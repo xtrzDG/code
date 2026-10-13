@@ -88,6 +88,7 @@ const quote = (overrides: Partial<PlanQuote> = {}): PlanQuote => ({
   annual_price: money(100_980, "EUR"),
   setup_fee: money(15_000, "EUR"),
   overage_price_per_minute: money(15, "EUR"),
+  additional_location_price: money(6900, "EUR"),
   local_monthly_price: money(29_300),
   local_annual_price: money(298_860),
   local_setup_fee: money(44_300),

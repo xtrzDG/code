@@ -41,6 +41,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import UserDisplayName
 from tests.compliance.audit_repositories import audit_log_repository
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.storage.builders import COUNTRY_SAMPLES, build_business
 
@@ -117,6 +118,7 @@ class InboxStore:
         )
         self.settings_repo = InboxSettingsRepository(collection(InboxSettingsDocument))
         self.audit_log_repo = audit_log_repository(collection(AuditLogEntryDocument))
+        self.brand_repo = in_memory_brand_repo()
 
     def later(self, minutes: int) -> Microseconds:
         """Move the clock on."""

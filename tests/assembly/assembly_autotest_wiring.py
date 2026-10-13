@@ -82,6 +82,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 from tests.assembly.deferred_use_case import DeferredUseCase
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
@@ -107,11 +108,13 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             AssistantVersionDetailsTransformer()
         )
         run_view_transformer = AutotestRunViewTransformer()
+        self.brand_knowledge_repo = in_memory_brand_knowledge_repo()
         self.build_draft_use_case = BuildAssistantDraftUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
             resource_repo=self.resource_repo,
             schedule_exception_repo=self.exception_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
             country_registry=self.country_registry,
             language_registry=self.language_registry,
             niche_template_registry=self.niche_registry,
@@ -150,6 +153,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
         plan_scenarios = PlanAutotestScenariosUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
             resource_repo=self.resource_repo,
             autotest_case_repo=self.autotest_case_repo,
             niche_template_registry=self.niche_registry,

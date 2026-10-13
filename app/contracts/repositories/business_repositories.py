@@ -14,6 +14,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.businesses.constrained_integers import BusinessBatchSize
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
@@ -64,6 +65,10 @@ class BusinessRepoContract(RepoContract, Protocol):
 
     def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
         """Businesses where the user is an owner or staff member."""
+        raise NotImplementedError
+
+    def list_by_brand(self, brand_id: BrandId) -> list[BusinessDocument]:
+        """The locations of a brand, oldest first (an indexed lookup)."""
         raise NotImplementedError
 
     def list_batch(

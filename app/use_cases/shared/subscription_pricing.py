@@ -19,6 +19,7 @@ from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote, QuotedMoney
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.booleans import IsPriceEstimated
 from app.schemas.typings.billing.constrained_integers import DiscountPercent
+from app.schemas.typings.brands.booleans import IsAdditionalLocation
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -88,15 +89,47 @@ def compute_annual_price(
     )
 
 
+def find_location_monthly_price(
+    plan_registry: PlanRegistryContract,
+    plan_key: PlanKey,
+    currency_code: CurrencyCode,
+    is_additional_location: IsAdditionalLocation,
+) -> Money:
+    """
+    The plan's monthly price, or its additional-location price for a
+    further location of a brand. A currency the price book has no
+    additional-location price in bills the plan price: never a conversion.
+
+    Raises:
+        ValidationFailedError: the plan has no price in this currency.
+    """
+
+    location_price: Money | None = (
+        plan_registry.find_local_additional_location_price(plan_key, currency_code)
+        if is_additional_location
+        else None
+    )
+    if location_price is not None:
+        return location_price
+
+    return find_monthly_price(plan_registry, plan_key, currency_code)
+
+
 def price_subscription(
     plan_registry: PlanRegistryContract,
     plan_key: PlanKey,
     billing_period: BillingPeriod,
     currency_code: CurrencyCode,
+    is_additional_location: IsAdditionalLocation = False,
 ) -> Money:
-    """Price of one billing period of the plan in the subscription currency."""
+    """
+    Price of one billing period of the plan in the subscription currency,
+    for the brand's further locations at the additional-location price.
+    """
 
-    monthly_price: Money = find_monthly_price(plan_registry, plan_key, currency_code)
+    monthly_price: Money = find_location_monthly_price(
+        plan_registry, plan_key, currency_code, is_additional_location
+    )
     if billing_period is BillingPeriod.MONTHLY:
         return monthly_price
 

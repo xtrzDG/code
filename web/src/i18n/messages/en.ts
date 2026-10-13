@@ -8,6 +8,7 @@ import { securityFlowEn } from "./sections/security";
 import { helpEn } from "./sections/help";
 import { siteEn } from "./sections/site";
 import { customersSectionEn } from "./sections/customers";
+import { brandsSectionEn } from "./sections/brands";
 import { referralsSectionEn } from "./sections/referrals";
 import { growthSectionEn } from "./sections/growth";
 import { onboardingEn } from "./onboarding/en";
@@ -160,6 +161,8 @@ export const en = {
     notFoundTitle: "Page not found",
     notFoundDescription: "The page does not exist or you do not have access to it.",
     backHome: "To my businesses",
+    twoFactorRequired:
+      "A business here asks its team to sign in with an authenticator app. Set one up in Account → Security, sign in again, then try once more.",
     codes: {
       not_found: "Not found, or you do not have access.",
       validation_failed: "Check the entered data.",
@@ -198,6 +201,7 @@ export const en = {
   ...siteEn,
   ...customersSectionEn,
   ...referralsSectionEn,
+  ...brandsSectionEn,
   ...growthSectionEn,
 } as const satisfies NestedMessages;
 

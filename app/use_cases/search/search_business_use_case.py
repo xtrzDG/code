@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.contact_activity_repositories import (
     ContactActivityRepoContract,
@@ -79,7 +80,9 @@ class SearchBusinessUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         phone_number_parser: PhoneNumberParserContract,
+        brand_repo: BrandRepoContract,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -130,7 +133,7 @@ class SearchBusinessUseCase(
         }
         totals = self._contact_activity_repo.count_for_contacts(business.id, ids)
         sees_phones: bool = sees_phone_numbers(
-            business, input_data.user_id, self._settings_repo
+            self._brand_repo, business, input_data.user_id, self._settings_repo
         )
         if customers or conversations or bookings:
             self._audit(business, input_data)

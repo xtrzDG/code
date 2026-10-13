@@ -115,6 +115,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
@@ -156,6 +157,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
         niche_template_registry=registries.niche_template_registry,
@@ -223,6 +225,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         SearchKnowledgeUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
     )
     get_price_use_case: Factory[
         UseCaseContract[PriceLookupQuery, PriceLookupResult]
@@ -230,6 +233,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         GetPriceUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
     )
     send_link_use_case: Factory[UseCaseContract[SendLinkQuery, SendLinkResult]] = (
         Factory(

@@ -19,8 +19,8 @@ from app.use_cases.knowledge.performer_links import (
     check_item_performers,
     unlink_left_out_resources,
 )
+from app.utilities.knowledge.knowledge_item_patches import patch_knowledge_item
 from app.utilities.knowledge.knowledge_item_views import to_item_details
-from app.utilities.knowledge.knowledge_items import patch_knowledge_item
 
 
 class UpdateKnowledgeItemUseCase(

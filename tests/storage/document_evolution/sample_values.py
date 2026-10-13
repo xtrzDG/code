@@ -73,6 +73,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "JobPeriodKey": "2026-09-21",
     "JobSerialKey": "business:business_42",
     "KnowledgeAttributeKey": "spice_level",
+    "KnowledgeShareKey": "parking",
     "KnowledgeTag": "signature",
     "LandingPath": "/c/cafe-batumi",
     "LanguageTag": "ka",

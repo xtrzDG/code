@@ -106,4 +106,5 @@ def to_item_details(
         is_active=item.is_active,
         created_at=item.created_at,
         updated_at=item.updated_at,
+        shared_key=item.shared_key,
     )

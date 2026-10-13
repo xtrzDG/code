@@ -96,7 +96,8 @@ def test_business_id_is_a_lookup_field_of_every_type_that_has_it() -> None:
     assert contact_fields[BUSINESS_ID_FIELD] is LookupFieldKind.TEXT
     assert BUSINESS_ID_FIELD not in business_fields
     assert business_fields == {
-        DocumentFieldPath("members[].user_id"): LookupFieldKind.ELEMENT_TEXT
+        DocumentFieldPath("members[].user_id"): LookupFieldKind.ELEMENT_TEXT,
+        DocumentFieldPath("brand_id"): LookupFieldKind.TEXT,
     }
 
 

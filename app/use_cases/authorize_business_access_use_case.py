@@ -1,3 +1,4 @@
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -12,15 +13,8 @@ from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     NotFoundError,
 )
-from app.utilities.security.two_factor_policy import (
-    is_two_factor_session,
-    mfa_required,
-)
-
-TEAM_TWO_FACTOR_MESSAGE: str = (
-    "This business asks its team to sign in with two factors: set up an "
-    "authenticator app (Account → Security) and sign in again."
-)
+from app.use_cases.shared.brand_reach import acting_role
+from app.use_cases.shared.team_two_factor import require_team_two_factors
 
 
 class AuthorizeBusinessAccessUseCase(
@@ -42,6 +36,13 @@ class AuthorizeBusinessAccessUseCase(
     other owner-only action (billing, the team, channels, security) and
     every copy of customers' data (`access_mode` WRITE) is refused.
 
+    A brand's team counts as members of its locations
+    (`app/utilities/brands/brand_access.py`): a brand owner acts as an
+    owner of every location, a regional manager as staff of the locations
+    assigned to them; any other location of the brand is reported as
+    missing to them. The brand is read at every call, so someone taken off
+    the brand, or a location taken out of it, is out at the next request.
+
     Someone who is not a member may still be platform support with an
     open, time-boxed look into this cabinet: AuthorizeSupportAccessUseCase
     decides (admin role and two factors read at every call, read-only
@@ -57,12 +58,14 @@ class AuthorizeBusinessAccessUseCase(
     def __init__(
         self,
         business_repo: BusinessRepoContract,
+        brand_repo: BrandRepoContract,
         session_assurance: SessionAssuranceContract,
         authorize_support_access: UseCaseContract[
             SupportAccessCheck, SupportAccessGrantDocument
         ],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._session_assurance: SessionAssuranceContract = session_assurance
         self._authorize_support_access: UseCaseContract[
             SupportAccessCheck, SupportAccessGrantDocument
@@ -75,23 +78,18 @@ class AuthorizeBusinessAccessUseCase(
         if business is None:
             raise NotFoundError(f"Business {input_data.business_id} was not found.")
 
-        assurance: SessionAssurance | None = self._session_assurance.current()
-        for member in business.members:
-            if member.user_id != input_data.user_id:
-                continue
+        role: BusinessMemberRole | None = acting_role(
+            self._brand_repo, business, input_data.user_id
+        )
+        if role is not None:
+            assurance: SessionAssurance | None = self._session_assurance.current()
+            require_team_two_factors(assurance, input_data.user_id, [business])
 
-            if (
-                business.require_mfa_for_members
-                and assurance is not None
-                and not is_two_factor_session(assurance, input_data.user_id)
-            ):
-                raise mfa_required(TEAM_TWO_FACTOR_MESSAGE)
-
-            if member.role is BusinessMemberRole.AGENCY:
+            if role is BusinessMemberRole.AGENCY:
                 require_agency_may(input_data)
             elif (
                 input_data.required_role is BusinessMemberRole.OWNER
-                and member.role is not BusinessMemberRole.OWNER
+                and role is not BusinessMemberRole.OWNER
             ):
                 raise AccessDeniedError("Only the business owner may do this.")
 

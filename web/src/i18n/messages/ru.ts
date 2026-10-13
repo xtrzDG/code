@@ -9,6 +9,7 @@ import { securityFlowRu } from "./sections/security";
 import { helpRu } from "./sections/help";
 import { siteRu } from "./sections/site";
 import { customersSectionRu } from "./sections/customers";
+import { brandsSectionRu } from "./sections/brands";
 import { referralsSectionRu } from "./sections/referrals";
 import { growthSectionRu } from "./sections/growth";
 import { onboardingRu } from "./onboarding/ru";
@@ -153,6 +154,8 @@ export const ru: Messages = {
     notFoundTitle: "Страница не найдена",
     notFoundDescription: "Такой страницы нет или у вас нет к ней доступа.",
     backHome: "К моим бизнесам",
+    twoFactorRequired:
+      "Один из бизнесов здесь просит команду входить с приложением-аутентификатором. Подключите его в разделе «Аккаунт → Безопасность», войдите снова и повторите.",
     codes: {
       not_found: "Не найдено или нет доступа.",
       validation_failed: "Проверьте введённые данные.",
@@ -191,5 +194,6 @@ export const ru: Messages = {
   ...siteRu,
   ...customersSectionRu,
   ...referralsSectionRu,
+  ...brandsSectionRu,
   ...growthSectionRu,
 };

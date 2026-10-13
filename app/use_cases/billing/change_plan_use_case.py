@@ -34,6 +34,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.brand_billing import is_additional_location
 from app.use_cases.shared.subscription_pricing import price_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -43,7 +44,10 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
     Owner switches plan or billing period (monthly or annual).
 
     The price stays in the subscription currency; annual is twelve months
-    minus the annual discount, rounded in minor units. The package changes
+    minus the annual discount, rounded in minor units; a further location
+    of a brand pays the plan's additional-location price, so choosing the
+    same plan again reprices a location that joined or left a brand since.
+    The package changes
     at once; the new price applies from the next invoice. When the price or
     the charge interval changes, automatic charges at the old price are
     stopped at the provider and unpaid invoices at the old price are voided,
@@ -109,6 +113,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             input_data.request.plan_key,
             input_data.request.billing_period,
             subscription.currency_code,
+            is_additional_location(self._business_repo, business),
         )
         is_charge_changed: bool = (
             new_price.amount_minor != subscription.price_minor

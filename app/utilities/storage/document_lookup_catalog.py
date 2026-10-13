@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.brand_collections import BRAND_LOOKUP_FIELDS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
 from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
@@ -59,8 +60,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("recovery_codes"): (text_field("user_id"),),
     DocumentCollectionName("mfa_challenges"): (integer_field("created_at"),),
     # The businesses of a signed-in user. Periodic jobs walk every business
-    # in first-write order, which needs no lookup column (1122).
-    DocumentCollectionName("businesses"): (element_field("members[].user_id"),),
+    # in first-write order, which needs no lookup column (1122). The
+    # locations of a brand (1192).
+    DocumentCollectionName("businesses"): (
+        element_field("members[].user_id"),
+        text_field("brand_id"),
+    ),
     # Webhook routing: the channel of an incoming message; channels in
     # error (a navigation badge, migration 1040; the admin system page,
     # 1093) and Meta tokens that run out soon (1093).
@@ -287,6 +292,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **GROWTH_LOOKUP_FIELDS,
     **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
     **INTEGRATION_LOOKUP_FIELDS,  # Webhooks and API keys (1181).
+    **BRAND_LOOKUP_FIELDS,  # Brands and their shared knowledge (1192).
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

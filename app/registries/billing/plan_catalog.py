@@ -9,6 +9,12 @@ it as "≈ 0.44 GEL", a conversion of 0.15 EUR.
 The setup fee is per setup option: the owner who sets the assistant up in
 the cabinet's guided setup (SELF_SERVE) pays nothing; DONE_FOR_YOU, where
 the platform team sets it up, costs the concept's 150 EUR / 443 GEL.
+
+Chains (R17, concept: Plus "сети из 2–3 точек"): a brand pays one setup
+fee, with its first location, and each further location of the brand pays
+the plan's additional-location price a month instead of the plan price.
+These prices are the product's own (the concept names none) and, like
+every price here, have explicit lari in the price book.
 """
 
 from app.schemas.constants.billing import PlanKey, SetupOption
@@ -88,6 +94,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         channels=list(MESSAGING_CHANNELS),
         is_voice_included=False,
         setup_fees=SETUP_FEES,
+        additional_location_monthly_price=build_eur_price(6900),
     ),
     PlanDefinition(
         key=PlanKey.VOICE_AND_CHAT,
@@ -104,6 +111,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         channels=list(VOICE_AND_MESSAGING_CHANNELS),
         is_voice_included=True,
         setup_fees=SETUP_FEES,
+        additional_location_monthly_price=build_eur_price(12500),
     ),
     PlanDefinition(
         key=PlanKey.PLUS,
@@ -120,6 +128,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         channels=list(VOICE_AND_MESSAGING_CHANNELS),
         is_voice_included=True,
         setup_fees=SETUP_FEES,
+        additional_location_monthly_price=build_eur_price(24900),
     ),
 )
 
@@ -134,4 +143,10 @@ LOCAL_SETUP_FEE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
     PlanKey.CHAT: (build_gel_price(44300),),
     PlanKey.VOICE_AND_CHAT: (build_gel_price(44300),),
     PlanKey.PLUS: (build_gel_price(44300),),
+}
+# Each further location of a brand, a month (explicit lari, like the plans).
+LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
+    PlanKey.CHAT: (build_gel_price(20400),),
+    PlanKey.VOICE_AND_CHAT: (build_gel_price(36900),),
+    PlanKey.PLUS: (build_gel_price(73500),),
 }

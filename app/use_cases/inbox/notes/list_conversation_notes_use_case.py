@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
@@ -8,7 +9,7 @@ from app.contracts.repositories.inbox_repositories import (
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -27,6 +28,7 @@ from app.use_cases.inbox.notes.note_views import (
     build_note_view,
     can_delete_note,
 )
+from app.use_cases.shared.brand_reach import business_team
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
@@ -45,6 +47,7 @@ class ListConversationNotesUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         conversation_repo: ConversationTeamRepoContract,
         note_repo: ConversationNoteRepoContract,
         user_repo: UserRepoContract,
@@ -54,6 +57,7 @@ class ListConversationNotesUseCase(
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._conversation_repo: ConversationTeamRepoContract = conversation_repo
         self._note_repo: ConversationNoteRepoContract = note_repo
         self._user_repo: UserRepoContract = user_repo
@@ -90,10 +94,11 @@ class ListConversationNotesUseCase(
             self._wall_clock.now_unix(),
         )
         names = author_names(self._user_repo, notes)
+        team: list[BusinessMember] = business_team(self._brand_repo, business)
         return ConversationNotePage(
             items=[
                 build_note_view(
-                    note, names, can_delete_note(business, input_data.user_id, note)
+                    note, names, can_delete_note(team, input_data.user_id, note)
                 )
                 for note in notes
             ],

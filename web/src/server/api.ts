@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import createClient, { type Client } from "openapi-fetch";
 import { cache } from "react";
 
-import { isApiError } from "@/api/errors";
+import { isApiError, needsTwoFactors } from "@/api/errors";
 import { unwrap, type ApiResult } from "@/api/result";
 import type { paths } from "@/api/schema";
 import type { BusinessView, CurrentUserView } from "@/api/types";
@@ -73,7 +73,7 @@ export async function serverFetch<T>(request: Promise<ApiResult<T>>): Promise<T>
         redirect(adminClientPath(businessId));
       }
     }
-    if (isApiError(error) && error.status === 403 && error.reasons.some((reason) => reason.code === "mfa_required")) {
+    if (isApiError(error) && needsTwoFactors(error)) {
       const pathname = (await headers()).get(PATHNAME_HEADER);
       redirect(securityPath({ reason: pathname?.startsWith(ADMIN_PATH) ? "admin" : "business", next: pathname }));
     }

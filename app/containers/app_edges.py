@@ -8,6 +8,9 @@ from app.containers.adapters.analytics_collections_container import (
 from app.containers.adapters.audit_chain_collections_container import (
     AuditChainCollectionsContainer,
 )
+from app.containers.adapters.brand_collections_container import (
+    BrandCollectionsContainer,
+)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -202,4 +205,12 @@ class AppEdgesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         audit_entry_collections=adapters.collections,
+    )
+    # Brands: chains of locations and their shared knowledge (1192).
+    brand_collections: BrandCollectionsContainer = Container(  # type: ignore[assignment]
+        BrandCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
     )

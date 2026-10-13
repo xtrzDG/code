@@ -14,6 +14,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.storage_pages import DocumentPagePosition, DocumentPageQuery
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.businesses.constrained_integers import (
     BusinessBatchSize,
     BusinessRevision,
@@ -27,6 +28,7 @@ from app.schemas.typings.storage.strings import StoredDocumentKey
 from app.schemas.typings.users.prefixed_id import UserId
 
 MEMBER_USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("members[].user_id")
+BRAND_ID_FIELD: DocumentFieldPath = DocumentFieldPath("brand_id")
 CHANNEL_KIND_FIELD: DocumentFieldPath = DocumentFieldPath("kind")
 EXTERNAL_ID_FIELD: DocumentFieldPath = DocumentFieldPath("external_id")
 
@@ -115,6 +117,9 @@ class BusinessRepository(BusinessRepoContract):
         return self._collection.list_by_fields(
             [field_equals(MEMBER_USER_ID_FIELD, user_id)]
         )
+
+    def list_by_brand(self, brand_id: BrandId) -> list[BusinessDocument]:
+        return self._collection.list_by_fields([field_equals(BRAND_ID_FIELD, brand_id)])
 
     def list_batch(
         self,

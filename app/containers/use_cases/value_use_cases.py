@@ -139,6 +139,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         GetBusinessValueUseCase,
         authorize_business_access=authorize,
+        brand_repo=repositories.brand_repo,
         compute_value_model=compute_value_model_use_case,
         activation_event_repo=repositories.activation_event_repo,
         wall_clock=wall_clock,

@@ -59,7 +59,8 @@ export function useKnowledgeItems() {
       }),
     {
       stale: [queryKeys.knowledge.all(business.id), queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)],
-      invalidate: [queryKeys.assistant.pendingAll(business.id)],
+      // A deleted own answer gives the brand's shared one back to the location.
+      invalidate: [queryKeys.assistant.pendingAll(business.id), queryKeys.brands.locationShared(business.id)],
     },
   );
 

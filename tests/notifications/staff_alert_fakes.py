@@ -11,6 +11,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.notifications import PushNotificationQueueContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.facilitators.notifications.staff_alert_facilitator import (
     StaffAlertFacilitator,
 )
@@ -32,6 +33,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
+from tests.foundation.brand_repositories import in_memory_brand_repo
 
 TEST_ENCRYPTION_KEY: PlatformSecret = PlatformSecret(
     "test-encryption-key-for-notification-links"
@@ -86,6 +88,7 @@ def build_staff_alerts(
     push_queue: PushNotificationQueueContract | None = None,
     subscriptions: PushSubscriptionRepository | None = None,
     preferences: NotificationPreferencesRepository | None = None,
+    brands: BrandRepoContract | None = None,
 ) -> StaffAlertFacilitator:
     """The real alert facilitator over fakes (no links unless settings say)."""
 
@@ -93,6 +96,7 @@ def build_staff_alerts(
         manager_notifier=notifier,
         push_queue=push_queue or RecordingPushQueue(),
         push_subscription_repo=subscriptions or push_subscription_repo(),
+        brand_repo=brands or in_memory_brand_repo(),
         notification_preferences_repo=preferences or preferences_repo(),
         link_signer=StaffLinkSigner(TEST_ENCRYPTION_KEY),
         text_transformer=StaffNotificationTextTransformer(resolver),

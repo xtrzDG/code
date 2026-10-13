@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.platform_admins import PlatformAdminRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.support_access import SupportAccessGrantRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -11,6 +12,7 @@ from app.schemas.dto.support_access import SupportAccessQuery, SupportAccessView
 from app.use_cases.businesses.support_access.support_access_views import (
     support_access_view,
 )
+from app.use_cases.shared.brand_reach import acting_role
 
 
 class GetSupportAccessUseCase(UseCaseContract[SupportAccessQuery, SupportAccessView]):
@@ -18,7 +20,8 @@ class GetSupportAccessUseCase(UseCaseContract[SupportAccessQuery, SupportAccessV
     Platform support in this business now (the cabinet's SupportBanner and
     Settings → Privacy): every open look into the cabinet with who, why
     and until when, and whether the owner lets support change things. The
-    team sees it; so does a support admin during their own look (with
+    team sees it (a brand's team as the team of its locations, never as
+    support); so does a support admin during their own look (with
     whether they may change things right now).
     """
 
@@ -27,6 +30,7 @@ class GetSupportAccessUseCase(UseCaseContract[SupportAccessQuery, SupportAccessV
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         grant_repo: SupportAccessGrantRepoContract,
         user_repo: UserRepoContract,
         platform_admins: PlatformAdminRegistryContract,
@@ -35,6 +39,7 @@ class GetSupportAccessUseCase(UseCaseContract[SupportAccessQuery, SupportAccessV
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._grant_repo: SupportAccessGrantRepoContract = grant_repo
         self._user_repo: UserRepoContract = user_repo
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
@@ -52,6 +57,7 @@ class GetSupportAccessUseCase(UseCaseContract[SupportAccessQuery, SupportAccessV
             business,
             self._grant_repo.list_open(business.id),
             input_data.user_id,
+            acting_role(self._brand_repo, business, input_data.user_id),
             self._user_repo,
             self._platform_admins,
             self._wall_clock.now_unix(),

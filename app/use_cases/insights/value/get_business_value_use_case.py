@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.setup_repositories import ActivationEventRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
@@ -42,7 +43,9 @@ class GetBusinessValueUseCase(UseCaseContract[BusinessValueQuery, ValueModel]):
         compute_value_model: UseCaseContract[ValueModelQuery, ValueModel],
         activation_event_repo: ActivationEventRepoContract,
         wall_clock: WallClock[Microseconds],
+        brand_repo: BrandRepoContract,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -72,5 +75,7 @@ class GetBusinessValueUseCase(UseCaseContract[BusinessValueQuery, ValueModel]):
             }
         )
         return (
-            model if sees_money(business, input_data.user_id) else without_money(model)
+            model
+            if sees_money(self._brand_repo, business, input_data.user_id)
+            else without_money(model)
         )

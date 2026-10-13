@@ -6,6 +6,7 @@ from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.analytics import ProductEventName
 from app.schemas.domain.billing import SubscriptionDocument
@@ -13,6 +14,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_go_live import GoLiveTrial, GoLiveTrialRequest
 from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.brand_billing import is_additional_location
 from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
@@ -43,7 +45,9 @@ class StartTrialAtGoLiveUseCase(UseCaseContract[GoLiveTrialRequest, GoLiveTrial]
         plan_registry: PlanRegistryContract,
         wall_clock: WallClock[Microseconds],
         product_events: RecordProductEventFacilitatorContract,
+        business_repo: BusinessRepoContract,
     ) -> None:
+        self._business_repo: BusinessRepoContract = business_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._plan_registry: PlanRegistryContract = plan_registry
@@ -70,6 +74,7 @@ class StartTrialAtGoLiveUseCase(UseCaseContract[GoLiveTrialRequest, GoLiveTrial]
             plan_key,
             billing_period,
             self._wall_clock.now_unix(),
+            is_additional_location(self._business_repo, business),
         )
         self._product_events.record(
             billing_event(ProductEventName.TRIAL_STARTED, subscription)

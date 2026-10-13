@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.inbox_repositories import InboxSettingsRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -18,6 +19,7 @@ from app.use_cases.inbox.inbox_support import (
     require_members,
 )
 from app.use_cases.inbox.settings.settings_views import build_settings_view
+from app.use_cases.shared.brand_reach import business_team
 
 
 class UpdateInboxSettingsUseCase(
@@ -25,8 +27,10 @@ class UpdateInboxSettingsUseCase(
 ):
     """
     An owner turns automatic assignment of new handoffs and new requests on
-    or off and chooses who takes turns (members only, 422 `not_a_member`;
-    none chosen: every staff member, or the owners when there is no staff).
+    or off and chooses who takes turns (the team only: the business's
+    members and the brand's team that reaches it, 422 `not_a_member`;
+    none chosen: every staff member of the business's own team, or its
+    owners when it has no staff).
     Audited (UPDATE of "inbox_settings").
     """
 
@@ -35,6 +39,7 @@ class UpdateInboxSettingsUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         inbox_settings_repo: InboxSettingsRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
@@ -42,6 +47,7 @@ class UpdateInboxSettingsUseCase(
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._inbox_settings_repo: InboxSettingsRepoContract = inbox_settings_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -55,7 +61,7 @@ class UpdateInboxSettingsUseCase(
             )
         )
         chosen = list(dict.fromkeys(input_data.request.auto_assign_user_ids))
-        require_members(business, chosen)
+        require_members(business_team(self._brand_repo, business), chosen)
         now: Microseconds = self._wall_clock.now_unix()
 
         def update(stored: InboxSettingsDocument) -> None:

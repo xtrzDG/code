@@ -43,6 +43,7 @@ from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.operations.operations_booking_factories import OperationsBookingFactories
 
@@ -78,6 +79,7 @@ class OperationsWorld(OperationsBookingFactories):
     def auto_assign(self) -> AutoAssignConversationUseCase:
         return AutoAssignConversationUseCase(
             business_repo=self.business_repo,
+            brand_repo=in_memory_brand_repo(),
             conversation_repo=self.conversation_repo,
             inbox_settings_repo=self.inbox_settings_repo,
             audit_log_repo=self.audit_repo,
@@ -190,6 +192,7 @@ class OperationsWorld(OperationsBookingFactories):
     def dashboard(self) -> GetDashboardStatsUseCase:
         return GetDashboardStatsUseCase(
             business_repo=self.business_repo,
+            brand_repo=in_memory_brand_repo(),
             business_profile_repo=self.profile_repo,
             schedule_exception_repo=self.exception_repo,
             conversation_repo=self.conversation_repo,

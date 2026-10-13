@@ -5,6 +5,9 @@ from app.contracts.registries import (
 from app.contracts.repositories.autotest_case_repositories import (
     AutotestCaseRepoContract,
 )
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
@@ -36,6 +39,7 @@ from app.use_cases.autotests.scenario_planning_parts import (
     ScenarioPlanningParts,
     collect_item_prices,
 )
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.assembly.autotest_scenarios import (
     DEFAULT_PARTY_SIZE,
     RED_TEAM_SCENARIO_KINDS,
@@ -94,6 +98,7 @@ class PlanAutotestScenariosUseCase(
         self,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         autotest_case_repo: AutotestCaseRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
@@ -103,6 +108,9 @@ class PlanAutotestScenariosUseCase(
     ) -> None:
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
@@ -126,8 +134,9 @@ class PlanAutotestScenariosUseCase(
             read_english_text(niche.resource_nouns)
             or RESOURCE_KIND_NOUNS[niche.resource_kind]
         )
-        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
-            business.id
+        # What the assistant answers from: a brand's shared prices included.
+        items: list[KnowledgeItemDocument] = load_active_knowledge(
+            self._knowledge_item_repo, self._brand_knowledge_item_repo, business
         )
         item_prices: dict[str, Money] = collect_item_prices(business, items)
         if input_data.smoke_check is not None:

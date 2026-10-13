@@ -36,6 +36,9 @@ class PlanDefinition(ImmutableDTO):
     Prices are defined in EUR; local-currency prices come from the price book.
     `setup_fees` prices each setup option (SELF_SERVE is free); `setup_fee`
     is the DONE_FOR_YOU fee, the one the price book has local prices of.
+    `additional_location_monthly_price` is what each further location of a
+    brand pays a month instead of `monthly_price` (R17): the brand's first
+    location pays the plan price and the brand's one setup fee.
     """
 
     key: PlanKey
@@ -52,3 +55,4 @@ class PlanDefinition(ImmutableDTO):
     channels: list[ChannelKind]
     is_voice_included: IsVoiceEnabled
     setup_fees: list[SetupOptionFee]
+    additional_location_monthly_price: Money

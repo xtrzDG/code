@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 from httpx2 import Response
 
 from tests.platform.authorization_billing import BILLING_BODIES
+from tests.platform.authorization_brands import BRAND_BODIES
 from tests.platform.authorization_calendars import CALENDAR_BODIES
 from tests.platform.authorization_customers import CUSTOMER_BODIES, CUSTOMER_QUERIES
 from tests.platform.authorization_inbox import INBOX_BODIES
@@ -86,6 +87,7 @@ REQUEST_BODIES.update(BILLING_BODIES)
 REQUEST_BODIES.update(CUSTOMER_BODIES)
 REQUEST_BODIES.update(CALENDAR_BODIES)
 REQUEST_BODIES.update(INTEGRATION_BODIES)
+REQUEST_BODIES.update(BRAND_BODIES)
 REQUEST_BODIES[f"PUT {B}/campaign-settings"] = {"rule_kind": "rebook", "delay_days": 30}
 REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},

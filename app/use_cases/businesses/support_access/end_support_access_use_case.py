@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.support_access import SupportAccessGrantRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -14,12 +15,14 @@ from app.schemas.dto.support_access import (
 from app.use_cases.businesses.support_access.support_access_views import (
     require_owner_member,
 )
+from app.use_cases.shared.brand_reach import acting_role
 from app.use_cases.shared.support_access import end_grant, is_live
 
 
 class EndSupportAccessUseCase(UseCaseContract[EndSupportAccessCommand, None]):
     """
-    The owner ends platform support's access at once (the banner's "End
+    The owner (an owner of the business's brand too) ends platform
+    support's access at once (the banner's "End
     access"): every open look into the cabinet (SUPPORT_ACCESS_END) and the
     consent to changes. Support's next request is refused.
     """
@@ -29,6 +32,7 @@ class EndSupportAccessUseCase(UseCaseContract[EndSupportAccessCommand, None]):
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         grant_repo: SupportAccessGrantRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
@@ -36,6 +40,7 @@ class EndSupportAccessUseCase(UseCaseContract[EndSupportAccessCommand, None]):
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._grant_repo: SupportAccessGrantRepoContract = grant_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -48,7 +53,9 @@ class EndSupportAccessUseCase(UseCaseContract[EndSupportAccessCommand, None]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        require_owner_member(business, input_data.user_id)
+        require_owner_member(
+            acting_role(self._brand_repo, business, input_data.user_id)
+        )
         now: Microseconds = self._wall_clock.now_unix()
         for grant in self._grant_repo.list_open(business.id):
             if is_live(grant, now):

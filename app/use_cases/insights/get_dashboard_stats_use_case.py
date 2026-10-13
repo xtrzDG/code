@@ -16,6 +16,7 @@ from app.contracts.repositories.booking_repositories import (
     LeadRepoContract,
     UnansweredQuestionRepoContract,
 )
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -131,8 +132,10 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         plan_registry: PlanRegistryContract,
         activation_event_repo: ActivationEventRepoContract,
         wall_clock: WallClock[Microseconds],
+        brand_repo: BrandRepoContract,
         read_session: StorageReadSessionContract | None = None,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._schedule_exception_repo: ScheduleExceptionRepoContract = (
@@ -197,7 +200,7 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             self._booking_repo.sum_value_made(
                 business.id, timeline_period(stretches, period_end)
             )
-            if sees_money(business, input_data.user_id)
+            if sees_money(self._brand_repo, business, input_data.user_id)
             else []
         )
         handoffs: list[HandoffActivityCount] = self._handoff_repo.count_made(

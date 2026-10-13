@@ -2,7 +2,7 @@
 Idempotency-Key on the real application: a retried "Create an AI
 assistant" makes one business and answers the first answer again, the same
 key with another body is refused, a retried staff reply stores one message,
-and the five creating operations document the header.
+and every creating operation that takes a key documents the header.
 """
 
 from typing import Any, cast
@@ -16,6 +16,8 @@ type JsonObject = dict[str, Any]
 KEY: str = "0c6f3a4e-2b1d-4e8f-9a7c-5d3b2e1f0a9c"
 IDEMPOTENT_OPERATIONS: set[str] = {
     "POST /v1/assistants",
+    "POST /v1/brands",
+    "POST /v1/brands/{brand_id}/locations/clone",
     "POST /v1/businesses/{business_id}/bookings",
     "POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages",
     "POST /v1/businesses/{business_id}/billing/checkout",

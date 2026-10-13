@@ -69,6 +69,7 @@ def planner(testbed: AssemblyTestbed) -> PlanAutotestScenariosUseCase:
     return PlanAutotestScenariosUseCase(
         business_profile_repo=testbed.profile_repo,
         knowledge_item_repo=testbed.knowledge_repo,
+        brand_knowledge_item_repo=testbed.brand_knowledge_repo,
         resource_repo=testbed.resource_repo,
         autotest_case_repo=testbed.autotest_case_repo,
         niche_template_registry=testbed.niche_registry,

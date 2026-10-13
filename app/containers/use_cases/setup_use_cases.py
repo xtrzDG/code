@@ -143,6 +143,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
             describe_apply_changes=apply_use_cases.describe_apply_changes_use_case,
             business_profile_repo=repositories.business_profile_repo,
             knowledge_item_repo=repositories.knowledge_item_repo,
+            brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
             resource_repo=repositories.resource_repo,
             channel_repo=repositories.channel_repo,
             subscription_repo=repositories.subscription_repo,
@@ -180,10 +181,12 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         PrepareTestChatVersionUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         schedule_exception_repo=repositories.schedule_exception_repo,
     )

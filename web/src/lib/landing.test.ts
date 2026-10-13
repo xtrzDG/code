@@ -24,6 +24,7 @@ function quote(overrides: Partial<PlanQuote> = {}): PlanQuote {
     annual_price: money(100980, "EUR"),
     setup_fee: money(15000, "EUR"),
     overage_price_per_minute: money(15, "EUR"),
+    additional_location_price: money(6900, "EUR"),
     ...overrides,
   };
 }

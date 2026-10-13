@@ -11,6 +11,75 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-13 — brands: a location's two-factor rule holds for the brand
+
+Spec: `0c61aa6b3430e849`
+
+- **Changed** (behaviour) every brand owner's operation (`PATCH`/`DELETE
+  /v1/brands/{brand_id}`, its `/locations`, `/locations/clone`, `/members`
+  and `/knowledge` writes) is an owner's action in every location of the
+  brand: while one of them asks its team for two factors
+  (`require_mfa_for_members`), a session signed in with the login code alone
+  gets 403 with the reason `mfa_required`, as in the location itself.
+  Making a business a brand's location (`POST /v1/brands`, `POST
+  /v1/brands/{brand_id}/locations`) follows that business's rule the same
+  way. A member leaving the brand and every read stay as they were. The
+  operations' descriptions say so.
+- **Changed** (behaviour) the facts a brand shares count wherever a
+  location's own knowledge counts: `GET …/profile/gaps`, the profile wizard,
+  `GET …/setup`, the go-live readiness and the autotests (price questions
+  for shared prices). The owner's test chat builds a fresh preview when a
+  shared fact changed after the version it would use.
+
+## 2026-10-12 — brands: a location's plan prices and shared answers, the brand team at work
+
+Spec: `ff07adf5309530b0`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/plans?language=`
+  (owners): every plan priced as this business is billed for it. A further
+  location of a brand is quoted the additional-location price a month (and
+  the annual price that follows from it); a location whose brand's one setup
+  fee another location carries is quoted no setup fee. `is_additional_location`
+  and `is_setup_fee_covered` say which applies. The cabinet's billing page
+  uses it instead of the country catalog.
+- **Added** `GET /v1/businesses/{business_id}/brand/knowledge` (owners and
+  staff): the facts the location's brand shares, each with `own_item_id`, the
+  location's own item that replaces it there (none outside a brand).
+- **Changed** (additive) `GET /v1/me`: `brand_id` names the brand of every
+  location in one, also for its own team; `brand_name` stays for the brand's
+  team.
+- **Changed** (behaviour) a brand's team acts with the role the brand gives
+  it everywhere: brand owners decide about platform support access, take over
+  and delete like owners in the inbox, and every member of the brand team who
+  reaches a location can be assigned conversations there (and is never shown
+  as platform support). `PATCH /v1/businesses/{business_id}` and the team
+  routes answer with the same `viewer_role` as `GET`. Editing a location's own
+  version of a shared answer keeps its `shared_key`.
+
+## 2026-10-12 — brands: chains of locations, shared answers, the additional-location price
+
+Spec: `0a773ddac5f2ce41`
+
+- **Added** brands (`/v1/brands`, `/v1/brands/{brand_id}`): a chain of
+  locations with one team. `BRAND_OWNER` runs every location as its owner;
+  `REGIONAL_MANAGER` works as staff in the locations assigned to them only.
+  Members (`/members`, `/members/{user_id}`), locations (`/locations`,
+  `/locations/{business_id}`), "New location from…" (`/locations/clone`:
+  profile, resources, knowledge and channel settings; never channel tokens,
+  payment settings, API keys, webhooks or customer data; like `POST
+  /v1/brands` it takes an `Idempotency-Key`) and the combined
+  overview (`/dashboard?period=`: a regional manager gets only the
+  locations assigned to them, with counts and no amounts; a location whose
+  access check refuses comes back with `is_locked` and no figures).
+- **Added** shared answers (`/v1/brands/{brand_id}/knowledge`,
+  `/knowledge/{shared_key}`) and a location's own answer in place of one
+  (`POST /v1/businesses/{business_id}/knowledge/brand-overrides`); a
+  location leaves its brand with `DELETE /v1/businesses/{business_id}/brand`.
+- **Changed** (additive) `GET /v1/me`: each membership names its brand
+  (`brand_id`, `brand_name`), including the locations a brand gives.
+- **Changed** (additive) `BusinessView.brand_id`, the plan catalog's
+  `additional_location_price` and `local_additional_location_price` (each
+  further location of a chain), and the setup fee charged once per brand.
 ## 2026-10-12 — the audit trail: hash chain status, the platform's audit log
 
 Spec: `f619b704e2a66ba5`

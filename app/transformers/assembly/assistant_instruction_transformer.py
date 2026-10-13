@@ -53,7 +53,10 @@ class AssistantInstructionTransformer(
             build_style_section(parts.tone),
             build_fact_section(parts.facts, input_data.tools),
             build_booking_section(
-                input_data.tools, parts.country_name, parts.timezone_name
+                input_data.tools,
+                parts.country_name,
+                parts.timezone_name,
+                has_sister_locations=input_data.business.brand_id is not None,
             ),
             build_handoff_section(
                 parts.business_handoff_rules,

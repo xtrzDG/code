@@ -9,6 +9,7 @@ import { securityFlowKa } from "./sections/security";
 import { helpKa } from "./sections/help";
 import { siteKa } from "./sections/site";
 import { customersSectionKa } from "./sections/customers";
+import { brandsSectionKa } from "./sections/brands";
 import { referralsSectionKa } from "./sections/referrals";
 import { growthSectionKa } from "./sections/growth";
 import { onboardingKa } from "./onboarding/ka";
@@ -153,6 +154,8 @@ export const ka: Messages = {
     notFoundTitle: "გვერდი ვერ მოიძებნა",
     notFoundDescription: "ასეთი გვერდი არ არსებობს ან მასზე წვდომა არ გაქვთ.",
     backHome: "ჩემს ბიზნესებზე",
+    twoFactorRequired:
+      "აქ ერთ-ერთი ბიზნესი გუნდს სთხოვს, ავთენტიფიკატორის აპით შევიდეს. დააყენეთ ის: ანგარიში → უსაფრთხოება, ხელახლა შედით და კვლავ სცადეთ.",
     codes: {
       not_found: "ვერ მოიძებნა ან წვდომა არ გაქვთ.",
       validation_failed: "შეამოწმეთ შეყვანილი მონაცემები.",
@@ -191,5 +194,6 @@ export const ka: Messages = {
   ...siteKa,
   ...customersSectionKa,
   ...referralsSectionKa,
+  ...brandsSectionKa,
   ...growthSectionKa,
 };

@@ -3,6 +3,9 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import NicheTemplateRegistryContract, PlanRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     ChannelRepoContract,
@@ -43,6 +46,7 @@ from app.schemas.typings.setup.constrained_integers import (
     SetupMinutesLeft,
     SetupPercent,
 )
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_service_paid_for,
@@ -75,6 +79,7 @@ from app.utilities.setup.setup_views import (
     milestone_views,
     phone_test_links,
     step_views,
+    went_live_at,
 )
 
 TRY_SIGNALS: frozenset[ActivationEventKind] = frozenset(
@@ -109,6 +114,7 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         describe_apply_changes: UseCaseContract[ApplyChangesSource, ApplyChangesView],
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         channel_repo: ChannelRepoContract,
         subscription_repo: SubscriptionRepoContract,
@@ -134,6 +140,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         ] = describe_apply_changes
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
@@ -176,7 +185,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
                 template=self._niche_template_registry.get(business.niche_key),
                 business=business,
                 profile=self._business_profile_repo.get_by_business(business.id),
-                knowledge_items=self._knowledge_item_repo.list_by_business(business.id),
+                knowledge_items=load_active_knowledge(
+                    self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+                ),
                 resources=self._resource_repo.list_by_business(business.id),
             ),
             has_staff_contact=business.manager_contacts != [],
@@ -217,14 +228,7 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             can_go_live=can_go_live(steps, facts),
             is_live=is_live,
             is_complete=all(step.is_done for step in steps if step.is_required),
-            went_live_at=next(
-                (
-                    event.occurred_at
-                    for event in events
-                    if event.kind is ActivationEventKind.WENT_LIVE
-                ),
-                None,
-            ),
+            went_live_at=went_live_at(events),
             trial_ends_at=(
                 subscription.trial_ends_at
                 if subscription is not None

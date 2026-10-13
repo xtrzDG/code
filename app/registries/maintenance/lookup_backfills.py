@@ -32,6 +32,7 @@ SPEND_GUARD: SchemaMigrationName = SchemaMigrationName(
 WAITLIST: SchemaMigrationName = SchemaMigrationName(
     "1151_waitlist_and_rebooking_campaigns"
 )
+BRANDS: SchemaMigrationName = SchemaMigrationName("1192_brands_and_shared_knowledge")
 AUDIT_CHAIN: SchemaMigrationName = SchemaMigrationName("1193_append_only_audit_chain")
 
 
@@ -131,6 +132,12 @@ LOOKUP_COLUMNS_WITHOUT_BACKFILL: tuple[LookupColumnWithoutBackfill, ...] = (
         AUDIT_CHAIN,
         "Only the failed sign-in checks of the last hour are counted by it, "
         "and the trigger fills it for every entry written since 1193.",
+    ),
+    without_backfill(
+        "businesses",
+        "brand_id",
+        BRANDS,
+        "Businesses written before 1192 belong to no brand: brands came with it.",
     ),
 )
 

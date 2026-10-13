@@ -37,6 +37,7 @@ class LaunchUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         wall_clock=time_provider.microsecond_wall_clock,
         product_events=facilitators.product_events,
+        business_repo=repositories.business_repo,
     )
     record_activation_event_use_case: Factory[
         UseCaseContract[ActivationEventRecord, None]

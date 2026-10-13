@@ -52,6 +52,7 @@ from app.utilities.security.require_recent_authentication import (
 )
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.foundation.access_support import AllowStepUp
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import (
     RecordingSignInNotices,
     build_authorize_business_access,
@@ -85,7 +86,9 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock, self.settings, self.platform_admin_repo
         )
         self.sign_in_notices = RecordingSignInNotices()
+        self.brand_repo = in_memory_brand_repo()
         self.authorize_business_access = build_authorize_business_access(
+            brand_repo=self.brand_repo,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
@@ -188,6 +191,7 @@ class AccountsUserUseCases(AccountsRepositories):
         self.get_current_user = GetCurrentUserUseCase(
             user_repo=self.user_repo,
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             user_view_transformer=user_view_transformer,
             session_assurance=self.session_assurance,
             platform_admins=self.platform_admins,
@@ -216,11 +220,13 @@ class AccountsUserUseCases(AccountsRepositories):
         )
         self.list_my_businesses = ListMyBusinessesUseCase(
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             user_repo=self.user_repo,
             business_view_transformer=business_view_transformer,
         )
         self.get_business = GetBusinessUseCase(
             authorize_business_access=self.authorize_business_access,
+            brand_repo=self.brand_repo,
             user_repo=self.user_repo,
             business_view_transformer=business_view_transformer,
         )
@@ -230,6 +236,7 @@ class AccountsUserUseCases(AccountsRepositories):
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
+            brand_repo=self.brand_repo,
             subscription_repo=self.subscription_repo,
             language_registry=self.language_registry,
             phone_number_parser=self.phone_parser,
@@ -243,6 +250,7 @@ class AccountsUserUseCases(AccountsRepositories):
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
+            brand_repo=self.brand_repo,
             phone_number_parser=self.phone_parser,
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
@@ -253,6 +261,7 @@ class AccountsUserUseCases(AccountsRepositories):
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
+            brand_repo=self.brand_repo,
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
@@ -262,6 +271,7 @@ class AccountsUserUseCases(AccountsRepositories):
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
+            brand_repo=self.brand_repo,
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,

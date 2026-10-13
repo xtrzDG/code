@@ -10,6 +10,7 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.notification_preferences import StaffNotificationPreferences
 from app.schemas.domain.referrals import BusinessReferral
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.businesses.constrained_integers import (
     BusinessRevision,
     RecordingRetentionDays,
@@ -80,9 +81,11 @@ class BusinessDocument(BaseDocument):
     referred it, as for every older row), and `hides_powered_by`, the Plus
     owner's choice to leave the "Powered by" link off the chat and the
     table card (False, so older rows read as they are).
+    Version 7: `brand_id`, the brand (chain of locations) the business is a
+    location of (None: a business on its own, as every older row).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("6")
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -106,4 +109,5 @@ class BusinessDocument(BaseDocument):
     dpa_version_accepted: DpaDocumentVersion | None = None
     referred_by: BusinessReferral | None = None
     hides_powered_by: IsPoweredByHidden = False
+    brand_id: BrandId | None = None
     revision: BusinessRevision = BusinessRevision(0)

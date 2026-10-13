@@ -1,5 +1,6 @@
 from app.contracts.registries import PlanRegistryContract
 from app.registries.billing.plan_catalog import (
+    LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK,
     LOCAL_MONTHLY_PRICE_BOOK,
     LOCAL_SETUP_FEE_BOOK,
     PLAN_DEFINITIONS,
@@ -59,6 +60,17 @@ class PlanRegistry(PlanRegistryContract):
         return find_price_book_price(
             self.get(plan_key).setup_fee,
             LOCAL_SETUP_FEE_BOOK.get(plan_key, ()),
+            currency_code,
+        )
+
+    def find_local_additional_location_price(
+        self,
+        plan_key: PlanKey,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        return find_price_book_price(
+            self.get(plan_key).additional_location_monthly_price,
+            LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK.get(plan_key, ()),
             currency_code,
         )
 

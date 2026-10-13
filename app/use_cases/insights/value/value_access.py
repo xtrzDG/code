@@ -4,6 +4,7 @@ from datetime import date, timedelta
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.constants.value import AverageCheckSource, ValuePeriod
 from app.schemas.domain.businesses import BusinessDocument
@@ -11,6 +12,7 @@ from app.schemas.dto.value.value_model import ValueModel, ValueModelQuery, Value
 from app.schemas.dto.value.value_views import BusinessValueQuery
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.brand_reach import acting_role
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
@@ -28,13 +30,17 @@ from app.utilities.value.value_periods import (
 MAX_PERIOD_DAYS: int = 366
 
 
-def sees_money(business: BusinessDocument, user_id: UserId) -> bool:
-    """Owners (and platform admins, who act as owners) see money; staff do not."""
+def sees_money(
+    brand_repo: BrandRepoContract, business: BusinessDocument, user_id: UserId
+) -> bool:
+    """
+    Owners (a brand's owners and platform admins act as owners) see money;
+    staff do not, nor a brand's regional manager, who works as staff in
+    their locations.
+    """
 
-    return not any(
-        member.user_id == user_id and member.role is BusinessMemberRole.STAFF
-        for member in business.members
-    )
+    role: BusinessMemberRole | None = acting_role(brand_repo, business, user_id)
+    return role is not BusinessMemberRole.STAFF
 
 
 def without_money(model: ValueModel) -> ValueModel:

@@ -7,14 +7,14 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { UserMembershipView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { countryFlag } from "@/lib/countries";
-import { CREATE_PATH, HOME_PATH, samePageIn } from "@/lib/navigation";
+import { CREATE_PATH, HOME_PATH } from "@/lib/navigation";
 
-import { IconBuilding, IconCheck, IconChevronDown, IconPlus } from "./icons";
+import { BusinessSwitcherGroups } from "./BusinessSwitcherGroups";
+import { IconBuilding, IconChevronDown, IconPlus } from "./icons";
 
 /**
  * The current business and a menu to jump to another one, keeping the
- * open page (bookings stay bookings). `compact` (the collapsed sidebar)
+ * open page (bookings stay bookings), grouped by brand. `compact` (the collapsed sidebar)
  * shows only the business's initial; the menu then opens to the side.
  */
 export function BusinessSwitcher({
@@ -107,27 +107,12 @@ export function BusinessSwitcher({
             compact ? "start-full top-0 ms-2 w-64" : "inset-x-0 top-full mt-1.5",
           )}
         >
-          <ul className="max-h-72 overflow-y-auto py-1">
-            {memberships.map((membership) => {
-              const isCurrent = membership.business_id === currentBusinessId;
-              return (
-                <li key={membership.business_id}>
-                  <Link
-                    href={samePageIn(membership.business_id, pathname)}
-                    aria-current={isCurrent ? "page" : undefined}
-                    onClick={close}
-                    className="flex min-h-10 items-center gap-2 px-3 py-2 text-sm text-ink hover:bg-surface-muted"
-                  >
-                    <span aria-hidden>{countryFlag(membership.country_code)}</span>
-                    <span className="min-w-0 flex-1 truncate" data-user-content>
-                      {membership.business_name}
-                    </span>
-                    {isCurrent ? <IconCheck className="size-4 text-accent" aria-hidden /> : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <BusinessSwitcherGroups
+            memberships={memberships}
+            currentBusinessId={currentBusinessId}
+            pathname={pathname}
+            onNavigate={close}
+          />
           <Link
             href={CREATE_PATH}
             onClick={close}

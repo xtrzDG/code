@@ -6,6 +6,9 @@ from app.contracts.registries import (
     NicheTemplateRegistryContract,
     PlanRegistryContract,
 )
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -36,6 +39,7 @@ from app.schemas.dto.niches import NicheTemplate
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.bookings.constrained_strings import LocalDate
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.assembly.assistant_tools import (
     can_take_bookings,
     select_assistant_tools,
@@ -51,8 +55,9 @@ class BuildAssistantDraftUseCase(
     The assistant as it would be built now (concept section 4,
     "buildAssistant"), without storing anything: the fact table and the
     instructions (chat, and the phone when the plan has voice) are built by
-    code from the niche template, the profile, active knowledge items,
-    resources and upcoming special days; tools follow the niche (booking
+    code from the niche template, the profile, active knowledge items (a
+    brand's location also the facts its brand shares and it does not
+    replace), resources and upcoming special days; tools follow the niche (booking
     tools only for a business with booking rules and an active resource,
     send_link only with links) and voice follows the plan.
 
@@ -67,6 +72,7 @@ class BuildAssistantDraftUseCase(
         self,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         schedule_exception_repo: ScheduleExceptionRepoContract,
         country_registry: CountryRegistryContract,
@@ -89,6 +95,9 @@ class BuildAssistantDraftUseCase(
     ) -> None:
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._schedule_exception_repo: ScheduleExceptionRepoContract = (
             schedule_exception_repo
@@ -131,11 +140,9 @@ class BuildAssistantDraftUseCase(
             self._language_registry,
             list(dict.fromkeys([*business.languages, business.owner_language])),
         )
-        knowledge_items: list[KnowledgeItemDocument] = [
-            item
-            for item in self._knowledge_item_repo.list_by_business(business.id)
-            if item.is_active
-        ]
+        knowledge_items: list[KnowledgeItemDocument] = load_active_knowledge(
+            self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+        )
         resources: list[ResourceDocument] = [
             resource
             for resource in self._resource_repo.list_by_business(business.id)

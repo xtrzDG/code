@@ -26,6 +26,7 @@ from app.use_cases.insights.value.value_return import (
     plan_return,
 )
 from app.utilities.setup.setup_keys import derive_activation_event_id
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.value.test_value_estimates import value_query
 from tests.value.test_value_return import SEPTEMBER, price, terms
 from tests.value.value_scene import ValueScene, at
@@ -72,6 +73,7 @@ def value_with_prices(scene: ValueScene) -> GetBusinessValueUseCase:
     world = scene.world
     return GetBusinessValueUseCase(
         authorize_business_access=world.authorize(),
+        brand_repo=in_memory_brand_repo(),
         compute_value_model=ComputeValueModelUseCase(
             business_repo=world.business_repo,
             business_profile_repo=world.profile_repo,

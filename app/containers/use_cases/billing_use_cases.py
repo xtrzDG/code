@@ -32,10 +32,7 @@ from app.schemas.dto.billing_ledger import (
     DueInvoicesRequest,
 )
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.schemas.dto.payments import (
-    PaymentWebhookDelivery,
-    PaymentWebhookReceipt,
-)
+from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.use_cases.billing.assemble_billing_overview_use_case import (
     AssembleBillingOverviewUseCase,
 )
@@ -98,6 +95,8 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
         billing_credit_repo=repositories.billing_credit_repo,
         credit_lock=registries.billing_credit_lock_registry,
+        brand_repo=repositories.brand_repo,
+        business_repo=repositories.business_repo,
     )
     assemble_billing_overview_use_case: Factory[
         UseCaseContract[BillingOverviewSource, BillingOverview]

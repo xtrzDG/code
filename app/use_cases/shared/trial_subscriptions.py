@@ -20,6 +20,7 @@ from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.typings.billing.prefixed_id import SubscriptionId
+from app.schemas.typings.brands.booleans import IsAdditionalLocation
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.use_cases.shared.billing_records import (
     find_current_subscription,
@@ -70,11 +71,13 @@ def open_trial_subscription(
     plan_key: PlanKey,
     billing_period: BillingPeriod,
     now: Microseconds,
+    is_additional_location: IsAdditionalLocation = False,
 ) -> SubscriptionDocument:
     """
     Store the TRIALING subscription that runs until the plan's trial days
     end in the business time zone, priced in the business currency when the
-    price book has it (else EUR); nothing is invoiced. A subscription chosen
+    price book has it (else EUR), a further brand location at the plan's
+    additional-location price; nothing is invoiced. A subscription chosen
     without a trial and never paid (INCOMPLETE) becomes the trial: its
     unpaid bills are voided. The caller checks that the trial is due.
     """
@@ -84,7 +87,7 @@ def open_trial_subscription(
         plan_registry, plan_key, business.currency_code
     )
     price: Money = price_subscription(
-        plan_registry, plan_key, billing_period, currency_code
+        plan_registry, plan_key, billing_period, currency_code, is_additional_location
     )
     trial_ends_at: Microseconds = add_local_days(
         now, int(plan.trial_days), business.timezone

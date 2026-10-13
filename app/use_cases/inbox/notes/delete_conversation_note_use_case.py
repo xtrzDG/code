@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
@@ -22,6 +23,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.use_cases.inbox.inbox_support import NOTE_ENTITY, append_audit, refusal
 from app.use_cases.inbox.notes.note_views import can_delete_note
+from app.use_cases.shared.brand_reach import business_team
 
 
 class DeleteConversationNoteUseCase(
@@ -39,6 +41,7 @@ class DeleteConversationNoteUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         note_repo: ConversationNoteRepoContract,
         audit_log_repo: AuditLogRepoContract,
         live_events: EventPublisherFacilitatorContract,
@@ -47,6 +50,7 @@ class DeleteConversationNoteUseCase(
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._note_repo: ConversationNoteRepoContract = note_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._live_events: EventPublisherFacilitatorContract = live_events
@@ -64,7 +68,9 @@ class DeleteConversationNoteUseCase(
         if note is None or note.conversation_id != input_data.conversation_id:
             raise NotFoundError(f"Note {input_data.note_id} was not found.")
 
-        if not can_delete_note(business, input_data.user_id, note):
+        if not can_delete_note(
+            business_team(self._brand_repo, business), input_data.user_id, note
+        ):
             raise AccessDeniedError(
                 "Only the author of a note or an owner can delete it.",
                 reasons=[

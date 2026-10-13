@@ -158,6 +158,22 @@ describe("friendly messages", () => {
     expect(describeError(denied, tEn).detail).toBeNull();
   });
 
+  it("asks for an authenticator when a business requires two factors of its team", () => {
+    const error = parseApiError(403, {
+      error: "access_denied",
+      message: "A location of this brand asks its team to sign in with two factors.",
+      reasons: [{ code: "mfa_required", message: "Set up an authenticator app." }],
+    });
+    const plain = new ApiError({ status: 403, code: "access_denied" });
+    expect(describeError(error, tEn).title).toBe(en.errors.twoFactorRequired);
+    expect(describeError(error, tRu).title).toBe(ru.errors.twoFactorRequired);
+    expect(describeError(error, tEn).detail).toBeNull();
+    expect(describeError(plain, tEn).title).toBe(en.errors.codes.access_denied);
+    expect(describeError(error, tEn, { access_denied: "auth.errors.countryRestricted" }).title).toBe(
+      en.auth.errors.countryRestricted,
+    );
+  });
+
   it("offers the request id for server errors", () => {
     const error = new ApiError({ status: 500, code: "internal_error", requestId: "req-9" });
     expect(describeError(error, tEn).requestId).toBe("req-9");

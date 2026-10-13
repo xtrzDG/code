@@ -37,6 +37,7 @@ from app.schemas.typings.knowledge.strings import (
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.knowledge.get_price_use_case import GetPriceUseCase
+from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.operations.operations_world import OperationsWorld
 
 SUMMER = ("07-01", "08-31", 30000, "Summer")
@@ -162,6 +163,7 @@ class GuestHouse:
         return GetPriceUseCase(
             business_repo=self.world.business_repo,
             knowledge_item_repo=self.world.knowledge_repo,
+            brand_knowledge_item_repo=in_memory_brand_knowledge_repo(),
         ).run(
             PriceLookupQuery(
                 business_id=self.business.id,

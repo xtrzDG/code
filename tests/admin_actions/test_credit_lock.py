@@ -73,6 +73,8 @@ def test_two_invoices_at_once_spend_the_credit_once() -> None:
         invoice_line_texts_transformer=testbed.invoice_line_texts_transformer,
         billing_credit_repo=ledger,
         credit_lock=testbed.credit_lock,
+        brand_repo=testbed.brand_repo,
+        business_repo=testbed.business_repo,
     )
     subscription = testbed.subscription(world.business.id)
     business = world.client()

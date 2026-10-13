@@ -31,6 +31,7 @@ from app.use_cases.shared.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
 )
+from app.use_cases.shared.brand_billing import is_additional_location
 from app.use_cases.shared.subscription_pricing import (
     price_subscription,
     select_subscription_currency,
@@ -134,6 +135,7 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
             request.plan_key,
             request.billing_period,
             currency_code,
+            is_additional_location(self._business_repo, business),
         )
         subscription = SubscriptionDocument(
             business_id=business.id,

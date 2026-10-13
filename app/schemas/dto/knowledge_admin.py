@@ -21,7 +21,10 @@ from app.schemas.typings.knowledge.constrained_integers import (
     KnowledgeSearchLimit,
     ServiceDurationMinutes,
 )
-from app.schemas.typings.knowledge.constrained_strings import KnowledgeTag
+from app.schemas.typings.knowledge.constrained_strings import (
+    KnowledgeShareKey,
+    KnowledgeTag,
+)
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.knowledge.strings import (
     KnowledgeBody,
@@ -181,7 +184,8 @@ class KnowledgeItemDetails(ImmutableDTO):
     A knowledge item as the owner sees it, with the price formatted. Its
     `performer_resource_ids` are every resource linked to it, from either
     side (the item names them, or they list the item as a service or as
-    their room type).
+    their room type). `shared_key`: the brand's shared fact this item
+    replaces in this location (None: an item of the location's own).
     """
 
     id: KnowledgeItemId
@@ -207,6 +211,7 @@ class KnowledgeItemDetails(ImmutableDTO):
     is_active: IsKnowledgeItemActive
     created_at: Microseconds
     updated_at: Microseconds
+    shared_key: KnowledgeShareKey | None = None
 
 
 class KnowledgeItemList(ImmutableDTO):

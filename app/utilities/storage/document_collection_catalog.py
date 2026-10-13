@@ -65,6 +65,7 @@ from app.schemas.typings.storage.constrained_strings import DocumentCollectionNa
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.audit_chain_collections import AUDIT_CHAIN_COLLECTIONS
+from app.utilities.storage.brand_collections import BRAND_COLLECTIONS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
@@ -279,6 +280,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *IDEMPOTENCY_COLLECTIONS,  # Idempotency keys of creating requests (1174).
     *INTEGRATION_COLLECTIONS,  # Webhooks and API keys (1181).
     *AUDIT_CHAIN_COLLECTIONS,  # View counts, chain checkpoints, checks (1193).
+    *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
 )
 
 

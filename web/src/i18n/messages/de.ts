@@ -9,6 +9,7 @@ import { securityFlowDe } from "./sections/security";
 import { helpDe } from "./sections/help";
 import { siteDe } from "./sections/site";
 import { customersSectionDe } from "./sections/customers";
+import { brandsSectionDe } from "./sections/brands";
 import { referralsSectionDe } from "./sections/referrals";
 import { growthSectionDe } from "./sections/growth";
 import { onboardingDe } from "./onboarding/de";
@@ -156,6 +157,8 @@ export const de: Messages = {
     notFoundTitle: "Seite nicht gefunden",
     notFoundDescription: "Die Seite existiert nicht oder Sie haben keinen Zugriff darauf.",
     backHome: "Zu meinen Unternehmen",
+    twoFactorRequired:
+      "Ein Unternehmen hier verlangt vom Team die Anmeldung mit einer Authenticator-App. Richten Sie eine unter Konto → Sicherheit ein, melden Sie sich neu an und versuchen Sie es erneut.",
     codes: {
       not_found: "Nicht gefunden, oder Sie haben keinen Zugriff.",
       validation_failed: "Prüfen Sie die eingegebenen Daten.",
@@ -194,5 +197,6 @@ export const de: Messages = {
   ...siteDe,
   ...customersSectionDe,
   ...referralsSectionDe,
+  ...brandsSectionDe,
   ...growthSectionDe,
 };

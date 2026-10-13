@@ -41,7 +41,8 @@ class QuotePlansUseCase(UseCaseContract[PlanQuoteRequest, PlanQuoteList]):
     without a price-book entry an official exchange rate gives an estimate
     marked `is_estimated`; without either the local price stays empty, so
     no price is ever invented. The annual price is twelve months minus the
-    annual discount.
+    annual discount. Each plan also quotes what a further location of a
+    brand pays a month.
     """
 
     def __init__(
@@ -118,12 +119,21 @@ class QuotePlansUseCase(UseCaseContract[PlanQuoteRequest, PlanQuoteList]):
             exchange_rate,
             display_language,
         )
+        local_location_price: QuotedMoney | None = price_locally(
+            plan.additional_location_monthly_price,
+            self._plan_registry.find_local_additional_location_price(
+                plan.key, local_currency_code
+            ),
+            exchange_rate,
+            display_language,
+        )
         is_rate_used: bool = any(
             quoted_money is not None and quoted_money.is_estimated
             for quoted_money in (
                 local_monthly_price,
                 local_setup_fee,
                 local_overage_price,
+                local_location_price,
             )
         )
         quote = PlanQuote(
@@ -167,6 +177,10 @@ class QuotePlansUseCase(UseCaseContract[PlanQuoteRequest, PlanQuoteList]):
             setup_options=self._quote_setup_options(
                 plan, local_currency_code, local_setup_fee, display_language
             ),
+            additional_location_price=quote_money(
+                plan.additional_location_monthly_price, False, display_language
+            ),
+            local_additional_location_price=local_location_price,
         )
         return quote, exchange_rate if is_rate_used else None
 

@@ -115,6 +115,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         Factory(
             ListContactsUseCase,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
+            brand_repo=repositories.brand_repo,
             contact_repo=repositories.contact_repo,
             card_repo=repositories.contact_repo,
             contact_activity_repo=repositories.contact_activity_repo,
@@ -130,6 +131,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         Factory(
             GetContactUseCase,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
+            brand_repo=repositories.brand_repo,
             contact_repo=repositories.contact_repo,
             contact_activity_repo=repositories.contact_activity_repo,
             customer_history_repo=repositories.customer_history_repo,

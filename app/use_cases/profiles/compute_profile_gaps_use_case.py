@@ -3,6 +3,9 @@ from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.booking_repositories import (
     UnansweredQuestionRepoContract,
 )
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -28,6 +31,7 @@ from app.schemas.typings.assistants.strings import GapDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LocalizedTextValue
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
 from app.utilities.knowledge.profile_texts import GAP_TEXTS
 
@@ -47,6 +51,7 @@ class ComputeProfileGapsUseCase(UseCaseContract[ProfileGapsQuery, ProfileGapsVie
         business_repo: BusinessRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         unanswered_question_repo: UnansweredQuestionRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
@@ -55,6 +60,9 @@ class ComputeProfileGapsUseCase(UseCaseContract[ProfileGapsQuery, ProfileGapsVie
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._unanswered_question_repo: UnansweredQuestionRepoContract = (
             unanswered_question_repo
@@ -79,7 +87,9 @@ class ComputeProfileGapsUseCase(UseCaseContract[ProfileGapsQuery, ProfileGapsVie
             template=template,
             business=business,
             profile=self._business_profile_repo.get_by_business(business.id),
-            knowledge_items=self._knowledge_item_repo.list_by_business(business.id),
+            knowledge_items=load_active_knowledge(
+                self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+            ),
             resources=self._resource_repo.list_by_business(business.id),
         )
         questions_by_key: dict[QuestionKey, QuestionDefinition] = {

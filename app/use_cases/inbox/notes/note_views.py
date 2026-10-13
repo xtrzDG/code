@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 from app.contracts.repositories.user_repositories import UserRepoContract
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessMember
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.inbox.conversation_notes import ConversationNoteView
@@ -28,13 +28,14 @@ def author_names(
 
 
 def can_delete_note(
-    business: BusinessDocument,
+    team: Sequence[BusinessMember],
     viewer: UserId,
     note: ConversationNoteDocument,
 ) -> bool:
-    """The author deletes their own note; an owner deletes any."""
+    """The author deletes their own note; an owner (a brand owner too, see
+    `business_team`) deletes any."""
 
-    return note.author_user_id == viewer or is_owner(business, viewer)
+    return note.author_user_id == viewer or is_owner(team, viewer)
 
 
 def build_note_view(

@@ -13,17 +13,20 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 def auto_assign_candidates(
     members: Sequence[BusinessMember],
+    team: Sequence[BusinessMember],
     chosen: Sequence[UserId],
 ) -> list[UserId]:
     """
-    The members who take turns, in a stable order: the chosen ones that are
-    still members (in the chosen order); without a choice every staff
-    member, or the owners when the business has no staff.
+    The people who take turns, in a stable order: the chosen ones still in
+    the `team` acting in the business (its members and the brand's team
+    that reaches it), in the chosen order; without a choice every staff
+    member of the business's own `members`, or its owners when it has no
+    staff (a brand's team takes turns only when the owner chose them).
     """
 
-    member_ids: list[UserId] = [member.user_id for member in members]
+    team_ids: set[UserId] = {member.user_id for member in team}
     if chosen:
-        return [user_id for user_id in dict.fromkeys(chosen) if user_id in member_ids]
+        return [user_id for user_id in dict.fromkeys(chosen) if user_id in team_ids]
 
     staff: list[UserId] = [
         member.user_id for member in members if member.role is BusinessMemberRole.STAFF

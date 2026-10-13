@@ -98,6 +98,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AuthorizeBusinessAccessUseCase,
         business_repo=repositories.business_repo,
+        brand_repo=repositories.brand_repo,
         session_assurance=utilities.session_assurance,
         authorize_support_access=authorize_support_access_use_case,
     )
@@ -179,6 +180,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             GetCurrentUserUseCase,
             user_repo=repositories.user_repo,
             business_repo=repositories.business_repo,
+            brand_repo=repositories.brand_repo,
             user_view_transformer=transformers.user_view_transformer,
             session_assurance=utilities.session_assurance,
             platform_admins=registries.platform_admin_registry,
@@ -217,6 +219,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListMyBusinessesUseCase,
         business_repo=repositories.business_repo,
+        brand_repo=repositories.brand_repo,
         user_repo=repositories.user_repo,
         business_view_transformer=transformers.business_view_transformer,
     )
@@ -224,6 +227,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         Factory(
             GetBusinessUseCase,
             authorize_business_access=authorize_business_access_use_case,
+            brand_repo=repositories.brand_repo,
             user_repo=repositories.user_repo,
             business_view_transformer=transformers.business_view_transformer,
         )
@@ -235,6 +239,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=authorize_business_access_use_case,
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
+        brand_repo=repositories.brand_repo,
         phone_number_parser=utilities.phone_number_parser,
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
@@ -248,6 +253,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=authorize_business_access_use_case,
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
+        brand_repo=repositories.brand_repo,
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
@@ -260,6 +266,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=authorize_business_access_use_case,
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
+        brand_repo=repositories.brand_repo,
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,

@@ -18,6 +18,7 @@ from app.contracts.notifications import (
     StaffAlertTextsContract,
 )
 from app.contracts.platform_admins import PlatformAdminRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -54,6 +55,7 @@ from app.use_cases.authorize_support_access_use_case import (
     AuthorizeSupportAccessUseCase,
 )
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_repo
 
 HOUR_MICROSECONDS: int = 60 * 60 * 1_000_000
 
@@ -95,11 +97,13 @@ def build_authorize_business_access(
     app_settings: AppSettings = ACCESS_SETTINGS,
     grant_repo: SupportAccessGrantRepoContract | None = None,
     platform_admins: PlatformAdminRegistryContract | None = None,
+    brand_repo: BrandRepoContract | None = None,
 ) -> AuthorizeBusinessAccessUseCase:
     """The production access check over these repositories."""
 
     return AuthorizeBusinessAccessUseCase(
         business_repo=business_repo,
+        brand_repo=brand_repo or in_memory_brand_repo(),
         session_assurance=session_assurance,
         authorize_support_access=AuthorizeSupportAccessUseCase(
             user_repo=user_repo,

@@ -16,6 +16,9 @@ from app.containers.adapters.analytics_collections_container import (
 from app.containers.adapters.audit_chain_collections_container import (
     AuditChainCollectionsContainer,
 )
+from app.containers.adapters.brand_collections_container import (
+    BrandCollectionsContainer,
+)
 from app.containers.adapters.calendar_sync_collections_container import (
     CalendarSyncCollectionsContainer,
 )
@@ -134,6 +137,7 @@ COLLECTION_CONTAINERS = (
     IntegrationCollectionsContainer,
     # The audit log's view counts, chain checkpoints and checks (1193).
     AuditChainCollectionsContainer,
+    BrandCollectionsContainer,  # Brands and their shared knowledge (1192).
 )
 
 

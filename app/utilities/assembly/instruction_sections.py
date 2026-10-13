@@ -141,12 +141,23 @@ OPTIONAL_BOOKING_RULES: tuple[tuple[AssistantToolName, str], ...] = (
 )
 
 
+SISTER_LOCATION_RULE: str = (
+    "- When nothing is free and check_availability lists sister_locations, "
+    "offer the brand's other location: its name, address and free times, and "
+    "its chat link or phone. You cannot book there yourself."
+)
+
+
 def build_booking_section(
     tools: Sequence[AssistantToolName],
     country_name: str,
     timezone_name: str,
+    has_sister_locations: bool = False,
 ) -> list[str]:
-    """Booking procedure, or how a request is taken when the version cannot book."""
+    """
+    Booking procedure, or how a request is taken when the version cannot
+    book; a brand's location also offers its sister locations.
+    """
 
     phone_rule: str = (
         "- Accept phone numbers of any country; a number without a country "
@@ -178,6 +189,7 @@ def build_booking_section(
         "notice, deposit and cancellation policy.",
         "- Use cancel_booking and reschedule_booking to change existing bookings.",
         *(rule for tool, rule in OPTIONAL_BOOKING_RULES if tool in tools),
+        *([SISTER_LOCATION_RULE] if has_sister_locations else []),
         time_rule,
         "- For larger groups, banquets, corporate events and other non-standard "
         "requests, collect the details with create_lead.",

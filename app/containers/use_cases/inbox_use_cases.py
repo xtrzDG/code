@@ -133,6 +133,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListInboxAssigneesUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         conversation_repo=repositories.conversation_repo,
         user_repo=repositories.user_repo,
     )
@@ -141,6 +142,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AssignConversationUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         conversation_repo=repositories.conversation_repo,
         audit_log_repo=repositories.audit_log_repo,
         live_events=facilitators.event_publisher,
@@ -151,6 +153,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AutoAssignConversationUseCase,
         business_repo=repositories.business_repo,
+        brand_repo=repositories.brand_repo,
         conversation_repo=repositories.conversation_repo,
         inbox_settings_repo=repositories.inbox_settings_repo,
         audit_log_repo=repositories.audit_log_repo,
@@ -177,6 +180,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         UpdateInboxSettingsUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         inbox_settings_repo=repositories.inbox_settings_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
@@ -199,6 +203,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListConversationNotesUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         conversation_repo=repositories.conversation_repo,
         note_repo=repositories.conversation_note_repo,
         user_repo=repositories.user_repo,
@@ -210,6 +215,7 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         DeleteConversationNoteUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         note_repo=repositories.conversation_note_repo,
         audit_log_repo=repositories.audit_log_repo,
         live_events=facilitators.event_publisher,

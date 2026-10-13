@@ -6,6 +6,7 @@ masked phone ("+995 ••• ••• •34") that is still enough to recognis
 caller.
 """
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.customer_repositories import (
     CustomerSettingsRepoContract,
 )
@@ -17,6 +18,7 @@ from app.schemas.typings.contacts.booleans import StaffSeesCustomerPhones
 from app.schemas.typings.contacts.strings import MaskedPhoneNumber
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.brand_reach import acting_role
 
 MASK: str = "•"
 # Digits kept at the start (after "+") and at the end of a masked phone.
@@ -24,24 +26,18 @@ SHOWN_LEADING_DIGITS: int = 3
 SHOWN_TRAILING_DIGITS: int = 2
 
 
-def member_role(
-    business: BusinessDocument, user_id: UserId
-) -> BusinessMemberRole | None:
-    """The person's role in the business; None for platform support."""
-
-    for member in business.members:
-        if member.user_id == user_id:
-            return member.role
-
-    return None
-
-
 def sees_phone_numbers(
+    brand_repo: BrandRepoContract,
     business: BusinessDocument,
     user_id: UserId,
     settings_repo: CustomerSettingsRepoContract,
 ) -> StaffSeesCustomerPhones:
-    role: BusinessMemberRole | None = member_role(business, user_id)
+    """
+    By the role the person acts with (a brand's owner as an owner, its
+    regional manager as staff); None for platform support.
+    """
+
+    role: BusinessMemberRole | None = acting_role(brand_repo, business, user_id)
     if role is BusinessMemberRole.OWNER:
         return True
 

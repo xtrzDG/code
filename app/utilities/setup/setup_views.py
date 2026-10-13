@@ -2,10 +2,16 @@
 
 from collections.abc import Sequence
 
+from typed_time_provider import Microseconds
+
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.niches import ProfileWizardStep
-from app.schemas.constants.setup import SetupActionTarget, SetupStepStatus
+from app.schemas.constants.setup import (
+    ActivationEventKind,
+    SetupActionTarget,
+    SetupStepStatus,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.setup import ActivationEventDocument
@@ -159,3 +165,16 @@ def milestone_views(
         )
         for event in events
     ]
+
+
+def went_live_at(events: Sequence[ActivationEventDocument]) -> Microseconds | None:
+    """When the business first went live, or None."""
+
+    return next(
+        (
+            event.occurred_at
+            for event in events
+            if event.kind is ActivationEventKind.WENT_LIVE
+        ),
+        None,
+    )

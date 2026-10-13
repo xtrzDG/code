@@ -26,6 +26,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.use_cases.shared.billing_records import is_trial_available
+from app.use_cases.shared.brand_billing import is_additional_location
 from app.use_cases.shared.trial_subscriptions import open_trial_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -102,6 +103,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             plan_key,
             input_data.request.billing_period,
             now,
+            is_additional_location(self._business_repo, business),
         )
         self._product_events.record(
             billing_event(ProductEventName.TRIAL_STARTED, trial, input_data.user_id)

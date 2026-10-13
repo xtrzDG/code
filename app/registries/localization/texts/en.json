@@ -198,7 +198,7 @@
     "plans.voice_and_chat.name": "Voice + chat",
     "plans.voice_and_chat.description": "400 call minutes and 1,500 dialogs a month: phone calls plus every messaging channel. For restaurants, hotels, clinics, entertainment and car services.",
     "plans.plus.name": "Plus",
-    "plans.plus.description": "1,000 call minutes and 3,000 dialogs a month. For busy restaurants, hotels, clinics and real estate agencies that get many calls and messages every day.",
+    "plans.plus.description": "1,000 call minutes and 3,000 dialogs a month. For busy restaurants and hotels, chains of 2–3 locations and real estate agencies: a chain pays one setup fee, and each further location a lower monthly price.",
     "forwarding.codes.no_answer": "Forward calls you do not answer.",
     "forwarding.codes.busy": "Forward calls while the line is busy.",
     "forwarding.codes.unreachable": "Forward calls while the phone is off or out of coverage.",

@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.data_tasks import DataTaskRegistryContract, DataTaskStateRepoContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.contact_activity_repositories import (
     ContactActivityRepoContract,
@@ -85,7 +86,9 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
         phone_number_parser: PhoneNumberParserContract,
         data_task_registry: DataTaskRegistryContract,
         data_task_state_repo: DataTaskStateRepoContract,
+        brand_repo: BrandRepoContract,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -115,7 +118,7 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
             )
         )
         sees_phones: bool = sees_phone_numbers(
-            business, input_data.user_id, self._customer_settings_repo
+            self._brand_repo, business, input_data.user_id, self._customer_settings_repo
         )
         now: Microseconds = self._wall_clock.now_unix()
         self._audit_log_repo.append(

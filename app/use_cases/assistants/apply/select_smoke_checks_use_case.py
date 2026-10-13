@@ -4,6 +4,9 @@ from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
@@ -18,6 +21,7 @@ from app.schemas.dto.niches import NicheTemplate
 from app.schemas.dto.setup.apply_changes import AppliedVersion
 from app.schemas.dto.setup.pending_changes import PendingChange
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.assembly.autotest_scenarios import list_applicable_kinds
 from app.utilities.assembly.fact_diff import diff_fact_tables
 from app.utilities.assembly.fact_formatting import compute_local_date
@@ -41,6 +45,7 @@ class SelectSmokeChecksUseCase(
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -49,6 +54,9 @@ class SelectSmokeChecksUseCase(
             assistant_version_repo
         )
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -87,8 +95,10 @@ class SelectSmokeChecksUseCase(
             version.default_language,
             {
                 str(item.title)
-                for item in self._knowledge_item_repo.list_by_business(business.id)
-                if item.is_active and item.price_minor is not None
+                for item in load_active_knowledge(
+                    self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+                )
+                if item.price_minor is not None
             },
         )
 

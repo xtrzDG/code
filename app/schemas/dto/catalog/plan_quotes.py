@@ -105,7 +105,9 @@ class PlanQuote(ImmutableDTO):
     Local prices are None when neither the price book nor an official rate
     knows the currency: prices are never invented. `setup_fee` is the
     DONE_FOR_YOU setup fee; `setup_options` prices both ways of being set
-    up (the owner alone in the cabinet is free).
+    up (the owner alone in the cabinet is free). A brand (a chain) pays the
+    plan price and one setup fee for its first location, and
+    `additional_location_price` a month for each further one.
     """
 
     plan_key: PlanKey
@@ -129,6 +131,8 @@ class PlanQuote(ImmutableDTO):
     setup_options: list[SetupOptionQuote] = Field(
         default_factory=list[SetupOptionQuote]
     )
+    additional_location_price: QuotedMoney
+    local_additional_location_price: QuotedMoney | None = None
 
 
 class PlanQuoteList(ImmutableDTO):

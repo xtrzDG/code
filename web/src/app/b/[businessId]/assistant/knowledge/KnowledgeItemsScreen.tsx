@@ -7,6 +7,7 @@ import { Alert, Button, ButtonLink, Card, ConfirmDialog, EmptyState, ErrorState,
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
+import { BrandSharedAnswers } from "./_components/items/BrandSharedAnswers";
 import { KnowledgeGroups } from "./_components/items/KnowledgeGroups";
 import { KnowledgeSearch } from "./_components/items/KnowledgeSearch";
 import { KnowledgeToolbar } from "./_components/items/KnowledgeToolbar";
@@ -17,7 +18,8 @@ import { useKnowledgeItems } from "./_lib/useKnowledgeItems";
 /**
  * Knowledge -> Items: everything the assistant knows, by kind, with search
  * and editing. The list is paged and filtered by the API; loaded items are
- * grouped by kind and sorted by title.
+ * grouped by kind and sorted by title. A location of a brand also sees the
+ * answers its brand shares and writes its own where they differ.
  */
 export function KnowledgeItemsScreen() {
   const { t, tp } = useI18n();
@@ -95,6 +97,13 @@ export function KnowledgeItemsScreen() {
           </div>
         )}
       </Card>
+
+      {business.brand_id ? (
+        <BrandSharedAnswers
+          onOpenOwn={list.openById}
+          onCreated={(item) => list.openEditor({ mode: "edit", id: item.id, item })}
+        />
+      ) : null}
 
       {editor ? (
         <KnowledgeItemEditor key={editor.key} target={editor.target} kinds={kinds} onClose={list.closeEditor} onSaved={list.onSaved} />

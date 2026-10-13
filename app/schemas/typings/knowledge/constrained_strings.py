@@ -11,6 +11,21 @@ class KnowledgeAttributeKey(BaseConstrainedTypedString):
     pattern = r"^[a-z][a-z0-9_]*$"
 
 
+class KnowledgeShareKey(BaseConstrainedTypedString):
+    """
+    The key that ties a location's knowledge item to a brand's shared one:
+    a location item with the brand item's key replaces it in that
+    location's assistant ("parking", "delivery-zone").
+
+    Example:
+        key = KnowledgeShareKey("parking")
+    """
+
+    min_length = 1
+    max_length = 64
+    pattern = r"^[a-z0-9][a-z0-9_\-]*$"
+
+
 class KnowledgeTag(BaseConstrainedTypedString):
     """
     Lower-case tag of a knowledge item ("vegetarian", "kids", "gluten-free").

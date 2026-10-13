@@ -189,6 +189,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         GetDashboardStatsUseCase,
         business_repo=repositories.business_repo,
+        brand_repo=repositories.brand_repo,
         business_profile_repo=repositories.business_profile_repo,
         schedule_exception_repo=repositories.schedule_exception_repo,
         conversation_repo=repositories.conversation_repo,

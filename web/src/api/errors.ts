@@ -235,6 +235,15 @@ export type ReasonMessages = Readonly<Record<string, ReasonMessage>>;
 /** Codes whose backend message helps the user fix the input (shown as a detail line). */
 const CODES_WITH_USEFUL_DETAIL: ReadonlySet<ApiErrorCode> = new Set(["validation_failed", "conflict"]);
 
+/**
+ * A refusal because a business asks its team for two factors and this
+ * session was signed in with the login code alone (403 `mfa_required`):
+ * the person needs an authenticator, not other rights.
+ */
+export function needsTwoFactors(error: ApiError): boolean {
+  return error.status === 403 && error.reasons.some((reason) => reason.code === "mfa_required");
+}
+
 export function errorMessageKey(error: ApiError, overrides?: ErrorMessageOverrides): MessageKey {
   return overrides?.[error.code] ?? ERROR_MESSAGE_KEYS[error.code];
 }
@@ -273,6 +282,9 @@ export function describeError(
     }
   }
   const overridden = overrides?.[apiError.code] !== undefined;
+  if (!overridden && needsTwoFactors(apiError)) {
+    return { title: t("errors.twoFactorRequired"), detail: null, requestId: null };
+  }
   return {
     title: t(errorMessageKey(apiError, overrides)),
     detail: !overridden && CODES_WITH_USEFUL_DETAIL.has(apiError.code) ? apiError.detail : null,

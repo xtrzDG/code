@@ -1,3 +1,6 @@
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -5,6 +8,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.knowledge import KnowledgeSearchRequest, KnowledgeSearchResult
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.knowledge.knowledge_item_views import to_item_view
 from app.utilities.knowledge.ranking.lexical_ranking import rank_knowledge_items
 from app.utilities.knowledge.ranking.ranked_item import RankedItem
@@ -30,9 +34,13 @@ class SearchKnowledgeUseCase(
         self,
         business_repo: BusinessRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
 
     def run(self, input_data: KnowledgeSearchRequest) -> KnowledgeSearchResult:
         business: BusinessDocument | None = self._business_repo.get(
@@ -43,8 +51,9 @@ class SearchKnowledgeUseCase(
 
         active_items: list[KnowledgeItemDocument] = [
             item
-            for item in self._knowledge_item_repo.list_by_business(business.id)
-            if item.is_active
+            for item in load_active_knowledge(
+                self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+            )
         ]
         ranked_items: list[RankedItem] = rank_knowledge_items(
             query=input_data.query,

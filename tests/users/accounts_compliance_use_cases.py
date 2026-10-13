@@ -41,6 +41,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.media.media_fakes import InMemoryMediaStorage
 from tests.privacy.processor_erasure_doubles import ProcessorErasureBed
 from tests.privacy.suppression_doubles import build_suppression_list
@@ -116,6 +117,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         )
         self.list_contacts = ListContactsUseCase(
             authorize_business_access=self.authorize_business_access,
+            brand_repo=in_memory_brand_repo(),
             contact_repo=self.contact_repo,
             card_repo=self.contact_repo,
             contact_activity_repo=self.contact_activity_repo,
@@ -128,6 +130,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         )
         self.get_contact = GetContactUseCase(
             authorize_business_access=self.authorize_business_access,
+            brand_repo=in_memory_brand_repo(),
             contact_repo=self.contact_repo,
             contact_activity_repo=self.contact_activity_repo,
             customer_history_repo=self.customer_history_repo,
