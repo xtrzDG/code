@@ -6,10 +6,10 @@
  * support team's WhatsApp, Telegram and e-mail.
  */
 
-import Link from "next/link";
 import { useId } from "react";
 
 import { IconHelp, IconPulse, IconSparkles } from "@/components/icons";
+import { IntentLink } from "@/components/ui/IntentLink";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { unreadKeys } from "@/lib/help/changelog";
@@ -44,11 +44,11 @@ export function HelpSupportSection({ rowClassName, onNavigate }: { rowClassName:
       <p id={titleId} className="px-2.5 pt-0.5 pb-1 text-xs font-medium text-ink-subtle">
         {t("helpCenter.support.title")}
       </p>
-      <Link href={HELP_PATH} onClick={onNavigate} className={rowClassName}>
+      <IntentLink href={HELP_PATH} onClick={onNavigate} className={rowClassName}>
         <IconHelp className="size-4 shrink-0" aria-hidden />
         {t("helpCenter.support.center")}
-      </Link>
-      <Link href={WHATS_NEW_PATH} onClick={onNavigate} className={rowClassName}>
+      </IntentLink>
+      <IntentLink href={WHATS_NEW_PATH} onClick={onNavigate} className={rowClassName}>
         <IconSparkles className="size-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1">{t("helpCenter.support.whatsNew")}</span>
         {unread > 0 ? (
@@ -57,11 +57,11 @@ export function HelpSupportSection({ rowClassName, onNavigate }: { rowClassName:
             {tp("helpCenter.support.unread", unread)}
           </span>
         ) : null}
-      </Link>
-      <Link href={STATUS_PATH} onClick={onNavigate} className={rowClassName}>
+      </IntentLink>
+      <IntentLink href={STATUS_PATH} onClick={onNavigate} className={rowClassName}>
         <IconPulse className="size-4 shrink-0" aria-hidden />
         {t("helpCenter.support.status")}
-      </Link>
+      </IntentLink>
       <SupportContacts rowClassName={rowClassName} />
     </section>
   );

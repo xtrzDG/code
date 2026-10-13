@@ -8,7 +8,6 @@
  * the backdrop close it.
  */
 
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
@@ -16,6 +15,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { IconChevronRight, IconX } from "../icons";
+import { IntentLink } from "../ui/IntentLink";
 import { useClosingContent } from "../ui/useClosingContent";
 import { useModalDialog } from "../ui/useModalDialog";
 import { AccountPanel } from "./AccountPanel";
@@ -38,7 +38,7 @@ function MoreLinks({ items, onNavigate }: { items: readonly ShellNavItem[]; onNa
             <ul className="overflow-hidden rounded-2xl border border-line bg-surface">
               {pages.map((page, index) => (
                 <li key={page.href} className={cn(index > 0 && "border-t border-line")}>
-                  <Link
+                  <IntentLink
                     href={page.href}
                     onClick={onNavigate}
                     aria-current={page.isActive ? "page" : undefined}
@@ -50,7 +50,7 @@ function MoreLinks({ items, onNavigate }: { items: readonly ShellNavItem[]; onNa
                     <span className="min-w-0 flex-1 py-2 [overflow-wrap:anywhere]">{page.label}</span>
                     <NavBadge count={page.badge ?? 0} />
                     <IconChevronRight className="size-4 shrink-0 text-ink-subtle rtl:-scale-x-100" aria-hidden />
-                  </Link>
+                  </IntentLink>
                 </li>
               ))}
             </ul>

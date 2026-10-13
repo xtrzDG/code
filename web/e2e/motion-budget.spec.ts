@@ -171,11 +171,12 @@ test.describe("with full motion", () => {
     for (const reading of readings) {
       expect(reading.interactions, "the taps were measured").toBeGreaterThanOrEqual(9);
     }
-    expect(inp, `INP, the median of the rounds: ${rounds}`).toBeLessThan(INP_BUDGET_MS);
-    expect(readings.flatMap((reading) => reading.shifts), "layout shifts (CLS)").toEqual([]);
+    // Each budget is checked on every run: one over its budget never hides another.
+    expect.soft(readings.flatMap((reading) => reading.shifts), "layout shifts (CLS)").toEqual([]);
     const last = readings[readings.length - 1];
-    expect(last?.moved.length, "things move with full motion").toBeGreaterThan(0);
-    expect(last?.viewTransitions, "the row's customer morphs into the conversation header").toBeGreaterThan(0);
+    expect.soft(last?.moved.length, "things move with full motion").toBeGreaterThan(0);
+    expect.soft(last?.viewTransitions, "the row's customer morphs into the conversation header").toBeGreaterThan(0);
+    expect.soft(inp, `INP, the median of the rounds: ${rounds}`).toBeLessThan(INP_BUDGET_MS);
   });
 });
 
