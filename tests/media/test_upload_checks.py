@@ -8,8 +8,12 @@ import struct
 
 import pytest
 
+from app.schemas.constants.media import AttachmentKind
 from app.schemas.exceptions.media_errors import MalformedMediaFileError
-from app.schemas.typings.media.constrained_strings import MessageMediaType
+from app.schemas.typings.media.constrained_strings import (
+    DeclaredMediaType,
+    MessageMediaType,
+)
 from app.schemas.typings.media.strings import DeclaredUploadType
 from app.utilities.media.exif_orientation import (
     orientation_only_exif,
@@ -18,28 +22,31 @@ from app.utilities.media.exif_orientation import (
 from app.utilities.media.jpeg_metadata import strip_jpeg_metadata
 from app.utilities.media.png_metadata import strip_png_metadata
 from app.utilities.media.upload_checks import (
-    measure_voice_note,
+    UPLOAD_KINDS,
+    accepted_upload_type,
     read_declared_type,
-    upload_kind_of,
 )
+from app.utilities.media.voice_note_length import measure_voice_note
 from app.utilities.media.webm_audio import read_webm_audio_seconds
 from app.utilities.media.webp_metadata import strip_webp_metadata
-from tests.media.media_fakes import ogg_opus_bytes
+from tests.media.mp4_files import mp4_recording
+from tests.media.recording_files import (
+    UNKNOWN_SIZE,
+    VIDEO_TRACK,
+    ebml,
+    ogg_opus_recording,
+    ogg_theora_bytes,
+    uint,
+    webm_recording,
+)
 from tests.media.upload_files import (
     COMMENT_TEXT,
     DEVICE_TEXT,
     GPS_TEXT,
-    UNKNOWN_SIZE,
-    VIDEO_TRACK,
-    ebml,
     exif_payload,
     jpeg_photo,
-    mp4_recording,
-    ogg_theora_bytes,
     png_chunk,
     png_photo,
-    uint,
-    webm_recording,
     webp_photo,
 )
 
@@ -127,11 +134,6 @@ class TestPngAndWebp:
 
 
 class TestRecordings:
-    def test_webm_length_from_its_blocks_or_its_header(self) -> None:
-        assert read_webm_audio_seconds(webm_recording(8)) == 8
-        assert read_webm_audio_seconds(webm_recording(37)) == 37
-        assert read_webm_audio_seconds(webm_recording(12, header_duration=True)) == 12
-
     def test_webm_with_video_or_of_another_kind_is_not_a_voice_note(self) -> None:
         with_video = webm_recording(5, track_types=(2, VIDEO_TRACK))
         matroska = webm_recording(5, doc_type=b"matroska")
@@ -145,7 +147,8 @@ class TestRecordings:
     def test_a_recording_cut_at_its_end_still_counts(self) -> None:
         recording = webm_recording(6)
 
-        assert read_webm_audio_seconds(recording[:-4]) in (0, 6)
+        # The cut last block is dropped; the first one's 20 ms still count.
+        assert read_webm_audio_seconds(recording[:-4]) == 1
 
     def test_every_browser_container_is_measured_and_video_refused(self) -> None:
         webm = MessageMediaType("audio/webm")
@@ -153,31 +156,37 @@ class TestRecordings:
         mp4 = MessageMediaType("audio/mp4")
 
         assert measure_voice_note(webm_recording(4), webm) == 4
-        assert measure_voice_note(ogg_opus_bytes(seconds=3), ogg) == 3
+        assert measure_voice_note(ogg_opus_recording(3), ogg) == 3
         assert measure_voice_note(mp4_recording(11), mp4) == 11
         assert measure_voice_note(ogg_theora_bytes(), ogg) is None
         assert measure_voice_note(mp4_recording(5, (b"vide",)), mp4) is None
         assert measure_voice_note(mp4_recording(5, (b"soun", b"vide")), mp4) is None
+        assert (
+            measure_voice_note(webm_recording(4), MessageMediaType("audio/wav")) is None
+        )
 
 
 class TestDeclaredTypes:
     def test_parameters_and_case_are_ignored(self) -> None:
-        assert read_declared_type(DeclaredUploadType("Audio/WebM; codecs=opus")) == (
-            "audio/webm"
-        )
+        declared = read_declared_type(DeclaredUploadType("Audio/WebM; codecs=opus"))
+
+        assert declared == DeclaredMediaType("audio/webm")
         assert read_declared_type(DeclaredUploadType(";")) is None
+        assert read_declared_type(DeclaredUploadType("not a type")) is None
         assert read_declared_type(None) is None
 
-    def test_only_photos_and_voice_notes_have_a_kind(self) -> None:
-        kinds = [
-            upload_kind_of(kind)
-            for kind in ("image/jpeg", "image/webp", "audio/ogg", "image/gif", None)
+    def test_only_photos_and_voice_notes_are_taken(self) -> None:
+        accepted = [
+            accepted_upload_type(DeclaredMediaType(kind))
+            for kind in ("image/jpeg", "image/webp", "audio/ogg", "image/gif")
         ]
 
-        assert [kind.value if kind else None for kind in kinds] == [
-            "image",
-            "image",
-            "audio",
-            None,
+        assert accepted == [
+            MessageMediaType("image/jpeg"),
+            MessageMediaType("image/webp"),
+            MessageMediaType("audio/ogg"),
             None,
         ]
+        assert accepted_upload_type(None) is None
+        assert all(isinstance(kind, MessageMediaType) for kind in UPLOAD_KINDS)
+        assert UPLOAD_KINDS[MessageMediaType("audio/mp4")] is AttachmentKind.AUDIO

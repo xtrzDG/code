@@ -84600,7 +84600,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a visitor message typed into the widget. `source` is where\nthe visitor came from as the widget read it (data-source, `?src=` or\n`?utm_source=` of the page); a conversation the message starts keeps it.\n`attachment_ids` name the photos and voice notes the visitor uploaded\nfor this message (POST .../attachments, at most four); a message with\nattachments may have no text.",
+                "description": "HTTP body of a visitor message typed into the widget. `source` is where\nthe visitor came from as the widget read it (data-source, `?src=` or\n`?utm_source=` of the page); a conversation the message starts keeps it.\n`attachment_ids` name the photos and voice notes the visitor uploaded\nfor this message (POST .../attachments, at most four); a message with\nattachments may have no text. An upload that is gone (not this\nvisitor's, over a day old) is refused with 422 `attachment_unavailable`,\none that already went with a message with 422 `attachment_already_sent`\n(a retry whose first answer was lost: that message is being answered).",
                 "properties": {
                   "attachment_ids": {
                     "items": {

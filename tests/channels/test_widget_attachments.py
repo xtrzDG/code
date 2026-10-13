@@ -2,7 +2,10 @@
 A website visitor's photo or voice note (POST /v1/widget/{id}/attachments):
 its type is read from its bytes, its size and length are checked by the
 API, photos lose their metadata, uploads are counted before they are read,
-and a file belongs to the visitor who uploaded it.
+and a file belongs to the visitor who uploaded it. Row-level security of
+the uploads (another business's scope sees no row) is proven on Postgres in
+tests/storage/test_widget_uploads_on_storage.py; a voice note's length from
+its audio, with real browsers' recordings, in test_widget_voice_lengths.py.
 """
 
 from typing import Any
@@ -13,15 +16,14 @@ from app.utilities.channels.widget_visitors import widget_visitor_id
 from app.utilities.media.media_paths import WIDGET_UPLOAD_DIRECTORY
 from tests.channels.test_widget import SESSION_KEY
 from tests.channels.widget_upload_bed import OTHER_VISITOR, WidgetUploadBed
-from tests.media.media_fakes import ogg_opus_bytes
+from tests.media.mp4_files import mp4_recording
+from tests.media.recording_files import ogg_opus_recording, webm_recording
 from tests.media.upload_files import (
     COMMENT_TEXT,
     DEVICE_TEXT,
     GPS_TEXT,
     jpeg_photo,
-    mp4_recording,
     png_photo,
-    webm_recording,
     webp_photo,
 )
 
@@ -74,7 +76,7 @@ class TestTypes:
 
         recordings = [
             (webm_recording(8), "audio/webm;codecs=opus"),
-            (ogg_opus_bytes(seconds=5), "audio/ogg"),
+            (ogg_opus_recording(5), "audio/ogg"),
             (mp4_recording(12), "audio/mp4"),
         ]
         views = [bed.upload(*recording).json() for recording in recordings]

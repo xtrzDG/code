@@ -56,7 +56,13 @@ export class FakeMediaWidgetApi extends FakeWidgetApi {
   refuseUploadWith: string | null = null;
   /** The next answer is one of a turn that booked: the thumbs show at once. */
   nextAnswerInvitesRating = false;
+  /** The next message with files is refused (422) with this reason code. */
+  refuseMessageWith: string | null = null;
+  /** The next message with files is queued but its answer never arrives. */
+  loseNextMessageAnswer = false;
   private uploadCount = 0;
+  /** Uploads already sent with a message: a second message is refused. */
+  private claimed = new Set<string>();
 
   constructor() {
     super();
@@ -87,15 +93,39 @@ export class FakeMediaWidgetApi extends FakeWidgetApi {
     }
     const body = request.method() === "POST" ? (JSON.parse(request.postData() ?? "{}") as Record<string, unknown>) : {};
     if (path.endsWith("/messages") && Array.isArray(body.attachment_ids)) {
-      // A message with files: accepted (202) and answered, like the API.
-      this.sentAttachments.push(body.attachment_ids as string[]);
-      this.sessionKeys.push(String(body.session_key));
-      this.add("customer", typeof body.text === "string" ? body.text : "");
-      this.add("assistant", `Answer to ${(body.attachment_ids as string[]).length} file(s)`);
-      await route.fulfill({ status: 202, headers: CORS_HEADERS, json: { event_id: "inbound_event_files" } });
+      await this.messageWithFiles(route, body, body.attachment_ids as string[]);
       return;
     }
     await super.handle(route);
+  }
+
+  /**
+   * A message with files: accepted (202) and answered, like the API; refused
+   * (422) when asked to, or when its files already went with a message.
+   */
+  private async messageWithFiles(route: Route, body: Record<string, unknown>, ids: string[]): Promise<void> {
+    const code = ids.some((id) => this.claimed.has(id)) ? "attachment_already_sent" : this.refuseMessageWith;
+    if (code) {
+      this.refuseMessageWith = null;
+      await route.fulfill({
+        status: 422,
+        headers: CORS_HEADERS,
+        json: { error: "validation_failed", message: "Refused.", reasons: [{ code, message: "Refused.", details: ids }] },
+      });
+      return;
+    }
+    ids.forEach((id) => this.claimed.add(id));
+    this.sentAttachments.push(ids);
+    this.sessionKeys.push(String(body.session_key));
+    this.add("customer", typeof body.text === "string" ? body.text : "");
+    this.add("assistant", `Answer to ${ids.length} file(s)`);
+    if (this.loseNextMessageAnswer) {
+      // Queued, but the connection broke before the widget heard back.
+      this.loseNextMessageAnswer = false;
+      await route.abort("connectionreset");
+      return;
+    }
+    await route.fulfill({ status: 202, headers: CORS_HEADERS, json: { event_id: "inbound_event_files" } });
   }
 
   private async upload(route: Route): Promise<void> {

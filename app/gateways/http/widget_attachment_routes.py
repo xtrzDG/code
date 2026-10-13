@@ -64,14 +64,14 @@ def build_widget_attachment_router(
     """
     Routes (public; the visitor is the X-Widget-Session-Key header):
         POST /v1/widget/{business_id}/attachments
-            One photo (JPEG, PNG, WebP) or voice note (WebM, Ogg, MP4) as
-            the multipart part `file`, for the visitor's next message to
-            name (201, `attachment_id`). Counted and checked (429, 404,
-            409) before the file is read; the file is then refused when
-            its bytes are not the type it was declared as, it is over the
-            cap of its kind or a voice note is too long (422 with the
-            reason's code). Refused to a website the business does not
-            allow (403).
+            One photo (JPEG, PNG, WebP) or voice note (Opus in WebM or Ogg,
+            AAC or Opus in MP4) as the multipart part `file`, for the
+            visitor's next message to name (201, `attachment_id`). Counted
+            and checked (429, 404, 409) before the file is read; the file
+            is then refused when its bytes are not the type it was
+            declared as, it is over the cap of its kind or a voice note is
+            too long, measured from its audio (422 with the reason's
+            code). Refused to a website the business does not allow (403).
     """
 
     router: APIRouter = APIRouter(
@@ -110,7 +110,7 @@ def build_widget_attachment_router(
                 client_ip_address=read_client_ip_address(request),
             ),
         )
-        body: bytes = await read_limited_body(request, int(allowance.max_file_bytes))
+        body: bytes = await read_limited_body(request, allowance.max_file_bytes)
         part: UploadedFilePart = parse_file_part(
             body, request.headers.get("content-type")
         )

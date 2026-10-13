@@ -126,7 +126,10 @@ class WidgetMessageRequest(ImmutableDTO):
     `?utm_source=` of the page); a conversation the message starts keeps it.
     `attachment_ids` name the photos and voice notes the visitor uploaded
     for this message (POST .../attachments, at most four); a message with
-    attachments may have no text.
+    attachments may have no text. An upload that is gone (not this
+    visitor's, over a day old) is refused with 422 `attachment_unavailable`,
+    one that already went with a message with 422 `attachment_already_sent`
+    (a retry whose first answer was lost: that message is being answered).
     """
 
     session_key: WidgetSessionKey

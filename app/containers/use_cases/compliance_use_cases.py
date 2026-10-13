@@ -199,6 +199,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         inbound_event_repo=repositories.inbound_event_repo,
         feedback_request_repo=repositories.feedback_request_repo,
         processor_erasure=facilitators.processor_erasure,
+        widget_upload_repo=repositories.widget_upload_repo,
         waitlist_entry_repo=repositories.waitlist_entry_repo,
         webhook_delivery_repo=repositories.webhook_delivery_repo,
     )

@@ -8,11 +8,11 @@ from app.contracts.repositories.media_repositories import WidgetUploadRepoContra
 from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import InboundEventKind
+from app.schemas.constants.media import WidgetUploadRefusal
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
 from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.conversations import InboundMessage
-from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.use_cases.shared.inbox_queue import queue_inbound_job
@@ -24,6 +24,7 @@ from app.utilities.deliveries.delivery_keys import (
     new_provider_message_id,
 )
 from app.utilities.deliveries.inbox_messages import build_inbound_customer_message
+from app.utilities.media.upload_refusals import upload_refused
 
 
 class QueueWidgetMessageUseCase(
@@ -39,8 +40,9 @@ class QueueWidgetMessageUseCase(
 
     The photos and voice notes the message names are claimed in the same
     transaction, each once and only by its own visitor: of two messages
-    naming one upload, one is queued and the other is refused (404), and
-    the worker reads each file the way it downloads a messenger's.
+    naming one upload, one is queued and the other is refused (422
+    `attachment_already_sent`: the upload went with the first), and the
+    worker reads each file the way it downloads a messenger's.
 
     The request thread never waits for the model, so a burst of visitors or
     a slow provider cannot take the API's threads or database connections.
@@ -121,7 +123,9 @@ class QueueWidgetMessageUseCase(
             ):
                 for claimed_id in claimed:
                     self._widget_upload_repo.release(message.business_id, claimed_id)
-                raise NotFoundError(f"Attachment {upload_id} is not available.")
+                raise upload_refused(
+                    WidgetUploadRefusal.ATTACHMENT_ALREADY_SENT, upload_id
+                )
 
             claimed.append(upload_id)
 

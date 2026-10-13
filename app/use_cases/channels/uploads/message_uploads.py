@@ -5,18 +5,17 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.media_repositories import WidgetUploadRepoContract
+from app.schemas.constants.media import WidgetUploadRefusal
 from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.domain.widget_uploads import WidgetUploadDocument
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
 from app.schemas.typings.channels.prefixed_id import WidgetVisitorId
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.schemas.typings.media.strings import ProviderMediaId, ProviderMediaType
 from app.utilities.channels.widget_visitors import widget_visitor_id
+from app.utilities.media.upload_refusals import upload_refused
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # An upload waits a day for its message; the daily purge removes it after.
@@ -34,10 +33,12 @@ def read_message_uploads(
     The named uploads, in the message's order, each one read in one query.
 
     Raises:
-        ValidationFailedError: an upload named twice.
-        NotFoundError: an upload that is missing, another business's or
-            another visitor's, already attached to a message or older than
-            a day (the same answer for each, so ids cannot be probed).
+        ValidationFailedError: an upload named twice; one of this visitor's
+            uploads already attached to a message (`attachment_already_sent`,
+            a Retry after a lost answer); one that is missing, another
+            business's or another visitor's, or older than a day
+            (`attachment_unavailable`, the same answer for each, so ids
+            cannot be probed).
     """
 
     if len(set(upload_ids)) != len(upload_ids):
@@ -58,10 +59,12 @@ def read_message_uploads(
         if (
             upload is None
             or upload.visitor_id != visitor
-            or upload.attached_at is not None
             or int(upload.created_at) < oldest
         ):
-            raise NotFoundError(f"Attachment {upload_id} is not available.")
+            raise upload_refused(WidgetUploadRefusal.ATTACHMENT_UNAVAILABLE, upload_id)
+
+        if upload.attached_at is not None:
+            raise upload_refused(WidgetUploadRefusal.ATTACHMENT_ALREADY_SENT, upload_id)
 
         uploads.append(upload)
 

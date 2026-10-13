@@ -19,18 +19,22 @@ from app.schemas.typings.media.constrained_integers import (
     MediaByteCount,
     MediaByteLimit,
 )
-from app.schemas.typings.media.constrained_strings import MessageMediaType
+from app.schemas.typings.media.constrained_strings import (
+    DeclaredMediaType,
+    MessageMediaType,
+)
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.utilities.channels.widget_visitors import widget_visitor_id
 from app.utilities.media.media_paths import widget_upload_storage_path
 from app.utilities.media.media_sniffing import sniff_media_type
 from app.utilities.media.upload_checks import (
-    measure_voice_note,
+    UPLOAD_KINDS,
+    accepted_upload_type,
     read_declared_type,
     strip_image_metadata,
-    upload_kind_of,
 )
 from app.utilities.media.upload_refusals import upload_refused
+from app.utilities.media.voice_note_length import measure_voice_note
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -47,9 +51,11 @@ class AcceptWidgetUploadUseCase(
     bytes must say the same type (422 `unsupported_type`,
     `type_mismatch`); it must be within the cap of its kind
     (MEDIA_MAX_IMAGE_BYTES, MEDIA_MAX_VOICE_BYTES: `file_too_large`); a
-    voice note must hold audio only and its length, read from its
-    container, must be at most MEDIA_MAX_VOICE_SECONDS (`voice_too_long`,
-    or `unreadable_file` when it cannot be read); a photo is kept without
+    voice note must hold audio only (Opus in WebM or Ogg, AAC or Opus in
+    MP4) and its length, the longest of what its container claims and
+    what its audio packets hold (`voice_note_length`), must be at most
+    MEDIA_MAX_VOICE_SECONDS (`voice_too_long`, or `unreadable_file` when
+    it cannot be read); a photo is kept without
     its metadata (`unreadable_file` when its structure does not add up).
     The file goes to the media storage, encrypted with the business's key,
     and is bound to the visitor (a one-way id of their key): another
@@ -77,7 +83,7 @@ class AcceptWidgetUploadUseCase(
             else self._media_settings.max_voice_bytes
         )
         if len(content) > int(limit):
-            raise upload_refused(WidgetUploadRefusal.FILE_TOO_LARGE, int(limit))
+            raise upload_refused(WidgetUploadRefusal.FILE_TOO_LARGE, limit)
 
         duration: AudioDurationSeconds | None = None
         if kind is AttachmentKind.AUDIO:
@@ -90,28 +96,30 @@ class AcceptWidgetUploadUseCase(
     def _recognize(
         self, input_data: WidgetUploadCommand
     ) -> tuple[MessageMediaType, AttachmentKind]:
-        declared: str | None = read_declared_type(input_data.declared_type)
-        sniffed: MessageMediaType | None = sniff_media_type(input_data.content)
-        declared_kind: AttachmentKind | None = upload_kind_of(declared)
-        if declared_kind is None:
+        declared: DeclaredMediaType | None = read_declared_type(
+            input_data.declared_type
+        )
+        accepted: MessageMediaType | None = accepted_upload_type(declared)
+        if accepted is None:
             raise upload_refused(WidgetUploadRefusal.UNSUPPORTED_TYPE, declared)
 
-        if sniffed is None or str(sniffed) != declared:
-            raise upload_refused(WidgetUploadRefusal.TYPE_MISMATCH, declared)
+        sniffed: MessageMediaType | None = sniff_media_type(input_data.content)
+        if sniffed != accepted:
+            raise upload_refused(WidgetUploadRefusal.TYPE_MISMATCH, accepted)
 
-        return sniffed, declared_kind
+        return accepted, UPLOAD_KINDS[accepted]
 
     def _measure(
         self, content: bytes, media_type: MessageMediaType
     ) -> AudioDurationSeconds:
         seconds: int | None = measure_voice_note(content, media_type)
         if seconds is None or seconds <= 0:
-            raise upload_refused(WidgetUploadRefusal.UNREADABLE_FILE, str(media_type))
+            raise upload_refused(WidgetUploadRefusal.UNREADABLE_FILE, media_type)
 
         if seconds > int(self._media_settings.max_voice_seconds):
             raise upload_refused(
                 WidgetUploadRefusal.VOICE_TOO_LONG,
-                int(self._media_settings.max_voice_seconds),
+                self._media_settings.max_voice_seconds,
             )
 
         return AudioDurationSeconds(seconds)
@@ -121,7 +129,7 @@ class AcceptWidgetUploadUseCase(
             return strip_image_metadata(content, media_type)
         except MalformedMediaFileError as error:
             raise upload_refused(
-                WidgetUploadRefusal.UNREADABLE_FILE, str(media_type)
+                WidgetUploadRefusal.UNREADABLE_FILE, media_type
             ) from error
 
     def _keep(

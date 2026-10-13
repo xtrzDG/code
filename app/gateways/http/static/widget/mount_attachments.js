@@ -125,11 +125,27 @@
       );
     }
 
+    // The code of the API's first reason (a 422's), or "".
+    function reasonCode(result) {
+      var reasons = result.body && Array.isArray(result.body.reasons) ? result.body.reasons : [];
+      return reasons.length && reasons[0] ? String(reasons[0].code) : "";
+    }
+
+    // A message naming uploads the API no longer has for it: "sent" (they
+    // went with this message's earlier try, whose answer was lost), "gone"
+    // (older than a day: attach them again), "" for any other answer.
+    function attachmentsRefusal(result) {
+      var code = result.status === 422 ? reasonCode(result) : "";
+      if (code === "attachment_already_sent") {
+        return "sent";
+      }
+      return code === "attachment_unavailable" ? "gone" : "";
+    }
+
     // The API's reason (422 with its code), its limits and outages in the
     // visitor's words.
     function uploadErrorText(result) {
-      var reasons = result.body && Array.isArray(result.body.reasons) ? result.body.reasons : [];
-      var code = reasons.length && reasons[0] ? String(reasons[0].code) : "";
+      var code = reasonCode(result);
       if (code === "file_too_large" || result.status === 413) {
         return text("fileTooLarge");
       }

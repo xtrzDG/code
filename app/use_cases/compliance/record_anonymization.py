@@ -5,12 +5,20 @@ is personal goes. Each function returns the record to store, or None when
 there is nothing left to remove (so a repeated purge writes nothing).
 """
 
+from dataclasses import dataclass
+
 from typed_time_provider import Microseconds
 
+from app.contracts.repositories.booking_repositories import (
+    BookingRepoContract,
+    HandoffRepoContract,
+    LeadRepoContract,
+)
 from app.schemas.constants.handoffs import HandoffSummaryCode
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.dto.compliance import ContactRecords
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -110,3 +118,29 @@ def erased_call(
 
     call.updated_at = now
     return call
+
+
+@dataclass(frozen=True)
+class BusinessRecordAnonymizer:
+    """A customer's erasure of their bookings', leads' and handoffs' words."""
+
+    booking_repo: BookingRepoContract
+    lead_repo: LeadRepoContract
+    handoff_repo: HandoffRepoContract
+
+    def anonymize(self, records: ContactRecords, now: Microseconds) -> None:
+        for booking in records.bookings:
+            if (anonymized := anonymized_booking(booking, now)) is not None:
+                self.booking_repo.save(anonymized)
+
+        for lead in records.leads:
+            if (lead_left := anonymized_lead(lead, ERASED_TEXT, now)) is not None:
+                self.lead_repo.save(lead_left)
+
+        for handoff in records.handoffs:
+            # The cabinet shows the code in the reader's language.
+            handoff_left = anonymized_handoff(
+                handoff, ERASED_TEXT, HandoffSummaryCode.DATA_ERASED, now
+            )
+            if handoff_left is not None:
+                self.handoff_repo.save(handoff_left)

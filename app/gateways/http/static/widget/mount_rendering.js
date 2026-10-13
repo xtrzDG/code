@@ -156,7 +156,9 @@
         }
       });
       row.appendChild(message);
-      row.appendChild(retry);
+      if (!item.cannotRetry) {
+        row.appendChild(retry);
+      }
       return row;
     }
 

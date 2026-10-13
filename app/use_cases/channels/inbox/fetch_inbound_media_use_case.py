@@ -43,9 +43,9 @@ from app.utilities.media.attachment_files import (
     attachment_of_stored_media,
     unreadable_attachment,
 )
-from app.utilities.media.audio_duration import read_audio_duration_seconds
 from app.utilities.media.media_paths import derive_message_media_id, media_storage_path
 from app.utilities.media.media_sniffing import kind_of_media_type, sniff_media_type
+from app.utilities.media.voice_note_length import measure_audio_seconds
 
 logger: logging.Logger = logging.getLogger(__name__)
 FILE_KINDS: frozenset[AttachmentKind] = frozenset(
@@ -187,11 +187,6 @@ class FetchInboundMediaUseCase(
             location, StoredMediaFile(content=fetched.content, media_type=media_type)
         )
         now: Microseconds = self._wall_clock.now_unix()
-        measured: int | None = (
-            read_audio_duration_seconds(fetched.content)
-            if attachment.kind is AttachmentKind.AUDIO
-            else None
-        )
         media = MessageMediaDocument(
             id=media_id,
             business_id=business_id,
@@ -200,8 +195,7 @@ class FetchInboundMediaUseCase(
             storage_path=location.path,
             media_type=media_type,
             byte_count=MediaByteCount(len(fetched.content)),
-            duration_seconds=attachment.duration_seconds
-            or (None if measured is None else AudioDurationSeconds(measured)),
+            duration_seconds=voice_note_length(attachment, fetched, media_type),
             created_at=now,
             updated_at=now,
         )
@@ -220,3 +214,24 @@ class FetchInboundMediaUseCase(
             return None
 
         return decrypt_channel_secret(channel, self._secret_cipher)
+
+
+def voice_note_length(
+    attachment: InboundAttachment, fetched: FetchedMedia, media_type: MessageMediaType
+) -> AudioDurationSeconds | None:
+    """
+    The longest of the length the sender stated (a platform's, or the
+    widget upload's own measurement) and the one measured here from the
+    file: a stated length never makes a voice note shorter than it is.
+    """
+
+    if attachment.kind is not AttachmentKind.AUDIO:
+        return None
+
+    measured: int | None = measure_audio_seconds(fetched.content, media_type)
+    lengths: list[int] = [
+        int(seconds)
+        for seconds in (attachment.duration_seconds, measured)
+        if seconds is not None
+    ]
+    return AudioDurationSeconds(max(lengths)) if lengths else None

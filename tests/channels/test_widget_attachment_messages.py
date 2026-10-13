@@ -1,14 +1,17 @@
 """
 A widget message that names uploads: each must be its own visitor's, in
-this business, not sent yet and at most a day old; the worker reads the
-files as it reads a WhatsApp customer's (voice notes transcribed and
-metered, photos kept for the model).
+this business, not sent yet and at most a day old (else 422
+`attachment_unavailable`, or `attachment_already_sent` when it went with
+an earlier message of this visitor); the worker reads the files as it
+reads a WhatsApp customer's (voice notes transcribed and metered, photos
+kept for the model).
 """
 
 import threading
+from typing import Any
 
 from app.schemas.constants.media import AttachmentKind
-from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.use_cases.channels.uploads.message_uploads import (
@@ -20,7 +23,17 @@ from tests.channels.outbox_reads import inbox
 from tests.channels.test_widget import SESSION_KEY, enable_widget
 from tests.channels.widget_upload_bed import OTHER_VISITOR, WidgetUploadBed
 from tests.media.inbound_media_steps import transcription_usage
-from tests.media.upload_files import jpeg_photo, png_photo, webm_recording
+from tests.media.recording_files import webm_recording
+from tests.media.upload_files import jpeg_photo, png_photo
+
+
+def refusal(response: Any) -> tuple[str, list[str]]:
+    """The 422's reason code and details (the upload id it is about)."""
+
+    assert response.status_code == 422, response.text
+    [reason] = response.json()["reasons"]
+    return reason["code"], reason["details"]
+
 
 DAY_SECONDS: int = 24 * 60 * 60
 
@@ -56,7 +69,7 @@ class TestBinding:
 
         stolen = bed.send([photo_id], "look", session_key=OTHER_VISITOR)
 
-        assert stolen.status_code == 404
+        assert refusal(stolen) == ("attachment_unavailable", [photo_id])
         assert bed.stored_upload(photo_id).attached_at is None
         assert inbox(bed.testbed) == []
 
@@ -67,27 +80,30 @@ class TestBinding:
         first = bed.send([photo_id], "first")
         again = bed.send([photo_id], "again")
 
-        assert (first.status_code, again.status_code) == (202, 404)
+        # The widget's Retry after a lost answer learns the first one went.
+        assert first.status_code == 202
+        assert refusal(again) == ("attachment_already_sent", [photo_id])
         assert len(inbox(bed.testbed)) == 1
 
-    def test_an_upload_of_another_business_is_not_found(self) -> None:
+    def test_an_upload_of_another_business_is_unavailable(self) -> None:
         bed = WidgetUploadBed()
         other_business = enable_widget(bed.testbed)
         photo_id = bed.uploaded_id(png_photo(), "image/png")
 
         response = bed.send([photo_id], "hi", business_id=other_business.id)
 
-        assert response.status_code == 404
+        assert refusal(response) == ("attachment_unavailable", [photo_id])
         assert bed.stored_upload(photo_id).attached_at is None
 
-    def test_an_upload_older_than_a_day_is_not_found(self) -> None:
+    def test_an_upload_older_than_a_day_is_unavailable(self) -> None:
         bed = WidgetUploadBed()
         photo_id = bed.uploaded_id(png_photo(), "image/png")
         bed.testbed.clock.advance(DAY_SECONDS + 1)
 
         response = bed.send([photo_id], "late")
 
-        assert response.status_code == 404
+        # The widget asks the visitor to attach the file again.
+        assert refusal(response) == ("attachment_unavailable", [photo_id])
 
     def test_an_upload_named_twice_or_five_uploads_are_refused(self) -> None:
         bed = WidgetUploadBed()
@@ -122,8 +138,9 @@ class TestBinding:
             try:
                 testbed.queue_widget_message.run(accepted)
                 outcome = "queued"
-            except NotFoundError:
-                outcome = "not_found"
+            except ValidationFailedError as error:
+                [reason] = error.reasons
+                outcome = str(reason.code)
             with lock:
                 outcomes.append(outcome)
 
@@ -133,7 +150,7 @@ class TestBinding:
         for thread in threads:
             thread.join()
 
-        assert sorted(outcomes) == ["not_found", "queued"]
+        assert sorted(outcomes) == ["attachment_already_sent", "queued"]
         assert len(inbox(testbed)) == 1
 
 

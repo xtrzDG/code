@@ -70,6 +70,21 @@ def is_widget_upload_path(business_id: BusinessId, path: str) -> bool:
     )
 
 
+def widget_upload_id_of_path(
+    business_id: BusinessId, path: str
+) -> WidgetUploadId | None:
+    """The upload a widget upload path of this business names, else None."""
+
+    if not is_widget_upload_path(business_id, path):
+        return None
+
+    stem: str = path.rsplit("/", 1)[-1].split(".", 1)[0]
+    try:
+        return WidgetUploadId(stem)
+    except ValueError:
+        return None
+
+
 def media_type_of_extension(file_name: str) -> MessageMediaType | None:
     """The media type a stored file's extension stands for (local storage)."""
 

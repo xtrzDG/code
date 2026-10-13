@@ -16,6 +16,7 @@ from fastapi import Request
 
 from app.schemas.constants.media import WidgetUploadRefusal
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.media.constrained_integers import MediaByteLimit
 from app.utilities.media.upload_refusals import upload_refused
 
 FILE_FIELD_NAME: str = "file"
@@ -42,13 +43,13 @@ class UploadedFilePart:
     declared_type: str | None
 
 
-async def read_limited_body(request: Request, most_file_bytes: int) -> bytes:
+async def read_limited_body(request: Request, most_file_bytes: MediaByteLimit) -> bytes:
     """
     The body, read as it streams, refused (422 `file_too_large`) as soon as
     it is longer than the file allowed plus the form around it.
     """
 
-    limit: int = most_file_bytes + MULTIPART_OVERHEAD_BYTES
+    limit: int = int(most_file_bytes) + MULTIPART_OVERHEAD_BYTES
     declared_length: str | None = request.headers.get("content-length")
     is_declared_too_long: bool = (
         declared_length is not None

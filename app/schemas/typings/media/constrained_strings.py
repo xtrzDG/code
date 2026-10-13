@@ -3,6 +3,22 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class DeclaredMediaType(BaseConstrainedTypedString):
+    """
+    Media type a website visitor's browser declared for an upload, read
+    from its `DeclaredUploadType`: lower case, without its parameters
+    ("audio/webm;codecs=opus" -> "audio/webm"). Still only a claim: the
+    file's own bytes must say the same type.
+
+    Example:
+        declared = DeclaredMediaType("audio/webm")
+    """
+
+    min_length = 3
+    max_length = 127
+    pattern = r"^[a-z0-9][a-z0-9!#$&^_.+\-]*/[a-z0-9][a-z0-9!#$&^_.+\-]*$"
+
+
 class MessageMediaType(BaseConstrainedTypedString):
     """
     Media type of a stored customer file, recognized from its bytes: audio

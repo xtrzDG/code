@@ -13,21 +13,28 @@ label and a migration path).
 
 ## 2026-10-12 — photos and voice messages in the website chat, the visitor's thumbs
 
-Spec: `82cbd3bb472632c6`
+Spec: `a85340491efee9c5`
 
 - **Added** `POST /v1/widget/{business_id}/attachments` (public, the
   visitor key in `X-Widget-Session-Key`, multipart part `file`): one photo
-  (JPEG, PNG, WebP) or voice message (WebM, Ogg, MP4) for the visitor's
-  next message; 201 with `attachment_id`, `kind`, `media_type`,
-  `byte_count` and a voice message's `duration_seconds`. The type is read
-  from the file's bytes, a photo's metadata is dropped (its orientation
-  kept), size and length are checked against `MEDIA_MAX_IMAGE_BYTES`,
-  `MEDIA_MAX_VOICE_BYTES` and `MEDIA_MAX_VOICE_SECONDS` (422 with the
-  reason `code`: `unsupported_type`, `type_mismatch`, `file_too_large`,
-  `voice_too_long`, `unreadable_file`); limited like messages (429).
+  (JPEG, PNG, WebP) or voice message (Opus in WebM or Ogg, AAC or Opus in
+  MP4) for the visitor's next message; 201 with `attachment_id`, `kind`,
+  `media_type`, `byte_count` and a voice message's `duration_seconds`. The
+  type is read from the file's bytes, a photo's metadata is dropped (its
+  orientation kept), size and length are checked against
+  `MEDIA_MAX_IMAGE_BYTES`, `MEDIA_MAX_VOICE_BYTES` and
+  `MEDIA_MAX_VOICE_SECONDS` (422 with the reason `code`:
+  `unsupported_type`, `type_mismatch`, `file_too_large`, `voice_too_long`,
+  `unreadable_file`); a voice message's length is the longest of what its
+  container claims and what its audio packets hold, so a forged header
+  does not shorten it; limited like messages (429).
 - **Changed** (additive) `POST /v1/widget/{business_id}/messages`:
   `attachment_ids` (at most four uploads of the same visitor, at most a
-  day old, each sent once); a message with uploads may have no `text`.
+  day old, each sent once); a message with uploads may have no `text`. An
+  upload that is gone (not the visitor's, over a day old) is refused with
+  422 `attachment_unavailable`, one that already went with a message with
+  422 `attachment_already_sent` (the retry of a message whose answer was
+  lost: that message is being answered).
 - **Added** `POST /v1/widget/{business_id}/rating` (public, JSON body
   with the visitor's `session_key`): `rating` good or bad, a bad one's
   optional `reason`, the answer's `message_id` (else the latest answer of

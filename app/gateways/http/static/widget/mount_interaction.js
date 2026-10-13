@@ -136,13 +136,21 @@
         guarded("send", function (result) {
           state.isSending = false;
           state.pendingItem = null;
-          if (result.status === 202) {
+          var refusal = attachmentsRefusal(result);
+          if (result.status === 202 || refusal === "sent") {
+            // A Retry refused as already sent: the first try reached the API
+            // (only its answer was lost), so its answer is awaited the same.
             receiveTicket(result.body && result.body.stream_ticket);
             awaitAnswer(item);
             return;
           }
           showTyping(false);
-          if (result.ok && result.body) {
+          if (refusal === "gone") {
+            // The files are gone; the words alone may still be sent.
+            item.attachments = [];
+            item.cannotRetry = !item.text;
+            markFailed(item, text("fileGone"), previewDetail(result));
+          } else if (result.ok && result.body) {
             receiveReply(result.body);
           } else {
             if (result.status === 429) {

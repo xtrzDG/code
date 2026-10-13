@@ -131,10 +131,11 @@
       recording.ticker = window.setInterval(guarded("render", renderTray), 1000);
       var limitSeconds = ruleNumber("max_voice_seconds");
       if (limitSeconds) {
-        // Stopped just under the API's limit.
+        // Stopped a second under the API's limit: the API counts the audio
+        // packets, which run a little past the clock.
         recording.limit = window.setTimeout(function () {
           stopRecording(true);
-        }, limitSeconds * 1000 - 250);
+        }, limitSeconds * 1000 - 1000);
       }
       announce(text("recording"));
       renderTray();

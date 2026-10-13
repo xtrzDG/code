@@ -53,7 +53,9 @@ class TranscribeVoiceNoteUseCase(
     (TOO_LONG); one without words is NOT_UNDERSTOOD, and so is every voice
     note while no speech-to-text is configured. A temporary failure fails
     the job to try again; its last attempt gives the voice note up. Each
-    transcription is metered as TRANSCRIPTION_SECONDS with its cost.
+    transcription is metered as TRANSCRIPTION_SECONDS with its cost: the
+    seconds the service says it billed when it says so, else the voice
+    note's measured length.
     """
 
     def __init__(
@@ -145,6 +147,8 @@ class TranscribeVoiceNoteUseCase(
             or result.billed_seconds
             or estimate_duration_seconds(media.byte_count)
         )
+        # What the service says it billed is what the transcription cost.
+        billed: AudioDurationSeconds = result.billed_seconds or seconds
         now: Microseconds = self._wall_clock.now_unix()
         # Kept even when empty: a turn that runs again neither asks nor pays twice.
         transcript = TranscribedVoiceText(text)
@@ -156,9 +160,9 @@ class TranscribeVoiceNoteUseCase(
             UsageEventDocument(
                 business_id=media.business_id,
                 kind=UsageKind.TRANSCRIPTION_SECONDS,
-                quantity=UsageQuantity(max(1, int(seconds))),
+                quantity=UsageQuantity(max(1, int(billed))),
                 cost_micro_usd=transcription_cost(
-                    self._media_settings.transcription_model_id, seconds
+                    self._media_settings.transcription_model_id, billed
                 ),
                 occurred_at=now,
                 created_at=now,

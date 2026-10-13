@@ -16,12 +16,14 @@ from app.repositories.delivery_repositories import (
 )
 from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.message_media_repository import MessageMediaRepository
+from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.message_media import MessageMediaDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.widget_uploads import WidgetUploadDocument
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
@@ -148,6 +150,10 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.message_media_repo = MessageMediaRepository(
             InMemoryDocumentCollectionAdapter(MessageMediaDocument)
         )
+        # The website chat's original uploads (a day apart from the messages).
+        self.widget_upload_repo = WidgetUploadRepository(
+            InMemoryDocumentCollectionAdapter(WidgetUploadDocument)
+        )
         # Langfuse and ElevenLabs, whose copies the erasure deletes by jobs.
         self.processor_erasure = ProcessorErasureBed()
         self.delete_contact_data = DeleteContactDataUseCase(
@@ -174,6 +180,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             inbound_event_repo=self.inbound_event_repo,
             feedback_request_repo=self.feedback_request_repo,
             processor_erasure=self.processor_erasure.facilitator(),
+            widget_upload_repo=self.widget_upload_repo,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,

@@ -2,9 +2,11 @@
  * Photos, voice messages and the thumbs of the website chat widget on a
  * host site, against a fake widget API (support/widget-media.ts): the
  * paperclip uploads a photo the next message names (a thumbnail in the
- * log), a refused file says why, the microphone records while held, and
- * the thumbs show under a booking's answer at once or after two quiet
- * minutes, in English, Georgian and Hebrew.
+ * log), a refused file says why, a file the API no longer has is dropped
+ * (the words may go again) and a Retry after a lost answer sends nothing
+ * twice, the microphone records while held, and the thumbs show under a
+ * booking's answer at once or after two quiet minutes, in English,
+ * Georgian and Hebrew.
  */
 
 import type { Page } from "@playwright/test";
@@ -71,6 +73,52 @@ test("a file that is not a photo or that the API refuses is not sent", async ({ 
   expect(api.uploads).toHaveLength(1);
   await expect(chat(page).locator(".aw-tray img")).toHaveCount(0);
   await expect(chat(page).getByRole("button", { name: "Send" })).toBeDisabled();
+});
+
+test("in Georgian a file the API no longer has is dropped and the words go without it", async ({
+  page,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(/status of 422/);
+  const api = new FakeMediaWidgetApi();
+  speaks(api, "ka", "ltr", "ქართული");
+  api.refuseMessageWith = "attachment_unavailable";
+  await serveSite(page.context(), api, { dataOpen: true });
+  await page.goto(`${SITE}/`);
+  await page.locator("input[type=file]").setInputFiles(photo());
+  await expect(chat(page).locator(".aw-tray img[alt]")).toBeVisible();
+
+  await ask(page, "ეს კერძი ვეგანურია?");
+
+  await expect(chat(page).getByText("ფაილი აღარ არის ხელმისაწვდომი. მიამაგრეთ ხელახლა.")).toBeVisible();
+  await expect(chat(page).locator(".aw-visitor img.aw-thumb")).toHaveCount(0);
+  await chat(page).getByRole("button", { name: "თავიდან ცდა" }).click();
+  await expect(chat(page).getByText("Answer to ეს კერძი ვეგანურია?")).toBeVisible();
+  // The words went again, without the file the API no longer had.
+  expect(api.sentAttachments).toEqual([]);
+});
+
+test("a Retry after a lost answer learns the photo already went and sends nothing twice", async ({
+  page,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(/status of 422|ERR_CONNECTION_RESET|Failed to fetch/);
+  const api = new FakeMediaWidgetApi();
+  api.loseNextMessageAnswer = true;
+  await serveSite(page.context(), api, { dataOpen: true });
+  await page.goto(`${SITE}/`);
+  await page.locator("input[type=file]").setInputFiles(photo());
+  await expect(chat(page).locator(".aw-tray img[alt='Photo']")).toBeVisible();
+  await chat(page).getByRole("button", { name: "Send" }).click();
+
+  const retry = chat(page).getByRole("button", { name: "Retry" });
+  await expect(chat(page).getByText("Message not sent.")).toBeVisible();
+  await retry.click();
+
+  await expect(chat(page).getByText("Message not sent.")).toBeHidden();
+  await expect(retry).toHaveCount(0);
+  await expect(chat(page).getByText("Answer to 1 file(s)")).toBeVisible();
+  expect(api.sentAttachments).toHaveLength(1);
 });
 
 test("in Georgian a booking's answer asks for thumbs at once and a thumbs down asks why", async ({ page }) => {

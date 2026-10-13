@@ -2,6 +2,10 @@
 
 import re
 
+from base_typed_id import BasePrefixedTypedId
+from base_typed_int import BaseTypedInt
+from base_typed_string import BaseTypedString
+
 from app.schemas.constants.media import WidgetUploadRefusal
 from app.schemas.dto.errors import ErrorReason
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -26,22 +30,30 @@ REFUSAL_MESSAGES: dict[WidgetUploadRefusal, str] = {
     WidgetUploadRefusal.UNREADABLE_FILE: (
         "The file's structure does not add up, or its length cannot be read."
     ),
+    WidgetUploadRefusal.ATTACHMENT_ALREADY_SENT: (
+        "The attachment already went with an earlier message."
+    ),
+    WidgetUploadRefusal.ATTACHMENT_UNAVAILABLE: (
+        "The attachment is no longer available: attach the file again."
+    ),
 }
 
 
 def upload_refused(
-    refusal: WidgetUploadRefusal, detail: str | int | None = None
+    refusal: WidgetUploadRefusal,
+    detail: BaseTypedString | BaseTypedInt | BasePrefixedTypedId | None = None,
 ) -> ValidationFailedError:
     """
-    The 422 of a refused upload; `detail` (a media type, a cap) goes with
-    the reason when it is a plain machine value.
+    The 422 of a refused upload; `detail` (a media type, a cap, the upload
+    a message named) goes with the reason when it is a plain machine value.
     """
 
     message: str = REFUSAL_MESSAGES[refusal]
+    text: str = (
+        str(int(detail)) if isinstance(detail, BaseTypedInt) else str(detail or "")
+    )
     details: list[ErrorReasonDetail] = (
-        [ErrorReasonDetail(str(detail))]
-        if detail is not None and DETAIL_PATTERN.match(str(detail))
-        else []
+        [ErrorReasonDetail(text)] if DETAIL_PATTERN.match(text) else []
     )
     return ValidationFailedError(
         message,

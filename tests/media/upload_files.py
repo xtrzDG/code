@@ -1,110 +1,11 @@
 """
-Small, structurally real files of the kinds a website visitor uploads,
-built byte by byte: JPEG, PNG and WebP photos carrying metadata, WebM, Ogg
-and MP4 recordings with audio or video tracks.
+Small, structurally real photos of the kinds a website visitor uploads,
+built byte by byte: JPEG, PNG and WebP carrying metadata (the recordings
+are in `recording_files` and `mp4_files`).
 """
 
 import struct
 import zlib
-
-# --- WebM (EBML) -----------------------------------------------------------
-
-UNKNOWN_SIZE: bytes = b"\x01\xff\xff\xff\xff\xff\xff\xff"
-AUDIO_TRACK: int = 2
-VIDEO_TRACK: int = 1
-MILLISECONDS_PER_SECOND: int = 1000
-# A cluster's blocks sit at most 32.767 s after its timecode (int16 offset).
-CLUSTER_SECONDS: int = 10
-
-
-def ebml(element_id: int, data: bytes) -> bytes:
-    """An element with its data size as an 8-byte variable-length integer."""
-
-    id_bytes: bytes = element_id.to_bytes((element_id.bit_length() + 7) // 8, "big")
-    return id_bytes + (0x01 << 56 | len(data)).to_bytes(8, "big") + data
-
-
-def uint(value: int, size: int = 4) -> bytes:
-    return value.to_bytes(size, "big")
-
-
-def simple_block(offset_ms: int) -> bytes:
-    """Track 1, `offset_ms` after its cluster, a keyframe, a few bytes."""
-
-    return ebml(0xA3, b"\x81" + struct.pack(">h", offset_ms) + b"\x80" + bytes(8))
-
-
-def webm_recording(
-    seconds: int,
-    track_types: tuple[int, ...] = (AUDIO_TRACK,),
-    header_duration: bool = False,
-    doc_type: bytes = b"webm",
-) -> bytes:
-    """
-    A WebM file as MediaRecorder writes it: an unknown-size segment and
-    clusters, no duration in the header unless asked, blocks to `seconds`.
-    """
-
-    header: bytes = ebml(0x1A45DFA3, ebml(0x4282, doc_type))
-    info_fields: bytes = ebml(0x2AD7B1, uint(1_000_000, 3))
-    if header_duration:
-        info_fields += ebml(0x4489, struct.pack(">d", seconds * 1000.0))
-    tracks: bytes = ebml(
-        0x1654AE6B,
-        b"".join(ebml(0xAE, ebml(0x83, uint(kind, 1))) for kind in track_types),
-    )
-    clusters: bytes = b""
-    last_ms: int = seconds * MILLISECONDS_PER_SECOND
-    for start in range(0, max(seconds, 1), CLUSTER_SECONDS):
-        start_ms: int = start * MILLISECONDS_PER_SECOND
-        end_ms: int = min(last_ms, start_ms + CLUSTER_SECONDS * 1000 - 20)
-        clusters += (
-            uint(0x1F43B675)
-            + UNKNOWN_SIZE
-            + ebml(0xE7, uint(start_ms))
-            + simple_block(0)
-            + simple_block(end_ms - start_ms)
-        )
-    return (
-        header
-        + uint(0x18538067)
-        + UNKNOWN_SIZE
-        + ebml(0x1549A966, info_fields)
-        + tracks
-        + clusters
-    )
-
-
-# --- Ogg and MP4 -------------------------------------------------------------
-
-
-def ogg_theora_bytes() -> bytes:
-    """An Ogg stream whose first packet is a Theora video header."""
-
-    return b"OggS" + bytes(24) + b"\x80theora" + bytes(64)
-
-
-def mp4_box(kind: bytes, payload: bytes) -> bytes:
-    return struct.pack(">I", 8 + len(payload)) + kind + payload
-
-
-def mp4_recording(seconds: int, handlers: tuple[bytes, ...] = (b"soun",)) -> bytes:
-    """An M4A as Safari records it: a movie header and one track per handler."""
-
-    movie_header: bytes = mp4_box(
-        b"mvhd", bytes(4) + bytes(8) + struct.pack(">II", 1000, seconds * 1000)
-    )
-    tracks: bytes = b"".join(
-        mp4_box(
-            b"trak",
-            mp4_box(b"mdia", mp4_box(b"hdlr", bytes(8) + handler + bytes(12))),
-        )
-        for handler in handlers
-    )
-    return mp4_box(b"ftyp", b"M4A " + bytes(4)) + mp4_box(
-        b"moov", movie_header + tracks
-    )
-
 
 # --- JPEG ------------------------------------------------------------------
 

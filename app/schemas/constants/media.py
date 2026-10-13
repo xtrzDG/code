@@ -43,7 +43,11 @@ class WidgetUploadRefusal(StrEnum):
     photo or voice note the chat takes, bytes that are not the type the
     browser declared, over the size cap of its kind, a voice note over
     MEDIA_MAX_VOICE_SECONDS, or a file whose structure does not add up (or
-    whose length cannot be read).
+    whose length cannot be read). A message naming an upload is refused
+    when the upload already went with an earlier message of this visitor
+    (a Retry after a lost answer) or is no longer there for them (older
+    than a day, never theirs, unknown: one answer, so ids cannot be
+    probed).
     """
 
     UNSUPPORTED_TYPE = "unsupported_type"
@@ -51,3 +55,5 @@ class WidgetUploadRefusal(StrEnum):
     FILE_TOO_LARGE = "file_too_large"
     VOICE_TOO_LONG = "voice_too_long"
     UNREADABLE_FILE = "unreadable_file"
+    ATTACHMENT_ALREADY_SENT = "attachment_already_sent"
+    ATTACHMENT_UNAVAILABLE = "attachment_unavailable"
