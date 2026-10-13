@@ -222,6 +222,8 @@ export const queryKeys = {
     profile: (businessId: Id) => ["billing", businessId, "profile"] as const,
     /** The cancel dialog's offers and the seasonal pause card. */
     lifecycle: (businessId: Id, locale: Locale) => ["billing", businessId, "lifecycle", locale] as const,
+    /** Every plan priced as this business is billed (a further location of a brand pays less). */
+    plans: (businessId: Id, locale: Locale) => ["billing", businessId, "plans", locale] as const,
   },
 
   settings: {

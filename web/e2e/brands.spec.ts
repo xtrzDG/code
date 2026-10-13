@@ -2,7 +2,9 @@
  * Brands: an owner groups locations of a chain under one brand, sees them
  * side by side, makes a new location from an existing one and finds them
  * grouped in the business switcher; a regional manager reaches only the
- * locations assigned to them, and loses even those once removed.
+ * locations assigned to them, and loses even those once removed or gone; a
+ * location replaces a shared answer with its own and its owner takes it
+ * out of the brand.
  */
 
 import type { APIRequestContext, Page } from "@playwright/test";
@@ -118,4 +120,59 @@ test("a regional manager reaches only their locations, and nothing once removed"
   await expect(member).toHaveCount(0);
   expect([403, 404]).toContain((await request.get(`${API_URL}/v1/businesses/${potsdamId}`, { headers: asManager })).status());
   await context.close();
+});
+
+test("a location shows its brand: its own answer, leaving the brand; a manager leaves it too", async ({ browser, page, owner, request }) => {
+  const asOwner = { authorization: `Bearer ${owner.token}` };
+  const brandName = `Morgenrot ${uniqueSuffix()}`;
+  const created = await request.post(`${API_URL}/v1/brands`, { headers: asOwner, data: { name: brandName, business_id: owner.businessId } });
+  expect(created.status(), await created.text()).toBe(201);
+  const brandId = ((await created.json()) as { id: string }).id;
+  const answer = await request.post(`${API_URL}/v1/brands/${brandId}/knowledge`, {
+    headers: asOwner,
+    data: { kind: "faq", title: "Is there parking?", body: "Free parking behind every salon." },
+  });
+  expect(answer.status(), await answer.text()).toBe(201);
+
+  // A regional manager leaves the brand from its page and loses the location.
+  const managerEmail = uniqueEmail();
+  const invited = await request.post(`${API_URL}/v1/brands/${brandId}/members`, {
+    headers: asOwner,
+    data: { email: managerEmail, role: "regional_manager", business_ids: [owner.businessId] },
+  });
+  expect(invited.ok(), await invited.text()).toBe(true);
+  const managerToken = await signInByEmail(request, managerEmail);
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  await signInContext(context, managerToken);
+  const managerPage = await context.newPage();
+  await managerPage.goto(`/brands/${brandId}`);
+  await managerPage.getByRole("button", { name: en.brands.manage.menu }).click();
+  await managerPage.getByRole("menuitem", { name: en.brands.manage.leave }).click();
+  await managerPage.getByRole("dialog").getByRole("button", { name: en.brands.manage.leave }).click();
+  await expect(managerPage).toHaveURL(/\/brands$/);
+  const asManager = { authorization: `Bearer ${managerToken}` };
+  expect([403, 404]).toContain((await request.get(`${API_URL}/v1/businesses/${owner.businessId}`, { headers: asManager })).status());
+  await context.close();
+
+  // The location's knowledge names the brand's answer; the owner writes this location's own.
+  await page.goto(`/b/${owner.businessId}/assistant/knowledge`);
+  const shared = page.getByRole("region", { name: en.brands.locationKnowledge.title });
+  const parking = shared.getByRole("listitem").filter({ hasText: "Is there parking?" });
+  await parking.getByRole("button", { name: en.brands.locationKnowledge.replace }).click();
+  const editor = page.getByRole("dialog");
+  await expect(editor).toBeVisible();
+  await editor.getByRole("button", { name: en.common.cancel }).click();
+  await expect(parking.getByText(en.brands.locationKnowledge.own)).toBeVisible();
+  await expect(parking.getByRole("button", { name: en.brands.locationKnowledge.editOwn })).toBeVisible();
+
+  // Settings name the brand; its owner takes the location out of it.
+  await page.goto(`/b/${owner.businessId}/settings`);
+  const card = page.getByTestId("brand-membership");
+  await expect(card.getByText(brandName)).toBeVisible();
+  await card.getByRole("button", { name: en.brands.location.leave }).click();
+  await page.getByRole("dialog").getByRole("button", { name: en.brands.location.leave }).click();
+  await expect(page.getByText(en.brands.location.left)).toBeVisible();
+  await expect(card).toHaveCount(0);
+  const stored = await request.get(`${API_URL}/v1/businesses/${owner.businessId}`, { headers: asOwner });
+  expect(((await stored.json()) as { brand_id?: string | null }).brand_id ?? null).toBeNull();
 });

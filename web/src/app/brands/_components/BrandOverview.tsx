@@ -5,13 +5,14 @@ import { useState } from "react";
 
 import { IconChevronRight, IconShield } from "@/components/icons";
 import { Badge, Card, ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
+import { sourceRowName } from "@/components/value/sourceLabel";
 import { formatWholeMoney } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
-import { brandTotals, type BrandLocationDashboard } from "../_lib/brands";
+import { brandTotals, topSources, type BrandLocationDashboard } from "../_lib/brands";
 import { BRAND_PERIODS, useBrandDashboard, type BrandPeriod } from "../_lib/useBrands";
 import { BrandLocations } from "./BrandLocations";
 import { useBrandFrame } from "./BrandFrameContext";
@@ -19,7 +20,8 @@ import { useBrandFrame } from "./BrandFrameContext";
 /**
  * The brand's locations side by side over a period: conversations,
  * bookings by the assistant, work waiting for the team and (for owners)
- * the estimated value. A location the person does not run shows locked.
+ * the estimated value and where its customers came from. A location the
+ * person does not run shows locked.
  */
 export function BrandOverview() {
   const { t, locale } = useI18n();
@@ -105,7 +107,7 @@ function Tile({ label, value, note }: { label: string; value: string; note?: str
 }
 
 function LocationRow({ row }: { row: BrandLocationDashboard }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const { location } = row;
   const place = [location.name, location.city].filter(Boolean).join(" · ");
   if (row.is_locked) {
@@ -123,6 +125,7 @@ function LocationRow({ row }: { row: BrandLocationDashboard }) {
   }
   const current = row.value?.current;
   const revenue = current?.estimated_revenue_minor;
+  const sources = topSources(row.sources);
   const figures = [
     { label: t("brands.overview.conversations"), value: formatNumber(current?.conversation_count ?? 0, locale) },
     { label: t("brands.overview.bookings"), value: formatNumber(current?.assistant_booking_count ?? 0, locale) },
@@ -145,6 +148,18 @@ function LocationRow({ row }: { row: BrandLocationDashboard }) {
           </span>
           {location.is_primary ? <Badge tone="neutral">{t("brands.locations.primary")}</Badge> : null}
         </p>
+        {sources.length > 0 ? (
+          <div className="mt-1.5 text-xs">
+            <p className="text-ink-subtle">{t("brands.overview.sources")}</p>
+            <ul className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-ink-muted">
+              {sources.map((source, index) => (
+                <li key={index} className="min-w-0 break-words">
+                  {sourceRowName(source, t, tp)} <span className="font-medium text-ink tabular-nums">{formatNumber(source.conversation_count, locale)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
       <dl className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
         {figures.map((figure) => (

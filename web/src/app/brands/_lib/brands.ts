@@ -1,7 +1,8 @@
 /**
  * Pure rules of the brand pages and the business switcher: memberships
- * grouped by brand, a brand's totals over its reached locations, the
- * businesses an owner can still put into a brand, and the forms' checks.
+ * grouped by brand, a brand's totals over its reached locations, where a
+ * location's customers came from, the businesses an owner can still put
+ * into a brand, and the forms' checks.
  */
 
 import type { Schema, UserMembershipView } from "@/api/types";
@@ -12,6 +13,8 @@ export type BrandMemberView = Schema<"BrandMemberView">;
 export type BrandMemberRole = Schema<"BrandMemberRole">;
 export type BrandLocationDashboard = Schema<"BrandLocationDashboard">;
 export type BrandKnowledgeItem = Schema<"BrandKnowledgeItemView">;
+type CustomerSources = Schema<"CustomerSourcesView">;
+type CustomerSourceRow = Schema<"CustomerSourceRow">;
 
 export const BRAND_ROLES = ["brand_owner", "regional_manager"] as const satisfies readonly BrandMemberRole[];
 
@@ -26,20 +29,22 @@ export interface MembershipGroup {
 }
 
 /**
- * The switcher's groups: one per brand (in the order its first location
- * comes), then the businesses outside any brand. Without any brand there
- * is a single unnamed group, so the menu looks as it always did.
+ * The switcher's groups: one per brand the person is on the team of (in the
+ * order its first location comes; the API names only those), then every
+ * other business, a location of a brand the person is not on the team of
+ * included. Without any brand there is a single unnamed group, so the menu
+ * looks as it always did.
  */
 export function groupMemberships(memberships: readonly UserMembershipView[]): MembershipGroup[] {
   const groups = new Map<string, MembershipGroup>();
   const others: UserMembershipView[] = [];
   for (const membership of memberships) {
-    if (!membership.brand_id) {
+    if (!membership.brand_id || !membership.brand_name) {
       others.push(membership);
       continue;
     }
     const group = groups.get(membership.brand_id) ?? {
-      brand: { id: membership.brand_id, name: membership.brand_name ?? "" },
+      brand: { id: membership.brand_id, name: membership.brand_name },
       memberships: [],
     };
     group.memberships.push(membership);
@@ -47,6 +52,15 @@ export function groupMemberships(memberships: readonly UserMembershipView[]): Me
   }
   const branded = [...groups.values()];
   return others.length > 0 || branded.length === 0 ? [...branded, { brand: null, memberships: others }] : branded;
+}
+
+/**
+ * The sources a location's row names on the overview: the few that brought
+ * the most conversations (the API lists them most first), none when the
+ * viewer may not see them (a regional manager) or nobody wrote yet.
+ */
+export function topSources(sources: CustomerSources | null | undefined, limit = 3): CustomerSourceRow[] {
+  return (sources?.rows ?? []).filter((row) => row.conversation_count > 0).slice(0, limit);
 }
 
 /** Businesses the person owns that belong to no brand yet: where a brand can start or grow. */

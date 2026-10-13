@@ -92,6 +92,8 @@ export const billingHe: Translation<typeof billingEn> = {
     setupFee: "הקמה: חינם עם המדריך, {price} כשאנחנו עושים זאת בשבילכם",
     additionalLocation: "כל סניף נוסף ברשת: {price} לחודש",
     setupFeeAnnual: "הקמה: חינם עם המדריך, הקמה על ידינו כלולה",
+    setupFeeCovered: "הקמה: ללא תשלום, סניף אחר של הרשת שלכם כבר שילם עליה",
+    furtherLocationNote: "זהו סניף נוסף של הרשת שלכם: כל מסלול עולה במחיר של סניף נוסף.",
     overage: "דקה נוספת: {price}",
     trial: { one: "יום ניסיון חינם", two: "יומיים ניסיון חינם", other: "{count} ימי ניסיון חינם" },
     channelsLabel: "ערוצים",

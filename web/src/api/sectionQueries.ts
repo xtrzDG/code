@@ -58,6 +58,14 @@ export const sectionQueries = {
     fetch: () => api.GET("/v1/businesses/{business_id}/channels", { params: { path: { business_id: businessId } } }),
   }),
 
+  billingPlans: (businessId: string, locale: string) => ({
+    key: queryKeys.billing.plans(businessId, locale),
+    fetch: () =>
+      api.GET("/v1/businesses/{business_id}/billing/plans", {
+        params: { path: { business_id: businessId }, query: { language: locale } },
+      }),
+  }),
+
   billingOverview: (businessId: string, locale: string) => ({
     key: queryKeys.billing.overview(businessId, locale),
     fetch: () =>

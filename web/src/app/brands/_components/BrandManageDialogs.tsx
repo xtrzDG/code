@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n/client";
 import { BRANDS_PATH } from "@/lib/navigation";
 
 import type { BrandView } from "../_lib/brands";
-import { useBrandSettings } from "../_lib/useBrands";
+import { useBrandSettings, useBrandTeam } from "../_lib/useBrands";
 
 /** A brand's new name (brand owners). */
 export function RenameBrandModal({ brand, open, onClose }: { brand: BrandView; open: boolean; onClose: () => void }) {
@@ -103,6 +103,40 @@ export function DeleteBrandDialog({ brand, open, onClose }: { brand: BrandView; 
       isPending={remove.isPending}
       error={remove.error}
       errorOverrides={{ conflict: "brands.manage.deleteBlocked" }}
+    />
+  );
+}
+
+/**
+ * A regional manager leaving the brand's team (a brand owner leaves from
+ * the Team tab, where the brand's last owner is kept).
+ */
+export function LeaveBrandDialog({ brand, userId, open, onClose }: { brand: BrandView; userId: string; open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const router = useRouter();
+  const { remove } = useBrandTeam(brand.id);
+
+  const onConfirm = async () => {
+    const result = await remove.run(userId);
+    if (result.ok) {
+      toast.success({ text: t("brands.manage.left"), values: { name: brand.name } });
+      onClose();
+      router.push(BRANDS_PATH);
+      router.refresh();
+    }
+  };
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title={<UserSentence text={t("brands.manage.leaveTitle")} values={{ name: brand.name }} />}
+      description={t("brands.manage.leaveDescription")}
+      confirmLabel={t("brands.manage.leave")}
+      isPending={remove.isPending}
+      error={remove.error}
     />
   );
 }

@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { usePlans } from "@/api/catalog";
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
@@ -50,7 +49,12 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
 
   const overviewQuery = sectionQueries.billingOverview(business.id, locale);
   const overview = useQuery(overviewQuery.key, overviewQuery.fetch);
-  const plans = usePlans(business.country_code);
+  // Priced as this business is billed: a further location of a brand pays the additional-location price.
+  const plansQuery = sectionQueries.billingPlans(business.id, locale);
+  const plans = useQuery(plansQuery.key, plansQuery.fetch);
+  const pricing = plans.data
+    ? { isAdditionalLocation: plans.data.is_additional_location ?? false, isSetupFeeCovered: plans.data.is_setup_fee_covered ?? false }
+    : undefined;
 
   // Back from the payment page: the payment provider confirms in the
   // background, so the page asks again every few seconds until it shows.
@@ -131,6 +135,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
 
           <PlansSection
             quotes={plans.data?.quotes}
+            pricing={pricing}
             exchangeRate={plans.data?.exchange_rate}
             error={plans.error}
             onRetry={plans.reload}

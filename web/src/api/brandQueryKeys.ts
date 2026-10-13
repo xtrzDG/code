@@ -18,5 +18,7 @@ export const brandQueryKeys = {
     dashboard: (brandId: Id, period: string) => ["brands", brandId, "dashboard", period] as const,
     /** The facts every location shares, with where they are replaced. */
     knowledge: (brandId: Id) => ["brands", brandId, "knowledge"] as const,
+    /** A location's view of its brand's shared answers, with its own replacements. */
+    locationShared: (businessId: Id) => ["brands", "location", businessId, "shared"] as const,
   },
 } satisfies Record<string, Record<string, (...args: never[]) => QueryKey>>;

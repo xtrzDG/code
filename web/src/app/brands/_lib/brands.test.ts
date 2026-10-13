@@ -8,6 +8,7 @@ import {
   groupMemberships,
   ownedFreeBusinesses,
   parsePriceMinor,
+  topSources,
   type BrandLocationDashboard,
   type InviteForm,
 } from "./brands";
@@ -43,6 +44,17 @@ describe("memberships grouped by brand", () => {
 
     expect(groups.map((group) => group.brand?.name ?? null)).toEqual(["Mtsvane Ezo", null]);
     expect(groups[0]?.memberships.map((item) => item.business_id)).toEqual(["a", "c"]);
+  });
+
+  it("keeps a location of a brand the person is not on the team of with the others", () => {
+    const groups = groupMemberships([
+      membership("a", { brand_id: "brand_1", brand_name: "Mtsvane Ezo" }),
+      membership("b", { brand_id: "brand_2", brand_name: null }),
+    ]);
+
+    expect(groups.map((group) => group.brand?.name ?? null)).toEqual(["Mtsvane Ezo", null]);
+    expect(groups[1]?.memberships.map((item) => item.business_id)).toEqual(["b"]);
+    expect(ownedFreeBusinesses([membership("b", { brand_id: "brand_2", brand_name: null })])).toEqual([]);
   });
 
   it("offers only owned businesses outside any brand to a new brand", () => {
@@ -98,6 +110,33 @@ const invite = (extra: Partial<InviteForm> = {}): InviteForm => ({
   role: "regional_manager",
   businessIds: ["business_1"],
   ...extra,
+});
+
+describe("where a location's customers came from", () => {
+  const sources = (counts: number[]) => ({
+    business_id: "b",
+    currency_code: "GEL",
+    date_from: "2026-09-12",
+    date_to: "2026-10-11",
+    value_basis: "bookings" as const,
+    rows: counts.map((count, index) => ({
+      kind: "tagged" as const,
+      acquisition_source: `tag-${index}`,
+      conversation_count: count,
+      booking_count: 0,
+      request_count: 0,
+      source_count: 1,
+    })),
+  });
+
+  it("names the three that brought the most conversations", () => {
+    expect(topSources(sources([9, 5, 3, 1])).map((row) => row.acquisition_source)).toEqual(["tag-0", "tag-1", "tag-2"]);
+  });
+
+  it("names none for a manager (no sources sent) or a period without conversations", () => {
+    expect(topSources(null)).toEqual([]);
+    expect(topSources(sources([0]))).toEqual([]);
+  });
 });
 
 describe("brand invitations", () => {

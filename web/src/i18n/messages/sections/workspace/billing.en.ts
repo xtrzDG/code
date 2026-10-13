@@ -92,6 +92,8 @@ export const billingEn = {
     setupFee: "Setup: free with the guide, {price} done for you",
     additionalLocation: "Each further location of a chain: {price} a month",
     setupFeeAnnual: "Setup: free with the guide, done for you included",
+    setupFeeCovered: "Setup: no fee, another location of your brand has already paid it",
+    furtherLocationNote: "This is a further location of your brand: each plan costs the additional-location price.",
     overage: "Extra minute: {price}",
     trial: { one: "{count}-day free trial", other: "{count}-day free trial" },
     channelsLabel: "Channels",

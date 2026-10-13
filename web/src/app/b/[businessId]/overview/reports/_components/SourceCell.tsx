@@ -1,8 +1,7 @@
 "use client";
 
-import { CHANNEL_LABELS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
-import { sourceLabel } from "@/components/value/sourceLabel";
+import { sourceChannels, sourceRowName } from "@/components/value/sourceLabel";
 import type { CustomerSourceRow } from "@/components/value/sourcesModel";
 import { useI18n } from "@/i18n/client";
 
@@ -14,13 +13,8 @@ import { useI18n } from "@/i18n/client";
  */
 export function SourceCell({ row, share }: { row: CustomerSourceRow; share: number }) {
   const { t, tp, locale } = useI18n();
-  const channels = (row.channels ?? []).map((channel) => t(CHANNEL_LABELS[channel])).join(", ");
-  const name =
-    row.kind === "other"
-      ? tp("sources.other", row.source_count ?? 1)
-      : row.kind === "untagged" || !row.acquisition_source
-        ? channels || t("sources.untagged")
-        : sourceLabel(row.acquisition_source, t);
+  const channels = sourceChannels(row, t);
+  const name = sourceRowName(row, t, tp);
   const details = row.kind === "untagged" ? t("sources.untagged") : [row.acquisition_source, channels].filter(Boolean).join(" · ");
   return (
     <span className="block min-w-0">

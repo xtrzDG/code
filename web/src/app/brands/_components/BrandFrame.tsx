@@ -11,16 +11,19 @@ import { brandPath, BRANDS_PATH } from "@/lib/navigation";
 
 import { useBrand } from "../_lib/useBrands";
 import { BrandFrameContext } from "./BrandFrameContext";
-import { DeleteBrandDialog, RenameBrandModal } from "./BrandManageDialogs";
+import { DeleteBrandDialog, LeaveBrandDialog, RenameBrandModal } from "./BrandManageDialogs";
+import { useBrandsContext } from "./BrandsContext";
 
 /**
  * A brand's header (name, the person's role, an owner's rename and
- * delete) and tabs; the pages inside read the brand from the frame.
+ * delete, a regional manager's leaving) and tabs; the pages inside read
+ * the brand from the frame.
  */
 export function BrandFrame({ brandId, children }: { brandId: string; children: ReactNode }) {
   const { t } = useI18n();
   const brand = useBrand(brandId);
-  const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
+  const { userId } = useBrandsContext();
+  const [dialog, setDialog] = useState<"rename" | "delete" | "leave" | null>(null);
 
   const back = (
     <Link href={BRANDS_PATH} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink">
@@ -57,16 +60,20 @@ export function BrandFrame({ brandId, children }: { brandId: string; children: R
     ...(isOwner ? [{ href: brandPath(view.id, "team"), label: t("brands.tabs.team") }] : []),
     { href: brandPath(view.id, "knowledge"), label: t("brands.tabs.knowledge") },
   ];
-  const manage = isOwner ? (
+  const manage = (
     <OverflowMenu
       label={t("brands.manage.menu")}
       placement="bottom"
-      actions={[
-        { key: "rename", label: t("brands.manage.rename"), onSelect: () => setDialog("rename") },
-        { key: "delete", label: t("brands.manage.deleteBrand"), onSelect: () => setDialog("delete"), tone: "danger" },
-      ]}
+      actions={
+        isOwner
+          ? [
+              { key: "rename", label: t("brands.manage.rename"), onSelect: () => setDialog("rename") },
+              { key: "delete", label: t("brands.manage.deleteBrand"), onSelect: () => setDialog("delete"), tone: "danger" },
+            ]
+          : [{ key: "leave", label: t("brands.manage.leave"), onSelect: () => setDialog("leave"), tone: "danger" }]
+      }
     />
-  ) : undefined;
+  );
 
   return (
     <BrandFrameContext.Provider value={{ brand: view, isOwner }}>
@@ -84,7 +91,9 @@ export function BrandFrame({ brandId, children }: { brandId: string; children: R
           <RenameBrandModal brand={view} open={dialog === "rename"} onClose={() => setDialog(null)} />
           <DeleteBrandDialog brand={view} open={dialog === "delete"} onClose={() => setDialog(null)} />
         </>
-      ) : null}
+      ) : (
+        <LeaveBrandDialog brand={view} userId={userId} open={dialog === "leave"} onClose={() => setDialog(null)} />
+      )}
     </BrandFrameContext.Provider>
   );
 }

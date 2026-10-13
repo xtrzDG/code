@@ -39,9 +39,16 @@ const ACTION_LABELS: Record<PlanAction, "billing.plans.switchTo" | "billing.plan
   subscribe: "billing.subscribe.subscribe",
 };
 
-/** The plans of the business's country, monthly or yearly, with the owner's action per plan. */
+/** How this business pays: a further location of a brand, a setup fee another location carried. */
+export interface LocationPricing {
+  isAdditionalLocation: boolean;
+  isSetupFeeCovered: boolean;
+}
+
+/** The plans priced as this business is billed, monthly or yearly, with the owner's action per plan. */
 export function PlansSection({
   quotes,
+  pricing,
   exchangeRate,
   error,
   onRetry,
@@ -52,6 +59,7 @@ export function PlansSection({
   onChoose,
 }: {
   quotes: readonly PlanQuote[] | undefined;
+  pricing?: LocationPricing;
   exchangeRate: { sources?: Schema<"ExchangeRateQuote">["sources"]; rate_date: string } | null | undefined;
   error: ApiError | null;
   onRetry: () => void;
@@ -105,6 +113,9 @@ export function PlansSection({
       {(overview.subscription?.status === "past_due" || overview.subscription?.status === "cancelled") && canManage ? (
         <p className="text-sm text-ink-muted">{t("billing.subscribe.resumeHint")}</p>
       ) : null}
+      {pricing?.isAdditionalLocation ? (
+        <p className="text-sm text-ink-muted">{t("billing.plans.furtherLocationNote")}</p>
+      ) : null}
       {overview.subscription?.status === "paused" && canManage ? (
         <p className="text-sm text-ink-muted">{t("billingLifecycle.pause.plansHint")}</p>
       ) : null}
@@ -138,9 +149,11 @@ export function PlansSection({
                 t("billing.plans.dialogs", { count: format.number(quote.included_dialogs) }),
                 period === "annual"
                   ? t("billing.plans.setupFeeAnnual")
-                  : t("billing.plans.setupFee", {
-                      price: quotedMoneyText(setupOptionFee(quote, "done_for_you", period) ?? planSetupFee(quote), format.money),
-                    }),
+                  : pricing?.isSetupFeeCovered
+                    ? t("billing.plans.setupFeeCovered")
+                    : t("billing.plans.setupFee", {
+                        price: quotedMoneyText(setupOptionFee(quote, "done_for_you", period) ?? planSetupFee(quote), format.money),
+                      }),
                 quote.is_voice_included
                   ? t("billing.plans.overage", { price: quotedMoneyText(planOveragePrice(quote), format.money) })
                   : null,

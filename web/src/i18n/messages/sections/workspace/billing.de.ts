@@ -92,6 +92,8 @@ export const billingDe: Translation<typeof billingEn> = {
     setupFee: "Einrichtung: kostenlos mit der Anleitung, {price} durch unser Team",
     additionalLocation: "Jeder weitere Standort einer Kette: {price} im Monat",
     setupFeeAnnual: "Einrichtung: kostenlos mit der Anleitung, durch unser Team inklusive",
+    setupFeeCovered: "Einrichtung: kostenlos, ein anderer Standort Ihrer Kette hat sie bereits bezahlt",
+    furtherLocationNote: "Dies ist ein weiterer Standort Ihrer Kette: Jeder Tarif kostet den Preis für einen weiteren Standort.",
     overage: "Zusätzliche Minute: {price}",
     trial: { one: "{count} Tag kostenlos testen", other: "{count} Tage kostenlos testen" },
     channelsLabel: "Kanäle",
