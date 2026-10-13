@@ -53,7 +53,14 @@ test("the first conversation, booking, channel card and Today start in the top h
       (current) => current.locator("[data-booking-card]").first().or(current.locator('[aria-labelledby="bookings-today"]')).first(),
     ],
     ["Channels", "assistant/channels", (current) => current.locator('section[aria-labelledby^="channel-"]').first()],
-    ["Overview", "overview", (current) => current.locator("[data-today-block]")],
+    [
+      "Overview",
+      "overview",
+      // The Today on the screen. React streams the server's Today into a hidden holder and reveals it
+      // up to 300 ms later (React 19.2 batches reveals); a block the client rendered meanwhile is on the
+      // screen while that hidden copy still waits in the document.
+      (current) => current.locator("[data-today-block]").filter({ visible: true }),
+    ],
   ];
   for (const [name, path, first] of pages) {
     await page.goto(`/b/${owner.businessId}/${path}`);
