@@ -14,7 +14,7 @@ export const auditChainEn = {
   },
   verdict: {
     unchecked: "Each new entry is sealed with the one before it. The first daily check runs within a day.",
-    unsealed: "Entries are sealed from the first one written after sealing began, and this log has none yet. Entries written before that are not sealed.",
+    unsealed: "Entries are sealed from the first one written after sealing began, and the latest check found none yet. Entries written before that are not sealed.",
     intact: "Each entry written since sealing began is sealed with the one before it, and the daily check found every one as it was written. Entries written before that are not sealed.",
     broken: "The daily check found a problem at entry {position}: {problem}. The platform team has been alerted.",
   },

@@ -13,7 +13,7 @@ export const auditChainDe: Translation<typeof auditChainEn> = {
   },
   verdict: {
     unchecked: "Jeder neue Eintrag wird mit dem vorherigen versiegelt. Die erste tägliche Prüfung läuft innerhalb eines Tages.",
-    unsealed: "Einträge werden ab dem ersten versiegelt, der nach dem Start der Versiegelung geschrieben wurde, und dieses Protokoll hat noch keinen. Ältere Einträge sind nicht versiegelt.",
+    unsealed: "Einträge werden ab dem ersten versiegelt, der nach dem Start der Versiegelung geschrieben wurde, und die letzte Prüfung hat noch keinen gefunden. Ältere Einträge sind nicht versiegelt.",
     intact: "Jeder seit dem Start der Versiegelung geschriebene Eintrag ist mit dem vorherigen versiegelt, und die tägliche Prüfung fand alle so vor, wie sie geschrieben wurden. Ältere Einträge sind nicht versiegelt.",
     broken: "Die tägliche Prüfung fand ein Problem bei Eintrag {position}: {problem}. Das Plattform-Team wurde alarmiert.",
   },
