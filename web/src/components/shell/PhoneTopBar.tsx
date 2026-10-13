@@ -8,6 +8,9 @@
  * panel ("More"), so the bar stays calm; a search button opens the
  * command palette, `action` adds one button at its end (the account, when
  * there is no tab bar), and `ring` the setup guide's progress before it.
+ * With `yields`, an open conversation's own header takes the bar's place on
+ * phones once it is there (shell.css): the bar keeps its room, hidden, so
+ * the page under it never moves.
  */
 
 import type { ReactNode } from "react";
@@ -24,6 +27,7 @@ export function PhoneTopBar({
   context,
   action,
   ring,
+  yields = false,
 }: {
   title?: string;
   /** The business name (user content) or "Platform admin". */
@@ -31,11 +35,17 @@ export function PhoneTopBar({
   action?: ReactNode;
   /** The setup guide's progress ring, before the action. */
   ring?: ReactNode;
+  /** An open conversation's header may take the bar's place (see above). */
+  yields?: boolean;
 }) {
   const { live } = usePhoneChromeSnapshot();
   const help = usePageHelp();
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-canvas/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
+    <header
+      data-phone-top-bar=""
+      data-yields={yields ? "" : undefined}
+      className="sticky top-0 z-20 border-b border-line bg-canvas/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden"
+    >
       <div className="flex h-14 items-center gap-3 px-4">
         <Brand href={HOME_PATH} hideName />
         <div className="min-w-0 flex-1 leading-tight">

@@ -57,7 +57,28 @@ export function dateTimeFormat(locale: string, options: Intl.DateTimeFormatOptio
   return { format: (date) => native.format(date), formatRange: (from, to) => native.formatRange(from, to) };
 }
 
+/**
+ * The number formatters made so far, by locale and options: making one costs
+ * far more than using it, and a counting number formats itself every frame.
+ */
+const numberFormats = new Map<string, NumberFormatter>();
+const MAX_NUMBER_FORMATS = 200;
+
 export function numberFormat(locale: string, options: Intl.NumberFormatOptions = {}): NumberFormatter {
+  const key = `${locale} ${JSON.stringify(options)}`;
+  const made = numberFormats.get(key);
+  if (made) {
+    return made;
+  }
+  const formatter = makeNumberFormat(locale, options);
+  if (numberFormats.size >= MAX_NUMBER_FORMATS) {
+    numberFormats.clear();
+  }
+  numberFormats.set(key, formatter);
+  return formatter;
+}
+
+function makeNumberFormat(locale: string, options: Intl.NumberFormatOptions): NumberFormatter {
   const georgian = isGeorgianLocale(locale) ? georgianNumberFormat(options) : null;
   if (georgian) {
     return { format: georgian };

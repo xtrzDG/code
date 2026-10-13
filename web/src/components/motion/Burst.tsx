@@ -9,17 +9,18 @@
  *     <div className="relative"><Burst /> …</div>
  */
 
-import { useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
 
 import { tweenTransition } from "@/lib/motion";
 import { burstSparks } from "@/lib/motionMath";
 
+import { useMotionPreference } from "./MotionPreference";
+
 /** Accent, success and warm tones of the theme (decoration only). */
 const SPARK_CLASSES = ["bg-accent", "bg-success", "bg-warning", "bg-accent-solid"] as const;
 
 export function Burst({ count = 14, radius = 56 }: { count?: number; radius?: number }) {
-  const isReduced = useReducedMotion();
+  const isReduced = useMotionPreference().isCalm;
   if (isReduced) {
     return null;
   }

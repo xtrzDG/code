@@ -14,7 +14,7 @@
  * conversations and bookings (components/CommandPalette).
  */
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { startTransition, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
 import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
@@ -25,6 +25,7 @@ import { HelpProvider } from "@/components/help/HelpProvider";
 import { PageHelpProvider, PhoneChromeProvider, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { afterNextPaint } from "@/lib/afterNextPaint";
 import { sidebarCookie } from "@/lib/shellPreferences";
 
 import { MoreSheet } from "./MoreSheet";
@@ -83,7 +84,11 @@ export function ShellFrame({
   initialCollapsed: boolean;
   /** False before the assistant exists and on an open conversation (its reply box needs the space). */
   showTabBar?: boolean;
-  /** False on an open conversation: its own bar (back, customer, actions) is the top of the phone screen. */
+  /**
+   * False on an open conversation: its own bar (back, customer, actions) is the top of the phone
+   * screen. The top bar still keeps its room, hidden under that bar (it yields), so opening and
+   * closing a conversation never moves the page.
+   */
   showPhoneTopBar?: boolean;
   /** The page uses the full width of large screens (the inbox: a list beside a conversation). */
   isWide?: boolean;
@@ -98,6 +103,11 @@ export function ShellFrame({
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [isMoreOpen, setMoreOpen] = useState(false);
+  // "More" opens and closes after the tap has painted, in a transition (not useTransition, whose
+  // pending flag would redraw the shell at once): the sheet's commit never holds the tap's frame.
+  const showMore = (open: boolean) => afterNextPaint(() => startTransition(() => setMoreOpen(open)));
+  // One element per help article: a new one on every redraw of the shell would redraw every page that reads it.
+  const pageHelp = useMemo(() => (helpSlug ? <HelpLink slug={helpSlug} /> : null), [helpSlug]);
   const tabItems = items.filter((item) => item.inTabBar);
   const moreItems = items.filter((item) => !item.inTabBar);
 
@@ -110,9 +120,9 @@ export function ShellFrame({
   return (
     <HelpProvider>
     <CommandPaletteProvider links={items.filter((item) => !item.secondary)} searchScope={searchScope}>
-    <PageHelpProvider help={helpSlug ? <HelpLink slug={helpSlug} /> : null}>
+    <PageHelpProvider help={pageHelp}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
-    <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
+    <div data-shell-frame="" className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
       <ServiceWorker />
       <a
         href="#main"
@@ -143,16 +153,16 @@ export function ShellFrame({
       </aside>
 
       <div className="transition-[padding] duration-(--motion-base) ease-(--ease-emphasized) lg:ps-(--sidebar-width)">
-        {showPhoneTopBar ? (
         <PhoneTopBar
           title={title}
           context={context}
           ring={ring?.(true)}
+          yields={!showPhoneTopBar}
           action={
             showTabBar ? undefined : (
               <button
                 type="button"
-                onClick={() => setMoreOpen(true)}
+                onClick={() => showMore(true)}
                 aria-label={t("account.menu")}
                 aria-haspopup="dialog"
                 aria-expanded={isMoreOpen}
@@ -163,7 +173,6 @@ export function ShellFrame({
             )
           }
         />
-        ) : null}
         <AnnouncementBanner />
         <ShellMain isWide={isWide} showTabBar={showTabBar}>
           {children}
@@ -175,12 +184,12 @@ export function ShellFrame({
           items={tabItems}
           isMoreActive={moreItems.some((item) => item.isActive)}
           isMoreOpen={isMoreOpen}
-          onOpenMore={() => setMoreOpen(true)}
+          onOpenMore={() => showMore(true)}
         />
       ) : null}
       <MoreSheet
         open={isMoreOpen}
-        onClose={() => setMoreOpen(false)}
+        onClose={() => showMore(false)}
         items={showTabBar ? moreItems : []}
         top={switcher ? (onNavigate) => switcher(onNavigate) : undefined}
         me={me}

@@ -71,3 +71,28 @@
     }
   }
 }
+
+/* The phone's top bar (PhoneTopBar): its row, its border and the notch above it. */
+:root {
+  --phone-top-bar-height: calc(3.5rem + 1px + env(safe-area-inset-top, 0px));
+}
+
+/*
+ * An open conversation on a phone shows its own header in the top bar's
+ * place. The bar stays where it is, hidden (it yields), and the header
+ * rises over it: the page under the bar never moves when a conversation
+ * opens or closes (no layout shift, CLS 0). While there is no header yet
+ * (a link straight to a conversation, an error) the bar shows; with a
+ * banner above the page (an announcement, platform support looking in) the
+ * bar shows and the header keeps below the banner.
+ */
+@media (width < 64rem) {
+  [data-shell-frame]:has([data-conversation-header]):not(:has([data-shell-banner])) {
+    & [data-phone-top-bar][data-yields] {
+      visibility: hidden;
+    }
+    & [data-conversation-header] {
+      margin-top: calc(-1.5rem - var(--phone-top-bar-height));
+    }
+  }
+}

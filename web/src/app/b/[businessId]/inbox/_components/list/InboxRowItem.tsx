@@ -15,22 +15,26 @@
  * a checkbox under the pointer, while anything is selected, and on a tap.
  */
 
+import * as m from "motion/react-m";
 import Link from "next/link";
-import type { FocusEvent, PointerEvent } from "react";
+import type { FocusEvent, PointerEvent, Ref } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheck } from "@/components/icons";
 import { TestBadge } from "@/components/insights/Badges";
 import { CustomerName } from "@/components/insights/common";
+import { useMotionPreference } from "@/components/motion/MotionPreference";
+import { morphName, SharedMorph } from "@/components/motion/SharedMorph";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { conversationPath } from "@/lib/navigation";
 import { formatPhone } from "@/lib/phone";
 
-import { initialsOf } from "../../_lib/conversationModel";
 import type { InboxDensity } from "../../_lib/inboxLayout";
 import type { InboxRow } from "../../_lib/inboxModel";
 import type { TeamMember } from "../../_lib/team";
+import { RowAvatar } from "./RowAvatar";
+import { rowMotion } from "./rowMotion";
 import { ChannelGlyph, NotesMark, RowAgeText, RowDetails, RowPreview, WorkChip } from "./rowParts";
 
 const URGENCY_EDGE = {
@@ -112,14 +116,20 @@ function RowCheck({ row, state, onToggle }: { row: InboxRow; state: RowState; on
 }
 
 export function InboxRowItem({
+  ref,
   row,
+  position,
   member,
   state,
   events,
   linkQuery,
   nowMs,
 }: {
+  /** AnimatePresence's handle on the row while it leaves (popLayout). */
+  ref?: Ref<HTMLLIElement>;
   row: InboxRow;
+  /** Its place in the list: the row glides only when this changes. */
+  position: number;
   /** Who handles it (null: nobody, or a former member). */
   member: TeamMember | null;
   state: RowState;
@@ -131,15 +141,19 @@ export function InboxRowItem({
   const href = `${conversationPath(business.id, row.id)}${linkQuery ? `?${linkQuery}` : ""}`;
   const isCompact = state.density === "compact";
   const hideCheckAvatar = state.isSelectable && (state.isChecked || state.isSelecting);
+  const { isCalm } = useMotionPreference();
 
   const hint = (event: PointerEvent<HTMLAnchorElement> | FocusEvent<HTMLAnchorElement>) => events.onHint(row, event.currentTarget);
   const leave = () => events.onHint(null, null);
 
   return (
-    <li
+    <m.li
+      ref={ref}
+      {...rowMotion(isCalm)}
+      layoutDependency={position}
       data-inbox-row={row.id}
       data-cursor={state.isCursor || undefined}
-      className={cn("group/row relative", state.isBusy && "pointer-events-none opacity-50 transition-opacity")}
+      className={cn("group/row relative bg-surface", state.isBusy && "pointer-events-none opacity-50 transition-opacity")}
     >
       {state.isSelectable ? <RowCheck row={row} state={state} onToggle={() => events.onToggle(row)} /> : null}
       <Link
@@ -162,32 +176,32 @@ export function InboxRowItem({
           state.isCursor && !state.isOpen && !state.isChecked && "bg-surface-muted",
         )}
       >
-        <span
-          aria-hidden
-          data-user-content
-          className={cn(
-            "absolute flex items-center justify-center rounded-full bg-surface-muted font-semibold text-ink-muted transition-opacity",
-            isCompact ? "start-2 top-1/2 size-7 -translate-y-1/2 text-[0.6875rem]" : "start-3 top-1/2 size-9 -translate-y-1/2 text-[0.8125rem]",
-            hideCheckAvatar ? "opacity-0" : state.isSelectable && "group-hover/row:opacity-0",
-          )}
-        >
-          {initialsOf(row.contactName)}
-        </span>
+        <RowAvatar
+          row={row}
+          isCompact={isCompact}
+          isHidden={hideCheckAvatar}
+          hidesOnHover={state.isSelectable}
+          isOpen={state.isOpen}
+        />
 
         {isCompact ? (
           <>
-            <span className="w-[32%] max-w-44 shrink-0 truncate text-[0.8125rem] font-semibold text-ink">
-              <CustomerLabel row={row} />
-            </span>
+            <SharedMorph name={morphName("conversation-name", row.id)} active={!state.isOpen}>
+              <span className="w-[32%] max-w-44 shrink-0 truncate text-[0.8125rem] font-semibold text-ink">
+                <CustomerLabel row={row} />
+              </span>
+            </SharedMorph>
             <WorkChip row={row} className="max-w-[34%] shrink-0" />
             <RowPreview row={row} className="flex-1 text-[0.8125rem] text-ink-muted" />
             <NotesMark count={row.noteCount} />
           </>
         ) : (
           <span className="flex min-w-0 items-baseline justify-between gap-2">
-            <span className="min-w-0 truncate text-sm font-semibold text-ink">
-              <CustomerLabel row={row} />
-            </span>
+            <SharedMorph name={morphName("conversation-name", row.id)} active={!state.isOpen}>
+              <span className="min-w-0 truncate text-sm font-semibold text-ink">
+                <CustomerLabel row={row} />
+              </span>
+            </SharedMorph>
             {row.isSandbox ? <TestBadge /> : null}
           </span>
         )}
@@ -214,6 +228,6 @@ export function InboxRowItem({
           <RowDetails row={row} member={member} />
         </span>
       </Link>
-    </li>
+    </m.li>
   );
 }

@@ -12,8 +12,12 @@
  * messenger says under it how it travels (DeliveryChip); under an answer
  * of the assistant, the options it offered to tap, what the reply guard did
  * and, for owners, "Fix answer". A reply to the business's story says so
- * above the customer's words (MessageContext).
+ * above the customer's words (MessageContext). A message that arrives while
+ * the conversation is open springs in (messageArrival.ts).
  */
+
+import * as m from "motion/react-m";
+import { useState } from "react";
 
 import { describeError } from "@/api/errors";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
@@ -21,6 +25,7 @@ import { IconCheck, IconAlert } from "@/components/icons";
 import { formatLocalDate } from "@/components/insights/dates";
 import { MESSAGE_AUTHORS, TOOL_LABELS } from "@/components/insights/labels";
 import type { MessageView } from "@/components/insights/types";
+import { useMotionPreference } from "@/components/motion/MotionPreference";
 import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -32,6 +37,7 @@ import { DeliveryChip } from "./DeliveryChip";
 import { MessageAttachments } from "./MessageAttachments";
 import { OfferedChoices, StoryContextLine } from "./MessageContext";
 import { AnswerTools } from "./AnswerTools";
+import { arrivalMotion, isArrival, openingMessages } from "./messageArrival";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
 const BUBBLE: Record<MessageView["author"], string> = {
@@ -55,6 +61,8 @@ export function Transcript({
 }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
+  const { isCalm } = useMotionPreference();
+  const [opening] = useState(() => openingMessages(messages));
 
   if (messages.length === 0 && !earlier?.hasMore) {
     return <p className="py-8 text-center text-sm text-ink-muted">{t("conversations.emptyTranscript")}</p>;
@@ -92,7 +100,12 @@ export function Transcript({
           </p>
           <ol className="space-y-4">
             {day.messages.map((message) => (
-              <MessageBubble key={message.id} message={message} onFix={onFixAnswer ?? null} />
+              <MessageBubble
+                key={message.id}
+                message={message}
+                onFix={onFixAnswer ?? null}
+                motion={arrivalMotion(isArrival(message, opening), isCalm)}
+              />
             ))}
           </ol>
         </section>
@@ -107,7 +120,15 @@ function memberName(
   return member ? (member.display_name ?? member.email ?? member.phone_number ?? null) : null;
 }
 
-function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((messageId: string) => void) | null }) {
+function MessageBubble({
+  message,
+  onFix,
+  motion,
+}: {
+  message: MessageView;
+  onFix: ((messageId: string) => void) | null;
+  motion: ReturnType<typeof arrivalMotion>;
+}) {
   const { t } = useI18n();
   const format = useBusinessFormat();
   const { business, me, isPlatformAdmin } = useBusiness();
@@ -128,7 +149,14 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
   const hasText = message.text.trim() !== "" || attachments.length === 0;
 
   return (
-    <li className={cn("flex", side === "end" ? "justify-end" : side === "center" ? "justify-center" : "justify-start")}>
+    <m.li
+      {...motion}
+      data-arrival={motion.initial ? "" : undefined}
+      className={cn(
+        "flex",
+        side === "end" ? "origin-bottom-right justify-end rtl:origin-bottom-left" : side === "center" ? "justify-center" : "origin-bottom-left justify-start rtl:origin-bottom-right",
+      )}
+    >
       <div
         className={cn(
           "min-w-0",
@@ -195,6 +223,6 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
         ) : null}
         {hasTechnicalDetails(message, isPlatformAdmin) ? <MessageTechnicalDetails message={message} className="mt-1.5" /> : null}
       </div>
-    </li>
+    </m.li>
   );
 }

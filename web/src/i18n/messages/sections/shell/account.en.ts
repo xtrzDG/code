@@ -14,4 +14,6 @@ export const accountEn = {
   installHint: "Open the cabinet from your home screen or dock, like an app.",
   installIosTitle: "Install the app on iPhone or iPad",
   installIosSteps: "In Safari, tap Share at the bottom of the screen, then “Add to Home Screen”.",
+  motion: "Reduce motion",
+  motionHint: "Keeps the cabinet still on this device: no animations, counting numbers or 3D. Your device's own setting is always followed.",
 } as const;

@@ -62,7 +62,7 @@ describe("the public pages' first load", () => {
 });
 
 describe("the 3D engine", () => {
-  it("is imported by the landing hero's scene alone, so no cabinet or niche page can carry it", () => {
+  it("is imported by the scene folder alone (the landing hero's and the setup finale's scenes), so no other page can carry it", () => {
     const importers = sourceFiles(SRC)
       .filter((file) => packagesOf(file).some((name) => THREE.test(name)))
       .map(fromSrc);
@@ -70,7 +70,7 @@ describe("the 3D engine", () => {
     expect(importers.filter((file) => !file.startsWith(SCENE_FOLDER + path.sep))).toEqual([]);
   });
 
-  it("is reached only through the hero's import() of the scene", () => {
+  it("is reached only through an import() of a scene (the hero's, the finale's orb)", () => {
     const staticSceneImporters = sourceFiles(SRC)
       .filter((file) => !fromSrc(file).startsWith(SCENE_FOLDER + path.sep))
       .filter((file) => importsOf(file).static.some((specifier) => /(^|\/)scene\//.test(specifier)))

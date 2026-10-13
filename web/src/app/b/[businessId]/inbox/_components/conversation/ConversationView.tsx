@@ -36,6 +36,7 @@ import { DetailsPanel } from "../details/DetailsPanel";
 import { NotesPanel } from "../notes/NotesPanel";
 import { AssignMenu } from "./AssignMenu";
 import { ConversationDetailSkeleton } from "./ConversationDetailSkeleton";
+import { ConversationHeaderPreview } from "./ConversationHeaderPreview";
 import { ConversationPanel, type PanelTab } from "./ConversationPanel";
 import { ConversationTopBar } from "./ConversationTopBar";
 import { Transcript } from "./Transcript";
@@ -72,7 +73,10 @@ export function ConversationView({ conversationId }: { conversationId: string })
         <ErrorState error={detail.error} onRetry={detail.reload} />
       </Card>
     ) : (
-      <ConversationDetailSkeleton label={t("conversations.loadingOne")} />
+      <ConversationDetailSkeleton
+        label={t("conversations.loadingOne")}
+        header={<ConversationHeaderPreview conversationId={conversationId} />}
+      />
     );
   }
 
@@ -88,7 +92,7 @@ export function ConversationView({ conversationId }: { conversationId: string })
     <article
       aria-labelledby="conversation-title"
       className={cn(
-        "flex min-h-[calc(100dvh-3rem)] flex-col lg:grid lg:h-full lg:min-h-0 lg:gap-4",
+        "flex min-h-[calc(100dvh-3rem-var(--phone-top-bar-height))] flex-col lg:grid lg:h-full lg:min-h-0 lg:gap-4",
         isWide ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : "lg:grid-cols-1",
       )}
     >

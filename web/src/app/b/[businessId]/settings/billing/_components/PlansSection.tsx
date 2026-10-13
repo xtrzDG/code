@@ -2,12 +2,14 @@
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheck } from "@/components/icons";
+import { TiltCard } from "@/components/motion";
 import { Badge, Button, Card, ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { useI18n } from "@/i18n/client";
 import type { ApiError } from "@/api/errors";
 import type { Schema } from "@/api/types";
 import { cn } from "@/lib/cn";
+import { TILT_DEGREES } from "@/lib/motion";
 import { listFormat } from "@/lib/intl/formatters";
 import { rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
 
@@ -161,70 +163,71 @@ export function PlansSection({
               ].filter((feature): feature is string => feature !== null);
 
               return (
-                <li
-                  key={quote.plan_key}
-                  className={cn(
-                    "flex flex-col rounded-2xl border bg-surface p-5 shadow-sm",
-                    isCurrent ? "border-accent-solid ring-1 ring-accent-solid" : "border-line",
-                  )}
-                  aria-current={isCurrent ? "true" : undefined}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-base font-semibold text-ink">{quote.name}</h3>
-                    {isCurrent ? <Badge tone="accent">{t("billing.plans.current")}</Badge> : null}
-                  </div>
-                  <p className="mt-1 min-h-10 text-sm text-ink-muted">{quote.description}</p>
-                  <div className="mt-4">
-                    <p className="flex flex-wrap items-baseline gap-x-1.5">
-                      <span className="text-2xl font-semibold tracking-tight text-ink">{quotedMoneyText(price, format.money)}</span>
-                      <span className="text-sm text-ink-muted">
-                        {t(period === "annual" ? "billing.unit.annual" : "billing.unit.monthly")}
-                      </span>
-                    </p>
-                    {period === "annual" ? (
-                      <p className="mt-0.5 text-sm text-ink-muted">
-                        {t("billing.plans.perMonthEquivalent", {
-                          price: format.money(monthlyEquivalentMinor(price), price.money.currency_code),
-                        })}
-                      </p>
-                    ) : null}
-                  </div>
-                  <ul className="mt-4 space-y-2 text-sm text-ink">
-                    {features.map((feature) => (
-                      <li key={feature} className="flex gap-2">
-                        <IconCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-xs text-ink-subtle">
-                    <span className="font-medium">{t("billing.plans.channelsLabel")}: </span>
-                    {listFormat(locale, { type: "conjunction" }).format(
-                      quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
+                <li key={quote.plan_key} className="flex" aria-current={isCurrent ? "true" : undefined}>
+                  <TiltCard
+                    maxDegrees={TILT_DEGREES.subtle}
+                    className={cn(
+                      "flex w-full flex-col rounded-2xl border bg-surface p-5 shadow-sm",
+                      isCurrent ? "border-accent-solid ring-1 ring-accent-solid" : "border-line",
                     )}
-                  </p>
-                  <div className="mt-auto space-y-2 pt-5">
-                    {actions.length === 0 ? (
-                      isCurrent ? (
-                        <Button variant="secondary" fullWidth disabled>
-                          {t("billing.plans.current")}
-                        </Button>
-                      ) : null
-                    ) : canManage ? (
-                      actions.map((action, index) => (
-                        <Button
-                          key={action}
-                          variant={index === 0 ? "primary" : "ghost"}
-                          fullWidth
-                          onClick={() => onChoose({ quote, period, action })}
-                        >
-                          {action === "subscribe" && isCurrent
-                            ? t("billing.subscribe.subscribeCurrent")
-                            : t(ACTION_LABELS[action])}
-                        </Button>
-                      ))
-                    ) : null}
-                  </div>
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-base font-semibold text-ink">{quote.name}</h3>
+                      {isCurrent ? <Badge tone="accent">{t("billing.plans.current")}</Badge> : null}
+                    </div>
+                    <p className="mt-1 min-h-10 text-sm text-ink-muted">{quote.description}</p>
+                    <div className="mt-4">
+                      <p className="flex flex-wrap items-baseline gap-x-1.5">
+                        <span className="text-2xl font-semibold tracking-tight text-ink">{quotedMoneyText(price, format.money)}</span>
+                        <span className="text-sm text-ink-muted">
+                          {t(period === "annual" ? "billing.unit.annual" : "billing.unit.monthly")}
+                        </span>
+                      </p>
+                      {period === "annual" ? (
+                        <p className="mt-0.5 text-sm text-ink-muted">
+                          {t("billing.plans.perMonthEquivalent", {
+                            price: format.money(monthlyEquivalentMinor(price), price.money.currency_code),
+                          })}
+                        </p>
+                      ) : null}
+                    </div>
+                    <ul className="mt-4 space-y-2 text-sm text-ink">
+                      {features.map((feature) => (
+                        <li key={feature} className="flex gap-2">
+                          <IconCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-3 text-xs text-ink-subtle">
+                      <span className="font-medium">{t("billing.plans.channelsLabel")}: </span>
+                      {listFormat(locale, { type: "conjunction" }).format(
+                        quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
+                      )}
+                    </p>
+                    <div className="mt-auto space-y-2 pt-5">
+                      {actions.length === 0 ? (
+                        isCurrent ? (
+                          <Button variant="secondary" fullWidth disabled>
+                            {t("billing.plans.current")}
+                          </Button>
+                        ) : null
+                      ) : canManage ? (
+                        actions.map((action, index) => (
+                          <Button
+                            key={action}
+                            variant={index === 0 ? "primary" : "ghost"}
+                            fullWidth
+                            onClick={() => onChoose({ quote, period, action })}
+                          >
+                            {action === "subscribe" && isCurrent
+                              ? t("billing.subscribe.subscribeCurrent")
+                              : t(ACTION_LABELS[action])}
+                          </Button>
+                        ))
+                      ) : null}
+                    </div>
+                  </TiltCard>
                 </li>
               );
             })}

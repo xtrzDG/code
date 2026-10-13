@@ -10,6 +10,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 
+import { prefersCalmMotion } from "@/lib/motionPreference";
 import { direction as directionOf, isTunnelPlace, type TunnelPlace } from "@/lib/tunnel/steps";
 
 import { useTunnelTelemetry } from "./useTunnelTelemetry";
@@ -35,7 +36,7 @@ export function useTunnelPlace(fallback: TunnelPlace, allowed: (place: TunnelPla
       } else {
         router.push(target, { scroll: false });
       }
-      const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const calm = prefersCalmMotion();
       window.scrollTo({ top: 0, behavior: calm ? "auto" : "smooth" });
     },
     [pathname, router],

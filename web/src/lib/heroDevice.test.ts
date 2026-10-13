@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { heroPlan, type DeviceSignals } from "./heroDevice";
+import { finaleOrbPlan, heroPlan, type DeviceSignals } from "./heroDevice";
 
 const DESKTOP: DeviceSignals = {
   prefersReducedMotion: false,
@@ -53,5 +53,22 @@ describe("which hero a device gets", () => {
     expect(heroPlan({ ...TABLET, cores: 4 })).toEqual({ kind: "poster", reason: "low-power" });
     expect(heroPlan({ ...TABLET, memoryGb: 4 })).toEqual({ kind: "poster", reason: "low-power" });
     expect(heroPlan({ ...TABLET, cores: undefined, memoryGb: undefined })).toEqual({ kind: "scene" });
+  });
+});
+
+describe("whether the setup finale's orb is 3D", () => {
+  const PHONE: DeviceSignals = { ...TABLET, isWideLayout: false };
+
+  it("is 3D on a capable phone or a narrow window, where the landing keeps its poster", () => {
+    expect(heroPlan(PHONE)).toEqual({ kind: "poster", reason: "narrow-screen" });
+    expect(finaleOrbPlan(PHONE)).toEqual({ kind: "scene" });
+    expect(finaleOrbPlan({ ...DESKTOP, isWideLayout: false })).toEqual({ kind: "scene" });
+  });
+
+  it("keeps the landing's other rules: motion, data, network and a capable device", () => {
+    expect(finaleOrbPlan({ ...PHONE, prefersReducedMotion: true })).toEqual({ kind: "poster", reason: "reduced-motion" });
+    expect(finaleOrbPlan({ ...PHONE, saveData: true })).toEqual({ kind: "poster", reason: "save-data" });
+    expect(finaleOrbPlan({ ...PHONE, effectiveType: "3g" })).toEqual({ kind: "poster", reason: "slow-network" });
+    expect(finaleOrbPlan({ ...PHONE, cores: 4 })).toEqual({ kind: "poster", reason: "low-power" });
   });
 });

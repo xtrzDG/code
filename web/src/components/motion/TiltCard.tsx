@@ -2,20 +2,30 @@
 
 /**
  * A card that tilts towards the mouse in 3D, with a soft glare where the
- * pointer is. Touch and pen input, and reduced motion, leave it flat.
+ * pointer is. Touch and pen input, and reduced motion (the device's or
+ * the cabinet's own setting), leave it flat; so does typing in a field
+ * inside it (a card with a form stays level while it is being filled in).
  * Children can sit at different depths with <TiltLayer depth={24}>, which
  * makes them float above the card while it tilts.
  *
  *     <TiltCard className="rounded-2xl border …"><TiltLayer depth={30}>…</TiltLayer></TiltCard>
  */
 
-import { useMotionTemplate, useMotionValue, useReducedMotion, useSpring } from "motion/react";
+import { useMotionTemplate, useMotionValue, useSpring } from "motion/react";
 import * as m from "motion/react-m";
 import type { PointerEvent, ReactNode } from "react";
 
 import { SPRINGS, TILT_DEGREES } from "@/lib/motion";
 import { tiltFromPointer } from "@/lib/motionMath";
 import { cn } from "@/lib/cn";
+
+import { useMotionPreference } from "./MotionPreference";
+
+/** A field inside the card has the focus: the card keeps level. */
+function isEditingWithin(card: HTMLElement): boolean {
+  const focused = document.activeElement;
+  return focused instanceof HTMLElement && card.contains(focused) && focused.matches("input, textarea, select, [contenteditable]");
+}
 
 export function TiltCard({
   children,
@@ -30,7 +40,7 @@ export function TiltCard({
   glare?: boolean;
   as?: "div" | "li" | "figure";
 }) {
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference().isCalm;
   const rotateX = useSpring(0, SPRINGS.bouncy);
   const rotateY = useSpring(0, SPRINGS.bouncy);
   const glareX = useMotionValue(50);
@@ -40,6 +50,10 @@ export function TiltCard({
 
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     if (reduced || event.pointerType !== "mouse") {
+      return;
+    }
+    if (isEditingWithin(event.currentTarget)) {
+      onPointerLeave();
       return;
     }
     const tilt = tiltFromPointer({ x: event.clientX, y: event.clientY }, event.currentTarget.getBoundingClientRect(), maxDegrees);

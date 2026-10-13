@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { MotionPreferenceProvider } from "@/components/motion/MotionPreference";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { StepUpDialog } from "@/components/security/StepUpDialog";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
@@ -8,10 +9,15 @@ import { ViewerTimeZoneProvider } from "@/components/time/ViewerTimeZone";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
 import { getClientTexts, getI18n } from "@/i18n/server";
+import { cn } from "@/lib/cn";
+import { motionAttribute } from "@/lib/motionPreference";
 import { themeColors } from "@/lib/theme";
+import { getMotionPreference } from "@/server/motionPreference";
+import { preloadScriptFont } from "@/server/scriptFontPreload";
 import { getTheme } from "@/server/theme";
 import { getViewerTimeZone } from "@/server/viewerTimeZone";
 
+import { brandFontVariables } from "./fonts";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,24 +39,41 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, messages, direction }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
+  const [{ locale, messages, direction }, theme, motion, viewerTimeZone] = await Promise.all([
+    getI18n(),
+    getTheme(),
+    getMotionPreference(),
+    getViewerTimeZone(),
+  ]);
   // A public page's client components get only their own texts (i18n/publicScope.ts).
   const clientTexts = await getClientTexts(messages);
+  // Georgian, Russian and Hebrew pages load their script's font with the stylesheet (fonts.ts).
+  preloadScriptFont(locale);
   return (
-    // data-theme and dir are rendered on the server, so the first paint already
-    // has the right colours and reads in the language's direction (Hebrew: right to left).
-    <html lang={locale} dir={direction} data-theme={theme} className="h-full">
+    // data-theme, data-motion and dir are rendered on the server, so the first
+    // paint already has the right colours, stays still for a person who asked
+    // for less motion, and reads in the language's direction (Hebrew: right to left).
+    // The brand typeface's families come as CSS variables (fonts.ts, globals.css).
+    <html
+      lang={locale}
+      dir={direction}
+      data-theme={theme}
+      data-motion={motionAttribute(motion)}
+      className={cn("h-full", brandFontVariables)}
+    >
       <body className="min-h-full bg-canvas text-ink antialiased">
         <WebVitalsReporter />
         <I18nProvider locale={locale} messages={clientTexts.messages} scope={clientTexts.scope}>
           <ThemeProvider initialTheme={theme}>
             <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
-              <MotionProvider animates={clientTexts.scope === "full"}>
-                <ToastProvider>
-                  {children}
-                  <StepUpDialog />
-                </ToastProvider>
-              </MotionProvider>
+              <MotionPreferenceProvider initialPreference={motion}>
+                <MotionProvider animates={clientTexts.scope === "full"}>
+                  <ToastProvider>
+                    {children}
+                    <StepUpDialog />
+                  </ToastProvider>
+                </MotionProvider>
+              </MotionPreferenceProvider>
             </ViewerTimeZoneProvider>
           </ThemeProvider>
         </I18nProvider>

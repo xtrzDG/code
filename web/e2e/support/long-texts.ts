@@ -2,9 +2,9 @@
  * Long texts never break a layout. The pseudo-locale (accented English, 40 %
  * longer, in brackets: src/i18n/pseudo.ts) stands in for Russian and
  * Georgian, which run 20–40 % longer than English: every page of a business,
- * the setup invitation and tunnel, the business list and the sign-in page, on
- * a desktop and on a phone, fit the screen and keep every button, tab and
- * link whole. Its right-to-left twin (`ar-XB`) checks the same pages laid out
+ * the setup invitation and tunnel, the business list, the account settings
+ * (Reduce motion among them) and the sign-in page, on a desktop and on a
+ * phone, fit the screen and keep every button, tab and link whole. Its right-to-left twin (`ar-XB`) checks the same pages laid out
  * as for Hebrew: a box placed by a physical side would push the page sideways
  * there. One spec file per direction (pseudo-locale-ltr.spec.ts,
  * pseudo-locale-rtl.spec.ts), so CI's shards can run them side by side.
@@ -12,9 +12,11 @@
 
 import type { Page } from "@playwright/test";
 
+import { pseudoLocalize } from "../../src/i18n/pseudo";
 import { SECTION_PAGES, visibleSections } from "../../src/lib/sections";
 
 import { expect, test } from "./fixtures";
+import { en } from "./messages";
 import { waitForNetworkQuiet } from "./network";
 import { findOverflow, usePseudoLocale } from "./overflow";
 
@@ -102,6 +104,44 @@ export function checkLongTexts(direction: Direction): void {
         await test.step("create", () => expectFits(page, "/create", direction));
         await test.step("businesses", () =>
           expectFits(page, "/businesses", direction));
+      });
+
+      test("the account settings, Reduce motion among them, fit", async ({
+        page,
+        context,
+        owner,
+      }) => {
+        await usePseudoLocale(context, direction);
+        await expectFits(page, `/b/${owner.businessId}/overview`, direction);
+        // A phone keeps them in the More sheet, a desktop in the account menu.
+        const opener = pseudoLocalize(
+          screen.isMobile ? en.navigation.more : en.account.menu,
+        );
+        await page.getByRole("button", { name: opener }).click();
+        const panel = page.getByRole("dialog", { name: opener });
+        const motion = { name: pseudoLocalize(en.account.motion) };
+        await expect(panel.getByRole("checkbox", motion)).toBeVisible();
+        expect(await findOverflow(page)).toEqual([]);
+        // Its label and hint wrap inside the panel.
+        const setting = panel
+          .locator("label")
+          .filter({ has: page.getByRole("checkbox", motion) });
+        const [panelBox, settingBox] = await Promise.all([
+          panel.boundingBox(),
+          setting.boundingBox(),
+        ]);
+        if (!panelBox || !settingBox) {
+          throw new Error("the account settings are not laid out");
+        }
+        expect(settingBox.x).toBeGreaterThanOrEqual(panelBox.x - 1);
+        expect(settingBox.x + settingBox.width).toBeLessThanOrEqual(
+          panelBox.x + panelBox.width + 1,
+        );
+        expect(
+          await setting.evaluate(
+            (label) => label.scrollWidth <= label.clientWidth + 1,
+          ),
+        ).toBe(true);
       });
 
       test("the sign-in page fits", async ({ page, context }) => {

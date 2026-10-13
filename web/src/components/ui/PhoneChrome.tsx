@@ -18,6 +18,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -82,12 +83,17 @@ export function usePhoneChromeSnapshot(): PhoneChromeSnapshot {
 
 type Entry = Parameters<Store["set"]>[1];
 
-/** Keeps `entry` registered while the component is on screen (null registers nothing). */
+/**
+ * Keeps `entry` registered while the component is on screen (null registers
+ * nothing). Registered before the browser paints: a new page's (i) and live
+ * dot come in the same frame as the page, so the top bar's buttons never
+ * move after it shows (no layout shift).
+ */
 function useEntry(entry: Entry | null): void {
   const value = useContext(PhoneChromeContext);
   const id = useId();
   const store = value?.store;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!store || !entry) {
       return;
     }

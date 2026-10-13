@@ -13,6 +13,7 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
+import { DayZeroIllustration } from "@/components/illustrations";
 import { Button, Card, EmptyState } from "@/components/ui";
 import type { ValueModel } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
@@ -146,6 +147,7 @@ export function OverviewStats({
           <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
           <Card className="lg:col-span-2" data-stats-empty="">
             <EmptyState
+              illustration={<DayZeroIllustration />}
               title={t(data.is_since_launch ? "dashboard.statsEmptyTitle" : "dashboard.emptyTitle")}
               description={t(data.is_since_launch ? "dashboard.statsEmptyDescription" : "dashboard.emptyDescription")}
             />

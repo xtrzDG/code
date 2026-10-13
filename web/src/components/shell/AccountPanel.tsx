@@ -2,14 +2,13 @@
 
 /**
  * Who is signed in and their preferences: the interface language, the
- * theme, the chime when someone needs a person, installing the cabinet as
+ * theme, the chime when someone needs a person, less motion, installing the cabinet as
  * an app, help and support (the help center, "What's new", the status
  * page, the support team's contacts), all businesses, Account → Security
  * (the authenticator app), the platform admin (for admins) and signing out. Shown by the user menu at the bottom
  * of the sidebar, and inside "More" on phones.
  */
 
-import Link from "next/link";
 import { useId, useState } from "react";
 
 import { useOptionalBusiness } from "@/components/business/BusinessContext";
@@ -24,7 +23,9 @@ import { HelpSupportSection } from "../help/HelpSupportSection";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { IconBuilding, IconDownload, IconKey, IconLink, IconMegaphone, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
+import { IntentLink } from "../ui/IntentLink";
 import { ChimeSetting } from "./ChimeSetting";
+import { MotionSetting } from "./MotionSetting";
 import { SignOutButton } from "./SignOutButton";
 import { UserAvatar, userDisplayName, userContact } from "./UserAvatar";
 import { useInstallPrompt } from "./useInstallPrompt";
@@ -119,8 +120,9 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
         </div>
       </section>
 
-      <div className="border-t border-line pt-2.5">
+      <div className="space-y-1 border-t border-line pt-2.5">
         <ChimeSetting />
+        <MotionSetting />
       </div>
 
       <HelpSupportSection rowClassName={ROW} onNavigate={onNavigate} />
@@ -128,25 +130,25 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
       <div className="space-y-0.5 border-t border-line pt-2">
         <InviteRow />
         <InstallRow />
-        <Link href={HOME_PATH} onClick={onNavigate} className={ROW}>
+        <IntentLink href={HOME_PATH} onClick={onNavigate} className={ROW}>
           <IconBuilding className="size-4 shrink-0" aria-hidden />
           {t("account.businesses")}
-        </Link>
-        <Link href={ACCOUNT_SECURITY_PATH} onClick={onNavigate} className={ROW}>
+        </IntentLink>
+        <IntentLink href={ACCOUNT_SECURITY_PATH} onClick={onNavigate} className={ROW}>
           <IconKey className="size-4 shrink-0" aria-hidden />
           {t("security.menu")}
-        </Link>
+        </IntentLink>
         {me.is_partner ? (
-          <Link href={PARTNER_PATH} onClick={onNavigate} className={ROW}>
+          <IntentLink href={PARTNER_PATH} onClick={onNavigate} className={ROW}>
             <IconLink className="size-4 shrink-0" aria-hidden />
             {t("referrals.partnerPortal")}
-          </Link>
+          </IntentLink>
         ) : null}
         {me.user.is_platform_admin ? (
-          <Link href={ADMIN_PATH} onClick={onNavigate} className={ROW}>
+          <IntentLink href={ADMIN_PATH} onClick={onNavigate} className={ROW}>
             <IconShield className="size-4 shrink-0" aria-hidden />
             {t("account.admin")}
-          </Link>
+          </IntentLink>
         ) : null}
         <SignOutButton className={cn(ROW, "h-auto")} />
       </div>

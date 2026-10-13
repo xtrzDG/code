@@ -83,7 +83,7 @@ export function InboxShell({ children }: { children: ReactNode }) {
       >
         <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 id="inbox-title" className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+            <h1 id="inbox-title" className="text-xl font-display tracking-tight text-ink sm:text-2xl">
               {t("inbox.title")}
             </h1>
             {/* The phone's top bar has its own "?". */}

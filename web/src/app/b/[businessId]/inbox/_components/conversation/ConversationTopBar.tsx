@@ -6,7 +6,8 @@
  * a link to their page), who of the team handles it, and the doors to the
  * notes and the details. On phones it is the bar at the top of the screen
  * (the transcript comes right under it); everything else about the
- * conversation waits behind "Details".
+ * conversation waits behind "Details". Its avatar and name are where the
+ * inbox row's fly to when the conversation opens (a view transition).
  */
 
 import Link from "next/link";
@@ -15,6 +16,7 @@ import type { ReactNode } from "react";
 import { CustomerStandingLink } from "@/components/customers/CustomerStandingLink";
 import { IconArrowLeft, IconInfo, IconPencil } from "@/components/icons";
 import { CHANNEL_LABELS, CONVERSATION_STATUS } from "@/components/insights/labels";
+import { morphName, SharedMorph } from "@/components/motion/SharedMorph";
 import type { ConversationSummaryView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -60,6 +62,7 @@ export function ConversationTopBar({
 
   return (
     <header
+      data-conversation-header=""
       className={cn(
         "sticky top-0 z-20 -mx-4 -mt-6 flex items-center gap-2 border-b border-line bg-canvas/85 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-2 backdrop-blur-xl sm:-mx-6 sm:px-5",
         "lg:static lg:mx-0 lg:mt-0 lg:rounded-t-2xl lg:border lg:bg-surface lg:px-4 lg:py-3 lg:backdrop-blur-none",
@@ -68,20 +71,26 @@ export function ConversationTopBar({
       <Link href={backHref} aria-label={t("inboxCard.back")} className={cn(ICON_BUTTON, "border-transparent bg-transparent lg:hidden")}>
         <IconArrowLeft className="size-5 rtl:-scale-x-100" aria-hidden />
       </Link>
-      <span
-        aria-hidden
-        data-user-content
-        className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink sm:flex"
-      >
-        {initialsOf(conversation.contact_name)}
-      </span>
-      <div className="min-w-0 flex-1 leading-tight">
+      <SharedMorph name={morphName("conversation-avatar", conversation.id)}>
+        <span
+          aria-hidden
+          data-user-content
+          className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink sm:flex"
+        >
+          {initialsOf(conversation.contact_name)}
+        </span>
+      </SharedMorph>
+      {/* Room for the name, the subline and the customer's standing (which arrives later): the header keeps its height. */}
+      <div className="min-h-15 min-w-0 flex-1 leading-tight">
         {/* The name keeps its own direction (<bdi>) but sits at the start, next to the avatar, in any script. */}
-        <h2 id="conversation-title" className="truncate text-start text-base font-semibold text-ink">
-          <bdi dir={conversation.contact_name ? "auto" : "ltr"} data-user-content={conversation.contact_name ? true : undefined}>
-            {name}
-          </bdi>
-        </h2>
+        {/* The inbox row's customer flies into this place when the conversation opens (SharedMorph). */}
+        <SharedMorph name={morphName("conversation-name", conversation.id)}>
+          <h2 id="conversation-title" className="truncate text-start text-base font-semibold text-ink">
+            <bdi dir={conversation.contact_name ? "auto" : "ltr"} data-user-content={conversation.contact_name ? true : undefined}>
+              {name}
+            </bdi>
+          </h2>
+        </SharedMorph>
         <p className="truncate text-xs text-ink-subtle">{subline}</p>
         {conversation.is_sandbox ? null : <CustomerStandingLink businessId={businessId} contactId={conversation.contact_id} />}
       </div>

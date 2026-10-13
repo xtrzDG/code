@@ -64,7 +64,9 @@ export function LiveStatus({
 }) {
   const chrome = usePhoneChrome();
   const isCompact = chrome?.hasTopBar ?? false;
-  usePhoneLive(usePageLevel(), isCompact ? { updatedAt, isFetching } : null);
+  // Registered in the shell even while the bar yields to an open conversation's header: the bar
+  // comes back with its dot and (i) in its first frame, and its buttons never move after it shows.
+  usePhoneLive(usePageLevel(), chrome ? { updatedAt, isFetching } : null);
   return <LiveStatusLine updatedAt={updatedAt} isFetching={isFetching} className={cn(isCompact && "max-lg:hidden", className)} />;
 }
 

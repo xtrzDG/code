@@ -13,16 +13,17 @@
  *   context or any error while setting up.
  */
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Component, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 import { useResolvedScheme } from "@/components/theme/useResolvedScheme";
-import { CAMERA_DISTANCE, cameraForScroll, isFrameRateLow, pointerToParallax } from "@/lib/heroScene";
+import { CAMERA_DISTANCE, cameraForScroll, pointerToParallax } from "@/lib/heroScene";
 import { approach, clamp } from "@/lib/motionMath";
 
 import { AssistantOrb } from "./AssistantOrb";
 import { ChannelBubbles } from "./ChannelBubbles";
 import { SceneAtmosphere } from "./SceneAtmosphere";
+import { FrameWatch, SceneBoundary } from "./sceneGuards";
 import { SCENE_PALETTES } from "./scenePalette";
 
 export interface HeroSceneProps {
@@ -38,22 +39,6 @@ interface Pointer {
   y: number;
 }
 
-class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
-  override state = { failed: false };
-
-  static getDerivedStateFromError(): { failed: boolean } {
-    return { failed: true };
-  }
-
-  override componentDidCatch(): void {
-    this.props.onError();
-  }
-
-  override render(): ReactNode {
-    return this.state.failed ? null : this.props.children;
-  }
-}
-
 function CameraRig({ pointer, scroll, fadeTarget }: { pointer: RefObject<Pointer>; scroll: RefObject<number>; fadeTarget: RefObject<HTMLDivElement | null> }) {
   const shownFade = useRef(1);
   useFrame((state, delta) => {
@@ -67,39 +52,6 @@ function CameraRig({ pointer, scroll, fadeTarget }: { pointer: RefObject<Pointer
     if (element && Math.abs(shownFade.current - view.fade) > 0.004) {
       shownFade.current = view.fade;
       element.style.opacity = String(view.fade);
-    }
-  });
-  return null;
-}
-
-/** Reports the first frame, then samples frame times once: slow → lower resolution → still slow → give up. */
-function FrameWatch({ onReady, onFallback }: { onReady: () => void; onFallback: () => void }) {
-  const setDpr = useThree((state) => state.setDpr);
-  const watch = useRef({ startedAt: -1, samples: [] as number[], lowered: false, done: false });
-  useFrame((state, delta) => {
-    const current = watch.current;
-    if (current.startedAt < 0) {
-      current.startedAt = state.clock.elapsedTime;
-      onReady();
-      return;
-    }
-    // The first second compiles shaders and uploads textures: not representative.
-    if (current.done || state.clock.elapsedTime - current.startedAt < 1) {
-      return;
-    }
-    current.samples.push(delta * 1000);
-    if (current.samples.length < 90) {
-      return;
-    }
-    if (!isFrameRateLow(current.samples)) {
-      current.done = true;
-    } else if (!current.lowered) {
-      current.lowered = true;
-      current.samples = [];
-      setDpr(1);
-    } else {
-      current.done = true;
-      onFallback();
     }
   });
   return null;

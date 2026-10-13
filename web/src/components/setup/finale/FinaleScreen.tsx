@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * The end of the tunnel: confetti and a burst of light, "Your assistant is
- * live!", the assistant's card, its link to share (copy, open) and a QR
- * code to try it from a phone, a few next steps, and "Open my assistant"
- * into the cabinet.
+ * The end of the tunnel: confetti and a burst of light, the assistant's orb
+ * (FinaleOrb: the landing's 3D orb where the device can run it), "Your
+ * assistant is live!", the assistant's card, its link to share (copy,
+ * open) and a QR code to try it from a phone, a few next steps, and "Open
+ * my assistant" into the cabinet.
  */
 
 import Link from "next/link";
@@ -27,6 +28,7 @@ import { TunnelVeil } from "../TunnelVeil";
 import type { StepContext } from "../flow/stepContext";
 import { AssistantCard } from "./AssistantCard";
 import { Confetti } from "./Confetti";
+import { FinaleOrb } from "./FinaleOrb";
 import { useFinale } from "./useFinale";
 
 const PANEL = "rounded-3xl border border-line bg-surface/85 p-5 backdrop-blur-md sm:p-6";
@@ -61,7 +63,8 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
       <TunnelVeil />
       <Confetti />
       <div className="text-center">
-        <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-5xl">
+        <FinaleOrb className="mb-4" />
+        <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-display tracking-tight text-balance text-ink outline-none! sm:text-5xl">
           {t("tunnelLaunch.finale.title")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-ink-muted">

@@ -30,6 +30,7 @@ export function SupportBanner() {
     <section
       aria-label={t("supportAccess.label")}
       data-testid="support-banner"
+      data-shell-banner=""
       className={cn(
         "mb-5 flex gap-3 rounded-2xl border px-4 py-3 text-sm",
         view.is_support_viewer ? "border-info/30 bg-info-soft/60" : "border-warning/40 bg-warning-soft/60",

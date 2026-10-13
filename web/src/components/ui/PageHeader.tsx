@@ -143,7 +143,7 @@ export function PageHeader({
       <div className={cn("min-w-0 space-y-1.5", isCompact && !eyebrow && "max-lg:contents")}>
         {eyebrow ? <p className="text-sm font-medium text-accent">{eyebrow}</p> : null}
         <div className={cn("flex min-w-0 items-center gap-2", isCompact && "max-lg:contents")}>
-          <h1 className={cn("text-xl font-semibold tracking-tight text-ink sm:text-2xl", isCompact && "max-lg:sr-only")}>{title}</h1>
+          <h1 className={cn("text-xl font-display tracking-tight text-ink sm:text-2xl", isCompact && "max-lg:sr-only")}>{title}</h1>
           {help ? <div className={cn("shrink-0", isCompact && "max-lg:hidden")}>{help}</div> : null}
         </div>
         {description ? <p className={cn("max-w-3xl text-sm text-ink-muted", hideOnPhones)}>{description}</p> : null}

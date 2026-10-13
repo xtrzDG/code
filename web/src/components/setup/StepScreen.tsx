@@ -19,6 +19,7 @@ import { IconArrowLeft, IconArrowRight } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { prefersCalmMotion } from "@/lib/motionPreference";
 import { stepNumber, TUNNEL_STEPS, type TunnelStep } from "@/lib/tunnel/steps";
 
 import type { StepMode } from "./stepMode";
@@ -105,7 +106,7 @@ function TunnelScreen({ step, title, text, children, actions, aside, wide = fals
     window.setTimeout(() => {
       const problem = screen.current?.querySelector<HTMLElement>("[aria-invalid='true'], [role='alert']");
       if (problem) {
-        const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const calm = prefersCalmMotion();
         problem.scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" });
       }
     }, REVEAL_DELAY_MS);
@@ -130,7 +131,7 @@ function TunnelScreen({ step, title, text, children, actions, aside, wide = fals
       <h1
         ref={heading}
         tabIndex={-1}
-        className="mt-3 text-3xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-4xl lg:text-[2.75rem]"
+        className="mt-3 text-3xl leading-tight font-display tracking-tight text-balance text-ink outline-none! sm:text-4xl lg:text-[2.75rem]"
       >
         {title}
       </h1>

@@ -61,7 +61,7 @@ export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
           <p className="text-sm font-medium text-accent">
             <UserSentence text={t("setup.eyebrow")} values={{ business: business.name }} />
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-display tracking-tight text-balance text-ink sm:text-4xl">
             {canSetUp ? t("setup.title") : t("setup.staffTitle")}
           </h1>
           <p className="mt-4 max-w-xl text-base text-ink-muted">

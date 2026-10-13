@@ -1,0 +1,63 @@
+/*
+ * View transitions (React's <ViewTransition>, in browsers with the View
+ * Transitions API; elsewhere pages simply swap). Imported by
+ * src/app/globals.css.
+ *
+ * Only named parts move: the page itself swaps at once instead of
+ * cross-fading, so opening a conversation does not wash the whole inbox.
+ * `.morph` is a shared element (an inbox row's customer becoming the open
+ * conversation's header, src/components/motion/SharedMorph.tsx): it glides
+ * with the cabinet's emphasized easing and a light blur hides the
+ * interpolation between the two sizes of text.
+ */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(.morph) {
+  animation-duration: var(--motion-slow);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+::view-transition-image-pair(.morph) {
+  animation-name: aw-morph-blur;
+  animation-duration: var(--motion-slow);
+}
+
+::view-transition-old(.morph),
+::view-transition-new(.morph) {
+  /* Keep each snapshot's own proportions while the group changes size. */
+  height: 100%;
+  object-fit: none;
+  object-position: left center;
+}
+
+:root[dir="rtl"]::view-transition-old(.morph),
+:root[dir="rtl"]::view-transition-new(.morph) {
+  object-position: right center;
+}
+
+@keyframes aw-morph-blur {
+  40% {
+    filter: blur(1.5px);
+  }
+}
+
+/* Reduced motion (the device's or the cabinet's own): the parts swap without moving. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+:root[data-motion="reduce"]::view-transition-group(*),
+:root[data-motion="reduce"]::view-transition-image-pair(*),
+:root[data-motion="reduce"]::view-transition-old(*),
+:root[data-motion="reduce"]::view-transition-new(*) {
+  animation: none !important;
+}
