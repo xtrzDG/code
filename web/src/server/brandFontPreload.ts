@@ -6,13 +6,13 @@ import path from "node:path";
 import { preload } from "react-dom";
 
 import type { Locale } from "@/i18n/config";
-import { scriptFontHref } from "@/lib/scriptFonts";
+import { brandFontHrefs } from "@/lib/brandFonts";
 
 /**
- * Preloads the brand font file of the page's own script (lib/scriptFonts.ts):
- * the root layout calls it, and React puts the <link rel="preload"> in the
- * head, so the file loads with the stylesheet and is there for the first
- * paint. The production server reads its build's file names once; the
+ * Preloads a cabinet page's brand font files, Latin and its own script's
+ * (lib/brandFonts.ts): the root layout calls it for cabinet pages only, and
+ * React puts the <link rel="preload"> tags in the head, so the files load
+ * with the stylesheet and are there for the first paint. The production server reads its build's file names once; the
  * development server, whose files change as it compiles, on every page.
  */
 
@@ -40,9 +40,8 @@ function mediaFiles(): readonly string[] {
   return files;
 }
 
-export function preloadScriptFont(locale: Locale): void {
-  const href = scriptFontHref(locale, mediaFiles());
-  if (href !== null) {
+export function preloadBrandFonts(locale: Locale): void {
+  for (const href of brandFontHrefs(locale, mediaFiles())) {
     preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   }
 }

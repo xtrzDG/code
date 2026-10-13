@@ -1,11 +1,12 @@
 /**
- * The brand typeface on a first visit (src/app/fonts.ts): with
+ * The brand typeface on a first visit (src/styles/typeface.css): with
  * `display: "optional"` a file that is late for the first paint stays out of
  * the whole document, and the cabinet changes pages without a new one. So a
  * Georgian, Russian or Hebrew page preloads its own script's file with the
  * stylesheet, at the very address its @font-face loads (one download), and
  * the face has loaded once the page has; an English page preloads Latin
- * alone.
+ * alone. The public site keeps the system's fonts: it preloads and fetches
+ * no font file (its LCP waits for none).
  */
 
 import type { Page } from "@playwright/test";
@@ -35,9 +36,9 @@ function fontFaces(page: Page): Promise<{ src: string; range: string }[]> {
 }
 
 const SCRIPTS = [
-  { locale: "ka", file: "noto_sans_georgian_wght", range: "U+10A0-10FF" },
-  { locale: "ru", file: "noto_sans_cyrillic_wght", range: "U+400-45F" },
-  { locale: "he", file: "noto_sans_hebrew_wght", range: "U+590-5FF" },
+  { locale: "ka", file: "noto-sans-georgian-wght", range: "U+10A0-10FF" },
+  { locale: "ru", file: "noto-sans-cyrillic-wght", range: "U+400-45F" },
+  { locale: "he", file: "noto-sans-hebrew-wght", range: "U+590-5FF" },
 ] as const;
 
 test.describe("the brand typeface", () => {
@@ -50,7 +51,7 @@ test.describe("the brand typeface", () => {
       const preloaded = await preloadedFonts(page);
       const own = preloaded.filter((href) => href.includes(`/${script.file}.`));
       expect(own, "the script's file is preloaded once").toHaveLength(1);
-      expect(preloaded.filter((href) => href.includes("noto_sans_latin_wght")), "Latin is preloaded too").toHaveLength(1);
+      expect(preloaded.filter((href) => href.includes("/noto-sans-latin-wght.")), "Latin is preloaded too").toHaveLength(1);
 
       // The preload is the very file the @font-face of that script loads: one download, used at once.
       const face = (await fontFaces(page)).find((rule) => rule.range.toUpperCase().includes(script.range));
@@ -75,6 +76,23 @@ test.describe("the brand typeface", () => {
     await page.goto("/login");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     const preloaded = await preloadedFonts(page);
-    expect(preloaded.map((href) => href.split("/").at(-1)?.split(/[.-]/)[0])).toEqual(["noto_sans_latin_wght"]);
+    expect(preloaded.map((href) => href.split("/").at(-1)?.split(".")[0])).toEqual(["noto-sans-latin-wght"]);
   });
+
+  for (const address of ["/en", "/ka/for/hotel"]) {
+    test(`the public page ${address} keeps the system's fonts and fetches no font file`, async ({ page }) => {
+      const fonts: string[] = [];
+      page.on("request", (request) => {
+        if (request.resourceType() === "font") {
+          fonts.push(request.url());
+        }
+      });
+      await page.goto(address);
+      await page.evaluate(() => document.fonts.ready);
+      expect(await preloadedFonts(page)).toEqual([]);
+      expect(fonts).toEqual([]);
+      const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+      expect(family.startsWith("ui-sans-serif"), family).toBe(true);
+    });
+  }
 });

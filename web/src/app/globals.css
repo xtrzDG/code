@@ -6,6 +6,7 @@
 @import "../styles/tunnel.css";
 @import "../styles/viewTransitions.css";
 @import "../styles/illustrations.css";
+@import "../styles/typeface.css";
 
 /*
  * Design tokens. Components use the semantic utilities below (bg-canvas,
@@ -136,12 +137,12 @@
   --color-tone-rose: var(--tone-rose);
 
   /*
-   * The brand typeface (src/app/fonts.ts): Noto Sans, one self-hosted file
-   * per script, each family with its unicode-range. The scripts come first
-   * and Latin last, because Latin's variable also names its size-adjusted
-   * Arial fallback, which has Cyrillic letters and would take them before
-   * the Cyrillic file. Then the system's fonts (each var() has one in case
-   * a page renders without the variables).
+   * The brand typeface (src/styles/typeface.css): Noto Sans, one self-hosted
+   * file per script, each family with its unicode-range. The scripts come
+   * first and Latin last, because Latin's variable also names its
+   * size-adjusted Arial fallback, which has Cyrillic letters and would take
+   * them before the Cyrillic file. Then the system's fonts: the public site
+   * has no variables (only cabinet pages do), so it uses these alone.
    */
   --font-sans:
     var(--font-brand-cyrillic, ui-sans-serif), var(--font-brand-georgian, ui-sans-serif),

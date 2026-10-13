@@ -1425,32 +1425,39 @@ Noto Sans, a variable font (weights 100–900), with Noto Sans Georgian and
 Noto Sans Hebrew of the same family: Latin, German, Cyrillic, Georgian and
 Hebrew look alike on every system. The files are in `public/fonts/` with
 their licence (SIL Open Font License 1.1, `public/fonts/OFL.txt`) and load
-through `next/font/local` (`src/app/fonts.ts`), one file per script with its
-`unicode-range`, so a page downloads only the scripts it shows:
+through `@font-face` rules in the shared stylesheet (`src/styles/typeface.css`,
+the build emits each file under a content hash), one file per script with its
+`unicode-range`, so a page downloads only the scripts it shows. It is the
+cabinet's typeface: the public site (landing, niche, legal and other pages
+under `/[locale]`) keeps the system's fonts and requests no font file, so its
+first paint and LCP wait for no font (the Lighthouse budgets). The faces are
+named only under `.brand-typeface`, which the root layout puts on `<html>`,
+with the preloads, for cabinet pages only (`/login` included):
 
 | File | Script | Size |
 | --- | --- | --- |
-| `noto-sans-latin-wght.woff2` | Latin (preloaded on every page) | 35.0 KB |
+| `noto-sans-latin-wght.woff2` | Latin (preloaded on every cabinet page) | 35.0 KB |
 | `noto-sans-latin-ext-wght.woff2` | the extended Latin letters and currency signs the cabinet's countries use (ğ, ș, ə, ₾, ₽…) | 23.5 KB |
 | `noto-sans-cyrillic-wght.woff2` | Cyrillic (preloaded on Russian pages) | 19.6 KB |
 | `noto-sans-georgian-wght.woff2` | Georgian: Mkhedruli, Mtavruli, Asomtavruli (preloaded on Georgian pages) | 40.6 KB |
 | `noto-sans-hebrew-wght.woff2` | Hebrew (preloaded on Hebrew pages) | 12.0 KB |
 
-`display: "optional"` and an Arial fallback resized to Noto's metrics
-(next/font's `adjustFontFallback`) keep the layout shift at 0: a font that
+`font-display: optional` and an Arial fallback resized to Noto's metrics
+(`Brand Latin Fallback`, the metrics next/font's `adjustFontFallback`
+computes) keep the layout shift at 0: a font that
 is late for the first paint is not swapped in. It stays out for the rest of
 that document, and the cabinet changes pages on the client, so a late file
 shows from the next full load on (it is in the cache by then). That is why a
-page preloads its own script: next/font preloads Latin everywhere, and the
-root layout adds the Georgian, Cyrillic or Hebrew file for a page in that
-language (`src/server/scriptFontPreload.ts` finds the file next/font emitted
-in the build's `static/media`; `src/lib/scriptFonts.ts` picks it), so it
-comes with the stylesheet and Chrome holds the first paint for it. The
+cabinet page preloads Latin and its own script: the root layout adds Latin
+and the Georgian, Cyrillic or Hebrew file for a page in that language
+(`src/server/brandFontPreload.ts` finds the files the build emitted in its
+`static/media`; `src/lib/brandFonts.ts` picks them), so they
+come with the stylesheet and Chrome holds the first paint for them. The
 extended Latin file (₾, ₽, ₪ and the letters of the neighbouring
 languages) and a script outside the page's language load when first
 needed. `--font-sans` (globals.css) lists the scripts, then Latin and its
 fallback; headings use `font-display` (weight 650, slightly tighter
-tracking). `src/app/fonts.test.ts` keeps every file under 60 KB, its
+tracking). `src/styles/typeface.test.ts` keeps every file under 60 KB, its
 unicode-range covering the cabinet's languages, and the licence next to
 them.
 
