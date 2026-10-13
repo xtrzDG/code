@@ -12,12 +12,30 @@ from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.journeys import JsonObject, sign_in_and_create_restaurant
 
 
-@pytest.fixture
-def owner() -> Iterator[tuple[Workshop, str, dict[str, str]]]:
+@pytest.fixture(scope="module")
+def signed_in() -> Iterator[tuple[Workshop, dict[str, str]]]:
+    """One application and one signed-in owner for the module (it starts slowly)."""
+
     workshop = start_workshop()
     with workshop.client:
-        token, _owner_id, business_id = sign_in_and_create_restaurant(workshop)
-        yield workshop, f"/v1/businesses/{business_id}", bearer(token)
+        token, _owner_id, _business_id = sign_in_and_create_restaurant(workshop)
+        yield workshop, bearer(token)
+
+
+@pytest.fixture
+def owner(
+    signed_in: tuple[Workshop, dict[str, str]],
+) -> tuple[Workshop, str, dict[str, str]]:
+    """A restaurant of its own for every test, so no test sees another's deposits."""
+
+    workshop, headers = signed_in
+    created = workshop.client.post(
+        "/v1/businesses",
+        json={"name": "Salobie Bia", "niche_key": "restaurant"},
+        headers=headers,
+    )
+    assert created.status_code == 201, created.text
+    return workshop, f"/v1/businesses/{created.json()['id']}", headers
 
 
 def reason_codes(body: JsonObject) -> list[str]:
@@ -186,7 +204,7 @@ def test_a_policy_names_what_its_rule_needs(
     )
 
     assert no_amount.status_code == 422
-    assert unknown_table.status_code in (404, 422)
+    assert unknown_table.status_code == 404, unknown_table.text
 
 
 def test_the_report_says_when_there_is_not_enough_data(
