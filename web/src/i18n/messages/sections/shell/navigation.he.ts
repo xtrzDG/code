@@ -13,6 +13,7 @@ export const navigationHe: Translation<typeof navigationEn> = {
     settings: "הגדרות",
   },
   tabLabels: {
+    overview: "סקירה",
     inbox: "הודעות",
   },
   descriptions: {

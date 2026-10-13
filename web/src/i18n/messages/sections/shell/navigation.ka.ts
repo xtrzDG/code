@@ -14,6 +14,8 @@ export const navigationKa: Translation<typeof navigationEn> = {
     settings: "პარამეტრები",
   },
   tabLabels: {
+    // "მიმოხილვა" in Noto Sans Georgian is wider than a fifth of a 390 px phone: "მთავარი" fits.
+    overview: "მთავარი",
     inbox: "შემოსული",
   },
   descriptions: {

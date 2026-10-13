@@ -15,6 +15,7 @@ export const navigationEn = {
   },
   /** Shorter names for the phone tab bar, where a long word would not fit a fifth of the screen. */
   tabLabels: {
+    overview: "Overview",
     inbox: "Inbox",
   },
   descriptions: {

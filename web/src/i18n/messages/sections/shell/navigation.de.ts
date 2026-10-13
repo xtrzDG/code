@@ -13,6 +13,7 @@ export const navigationDe: Translation<typeof navigationEn> = {
     settings: "Einstellungen",
   },
   tabLabels: {
+    overview: "Übersicht",
     inbox: "Eingang",
   },
   descriptions: {
