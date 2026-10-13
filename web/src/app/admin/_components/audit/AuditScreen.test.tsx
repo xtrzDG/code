@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { api } from "@/api/client";
 import { queryCache } from "@/api/queryCache";
 import { answerGet, lastGetQuery, ok, pending } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
@@ -46,7 +47,7 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
   it.each(["en", "ru", "ka", "he", "de"] as const)("shows the chains and the platform's entries in %s", async (locale) => {
     const { t } = textsIn(locale);
     answers({ items: [failed], next_cursor: null });
-    renderInLocale(<AuditScreen />, { locale });
+    renderInLocale(<AuditScreen showSecurityLog />, { locale });
 
     const chains = await screen.findByRole("region", { name: t("adminAudit.chains.title") });
     expect(within(chains).getByText(t("adminAudit.chains.platform"))).toBeTruthy();
@@ -63,7 +64,7 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
     const user = userEvent.setup();
     const { t } = textsIn("en");
     answers({ items: [failed], next_cursor: null });
-    renderInLocale(<AuditScreen />);
+    renderInLocale(<AuditScreen showSecurityLog />);
 
     await screen.findByRole("table", { name: t("adminAudit.log.title") });
     answers({ items: [], next_cursor: null });
@@ -73,12 +74,23 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
     expect(lastGetQuery()).toMatchObject({ security_event: "logout", limit: "50" });
   });
 
+  it("never asks for the platform log for an admin who may not read it", async () => {
+    const { t } = textsIn("en");
+    answers({ items: [failed], next_cursor: null });
+    renderInLocale(<AuditScreen showSecurityLog={false} />);
+
+    await screen.findByRole("region", { name: t("adminAudit.chains.title") });
+    expect(screen.getByText(t("adminAudit.log.restricted"))).toBeTruthy();
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(api.GET).not.toHaveBeenCalledWith(LOG, expect.anything());
+  });
+
   it("says every log is intact when no chain is broken", async () => {
     const { t } = textsIn("en");
     answerGet((path) =>
       path === CHAINS ? ok({ ...overview, broken_chains: 0, broken: [] }) : path === LOG ? ok({ items: [], next_cursor: null }) : pending(),
     );
-    renderInLocale(<AuditScreen />);
+    renderInLocale(<AuditScreen showSecurityLog />);
 
     expect(await screen.findByText(t("adminAudit.chains.allIntact"))).toBeTruthy();
     expect(await screen.findByText(t("adminAudit.log.empty"))).toBeTruthy();

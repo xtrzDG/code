@@ -40,9 +40,13 @@ test("the owner sees the tamper check above the audit log", async ({ page, owner
 
   await expect(page.getByRole("heading", { name: en.settings.audit.title })).toBeVisible();
   await expect(page.getByText(chain.title, { exact: true })).toBeVisible();
-  // A new business's log waits for the next daily check.
-  await expect(page.getByText(new RegExp(`^(${chain.status.unchecked}|${chain.status.intact})$`))).toBeVisible();
-  await expect(page.getByText(new RegExp(`^(${chain.verdict.unchecked}|${chain.verdict.intact})$`))).toBeVisible();
+  // A new business's log waits for the next daily check (or was checked already).
+  await expect(
+    page.getByText(new RegExp(`^(${chain.status.unchecked}|${chain.status.unsealed}|${chain.status.intact})$`)),
+  ).toBeVisible();
+  await expect(
+    page.getByText(new RegExp(`^(${chain.verdict.unchecked}|${chain.verdict.unsealed}|${chain.verdict.intact})$`)),
+  ).toBeVisible();
 });
 
 test("the owner reads the tamper check in Russian", async ({ page, owner }) => {

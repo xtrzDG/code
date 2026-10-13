@@ -16,8 +16,16 @@ import { formatNumber } from "@/lib/format";
 
 const STATUS_KEYS: Readonly<Record<ChainVerdict, MessageKey>> = {
   unchecked: "auditChain.status.unchecked",
+  unsealed: "auditChain.status.unsealed",
   intact: "auditChain.status.intact",
   broken: "auditChain.status.broken",
+};
+
+/** What a verdict other than "broken" says (a broken one names the entry). */
+const VERDICT_KEYS: Readonly<Record<Exclude<ChainVerdict, "broken">, MessageKey>> = {
+  unchecked: "auditChain.verdict.unchecked",
+  unsealed: "auditChain.verdict.unsealed",
+  intact: "auditChain.verdict.intact",
 };
 
 const PROBLEM_KEYS: Readonly<Record<AuditChainProblem, MessageKey>> = {
@@ -77,7 +85,7 @@ export function AuditChainSummary({
                 position: view?.broken_position ? position(view.broken_position) : "—",
                 problem: problemText(view?.problem),
               })
-            : t(verdict === "intact" ? "auditChain.verdict.intact" : "auditChain.verdict.unchecked")}
+            : t(VERDICT_KEYS[verdict])}
         </p>
         {details.length > 0 ? <p className="text-xs text-ink-subtle">{details.join(" · ")}</p> : null}
       </div>

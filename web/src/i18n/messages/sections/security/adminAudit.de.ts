@@ -35,6 +35,7 @@ export const adminAuditDe: Translation<typeof adminAuditEn> = {
     emptyFiltered: "Keine Einträge für dieses Ereignis",
     unknownPerson: "Unbekannte Person",
     system: "System",
+    restricted: "Das Plattformprotokoll zeigt die Anmeldungen aller Personen mit ihren Netzwerkadressen, daher sehen es nur Admins mit der Berechtigung für das Sicherheitsprotokoll.",
   },
   events: {
     login_failed: "Falscher Code",

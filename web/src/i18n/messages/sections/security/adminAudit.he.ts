@@ -35,6 +35,7 @@ export const adminAuditHe: Translation<typeof adminAuditEn> = {
     emptyFiltered: "אין רשומות לאירוע הזה",
     unknownPerson: "אדם לא ידוע",
     system: "מערכת",
+    restricted: "יומן הפלטפורמה מציג את הכניסות של כל אדם עם כתובות הרשת שלו, ולכן רק מנהלים עם הרשאה לקרוא את יומן האבטחה רואים אותו.",
   },
   events: {
     login_failed: "קוד שגוי",

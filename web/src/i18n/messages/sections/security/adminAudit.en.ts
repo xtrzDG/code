@@ -37,6 +37,7 @@ export const adminAuditEn = {
     emptyFiltered: "No entries for this event",
     unknownPerson: "Unknown person",
     system: "System",
+    restricted: "The platform log shows every person's sign-ins with their network addresses, so only admins allowed to read the security log see it.",
   },
   events: {
     login_failed: "Wrong code",

@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { queryCache } from "@/api/queryCache";
@@ -17,9 +18,12 @@ const CHAIN = "/v1/businesses/{business_id}/audit-log/chain";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 const CHECKED = Date.UTC(2026, 9, 12, 3, 15) * 1000;
 
-function answer(view: AuditChainStatusView | Promise<unknown>) {
+function answer(...views: (AuditChainStatusView | Promise<unknown>)[]) {
+  let call = 0;
   answerGet((path) => {
     expect(path).toBe(CHAIN);
+    const view = views[Math.min(call, views.length - 1)];
+    call += 1;
     return view instanceof Promise ? view : ok(view);
   });
 }
@@ -58,6 +62,10 @@ describe("AuditChainStrip: the tamper check on Settings → Audit", () => {
     expect(alert.textContent).toBe(
       t("auditChain.verdict.broken", { position: "17", problem: t("auditChain.problems.position_gap") }),
     );
+    // A gap is reported at the missing position: entry 17 itself is gone.
+    expect(alert.textContent).toBe(
+      "The daily check found a problem at entry 17: it was removed. The platform team has been alerted.",
+    );
     expect(screen.getByText(t("auditChain.status.broken"))).toBeTruthy();
   });
 
@@ -69,6 +77,32 @@ describe("AuditChainStrip: the tamper check on Settings → Audit", () => {
     expect(await screen.findByText(t("auditChain.status.unchecked"))).toBeTruthy();
     expect(screen.getByText(t("auditChain.verdict.unchecked"))).toBeTruthy();
     expect(screen.getByText(t("auditChain.purgedThrough", { position: "1,200" }))).toBeTruthy();
+  });
+
+  it.each(["en", "ru", "ka", "he", "de"] as const)(
+    "does not call a log with no sealed entry intact, in %s",
+    async (locale) => {
+      const { t } = textsIn(locale);
+      answer({ status: "intact", entries_checked: 0, checked_at: CHECKED });
+      renderStrip(locale);
+
+      expect(await screen.findByText(t("auditChain.status.unsealed"))).toBeTruthy();
+      expect(screen.getByText(t("auditChain.verdict.unsealed"))).toBeTruthy();
+      expect(screen.queryByText(t("auditChain.status.intact"))).toBeNull();
+    },
+  );
+
+  it("says a failed check could not load and loads it again on Retry", async () => {
+    const { t } = textsIn("en");
+    answer(
+      failure(500, { error: "internal_error", message: "boom" }),
+      { status: "intact", verified_through_position: 9, entries_checked: 9, checked_at: CHECKED },
+    );
+    renderStrip();
+
+    await userEvent.click(await screen.findByRole("button", { name: t("common.retry") }));
+
+    expect(await screen.findByText(t("auditChain.status.intact"))).toBeTruthy();
   });
 
   it("shows nothing for a member the check is not for (the log says why)", async () => {

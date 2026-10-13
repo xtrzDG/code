@@ -35,6 +35,7 @@ export const adminAuditRu: Translation<typeof adminAuditEn> = {
     emptyFiltered: "Нет записей с этим событием",
     unknownPerson: "Неизвестный человек",
     system: "Система",
+    restricted: "Журнал платформы показывает входы всех людей с их сетевыми адресами, поэтому его видят только администраторы с правом читать журнал безопасности.",
   },
   events: {
     login_failed: "Неверный код",

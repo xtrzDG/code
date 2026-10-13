@@ -11,18 +11,28 @@ import type { BadgeTone } from "@/components/ui";
 export type AuditChainStatusView = Schema<"AuditChainStatusView">;
 export type AuditChainProblem = Schema<"AuditChainProblem">;
 
-/** What the latest check found; "unchecked" until the first one ran. */
-export type ChainVerdict = "unchecked" | "intact" | "broken";
+/**
+ * What the latest check found: "unchecked" until the first one ran,
+ * "unsealed" while the log holds no sealed entry (only entries from before
+ * sealing began, or none), then "intact" or "broken".
+ */
+export type ChainVerdict = "unchecked" | "unsealed" | "intact" | "broken";
 
-export function chainVerdict(view: Pick<AuditChainStatusView, "status"> | null | undefined): ChainVerdict {
+export function chainVerdict(
+  view: Pick<AuditChainStatusView, "status" | "verified_through_position"> | null | undefined,
+): ChainVerdict {
   if (!view?.status) {
     return "unchecked";
   }
-  return view.status === "broken" ? "broken" : "intact";
+  if (view.status === "broken") {
+    return "broken";
+  }
+  return view.verified_through_position ? "intact" : "unsealed";
 }
 
 export const CHAIN_VERDICT_TONES: Readonly<Record<ChainVerdict, BadgeTone>> = {
   unchecked: "neutral",
+  unsealed: "neutral",
   intact: "success",
   broken: "danger",
 };

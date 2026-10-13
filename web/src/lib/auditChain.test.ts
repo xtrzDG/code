@@ -10,11 +10,16 @@ describe("chainVerdict", () => {
   });
 
   it("names what the latest check found", () => {
-    expect(chainVerdict({ status: "intact" })).toBe("intact");
+    expect(chainVerdict({ status: "intact", verified_through_position: 12 })).toBe("intact");
     expect(chainVerdict({ status: "broken" })).toBe("broken");
   });
 
-  it("marks only a broken chain as danger", () => {
-    expect(CHAIN_VERDICT_TONES).toEqual({ unchecked: "neutral", intact: "success", broken: "danger" });
+  it("never calls a log without a sealed entry intact", () => {
+    expect(chainVerdict({ status: "intact" })).toBe("unsealed");
+    expect(chainVerdict({ status: "intact", verified_through_position: null })).toBe("unsealed");
+  });
+
+  it("marks only a broken chain as danger and only a sealed one as intact", () => {
+    expect(CHAIN_VERDICT_TONES).toEqual({ unchecked: "neutral", unsealed: "neutral", intact: "success", broken: "danger" });
   });
 });
