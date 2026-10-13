@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { render } from "@testing-library/react";
@@ -66,12 +66,12 @@ function drawn(svg: SVGSVGElement) {
 
 describe("the spot illustrations", () => {
   it.each(Object.entries(ILLUSTRATIONS))("%s is hidden from screen readers and named", (name, Illustration) => {
-    const { container } = render(<Illustration className="w-40" />);
+    const { container } = render(<Illustration className="mx-auto" />);
     const svg = container.querySelector("svg");
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
     expect(svg?.getAttribute("focusable")).toBe("false");
     expect(svg?.dataset.illustration).toBe(name);
-    expect(svg?.getAttribute("class")).toContain("w-40");
+    expect(svg?.getAttribute("class")).toContain("mx-auto");
   });
 
   it.each(Object.entries(ILLUSTRATIONS))("%s paints with the theme's neutrals and clay only", (_name, Illustration) => {
@@ -89,6 +89,19 @@ describe("the spot illustrations", () => {
         expect(PICTURE_TOKENS.has(variable[1] ?? ""), `var(--${variable[1]})`).toBe(true);
       }
     }
+  });
+
+  it("is sized by the box around it, never by a width in its className (w-full would win)", () => {
+    const sourceRoot = path.resolve(__dirname, "..", "..");
+    const sources = (readdirSync(sourceRoot, { recursive: true, encoding: "utf8" }) as string[]).filter(
+      (file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"),
+    );
+    const sizedByClass = sources.flatMap((file) =>
+      [...readFileSync(path.join(sourceRoot, file), "utf8").matchAll(/<\w+Illustration\b[^>]*\bclassName=[^>]*>/g)]
+        .filter((tag) => /(?:^|[\s"'`{(])(?:[a-z0-9]+:)*(?:w|size|min-w|max-w|h|min-h|max-h)-/.test(tag[0]))
+        .map((tag) => `${file}: ${tag[0]}`),
+    );
+    expect(sizedByClass).toEqual([]);
   });
 
   it("gives every orb its own gradient, so two on a page do not share one", () => {

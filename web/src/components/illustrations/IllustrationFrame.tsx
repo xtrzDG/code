@@ -1,7 +1,10 @@
 /**
  * The canvas every spot illustration draws on: a 160 × 120 SVG that fills
  * its box's width, hidden from screen readers (the words beside it carry
- * the meaning). Server-safe: no state, no script.
+ * the meaning). Server-safe: no state, no script. A wrapper sizes it
+ * (`<div className="w-40"><OfflineIllustration /></div>`, as EmptyState
+ * does): a width in `className` would lose to `w-full`, since `cn` joins
+ * classes without merging them.
  *
  * The art is drawn with the theme's tokens only, as Tailwind fill and
  * stroke utilities (`fill-surface`, `stroke-line-strong`, `fill-accent-solid`,

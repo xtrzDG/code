@@ -25,7 +25,10 @@ export default async function OfflinePage() {
         <span />
       </div>
       <div className="w-full max-w-md rounded-3xl border border-line bg-surface/90 p-8 text-center shadow-2xl backdrop-blur">
-        <OfflineIllustration className="mx-auto mb-4 w-40" />
+        {/* The drawing fills its box (IllustrationFrame); the box gives it its size. */}
+        <div className="mx-auto mb-4 w-40">
+          <OfflineIllustration />
+        </div>
         <h1 className="text-xl font-display tracking-tight text-ink">{t("app.offlineTitle")}</h1>
         <p className="mt-2 text-sm text-ink-muted">{t("app.offlineDescription")}</p>
         {/* A form without an action loads the address it is on again: no script needed. */}

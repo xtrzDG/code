@@ -1,8 +1,7 @@
 "use client";
 
 import { BookingCalendar } from "@/components/bookings/calendar/BookingCalendar";
-import { IconPlus } from "@/components/icons";
-import { NoBookingsIllustration } from "@/components/illustrations";
+import { IconCalendar, IconPlus } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { ExportCsvButton } from "@/components/exports/ExportCsvButton";
@@ -106,7 +105,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         ) : items.length === 0 && !bookings.isPlaceholder ? (
           <Card>
             <EmptyState
-              illustration={<NoBookingsIllustration />}
+              icon={<IconCalendar className="size-6" />}
               title={t("bookings.emptyTitle")}
               description={t("bookings.emptyDescription")}
               action={

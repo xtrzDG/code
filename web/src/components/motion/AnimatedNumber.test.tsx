@@ -19,6 +19,10 @@ describe("AnimatedNumber", () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       return new DOMRect(0, 0, (this.textContent ?? "").length * CHARACTER_PX, 20);
     });
+    // A box is laid out unless it or an ancestor is hidden (display: none).
+    vi.spyOn(HTMLElement.prototype, "getClientRects").mockImplementation(function (this: HTMLElement) {
+      return (this.closest("[hidden]") ? [] : [this.getBoundingClientRect()]) as unknown as DOMRectList;
+    });
     // Every number is on screen at once.
     vi.stubGlobal(
       "IntersectionObserver",
@@ -95,6 +99,26 @@ describe("AnimatedNumber", () => {
     expect(numberIn(view.container).firstChild).toBe(text);
     view.rerender(<AnimatedNumber value={16} format={(value) => `${value} items`} countIn={false} />);
     expect(numberIn(view.container).textContent).toBe("16 items");
+  });
+
+  it("shows a value that changed while the number was hidden at once, never a count in a 0 px box", () => {
+    const shown = (value: number, hidden: boolean) => (
+      <div hidden={hidden}>
+        <AnimatedNumber value={value} format={format} countIn={false} />
+      </div>
+    );
+    const view = render(shown(3, true));
+    view.rerender(shown(128, true));
+
+    const number = numberIn(view.container);
+    expect(number.textContent).toBe("128");
+    expect(number.style.width).toBe("");
+    expect(frames).toHaveLength(0);
+
+    view.rerender(shown(128, false));
+    expect(number.textContent).toBe("128");
+    expect(number.style.width).toBe("");
+    expect(frames).toHaveLength(0);
   });
 
   it("keeps still with the cabinet's own Reduce motion", () => {

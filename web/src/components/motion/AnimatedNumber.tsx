@@ -12,7 +12,8 @@
  * The count never moves the text around it (no layout shift, CLS 0): it
  * runs inside the final number's width, so the layout changes once, when
  * the value does, as it would without the count. A number that would have
- * to start wider than it ends (16 → 4) does not count; it changes at once.
+ * to start wider than it ends (16 → 4) does not count; it changes at once,
+ * and so does one that changes while it is not shown at all.
  *
  *     <AnimatedNumber value={stats.conversations} format={(n) => numberFormat.format(n)} />
  */
@@ -27,6 +28,11 @@ const DEFAULT_DURATION_MS = 900;
 
 /** Rounding of the browser's widths: a smaller difference is no change. */
 const WIDTH_TOLERANCE_PX = 0.5;
+
+/** Whether the span is laid out at all (display: none on it or an ancestor leaves it without a box). */
+function hasBox(node: HTMLElement): boolean {
+  return node.getClientRects().length > 0;
+}
 
 /** Holds the span at `width` (the final number's) while the count runs; null lets it size itself again. */
 function holdWidth(node: HTMLElement, width: number | null): void {
@@ -87,7 +93,9 @@ export function AnimatedNumber({
       write(value);
     };
     const cannotCount = typeof IntersectionObserver === "undefined" || !Number.isFinite(from) || !Number.isFinite(value);
-    if (from === value || cannotCount || prefersCalmMotion()) {
+    // A number without a box (in a closed fold, a hidden sheet, the phone's sidebar) has no width to
+    // count in, and nobody saw the old value: it shows the new one, and appears with it.
+    if (from === value || cannotCount || prefersCalmMotion() || !hasBox(node)) {
       settle();
       return;
     }
