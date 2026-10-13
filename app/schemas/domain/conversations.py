@@ -25,13 +25,13 @@ from app.schemas.constants.reply_safety import (
     InjectionSignal,
     ReplyGuardReason,
 )
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import (
     AwaitsImprovement,
@@ -262,13 +262,6 @@ class LlmTurnDocument(BaseDocument):
     role: LlmTurnRole
     payload: LlmProviderPayload
     canonical_payload: LlmProviderPayload | None = None
-
-
-class CallSummary(PersistentDocument):
-    """The summary of a call for staff in one language."""
-
-    language: LanguageTag
-    text: CallSummaryText
 
 
 class CallDocument(BaseDocument):

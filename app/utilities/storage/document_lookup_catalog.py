@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.audit_chain_collections import AUDIT_LOG_LOOKUP_FIELDS
 from app.utilities.storage.brand_collections import BRAND_LOOKUP_FIELDS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
@@ -196,20 +197,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("occurrence_count"),
         integer_field("last_seen_at"),
     ),
-    # The audit log newest first, filtered by operation, entity and person;
-    # each hash chain by position (its head, the checks, the admin view of
-    # the platform's chain) and the hour's operations of every business by
-    # kind, for the anomaly alerts (1193).
-    DocumentCollectionName("audit_log_entries"): (
-        text_field("actor_id"),
-        text_field("action"),
-        filter_field("entity"),
-        integer_field("created_at"),
-        text_field("chain_key"),
-        integer_field("chain_position"),
-        filter_field("security_event"),
-        filter_field("entity_id"),
-    ),
+    **AUDIT_LOG_LOOKUP_FIELDS,  # The audit log and its hash chains (1193).
     # Usage of a billing period; today's spend of a business and of the
     # platform, summed by kind (the spend guard, 1142).
     DocumentCollectionName("usage_events"): (

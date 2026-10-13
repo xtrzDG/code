@@ -38,7 +38,6 @@ from app.schemas.domain.jobs import (
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
-from app.schemas.domain.message_media import MessageMediaDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
@@ -60,7 +59,6 @@ from app.schemas.domain.setup import (
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
 from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
-from app.schemas.domain.widget_uploads import WidgetUploadDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
@@ -79,6 +77,7 @@ from app.utilities.storage.idempotency_collections import IDEMPOTENCY_COLLECTION
 from app.utilities.storage.integration_collections import INTEGRATION_COLLECTIONS
 from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
 from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
+from app.utilities.storage.media_collections import MEDIA_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
@@ -117,13 +116,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(DocumentCollectionName("messages"), MessageDocument),
     DocumentCollectionDefinition(DocumentCollectionName("llm_turns"), LlmTurnDocument),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("message_media"), MessageMediaDocument
-    ),
-    # Files website chat visitors upload before their message (1191).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("widget_uploads"), WidgetUploadDocument
-    ),
+    *MEDIA_COLLECTIONS,  # Customers' files, website visitors' uploads (1191).
     DocumentCollectionDefinition(DocumentCollectionName("calls"), CallDocument),
     # Bookings, leads, handoffs and open questions.
     DocumentCollectionDefinition(DocumentCollectionName("bookings"), BookingDocument),

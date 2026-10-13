@@ -12,7 +12,7 @@ from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
 )
 from app.schemas.constants.calls import MissedCallReason
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
-from app.schemas.domain.conversations import CallSummary
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.calls.constrained_strings import CallSummaryText

@@ -5,7 +5,7 @@ by queued jobs, so a processor's outage never fails the erasure.
 """
 
 from app.schemas.constants.privacy import ProcessorErasureReason, SubProcessor
-from app.schemas.domain.conversations import CallSummary
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.dto.compliance import ContactDataCommand
 from app.schemas.dto.jobs import QueuedJobInput
 from app.schemas.dto.processor_erasure import ProcessorErasureJobPayload

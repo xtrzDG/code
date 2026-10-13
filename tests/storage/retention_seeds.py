@@ -23,10 +23,10 @@ from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.constants.media import AttachmentKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
     CallDocument,
-    CallSummary,
     ConversationDocument,
     LlmTurnDocument,
     MessageDocument,

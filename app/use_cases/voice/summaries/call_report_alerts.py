@@ -8,7 +8,7 @@ from app.schemas.constants.conversations import CallOutcome
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.notifications import StaffAlertEvent, StaffLinkTarget
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.conversations import CallSummary
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.dto.calls.call_summaries import CallReportTextInput
 from app.schemas.dto.notifications.staff_alerts import StaffAlert, StaffAlertBrief
 from app.schemas.typings.conversations.prefixed_id import ConversationId

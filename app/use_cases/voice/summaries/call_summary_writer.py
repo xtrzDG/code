@@ -7,7 +7,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.conversations import CallSummary
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.dto.conversations import LlmCallLimits, LlmRequest, LlmResponse
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine
 from app.schemas.exceptions.base_exception import ApplicationError

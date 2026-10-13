@@ -32,7 +32,6 @@ from app.contracts.repositories.setup_repositories import ActivationEventRepoCon
 from app.contracts.storage import StorageReadSessionContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     BookingActivityCount,
@@ -81,9 +80,10 @@ from app.use_cases.insights.dashboard_values import (
 )
 from app.use_cases.insights.value.launch_floor import read_launch_floor
 from app.use_cases.insights.value.value_access import sees_money
+from app.use_cases.insights.value.value_estimates import read_weekly_hours
 from app.use_cases.shared.business_access import require_business
 from app.use_cases.shared.storage_transaction import in_read_session
-from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
+from app.utilities.scheduling.opening_hours import DayRanges
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     local_day_start_microseconds,
@@ -179,8 +179,11 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         by_day: ActivityPeriod = timeline_period(days, period_end)
         start: Microseconds = by_day.start
         end: Microseconds = by_day.end
+        weekly_hours: DayRanges | None = read_weekly_hours(
+            self._business_profile_repo, self._schedule_exception_repo, business
+        )
         stretches: list[TimelineStretch] = build_timeline(
-            date_from, date_to, zone, self._weekly_hours(business)
+            date_from, date_to, zone, weekly_hours
         )
         mix: list[ConversationMixCount] = self._conversation_repo.count_started_by_mix(
             business.id, start, end
@@ -286,18 +289,4 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             after_hours_booked_value=booked_value_totals(
                 after_hours_groups(values, stretches)
             ),
-        )
-
-    def _weekly_hours(self, business: BusinessDocument) -> DayRanges | None:
-        """The business's opening ranges by date; None without weekly hours."""
-
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
-        )
-        if profile is None or not profile.hours:
-            return None
-
-        return business_day_ranges(
-            list(profile.hours),
-            self._schedule_exception_repo.list_by_business(business.id),
         )

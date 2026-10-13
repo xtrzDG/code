@@ -23,8 +23,9 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import CallDocument, CallSummary
+from app.schemas.domain.conversations import CallDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.calls.call_summaries import (
     CallBookingNote,

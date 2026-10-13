@@ -17,10 +17,10 @@ from app.schemas.constants.conversations import (
     MessageAuthor,
 )
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
-    CallSummary,
     ConversationDocument,
     MessageDocument,
 )
