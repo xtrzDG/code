@@ -27,17 +27,47 @@ def merge_brand_knowledge(
 ) -> list[KnowledgeItemDocument]:
     """The location's items as they are, then the shared facts it keeps."""
 
-    replaced: set[KnowledgeShareKey] = {
-        item.shared_key for item in location_items if item.shared_key is not None
-    }
     return [
         *location_items,
         *(
             as_location_item(shared, business)
-            for shared in shared_items
-            if shared.is_active and shared.shared_key not in replaced
+            for shared in unreplaced_shared_items(location_items, shared_items)
+            if shared.is_active
         ),
     ]
+
+
+def knowledge_revisions(
+    location_items: list[KnowledgeItemDocument],
+    shared_items: list[BrandKnowledgeItemDocument],
+    business: BusinessDocument,
+) -> list[KnowledgeItemDocument]:
+    """
+    Every item whose change reaches the location's assistant, active or
+    not, each with when it last changed: the location's own items and the
+    shared facts it does not replace (a fact the brand turned off counts:
+    the assistant must stop saying it). For "is the version up to date".
+    """
+
+    return [
+        *location_items,
+        *(
+            as_location_item(shared, business)
+            for shared in unreplaced_shared_items(location_items, shared_items)
+        ),
+    ]
+
+
+def unreplaced_shared_items(
+    location_items: list[KnowledgeItemDocument],
+    shared_items: list[BrandKnowledgeItemDocument],
+) -> list[BrandKnowledgeItemDocument]:
+    """The shared facts no location item replaces (by the fact's key)."""
+
+    replaced: set[KnowledgeShareKey] = {
+        item.shared_key for item in location_items if item.shared_key is not None
+    }
+    return [shared for shared in shared_items if shared.shared_key not in replaced]
 
 
 def as_location_item(
@@ -46,7 +76,9 @@ def as_location_item(
 ) -> KnowledgeItemDocument:
     """A shared fact read as one of the location's items (same id, never stored)."""
 
-    return build_location_item(shared, business, shared.id, shared.updated_at)
+    return build_location_item(
+        shared, business, shared.id, shared.updated_at
+    ).model_copy(update={"is_active": shared.is_active})
 
 
 def location_copy(

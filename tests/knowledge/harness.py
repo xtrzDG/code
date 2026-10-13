@@ -66,6 +66,7 @@ class KnowledgeHarness(KnowledgeStore):
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
         )
+        self.brand_knowledge_repo = in_memory_brand_knowledge_repo()
         self.list_niche_templates = ListNicheTemplatesUseCase(
             niche_template_registry=self.niche_template_registry,
             localized_text_resolver=self.resolver,
@@ -79,6 +80,7 @@ class KnowledgeHarness(KnowledgeStore):
             business_repo=self.business_repo,
             business_profile_repo=self.business_profile_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
             resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             localized_text_resolver=self.resolver,
@@ -108,6 +110,7 @@ class KnowledgeHarness(KnowledgeStore):
             business_repo=self.business_repo,
             business_profile_repo=self.business_profile_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
             resource_repo=self.resource_repo,
             unanswered_question_repo=self.unanswered_question_repo,
             niche_template_registry=self.niche_template_registry,
@@ -150,7 +153,6 @@ class KnowledgeHarness(KnowledgeStore):
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
-        self.brand_knowledge_repo = in_memory_brand_knowledge_repo()
         self.search_knowledge = SearchKnowledgeUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,

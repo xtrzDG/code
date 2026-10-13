@@ -143,6 +143,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
             describe_apply_changes=apply_use_cases.describe_apply_changes_use_case,
             business_profile_repo=repositories.business_profile_repo,
             knowledge_item_repo=repositories.knowledge_item_repo,
+            brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
             resource_repo=repositories.resource_repo,
             channel_repo=repositories.channel_repo,
             subscription_repo=repositories.subscription_repo,
@@ -185,6 +186,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         schedule_exception_repo=repositories.schedule_exception_repo,
     )

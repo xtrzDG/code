@@ -157,6 +157,8 @@ export const de: Messages = {
     notFoundTitle: "Seite nicht gefunden",
     notFoundDescription: "Die Seite existiert nicht oder Sie haben keinen Zugriff darauf.",
     backHome: "Zu meinen Unternehmen",
+    twoFactorRequired:
+      "Ein Unternehmen hier verlangt vom Team die Anmeldung mit einer Authenticator-App. Richten Sie eine unter Konto → Sicherheit ein, melden Sie sich neu an und versuchen Sie es erneut.",
     codes: {
       not_found: "Nicht gefunden, oder Sie haben keinen Zugriff.",
       validation_failed: "Prüfen Sie die eingegebenen Daten.",

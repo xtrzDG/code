@@ -3,7 +3,10 @@ import logging
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
-from app.contracts.repositories.brand_repositories import BrandRepoContract
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+    BrandRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -24,6 +27,7 @@ from app.schemas.dto.assistants.assistant_commands import (
 from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.use_cases.shared.assistant_knowledge import load_knowledge_revisions
 from app.use_cases.shared.brand_reach import acting_role
 from app.use_cases.shared.test_chat_versions import is_chosen_for_test_chat
 from app.utilities.setup.pending_changes import has_unapplied_changes
@@ -36,10 +40,11 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
     "Try your assistant" before going live and with the latest edits: when
     the version the owner's test chat would talk to (the newest one not
     archived, else the live one) was built before the last change of the
-    profile, knowledge, resources or languages, or there is no version
-    yet, a fresh DRAFT is built from what the business has now. A draft is
-    only a preview: nothing is checked or published, and the next "Apply
-    changes" builds its own version.
+    profile, knowledge (the brand's shared facts the location keeps
+    included), resources or languages, or there is no version yet, a
+    fresh DRAFT is built from what the business has now. A draft is only a
+    preview: nothing is checked or published, and the next "Apply changes"
+    builds its own version.
 
     Building a version is an owner's action (a brand owner's too), so for
     staff, a test of a
@@ -61,6 +66,7 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
         assistant_version_repo: AssistantVersionRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         schedule_exception_repo: ScheduleExceptionRepoContract,
     ) -> None:
@@ -78,6 +84,9 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
         )
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._schedule_exception_repo: ScheduleExceptionRepoContract = (
             schedule_exception_repo
@@ -135,7 +144,9 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
             business,
             tested,
             self._business_profile_repo.get_by_business(business.id),
-            self._knowledge_item_repo.list_by_business(business.id),
+            load_knowledge_revisions(
+                self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+            ),
             self._resource_repo.list_by_business(business.id),
             self._schedule_exception_repo.list_by_business(business.id),
         )

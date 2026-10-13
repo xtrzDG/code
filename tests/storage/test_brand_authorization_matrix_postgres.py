@@ -4,8 +4,9 @@ on Postgres, where row-level security is the second line of defence: every
 brand operation refuses strangers (404), callers without a token (401) and
 regional managers on the owners' operations (403) without changing a row;
 members touch only the locations they reach; the brand's roles keep each
-location's business rules; and leaving the brand ends access at the next
-request.
+location's business rules; leaving the brand ends access at the next
+request; and a location's two-factor rule for its team holds for joining a
+brand and for every brand owner's operation.
 """
 
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -21,6 +22,10 @@ from tests.platform.brand_matrix_checks import (
     check_members_reach_only_their_locations,
 )
 from tests.platform.brand_matrix_world import open_brand_world
+from tests.platform.brand_two_factor_checks import (
+    check_brand_owner_actions_need_two_factors,
+    check_joining_a_brand_needs_two_factors,
+)
 
 
 def environment_of(database_url: DatabaseUrl) -> dict[str, str]:
@@ -67,5 +72,16 @@ def test_leaving_the_brand_ends_access_at_the_next_request_on_postgres(
 ) -> None:
     with open_brand_world(environment_of(database_url)) as brand:
         failures = check_revocation_at_next_request(brand)
+
+    assert failures == []
+
+
+def test_locations_two_factor_rule_holds_for_the_brand_on_postgres(
+    database_url: DatabaseUrl,
+) -> None:
+    with open_brand_world(environment_of(database_url)) as brand:
+        failures = check_joining_a_brand_needs_two_factors(
+            brand
+        ) + check_brand_owner_actions_need_two_factors(brand)
 
     assert failures == []

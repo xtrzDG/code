@@ -88,6 +88,7 @@ class BrandUseCasesContainer(BrandContentUseCasesContainer):
             user_repo=Base.repos.user_repo,
             audit_log_repo=Base.repos.audit_log_repo,
             brand_view_transformer=Base.views,
+            session_assurance=Base.utilities.session_assurance,
             wall_clock=Base.clock,
         )
     )
@@ -119,6 +120,7 @@ class BrandUseCasesContainer(BrandContentUseCasesContainer):
         audit_log_repo=Base.repos.audit_log_repo,
         brand_view_transformer=Base.views,
         step_up=Base.utilities.step_up_guard,
+        session_assurance=Base.utilities.session_assurance,
         wall_clock=Base.clock,
     )
     remove_brand_location_use_case: Factory[

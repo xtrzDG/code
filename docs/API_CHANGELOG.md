@@ -11,6 +11,26 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-13 — brands: a location's two-factor rule holds for the brand
+
+Spec: `0c61aa6b3430e849`
+
+- **Changed** (behaviour) every brand owner's operation (`PATCH`/`DELETE
+  /v1/brands/{brand_id}`, its `/locations`, `/locations/clone`, `/members`
+  and `/knowledge` writes) is an owner's action in every location of the
+  brand: while one of them asks its team for two factors
+  (`require_mfa_for_members`), a session signed in with the login code alone
+  gets 403 with the reason `mfa_required`, as in the location itself.
+  Making a business a brand's location (`POST /v1/brands`, `POST
+  /v1/brands/{brand_id}/locations`) follows that business's rule the same
+  way. A member leaving the brand and every read stay as they were. The
+  operations' descriptions say so.
+- **Changed** (behaviour) the facts a brand shares count wherever a
+  location's own knowledge counts: `GET …/profile/gaps`, the profile wizard,
+  `GET …/setup`, the go-live readiness and the autotests (price questions
+  for shared prices). The owner's test chat builds a fresh preview when a
+  shared fact changed after the version it would use.
+
 ## 2026-10-12 — brands: a location's plan prices and shared answers, the brand team at work
 
 Spec: `ff07adf5309530b0`

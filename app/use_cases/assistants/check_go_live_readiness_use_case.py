@@ -8,6 +8,9 @@ from app.contracts.registries import (
 )
 from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
 from app.contracts.repositories.compliance_repositories import DpaAcceptanceRepoContract
 from app.contracts.repositories.knowledge_repositories import (
@@ -36,6 +39,7 @@ from app.use_cases.assistants.go_live_autotest_checks import (
     check_autotests,
     summarize_autotest_run,
 )
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_service_paid_for,
@@ -74,6 +78,7 @@ class CheckGoLiveReadinessUseCase(
         dpa_acceptance_repo: DpaAcceptanceRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         autotest_run_repo: AutotestRunRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
@@ -86,6 +91,9 @@ class CheckGoLiveReadinessUseCase(
         self._dpa_acceptance_repo: DpaAcceptanceRepoContract = dpa_acceptance_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
@@ -187,7 +195,9 @@ class CheckGoLiveReadinessUseCase(
                 template=self._niche_template_registry.get(business.niche_key),
                 business=business,
                 profile=self._business_profile_repo.get_by_business(business.id),
-                knowledge_items=self._knowledge_item_repo.list_by_business(business.id),
+                knowledge_items=load_active_knowledge(
+                    self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+                ),
                 resources=self._resource_repo.list_by_business(business.id),
             )
             if finding.is_blocking

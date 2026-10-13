@@ -3,7 +3,10 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
-from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.session_assurance import (
+    SessionAssuranceContract,
+    StepUpGuardContract,
+)
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.brands import BrandMemberRole
@@ -22,6 +25,7 @@ from app.use_cases.brands.brand_rules import (
     require_own_business,
 )
 from app.use_cases.brands.brand_view_loading import BrandViewLoader
+from app.use_cases.shared.team_two_factor import require_team_two_factors
 
 
 class AddBrandLocationUseCase(UseCaseContract[AddBrandLocationCommand, BrandView]):
@@ -30,7 +34,9 @@ class AddBrandLocationUseCase(UseCaseContract[AddBrandLocationCommand, BrandView
     a fresh sign-in): its team stays, and the brand's team reaches it from
     now on (its owners as owners; managers only once assigned to it). The
     business must be in no brand; the join is one step with what is stored
-    and shows in the business's audit log.
+    and shows in the business's audit log. Joining is an owner's action in
+    the business, so its own two-factor rule for its team applies too
+    (`mfa_required`), besides the brand's locations' (the brand check).
     """
 
     def __init__(
@@ -41,6 +47,7 @@ class AddBrandLocationUseCase(UseCaseContract[AddBrandLocationCommand, BrandView
         audit_log_repo: AuditLogRepoContract,
         brand_view_transformer: TransformerContract[BrandViewSource, BrandView],
         step_up: StepUpGuardContract,
+        session_assurance: SessionAssuranceContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_brand_access: UseCaseContract[
@@ -49,6 +56,7 @@ class AddBrandLocationUseCase(UseCaseContract[AddBrandLocationCommand, BrandView
         self._business_repo: BusinessRepoContract = business_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._step_up: StepUpGuardContract = step_up
+        self._session_assurance: SessionAssuranceContract = session_assurance
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._views: BrandViewLoader = BrandViewLoader(
             business_repo, user_repo, brand_view_transformer
@@ -67,6 +75,9 @@ class AddBrandLocationUseCase(UseCaseContract[AddBrandLocationCommand, BrandView
             self._business_repo.get(business_id), business_id, input_data.user_id
         )
         require_free_of_brands(business)
+        require_team_two_factors(
+            self._session_assurance.current(), input_data.user_id, [business]
+        )
         self._step_up.require_recent_authentication()
         now: Microseconds = self._wall_clock.now_unix()
 

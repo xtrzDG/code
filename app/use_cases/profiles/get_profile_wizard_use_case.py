@@ -1,5 +1,8 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import NicheTemplateRegistryContract
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -27,6 +30,7 @@ from app.schemas.typings.profiles.constrained_strings import (
     QuestionChoiceKey,
     QuestionKey,
 )
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.knowledge.niche_answers import split_choice_answer
 from app.utilities.knowledge.niche_views import (
     default_forbidden_rules,
@@ -66,6 +70,7 @@ class GetProfileWizardUseCase(UseCaseContract[ProfileWizardQuery, ProfileWizardV
         business_repo: BusinessRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         localized_text_resolver: LocalizedTextResolverContract,
@@ -73,6 +78,9 @@ class GetProfileWizardUseCase(UseCaseContract[ProfileWizardQuery, ProfileWizardV
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
         self._resource_repo: ResourceRepoContract = resource_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
@@ -97,7 +105,9 @@ class GetProfileWizardUseCase(UseCaseContract[ProfileWizardQuery, ProfileWizardV
             template=template,
             business=business,
             profile=profile,
-            knowledge_items=self._knowledge_item_repo.list_by_business(business.id),
+            knowledge_items=load_active_knowledge(
+                self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+            ),
             resources=self._resource_repo.list_by_business(business.id),
         )
         incomplete_steps: set[ProfileWizardStep] = blocking_steps(findings)

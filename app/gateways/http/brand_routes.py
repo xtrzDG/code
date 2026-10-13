@@ -42,6 +42,17 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 
 BRAND_PATH: str = "/v1/brands/{brand_id}"
+BRAND_OWNER_ACTION: str = (
+    "Brand owners only: a regional manager gets 403 `access_denied`. It is an "
+    "owner's action in every location of the brand, so while one of them asks "
+    "its team for two factors, a session signed in with the login code alone "
+    "gets 403 `mfa_required`."
+)
+JOINING_A_BRAND: str = (
+    "Only an owner of the business, in no brand yet, brings it in; while the "
+    "business asks its team for two factors, a session signed in with the "
+    "login code alone gets 403 `mfa_required`."
+)
 read_create_body = build_json_body_dependency(CreateBrandRequest)
 read_rename_body = build_json_body_dependency(RenameBrandRequest)
 read_location_body = build_json_body_dependency(AddBrandLocationRequest)
@@ -89,6 +100,7 @@ def build_brand_router(
 
     @router.post(
         "/v1/brands",
+        description=JOINING_A_BRAND,
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(CreateBrandRequest),
         dependencies=[Depends(idempotent)],
@@ -114,7 +126,11 @@ def build_brand_router(
             BrandQuery(user_id=user_id, brand_id=brand_of(brand_id))
         )
 
-    @router.patch(BRAND_PATH, openapi_extra=describe_json_body(RenameBrandRequest))
+    @router.patch(
+        BRAND_PATH,
+        description=BRAND_OWNER_ACTION,
+        openapi_extra=describe_json_body(RenameBrandRequest),
+    )
     def rename_brand_route(
         brand_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
@@ -126,7 +142,11 @@ def build_brand_router(
             )
         )
 
-    @router.delete(BRAND_PATH, status_code=status.HTTP_204_NO_CONTENT)
+    @router.delete(
+        BRAND_PATH,
+        description=BRAND_OWNER_ACTION,
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def delete_brand_route(
         brand_id: str, user_id: Annotated[UserId, Depends(current_user)]
     ) -> None:
@@ -160,6 +180,7 @@ def build_brand_router(
 
     @router.post(
         f"{BRAND_PATH}/locations",
+        description=f"{BRAND_OWNER_ACTION} {JOINING_A_BRAND}",
         openapi_extra=describe_json_body(AddBrandLocationRequest),
     )
     def add_brand_location(
@@ -179,6 +200,7 @@ def build_brand_router(
 
     @router.delete(
         f"{BRAND_PATH}/locations/{{business_id}}",
+        description=BRAND_OWNER_ACTION,
         status_code=status.HTTP_204_NO_CONTENT,
     )
     def remove_brand_location(
@@ -198,6 +220,7 @@ def build_brand_router(
 
     @router.post(
         f"{BRAND_PATH}/locations/clone",
+        description=BRAND_OWNER_ACTION,
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(CloneBrandLocationRequest),
         dependencies=[Depends(idempotent)],

@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 
 from app.contracts.operator_contract import OperatorContract
-from app.gateways.http.brand_routes import BRAND_PATH, brand_of
+from app.gateways.http.brand_routes import BRAND_OWNER_ACTION, BRAND_PATH, brand_of
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -77,6 +77,7 @@ def build_brand_knowledge_router(
 
     @router.post(
         f"{BRAND_PATH}/knowledge",
+        description=BRAND_OWNER_ACTION,
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(BrandKnowledgeItemRequest),
     )
@@ -91,7 +92,11 @@ def build_brand_knowledge_router(
             )
         )
 
-    @router.put(ITEM_PATH, openapi_extra=describe_json_body(BrandKnowledgeItemRequest))
+    @router.put(
+        ITEM_PATH,
+        description=BRAND_OWNER_ACTION,
+        openapi_extra=describe_json_body(BrandKnowledgeItemRequest),
+    )
     def update_brand_knowledge_item(
         brand_id: str,
         shared_key: str,
@@ -107,7 +112,11 @@ def build_brand_knowledge_router(
             )
         )
 
-    @router.delete(ITEM_PATH, status_code=status.HTTP_204_NO_CONTENT)
+    @router.delete(
+        ITEM_PATH,
+        description=BRAND_OWNER_ACTION,
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def delete_brand_knowledge_item(
         brand_id: str,
         shared_key: str,

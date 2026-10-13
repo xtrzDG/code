@@ -13,7 +13,9 @@ description like the business matrix:
   assigned to B, they are staff there (403 on the owner's operations);
   a brand owner who is not on B's own team owns it;
 - taking someone off the brand, or a location out of it, ends that
-  access at the next request.
+  access at the next request;
+- a location's two-factor rule for its team holds for the brand's owners'
+  operations and for joining a brand (tests/platform/brand_two_factor_checks.py).
 
 The same runs on Postgres with row-level security in
 tests/storage/test_brand_authorization_matrix_postgres.py.
@@ -35,6 +37,10 @@ from tests.platform.brand_matrix_checks import (
     check_members_reach_only_their_locations,
 )
 from tests.platform.brand_matrix_world import BrandWorld, open_brand_world
+from tests.platform.brand_two_factor_checks import (
+    check_brand_owner_actions_need_two_factors,
+    check_joining_a_brand_needs_two_factors,
+)
 
 MINIMUM_BRAND_OPERATIONS: int = 14
 
@@ -98,3 +104,13 @@ def test_members_touch_only_the_brand_locations_they_reach() -> None:
 def test_removal_from_the_brand_ends_access_at_the_next_request() -> None:
     with open_brand_world() as changed:
         assert check_revocation_at_next_request(changed) == []
+
+
+def test_joining_a_brand_follows_the_business_two_factor_rule() -> None:
+    with open_brand_world() as changed:
+        assert check_joining_a_brand_needs_two_factors(changed) == []
+
+
+def test_brand_owner_actions_follow_each_location_two_factor_rule() -> None:
+    with open_brand_world() as changed:
+        assert check_brand_owner_actions_need_two_factors(changed) == []

@@ -153,6 +153,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
         plan_scenarios = PlanAutotestScenariosUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
             resource_repo=self.resource_repo,
             autotest_case_repo=self.autotest_case_repo,
             niche_template_registry=self.niche_registry,

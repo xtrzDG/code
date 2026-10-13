@@ -14,15 +14,7 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
 )
 from app.use_cases.shared.brand_reach import acting_role
-from app.utilities.security.two_factor_policy import (
-    is_two_factor_session,
-    mfa_required,
-)
-
-TEAM_TWO_FACTOR_MESSAGE: str = (
-    "This business asks its team to sign in with two factors: set up an "
-    "authenticator app (Account → Security) and sign in again."
-)
+from app.use_cases.shared.team_two_factor import require_team_two_factors
 
 
 class AuthorizeBusinessAccessUseCase(
@@ -91,12 +83,7 @@ class AuthorizeBusinessAccessUseCase(
         )
         if role is not None:
             assurance: SessionAssurance | None = self._session_assurance.current()
-            if (
-                business.require_mfa_for_members
-                and assurance is not None
-                and not is_two_factor_session(assurance, input_data.user_id)
-            ):
-                raise mfa_required(TEAM_TWO_FACTOR_MESSAGE)
+            require_team_two_factors(assurance, input_data.user_id, [business])
 
             if role is BusinessMemberRole.AGENCY:
                 require_agency_may(input_data)

@@ -161,6 +161,8 @@ export const en = {
     notFoundTitle: "Page not found",
     notFoundDescription: "The page does not exist or you do not have access to it.",
     backHome: "To my businesses",
+    twoFactorRequired:
+      "A business here asks its team to sign in with an authenticator app. Set one up in Account → Security, sign in again, then try once more.",
     codes: {
       not_found: "Not found, or you do not have access.",
       validation_failed: "Check the entered data.",

@@ -96,7 +96,12 @@ class BrandContentUseCasesContainer(containers.DeclarativeContainer):
 
     authorize_brand_access_use_case: Factory[
         UseCaseContract[BrandAccessRequest, BrandDocument]
-    ] = Factory(authorize.AuthorizeBrandAccessUseCase, brand_repo=repos.brand_repo)
+    ] = Factory(
+        authorize.AuthorizeBrandAccessUseCase,
+        brand_repo=repos.brand_repo,
+        business_repo=repos.business_repo,
+        session_assurance=utilities.session_assurance,
+    )
     brand_access = authorize_brand_access_use_case
 
     list_brand_knowledge_use_case: Factory[

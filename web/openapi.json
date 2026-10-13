@@ -39971,6 +39971,7 @@
         ]
       },
       "post": {
+        "description": "Only an owner of the business, in no brand yet, brings it in; while the business asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_create_brand",
         "parameters": [
           {
@@ -40126,6 +40127,7 @@
     },
     "/v1/brands/{brand_id}": {
       "delete": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_delete_brand",
         "parameters": [
           {
@@ -40351,6 +40353,7 @@
         ]
       },
       "patch": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_rename_brand",
         "parameters": [
           {
@@ -40774,6 +40777,7 @@
         ]
       },
       "post": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_create_brand_knowledge_item",
         "parameters": [
           {
@@ -40992,6 +40996,7 @@
     },
     "/v1/brands/{brand_id}/knowledge/{shared_key}": {
       "delete": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_delete_brand_knowledge_item",
         "parameters": [
           {
@@ -41110,6 +41115,7 @@
         ]
       },
       "put": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_update_brand_knowledge_item",
         "parameters": [
           {
@@ -41337,6 +41343,7 @@
     },
     "/v1/brands/{brand_id}/locations": {
       "post": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`. Only an owner of the business, in no brand yet, brings it in; while the business asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_add_brand_location",
         "parameters": [
           {
@@ -41478,6 +41485,7 @@
     },
     "/v1/brands/{brand_id}/locations/clone": {
       "post": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_clone_brand_location",
         "parameters": [
           {
@@ -41653,6 +41661,7 @@
     },
     "/v1/brands/{brand_id}/locations/{business_id}": {
       "delete": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_remove_brand_location",
         "parameters": [
           {
@@ -41773,6 +41782,7 @@
     },
     "/v1/brands/{brand_id}/members": {
       "post": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_invite_brand_member",
         "parameters": [
           {
@@ -41971,6 +41981,7 @@
     },
     "/v1/brands/{brand_id}/members/{user_id}": {
       "delete": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`. A member who leaves (removes themself) needs neither.",
         "operationId": "brands_remove_brand_member",
         "parameters": [
           {
@@ -42089,6 +42100,7 @@
         ]
       },
       "patch": {
+        "description": "Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.",
         "operationId": "brands_change_brand_member",
         "parameters": [
           {

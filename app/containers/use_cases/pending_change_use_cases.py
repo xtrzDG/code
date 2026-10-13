@@ -93,6 +93,7 @@ class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )

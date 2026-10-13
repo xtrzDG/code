@@ -4,6 +4,7 @@ from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
+from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.brands import BrandMemberRole
@@ -21,6 +22,7 @@ from app.use_cases.brands.brand_rules import (
     require_valid_brand_name,
 )
 from app.use_cases.brands.brand_view_loading import BrandViewLoader
+from app.use_cases.shared.team_two_factor import require_team_two_factors
 
 
 class CreateBrandUseCase(UseCaseContract[CreateBrandCommand, BrandView]):
@@ -29,7 +31,9 @@ class CreateBrandUseCase(UseCaseContract[CreateBrandCommand, BrandView]):
     brand and becomes the brand's owner. The business must be the
     person's own (they are one of its owners) and in no brand yet; it
     joins in one step with what is stored, so two brands never get it.
-    The join is in the business's audit log.
+    The join is in the business's audit log. Making a business a brand's
+    location is an owner's action in it, so its two-factor rule for its
+    team applies (`mfa_required`).
     """
 
     def __init__(
@@ -39,9 +43,11 @@ class CreateBrandUseCase(UseCaseContract[CreateBrandCommand, BrandView]):
         user_repo: UserRepoContract,
         audit_log_repo: AuditLogRepoContract,
         brand_view_transformer: TransformerContract[BrandViewSource, BrandView],
+        session_assurance: SessionAssuranceContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._brand_repo: BrandRepoContract = brand_repo
+        self._session_assurance: SessionAssuranceContract = session_assurance
         self._business_repo: BusinessRepoContract = business_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -58,6 +64,9 @@ class CreateBrandUseCase(UseCaseContract[CreateBrandCommand, BrandView]):
             input_data.user_id,
         )
         require_free_of_brands(business)
+        require_team_two_factors(
+            self._session_assurance.current(), input_data.user_id, [business]
+        )
         now: Microseconds = self._wall_clock.now_unix()
         brand = BrandDocument(
             name=request.name,

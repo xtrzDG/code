@@ -803,7 +803,10 @@ export interface paths {
         /** List My Brands */
         get: operations["brands_list_my_brands"];
         put?: never;
-        /** Create Brand Route */
+        /**
+         * Create Brand Route
+         * @description Only an owner of the business, in no brand yet, brings it in; while the business asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         post: operations["brands_create_brand"];
         delete?: never;
         options?: never;
@@ -822,11 +825,17 @@ export interface paths {
         get: operations["brands_get_brand"];
         put?: never;
         post?: never;
-        /** Delete Brand Route */
+        /**
+         * Delete Brand Route
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         delete: operations["brands_delete_brand"];
         options?: never;
         head?: never;
-        /** Rename Brand Route */
+        /**
+         * Rename Brand Route
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         patch: operations["brands_rename_brand"];
         trace?: never;
     };
@@ -862,7 +871,10 @@ export interface paths {
         /** List Brand Knowledge */
         get: operations["brands_list_brand_knowledge"];
         put?: never;
-        /** Create Brand Knowledge Item */
+        /**
+         * Create Brand Knowledge Item
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         post: operations["brands_create_brand_knowledge_item"];
         delete?: never;
         options?: never;
@@ -878,10 +890,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Brand Knowledge Item */
+        /**
+         * Update Brand Knowledge Item
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         put: operations["brands_update_brand_knowledge_item"];
         post?: never;
-        /** Delete Brand Knowledge Item */
+        /**
+         * Delete Brand Knowledge Item
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         delete: operations["brands_delete_brand_knowledge_item"];
         options?: never;
         head?: never;
@@ -897,7 +915,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add Brand Location */
+        /**
+         * Add Brand Location
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`. Only an owner of the business, in no brand yet, brings it in; while the business asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         post: operations["brands_add_brand_location"];
         delete?: never;
         options?: never;
@@ -914,7 +935,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Clone Brand Location */
+        /**
+         * Clone Brand Location
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         post: operations["brands_clone_brand_location"];
         delete?: never;
         options?: never;
@@ -932,7 +956,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove Brand Location */
+        /**
+         * Remove Brand Location
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         delete: operations["brands_remove_brand_location"];
         options?: never;
         head?: never;
@@ -948,7 +975,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Invite Brand Member */
+        /**
+         * Invite Brand Member
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         post: operations["brands_invite_brand_member"];
         delete?: never;
         options?: never;
@@ -966,11 +996,17 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove Brand Member */
+        /**
+         * Remove Brand Member
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`. A member who leaves (removes themself) needs neither.
+         */
         delete: operations["brands_remove_brand_member"];
         options?: never;
         head?: never;
-        /** Change Brand Member */
+        /**
+         * Change Brand Member
+         * @description Brand owners only: a regional manager gets 403 `access_denied`. It is an owner's action in every location of the brand, so while one of them asks its team for two factors, a session signed in with the login code alone gets 403 `mfa_required`.
+         */
         patch: operations["brands_change_brand_member"];
         trace?: never;
     };

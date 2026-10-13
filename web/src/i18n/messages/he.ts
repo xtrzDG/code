@@ -157,6 +157,8 @@ export const he: Messages = {
     notFoundTitle: "הדף לא נמצא",
     notFoundDescription: "הדף לא קיים או שאין לכם גישה אליו.",
     backHome: "לעסקים שלי",
+    twoFactorRequired:
+      "אחד העסקים כאן מבקש מהצוות להתחבר עם אפליקציית אימות. הגדירו אחת בעמוד „אבטחה” שבחשבון, התחברו מחדש ונסו שוב.",
     codes: {
       not_found: "לא נמצא, או שאין לכם גישה.",
       validation_failed: "בדקו את הנתונים שהוזנו.",

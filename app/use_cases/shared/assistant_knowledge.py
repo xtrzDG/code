@@ -9,7 +9,10 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.schemas.domain.brands import BrandKnowledgeItemDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.utilities.brands.brand_knowledge_merge import merge_brand_knowledge
+from app.utilities.brands.brand_knowledge_merge import (
+    knowledge_revisions,
+    merge_brand_knowledge,
+)
 
 
 def load_active_knowledge(
@@ -23,15 +26,43 @@ def load_active_knowledge(
     `app/utilities/brands/brand_knowledge_merge.py`).
     """
 
-    shared: list[BrandKnowledgeItemDocument] = (
-        []
-        if business.brand_id is None
-        else brand_knowledge_item_repo.list_by_brand(business.brand_id)
-    )
     return [
         item
         for item in merge_brand_knowledge(
-            knowledge_item_repo.list_by_business(business.id), shared, business
+            knowledge_item_repo.list_by_business(business.id),
+            shared_knowledge(brand_knowledge_item_repo, business),
+            business,
         )
         if item.is_active
     ]
+
+
+def load_knowledge_revisions(
+    knowledge_item_repo: KnowledgeItemRepoContract,
+    brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
+    business: BusinessDocument,
+) -> list[KnowledgeItemDocument]:
+    """
+    Every item whose change reaches the assistant, active or not: the
+    business's own and, for a brand's location, the shared facts it does
+    not replace (`knowledge_revisions`). What "is a version up to date"
+    compares against when the version was built.
+    """
+
+    return knowledge_revisions(
+        knowledge_item_repo.list_by_business(business.id),
+        shared_knowledge(brand_knowledge_item_repo, business),
+        business,
+    )
+
+
+def shared_knowledge(
+    brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
+    business: BusinessDocument,
+) -> list[BrandKnowledgeItemDocument]:
+    """The facts the business's brand shares (none outside a brand)."""
+
+    if business.brand_id is None:
+        return []
+
+    return brand_knowledge_item_repo.list_by_brand(business.brand_id)

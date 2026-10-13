@@ -125,6 +125,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         dpa_acceptance_repo=repositories.dpa_acceptance_repo,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         niche_template_registry=registries.niche_template_registry,
