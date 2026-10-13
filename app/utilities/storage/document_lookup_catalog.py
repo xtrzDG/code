@@ -142,6 +142,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # Customer files past their retention, oldest first (1081).
     DocumentCollectionName("message_media"): (integer_field("created_at"),),
+    # Visitors' uploads by age for the daily purge (1191).
+    DocumentCollectionName("widget_uploads"): (integer_field("created_at"),),
     # Bookings by start (list pages, availability: the ones not over yet),
     # by creation (dashboard), by status (badges, migration 1040), and those
     # of one conversation; their value per currency (dashboard and value

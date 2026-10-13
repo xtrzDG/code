@@ -3,7 +3,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.channels.widget import WidgetMessageCommand
 from app.schemas.dto.channels.widget_streams import WidgetStreamTicketRequest
 from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
-from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.typings.channels.constrained_strings import WidgetStreamTicket
 
 
@@ -21,27 +21,28 @@ class WidgetMessageOrchestrator(
 
     def __init__(
         self,
-        accept_widget_message: UseCaseContract[WidgetMessageCommand, InboundMessage],
+        accept_widget_message: UseCaseContract[
+            WidgetMessageCommand, AcceptedWidgetMessage
+        ],
         queue_widget_message: UseCaseContract[
-            InboundMessage, WidgetMessageAcceptedView
+            AcceptedWidgetMessage, WidgetMessageAcceptedView
         ],
         issue_stream_ticket: UseCaseContract[
             WidgetStreamTicketRequest, WidgetStreamTicket
         ],
     ) -> None:
         self._accept_widget_message: UseCaseContract[
-            WidgetMessageCommand,
-            InboundMessage,
+            WidgetMessageCommand, AcceptedWidgetMessage
         ] = accept_widget_message
         self._queue_widget_message: UseCaseContract[
-            InboundMessage, WidgetMessageAcceptedView
+            AcceptedWidgetMessage, WidgetMessageAcceptedView
         ] = queue_widget_message
         self._issue_stream_ticket: UseCaseContract[
             WidgetStreamTicketRequest, WidgetStreamTicket
         ] = issue_stream_ticket
 
     def execute(self, input_data: WidgetMessageCommand) -> WidgetMessageAcceptedView:
-        accepted: InboundMessage = self._accept_widget_message.run(input_data)
+        accepted: AcceptedWidgetMessage = self._accept_widget_message.run(input_data)
         queued: WidgetMessageAcceptedView = self._queue_widget_message.run(accepted)
         ticket: WidgetStreamTicket = self._issue_stream_ticket.run(
             WidgetStreamTicketRequest(

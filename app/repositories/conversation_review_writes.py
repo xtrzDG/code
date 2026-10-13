@@ -1,6 +1,7 @@
 """
 The review writes of `ConversationRepository`: a rating (with its reason
-and answer) and the mark that someone acted on it are written in one step
+and answer; the team's, or a website visitor's that never replaces the
+team's) and the mark that someone acted on it are written in one step
 each, and the conversations rated bad and not acted on are one keyset
 page on their own index (migration 1112).
 """
@@ -10,8 +11,12 @@ from typed_time_provider import Microseconds
 from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import LAST_MESSAGE_AT_FIELD
 from app.repositories.document_queries import field_equals
+from app.schemas.constants.conversations import ConversationRatingBy
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.conversation_feed.answer_reviews import ConversationRatingChange
+from app.schemas.dto.conversation_feed.answer_reviews import (
+    ConversationRatingChange,
+    CustomerRatingChange,
+)
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_queries import DocumentFilter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -41,10 +46,37 @@ class ConversationReviewWrites(BusinessScopedRepository[ConversationDocument]):
                         "rating": change.rating,
                         "rated_by": change.rated_by if is_rated else None,
                         "rated_at": change.at if is_rated else None,
+                        "rating_by": ConversationRatingBy.TEAM if is_rated else None,
                         "rating_reason": change.rating_reason if is_rated else None,
                         "rated_message_id": (
                             change.rated_message_id if is_rated else None
                         ),
+                        "updated_at": change.at,
+                    }
+                )
+            )
+
+        return self._modify_in_business(business_id, str(conversation_id), rate)
+
+    def set_customer_rating(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+        change: CustomerRatingChange,
+    ) -> ConversationDocument | None:
+        def rate(stored: ConversationDocument) -> ConversationDocument | None:
+            if stored.rating_by is ConversationRatingBy.TEAM:
+                return None
+
+            return with_review_attention(
+                stored.model_copy(
+                    update={
+                        "rating": change.rating,
+                        "rated_by": None,
+                        "rated_at": change.at,
+                        "rating_by": ConversationRatingBy.CUSTOMER,
+                        "rating_reason": change.rating_reason,
+                        "rated_message_id": change.rated_message_id,
                         "updated_at": change.at,
                     }
                 )

@@ -11,6 +11,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingBy,
     ConversationRatingReason,
     ConversationStatus,
     MessageAuthor,
@@ -161,6 +162,7 @@ class DemoConversationRecorder:
         conversation.updated_at = Microseconds(moment)
         if rating is not None:
             conversation.rating = rating
+            conversation.rating_by = ConversationRatingBy.TEAM
             conversation.rated_by = rated_by
             conversation.rated_at = self._clock.later(Microseconds(moment), 90)
             conversation.rating_reason = rating_reason

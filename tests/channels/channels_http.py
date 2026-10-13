@@ -122,6 +122,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                         testbed.channel_repo,
                         testbed.widget_rate_limits,
                         testbed.wall_clock,
+                        testbed.widget_upload_repo,
                     ),
                     testbed.queue_widget_message,
                     stream_tickets,

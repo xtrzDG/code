@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.configurations.media_settings import (
+    DEFAULT_MAX_CONCURRENT_UPLOADS,
     DEFAULT_MAX_IMAGE_BYTES,
     DEFAULT_MAX_VOICE_BYTES,
     DEFAULT_MAX_VOICE_SECONDS,
@@ -11,6 +12,7 @@ from app.schemas.configurations.media_settings import (
     MediaSettings,
 )
 from app.schemas.typings.media.constrained_integers import (
+    ConcurrentUploadLimit,
     MediaByteLimit,
     VoiceDurationLimitSeconds,
 )
@@ -70,6 +72,15 @@ def read_media_settings(
                     DEFAULT_MAX_VOICE_SECONDS,
                 ),
                 VoiceDurationLimitSeconds,
+            ),
+            max_concurrent_uploads=parse_setting(
+                "MEDIA_MAX_CONCURRENT_UPLOADS",
+                read_integer(
+                    environment_variables,
+                    "MEDIA_MAX_CONCURRENT_UPLOADS",
+                    DEFAULT_MAX_CONCURRENT_UPLOADS,
+                ),
+                ConcurrentUploadLimit,
             ),
         )
     )

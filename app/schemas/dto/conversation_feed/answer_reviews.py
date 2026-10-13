@@ -26,3 +26,16 @@ class ConversationRatingChange(ImmutableDTO):
     rating_reason: ConversationRatingReason | None = None
     rated_message_id: MessageId | None = None
     at: Microseconds
+
+
+class CustomerRatingChange(ImmutableDTO):
+    """
+    A website visitor's thumbs on their own conversation: good or bad, why
+    it was bad (optional), the answer it is about and when. It never
+    replaces the team's rating.
+    """
+
+    rating: ConversationRating
+    rating_reason: ConversationRatingReason | None = None
+    rated_message_id: MessageId | None = None
+    at: Microseconds

@@ -13,8 +13,9 @@ class PurgeExpiredRecordingsJobOrchestrator(OrchestratorContract[JobTick, JobRep
     """
     The daily retention job of the background worker: purge expired call
     recordings of every business (concept section 10, 90 days by default),
-    then the voice notes and photos customers sent, kept as long, and report
-    how many calls and files were purged.
+    then the voice notes and photos customers sent, kept as long, then the
+    website visitors' uploads older than a day, and report how many calls
+    and files were purged.
     """
 
     def __init__(
@@ -27,6 +28,10 @@ class PurgeExpiredRecordingsJobOrchestrator(OrchestratorContract[JobTick, JobRep
             PurgeExpiredRecordingsCommand,
             MessageMediaPurgeResult,
         ],
+        purge_stale_widget_uploads: UseCaseContract[
+            PurgeExpiredRecordingsCommand,
+            MessageMediaPurgeResult,
+        ],
     ) -> None:
         self._purge_expired_recordings: UseCaseContract[
             PurgeExpiredRecordingsCommand,
@@ -36,6 +41,10 @@ class PurgeExpiredRecordingsJobOrchestrator(OrchestratorContract[JobTick, JobRep
             PurgeExpiredRecordingsCommand,
             MessageMediaPurgeResult,
         ] = purge_expired_message_media
+        self._purge_stale_widget_uploads: UseCaseContract[
+            PurgeExpiredRecordingsCommand,
+            MessageMediaPurgeResult,
+        ] = purge_stale_widget_uploads
 
     def execute(self, input_data: JobTick) -> JobReport:
         del input_data
@@ -45,8 +54,13 @@ class PurgeExpiredRecordingsJobOrchestrator(OrchestratorContract[JobTick, JobRep
         media: MessageMediaPurgeResult = self._purge_expired_message_media.run(
             PurgeExpiredRecordingsCommand(business_id=None)
         )
+        uploads: MessageMediaPurgeResult = self._purge_stale_widget_uploads.run(
+            PurgeExpiredRecordingsCommand(business_id=None)
+        )
         return JobReport(
             processed_count=ProcessedItemCount(
-                int(result.purged_calls) + int(media.deleted_files)
+                int(result.purged_calls)
+                + int(media.deleted_files)
+                + int(uploads.deleted_files)
             )
         )

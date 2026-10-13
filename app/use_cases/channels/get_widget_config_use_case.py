@@ -35,6 +35,7 @@ from app.use_cases.shared.widget_languages import (
     build_widget_greetings,
     build_widget_languages,
 )
+from app.utilities.channels.widget_attachment_rules import widget_attachment_rules
 from app.utilities.channels.widget_starters import (
     add_niche_starters,
     build_starter_questions,
@@ -57,7 +58,8 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
     questions per language from the FAQ (the niche's ready questions in a
     language the FAQ does not cover), the privacy notice the footer
     links to with its "Powered by" link (the business's referral code), and
-    the business's other channels (the hosted chat page offers them).
+    the business's other channels (the hosted chat page offers them),
+    and the photos and voice notes a visitor may upload (types and caps).
     Nothing personal or secret is returned.
     """
 
@@ -131,6 +133,7 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
             powered_by_url=self._referral_links.powered_by_link(
                 business, POWERED_BY_SOURCE_TAG
             ),
+            attachments=widget_attachment_rules(self._app_settings.media),
         )
 
     def _starter_questions(

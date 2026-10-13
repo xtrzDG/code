@@ -75,6 +75,9 @@
           return;
         }
         var row = messageRow(item.role, item.text, item.direction, item.role === "staff" ? text("staff") : "");
+        if (item.attachments && item.attachments.length) {
+          appendFiles(row, item);
+        }
         // Faded while on its way; once the API has it, the typing dots say
         // that the answer is coming.
         if (item === state.pendingItem) {
@@ -85,6 +88,7 @@
           log.appendChild(errorRow(item));
         }
       });
+      appendRating();
       if (typingRow) {
         log.appendChild(typingRow);
       }
@@ -92,6 +96,42 @@
       if (wasAtEnd || state.isSending) {
         scrollToEnd();
       }
+    }
+
+    // A visitor message's photos (thumbnails while this page has them) and
+    // voice messages, above its text.
+    function appendFiles(row, item) {
+      var files = el("div", "aw-files");
+      item.attachments.forEach(function (attachment) {
+        var url = state.mediaUrls[attachment.id];
+        if (attachment.kind === "image" && url) {
+          var image = el("img", "aw-thumb");
+          image.src = url;
+          image.alt = text("photo");
+          files.appendChild(image);
+        } else {
+          files.appendChild(fileLabel(attachment));
+        }
+      });
+      row.insertBefore(files, row.firstChild);
+    }
+
+    function fileLabel(attachment) {
+      var label = el("span", "aw-file");
+      label.appendChild(attachment.kind === "audio" ? micIcon() : photoIcon());
+      var name = el("span", "");
+      name.textContent =
+        attachment.kind === "audio"
+          ? text("voice") + (attachment.seconds ? " " + clock(attachment.seconds) : "")
+          : text("photo");
+      label.appendChild(name);
+      return label;
+    }
+
+    function clock(seconds) {
+      var whole = Math.max(0, Math.round(seconds));
+      var rest = whole % 60;
+      return Math.floor(whole / 60) + ":" + (rest < 10 ? "0" : "") + rest;
     }
 
     function errorRow(item) {
@@ -116,7 +156,9 @@
         }
       });
       row.appendChild(message);
-      row.appendChild(retry);
+      if (!item.cannotRetry) {
+        row.appendChild(retry);
+      }
       return row;
     }
 
@@ -139,7 +181,11 @@
     }
 
     function updateSendButton() {
-      sendButton.disabled = state.isSending || isSendingHeld() || input.value.trim() === "";
+      sendButton.disabled =
+        state.isSending ||
+        isSendingHeld() ||
+        isUploading() ||
+        (input.value.trim() === "" && readyUploads().length === 0);
     }
 
     function autoSize() {
@@ -176,6 +222,8 @@
             key: item.key,
             draft: item.draft === true ? true : undefined,
             choices: item.choices && item.choices.length ? item.choices : undefined,
+            attachments: item.attachments && item.attachments.length ? readAttachments(item.attachments) : undefined,
+            invitesRating: item.invitesRating === true ? true : undefined,
             pending: item.pending === true ? true : undefined,
             sentAt: item.pending === true ? item.sentAt : undefined
           };

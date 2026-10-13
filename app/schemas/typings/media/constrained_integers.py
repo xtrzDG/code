@@ -9,6 +9,18 @@ class AudioDurationSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class ConcurrentUploadLimit(BaseConstrainedTypedInt):
+    """
+    Website chat uploads one API process takes at once
+    (MEDIA_MAX_CONCURRENT_UPLOADS): each holds its file in memory while it
+    is read, checked and stored, so a few never take the memory the rest
+    of the API needs.
+    """
+
+    ge = 1
+    le = 64
+
+
 class DeletedMediaCount(BaseConstrainedTypedInt):
     """How many stored customer files one purge removed."""
 
@@ -29,6 +41,16 @@ class MediaByteLimit(BaseConstrainedTypedInt):
 
     ge = 1024
     le = 25 * 1024 * 1024
+
+
+class UploadsPerAddressLimit(BaseConstrainedTypedInt):
+    """
+    Website chat uploads of one client network one API process takes at
+    once: one network never holds every upload place.
+    """
+
+    ge = 1
+    le = 64
 
 
 class VoiceDurationLimitSeconds(BaseConstrainedTypedInt):

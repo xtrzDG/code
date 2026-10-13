@@ -314,6 +314,9 @@ _.starter_questions  # app/schemas/dto/channels/widget.py
 _.contact_links  # app/schemas/dto/channels/widget.py
 _.stream_ticket  # app/schemas/dto/channels/widget.py, widget_turns.py (the live stream)
 _.widget_script_url  # app/schemas/dto/sharing.py
+_.attachment_id  # app/schemas/dto/channels/widget_uploads.py (the upload's id)
+_.image_types  # app/schemas/dto/channels/widget_uploads.py (the file picker)
+_.audio_types  # app/schemas/dto/channels/widget_uploads.py (the recorder)
 
 _.source_page_url  # app/schemas/dto/menu_import.py
 

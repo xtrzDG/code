@@ -5390,6 +5390,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/widget/{business_id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Widget Attachment */
+        post: operations["channels_upload_widget_attachment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/widget/{business_id}/config": {
         parameters: {
             query?: never;
@@ -5456,6 +5473,23 @@ export interface paths {
         put?: never;
         /** Send Widget Message */
         post: operations["channels_send_widget_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/widget/{business_id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rate Widget Conversation */
+        post: operations["channels_rate_widget_conversation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5963,7 +5997,9 @@ export interface components {
          *     (UNANSWERED_QUESTION) has its `question_id`, `question`, how often it
          *     was asked and its language; a conversation rated bad (BAD_RATING) its
          *     `conversation_id`, the rated answer (`message_id`, `answer`), the
-         *     customer's last words (`customer_message`) and the reason given.
+         *     customer's last words (`customer_message`), the reason given and who
+         *     flagged it (`rating_by`: the team, or the customer with the website
+         *     chat's thumbs).
          *     `at` is when it was last asked or written.
          */
         AnswerToImproveView: {
@@ -5986,6 +6022,7 @@ export interface components {
             question?: string | null;
             /** Question Id */
             question_id?: string | null;
+            rating_by?: components["schemas"]["ConversationRatingBy"] | null;
             rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
         };
         /**
@@ -9504,7 +9541,7 @@ export interface components {
          * @description Customer conversation in one channel (concept table `conversations`).
          *
          *     Pinned to one assistant version so its instruction and tools never change
-         *     mid-conversation. `rating` is the owner's or staff's good / bad verdict.
+         *     mid-conversation. `rating` is the team's or the customer's good / bad verdict.
          *
          *     The team inbox fields belong to their own operations, and a plain save
          *     of the conversation keeps their stored values
@@ -9518,12 +9555,10 @@ export interface components {
          *
          *     Version 2: the team inbox fields (all optional, so version 1 rows read
          *     as they are).
-         *
          *     Version 3: `acquisition_source`, where the customer came from when the
          *     conversation started (a shared link's tag, an ad, the number dialled;
          *     `app/utilities/sharing/acquisition_sources.py`). Set once, never
          *     changed; optional, so version 2 rows read as they are.
-         *
          *     Version 4: why a bad rating was given (`rating_reason`), the answer it
          *     is about (`rated_message_id`), when someone acted on it (corrected the
          *     answer or saved a check from it: `improved_at`) and, derived on every
@@ -9531,11 +9566,13 @@ export interface components {
          *     the Overview's "Answers worth improving"). The review fields change
          *     only through `ConversationReviewRepoContract.set_review`; a plain save
          *     keeps them as stored. All optional, so version 3 rows read as they are.
-         *
          *     Version 5: what the conversation was about (`summary`, at most 300
          *     characters, written by a cheap model once it was quiet for two hours)
          *     and when (`summarized_at`), the assistant's memory of a returning
          *     customer. Optional, so version 4 rows read as they are.
+         *     Version 6: who rated it (`rating_by`: the team, or the customer under the
+         *     website chat's answers, whose `rated_by` is None). Rated version 5 rows
+         *     were the team's (the upcaster says so).
          */
         ConversationDocument: {
             /** Acquisition Source */
@@ -9605,10 +9642,11 @@ export interface components {
             /** Rated Message Id */
             rated_message_id?: string | null;
             rating?: components["schemas"]["ConversationRating"] | null;
+            rating_by?: components["schemas"]["ConversationRatingBy"] | null;
             rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** @default open */
@@ -9753,6 +9791,15 @@ export interface components {
          */
         ConversationRating: "good" | "bad";
         /**
+         * ConversationRatingBy
+         * @description Who rated a conversation: the owner or staff in the cabinet (TEAM), or
+         *     the customer with the thumbs under the website chat's answers
+         *     (CUSTOMER). The team's verdict stands: a customer's rating never
+         *     replaces it.
+         * @enum {string}
+         */
+        ConversationRatingBy: "team" | "customer";
+        /**
          * ConversationRatingReason
          * @description Why the owner or staff rated a conversation bad: the assistant said
          *     something wrong, should have passed it to a person, struck the wrong
@@ -9772,7 +9819,8 @@ export interface components {
         /**
          * ConversationSummaryView
          * @description A conversation row in the feed: who, where, flags, how many messages
-         *     (all and the customer's) and the beginning of the last one.
+         *     (all and the customer's), the beginning of the last one and its rating
+         *     (`rating_by`: the team's or the customer's from the website chat).
          */
         ConversationSummaryView: {
             /** Assistant Version Id */
@@ -9809,6 +9857,7 @@ export interface components {
             /** Rated Message Id */
             rated_message_id?: string | null;
             rating?: components["schemas"]["ConversationRating"] | null;
+            rating_by?: components["schemas"]["ConversationRatingBy"] | null;
             rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
             status: components["schemas"]["ConversationStatus"];
         };
@@ -18019,6 +18068,43 @@ export interface components {
             origins: string[];
         };
         /**
+         * WidgetAttachmentRulesView
+         * @description What the widget lets a visitor send besides text: photos of these types
+         *     up to `max_image_bytes` (MEDIA_MAX_IMAGE_BYTES), voice notes of these
+         *     types up to `max_voice_seconds` (MEDIA_MAX_VOICE_SECONDS) and
+         *     `max_voice_bytes` (MEDIA_MAX_VOICE_BYTES). The API checks all of it
+         *     again.
+         */
+        WidgetAttachmentRulesView: {
+            /** Audio Types */
+            audio_types: string[];
+            /** Image Types */
+            image_types: string[];
+            /** Max Image Bytes */
+            max_image_bytes: number;
+            /** Max Voice Bytes */
+            max_voice_bytes: number;
+            /** Max Voice Seconds */
+            max_voice_seconds: number;
+        };
+        /**
+         * WidgetAttachmentView
+         * @description An uploaded file the visitor's next message may name (`attachment_id`):
+         *     what it is, its type as its bytes say, its size and, for a voice note,
+         *     its length.
+         */
+        WidgetAttachmentView: {
+            /** Attachment Id */
+            attachment_id: string;
+            /** Byte Count */
+            byte_count: number;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            kind: components["schemas"]["AttachmentKind"];
+            /** Media Type */
+            media_type: string;
+        };
+        /**
          * WidgetConfigView
          * @description Public configuration the widget script loads before it shows itself.
          *
@@ -18036,10 +18122,13 @@ export interface components {
          *     footer; `contact_links` are the other channels, offered on the hosted
          *     chat page. `powered_by_url` is the footer's "Powered by" link with the
          *     business's referral code (None when a Plus owner switched it off).
+         *     `attachments` says which photos and voice notes the visitor may send
+         *     and how large or long they may be.
          */
         WidgetConfigView: {
             /** Accent Color */
             accent_color?: string | null;
+            attachments?: components["schemas"]["WidgetAttachmentRulesView"] | null;
             /** Business Id */
             business_id: string;
             /** Business Name */
@@ -18132,7 +18221,9 @@ export interface components {
          * WidgetMessageView
          * @description An assistant or staff message as the widget shows it; `choices` are the
          *     options an assistant reply offers, shown as chips under it until the
-         *     visitor writes (a tap sends the label).
+         *     visitor writes (a tap sends the label). `invites_rating`: the answer of
+         *     a turn that booked or took a lead, under which the widget asks for a
+         *     thumbs up or down at once.
          */
         WidgetMessageView: {
             author: components["schemas"]["MessageAuthor"];
@@ -18143,6 +18234,11 @@ export interface components {
             direction: components["schemas"]["TextDirection"];
             /** Id */
             id: string;
+            /**
+             * Invites Rating
+             * @default false
+             */
+            invites_rating: boolean;
             /** Language */
             language?: string | null;
             /** Text */
@@ -18181,6 +18277,14 @@ export interface components {
          * @enum {string}
          */
         WidgetPosition: "left" | "right";
+        /**
+         * WidgetRatingView
+         * @description The rating the widget shows as given (whether or not the team's stands).
+         */
+        WidgetRatingView: {
+            rating: components["schemas"]["ConversationRating"];
+            reason?: components["schemas"]["ConversationRatingReason"] | null;
+        };
         /**
          * WidgetSnippetView
          * @description Embed code the owner pastes into the website, and the page that shows
@@ -53782,6 +53886,100 @@ export interface operations {
             };
         };
     };
+    channels_upload_widget_attachment: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Widget-Session-Key": string;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetAttachmentView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     channels_get_widget_config: {
         parameters: {
             query?: never;
@@ -54161,6 +54359,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Attachment Ids */
+                    attachment_ids?: string[];
                     /** Contact Name */
                     contact_name?: string | null;
                     /** Session Key */
@@ -54168,7 +54368,7 @@ export interface operations {
                     /** Source */
                     source?: string | null;
                     /** Text */
-                    text: string;
+                    text?: string | null;
                 };
             };
         };
@@ -54180,6 +54380,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetMessageAcceptedView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_rate_widget_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Message Id */
+                    message_id?: string | null;
+                    /**
+                     * ConversationRating
+                     * @description The owner's or staff's verdict on how the assistant handled a
+                     *     conversation (concept section 8, "good / bad" on the card), used in the
+                     *     weekly quality review (section 11).
+                     * @enum {string}
+                     */
+                    rating: "good" | "bad";
+                    reason?: ("wrong_info" | "should_hand_off" | "tone" | "too_long") | null;
+                    /** Session Key */
+                    session_key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetRatingView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

@@ -69,6 +69,9 @@ from app.containers.orchestrators.value_orchestrators import (
 from app.containers.orchestrators.webhook_orchestrators import (
     WebhookOrchestratorsContainer,
 )
+from app.containers.orchestrators.widget_visitor_orchestrators import (
+    WidgetVisitorOrchestratorsContainer,
+)
 
 
 class OrchestratorsContainer(CoreOrchestratorsContainer):
@@ -220,4 +223,8 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         public_api_use_cases=CoreOrchestratorsContainer.use_cases.public_api,
         booking_use_cases=CoreOrchestratorsContainer.use_cases.bookings,
         follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
+    )
+    widget_visitors: WidgetVisitorOrchestratorsContainer = Container(  # type: ignore[assignment]
+        WidgetVisitorOrchestratorsContainer,
+        widget_visitor_use_cases=CoreOrchestratorsContainer.use_cases.widget_visitors,
     )

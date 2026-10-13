@@ -44,6 +44,12 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "GET /v1/widget/{business_id}/messages": "website chat; the visitor's own",
     "GET /v1/widget/{business_id}/events": "website chat; a signed stream ticket",
     "POST /v1/widget/{business_id}/handoff": "website chat; the visitor's own",
+    "POST /v1/widget/{business_id}/attachments": (
+        "website chat; files bound to the visitor's key, limits, checked bytes"
+    ),
+    "POST /v1/widget/{business_id}/rating": (
+        "website chat; the visitor's own answers, limits"
+    ),
     "POST /v1/widget/errors": "the widget's error beacon, rate limited",
     "POST /v1/channels/telegram/{channel_id}/webhook": "Telegram's secret token",
     "GET /v1/channels/meta/webhook": "Meta's verify token handshake",

@@ -66,6 +66,7 @@ export const teachingKa: Translation<typeof teachingEn> = {
     },
   },
   rating: {
+    byCustomer: "შეფასება კლიენტმა საიტის ჩატში დატოვა.",
     reasonLabel: "რა იყო არასწორი?",
     reasons: {
       wrong_info: "არასწორი ინფორმაცია",
@@ -144,6 +145,7 @@ export const teachingKa: Translation<typeof teachingEn> = {
     loading: "პასუხებს ვტვირთავთ…",
     empty: "ახლა გასაუმჯობესებელი არაფერია.",
     badRating: "ცუდი შეფასება",
+    byCustomer: "კლიენტის შეფასება",
     unanswered: "უპასუხოდ",
     asked: {
       one: "იკითხეს {count}-ჯერ",

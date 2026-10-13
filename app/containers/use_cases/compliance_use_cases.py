@@ -57,6 +57,9 @@ from app.use_cases.compliance.purge_expired_message_media_use_case import (
 from app.use_cases.compliance.purge_expired_recordings_use_case import (
     PurgeExpiredRecordingsUseCase,
 )
+from app.use_cases.compliance.purge_stale_widget_uploads_use_case import (
+    PurgeStaleWidgetUploadsUseCase,
+)
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 
@@ -198,6 +201,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         inbound_event_repo=repositories.inbound_event_repo,
         feedback_request_repo=repositories.feedback_request_repo,
         processor_erasure=facilitators.processor_erasure,
+        widget_upload_repo=repositories.widget_upload_repo,
         waitlist_entry_repo=repositories.waitlist_entry_repo,
         webhook_delivery_repo=repositories.webhook_delivery_repo,
     )
@@ -208,6 +212,17 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         message_media_repo=repositories.message_media_repo,
         message_repo=repositories.message_repo,
+        media_storage=adapters.media.media_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Website visitors' uploads, a day each (1191).
+    purge_stale_widget_uploads_use_case: Factory[
+        UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]
+    ] = Factory(
+        PurgeStaleWidgetUploadsUseCase,
+        business_repo=repositories.business_repo,
+        widget_upload_repo=repositories.widget_upload_repo,
         media_storage=adapters.media.media_storage,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,

@@ -10,6 +10,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import (
     AnswerToImproveKind,
     ConversationRating,
+    ConversationRatingBy,
     ConversationRatingReason,
 )
 from app.schemas.constants.knowledge import AnswerCorrectionScope
@@ -17,6 +18,7 @@ from app.schemas.dto.assistants.autotest_cases import (
     AutotestCaseInput,
     CreateAutotestCaseCommand,
 )
+from app.schemas.dto.conversation_feed.answer_reviews import CustomerRatingChange
 from app.schemas.dto.conversation_feed.answers_to_improve import (
     AnswersToImproveQuery,
     AnswersToImproveView,
@@ -139,6 +141,33 @@ def test_a_check_saved_from_a_bad_rating_leaves_the_list() -> None:
     )
 
     assert read(world).bad_rating_count == 0
+
+
+def test_a_customers_thumbs_down_joins_the_list_as_theirs() -> None:
+    world = build_teaching_world(say("Не знаю."))
+    reply = world.brain.send("Есть парковка?")
+    answer = world.answer_of(reply)
+    world.advance(60)
+    world.brain.conversation_repo.set_customer_rating(
+        world.brain.business.id,
+        reply.conversation_id,
+        CustomerRatingChange(
+            rating=ConversationRating.BAD,
+            rated_message_id=answer.id,
+            at=world.brain.clock.wall_clock().now_unix(),
+        ),
+    )
+
+    [item] = read(world).items
+
+    assert item.kind is AnswerToImproveKind.BAD_RATING
+    assert item.rating_by is ConversationRatingBy.CUSTOMER
+    assert item.message_id == answer.id
+    assert item.rating_reason is None
+    # The team's own verdict replaces the customer's, and says so.
+    rate_bad(world, reply.conversation_id)
+    [rated] = read(world).items
+    assert rated.rating_by is ConversationRatingBy.TEAM
 
 
 def test_strangers_see_nothing() -> None:

@@ -18,6 +18,14 @@
       inputLabel.textContent = text("placeholder");
       sendButton.setAttribute("aria-label", text("send"));
       sendButton.title = text("send");
+      [
+        [media.attach, "attach"],
+        [media.mic, "record"]
+      ].forEach(function (tool) {
+        tool[0].setAttribute("aria-label", text(tool[1]));
+        tool[0].title = text(tool[1]);
+      });
+      renderTray();
       applyChromeLanguage();
       renderLog();
     }
@@ -87,7 +95,8 @@
 
     function submit() {
       var messageText = input.value.trim();
-      if (!messageText || state.isSending || isLivePreview) {
+      var hasFiles = readyUploads().length > 0;
+      if ((!messageText && !hasFiles) || state.isSending || isLivePreview || isUploading()) {
         return;
       }
       if (isSendingHeld()) {
@@ -101,7 +110,7 @@
       input.value = "";
       autoSize();
       adoptStoredState();
-      var item = { role: "visitor", text: messageText, failed: false };
+      var item = { role: "visitor", text: messageText, failed: false, attachments: takeAttachments() };
       state.history.push(item);
       send(item);
     }
@@ -123,23 +132,25 @@
       updateSendButton();
       renderLog();
       syncTyping();
-      requestJson(
-        messagesUrl,
-        withVisitSource({
-          session_key: state.sessionKey,
-          text: item.text
-        })
-      ).then(
+      requestJson(messagesUrl, messageBody(item)).then(
         guarded("send", function (result) {
           state.isSending = false;
           state.pendingItem = null;
-          if (result.status === 202) {
+          var refusal = attachmentsRefusal(result);
+          if (result.status === 202 || refusal === "sent") {
+            // A Retry refused as already sent: the first try reached the API
+            // (only its answer was lost), so its answer is awaited the same.
             receiveTicket(result.body && result.body.stream_ticket);
             awaitAnswer(item);
             return;
           }
           showTyping(false);
-          if (result.ok && result.body) {
+          if (refusal === "gone") {
+            // The files are gone; the words alone may still be sent.
+            item.attachments = [];
+            item.cannotRetry = !item.text;
+            markFailed(item, text("fileGone"), previewDetail(result));
+          } else if (result.ok && result.body) {
             receiveReply(result.body);
           } else {
             if (result.status === 429) {

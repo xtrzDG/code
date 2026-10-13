@@ -61,12 +61,15 @@ class ChannelMediaRequest(ImmutableDTO):
     One file to download from a messaging platform, at most `max_bytes`
     long. `credential` is the channel's decrypted bot or page token (None
     for WhatsApp, which uses the platform token); never in logs.
+    `business_id` is the business the message came to (the website chat
+    reads its uploads from that business's media storage).
     """
 
     channel: ChannelKind
     provider_media_id: ProviderMediaId
     credential: ChannelSecret | None = Field(default=None, repr=False)
     max_bytes: MediaByteLimit
+    business_id: BusinessId | None = None
 
 
 class FetchedMedia(ImmutableDTO):

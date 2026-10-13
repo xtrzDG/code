@@ -5,14 +5,17 @@ from fastapi import APIRouter
 from app.containers.app import AppContainer
 from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.spend_guard_router_assembly import widget_origin_guard_of
+from app.gateways.http.widget_attachment_routes import build_widget_attachment_router
 from app.gateways.http.widget_event_routes import build_widget_event_router
+from app.gateways.http.widget_rating_routes import build_widget_rating_router
 
 
 def build_public_channel_router(app_container: AppContainer) -> APIRouter:
     """
     Webhooks (each authenticated by its platform) and the widget's routes,
     which answer only on websites the business allows: its configuration,
-    messages and its visitors' live stream.
+    messages, its visitors' photos, voice notes and ratings and their live
+    stream.
     """
 
     operators = app_container.operators
@@ -38,6 +41,23 @@ def build_public_channel_router(app_container: AppContainer) -> APIRouter:
             ),
             stream_facilitator=app_container.facilitators.widget_stream_facilitator(),
             limits=app_container.facilitators.live.widget_stream_limits(),
+            widget_origin_guard=widget_origin_guard_of(operators),
+        )
+    )
+    visitors = operators.widget_visitors
+    router.include_router(
+        build_widget_attachment_router(
+            admit_widget_upload_operator=visitors.admit_widget_upload_operator(),
+            accept_widget_upload_operator=visitors.accept_widget_upload_operator(),
+            upload_slots=app_container.facilitators.live.widget_upload_slots(),
+            widget_origin_guard=widget_origin_guard_of(operators),
+        )
+    )
+    router.include_router(
+        build_widget_rating_router(
+            rate_widget_conversation_operator=(
+                visitors.rate_widget_conversation_operator()
+            ),
             widget_origin_guard=widget_origin_guard_of(operators),
         )
     )

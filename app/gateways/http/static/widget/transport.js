@@ -1,12 +1,6 @@
   // --- network -----------------------------------------------------------
 
   function requestJson(url, body, sessionKey) {
-    var controller = typeof AbortController === "function" ? new AbortController() : null;
-    var timer = controller
-      ? window.setTimeout(function () {
-          controller.abort();
-        }, REQUEST_TIMEOUT_MS)
-      : null;
     var options = {
       method: body ? "POST" : "GET",
       credentials: "omit",
@@ -24,6 +18,37 @@
       options.headers = {};
       options.headers[SESSION_KEY_HEADER] = sessionKey;
     }
+    return fetchJson(url, options);
+  }
+
+  // One photo or voice message for the visitor's next message, as the
+  // multipart part "file"; the visitor key goes in a header (a preflighted
+  // request: the API answers OPTIONS for it).
+  function requestUpload(url, file, fileName, sessionKey) {
+    var form = new FormData();
+    form.append("file", file, fileName);
+    var headers = {};
+    headers[SESSION_KEY_HEADER] = sessionKey;
+    return fetchJson(url, {
+      method: "POST",
+      credentials: "omit",
+      mode: "cors",
+      cache: "no-store",
+      referrerPolicy: "strict-origin-when-cross-origin",
+      headers: headers,
+      body: form
+    });
+  }
+
+  // The response's status, JSON body (null when there is none) and
+  // Retry-After; a request that takes too long is aborted.
+  function fetchJson(url, options) {
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = controller
+      ? window.setTimeout(function () {
+          controller.abort();
+        }, REQUEST_TIMEOUT_MS)
+      : null;
     if (controller) {
       options.signal = controller.signal;
     }

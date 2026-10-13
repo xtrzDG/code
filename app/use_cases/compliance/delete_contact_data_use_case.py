@@ -33,13 +33,15 @@ from app.contracts.repositories.inbox_repositories import (
 from app.contracts.repositories.integration_repositories import (
     WebhookDeliveryRepoContract,
 )
-from app.contracts.repositories.media_repositories import MessageMediaRepoContract
+from app.contracts.repositories.media_repositories import (
+    MessageMediaRepoContract,
+    WidgetUploadRepoContract,
+)
 from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import HandoffSummaryCode
 from app.schemas.constants.privacy import ProcessorErasureReason
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
@@ -69,10 +71,7 @@ from app.use_cases.compliance.contact_trace_erasure import (
     TraceErasure,
 )
 from app.use_cases.compliance.record_anonymization import (
-    ERASED_TEXT,
-    anonymized_booking,
-    anonymized_handoff,
-    anonymized_lead,
+    BusinessRecordAnonymizer,
     erased_call,
 )
 from app.utilities.privacy.erased_conversations import ERASED_CHANNEL_USER_ID_PREFIX
@@ -85,24 +84,25 @@ class DeleteContactDataUseCase(
     """
     Owner erases one visitor's personal data (right to erasure).
 
-    Recordings, voice notes and photos are deleted from storage first, so a
-    storage failure leaves the database untouched and the erasure can be
-    retried (`contact_file_erasure`). Then the messages, model transcripts and
-    the team's internal notes of their conversations and call transcripts are
-    deleted, and the contact keeps only its id and the erasure time (no name,
-    phones, language or channel identities), so the cabinet shows it as erased
-    and a new message from the same person starts a new contact.
-    Business records stay but lose the personal parts: conversations lose
-    the channel identity, bookings their notes, leads their details and
-    budget, handoffs their summary. Missed calls, queued messages, webhook
-    events and requests for feedback lose what identifies the person, the
-    outbound webhooks' deliveries about them go (`contact_trace_erasure`).
-    A customer who said STOP stays on the suppression list (only digests,
-    kept on purpose), so the erasure never makes them reachable again. The
-    copies the sub-processors keep (the traces of the conversations' model
-    calls at Langfuse, the calls at ElevenLabs) are deleted by queued jobs with
-    retries (`processor_erasure`), so a processor's outage never fails the
-    erasure. The erasure is audited with the contact id only.
+    Recordings, voice notes and photos (the website chat's original uploads
+    too) go from storage first, so a storage failure leaves the database
+    untouched and the erasure can be retried (`contact_file_erasure`). Then
+    the messages, model transcripts, the team's internal notes of their
+    conversations and call transcripts are deleted, and the contact keeps
+    only its id and the erasure time (no name, phones, language or channel
+    identities): the cabinet shows it as erased and a new message from the
+    same person starts a new contact. Business records stay but lose the
+    personal parts: conversations lose the channel identity, bookings their
+    notes, leads their details and budget, handoffs their summary. Missed
+    calls, queued messages, webhook events and requests for feedback lose
+    what identifies the person, the outbound webhooks' deliveries about
+    them go (`contact_trace_erasure`). A customer who said STOP stays on
+    the suppression list (only digests, kept on purpose), so the erasure
+    never makes them reachable again. The copies the sub-processors keep
+    (the traces of the conversations' model calls at Langfuse, the calls at
+    ElevenLabs) are deleted by queued jobs with retries
+    (`processor_erasure`), so a processor's outage never fails the erasure.
+    The erasure is audited with the contact id only.
     """
 
     def __init__(
@@ -133,6 +133,7 @@ class DeleteContactDataUseCase(
         inbound_event_repo: InboundEventRepoContract,
         feedback_request_repo: FeedbackRequestRepoContract,
         processor_erasure: ProcessorErasureFacilitatorContract,
+        widget_upload_repo: WidgetUploadRepoContract,
         waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
         webhook_delivery_repo: WebhookDeliveryRepoContract | None = None,
     ) -> None:
@@ -151,15 +152,15 @@ class DeleteContactDataUseCase(
         self._message_repo: MessageRepoContract = message_repo
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
         self._call_repo: CallRepoContract = call_repo
-        self._booking_repo: BookingRepoContract = booking_repo
-        self._lead_repo: LeadRepoContract = lead_repo
-        self._handoff_repo: HandoffRepoContract = handoff_repo
         self._note_repo: ConversationNoteRepoContract = note_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._suppression_list: SuppressionListContract = suppression_list
         self._files: ContactFileEraser = ContactFileEraser(
-            recording_storage, media_storage, message_media_repo
+            recording_storage, media_storage, message_media_repo, widget_upload_repo
+        )
+        self._records: BusinessRecordAnonymizer = BusinessRecordAnonymizer(
+            booking_repo, lead_repo, handoff_repo
         )
         self._traces: ContactTraceEraser = ContactTraceEraser(
             missed_call_repo, outbound_message_repo, inbound_event_repo,
@@ -193,7 +194,7 @@ class DeleteContactDataUseCase(
         traces: TraceErasure = self._traces.erase(records, now)
         self._erase_calls(records, now)
         deleted_llm_turns: int = self._erase_conversations(business, records, now)
-        self._anonymize_business_records(records, now)
+        self._records.anonymize(records, now)
         queued: ProcessorErasureJobCount = self._processor_erasure.request_erasure(
             ProcessorErasureScope(
                 business_id=business.id,
@@ -277,24 +278,3 @@ class DeleteContactDataUseCase(
             self._conversation_repo.save(conversation)
 
         return deleted_llm_turns
-
-    def _anonymize_business_records(
-        self,
-        records: ContactRecords,
-        now: Microseconds,
-    ) -> None:
-        for booking in records.bookings:
-            if (anonymized := anonymized_booking(booking, now)) is not None:
-                self._booking_repo.save(anonymized)
-
-        for lead in records.leads:
-            if (lead_left := anonymized_lead(lead, ERASED_TEXT, now)) is not None:
-                self._lead_repo.save(lead_left)
-
-        for handoff in records.handoffs:
-            # The cabinet shows the code in the reader's language.
-            handoff_left = anonymized_handoff(
-                handoff, ERASED_TEXT, HandoffSummaryCode.DATA_ERASED, now
-            )
-            if handoff_left is not None:
-                self._handoff_repo.save(handoff_left)

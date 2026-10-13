@@ -65,6 +65,7 @@ export const teachingHe: Translation<typeof teachingEn> = {
     },
   },
   rating: {
+    byCustomer: "הלקוח דירג את התשובה בצ׳אט באתר.",
     reasonLabel: "מה היה לא בסדר?",
     reasons: {
       wrong_info: "מידע שגוי",
@@ -141,6 +142,7 @@ export const teachingHe: Translation<typeof teachingEn> = {
     loading: "טוענים תשובות לשיפור…",
     empty: "אין מה לשפר כרגע.",
     badRating: "דורגה כרעה",
+    byCustomer: "דירוג של הלקוח",
     unanswered: "אין תשובה",
     asked: {
       one: "נשאלה פעם אחת",

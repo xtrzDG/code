@@ -61,6 +61,13 @@
  * "Talk to a person" passes the conversation to staff (POST .../handoff),
  * "New conversation" starts over under a new visitor key, and the footer
  * says it is an AI assistant that can make mistakes, with the privacy notice.
+ * The paperclip sends photos (JPEG, PNG, WebP) and the microphone, held
+ * down, records a voice message (MediaRecorder; hidden in browsers without
+ * one): each file is uploaded on its own (POST .../attachments, the visitor
+ * key in a header) and the message names what was uploaded; the API checks
+ * every file again. Under an answer that booked or took a lead, or after two
+ * minutes without a new message, thumbs up and down ask how the answer was
+ * (POST .../rating); a thumbs down may say what went wrong.
  * window.AssistantWorkshopChat.open() / .close() / .toggle() control it.
  */
 (function () {
@@ -72,6 +79,8 @@
   var MESSAGES_PATH = "/v1/widget/{business_id}/messages";
   var HANDOFF_PATH = "/v1/widget/{business_id}/handoff";
   var EVENTS_PATH = "/v1/widget/{business_id}/events";
+  var ATTACHMENTS_PATH = "/v1/widget/{business_id}/attachments";
+  var RATING_PATH = "/v1/widget/{business_id}/rating";
   var ERRORS_PATH = "/v1/widget/errors";
   var SCRIPT_FILE_NAME = "/widget.js";
 
@@ -143,6 +152,19 @@
   var ERROR_NAME_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
   var BUSINESS_ID_PATTERN = /^business_[0-9a-f-]{36}$/;
   var WIDGET_FRAME_PATTERN = /widget\.js(?:\?[^\s:)]*)?:(\d+):(\d+)/;
+  // Photos and voice messages of one message (the API's limit).
+  var MAX_ATTACHMENTS = 4;
+  var ATTACHMENT_ID_PATTERN = /^widget_upload_[0-9a-f-]{36}$/;
+  // A press of the microphone shorter than this was a tap, not a message.
+  var MIN_RECORDING_MS = 700;
+  // Recording formats in the browser's order of preference; the API's list
+  // of voice message types decides which ones may be used.
+  var RECORDING_TYPES = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/webm", "audio/ogg", "audio/mp4"];
+  // The thumbs show under an answer this long after it, when nobody wrote.
+  var RATING_IDLE_MS = 2 * 60 * 1000;
+  var MAX_RATED_ANSWERS = 50;
+  var RATING_REASONS = ["wrong_info", "should_hand_off", "tone", "too_long"];
+  var RATING_REASON_TEXTS = ["reasonWrong", "reasonPerson", "reasonTone", "reasonLong"];
   // Fallback when the browser blocks localStorage / sessionStorage.
   var memoryStorage = {};
 

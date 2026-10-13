@@ -127,6 +127,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       messages: "Сообщения",
       llm_turns: "Записи обращений к ИИ",
       message_media: "Файлы клиентов",
+      widget_upload: "Файлы из чата на сайте",
       missed_call: "Пропущенные звонки",
       call_recording: "Запись звонка",
       privacy_settings: "Сроки хранения данных",

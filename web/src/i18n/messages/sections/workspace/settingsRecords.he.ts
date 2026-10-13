@@ -109,6 +109,7 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       messages: "הודעות",
       llm_turns: "רשומות קריאות AI",
       message_media: "קבצי לקוחות",
+      widget_upload: "קבצים שהועלו בצ׳אט באתר",
       missed_call: "שיחות שלא נענו",
       call_recording: "הקלטת שיחה",
       privacy_settings: "שמירת נתונים",

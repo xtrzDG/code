@@ -27,6 +27,9 @@ class ComplianceOrchestratorsContainer(containers.DeclarativeContainer):
         purge_expired_message_media=(
             compliance_use_cases.purge_expired_message_media_use_case
         ),
+        purge_stale_widget_uploads=(
+            compliance_use_cases.purge_stale_widget_uploads_use_case
+        ),
     )
 
     # --- Compliance.

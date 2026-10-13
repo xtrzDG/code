@@ -52,6 +52,18 @@ class ConversationRating(StrEnum):
     BAD = "bad"
 
 
+class ConversationRatingBy(StrEnum):
+    """
+    Who rated a conversation: the owner or staff in the cabinet (TEAM), or
+    the customer with the thumbs under the website chat's answers
+    (CUSTOMER). The team's verdict stands: a customer's rating never
+    replaces it.
+    """
+
+    TEAM = "team"
+    CUSTOMER = "customer"
+
+
 class ConversationRatingReason(StrEnum):
     """
     Why the owner or staff rated a conversation bad: the assistant said

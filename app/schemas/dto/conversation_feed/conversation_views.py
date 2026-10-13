@@ -17,6 +17,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingBy,
     ConversationRatingReason,
     ConversationStatus,
     MessageAuthor,
@@ -27,6 +28,7 @@ from app.schemas.constants.media import AttachmentKind
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.conversation_feed.call_summary_views import CallSummaryView
 from app.schemas.dto.conversation_feed.message_deliveries import MessageDeliveryView
 from app.schemas.dto.conversation_feed.message_guard import MessageGuardView
 from app.schemas.dto.conversation_feed.message_tallies import (
@@ -44,7 +46,6 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
@@ -132,7 +133,8 @@ class ConversationMessagesQuery(ImmutableDTO):
 class ConversationSummaryView(ImmutableDTO):
     """
     A conversation row in the feed: who, where, flags, how many messages
-    (all and the customer's) and the beginning of the last one.
+    (all and the customer's), the beginning of the last one and its rating
+    (`rating_by`: the team's or the customer's from the website chat).
     """
 
     id: ConversationId
@@ -154,6 +156,7 @@ class ConversationSummaryView(ImmutableDTO):
     last_message_at: Microseconds
     created_at: Microseconds
     rating: ConversationRating | None = None
+    rating_by: ConversationRatingBy | None = None
     rating_reason: ConversationRatingReason | None = None
     rated_message_id: MessageId | None = None
 
@@ -205,13 +208,6 @@ class MessageView(ImmutableDTO):
     guard: MessageGuardView | None = None
     context_note: InboundContextNote | None = None
     choices: list[ChoiceLabel] = Field(default_factory=list[ChoiceLabel])
-
-
-class CallSummaryView(ImmutableDTO):
-    """The short summary of a call for staff, in one language."""
-
-    language: LanguageTag
-    text: CallSummaryText
 
 
 class CallView(ImmutableDTO):

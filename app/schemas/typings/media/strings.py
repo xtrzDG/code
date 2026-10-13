@@ -7,6 +7,14 @@ class AttachmentCaption(BaseTypedString):
     """Text a customer wrote under a photo, a voice note or a file."""
 
 
+class DeclaredUploadType(BaseTypedString):
+    """
+    Media type a website visitor's browser declared for an uploaded file, as
+    it sent it (it may carry parameters: "audio/webm;codecs=opus"). Never
+    trusted on its own: the file's bytes must say the same.
+    """
+
+
 class LocationAddress(BaseTypedString):
     """Street address the messenger attached to a shared location."""
 

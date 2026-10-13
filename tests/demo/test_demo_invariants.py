@@ -7,7 +7,8 @@ computed from the seeded records themselves, so no two screens disagree.
 - the admin's autotest health is the published version's stored verdict;
 - the inbox badge is the sum of the inbox tabs it stands for;
 - a client with provider costs has a margin;
-- the customer list comes most recently active first, as each row says.
+- the customer list comes most recently active first, as each row says;
+- every seeded rating is the team's (the owner rated it in the cabinet).
 """
 
 import math
@@ -15,6 +16,7 @@ from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
+from app.schemas.constants.conversations import ConversationRatingBy
 from app.schemas.domain.conversations import CallDocument
 from tests.demo.test_demo_seeding import (
     DEMO_ENVIRONMENT,
@@ -183,3 +185,18 @@ def test_the_customer_list_comes_most_recently_active_first() -> None:
             moments = [int(item["last_activity_at"]) for item in page["items"]]
             assert len(moments) > 1, name
             assert moments == sorted(moments, reverse=True), name
+
+
+def test_every_seeded_rating_is_the_teams() -> None:
+    workshop = start_workshop(DEMO_ENVIRONMENT)
+    container = workshop.container
+    # The demo is seeded when the application starts.
+    with workshop.client, container.utilities.storage_scope().platform_wide():
+        conversations = (
+            container.adapters.collections.conversation_collection().list_all()
+        )
+
+    rated = [c for c in conversations if c.rating is not None]
+    assert rated
+    assert {c.rating_by for c in rated} == {ConversationRatingBy.TEAM}
+    assert all(c.rated_by is not None for c in rated)

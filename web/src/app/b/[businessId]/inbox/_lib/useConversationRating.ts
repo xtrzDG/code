@@ -18,10 +18,14 @@ import type { RatingReason } from "@/lib/teaching";
 
 type Feed = PagedData<ConversationSummaryView, ConversationPage>;
 
-/** The feed rows and the card of one conversation with another rating (and why it was bad). */
+/**
+ * The feed rows and the card of one conversation with another rating (and
+ * why it was bad): the team's, which replaces a customer's.
+ */
 function withRating(conversationId: string, rating: ConversationRating | null, reason: RatingReason | null) {
+  const ratingBy = rating === null ? null : ("team" as const);
   const rate = <T extends ConversationSummaryView>(conversation: T): T =>
-    conversation.id === conversationId ? { ...conversation, rating, rating_reason: reason } : conversation;
+    conversation.id === conversationId ? { ...conversation, rating, rating_reason: reason, rating_by: ratingBy } : conversation;
   return {
     feed: (data: Feed): Feed => ({ ...data, items: data.items.map(rate) }),
     card: (data: ConversationDetailView): ConversationDetailView => ({ ...data, conversation: rate(data.conversation) }),
