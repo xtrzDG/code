@@ -11,6 +11,19 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
+
+Spec: `4a535aa5b8e4215c`
+
+The API description with the six entries below merged together (brands:
+the two-factor rule, plan prices and shared answers, chains of locations;
+the audit trail's chain status and the platform's audit log; deposits and
+payment links; photos and voice messages in the website chat with the
+visitor's thumbs). Each of those entries names the description of its own
+change alone; nothing else changed for clients. Availability answers
+carry the sister locations of a brand next to the deposit fields of
+booking views, and `PlatformAdminPermission` may be `view_security_log`.
+
 ## 2026-10-13 — brands: a location's two-factor rule holds for the brand
 
 Spec: `0c61aa6b3430e849`
