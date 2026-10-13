@@ -8,13 +8,18 @@
  *
  * One file per script, each with its own unicode-range: a page downloads
  * only the scripts it shows. Latin (digits, punctuation, every English and
- * German word) is preloaded; Cyrillic, Georgian, Hebrew and the extended
- * Latin letters and currency signs (ğ, ș, ə, ₾, ₽, ₪…) come when the
- * first such character is on screen.
+ * German word) is preloaded on every page; the root layout preloads the
+ * Georgian, Cyrillic or Hebrew file for a page in that language
+ * (server/scriptFontPreload.ts, lib/scriptFonts.ts), so it loads with the
+ * stylesheet. The extended Latin letters and currency signs (ğ, ș, ə, ₾,
+ * ₽, ₪…) and a script outside the page's language come when the first such
+ * character is on screen.
  *
  * `display: "optional"`: a font that is not there within about 100 ms of
- * being needed is not swapped in later (the next page has it from the
- * cache), so text never jumps: the layout shift stays 0. Meanwhile Arial,
+ * being needed is not swapped in later, so text never jumps: the layout
+ * shift stays 0. It is dropped for the rest of the document, and the
+ * cabinet changes pages without a new one: a file that came late is used
+ * from the next full load on (it is cached by then). Meanwhile Arial,
  * resized to Noto Sans's metrics (next/font's size-adjusted fallback),
  * takes its place; where there is no Arial the system font does.
  *

@@ -1413,7 +1413,10 @@ visible focus, and labels for icon-only buttons. Empty and quiet states draw
 a spot illustration (`@/components/illustrations`: the calm inbox, day 0 of
 the Overview, no bookings, no invoices, offline, the assistant's orb) in the
 theme's own tokens, so it changes with the theme like the text around it;
-`EmptyState` takes one as its `illustration`.
+`EmptyState` takes one as its `illustration`, and a wrapper gives it its
+size (the drawing fills its box). `NoBookingsIllustration` waits in the set
+for the bookings pages, which keep their calendar icon until their owner
+adopts it.
 
 ### Typeface
 
@@ -1426,16 +1429,25 @@ through `next/font/local` (`src/app/fonts.ts`), one file per script with its
 
 | File | Script | Size |
 | --- | --- | --- |
-| `noto-sans-latin-wght.woff2` | Latin (preloaded) | 35.0 KB |
+| `noto-sans-latin-wght.woff2` | Latin (preloaded on every page) | 35.0 KB |
 | `noto-sans-latin-ext-wght.woff2` | the extended Latin letters and currency signs the cabinet's countries use (ğ, ș, ə, ₾, ₽…) | 23.5 KB |
-| `noto-sans-cyrillic-wght.woff2` | Cyrillic | 19.6 KB |
-| `noto-sans-georgian-wght.woff2` | Georgian (Mkhedruli, Mtavruli, Asomtavruli) | 40.6 KB |
-| `noto-sans-hebrew-wght.woff2` | Hebrew | 12.0 KB |
+| `noto-sans-cyrillic-wght.woff2` | Cyrillic (preloaded on Russian pages) | 19.6 KB |
+| `noto-sans-georgian-wght.woff2` | Georgian: Mkhedruli, Mtavruli, Asomtavruli (preloaded on Georgian pages) | 40.6 KB |
+| `noto-sans-hebrew-wght.woff2` | Hebrew (preloaded on Hebrew pages) | 12.0 KB |
 
 `display: "optional"` and an Arial fallback resized to Noto's metrics
 (next/font's `adjustFontFallback`) keep the layout shift at 0: a font that
-is late for the first paint is not swapped in, the next page has it from the
-cache. `--font-sans` (globals.css) lists the scripts, then Latin and its
+is late for the first paint is not swapped in. It stays out for the rest of
+that document, and the cabinet changes pages on the client, so a late file
+shows from the next full load on (it is in the cache by then). That is why a
+page preloads its own script: next/font preloads Latin everywhere, and the
+root layout adds the Georgian, Cyrillic or Hebrew file for a page in that
+language (`src/server/scriptFontPreload.ts` finds the file next/font emitted
+in the build's `static/media`; `src/lib/scriptFonts.ts` picks it), so it
+comes with the stylesheet and Chrome holds the first paint for it. The
+extended Latin file (₾, ₽, ₪ and the letters of the neighbouring
+languages) and a script outside the page's language load when first
+needed. `--font-sans` (globals.css) lists the scripts, then Latin and its
 fallback; headings use `font-display` (weight 650, slightly tighter
 tracking). `src/app/fonts.test.ts` keeps every file under 60 KB, its
 unicode-range covering the cabinet's languages, and the licence next to

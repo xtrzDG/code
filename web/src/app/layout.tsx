@@ -13,6 +13,7 @@ import { cn } from "@/lib/cn";
 import { motionAttribute } from "@/lib/motionPreference";
 import { themeColors } from "@/lib/theme";
 import { getMotionPreference } from "@/server/motionPreference";
+import { preloadScriptFont } from "@/server/scriptFontPreload";
 import { getTheme } from "@/server/theme";
 import { getViewerTimeZone } from "@/server/viewerTimeZone";
 
@@ -46,6 +47,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   ]);
   // A public page's client components get only their own texts (i18n/publicScope.ts).
   const clientTexts = await getClientTexts(messages);
+  // Georgian, Russian and Hebrew pages load their script's font with the stylesheet (fonts.ts).
+  preloadScriptFont(locale);
   return (
     // data-theme, data-motion and dir are rendered on the server, so the first
     // paint already has the right colours, stays still for a person who asked
