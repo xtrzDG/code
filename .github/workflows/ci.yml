@@ -453,7 +453,7 @@ jobs:
           upload-artifact-retention: 30
 
   e2e:
-    name: End-to-end (${{ matrix.shard }}/8)
+    name: End-to-end (${{ matrix.shard }}/9)
     needs: web-build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -463,7 +463,7 @@ jobs:
         # e2e/support/shards.ts balances the spec files by their measured
         # durations (e2e/durations.json); support/shards.test.ts keeps every
         # shard within its budget for this count.
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9]
     defaults:
       run:
         working-directory: web
@@ -519,7 +519,7 @@ jobs:
       - name: End-to-end tests
         env:
           E2E_SKIP_BUILD: "1"
-          E2E_SHARD: ${{ matrix.shard }}/8
+          E2E_SHARD: ${{ matrix.shard }}/9
         run: npm run e2e
 
       # A failed test's page snapshot and the API's last lines, readable in

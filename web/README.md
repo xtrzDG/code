@@ -76,7 +76,7 @@ Behind a reverse proxy, run the API with
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
 (CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
 next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
-eight shards that start that build (`docs/operations/ci.md`).
+nine shards that start that build (`docs/operations/ci.md`).
 
 ## End-to-end tests
 
@@ -225,7 +225,7 @@ Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
 and the API log as the `e2e-report-<shard>` artifact.
 
-CI runs the suite in eight shards, each with its own API, balanced by the
+CI runs the suite in nine shards, each with its own API, balanced by the
 seconds each spec file takes on CI's runners (`e2e/durations.json`, written
 by Playwright's JSON reporter; an idle four-core machine measures about
 the same); a spec without a measurement counts as the mean, and

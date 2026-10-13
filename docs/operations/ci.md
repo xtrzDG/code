@@ -22,13 +22,13 @@ Everything starts at once except `coverage` (after every backend part),
 | `web-checks` | check:intl, lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
-| `e2e` (1/8 … 8/8) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `e2e` (1/9 … 9/9) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
 about 1:45 + 4:40 + 0:20, under seven minutes. The backend path
-(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 17
-jobs run at the same time (eight shards, six backend parts and three
+(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 18
+jobs run at the same time (nine shards, six backend parts and three
 others), within the 20 that GitHub runs at once for a free account.
 
 Expected times are local measurements scaled to GitHub's runners (public
