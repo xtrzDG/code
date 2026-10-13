@@ -1627,14 +1627,17 @@ motion.
   selectors run on the page's main thread, slowed like the page, and would
   otherwise hold that paint back. "More" and its sheet answer a tap or
   Escape in the same frame (the place lights up, the sheet starts to leave)
-  and open or close after that paint. Measure it in Playwright's headless
-  shell, as CI does (`npx playwright install chromium`): full Chrome in its
-  new headless mode (`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` pointing at
-  `chrome`) keeps the bottom ~85 px of the 390×844 viewport off its window,
-  so a change there (the tab bar) is never painted on its own and every
-  tab-bar tap reads 300 ms or more. 60 frames a second on a real mid-range
-  phone is not measured here (headless Chromium on a server, SwiftShader):
-  that needs a device run.
+  and open or close after that paint; an inbox row tapped on its way to
+  its conversation moves the keyboard's cursor (a redraw of the whole
+  list) only after that tap has painted (`InboxRowItem`). Measure it in
+  Playwright's headless shell, as CI does (`npx playwright install
+  chromium`): full Chrome in its new headless mode
+  (`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` pointing at `chrome`) keeps the
+  bottom ~85 px of the 390×844 viewport off its window, so a change only
+  there (the tab bar) is never painted on its own and a tap whose answer
+  is only there reads 300 ms or more. 60 frames a second on a real
+  mid-range phone is not measured here (headless Chromium on a server,
+  SwiftShader): that needs a device run.
 
 First load, measured with `npm run build && npm run measure:first-load`
 (gzipped JavaScript a first visit downloads, with the API running for the

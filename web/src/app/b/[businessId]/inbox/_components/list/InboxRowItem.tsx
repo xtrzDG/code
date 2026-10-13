@@ -17,7 +17,7 @@
 
 import * as m from "motion/react-m";
 import Link from "next/link";
-import type { FocusEvent, PointerEvent, Ref } from "react";
+import { startTransition, type FocusEvent, type PointerEvent, type Ref } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheck } from "@/components/icons";
@@ -26,6 +26,7 @@ import { CustomerName } from "@/components/insights/common";
 import { useMotionPreference } from "@/components/motion/MotionPreference";
 import { morphName, SharedMorph } from "@/components/motion/SharedMorph";
 import { useI18n } from "@/i18n/client";
+import { afterNextPaint } from "@/lib/afterNextPaint";
 import { cn } from "@/lib/cn";
 import { conversationPath } from "@/lib/navigation";
 import { formatPhone } from "@/lib/phone";
@@ -163,8 +164,16 @@ export function InboxRowItem({
         onPointerEnter={(event) => event.pointerType === "mouse" && hint(event)}
         onPointerLeave={leave}
         onFocus={(event) => {
-          events.onCursor(row);
-          hint(event);
+          // The keyboard landed on the row (Tab, j/k): the cursor and the details come with it.
+          if (event.currentTarget.matches(":focus-visible")) {
+            events.onCursor(row);
+            hint(event);
+            return;
+          }
+          // A tap or a click focuses the row on its way to open it. Moving the cursor redraws the
+          // whole list, so it follows once the tap has painted its answer; the details come with
+          // the pointer resting on the row (onPointerEnter), not with this focus.
+          afterNextPaint(() => startTransition(() => events.onCursor(row)));
         }}
         onBlur={leave}
         className={cn(
