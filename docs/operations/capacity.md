@@ -469,6 +469,30 @@ one for the job queue's own unit (11 of its 14 round trips); the
 waitlist's held places are read for every availability, as only a read
 shows whether there are any.
 
+**Wave 19 on top (2026-10-13).** Two packages of the wave need one more
+round trip each on three of the counted requests; the test's counts
+moved by exactly that, every other count stayed:
+
+- `GET /v1/me` 11 → 12: the cabinet lists the locations a person reaches
+  through a brand (R17-BRANDS), so the user's brands are read by member
+  (one indexed lookup, inside the request's read session). Nothing the
+  request already holds says whether a person is in any brand.
+- Conversation list 22 → 23 and card 31 → 32: an audit entry never
+  changes once chained (R13-AUDIT-TRAIL, migration 1193), so a repeated
+  view is counted in `audit_view_counts` instead of rewriting the entry.
+  The first repetition of a view finds no count yet (the row-locked
+  modify misses, its own transaction) and then inserts one (a second
+  transaction): two write transactions where H6 had a read in the
+  session and one write. Every later repetition is one row-locked update
+  (four round trips, one fewer than H6's read plus rewrite). Both writes
+  now run in the business's own row-level security scope, not
+  platform-wide. The counted request is the second of two, so it pays
+  the first repetition.
+
+The availability (21), dashboard (28), widget poll (8) and Telegram
+webhook (14 in 2 transactions) counts are unchanged with all six
+packages merged.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by

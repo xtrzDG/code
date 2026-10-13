@@ -9,8 +9,11 @@ adds a read to every cabinet request fails here, on every pull request.
 The budgets are the counts of 2026-10-12 (docs/operations/capacity.md,
 "The weekly run of 2026-10-12"), down from: /v1/me 25, the conversation
 list 42, a conversation 78, availability 49, the dashboard 81, a widget
-poll 9 and a Telegram webhook 27 round trips in 4 transactions. A request
-may get cheaper; raise a budget only with the reason in capacity.md.
+poll 9 and a Telegram webhook 27 round trips in 4 transactions. Wave 19
+added one each to /v1/me (the brands the person belongs to) and to the
+conversation list and card (a repeated view's first count in
+`audit_view_counts`); capacity.md says why. A request may get cheaper;
+raise a budget only with the reason in capacity.md.
 """
 
 from collections.abc import Callable, Generator
@@ -34,9 +37,9 @@ from tests.storage.request_cost_world import (
 from tests.storage.statement_trace import TraceCount
 
 ROUND_TRIP_BUDGETS: dict[str, tuple[Callable[[RequestCostWorld], Response], int]] = {
-    "authenticate (GET /v1/me)": (get_me, 11),
-    "conversations_list": (list_conversations, 22),
-    "conversation_detail": (get_conversation, 31),
+    "authenticate (GET /v1/me)": (get_me, 12),
+    "conversations_list": (list_conversations, 23),
+    "conversation_detail": (get_conversation, 32),
     "availability": (check_availability, 21),
     "dashboard": (get_dashboard, 28),
     "widget_poll": (poll_widget, 8),
