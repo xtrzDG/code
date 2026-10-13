@@ -3,6 +3,7 @@ Many rows fast, and the SQL the application runs: helpers of the storage
 tests that check query plans and timings on realistic table sizes.
 """
 
+import re
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from typing import LiteralString, cast
@@ -91,6 +92,13 @@ def analyze(connection_pool: PostgresConnectionPoolClient) -> None:
         connection.execute("vacuum analyze")
 
 
+# Transaction control the replay leaves out (it runs in a transaction of
+# its own): the end of a transaction or savepoint, a savepoint alone.
+TRANSACTION_CONTROL: re.Pattern[str] = re.compile(
+    r"^(commit|rollback|release savepoint|savepoint \S+$)", re.IGNORECASE
+)
+
+
 class RecordingConnection:
     """A connection that remembers every statement run through it."""
 
@@ -101,6 +109,11 @@ class RecordingConnection:
     ) -> None:
         self._connection: PostgresConnection = connection
         self._transaction: list[tuple[str, Sequence[object]]] = transaction
+
+    def __getattr__(self, name: str) -> object:
+        """Everything but `execute` as the wrapped connection has it."""
+
+        return getattr(self._connection, name)
 
     def execute(
         self,
@@ -116,17 +129,23 @@ class RecordingConnection:
 
 
 class RecordingConnectionPool(PostgresConnectionPoolClient):
-    """A pool that records the statements of every transaction it hands out."""
+    """
+    A pool that records the statements of every borrow of a connection (a
+    storage transaction borrows one: `begin` with its scope, its
+    statements, `commit`).
+    """
 
     def __init__(self, database_url: DatabaseUrl) -> None:
         super().__init__(database_url, max_size=2)
         self.transactions: list[list[tuple[str, Sequence[object]]]] = []
 
     @contextmanager
-    def transaction(self) -> Generator[PostgresConnection]:
+    def connection(
+        self, acquire_timeout_seconds: float | None = None
+    ) -> Generator[PostgresConnection]:
         statements: list[tuple[str, Sequence[object]]] = []
         self.transactions.append(statements)
-        with super().transaction() as connection:
+        with super().connection(acquire_timeout_seconds) as connection:
             yield cast(PostgresConnection, RecordingConnection(connection, statements))
 
 
@@ -142,20 +161,38 @@ def explain(
     plans: list[dict[str, object]] = []
     with connection_pool.transaction() as connection:
         for statement, parameters in transaction:
-            # Replays SQL the application composed itself (sql.SQL objects).
-            replayed: LiteralString = statement  # pyright: ignore[reportAssignmentType]
-            if "set_config" in statement:
-                connection.execute(replayed, parameters or None)
-                continue
-
-            row: TupleRow | None = connection.execute(
-                f"explain (format json) {replayed}", parameters or None
-            ).fetchone()
-            assert row is not None
-            plan: object = cast(list[dict[str, object]], row[0])[0]["Plan"]
-            plans.append(cast(dict[str, object], plan))
+            plan: dict[str, object] | None = replay(connection, statement, parameters)
+            if plan is not None:
+                plans.append(plan)
 
     return plans
+
+
+def replay(
+    connection: PostgresConnection, statement: str, parameters: Sequence[object]
+) -> dict[str, object] | None:
+    """
+    One recorded statement replayed: a read's or delete's plan (EXPLAIN,
+    format json); a scope is applied, transaction control left out (None).
+    """
+
+    # Replays SQL the application composed itself (sql.SQL objects).
+    replayed: LiteralString = statement  # pyright: ignore[reportAssignmentType]
+    if TRANSACTION_CONTROL.match(statement):
+        return None
+
+    if "set_config" in statement:
+        # The scope only (`begin; select set_config(...)` opens it).
+        scope: LiteralString = replayed[replayed.index("select set_config") :]
+        connection.execute(scope, parameters or None)
+        return None
+
+    row: TupleRow | None = connection.execute(
+        f"explain (format json) {replayed}", parameters or None
+    ).fetchone()
+    assert row is not None
+    plan: object = cast(list[dict[str, object]], row[0])[0]["Plan"]
+    return cast(dict[str, object], plan)
 
 
 def plan_nodes(plan: dict[str, object]) -> list[dict[str, object]]:

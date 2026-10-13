@@ -28,6 +28,7 @@ from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.repositories.setup_repositories import ActivationEventRepoContract
+from app.contracts.storage import StorageReadSessionContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -80,6 +81,7 @@ from app.use_cases.insights.dashboard_values import (
 from app.use_cases.insights.value.launch_floor import read_launch_floor
 from app.use_cases.insights.value.value_access import sees_money
 from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
@@ -102,15 +104,15 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
     and per local day the conversations, bookings and handoffs (for the
     trend chart), and what the bookings are worth per currency (their
     services' prices, stays' rates) with the part booked after hours, for
-    owners only (staff see no money). Also
-    the open unanswered questions, the voice package
-    minutes used in the period, and the package of the current billing
-    window (used and included minutes and dialogs, no prices), which staff
-    see too. Sandbox activity is excluded everywhere.
+    owners only (staff see no money). Also the open unanswered questions,
+    the voice package minutes used in the period, and the package of the
+    current billing window (used and included minutes and dialogs, no
+    prices), which staff see too. Sandbox activity is excluded everywhere.
 
     Everything is counted by the database (grouped counts over indexed
     columns, `dashboard_timeline` for days and opening hours), so the
-    dashboard costs the same with a year of history as with a week.
+    dashboard costs the same with a year of history as with a week; the
+    reads share one read session (one statement each).
     """
 
     def __init__(
@@ -129,6 +131,7 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         plan_registry: PlanRegistryContract,
         activation_event_repo: ActivationEventRepoContract,
         wall_clock: WallClock[Microseconds],
+        read_session: StorageReadSessionContract | None = None,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -148,8 +151,13 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         self._plan_registry: PlanRegistryContract = plan_registry
         self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._read_session: StorageReadSessionContract | None = read_session
 
     def run(self, input_data: DashboardStatsQuery) -> DashboardStats:
+        with in_read_session(self._read_session):
+            return self._run(input_data)
+
+    def _run(self, input_data: DashboardStatsQuery) -> DashboardStats:
         business: BusinessDocument = require_business(
             self._business_repo, input_data.business_id
         )

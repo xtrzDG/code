@@ -10,9 +10,9 @@ import psycopg
 from psycopg import pq
 
 from app.adapters.storage.postgres.postgres_session_settings import (
-    apply_storage_scope,
     translate_storage_error,
 )
+from app.adapters.storage.postgres.scoped_transactions import scoped_transaction
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
@@ -34,9 +34,8 @@ def platform_transaction(
 
     with (
         storage_errors_translated(collection_name),
-        connection_pool.transaction() as connection,
+        scoped_transaction(connection_pool, StorageScope.platform_wide()) as connection,
     ):
-        apply_storage_scope(connection, StorageScope.platform_wide())
         yield connection
 
 

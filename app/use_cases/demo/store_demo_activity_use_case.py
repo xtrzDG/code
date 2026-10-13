@@ -225,16 +225,13 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._business_repo.update(business_id, publish)
 
     def _store_customers(self, activity: DemoBusinessActivity) -> None:
-        for contact in activity.contacts:
-            self._contact_repo.save(contact)
-        for conversation in activity.conversations:
-            self._conversation_repo.save(conversation)
-        for message in activity.messages:
-            self._message_repo.save(message)
+        # A new business's history: each kind in one batch (one transaction).
+        self._contact_repo.save_many(activity.contacts)
+        self._conversation_repo.save_many(activity.conversations)
+        self._message_repo.save_many(activity.messages)
         for call in activity.calls:
             self._call_repo.save(call)
-        for booking in activity.bookings:
-            self._booking_repo.save(booking)
+        self._booking_repo.save_many(activity.bookings)
         for lead in activity.leads:
             self._lead_repo.save(lead)
         for handoff in activity.handoffs:

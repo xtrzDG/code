@@ -60,6 +60,7 @@ class ReceiveTelegramWebhookUseCase(
                 channel_id=channel.id,
                 channel=channel.kind,
                 message=message,
+                channel_last_inbound_at=channel.last_inbound_at,
             )
             for message in messages
         ]

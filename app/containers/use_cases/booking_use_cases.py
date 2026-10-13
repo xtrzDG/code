@@ -85,6 +85,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         busy_times_repo=repositories.calendar_busy_times_repo,
         busy_time_sync=facilitators.busy_time_sync,
         wall_clock=time_provider.microsecond_wall_clock,
+        read_session=adapters.storage_read_session,
     )
     create_booking_use_case: Factory[
         UseCaseContract[CreateBookingCommand, BookingResult]

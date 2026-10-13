@@ -31,6 +31,7 @@ from app.schemas.dto.calendar_sync.busy_reads import (
 )
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calendar_sync.booleans import HasLinkedCalendars
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.calendar_sync.constrained_strings import (
     CalendarFeedUrl,
@@ -202,11 +203,13 @@ class BusyTimeSyncFacilitatorContract(FacilitatorContract, Protocol):
 
     def refresh_stale(
         self, business_id: BusinessId, timeout: BusyTimeFetchSeconds
-    ) -> None:
+    ) -> HasLinkedCalendars:
         """
         Before availability is shown: read again, within `timeout` in all,
         the business's resources whose busy times are older than two sync
-        periods (the sync job fell behind). Never raises.
+        periods (the sync job fell behind). Never raises. Whether any
+        resource of the business links a calendar (only a link brings busy
+        times; True when that could not be read).
         """
         raise NotImplementedError
 

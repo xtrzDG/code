@@ -1,4 +1,6 @@
+import contextvars
 import logging
+from concurrent.futures import Future, ThreadPoolExecutor
 
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -21,6 +23,10 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 LOGGER: logging.Logger = logging.getLogger(__name__)
 # A progress line every this many businesses (a full run takes minutes).
 PROGRESS_EVERY: int = 25
+# Load businesses stored at once (each is independent of the others): one
+# builds and encodes its documents while another's are written, so the
+# Python work and the database's overlap instead of taking turns.
+STORING_THREADS: int = 4
 
 
 class SeedLoadOrchestrator(OrchestratorContract[SeedLoadCommand, LoadSeedManifest]):
@@ -29,7 +35,10 @@ class SeedLoadOrchestrator(OrchestratorContract[SeedLoadCommand, LoadSeedManifes
     then every business exactly like a demo business (its foundation, its
     assistant versions assembled from it as the owner's "assemble" does,
     a month of demo activity with the published version live) and its
-    bulk history on top. Returns the manifest the load tests read.
+    bulk history on top, `STORING_THREADS` businesses at a time. Returns
+    the manifest the load tests read, the businesses in plan order; a
+    business that fails stops the run (the ones not started yet are not
+    stored).
     """
 
     def __init__(
@@ -63,16 +72,34 @@ class SeedLoadOrchestrator(OrchestratorContract[SeedLoadCommand, LoadSeedManifes
     def execute(self, input_data: SeedLoadCommand) -> LoadSeedManifest:
         plan: LoadSeedPlan = self._prepare_load_businesses.run(input_data)
         seeds: list[LoadBusinessSeed] = []
-        for business_plan in plan.businesses:
-            seeds.append(self._store_business(business_plan, plan))
-            if len(seeds) % PROGRESS_EVERY == 0 or len(seeds) == len(plan.businesses):
-                LOGGER.info(
-                    "Load dataset: %d of %d businesses stored.",
-                    len(seeds),
-                    len(plan.businesses),
+        with ThreadPoolExecutor(
+            max_workers=STORING_THREADS, thread_name_prefix="seed-load"
+        ) as executor:
+            # Each business in a copy of this context (the platform-wide
+            # storage scope and the log context of the run).
+            stored: list[Future[LoadBusinessSeed]] = [
+                executor.submit(
+                    contextvars.copy_context().run,
+                    self._store_business,
+                    business_plan,
+                    plan,
                 )
+                for business_plan in plan.businesses
+            ]
+            try:
+                for business_seed in stored:
+                    seeds.append(business_seed.result())
+                    self._report_progress(len(seeds), len(plan.businesses))
+            except BaseException:
+                for business_seed in stored:
+                    business_seed.cancel()
+                raise
 
         return LoadSeedManifest(seeded_at=plan.seeded_at, businesses=seeds)
+
+    def _report_progress(self, stored: int, total: int) -> None:
+        if stored % PROGRESS_EVERY == 0 or stored == total:
+            LOGGER.info("Load dataset: %d of %d businesses stored.", stored, total)
 
     def _store_business(
         self, business_plan: LoadBusinessPlan, plan: LoadSeedPlan

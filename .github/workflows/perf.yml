@@ -73,6 +73,14 @@ jobs:
       - name: Latency budgets
         run: uv run pytest -m perf tests/perf -ra
 
+      # The runner's CPUs and memory and the seed time next to the numbers:
+      # a slow shared runner shows as one (docs/operations/capacity.md).
+      - name: Runner and seeding in the job summary
+        if: ${{ always() }}
+        run: >-
+          uv run python -m scripts.perf_runner --report "$PERF_REPORT"
+          >> "$GITHUB_STEP_SUMMARY"
+
       # perf/baseline.json is of the full scale: a smaller dataset is held
       # to the budgets above only, and never becomes the baseline.
       - name: Compare with the baseline (more than 20% slower fails)
@@ -114,6 +122,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # The runner summary below is a repository script, written for the
+      # project's Python 3.14; the runner image's own python3 is older.
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: "3.14"
+
       # `--wait` only for the API: the worker has no health check (its
       # heartbeat is in the database), so compose cannot wait for it.
       - name: Start Postgres, migrations and the API
@@ -130,20 +145,43 @@ jobs:
       # services; the latency budgets above cover the full scale.
       - name: Seed the load dataset
         shell: bash
+        run: |
+          started=$SECONDS
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml \
+            run --rm -T api seed-load --businesses 50 --messages 200000 \
+            --bookings 20000 --visitors 1000 --manifest - > perf/manifest.json
+          echo "LOAD_SEED_SECONDS=$((SECONDS - started))" >> "$GITHUB_ENV"
+
+      # Information only: a summary that fails shows as a failed step, and
+      # the drain waits and the three scenarios run all the same.
+      - name: Runner and seeding in the job summary
+        continue-on-error: true
         run: >-
-          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
-          run --rm -T api seed-load --businesses 50 --messages 200000
-          --bookings 20000 --visitors 1000 --manifest - > perf/manifest.json
+          uv run --no-project python -m scripts.perf_runner
+          --seed-seconds "$LOAD_SEED_SECONDS"
+          --dataset "load: 50 businesses, 200,000 messages, 1,000 visitors"
+          >> "$GITHUB_STEP_SUMMARY"
+
+      # Before each scenario the worker drains the customer lanes, so one
+      # scenario's backlog does not load the next (bounded: 10 minutes).
+      - name: Wait for the queue before cabinet browsing
+        run: perf/wait-for-drain.sh "before cabinet browsing"
 
       - name: Cabinet browsing
         run: >-
           docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
           --profile load run --rm k6 run /perf/k6/cabinet_browsing.js
 
+      - name: Wait for the queue before widget polling
+        run: perf/wait-for-drain.sh "before widget polling"
+
       - name: Widget polling, 1000 visitors
         run: >-
           docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
           --profile load run --rm k6 run /perf/k6/widget_polling.js
+
+      - name: Wait for the queue before the webhook burst
+        run: perf/wait-for-drain.sh "before the webhook burst"
 
       - name: Webhook burst, 200 messages a second
         run: >-

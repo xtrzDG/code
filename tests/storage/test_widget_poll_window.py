@@ -206,10 +206,7 @@ def read_session(
     if not isinstance(collections, PostgresCollectionFactory):
         return None
 
-    return PostgresReadSessionAdapter(
-        request.getfixturevalue("connection_pool"),
-        request.getfixturevalue("storage_scope"),
-    )
+    return PostgresReadSessionAdapter(request.getfixturevalue("connection_pool"))
 
 
 def test_every_cursor_gets_the_whole_chats_answer(

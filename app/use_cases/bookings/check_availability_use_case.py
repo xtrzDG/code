@@ -17,6 +17,7 @@ from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
+from app.contracts.storage import StorageReadSessionContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -25,6 +26,7 @@ from app.schemas.dto.bookings import (
     AvailabilityResult,
     AvailableSlot,
 )
+from app.schemas.typings.calendar_sync.booleans import HasLinkedCalendars
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.use_cases.bookings.availability_slots import (
     StayPricing,
@@ -43,6 +45,7 @@ from app.use_cases.bookings.offer_selection import (
     OfferRequest,
     choose_offer,
 )
+from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.bookings.offer_views import build_offer_view, list_offer_views
 from app.utilities.calendar_sync.busy_windows import ON_DEMAND_READ_SECONDS
 from app.utilities.scheduling.placement_request import PlacementRequest
@@ -91,7 +94,8 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
     resources' linked calendars made busy (walk-ins in Google Calendar,
     Airbnb reservations, a booking system's bookings) take every unit;
     sources the sync job has not read for two periods are read again
-    first, within 2 s.
+    first, within 2 s, and a business that links no calendar has no busy
+    times to read. The reads after that share one read session.
     """
 
     def __init__(
@@ -106,7 +110,9 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
         busy_times_repo: CalendarBusyTimesRepoContract,
         busy_time_sync: BusyTimeSyncFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        read_session: StorageReadSessionContract | None = None,
     ) -> None:
+        self._read_session: StorageReadSessionContract | None = read_session
         self._growth: GrowthBookingsFacilitatorContract = growth
         self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
         self._busy_time_sync: BusyTimeSyncFacilitatorContract = busy_time_sync
@@ -121,16 +127,26 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AvailabilityQuery) -> AvailabilityResult:
-        self._busy_time_sync.refresh_stale(
+        has_linked_calendars: HasLinkedCalendars = self._busy_time_sync.refresh_stale(
             input_data.business_id, ON_DEMAND_READ_SECONDS
         )
+        with in_read_session(self._read_session):
+            return self._available(
+                input_data, self._busy_times_repo if has_linked_calendars else None
+            )
+
+    def _available(
+        self,
+        input_data: AvailabilityQuery,
+        busy_times_repo: CalendarBusyTimesRepoContract | None,
+    ) -> AvailabilityResult:
         inputs: SchedulingInputs = load_scheduling_inputs(
             self._business_repo,
             self._business_profile_repo,
             self._resource_repo,
             self._schedule_exception_repo,
             input_data.business_id,
-            self._busy_times_repo,
+            busy_times_repo,
         )
         if input_data.party_size is not None and not input_data.full_day:
             ensure_party_size_allowed(input_data.party_size, inputs.rules)

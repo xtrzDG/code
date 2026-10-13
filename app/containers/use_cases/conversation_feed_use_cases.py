@@ -102,6 +102,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         summary_transformer=transformers.conversation_summary_transformer,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        read_session=adapters.storage_read_session,
     )
     get_conversation_use_case: Factory[
         UseCaseContract[ConversationQuery, ConversationDetailView]
@@ -123,6 +124,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         channel_repo=repositories.channel_repo,
         outbound_message_repo=repositories.outbound_message_repo,
+        read_session=adapters.storage_read_session,
     )
     # The judge's score of the conversation (production quality), if sampled.
     get_conversation_quality_use_case: Factory[

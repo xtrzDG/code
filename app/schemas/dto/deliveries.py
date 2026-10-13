@@ -41,12 +41,17 @@ from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 
 
 class RoutedInboundMessage(ImmutableDTO):
-    """A verified customer message and the connected channel it belongs to."""
+    """
+    A verified customer message and the connected channel it belongs to,
+    with the channel's `last_inbound_at` as read when it was routed (the
+    inbox notes the channel's activity without reading it again).
+    """
 
     business_id: BusinessId
     channel_id: ChannelId
     channel: ChannelKind
     message: ChannelInboundMessage
+    channel_last_inbound_at: Microseconds | None
 
 
 class InboxIntake(ImmutableDTO):

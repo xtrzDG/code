@@ -33,7 +33,6 @@ def build_unit_of_work_adapter(
 
 def build_read_session_adapter(
     connection_pool: PostgresConnectionPoolClient | None,
-    storage_scope: StorageScopeContract,
 ) -> StorageReadSessionContract | None:
     """
     Several reads in one Postgres transaction; None without a database
@@ -43,4 +42,4 @@ def build_read_session_adapter(
     if connection_pool is None:
         return None
 
-    return PostgresReadSessionAdapter(connection_pool, storage_scope)
+    return PostgresReadSessionAdapter(connection_pool)

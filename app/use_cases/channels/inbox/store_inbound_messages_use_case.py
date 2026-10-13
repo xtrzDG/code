@@ -6,7 +6,6 @@ from app.contracts.repositories.delivery_repositories import InboundEventRepoCon
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.deliveries import InboundEventKind
 from app.schemas.constants.telemetry import WebhookMessageOutcome
 from app.schemas.domain.inbound_events import InboundEventDocument
@@ -16,7 +15,7 @@ from app.schemas.typings.channels.constrained_integers import WebhookMessageCoun
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.use_cases.shared.inbox_queue import store_and_queue
-from app.utilities.channels.channel_activity import stamp_channel_activity_by_id
+from app.utilities.channels.channel_activity import stamp_routed_channel_activity
 from app.utilities.deliveries.delivery_jobs import PROCESS_INBOUND_MESSAGE_JOB
 from app.utilities.deliveries.delivery_keys import (
     bounded_provider_message_id,
@@ -43,9 +42,10 @@ class StoreInboundMessagesUseCase(
     derived from the business, channel and platform message id) and is not
     queued again, so a redelivered webhook gets no second answer. Nothing
     slow happens here: the worker answers. A channel that brought a new
-    message notes when (`last_inbound_at`, to the minute), for its health
-    line in the cabinet. Each message is counted for /metrics by channel:
-    received, then queued or duplicate.
+    message notes when (`last_inbound_at`, to the minute, judged by the
+    stamp read with the channel when the webhook was verified: the channel
+    is not read again), for its health line in the cabinet. Each message
+    is counted for /metrics by channel: received, then queued or duplicate.
     """
 
     def __init__(
@@ -67,7 +67,7 @@ class StoreInboundMessagesUseCase(
     def run(self, input_data: list[RoutedInboundMessage]) -> InboxIntake:
         now: Microseconds = self._wall_clock.now_unix()
         queued: int = 0
-        active_channels: list[ChannelId] = []
+        active_channels: dict[ChannelId, RoutedInboundMessage] = {}
         for routed in input_data:
             event: InboundEventDocument = build_customer_event(routed, now)
             self._metrics.count_webhook_messages(
@@ -94,12 +94,15 @@ class StoreInboundMessagesUseCase(
             )
             if is_new:
                 queued += 1
-                if routed.channel_id not in active_channels:
-                    active_channels.append(routed.channel_id)
+                active_channels.setdefault(routed.channel_id, routed)
 
-        for channel_id in active_channels:
-            stamp_channel_activity_by_id(
-                self._channel_repo, channel_id, MessageDirection.INBOUND, now
+        for channel_id, routed in active_channels.items():
+            stamp_routed_channel_activity(
+                self._channel_repo,
+                routed.business_id,
+                channel_id,
+                routed.channel_last_inbound_at,
+                now,
             )
 
         return InboxIntake(

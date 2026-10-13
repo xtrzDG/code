@@ -17,6 +17,7 @@ from app.contracts.repositories.delivery_repositories import (
     OutboundMessageRepoContract,
 )
 from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
+from app.contracts.storage import StorageReadSessionContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -55,6 +56,7 @@ from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
 from app.use_cases.shared.assignment_views import build_assignment_view
+from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
@@ -77,7 +79,7 @@ class GetConversationUseCase(
     who of the team is assigned to it. Reading a
     conversation is an operation on personal data, so each view is
     written to the audit log, one entry per call shown as well (concept
-    section 10).
+    section 10). The reads share one read session (one statement each).
     """
 
     def __init__(
@@ -102,6 +104,7 @@ class GetConversationUseCase(
         resource_repo: ResourceRepoContract,
         channel_repo: ChannelRepoContract,
         outbound_message_repo: OutboundMessageRepoContract,
+        read_session: StorageReadSessionContract | None = None,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -127,8 +130,13 @@ class GetConversationUseCase(
         self._resource_repo: ResourceRepoContract = resource_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
+        self._read_session: StorageReadSessionContract | None = read_session
 
     def run(self, input_data: ConversationQuery) -> ConversationDetailView:
+        with in_read_session(self._read_session):
+            return self._run(input_data)
+
+    def _run(self, input_data: ConversationQuery) -> ConversationDetailView:
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
                 user_id=input_data.user_id,

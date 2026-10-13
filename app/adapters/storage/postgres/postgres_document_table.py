@@ -17,10 +17,10 @@ from app.adapters.storage.postgres.document_table_queries import (
     build_document_table_queries,
 )
 from app.adapters.storage.postgres.postgres_session_settings import (
-    apply_storage_scope,
     translate_storage_error,
 )
 from app.adapters.storage.postgres.read_sessions import read_session_connection
+from app.adapters.storage.postgres.scoped_transactions import scoped_transaction
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
@@ -102,21 +102,21 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
     def _read_transaction(self) -> Generator[tuple[PostgresConnection, str | None]]:
         """
         Like `_transaction`, for a read: inside a read session of this
-        pool and scope (`PostgresReadSessionAdapter`) the read is one
-        statement of the session's transaction.
+        pool (`PostgresReadSessionAdapter`) the read is one statement of
+        the session's transaction, in this read's scope.
         """
 
         scope: StorageScope = self._effective_scope()
-        connection: PostgresConnection | None = read_session_connection(
-            self._connection_pool, scope
-        )
-        if connection is None:
-            with self._transaction_in(scope) as opened:
-                yield opened
-            return
+        with (
+            self._translated_errors(),
+            read_session_connection(self._connection_pool, scope) as connection,
+        ):
+            if connection is not None:
+                yield connection, business_id_of(scope)
+                return
 
-        with self._translated_errors():
-            yield connection, business_id_of(scope)
+        with self._transaction_in(scope) as opened:
+            yield opened
 
     @contextmanager
     def _transaction_in(
@@ -124,9 +124,8 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
     ) -> Generator[tuple[PostgresConnection, str | None]]:
         with (
             self._translated_errors(),
-            self._connection_pool.transaction() as connection,
+            scoped_transaction(self._connection_pool, scope) as connection,
         ):
-            apply_storage_scope(connection, scope)
             yield connection, business_id_of(scope)
 
     @contextmanager

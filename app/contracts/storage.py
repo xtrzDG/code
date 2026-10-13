@@ -69,16 +69,18 @@ class StorageUnitOfWorkContract(AdapterContract, Protocol):
 class StorageReadSessionContract(AdapterContract, Protocol):
     def read_session(self) -> AbstractContextManager[None]:
         """
-        Run the block's reads of tenant collections in the current storage
-        scope on one connection, in one transaction whose scope is set
-        once: each read is one statement instead of four (begin, scope,
-        read, commit). Every read still sees what was committed when it
-        runs, as outside the block. Writes, and reads in another scope
-        (platform collections), run as they would outside the block, on
-        connections of their own. A read that fails ends the session: the
-        block's later reads fail too, so the block must not go on after a
-        storage error. Unscoped, nested or inside a unit of work, the block
-        runs as it is.
+        Run the block's reads on one connection, in one transaction begun
+        at the first read with its storage scope (a read in another scope,
+        a platform collection, sets its scope first): each read is one
+        statement instead of three (begin with the scope, read, commit).
+        Every read still sees what was committed when it runs, and each
+        read's scope binds row-level security as outside the block. Other
+        work of the block (writes, units of work, locks) runs as it would
+        outside it, after the session committed its reads, on the same
+        connection; a write commits on its own. A read that fails rolls
+        the session's transaction back. Nested or inside a unit of work,
+        the block runs as it is. The block must not wait for anything slow
+        (a provider's API) between its reads: the transaction stays open.
         """
         raise NotImplementedError
 

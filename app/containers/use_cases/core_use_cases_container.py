@@ -64,6 +64,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
 
     accounts: AccountUseCasesContainer = Container(  # type: ignore[assignment]
         AccountUseCasesContainer,
+        adapters=adapters,
         config=config,
         facilitators=facilitators,
         registries=registries,
@@ -241,6 +242,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     )
     follow_ups: FollowUpUseCasesContainer = Container(  # type: ignore[assignment]
         FollowUpUseCasesContainer,
+        adapters=adapters,
         facilitators=facilitators,
         registries=registries,
         repositories=repositories,

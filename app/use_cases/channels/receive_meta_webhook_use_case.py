@@ -89,4 +89,5 @@ class ReceiveMetaWebhookUseCase(
             channel_id=channel.id,
             channel=channel.kind,
             message=message,
+            channel_last_inbound_at=channel.last_inbound_at,
         )

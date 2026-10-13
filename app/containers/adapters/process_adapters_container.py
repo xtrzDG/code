@@ -51,11 +51,10 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
         connection_pool=clients.postgres_pool,
         storage_scope=utilities.storage_scope,
     )
-    # Several reads of one scope in one transaction (Postgres), None in memory.
+    # Several reads in one transaction (Postgres), None in memory.
     storage_read_session: Singleton[StorageReadSessionContract | None] = Singleton(
         build_read_session_adapter,
         connection_pool=clients.postgres_pool,
-        storage_scope=utilities.storage_scope,
     )
     # Queued jobs wake idle lane threads at once: Postgres NOTIFY/LISTEN
     # reaches the worker processes, the in-process signal without a database.

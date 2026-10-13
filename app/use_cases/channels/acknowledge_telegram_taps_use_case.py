@@ -7,6 +7,8 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels.channel_webhooks import TelegramWebhookRequest
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.utilities.channels.delivery_targets import decrypt_channel_secret
+from app.utilities.channels.json_values import parse_json_object
+from app.utilities.channels.telegram_taps import read_tap
 
 
 class AcknowledgeTelegramTapsUseCase(UseCaseContract[TelegramWebhookRequest, None]):
@@ -14,7 +16,8 @@ class AcknowledgeTelegramTapsUseCase(UseCaseContract[TelegramWebhookRequest, Non
     Answer the button tap of a verified Telegram webhook once its message is
     stored: the button stops showing progress and the tapped message keeps
     the chosen option without its buttons (the adapter's
-    `acknowledge_taps`, best effort). Anything else does nothing.
+    `acknowledge_taps`, best effort). Anything else does nothing and reads
+    nothing (most updates are typed messages).
     """
 
     def __init__(
@@ -28,6 +31,9 @@ class AcknowledgeTelegramTapsUseCase(UseCaseContract[TelegramWebhookRequest, Non
         self._telegram_adapter: ChannelAdapterContract = telegram_adapter
 
     def run(self, input_data: TelegramWebhookRequest) -> None:
+        if read_tap(parse_json_object(input_data.payload.body)) is None:
+            return
+
         channel: ChannelDocument | None = self._channel_repo.get(input_data.channel_id)
         if channel is None or channel.kind is not ChannelKind.TELEGRAM:
             return
