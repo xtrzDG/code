@@ -34,7 +34,13 @@ function hasBox(node: HTMLElement): boolean {
   return node.getClientRects().length > 0;
 }
 
-/** Holds the span at `width` (the final number's) while the count runs; null lets it size itself again. */
+/**
+ * Holds the span at `width` (the final number's) while the count runs; null
+ * lets it size itself again. The digits stay at the start of the box (the
+ * start a parent's centring or end alignment would otherwise move as the
+ * text grows): a text whose start moves is a layout shift, even inside a
+ * box that keeps still.
+ */
 function holdWidth(node: HTMLElement, width: number | null): void {
   if (width === null) {
     node.style.removeProperty("width");
@@ -42,7 +48,7 @@ function holdWidth(node: HTMLElement, width: number | null): void {
     return;
   }
   node.style.width = `${width}px`;
-  node.style.textAlign = "end";
+  node.style.textAlign = "start";
 }
 
 export function AnimatedNumber({

@@ -55,7 +55,8 @@ describe("AnimatedNumber", () => {
     const number = numberIn(view.container);
     expect(number.textContent).toBe("4");
     expect(number.style.width).toBe("20px");
-    expect(number.style.textAlign).toBe("end");
+    // The text's start stays where the final number's will be: a start that moves is a layout shift.
+    expect(number.style.textAlign).toBe("start");
 
     runFrame(0);
     runFrame(450);
