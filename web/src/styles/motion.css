@@ -176,6 +176,16 @@
       transform: var(--dialog-from);
     }
   }
+  /*
+   * Leaving at the press: a dialog whose state closes it a frame later (the
+   * phone's More sheet) starts its exit at once, while it is still open.
+   */
+  dialog[data-motion][open][data-closing] {
+    opacity: 0;
+    transform: var(--dialog-from);
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-exit);
+  }
   dialog[data-motion="modal"] {
     --dialog-from: perspective(1200px) translateY(14px) rotateX(6deg) scale(0.96);
   }
@@ -214,5 +224,8 @@
     @starting-style {
       opacity: 0;
     }
+  }
+  dialog[data-motion][open][data-closing]::backdrop {
+    opacity: 0;
   }
 }

@@ -8,7 +8,7 @@
  * the backdrop close it.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
@@ -77,9 +77,22 @@ export function MoreSheet({
   me: CurrentUserView;
 }) {
   const { t } = useI18n();
-  const dialog = useModalDialog(open, onClose);
+  const dialog = useModalDialog(open, () => leave());
   // The sheet slides down with its content still in it.
   const content = useClosingContent(open, [] as const);
+
+  // Escape, the backdrop, × or a place: the shell closes the sheet after the press has painted
+  // (ShellFrame), so the press paints its own answer first: the sheet starts to slide away
+  // (data-closing, src/styles/motion.css). Opening again clears it.
+  function leave() {
+    dialog.ref.current?.setAttribute("data-closing", "");
+    onClose();
+  }
+  useEffect(() => {
+    if (open) {
+      dialog.ref.current?.removeAttribute("data-closing");
+    }
+  }, [open, dialog.ref]);
 
   return (
     <dialog
@@ -95,7 +108,7 @@ export function MoreSheet({
             <h2 className="text-lg font-semibold tracking-tight">{t("navigation.more")}</h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={leave}
               aria-label={t("common.close")}
               className="flex size-11 cursor-pointer items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
             >
@@ -103,10 +116,10 @@ export function MoreSheet({
             </button>
           </header>
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-            {top?.(onClose)}
-            {items.length > 0 ? <MoreLinks items={items} onNavigate={onClose} /> : null}
+            {top?.(leave)}
+            {items.length > 0 ? <MoreLinks items={items} onNavigate={leave} /> : null}
             <div className="rounded-2xl border border-line bg-surface p-2">
-              <AccountPanel me={me} onNavigate={onClose} />
+              <AccountPanel me={me} onNavigate={leave} />
             </div>
           </div>
         </div>

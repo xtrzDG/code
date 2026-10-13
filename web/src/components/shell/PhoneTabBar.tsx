@@ -11,7 +11,7 @@
 import { LayoutGroup } from "motion/react";
 import * as m from "motion/react-m";
 import Link from "next/link";
-import { useId, type ComponentType } from "react";
+import { useId, useState, type ComponentType } from "react";
 
 import { Fab, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -45,12 +45,64 @@ function Marker() {
   );
 }
 
-function PlaceIcon({ icon: Icon, isActive, badge }: { icon: ComponentType<IconProps>; isActive: boolean; badge: number }) {
+/** The current place's icon grows a little; a lit one (More while it opens) only takes the accent. */
+function PlaceIcon({
+  icon: Icon,
+  isActive,
+  isLit = false,
+  badge,
+}: {
+  icon: ComponentType<IconProps>;
+  isActive: boolean;
+  isLit?: boolean;
+  badge: number;
+}) {
   return (
     <span className="relative">
-      <Icon className={cn("size-[1.375rem] transition-transform", isActive ? "scale-105 text-accent" : "text-ink-subtle")} aria-hidden />
+      <Icon
+        className={cn("size-[1.375rem] transition-transform", isActive ? "scale-105 text-accent" : isLit ? "text-accent" : "text-ink-subtle")}
+        aria-hidden
+      />
       {badge > 0 ? <NavBadge count={badge} size="sm" className="absolute -end-3 -top-1.5 ring-2 ring-surface" /> : null}
     </span>
+  );
+}
+
+/**
+ * "More": the sheet opens after the tap has painted (ShellFrame), so the tap
+ * paints its own answer first: the place lights up at once, and stays lit
+ * while the sheet is open. Only this button redraws for it.
+ */
+function MoreTab({ isMoreActive, isMoreOpen, onOpenMore }: { isMoreActive: boolean; isMoreOpen: boolean; onOpenMore: () => void }) {
+  const { t } = useI18n();
+  const [isPressed, setPressed] = useState(false);
+  const [wasOpen, setWasOpen] = useState(isMoreOpen);
+  // Derived from props during render (React's "previous props" pattern): the sheet took over.
+  if (wasOpen !== isMoreOpen) {
+    setWasOpen(isMoreOpen);
+    setPressed(false);
+  }
+  const isLit = isMoreActive || isMoreOpen || isPressed;
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setPressed(true);
+        onOpenMore();
+      }}
+      aria-haspopup="dialog"
+      aria-expanded={isMoreOpen}
+      className={cn(PLACE, "cursor-pointer", isLit ? "text-accent-ink" : "text-ink-muted active:text-ink")}
+    >
+      {isMoreActive ? <Marker /> : null}
+      <span className="relative flex max-w-full flex-col items-center gap-1">
+        <PlaceIcon icon={IconMenu} isActive={isMoreActive} isLit={isLit} badge={0} />
+        <span data-tab-label className={LABEL}>
+          {t("navigation.more")}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -100,21 +152,7 @@ export function PhoneTabBar({
             </li>
           ))}
           <li className="flex min-w-0 flex-1">
-            <button
-              type="button"
-              onClick={onOpenMore}
-              aria-haspopup="dialog"
-              aria-expanded={isMoreOpen}
-              className={cn(PLACE, "cursor-pointer", isMoreActive ? "text-accent-ink" : "text-ink-muted active:text-ink")}
-            >
-              {isMoreActive ? <Marker /> : null}
-              <span className="relative flex max-w-full flex-col items-center gap-1">
-                <PlaceIcon icon={IconMenu} isActive={isMoreActive} badge={0} />
-                <span data-tab-label className={LABEL}>
-                  {t("navigation.more")}
-                </span>
-              </span>
-            </button>
+            <MoreTab isMoreActive={isMoreActive} isMoreOpen={isMoreOpen} onOpenMore={onOpenMore} />
           </li>
         </ul>
       </nav>

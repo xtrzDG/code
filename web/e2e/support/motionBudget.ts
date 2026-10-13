@@ -228,6 +228,17 @@ export async function waitForMainThreadQuiet(page: Page, { quietMs = 1000, timeo
 }
 
 /**
+ * Resolves after the page's next paint. The test reads the page through
+ * Playwright's selectors (by role, by text), which run on the page's own
+ * main thread, slowed like the page: run between a tap and the paint it
+ * brings, they would hold that paint back and count in the tap's INP as if
+ * the cabinet did that work (as trace snapshots would, playwright.config.ts).
+ */
+export async function nextPaint(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0))));
+}
+
+/**
  * From here on the interactions and layout shifts count; what moved since
  * the page loaded stays recorded. With `watchMotion: false` the motion
  * watch stops here (what moved until now stays): its observers run on the

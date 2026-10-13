@@ -26,13 +26,14 @@
  * Chromium on a server, SwiftShader): that needs a device run.
  */
 
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { uniqueSuffix } from "./support/api";
 import { signInAsDemoOwner, visitorAsksForPerson } from "./support/demo";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import {
+  nextPaint,
   readMotionBudget,
   recordMotionBudget,
   startMeasuring,
@@ -78,45 +79,52 @@ async function look(page: Page): Promise<void> {
   await waitForMainThreadQuiet(page, { quietMs: 500 });
 }
 
+/** A tap, and the paint it brings before the test reads the page again (nextPaint). */
+async function tap(target: Locator): Promise<void> {
+  await target.tap();
+  await nextPaint(target.page());
+}
+
 /** One round by taps, from the Overview back to it (one document: one recording). */
 async function round(page: Page): Promise<void> {
   const periods = page.getByRole("group", { name: en.dashboard.periodLabel });
   for (const period of ["30d", "7d", "today"] as const) {
-    await periods.getByText(en.dashboard.periods[period], { exact: true }).tap();
+    await tap(periods.getByText(en.dashboard.periods[period], { exact: true }));
     await expect(page.getByRole("radio", { name: en.dashboard.periods[period] })).toBeChecked();
     await look(page);
   }
 
   const tabBar = page.getByRole("navigation", { name: en.navigation.tabBar });
   // The link's name carries the badge too (", 3 waiting Inbox").
-  await tabBar.getByRole("link", { name: new RegExp(en.navigation.tabLabels.inbox) }).tap();
+  await tap(tabBar.getByRole("link", { name: new RegExp(en.navigation.tabLabels.inbox) }));
   const rows = page.locator("[data-inbox-row]");
   await expect(rows.first()).toBeVisible();
   await look(page);
   for (const view of ["requests", "needs_person"] as const) {
-    await page.locator(`[data-inbox-view="${view}"]`).tap();
+    await tap(page.locator(`[data-inbox-view="${view}"]`));
     await expect(page.locator(`[data-inbox-view="${view}"] input`)).toBeChecked();
     await look(page);
   }
   await expect(rows.first()).toBeVisible();
 
-  await tabBar.getByRole("button", { name: en.navigation.more }).tap();
+  await tap(tabBar.getByRole("button", { name: en.navigation.more }));
   const more = page.getByRole("dialog", { name: en.navigation.more });
   await expect(more).toBeVisible();
   await look(page);
   await page.keyboard.press("Escape");
+  await nextPaint(page);
   await expect(more).toBeHidden();
   await look(page);
 
   // The conversation takes the whole screen on a phone (no tab bar).
-  await rows.first().locator("a[href]").first().tap();
+  await tap(rows.first().locator("a[href]").first());
   await expect(page.locator("#conversation-title")).toBeVisible();
   await look(page);
-  await page.getByRole("link", { name: en.inboxCard.back }).tap();
+  await tap(page.getByRole("link", { name: en.inboxCard.back }));
   await expect(rows.first()).toBeVisible();
   await look(page);
 
-  await tabBar.getByRole("link", { name: en.navigation.sections.overview }).tap();
+  await tap(tabBar.getByRole("link", { name: en.navigation.sections.overview }));
   await expect(periods).toBeVisible();
   await look(page);
 }

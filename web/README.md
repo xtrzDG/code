@@ -1622,7 +1622,17 @@ motion.
   device that allows motion, nothing moves in either round: no CSS or Web
   Animation that moves, no spring rewriting a transform, no view
   transition, no 3D canvas. The trace keeps no DOM snapshots there: they are
-  taken in the page at every tap. 60 frames a second on a real mid-range
+  taken in the page at every tap, and after each tap the test waits for the
+  page's next paint before it reads the page (`nextPaint`): its role and text
+  selectors run on the page's main thread, slowed like the page, and would
+  otherwise hold that paint back. "More" and its sheet answer a tap or
+  Escape in the same frame (the place lights up, the sheet starts to leave)
+  and open or close after that paint. Measure it in Playwright's headless
+  shell, as CI does (`npx playwright install chromium`): full Chrome in its
+  new headless mode (`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` pointing at
+  `chrome`) keeps the bottom ~85 px of the 390×844 viewport off its window,
+  so a change there (the tab bar) is never painted on its own and every
+  tab-bar tap reads 300 ms or more. 60 frames a second on a real mid-range
   phone is not measured here (headless Chromium on a server, SwiftShader):
   that needs a device run.
 
