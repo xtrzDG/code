@@ -6,6 +6,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.dto.deposits.deposit_views import BookingDepositView
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.booleans import IsSandboxIncluded
 from app.schemas.typings.bookings.constrained_integers import PartySize
@@ -36,7 +37,10 @@ class ListLeadsQuery(ImmutableDTO):
 
 
 class LeadListItem(ImmutableDTO):
-    """Lead with the contact it came from."""
+    """
+    Lead with the contact it came from; `deposit` is the deposit asked for
+    a banquet request, if any.
+    """
 
     id: LeadId
     business_id: BusinessId
@@ -53,6 +57,7 @@ class LeadListItem(ImmutableDTO):
     status: LeadStatus
     is_sandbox: IsSandboxConversation = False
     created_at: Microseconds
+    deposit: BookingDepositView | None = None
 
 
 class LeadStatusCount(ImmutableDTO):

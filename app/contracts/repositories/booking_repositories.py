@@ -84,6 +84,19 @@ class LeadRepoContract(
     def get(self, business_id: BusinessId, lead_id: LeadId) -> LeadDocument | None:
         raise NotImplementedError
 
+    def update(
+        self,
+        business_id: BusinessId,
+        lead_id: LeadId,
+        change: Callable[[LeadDocument], LeadDocument | None],
+    ) -> LeadDocument | None:
+        """
+        What `change` makes of the stored lead, written in one step (a
+        change made meanwhile is never overwritten); None when the lead is
+        gone or `change` keeps it as it is.
+        """
+        raise NotImplementedError
+
     def list_by_business(self, business_id: BusinessId) -> list[LeadDocument]:
         """Return leads ordered by created_at descending."""
         raise NotImplementedError

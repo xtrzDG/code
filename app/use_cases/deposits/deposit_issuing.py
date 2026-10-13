@@ -10,7 +10,10 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.booking_repositories import (
+    BookingRepoContract,
+    LeadRepoContract,
+)
 from app.contracts.repositories.deposit_repositories import (
     DepositRequestRepoContract,
 )
@@ -42,6 +45,7 @@ from app.utilities.deposits.deposit_line_texts import (
 )
 from app.utilities.deposits.deposit_refusals import deposit_refusal
 from app.utilities.deposits.deposit_times import hold_end_text, minutes_later
+from app.utilities.deposits.lead_deposit_state import show_lead_deposit
 from app.utilities.scheduling.zoned_time import load_time_zone
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -53,6 +57,7 @@ SHORTEST_REMINDED_HOLD_MINUTES: int = 30
 class DepositIssuing:
     request_repo: DepositRequestRepoContract
     booking_repo: BookingRepoContract
+    lead_repo: LeadRepoContract
     lines: PaymentLines
 
     def issue(
@@ -64,8 +69,9 @@ class DepositIssuing:
         now: Microseconds,
     ) -> DepositRequestDocument:
         """
-        Store a new request and hold the booking for it (under the business
-        lock). Raises ValidationFailedError when there is no page to pay on.
+        Store a new request, hold the booking for it or show it on the
+        banquet request (under the business lock). Raises
+        ValidationFailedError when there is no page to pay on.
         """
 
         if quoted.amount is None or quoted.policy is None:
@@ -114,6 +120,12 @@ class DepositIssuing:
                 subject.business_id,
                 subject.id,
                 lambda booking: hold_booking(booking, request, now),
+            )
+        else:
+            self.lead_repo.update(
+                subject.business_id,
+                subject.id,
+                lambda lead: show_lead_deposit(lead, request, now),
             )
         return request
 

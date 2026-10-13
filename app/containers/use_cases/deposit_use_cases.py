@@ -144,6 +144,7 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
             DepositIssuing,
             request_repo=repositories.deposit_request_repo,
             booking_repo=repositories.booking_repo,
+            lead_repo=repositories.lead_repo,
             lines=lines,
         ),
         lock_registry=registries.business_lock_registry,
@@ -166,6 +167,7 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
         deposit_request_repo=repositories.deposit_request_repo,
         deposit_settings_repo=repositories.deposit_settings_repo,
         booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
         lock_registry=registries.business_lock_registry,
         audit_log_repo=repositories.audit_log_repo,
         live_events=facilitators.event_publisher,
@@ -191,6 +193,7 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
             DepositHoldRelease,
             request_repo=repositories.deposit_request_repo,
             booking_repo=repositories.booking_repo,
+            lead_repo=repositories.lead_repo,
             lock_registry=registries.business_lock_registry,
         ),
         notices=Factory(

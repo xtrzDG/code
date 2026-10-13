@@ -27,7 +27,10 @@ from app.use_cases.deposits.deposit_quotes import (
     quote_banquet,
     quote_booking,
 )
-from app.use_cases.deposits.deposit_subjects import DepositSubjects
+from app.use_cases.deposits.deposit_subjects import (
+    OPEN_LEAD_STATUSES,
+    DepositSubjects,
+)
 from app.use_cases.shared.business_access import require_business
 from app.utilities.deposits.booking_deposit_state import (
     OPEN_BOOKING_STATUSES,
@@ -117,13 +120,14 @@ class SendPaymentLinkUseCase(
 
             request = self._issuing.issue(settings, subject, quoted, input_data, now)
 
-        if isinstance(subject, BookingDocument):
-            self._live_events.publish(
-                business.id,
-                LiveEventKind.BOOKING_CHANGED,
-                (subject.id,),
-                is_sandbox=subject.is_sandbox,
-            )
+        self._live_events.publish(
+            business.id,
+            LiveEventKind.BOOKING_CHANGED
+            if isinstance(subject, BookingDocument)
+            else LiveEventKind.LEAD_CHANGED,
+            (subject.id,),
+            is_sandbox=subject.is_sandbox,
+        )
         return self._issuing.receipt(business, settings, request, now)
 
     def _earlier_requests(
@@ -136,10 +140,13 @@ class SendPaymentLinkUseCase(
 
 
 def is_still_open(subject: BookingDocument | LeadDocument, now: Microseconds) -> bool:
-    """A booking not started yet that still waits for its visit; any open request."""
+    """
+    A booking not started yet that still waits for its visit; a request
+    staff have not closed (won or lost).
+    """
 
     if isinstance(subject, LeadDocument):
-        return True
+        return subject.status in OPEN_LEAD_STATUSES
 
     starts_at: int = int(subject.starts_at) * MICROSECONDS_PER_SECOND
     return subject.status in OPEN_BOOKING_STATUSES and starts_at > int(now)

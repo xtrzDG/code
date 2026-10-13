@@ -4,6 +4,7 @@ from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import LeadView
 from app.schemas.dto.operations.leads import LeadListItem
+from app.utilities.deposits.deposit_row_views import deposit_row_view
 
 
 def build_lead_view(lead: LeadDocument) -> LeadView:
@@ -42,4 +43,5 @@ def build_lead_list_item(
         status=lead.status,
         is_sandbox=lead.is_sandbox,
         created_at=lead.created_at,
+        deposit=deposit_row_view(lead.deposit),
     )

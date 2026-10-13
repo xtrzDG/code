@@ -8,9 +8,9 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.deposits.deposit_views import BookingDepositView
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.localization.constrained_strings import TimezoneName
+from app.utilities.deposits.deposit_row_views import deposit_row_view
 from app.utilities.scheduling.zoned_time import (
     minute_of_day,
     to_local_date,
@@ -69,15 +69,5 @@ def build_booking_view(
         ),
         value_minor=booking.value_minor,
         currency_code=booking.currency_code,
-        deposit=(
-            None
-            if booking.deposit is None
-            else BookingDepositView(
-                request_id=booking.deposit.request_id,
-                status=booking.deposit.status,
-                amount_minor=booking.deposit.amount_minor,
-                currency_code=booking.deposit.currency_code,
-                hold_expires_at=booking.deposit.hold_expires_at,
-            )
-        ),
+        deposit=deposit_row_view(booking.deposit),
     )

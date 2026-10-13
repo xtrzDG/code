@@ -60,6 +60,7 @@ class DepositWorld(DepositStore):
             issuing=DepositIssuing(
                 request_repo=self.deposit_request_repo,
                 booking_repo=self.booking_repo,
+                lead_repo=self.lead_repo,
                 lines=self.lines,
             ),
             lock_registry=self.lock_registry,
@@ -73,6 +74,7 @@ class DepositWorld(DepositStore):
             deposit_request_repo=self.deposit_request_repo,
             deposit_settings_repo=self.deposit_settings_repo,
             booking_repo=self.booking_repo,
+            lead_repo=self.lead_repo,
             lock_registry=self.lock_registry,
             audit_log_repo=self.audit_repo,
             live_events=self.live_events,
@@ -88,6 +90,7 @@ class DepositWorld(DepositStore):
             hold_release=DepositHoldRelease(
                 request_repo=self.deposit_request_repo,
                 booking_repo=self.booking_repo,
+                lead_repo=self.lead_repo,
                 lock_registry=self.lock_registry,
             ),
             notices=DepositNotices(

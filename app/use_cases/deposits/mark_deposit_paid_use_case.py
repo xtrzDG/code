@@ -2,7 +2,10 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import BusinessLockRegistryContract
-from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.booking_repositories import (
+    BookingRepoContract,
+    LeadRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.deposit_repositories import (
     DepositRequestRepoContract,
@@ -13,7 +16,7 @@ from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.deposits import DepositRefusalCode, DepositStatus
 from app.schemas.constants.live_events import LiveEventKind
-from app.schemas.domain.bookings import BookingDocument
+from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.deposits import DepositRequestDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -28,6 +31,7 @@ from app.use_cases.deposits.deposit_request_views import build_request_view
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.deposits.booking_deposit_state import show_deposit
 from app.utilities.deposits.deposit_refusals import deposit_conflict
+from app.utilities.deposits.lead_deposit_state import follow_lead_deposit
 
 DEPOSIT_REQUEST_ENTITY: AuditEntityName = AuditEntityName("deposit_request")
 HELD_STATUSES: frozenset[BookingStatus] = frozenset(
@@ -44,8 +48,9 @@ class MarkDepositPaidUseCase(
     reminder goes, and a booking held for it is confirmed. Under the
     business's booking lock, so it never crosses the release of the hold:
     whichever comes first wins, and a deposit whose hold ran out (the place
-    went back) is refused with STATUS_CHANGED. Marking a paid deposit again
-    changes nothing. Owners and staff; audited.
+    went back) is refused with STATUS_CHANGED. A banquet request shows its
+    deposit paid. Marking a paid deposit again changes nothing. Owners and
+    staff; audited.
     """
 
     def __init__(
@@ -56,6 +61,7 @@ class MarkDepositPaidUseCase(
         deposit_request_repo: DepositRequestRepoContract,
         deposit_settings_repo: DepositSettingsRepoContract,
         booking_repo: BookingRepoContract,
+        lead_repo: LeadRepoContract,
         lock_registry: BusinessLockRegistryContract,
         audit_log_repo: AuditLogRepoContract,
         live_events: EventPublisherFacilitatorContract,
@@ -67,6 +73,7 @@ class MarkDepositPaidUseCase(
         self._request_repo: DepositRequestRepoContract = deposit_request_repo
         self._settings_repo: DepositSettingsRepoContract = deposit_settings_repo
         self._booking_repo: BookingRepoContract = booking_repo
+        self._lead_repo: LeadRepoContract = lead_repo
         self._lock_registry: BusinessLockRegistryContract = lock_registry
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._live_events: EventPublisherFacilitatorContract = live_events
@@ -102,11 +109,18 @@ class MarkDepositPaidUseCase(
                 )
 
             booking: BookingDocument | None = None
+            lead: LeadDocument | None = None
             if paid.booking_id is not None:
                 booking = self._booking_repo.update(
                     business.id,
                     paid.booking_id,
                     lambda held: confirm_booking(held, paid, now),
+                )
+            elif paid.lead_id is not None:
+                lead = self._lead_repo.update(
+                    business.id,
+                    paid.lead_id,
+                    lambda request: follow_lead_deposit(request, paid, now),
                 )
 
         self._audit_log_repo.append(
@@ -125,6 +139,13 @@ class MarkDepositPaidUseCase(
                 LiveEventKind.BOOKING_CHANGED,
                 (booking.id,),
                 is_sandbox=booking.is_sandbox,
+            )
+        if lead is not None:
+            self._live_events.publish(
+                business.id,
+                LiveEventKind.LEAD_CHANGED,
+                (lead.id,),
+                is_sandbox=lead.is_sandbox,
             )
         return build_request_view(
             paid, self._settings_repo.get_by_business(business.id)

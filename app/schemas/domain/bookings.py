@@ -111,8 +111,15 @@ class BookingDocument(BaseDocument):
 
 
 class LeadDocument(BaseDocument):
-    """Request for a manager (concept table `leads`)."""
+    """
+    Request for a manager (concept table `leads`).
 
+    `deposit` is the deposit asked for a banquet request
+    (`DepositRequestDocument` holds the rest), None when none was.
+    """
+
+    # 2: `deposit` (optional; no deposit was ever asked of older rows).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: LeadId = Field(default_factory=LeadId)
     business_id: BusinessId
     contact_id: ContactId
@@ -125,3 +132,4 @@ class LeadDocument(BaseDocument):
     source_channel: ChannelKind
     status: LeadStatus = LeadStatus.NEW
     is_sandbox: IsSandboxConversation = False
+    deposit: BookingDeposit | None = None

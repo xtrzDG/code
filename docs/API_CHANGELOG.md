@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-12 — deposits and payment links
 
-Spec: `aebc2c6b0704bd3c`
+Spec: `726c92e6f5d5f47b`
 
 - **Added** the deposit settings of a business:
   `GET·PUT /v1/businesses/{business_id}/deposit-settings` (on or off, the
@@ -48,6 +48,10 @@ Spec: `aebc2c6b0704bd3c`
 - **Changed** (additive) the assistant's tool names (`tools` of a version,
   `tool_name` of a message's tool calls): `send_payment_link`, stored only
   once the `send_payment_link_tool` release gate opens.
+- **Changed** (additive) the lead row (`GET …/leads`, a conversation's
+  `leads`): `deposit` (same shape as on a booking) once a deposit was asked
+  for a banquet request; `POST …/deposits/{deposit_id}/paid` marks it paid
+  too (the request keeps its status).
 
 ## 2026-10-07 — webhook switch-off notices, bookings written to Cal.com
 

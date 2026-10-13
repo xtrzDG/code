@@ -92,6 +92,14 @@ class SweepDepositsUseCase(UseCaseContract[JobTick, JobReport]):
         return JobReport(processed_count=ProcessedItemCount(done))
 
     def _after_release(self, released: ReleasedHold, now: Microseconds) -> None:
+        if released.lead is not None:
+            self._live_events.publish(
+                released.lead.business_id,
+                LiveEventKind.LEAD_CHANGED,
+                (released.lead.id,),
+                is_sandbox=released.lead.is_sandbox,
+            )
+
         booking = released.booking
         if booking is None or not released.was_booking_held:
             return

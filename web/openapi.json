@@ -17510,7 +17510,7 @@
       },
       "LeadDocument": {
         "additionalProperties": false,
-        "description": "Request for a manager (concept table `leads`).",
+        "description": "Request for a manager (concept table `leads`).\n\n`deposit` is the deposit asked for a banquet request\n(`DepositRequestDocument` holds the rest), None when none was.",
         "properties": {
           "budget": {
             "anyOf": [
@@ -17546,6 +17546,16 @@
             "description": "Creation wall-clock UNIX timestamp in microseconds.",
             "title": "Created At",
             "type": "integer"
+          },
+          "deposit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingDeposit"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "details": {
             "title": "Details",
@@ -17591,8 +17601,7 @@
             "title": "Requested Date"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -17621,7 +17630,7 @@
       },
       "LeadListItem": {
         "additionalProperties": false,
-        "description": "Lead with the contact it came from.",
+        "description": "Lead with the contact it came from; `deposit` is the deposit asked for\na banquet request, if any.",
         "properties": {
           "budget": {
             "anyOf": [
@@ -17681,6 +17690,16 @@
           "created_at": {
             "title": "Created At",
             "type": "integer"
+          },
+          "deposit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingDepositView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "details": {
             "title": "Details",

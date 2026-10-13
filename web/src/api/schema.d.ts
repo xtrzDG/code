@@ -11955,6 +11955,9 @@ export interface components {
         /**
          * LeadDocument
          * @description Request for a manager (concept table `leads`).
+         *
+         *     `deposit` is the deposit asked for a banquet request
+         *     (`DepositRequestDocument` holds the rest), None when none was.
          */
         LeadDocument: {
             /** Budget */
@@ -11970,6 +11973,7 @@ export interface components {
              * @description Creation wall-clock UNIX timestamp in microseconds.
              */
             created_at?: number;
+            deposit?: components["schemas"]["BookingDeposit"] | null;
             /** Details */
             details: string;
             /** Id */
@@ -11986,8 +11990,7 @@ export interface components {
             requested_date?: string | null;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             source_channel: components["schemas"]["ChannelKind"];
@@ -12001,7 +12004,8 @@ export interface components {
         };
         /**
          * LeadListItem
-         * @description Lead with the contact it came from.
+         * @description Lead with the contact it came from; `deposit` is the deposit asked for
+         *     a banquet request, if any.
          */
         LeadListItem: {
             /** Budget */
@@ -12018,6 +12022,7 @@ export interface components {
             conversation_id?: string | null;
             /** Created At */
             created_at: number;
+            deposit?: components["schemas"]["BookingDepositView"] | null;
             /** Details */
             details: string;
             /** Id */

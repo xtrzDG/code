@@ -1,9 +1,9 @@
 """
 Letting a lapsed hold go: under the business's booking lock, a deposit
 still AWAITING whose hold ran out becomes EXPIRED, and the booking held
-for it is cancelled (its place goes back, to the waitlist first). A
-payment marked a moment earlier wins: the deposit is then PAID and
-nothing is released.
+for it is cancelled (its place goes back, to the waitlist first); a
+banquet request only shows its link lapsed. A payment marked a moment
+earlier wins: the deposit is then PAID and nothing is released.
 """
 
 from dataclasses import dataclass
@@ -11,33 +11,42 @@ from dataclasses import dataclass
 from typed_time_provider import Microseconds
 
 from app.contracts.operations import BusinessLockRegistryContract
-from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.booking_repositories import (
+    BookingRepoContract,
+    LeadRepoContract,
+)
 from app.contracts.repositories.deposit_repositories import (
     DepositRequestRepoContract,
 )
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.deposits import DepositStatus
-from app.schemas.domain.bookings import BookingDocument
+from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.deposits import DepositRequestDocument
 from app.utilities.deposits.booking_deposit_state import (
     is_held_for_deposit,
     show_deposit,
 )
+from app.utilities.deposits.lead_deposit_state import follow_lead_deposit
 
 
 @dataclass(frozen=True)
 class ReleasedHold:
-    """A deposit that lapsed, and the booking it released (if one was held)."""
+    """
+    A deposit that lapsed, and the booking it released (if one was held)
+    or the banquet request that shows it lapsed.
+    """
 
     request: DepositRequestDocument
     booking: BookingDocument | None
     was_booking_held: bool
+    lead: LeadDocument | None = None
 
 
 @dataclass(frozen=True)
 class DepositHoldRelease:
     request_repo: DepositRequestRepoContract
     booking_repo: BookingRepoContract
+    lead_repo: LeadRepoContract
     lock_registry: BusinessLockRegistryContract
 
     def release(
@@ -53,7 +62,16 @@ class DepositHoldRelease:
                 return None
 
             if lapsed.booking_id is None:
-                return ReleasedHold(lapsed, None, False)
+                lead: LeadDocument | None = (
+                    None
+                    if lapsed.lead_id is None
+                    else self.lead_repo.update(
+                        request.business_id,
+                        lapsed.lead_id,
+                        lambda stored: follow_lead_deposit(stored, lapsed, now),
+                    )
+                )
+                return ReleasedHold(lapsed, None, False, lead)
 
             before: BookingDocument | None = self.booking_repo.get(
                 request.business_id, lapsed.booking_id
