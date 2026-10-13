@@ -1531,7 +1531,11 @@ motion.
   and the Overview's tiles count to the new period's numbers; channel and
   plan cards tilt (`TiltCard`, level while a field inside has focus); the
   setup finale shows the landing's 3D orb (`FinaleOrb`: the scene's lazy
-  chunk where the hero would get it, the flat drawing elsewhere).
+  chunk wherever WebGL exists, phones included, under the hero's other
+  rules, `finaleOrbPlan`; the flat drawing elsewhere).
+- **Few prefetches at once**: the links of "More" and the account menu
+  (`IntentLink`) fetch their page when a finger, the pointer or the focus
+  comes to them, not all thirty when the sheet opens.
 - **Taps paint first**: a choice whose page redraws (the Overview's
   period, the inbox views: `useOptimisticChoice`) shows as chosen at once
   and changes the page after the browser has painted that, in a transition;

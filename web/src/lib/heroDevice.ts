@@ -79,3 +79,12 @@ export function heroPlan(signals: DeviceSignals): HeroPlan {
   }
   return { kind: "scene" };
 }
+
+/**
+ * The setup finale's orb (FinaleOrb): the hero's rules but the layout's. The
+ * orb has a box of its own on every screen, so a phone or a narrow window
+ * that passes the rest (motion, data, network, a capable device) gets it too.
+ */
+export function finaleOrbPlan(signals: DeviceSignals): HeroPlan {
+  return heroPlan({ ...signals, isWideLayout: true });
+}
