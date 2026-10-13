@@ -23,19 +23,21 @@ from app.schemas.typings.media.strings import DeclaredUploadType
 class WidgetUploadAdmission(ImmutableDTO):
     """
     A website visitor starts an upload (the visitor key from the
-    X-Widget-Session-Key header): counted and checked before a byte of the
-    file is read.
+    X-Widget-Session-Key header) of a file of the type its form part
+    declares: counted and checked before a byte of the file is read.
     """
 
     business_id: BusinessId
     session_key: WidgetSessionKey
     client_ip_address: ClientIpAddress | None = None
+    declared_type: DeclaredUploadType | None = None
 
 
 class WidgetUploadAllowance(ImmutableDTO):
     """
-    The upload may go on: the largest file it may carry (the larger of the
-    photo and voice note caps), so the route reads no more than that.
+    The upload may go on: the largest file it may carry (the cap of the
+    declared kind: a photo is read only up to the photo cap), so the route
+    reads no more than that.
     """
 
     max_file_bytes: MediaByteLimit

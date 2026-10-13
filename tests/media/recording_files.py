@@ -124,6 +124,19 @@ def webm_opus_stream(
     return webm_header(duration_ms=duration_ms) + clusters
 
 
+# A Void element (0xEC) claiming some 2 GB: it runs past the end of any
+# voice note, and a decoder resyncs at the next cluster after it.
+OVERSIZED_VOID: bytes = bytes.fromhex("EC010000007FFFFFFF")
+
+
+def with_element_before_second_cluster(recording: bytes, element: bytes) -> bytes:
+    """`recording` with `element` put in front of its second cluster."""
+
+    cluster_id: bytes = uint(0x1F43B675)
+    second: int = recording.index(cluster_id, recording.index(cluster_id) + 1)
+    return recording[:second] + element + recording[second:]
+
+
 # --- Ogg Opus ----------------------------------------------------------------
 
 OGG_SERIAL: int = 0x5EED

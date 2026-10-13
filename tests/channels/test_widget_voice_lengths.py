@@ -18,10 +18,12 @@ from tests.channels.widget_upload_bed import WidgetUploadBed
 from tests.media.inbound_media_steps import transcription_usage
 from tests.media.mp4_files import fragmented_mp4_recording, mp4_recording
 from tests.media.recording_files import (
+    OVERSIZED_VOID,
     ogg_opus_recording,
     ogg_page,
     webm_opus_stream,
     webm_recording,
+    with_element_before_second_cluster,
 )
 
 RECORDINGS: Path = Path(__file__).parents[1] / "media" / "recordings"
@@ -46,6 +48,14 @@ class TestForgedLengths:
 
         assert refusal(bed.upload(forged, "audio/webm")) == "voice_too_long"
         assert refusal(bed.upload(squeezed, "audio/webm")) == "voice_too_long"
+        assert bed.testbed.media_storage.files == {}
+
+    def test_an_oversized_element_after_a_cluster_does_not_pass(self) -> None:
+        # Measured as 10 s (the first cluster) before; a decoder plays 600 s.
+        bed = WidgetUploadBed()
+        forged = with_element_before_second_cluster(webm_recording(600), OVERSIZED_VOID)
+
+        assert refusal(bed.upload(forged, "audio/webm")) == "unreadable_file"
         assert bed.testbed.media_storage.files == {}
 
     def test_an_ogg_last_page_claiming_a_second_does_not_pass(self) -> None:

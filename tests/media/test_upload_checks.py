@@ -144,11 +144,12 @@ class TestRecordings:
         assert read_webm_audio_seconds(no_tracks + UNKNOWN_SIZE) is None
         assert read_webm_audio_seconds(b"\x1a\x45\xdf\xa3\x00") is None
 
-    def test_a_recording_cut_at_its_end_still_counts(self) -> None:
+    def test_a_recording_cut_at_its_end_is_refused(self) -> None:
         recording = webm_recording(6)
 
-        # The cut last block is dropped; the first one's 20 ms still count.
-        assert read_webm_audio_seconds(recording[:-4]) == 1
+        # MediaRecorder's Blob is whole: a cut file is no recording of it.
+        assert read_webm_audio_seconds(recording) == 6
+        assert read_webm_audio_seconds(recording[:-4]) is None
 
     def test_every_browser_container_is_measured_and_video_refused(self) -> None:
         webm = MessageMediaType("audio/webm")

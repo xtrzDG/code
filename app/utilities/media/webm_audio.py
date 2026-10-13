@@ -9,7 +9,9 @@ times are claims the writer made, so the length is the largest of them
 and of what the blocks hold: each block is one Opus packet, which says
 how long it plays (`opus_packets`). Only a WebM file whose every track is
 Opus audio counts: a video, another codec, compressed or laced blocks, or
-a Matroska file of another kind, is not a voice note.
+a Matroska file of another kind, is not a voice note. Nor is a file cut
+short or with an element running past its end: a decoder resyncs at the
+next cluster and plays on, where a count that stopped there falls short.
 """
 
 import math
@@ -139,8 +141,10 @@ def walk(content: bytes, start: int, end: int, reading: WebmReading) -> None:
 
         data_end: int = position + size
         if data_end > end:
-            # A recording cut at its very end: what came before still counts.
-            return
+            # MediaRecorder's Blob is whole. An element running past the end
+            # is a forgery a decoder skips by resyncing at the next cluster,
+            # whose audio would play but not be counted here.
+            raise WebmStructureError("An element runs past the end of the file.")
 
         read_element(content, element_id, position, data_end, reading, 0)
         position = data_end

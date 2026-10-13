@@ -1,64 +1,86 @@
-"""The widget upload's multipart body, parsed without a form library."""
+"""
+The widget upload's multipart body, read as it streams without a form
+library: the same file comes out whatever the chunks the body arrives in,
+and anything but one `file` part is refused.
+"""
 
 import pytest
 
-from app.gateways.http.multipart_upload import parse_file_part
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from tests.channels.multipart_bodies import (
+    BOUNDARY,
+    FORM,
+    multipart_body,
+    read_upload,
+)
 
-BOUNDARY: str = "----widget7MA4YWxkTrZu0gW"
-FORM: str = f"multipart/form-data; boundary={BOUNDARY}"
-
-
-def body(*parts: tuple[str, bytes, str | None]) -> bytes:
-    """A multipart body of (field name, content, content type) parts."""
-
-    chunks: list[bytes] = []
-    for name, content, content_type in parts:
-        headers = f'Content-Disposition: form-data; name="{name}"; filename="x"\r\n'
-        if content_type is not None:
-            headers += f"Content-Type: {content_type}\r\n"
-        chunks.append(
-            f"--{BOUNDARY}\r\n".encode()
-            + headers.encode()
-            + b"\r\n"
-            + content
-            + b"\r\n"
-        )
-    return b"".join(chunks) + f"--{BOUNDARY}--\r\n".encode()
+# One byte at a time, odd sizes that split the boundary, the whole body.
+CHUNK_SIZES: list[int] = [1, 3, 17, 64, 1000, 1_000_000]
 
 
-def test_the_file_part_comes_with_its_declared_type() -> None:
-    content = b"\x89PNG\r\n\x1a\n\r\n--not-the-boundary\r\n" + bytes(range(256))
+@pytest.mark.parametrize("chunk_size", CHUNK_SIZES)
+def test_the_file_part_comes_with_its_declared_type(chunk_size: int) -> None:
+    content = (
+        b"\x89PNG\r\n\x1a\n\r\n--not-the-boundary\r\n"
+        + b"\r\n--"
+        + BOUNDARY.encode()[:-1]
+        + b"!"
+        + bytes(range(256))
+    )
 
-    part = parse_file_part(body(("file", content, "image/png")), FORM)
+    declared, file = read_upload(
+        multipart_body(("file", content, "image/png")), chunk_size=chunk_size
+    )
 
-    assert part.content == content
-    assert part.declared_type == "image/png"
+    assert file == content
+    assert declared == "image/png"
 
 
-def test_a_quoted_boundary_and_a_missing_type_are_read() -> None:
+@pytest.mark.parametrize("chunk_size", CHUNK_SIZES)
+def test_a_file_ending_like_a_line_break_keeps_its_bytes(chunk_size: int) -> None:
+    content = b"abc\r\n\r\n-"
+
+    _, file = read_upload(
+        multipart_body(("file", content, None)), chunk_size=chunk_size
+    )
+
+    assert file == content
+
+
+def test_a_quoted_boundary_a_preamble_and_a_missing_type_are_read() -> None:
     quoted = f'multipart/form-data; boundary="{BOUNDARY}"'
+    body = b"a preamble the form may have\r\n" + multipart_body(("file", b"abc", None))
 
-    part = parse_file_part(body(("file", b"abc", None)), quoted)
+    assert read_upload(body, quoted) == (None, b"abc")
+    assert read_upload(multipart_body(("file", b"", None))) == (None, b"")
 
-    assert (part.content, part.declared_type) == (b"abc", None)
 
-
+@pytest.mark.parametrize("chunk_size", [1, 1_000_000])
 @pytest.mark.parametrize(
     ("raw", "content_type"),
     [
-        (body(("file", b"a", None), ("file", b"b", None)), FORM),
-        (body(("photo", b"a", None)), FORM),
-        (body(), FORM),
-        (body(("file", b"a", None)), "application/json"),
-        (body(("file", b"a", None)), "multipart/form-data"),
-        (body(("file", b"a", None)), None),
-        (body(("file", b"a", None))[:-12], FORM),
+        (multipart_body(("file", b"a", None), ("file", b"b", None)), FORM),
+        (multipart_body(("photo", b"a", None)), FORM),
+        (multipart_body(("note", b"a", None), ("file", b"b", None)), FORM),
+        (multipart_body(), FORM),
+        (multipart_body(("file", b"a", None)), "application/json"),
+        (multipart_body(("file", b"a", None)), "multipart/form-data"),
+        (multipart_body(("file", b"a", None)), None),
+        (multipart_body(("file", b"a", None))[:-12], FORM),
+        (multipart_body(("file", b"a", None))[:-4], FORM),
         (b"--" + BOUNDARY.encode() + b"\r\nno headers end", FORM),
+        (b"", FORM),
     ],
 )
 def test_anything_but_one_file_part_is_refused(
-    raw: bytes, content_type: str | None
+    raw: bytes, content_type: str | None, chunk_size: int
 ) -> None:
     with pytest.raises(ValidationFailedError):
-        parse_file_part(raw, content_type)
+        read_upload(raw, content_type, chunk_size=chunk_size)
+
+
+def test_a_head_longer_than_the_form_needs_is_refused() -> None:
+    preamble = bytes(17 * 1024)
+
+    with pytest.raises(ValidationFailedError):
+        read_upload(preamble + multipart_body(("file", b"abc", None)))

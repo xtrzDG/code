@@ -27,12 +27,14 @@ from tests.media.mp4_files import (
     mp4_recording,
 )
 from tests.media.recording_files import (
+    OVERSIZED_VOID,
     ebml,
     ogg_opus_recording,
     ogg_page,
     webm_header,
     webm_opus_stream,
     webm_recording,
+    with_element_before_second_cluster,
 )
 
 WEBM: MessageMediaType = MessageMediaType("audio/webm")
@@ -75,6 +77,18 @@ class TestForgedWebm:
         squeezed = webm_opus_stream(10_000, spacing_ms=0, duration_ms=1000.0)
 
         assert measure_voice_note(squeezed, WEBM) == TEN_MINUTES
+
+    def test_an_element_running_past_the_end_does_not_cut_the_count(self) -> None:
+        # Ten minutes, the header saying 1 s, an oversized Void after the
+        # first cluster: the count stopped there at 10 s while a decoder
+        # resyncs at the next cluster and plays all ten minutes.
+        recording = webm_recording(TEN_MINUTES, header_duration=True).replace(
+            struct.pack(">d", TEN_MINUTES * 1000.0), struct.pack(">d", 1000.0)
+        )
+        forged = with_element_before_second_cluster(recording, OVERSIZED_VOID)
+
+        assert measure_voice_note(forged, WEBM) is None
+        assert measure_audio_seconds(forged, WEBM) is None
 
     def test_honest_recordings_keep_their_length(self) -> None:
         assert measure_voice_note(webm_opus_stream(1000), WEBM) == 60

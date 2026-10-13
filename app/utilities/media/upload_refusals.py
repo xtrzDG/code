@@ -30,6 +30,9 @@ REFUSAL_MESSAGES: dict[WidgetUploadRefusal, str] = {
     WidgetUploadRefusal.UNREADABLE_FILE: (
         "The file's structure does not add up, or its length cannot be read."
     ),
+    WidgetUploadRefusal.UPLOAD_TOO_SLOW: (
+        "The file did not arrive in time: send it again."
+    ),
     WidgetUploadRefusal.ATTACHMENT_ALREADY_SENT: (
         "The attachment already went with an earlier message."
     ),

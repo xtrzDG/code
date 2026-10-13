@@ -361,11 +361,20 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 Загрузка посетителя — недоверенные байты:
 
 - `POST /v1/widget/{id}/attachments` (`widget_attachment_routes.py`):
-  `AdmitWidgetUploadUseCase` сначала считает лимиты (`WIDGET_UPLOAD_LIMITS`
-  на посетителя, сеть, бизнес, платформу) и проверяет, что чат включён, и
-  только потом маршрут читает тело не длиннее большего из лимитов фото и
-  голосового (`read_limited_body`, плюс `MULTIPART_OVERHEAD_BYTES` на
-  заголовки частей); `AcceptWidgetUploadUseCase` читает тип
+  загрузка сначала занимает одно из мест процесса
+  (`WidgetUploadSlotsFacilitator`: `MEDIA_MAX_CONCURRENT_UPLOADS`, не больше
+  двух на сеть клиента; занято — сразу 429 с `Retry-After`, ничего не
+  читается), так что одновременно в памяти лишь несколько файлов. Тело
+  читается потоком (`multipart_file_stream.py`): сначала заголовки части
+  (не больше `MULTIPART_OVERHEAD_BYTES`), затем
+  `AdmitWidgetUploadUseCase` считает лимиты (`WIDGET_UPLOAD_LIMITS` на
+  посетителя, сеть, бизнес, платформу), проверяет, что чат включён, и по
+  заявленному типу части отказывает в чужом типе (`unsupported_type`) или
+  выбирает предел его вида — фото читается не дальше
+  `MEDIA_MAX_IMAGE_BYTES`, голосовое не дальше `MEDIA_MAX_VOICE_BYTES`; байты
+  файла идут в один буфер (тело целиком и его копии не держатся), чтение
+  обрывается на пределе (`file_too_large`), а тело, не пришедшее за 120 с,
+  получает `upload_too_slow` и отдаёт место; `AcceptWidgetUploadUseCase` читает тип
   по байтам (`upload_checks.py`: заявленный тип должен совпасть), у JPEG,
   PNG и WebP пересобирает файл без метаданных (EXIF остаётся только с
   ориентацией), меряет голосовое по самому звуку (`voice_note_length.py`):
@@ -374,8 +383,9 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   AAC и пакеты Opus в таблицах сэмплов и фрагментах MP4, — так что
   подделанная длительность в заголовке, последней странице Ogg или `mvhd`
   запись не укорачивает; видео, другой кодек, сжатые или зашифрованные
-  кадры, блоки с lacing, страницы Ogg с неверной CRC и повторённые боксы
-  MP4 — отказ; и кладёт файл в зашифрованное хранилище медиа
+  кадры, блоки с lacing, элемент WebM длиннее остатка файла (декодер
+  пропустил бы его и сыграл кластеры за ним), страницы Ogg с неверной CRC и
+  повторённые боксы MP4 — отказ; и кладёт файл в зашифрованное хранилище медиа
   (`widget-uploads/{бизнес}/…`) с записью `WidgetUploadDocument`
   (`widget_uploads`, миграция 1191, RLS по бизнесу), привязанной к
   `WidgetVisitorId` — хешу ключа посетителя;
@@ -392,8 +402,8 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   голосовое ещё раз и берёт большее из заявленной и измеренной длины
   (`fetch_inbound_media_use_case.py`, так лимит MEDIA_MAX_VOICE_SECONDS
   держится в любом канале), расшифровывает его `TranscribeVoiceNoteUseCase`
-  (в TRANSCRIPTION_SECONDS — секунды, которые сервис назвал оплаченными,
-  иначе измеренная длина), фото уходит модели;
+  (в TRANSCRIPTION_SECONDS — большее из измеренной длины и секунд, которые
+  сервис назвал оплаченными), фото уходит модели;
 - неотправленные загрузки старше суток удаляет ежедневная чистка
   (`PurgeStaleWidgetUploadsUseCase` в цепочке `purge_expired_recordings`,
   с записью в журнал аудита); копия отправленного файла живёт по сроку

@@ -2,8 +2,12 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.config import ConfigContainer
 from app.containers.integration_facilitators import IntegrationFacilitatorsContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.facilitators.channels.widget_upload_slots_facilitator import (
+    WidgetUploadSlotsFacilitator,
+)
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
 )
@@ -22,12 +26,14 @@ class LiveFacilitatorsContainer(containers.DeclarativeContainer):
     Live updates over the live event bus: use cases publish what changed
     (ids only); the cabinet's SSE route opens streams, at most a few per
     person and process; the website chat's SSE route opens one per open
-    widget, which hears only its own visitor's typing and answers. A child
-    of FacilitatorsContainer, which names its providers flat
-    (`facilitators.event_publisher`).
+    widget, which hears only its own visitor's typing and answers; the
+    website chat's uploads take one of a few places of the process each
+    (MEDIA_MAX_CONCURRENT_UPLOADS). A child of FacilitatorsContainer, which
+    names its providers flat (`facilitators.event_publisher`).
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     integrations: IntegrationFacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -49,4 +55,8 @@ class LiveFacilitatorsContainer(containers.DeclarativeContainer):
         WidgetEventStreamFacilitator,
         bus=adapters.live_event_bus,
         limits=widget_stream_limits,
+    )
+    widget_upload_slots: Singleton[WidgetUploadSlotsFacilitator] = Singleton(
+        WidgetUploadSlotsFacilitator,
+        uploads_at_once=config.app_settings.provided.media.max_concurrent_uploads,
     )

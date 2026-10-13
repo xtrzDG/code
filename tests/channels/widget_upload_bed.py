@@ -4,10 +4,14 @@ business with its website chat switched on, and helpers that upload files
 and send messages naming them, as the widget does.
 """
 
+from collections.abc import Callable
 from typing import Any
 
 from fastapi.testclient import TestClient
 
+from app.facilitators.channels.widget_upload_slots_facilitator import (
+    WidgetUploadSlotsFacilitator,
+)
 from app.gateways.http.widget_attachment_routes import build_widget_attachment_router
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
@@ -38,14 +42,26 @@ SMALL_MEDIA_LIMITS: dict[str, str] = {
 }
 
 
+def keep_as_is(operator: Any) -> Any:
+    return operator
+
+
 class WidgetUploadBed:
     """A widget with uploads, over the in-memory channels testbed."""
 
-    def __init__(self, settings: AppSettings | None = None) -> None:
+    def __init__(
+        self,
+        settings: AppSettings | None = None,
+        wrap_accept: Callable[[Any], Any] | None = None,
+        upload_read_seconds: float = 120.0,
+    ) -> None:
         self.testbed = ChannelsTestbed(settings or build_settings(**SMALL_MEDIA_LIMITS))
         self.business = enable_widget(self.testbed)
         self.client: TestClient = self.testbed.build_http_client()
         testbed = self.testbed
+        self.upload_slots = WidgetUploadSlotsFacilitator(
+            testbed.settings.media.max_concurrent_uploads
+        )
         self.client.app.include_router(  # type: ignore[attr-defined]
             build_widget_attachment_router(
                 admit_widget_upload_operator=wrap_use_case(
@@ -57,14 +73,18 @@ class WidgetUploadBed:
                         testbed.wall_clock,
                     )
                 ),
-                accept_widget_upload_operator=wrap_use_case(
-                    AcceptWidgetUploadUseCase(
-                        testbed.widget_upload_repo,
-                        testbed.media_storage,
-                        testbed.settings.media,
-                        testbed.wall_clock,
+                accept_widget_upload_operator=(wrap_accept or keep_as_is)(
+                    wrap_use_case(
+                        AcceptWidgetUploadUseCase(
+                            testbed.widget_upload_repo,
+                            testbed.media_storage,
+                            testbed.settings.media,
+                            testbed.wall_clock,
+                        )
                     )
                 ),
+                upload_slots=self.upload_slots,
+                upload_read_seconds=upload_read_seconds,
             )
         )
 

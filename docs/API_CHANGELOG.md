@@ -27,7 +27,15 @@ Spec: `a85340491efee9c5`
   `unsupported_type`, `type_mismatch`, `file_too_large`, `voice_too_long`,
   `unreadable_file`); a voice message's length is the longest of what its
   container claims and what its audio packets hold, so a forged header
-  does not shorten it; limited like messages (429).
+  does not shorten it (a WebM element running past the end of the file is
+  `unreadable_file`); limited like messages (429). The body is read as it
+  streams: the type its part declares is checked first (`unsupported_type`
+  before the file is read) and picks the cap of its kind, so a photo is
+  read only up to `MEDIA_MAX_IMAGE_BYTES`; a body that has not arrived
+  within 120 s is `upload_too_slow`. An API process takes at most
+  `MEDIA_MAX_CONCURRENT_UPLOADS` uploads at once, two per client network
+  (429 `too_many_uploads_at_once` or `too_many_uploads_from_address` with
+  `Retry-After: 5`).
 - **Changed** (additive) `POST /v1/widget/{business_id}/messages`:
   `attachment_ids` (at most four uploads of the same visitor, at most a
   day old, each sent once); a message with uploads may have no `text`. An

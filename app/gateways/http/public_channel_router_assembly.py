@@ -49,6 +49,7 @@ def build_public_channel_router(app_container: AppContainer) -> APIRouter:
         build_widget_attachment_router(
             admit_widget_upload_operator=visitors.admit_widget_upload_operator(),
             accept_widget_upload_operator=visitors.accept_widget_upload_operator(),
+            upload_slots=app_container.facilitators.live.widget_upload_slots(),
             widget_origin_guard=widget_origin_guard_of(operators),
         )
     )

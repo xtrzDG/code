@@ -101,7 +101,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     # Live updates of cabinets and website chats (ids only).
     live: LiveFacilitatorsContainer = Container(  # type: ignore[assignment]
         LiveFacilitatorsContainer, adapters=adapters, time_provider=time_provider,
-        integrations=integrations,
+        integrations=integrations, config=config,
     )  # fmt: skip
     event_publisher = live.event_publisher
     live_stream_limits = live.live_stream_limits

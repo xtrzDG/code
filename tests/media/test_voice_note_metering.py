@@ -2,7 +2,8 @@
 The worker measures every voice note it keeps and never takes a shorter
 length on the sender's word, so the MEDIA_MAX_VOICE_SECONDS cap holds for
 every channel; transcription is metered by the seconds the service says
-it billed when it says so (both took the stated length before).
+it billed when that is longer than the measured length (both took the
+stated length before, and a shorter billed count was metered as given).
 """
 
 from app.schemas.constants.media import AttachmentProblem
@@ -62,6 +63,22 @@ class TestBilledSeconds:
         assert voice.duration_seconds == 7
         [usage] = transcription_usage(testbed, business.id)
         assert int(usage.quantity) == 45
+
+    def test_a_billed_count_below_the_measured_length_is_not_metered(self) -> None:
+        testbed = ChannelsTestbed()
+        business, channel = connect_bot(testbed)
+        testbed.media_fetcher.files["voice-file-0001"] = ogg_opus_bytes(seconds=240)
+        # A shorter billed count (or none, as token-billed models) meters
+        # what was measured: 240 s, not 5 s.
+        testbed.voice_transcriber.billed_seconds = 5
+
+        post_update(testbed, channel, telegram_update(0))
+        testbed.run_worker()
+
+        [voice] = read_attachments(testbed)
+        assert voice.duration_seconds == 240
+        [usage] = transcription_usage(testbed, business.id)
+        assert int(usage.quantity) == 240
 
     def test_without_a_billed_count_the_measured_length_is_metered(self) -> None:
         testbed = ChannelsTestbed()

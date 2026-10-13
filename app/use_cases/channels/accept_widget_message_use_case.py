@@ -50,8 +50,9 @@ class AcceptWidgetMessageUseCase(
     widget's random session key; the page's source tag, cut to a tag (or
     dropped), goes with the message. A message has text, uploads
     (`attachment_ids`, POST .../attachments) or both; each upload must be
-    the visitor's own, not attached to a message yet and at most a day
-    old (404 otherwise); queueing the message claims it.
+    the visitor's own and at most a day old (422 `attachment_unavailable`
+    otherwise) and not sent with a message yet (422
+    `attachment_already_sent`); queueing the message claims it.
 
     The endpoint is public and every message costs a model call, so
     messages are limited per visitor, per client network (an IPv6 /64), per
