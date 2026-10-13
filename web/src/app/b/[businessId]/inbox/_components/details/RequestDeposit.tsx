@@ -4,10 +4,7 @@ import { queryCache } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { DepositPayment } from "@/components/deposits/DepositPayment";
-import type {
-  ConversationDetailView,
-  LeadListItem,
-} from "@/components/insights/types";
+import type { ConversationDetailView, LeadListItem } from "@/components/insights/types";
 
 import { cardWithPaidRequestDeposit } from "../../_lib/cardUpdates";
 
@@ -24,9 +21,8 @@ export function RequestDeposit({ lead }: { lead: LeadListItem }) {
   const conversationId = lead.conversation_id ?? null;
   const showPaid = () => {
     if (conversationId) {
-      queryCache.update<ConversationDetailView>(
-        queryKeys.conversations.detail(business.id, conversationId),
-        (card) => cardWithPaidRequestDeposit(card, lead.id),
+      queryCache.update<ConversationDetailView>(queryKeys.conversations.detail(business.id, conversationId), (card) =>
+        cardWithPaidRequestDeposit(card, lead.id),
       );
     }
   };

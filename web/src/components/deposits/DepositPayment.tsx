@@ -57,9 +57,7 @@ export function DepositPayment({
         <DepositBadge status={deposit.status} />
       </div>
       {deposit.status === "awaiting" && deposit.hold_expires_at ? (
-        <p className="text-ink-muted">
-          {t(heldUntilKey, { time: format.dateTime(deposit.hold_expires_at) })}
-        </p>
+        <p className="text-ink-muted">{t(heldUntilKey, { time: format.dateTime(deposit.hold_expires_at) })}</p>
       ) : null}
       {reference ? (
         <p className="text-ink-muted">
@@ -74,45 +72,21 @@ export function DepositPayment({
           ) : null}
         </p>
       ) : null}
-      {deposit.status === "refund_due" ? (
-        <Alert tone="warning">{t("deposits.booking.refundDue")}</Alert>
-      ) : null}
+      {deposit.status === "refund_due" ? <Alert tone="warning">{t("deposits.booking.refundDue")}</Alert> : null}
       {canMarkPaid(deposit) && !isConfirming ? (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setConfirming(true)}
-        >
+        <Button size="sm" variant="secondary" onClick={() => setConfirming(true)}>
           {t("deposits.booking.markPaid")}
         </Button>
       ) : null}
       {canMarkPaid(deposit) && isConfirming ? (
-        <div
-          role="group"
-          aria-label={t("deposits.booking.confirmTitle")}
-          className="space-y-2 rounded-xl bg-surface-muted p-3"
-        >
-          <p className="font-medium text-ink">
-            {t("deposits.booking.confirmTitle")}
-          </p>
-          <p className="text-ink-muted">
-            {t(confirmKey, { amount, reference: reference ?? "–" })}
-          </p>
+        <div role="group" aria-label={t("deposits.booking.confirmTitle")} className="space-y-2 rounded-xl bg-surface-muted p-3">
+          <p className="font-medium text-ink">{t("deposits.booking.confirmTitle")}</p>
+          <p className="text-ink-muted">{t(confirmKey, { amount, reference: reference ?? "–" })}</p>
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              autoFocus
-              isLoading={markPaid.isPending}
-              onClick={() => void confirm()}
-            >
+            <Button size="sm" autoFocus isLoading={markPaid.isPending} onClick={() => void confirm()}>
               {t("deposits.booking.confirm")}
             </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={markPaid.isPending}
-              onClick={() => setConfirming(false)}
-            >
+            <Button size="sm" variant="secondary" disabled={markPaid.isPending} onClick={() => setConfirming(false)}>
               {t("common.cancel")}
             </Button>
           </div>
