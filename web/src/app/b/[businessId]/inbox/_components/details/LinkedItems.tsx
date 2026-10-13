@@ -4,8 +4,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
+import { DepositBadge } from "@/components/deposits/DepositBadge";
 import { IconPlus } from "@/components/icons";
-import { BookingStatusBadge, HandoffStatusBadge, HandoffUrgencyBadge, LeadStatusBadge } from "@/components/insights/Badges";
+import {
+  BookingStatusBadge,
+  HandoffStatusBadge,
+  HandoffUrgencyBadge,
+  LeadStatusBadge,
+} from "@/components/insights/Badges";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
 import { HANDOFF_REASONS, LEAD_TYPES } from "@/components/insights/labels";
 import { usePartyWording } from "@/components/insights/usePartyWording";
@@ -38,7 +44,12 @@ export function LinkedItems({
   const isEmpty = handoffs.length + leads.length + bookings.length === 0;
 
   const bookButton = onBook ? (
-    <Button variant="secondary" size="sm" leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={onBook}>
+    <Button
+      variant="secondary"
+      size="sm"
+      leadingIcon={<IconPlus className="size-4" aria-hidden />}
+      onClick={onBook}
+    >
       {t("conversations.linked.book")}
     </Button>
   ) : undefined;
@@ -50,14 +61,21 @@ export function LinkedItems({
   return (
     <Card title={t("conversations.linked.title")} actions={bookButton}>
       {isEmpty ? (
-        <p className="text-sm text-ink-muted">{t("conversations.linked.empty")}</p>
+        <p className="text-sm text-ink-muted">
+          {t("conversations.linked.empty")}
+        </p>
       ) : (
         <div className="space-y-4">
           {handoffs.length > 0 ? (
             <LinkedGroup title={t("conversations.linked.handoffs")}>
               {handoffs.map((handoff) => (
-                <li key={handoff.id} className="flex flex-wrap items-center gap-2">
-                  <span className="text-ink">{t(HANDOFF_REASONS[handoff.reason])}</span>
+                <li
+                  key={handoff.id}
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  <span className="text-ink">
+                    {t(HANDOFF_REASONS[handoff.reason])}
+                  </span>
                   <HandoffUrgencyBadge urgency={handoff.urgency} />
                   <HandoffStatusBadge status={handoff.status} />
                 </li>
@@ -68,27 +86,48 @@ export function LinkedItems({
             <LinkedGroup title={t("conversations.linked.leads")}>
               {leads.map((lead) => (
                 <li key={lead.id} className="flex flex-wrap items-center gap-2">
-                  <span className="text-ink">{t(LEAD_TYPES[lead.lead_type])}</span>
+                  <span className="text-ink">
+                    {t(LEAD_TYPES[lead.lead_type])}
+                  </span>
                   {lead.requested_date ? (
-                    <span className="text-ink-muted">{formatLocalDate(lead.requested_date, locale)}</span>
+                    <span className="text-ink-muted">
+                      {formatLocalDate(lead.requested_date, locale)}
+                    </span>
                   ) : null}
                   <LeadStatusBadge status={lead.status} />
+                  {lead.deposit ? (
+                    <DepositBadge status={lead.deposit.status} />
+                  ) : null}
                 </li>
               ))}
             </LinkedGroup>
           ) : null}
           {bookings.length > 0 ? (
-            <LinkedGroup title={t("conversations.linked.bookings")} href={businessPath(businessId, "bookings")}>
+            <LinkedGroup
+              title={t("conversations.linked.bookings")}
+              href={businessPath(businessId, "bookings")}
+            >
               {bookings.map((booking) => (
-                <li key={booking.id} className="flex flex-wrap items-center gap-2">
+                <li
+                  key={booking.id}
+                  className="flex flex-wrap items-center gap-2"
+                >
                   <span className="text-ink">
-                    {formatLocalDate(booking.date, locale, { weekday: "short", day: "numeric", month: "short" })}
-                    {booking.time ? `, ${formatLocalTime(booking.time, locale)}` : ""}
+                    {formatLocalDate(booking.date, locale, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    })}
+                    {booking.time
+                      ? `, ${formatLocalTime(booking.time, locale)}`
+                      : ""}
                   </span>
                   <span dir="auto" data-user-content className="text-ink-muted">
                     {booking.resource_name}
                   </span>
-                  <span className="text-ink-muted">{party.count(booking.party_size, booking.resource_id)}</span>
+                  <span className="text-ink-muted">
+                    {party.count(booking.party_size, booking.resource_id)}
+                  </span>
                   <BookingStatusBadge status={booking.status} />
                 </li>
               ))}
@@ -101,14 +140,25 @@ export function LinkedItems({
 }
 
 /** A group of what the conversation produced; `href` leads to its own page (bookings). */
-function LinkedGroup({ title, href, children }: { title: string; href?: string; children: ReactNode }) {
+function LinkedGroup({
+  title,
+  href,
+  children,
+}: {
+  title: string;
+  href?: string;
+  children: ReactNode;
+}) {
   const { t } = useI18n();
   return (
     <section>
       <div className="mb-1.5 flex items-center justify-between gap-3">
         <h3 className="text-sm font-medium text-ink-muted">{title}</h3>
         {href ? (
-          <Link href={href} className="text-sm font-medium text-accent hover:underline">
+          <Link
+            href={href}
+            className="text-sm font-medium text-accent hover:underline"
+          >
             {t("conversations.linked.open")}
             <span className="sr-only"> {title}</span>
           </Link>

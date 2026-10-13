@@ -1,14 +1,22 @@
 /**
  * Pure changes of cached inbox data after an action on a conversation:
  * the new assignment on its card and on its rows, a resolved handoff, a
- * request's new status, a note more or less. The screens apply them at
+ * request's new status or paid deposit, a note more or less. The screens apply them at
  * once; the live stream brings the server's own copy right after.
  */
 
 import type { PagedData } from "@/api/paging";
-import type { ConversationDetailView, HandoffListItem, LeadStatus } from "@/components/insights/types";
+import type {
+  ConversationDetailView,
+  HandoffListItem,
+  LeadStatus,
+} from "@/components/insights/types";
 
-import type { ConversationAssignmentView, InboxItemView, InboxPage } from "./types";
+import type {
+  ConversationAssignmentView,
+  InboxItemView,
+  InboxPage,
+} from "./types";
 
 export type InboxListData = PagedData<InboxItemView, InboxPage>;
 
@@ -17,11 +25,16 @@ export function cardWithAssignment(
   card: ConversationDetailView,
   assignment: ConversationAssignmentView,
 ): ConversationDetailView {
-  return card.conversation.id === assignment.conversation_id ? { ...card, assignment } : card;
+  return card.conversation.id === assignment.conversation_id
+    ? { ...card, assignment }
+    : card;
 }
 
 /** The rows of a list with the conversation's new assignment. */
-export function rowsWithAssignment(data: InboxListData, assignment: ConversationAssignmentView): InboxListData {
+export function rowsWithAssignment(
+  data: InboxListData,
+  assignment: ConversationAssignmentView,
+): InboxListData {
   if (!data.items.some((item) => item.id === assignment.conversation_id)) {
     return data;
   }
@@ -58,8 +71,13 @@ export function requestedAssignment(
 }
 
 /** The card after a handoff was resolved: the handoff replaced; no open one left, the assistant answers again. */
-export function cardWithResolvedHandoff(card: ConversationDetailView, resolved: HandoffListItem): ConversationDetailView {
-  const handoffs = (card.handoffs ?? []).map((handoff) => (handoff.id === resolved.id ? resolved : handoff));
+export function cardWithResolvedHandoff(
+  card: ConversationDetailView,
+  resolved: HandoffListItem,
+): ConversationDetailView {
+  const handoffs = (card.handoffs ?? []).map((handoff) =>
+    handoff.id === resolved.id ? resolved : handoff,
+  );
   const stillOpen = handoffs.some((handoff) => handoff.status !== "resolved");
   return {
     ...card,
@@ -72,39 +90,83 @@ export function cardWithResolvedHandoff(card: ConversationDetailView, resolved: 
 }
 
 /** The card with a resolved handoff open again: the conversation waits for a person once more. */
-export function cardWithReopenedHandoff(card: ConversationDetailView, reopened: HandoffListItem): ConversationDetailView {
+export function cardWithReopenedHandoff(
+  card: ConversationDetailView,
+  reopened: HandoffListItem,
+): ConversationDetailView {
   return {
     ...card,
-    handoffs: (card.handoffs ?? []).map((handoff) => (handoff.id === reopened.id ? reopened : handoff)),
-    conversation: card.conversation.status === "open" ? { ...card.conversation, status: "handoff" } : card.conversation,
+    handoffs: (card.handoffs ?? []).map((handoff) =>
+      handoff.id === reopened.id ? reopened : handoff,
+    ),
+    conversation:
+      card.conversation.status === "open"
+        ? { ...card.conversation, status: "handoff" }
+        : card.conversation,
   };
 }
 
 /** The card with one request in another status. */
-export function cardWithRequestStatus(card: ConversationDetailView, leadId: string, status: LeadStatus): ConversationDetailView {
+export function cardWithRequestStatus(
+  card: ConversationDetailView,
+  leadId: string,
+  status: LeadStatus,
+): ConversationDetailView {
   return {
     ...card,
-    leads: (card.leads ?? []).map((lead) => (lead.id === leadId ? { ...lead, status } : lead)),
+    leads: (card.leads ?? []).map((lead) =>
+      lead.id === leadId ? { ...lead, status } : lead,
+    ),
+  };
+}
+
+/** The card once staff marked a request's deposit paid (the request keeps its status). */
+export function cardWithPaidRequestDeposit(
+  card: ConversationDetailView,
+  leadId: string,
+): ConversationDetailView {
+  return {
+    ...card,
+    leads: (card.leads ?? []).map((lead) =>
+      lead.id === leadId && lead.deposit
+        ? {
+            ...lead,
+            deposit: { ...lead.deposit, status: "paid", hold_expires_at: null },
+          }
+        : lead,
+    ),
   };
 }
 
 /** The rows of a list with one note more (+1) or less (-1) on a conversation. */
-export function rowsWithNoteDelta(data: InboxListData, conversationId: string, delta: number): InboxListData {
+export function rowsWithNoteDelta(
+  data: InboxListData,
+  conversationId: string,
+  delta: number,
+): InboxListData {
   if (!data.items.some((item) => item.id === conversationId)) {
     return data;
   }
   return {
     ...data,
     items: data.items.map((item) =>
-      item.id === conversationId ? { ...item, note_count: Math.max(0, item.note_count + delta) } : item,
+      item.id === conversationId
+        ? { ...item, note_count: Math.max(0, item.note_count + delta) }
+        : item,
     ),
   };
 }
 
 /** The handoff of the card that still waits for a person (the newest one), if any. */
-export function openHandoffOf(card: ConversationDetailView): HandoffListItem | null {
-  const open = (card.handoffs ?? []).filter((handoff) => handoff.status !== "resolved");
-  return open.sort((left, right) => right.created_at - left.created_at)[0] ?? null;
+export function openHandoffOf(
+  card: ConversationDetailView,
+): HandoffListItem | null {
+  const open = (card.handoffs ?? []).filter(
+    (handoff) => handoff.status !== "resolved",
+  );
+  return (
+    open.sort((left, right) => right.created_at - left.created_at)[0] ?? null
+  );
 }
 
 /** The requests of the card that are still open (new or in progress), newest first. */

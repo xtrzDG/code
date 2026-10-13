@@ -11,12 +11,17 @@ export function DepositPolicyLine({ policy }: { policy: DepositPolicyView }) {
   const format = useBusinessFormat();
   const summary = policySummary(policy);
   const text = t(summary.key, {
-    amount: summary.amountMinor === null ? "" : format.money(summary.amountMinor, policy.currency_code),
+    amount:
+      summary.amountMinor === null
+        ? ""
+        : format.money(summary.amountMinor, policy.currency_code),
     percent: summary.percent ?? "",
   });
   return (
     <p className="text-sm text-ink-muted">
-      {summary.fromGuests === null ? text : `${text} · ${tp("deposits.policy.fromGuests", summary.fromGuests)}`}
+      {summary.fromGuests === null
+        ? text
+        : `${text} · ${tp("deposits.policy.fromGuests", summary.fromGuests)}`}
     </p>
   );
 }

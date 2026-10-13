@@ -23,7 +23,13 @@ export const depositsDe: Translation<typeof depositsEn> = {
       "Tun Sie das, sobald Sie {amount} mit dem Code {reference} in Ihrem Händlerkonto sehen. Die Buchung wird dann bestätigt.",
     confirm: "Ja, bezahlt",
     marked: "Anzahlung als bezahlt markiert",
-    refundDue: "Die Buchung wurde rechtzeitig storniert: Erstatten Sie die Anzahlung über Ihr Händlerkonto.",
+    refundDue:
+      "Die Buchung wurde rechtzeitig storniert: Erstatten Sie die Anzahlung über Ihr Händlerkonto.",
+  },
+  request: {
+    linkUntil: "Der Zahlungslink gilt bis {time}",
+    confirmDescription:
+      "Tun Sie das, sobald Sie {amount} mit dem Code {reference} in Ihrem Händlerkonto sehen.",
   },
   policy: {
     title: "Anzahlung",
@@ -43,7 +49,8 @@ export const depositsDe: Translation<typeof depositsEn> = {
     minPartyHint: "Leer lassen, um bei jeder Buchung zu fragen.",
     page: "Zahlungsseite",
     defaultPage: "Die Standardseite",
-    pageHint: "Eine Seite mit einem festen Betrag passt nur zu einer festen Anzahlung in genau dieser Höhe.",
+    pageHint:
+      "Eine Seite mit einem festen Betrag passt nur zu einer festen Anzahlung in genau dieser Höhe.",
     save: "Anzahlung speichern",
     saved: "Anzahlung gespeichert",
     removed: "Es wird jetzt keine Anzahlung verlangt",
@@ -66,13 +73,15 @@ export const depositsDe: Translation<typeof depositsEn> = {
     description:
       "Halten Sie eine Buchung, bis der Kunde eine Anzahlung auf Ihrer eigenen Zahlungsseite leistet. Der Assistent sendet Ihren Link mit dem Betrag, den Sie festlegen; Betrag oder Link wählt er nie selbst.",
     toggle: "Anzahlungen verlangen",
-    toggleHint: "Tische, Zimmer, Mitarbeitende und Leistungen mit Anzahlung verlangen sie beim Buchen.",
+    toggleHint:
+      "Tische, Zimmer, Mitarbeitende und Leistungen mit Anzahlung verlangen sie beim Buchen.",
     turnedOff: "Anzahlungen ausgeschaltet",
     holdMinutes: "Auf die Zahlung warten, Minuten",
     holdHint:
       "Von 15 Minuten bis zu einem Tag. Bei 30 Minuten oder mehr erhält der Kunde zur Hälfte eine Erinnerung; ein unbezahlter Platz wird danach freigegeben und der Kunde benachrichtigt.",
     refundHours: "Erstattung bei Storno, Stunden vor dem Besuch",
-    refundHint: "Früher storniert: Sie erstatten die Anzahlung. Später oder nicht erschienen: Die Anzahlung bleibt bei Ihnen.",
+    refundHint:
+      "Früher storniert: Sie erstatten die Anzahlung. Später oder nicht erschienen: Die Anzahlung bleibt bei Ihnen.",
     manual:
       "Zahlungen bestätigen Sie selbst: Sobald das Geld in Ihrem Händlerkonto ist, öffnen Sie die Buchung und tippen auf „Bezahlt“. Eine automatische Bestätigung durch den Zahlungsanbieter ist nicht angebunden.",
     errors: {
@@ -85,7 +94,8 @@ export const depositsDe: Translation<typeof depositsEn> = {
     description:
       "Ihre eigenen Seiten, auf denen Kunden bezahlen: Flitt, Stripe Payment Links, TBC, Bank of Georgia oder jeder Anbieter mit einem Link, in jedem Land und jeder Währung.",
     empty: "Noch keine Zahlungsseite",
-    emptyDescription: "Fügen Sie den Link Ihrer Zahlungsseite hinzu. Der Assistent sendet ihn mit der Anzahlung.",
+    emptyDescription:
+      "Fügen Sie den Link Ihrer Zahlungsseite hinzu. Der Assistent sendet ihn mit der Anzahlung.",
     add: "Seite hinzufügen",
     label: "Name",
     labelPlaceholder: "Flitt, Anzahlungen für Tische",
@@ -95,15 +105,19 @@ export const depositsDe: Translation<typeof depositsEn> = {
       static: "Ein fester Betrag",
     },
     kindHints: {
-      template: "Setzen Sie {amount} dort ein, wo der Betrag steht, und {reference} dort, wo der Zahlungscode steht.",
-      static: "Eine Seite, die immer denselben Betrag abbucht: Sie passt nur zu einer festen Anzahlung.",
+      template:
+        "Setzen Sie {amount} dort ein, wo der Betrag steht, und {reference} dort, wo der Zahlungscode steht.",
+      static:
+        "Eine Seite, die immer denselben Betrag abbucht: Sie passt nur zu einer festen Anzahlung.",
     },
     address: "Link",
-    addressHint: "Nur https. Ein Link mit Schlüssel wird verschlüsselt gespeichert und ohne ihn angezeigt.",
+    addressHint:
+      "Nur https. Ein Link mit Schlüssel wird verschlüsselt gespeichert und ohne ihn angezeigt.",
     sealed: "Schlüssel verborgen",
     default: "Standard",
     makeDefault: "Als Standard festlegen",
-    defaultHint: "Die Seite, die Anzahlungen nutzen, wenn ein Tisch, Zimmer, Mitarbeiter oder eine Leistung keine andere nennt.",
+    defaultHint:
+      "Die Seite, die Anzahlungen nutzen, wenn ein Tisch, Zimmer, Mitarbeiter oder eine Leistung keine andere nennt.",
     removeLabel: "{label} entfernen",
     removeTitle: "Diese Zahlungsseite entfernen?",
     removeDescription:
@@ -117,18 +131,23 @@ export const depositsDe: Translation<typeof depositsEn> = {
     },
     refusals: {
       linkNotHttps: "Der Link muss mit https:// beginnen.",
-      linkInvalid: "Dieser Link kann nicht verwendet werden: Prüfen Sie die Adresse.",
+      linkInvalid:
+        "Dieser Link kann nicht verwendet werden: Prüfen Sie die Adresse.",
       templateInvalid:
         "Eine Seite, die den Betrag einsetzt, braucht {amount} im Link, und nur {amount}, {amount_minor}, {currency} und {reference} werden eingesetzt.",
-      noPaymentLink: "Wählen Sie eine Ihrer Zahlungsseiten, die den Betrag einsetzt.",
+      noPaymentLink:
+        "Wählen Sie eine Ihrer Zahlungsseiten, die den Betrag einsetzt.",
       depositsOff: "Anzahlungen sind ausgeschaltet.",
-      currencyMismatch: "Die Anzahlung muss in der Währung des Unternehmens sein.",
-      statusChanged: "Diese Anzahlung hat sich inzwischen geändert: Sie wartet nicht mehr auf eine Zahlung.",
+      currencyMismatch:
+        "Die Anzahlung muss in der Währung des Unternehmens sein.",
+      statusChanged:
+        "Diese Anzahlung hat sich inzwischen geändert: Sie wartet nicht mehr auf eine Zahlung.",
     },
   },
   banquet: {
     title: "Bankettanfragen",
-    description: "Die Anzahlung, die eine Bankettanfrage verlangt, bevor das Team zurückruft. Ausgeschaltet lassen, um keine zu verlangen.",
+    description:
+      "Die Anzahlung, die eine Bankettanfrage verlangt, bevor das Team zurückruft. Ausgeschaltet lassen, um keine zu verlangen.",
   },
   report: {
     title: "Anzahlungen",
@@ -143,7 +162,8 @@ export const depositsDe: Translation<typeof depositsEn> = {
     noShowWith: "Nicht erschienen mit bezahlter Anzahlung",
     noShowWithout: "Nicht erschienen ohne Anzahlung",
     noShowCounts: "{noShows} von {finished} Besuchen",
-    notEnoughData: "Noch nicht genug Daten: {finished} von {min} abgeschlossenen Besuchen",
+    notEnoughData:
+      "Noch nicht genug Daten: {finished} von {min} abgeschlossenen Besuchen",
     off: "Anzahlungen sind ausgeschaltet. Schalten Sie sie unter Einstellungen → Anzahlungen ein.",
     openSettings: "Einstellungen für Anzahlungen",
     loading: "Anzahlungen werden geladen…",

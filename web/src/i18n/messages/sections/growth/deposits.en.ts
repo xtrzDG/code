@@ -27,7 +27,13 @@ export const depositsEn = {
       "Do it once you see {amount} with the reference {reference} in your merchant account. The booking is then confirmed.",
     confirm: "Yes, it is paid",
     marked: "Deposit marked as paid",
-    refundDue: "The booking was cancelled in time: return the deposit in your merchant account.",
+    refundDue:
+      "The booking was cancelled in time: return the deposit in your merchant account.",
+  },
+  request: {
+    linkUntil: "The payment link is valid until {time}",
+    confirmDescription:
+      "Do it once you see {amount} with the reference {reference} in your merchant account.",
   },
   policy: {
     title: "Deposit",
@@ -47,7 +53,8 @@ export const depositsEn = {
     minPartyHint: "Leave it empty to ask every booking.",
     page: "Payment page",
     defaultPage: "The default page",
-    pageHint: "A page with one fixed amount fits only a fixed deposit of that amount.",
+    pageHint:
+      "A page with one fixed amount fits only a fixed deposit of that amount.",
     save: "Save the deposit",
     saved: "Deposit saved",
     removed: "No deposit is asked now",
@@ -70,13 +77,15 @@ export const depositsEn = {
     description:
       "Hold a booking until the customer pays a deposit on your own payment page. The assistant sends your link with the amount you set; it never chooses an amount or a link.",
     toggle: "Ask deposits",
-    toggleHint: "Tables, rooms, masters and services with a deposit ask it when they are booked.",
+    toggleHint:
+      "Tables, rooms, masters and services with a deposit ask it when they are booked.",
     turnedOff: "Deposits turned off",
     holdMinutes: "Wait for the payment, minutes",
     holdHint:
       "From 15 minutes to a day. A wait of 30 minutes or more sends the customer one reminder halfway; an unpaid place is then let go and the customer is told.",
     refundHours: "Refund when cancelled, hours before the visit",
-    refundHint: "Cancelled earlier: you return the deposit. Later, or a no-show: the deposit stays with you.",
+    refundHint:
+      "Cancelled earlier: you return the deposit. Later, or a no-show: the deposit stays with you.",
     manual:
       "Payments are confirmed by hand: when the money is in your merchant account, open the booking and press “Paid”. Confirmation straight from the payment provider is not connected.",
     errors: {
@@ -89,7 +98,8 @@ export const depositsEn = {
     description:
       "Your own pages where customers pay: Flitt, Stripe Payment Links, TBC, Bank of Georgia or any provider with a link, in any country and currency.",
     empty: "No payment page yet",
-    emptyDescription: "Add the link of your payment page. The assistant sends it with the deposit.",
+    emptyDescription:
+      "Add the link of your payment page. The assistant sends it with the deposit.",
     add: "Add the page",
     label: "Name",
     labelPlaceholder: "Flitt, table deposits",
@@ -99,18 +109,23 @@ export const depositsEn = {
       static: "One fixed amount",
     },
     kindHints: {
-      template: "Put {amount} where the amount goes and {reference} where the payment reference goes.",
-      static: "A page that always charges the same amount: it fits only a fixed deposit.",
+      template:
+        "Put {amount} where the amount goes and {reference} where the payment reference goes.",
+      static:
+        "A page that always charges the same amount: it fits only a fixed deposit.",
     },
     address: "Link",
-    addressHint: "https only. A link that carries a key is stored encrypted and shown without it.",
+    addressHint:
+      "https only. A link that carries a key is stored encrypted and shown without it.",
     sealed: "Key hidden",
     default: "Default",
     makeDefault: "Make default",
-    defaultHint: "The page deposits use unless a table, room, master or service names another one.",
+    defaultHint:
+      "The page deposits use unless a table, room, master or service names another one.",
     removeLabel: "Remove {label}",
     removeTitle: "Remove this payment page?",
-    removeDescription: "Deposits already asked keep their link. Deposits set to this page use the default one.",
+    removeDescription:
+      "Deposits already asked keep their link. Deposits set to this page use the default one.",
     added: "Payment page added",
     removed: "Payment page removed",
     defaultSet: "Default page changed",
@@ -121,20 +136,25 @@ export const depositsEn = {
     refusals: {
       linkNotHttps: "The link must start with https://.",
       linkInvalid: "This link cannot be used: check the address.",
-      templateInvalid: "A page that fills in the amount needs {amount} in the link, and only {amount}, {amount_minor}, {currency} and {reference} are filled in.",
-      noPaymentLink: "Choose one of your payment pages that fills in the amount.",
+      templateInvalid:
+        "A page that fills in the amount needs {amount} in the link, and only {amount}, {amount_minor}, {currency} and {reference} are filled in.",
+      noPaymentLink:
+        "Choose one of your payment pages that fills in the amount.",
       depositsOff: "Deposits are off.",
       currencyMismatch: "The deposit must be in the business currency.",
-      statusChanged: "This deposit has changed meanwhile: it is no longer waiting for payment.",
+      statusChanged:
+        "This deposit has changed meanwhile: it is no longer waiting for payment.",
     },
   },
   banquet: {
     title: "Banquet requests",
-    description: "The deposit a banquet request asks before the team calls back. Leave it off to ask none.",
+    description:
+      "The deposit a banquet request asks before the team calls back. Leave it off to ask none.",
   },
   report: {
     title: "Deposits",
-    description: "The last 30 days: deposits asked and paid, the money collected, and how often guests did not come with a paid deposit and without one.",
+    description:
+      "The last 30 days: deposits asked and paid, the money collected, and how often guests did not come with a paid deposit and without one.",
     requested: "Asked",
     paid: "Paid",
     awaiting: "Waiting",

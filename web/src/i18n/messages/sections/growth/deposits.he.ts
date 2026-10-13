@@ -25,9 +25,15 @@ export const depositsHe: Translation<typeof depositsEn> = {
     marked: "הפיקדון סומן כשולם",
     refundDue: "ההזמנה בוטלה בזמן: החזירו את הפיקדון דרך חשבון הסליקה שלכם.",
   },
+  request: {
+    linkUntil: "קישור התשלום בתוקף עד {time}",
+    confirmDescription:
+      "סמנו כשתראו {amount} עם הקוד {reference} בחשבון הסליקה שלכם.",
+  },
   policy: {
     title: "פיקדון",
-    description: "הלקוח משלם אותו בעמוד התשלום שלכם בעת ההזמנה. הסכום תמיד נלקח מכאן, והעוזר אף פעם לא בוחר אותו.",
+    description:
+      "הלקוח משלם אותו בעמוד התשלום שלכם בעת ההזמנה. הסכום תמיד נלקח מכאן, והעוזר אף פעם לא בוחר אותו.",
     rule: "פיקדון",
     rules: {
       none: "בלי פיקדון",
@@ -54,7 +60,11 @@ export const depositsHe: Translation<typeof depositsEn> = {
       per_guest: "פיקדון {amount} לכל אורח",
       percent_of_value: "פיקדון {percent}% מהשווי",
     },
-    fromGuests: { one: "מאורח {count}", two: "מ-{count} אורחים", other: "מ-{count} אורחים" },
+    fromGuests: {
+      one: "מאורח {count}",
+      two: "מ-{count} אורחים",
+      other: "מ-{count} אורחים",
+    },
     errors: {
       percent: "הזינו אחוז בין 1 ל-100.",
       minParty: "הזינו מספר שלם של אורחים, 1 ומעלה.",
@@ -65,13 +75,15 @@ export const depositsHe: Translation<typeof depositsEn> = {
     description:
       "שמרו הזמנה עד שהלקוח משלם פיקדון בעמוד התשלום שלכם. העוזר שולח את הקישור שלכם עם הסכום שקבעתם; הוא אף פעם לא בוחר סכום או קישור.",
     toggle: "לבקש פיקדונות",
-    toggleHint: "שולחנות, חדרים, אנשי מקצוע ושירותים עם פיקדון מבקשים אותו בעת ההזמנה.",
+    toggleHint:
+      "שולחנות, חדרים, אנשי מקצוע ושירותים עם פיקדון מבקשים אותו בעת ההזמנה.",
     turnedOff: "הפיקדונות כובו",
     holdMinutes: "המתנה לתשלום, בדקות",
     holdHint:
       "מ-15 דקות ועד יממה. בהמתנה של 30 דקות ומעלה הלקוח מקבל תזכורת אחת באמצע; מקום שלא שולם משתחרר אחר כך והלקוח מקבל הודעה.",
     refundHours: "החזר בביטול, כמה שעות לפני הביקור",
-    refundHint: "בוטל מוקדם יותר: אתם מחזירים את הפיקדון. מאוחר יותר, או שהלקוח לא הגיע: הפיקדון נשאר אצלכם.",
+    refundHint:
+      "בוטל מוקדם יותר: אתם מחזירים את הפיקדון. מאוחר יותר, או שהלקוח לא הגיע: הפיקדון נשאר אצלכם.",
     manual:
       "את התשלום מאשרים ידנית: כשהכסף מופיע בחשבון הסליקה, פתחו את ההזמנה ולחצו „שולם“. אישור אוטומטי מספק התשלומים לא מחובר.",
     errors: {
@@ -84,7 +96,8 @@ export const depositsHe: Translation<typeof depositsEn> = {
     description:
       "העמודים שלכם שבהם לקוחות משלמים: Flitt, Stripe Payment Links, TBC, בנק ג׳ורג׳יה או כל ספק עם קישור, בכל מדינה ובכל מטבע.",
     empty: "עדיין אין עמוד תשלום",
-    emptyDescription: "הוסיפו את הקישור לעמוד התשלום שלכם. העוזר שולח אותו יחד עם הפיקדון.",
+    emptyDescription:
+      "הוסיפו את הקישור לעמוד התשלום שלכם. העוזר שולח אותו יחד עם הפיקדון.",
     add: "הוספת העמוד",
     label: "שם",
     labelPlaceholder: "Flitt, פיקדונות לשולחנות",
@@ -94,7 +107,8 @@ export const depositsHe: Translation<typeof depositsEn> = {
       static: "סכום קבוע אחד",
     },
     kindHints: {
-      template: "שימו {amount} במקום שבו בא הסכום ו-{reference} במקום שבו בא קוד התשלום.",
+      template:
+        "שימו {amount} במקום שבו בא הסכום ו-{reference} במקום שבו בא קוד התשלום.",
       static: "עמוד שתמיד גובה את אותו סכום: מתאים רק לפיקדון קבוע.",
     },
     address: "קישור",
@@ -102,10 +116,12 @@ export const depositsHe: Translation<typeof depositsEn> = {
     sealed: "המפתח מוסתר",
     default: "ברירת מחדל",
     makeDefault: "להגדיר כברירת מחדל",
-    defaultHint: "העמוד שהפיקדונות משתמשים בו, אלא אם שולחן, חדר, איש מקצוע או שירות בוחרים עמוד אחר.",
+    defaultHint:
+      "העמוד שהפיקדונות משתמשים בו, אלא אם שולחן, חדר, איש מקצוע או שירות בוחרים עמוד אחר.",
     removeLabel: "הסרת {label}",
     removeTitle: "להסיר את עמוד התשלום הזה?",
-    removeDescription: "פיקדונות שכבר נשלחו שומרים על הקישור שלהם. פיקדונות שהוגדרו לעמוד הזה ישתמשו בעמוד ברירת המחדל.",
+    removeDescription:
+      "פיקדונות שכבר נשלחו שומרים על הקישור שלהם. פיקדונות שהוגדרו לעמוד הזה ישתמשו בעמוד ברירת המחדל.",
     added: "עמוד התשלום נוסף",
     removed: "עמוד התשלום הוסר",
     defaultSet: "עמוד ברירת המחדל השתנה",
@@ -126,7 +142,8 @@ export const depositsHe: Translation<typeof depositsEn> = {
   },
   banquet: {
     title: "בקשות לאירועים",
-    description: "הפיקדון שבקשה לאירוע מבקשת לפני שהצוות חוזר ללקוח. השאירו כבוי כדי לא לבקש.",
+    description:
+      "הפיקדון שבקשה לאירוע מבקשת לפני שהצוות חוזר ללקוח. השאירו כבוי כדי לא לבקש.",
   },
   report: {
     title: "פיקדונות",
@@ -141,7 +158,8 @@ export const depositsHe: Translation<typeof depositsEn> = {
     noShowWith: "אי-הגעה עם פיקדון ששולם",
     noShowWithout: "אי-הגעה בלי פיקדון",
     noShowCounts: "{noShows} מתוך {finished} ביקורים",
-    notEnoughData: "עדיין אין מספיק נתונים: {finished} מתוך {min} ביקורים שהסתיימו",
+    notEnoughData:
+      "עדיין אין מספיק נתונים: {finished} מתוך {min} ביקורים שהסתיימו",
     off: "הפיקדונות כבויים. הפעילו אותם בהגדרות ← פיקדונות.",
     openSettings: "הגדרות פיקדונות",
     loading: "טוענים פיקדונות…",
