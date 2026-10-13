@@ -26,7 +26,7 @@
   "customers.spec.ts": 14.1,
   "data-exports.spec.ts": 10.7,
   "data-retention.spec.ts": 3.4,
-  "deposits.spec.ts": 29,
+  "deposits.spec.ts": 37,
   "encryption-keys.spec.ts": 9.4,
   "hebrew-conversation.spec.ts": 2,
   "help-center.spec.ts": 22.9,
