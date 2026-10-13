@@ -31,6 +31,10 @@ async function changeInterfaceLanguage(locale: Locale): Promise<void> {
  * keyboard, screen readers and phone pickers. The page stays where it is and
  * re-renders in the new language; a public page that has its language in
  * its address (/ru/for/hotel) opens in the new one (/ka/for/hotel).
+ * The names are drawn in the page's own script's font, Latin and then the
+ * system's (`font-language-names`, globals.css): the browser shapes a closed
+ * select's options too, and the brand font would make every page download
+ * the other scripts' files before its first paint.
  */
 export function LanguageSwitcher({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { t, locale } = useI18n();
@@ -78,7 +82,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
             });
           }}
           className={cn(
-            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pe-7 ps-8 text-sm font-medium text-ink max-[359px]:ps-2.5",
+            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pe-7 ps-8 font-language-names text-sm font-medium text-ink max-[359px]:ps-2.5",
             "transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus disabled:opacity-60",
           )}
         >

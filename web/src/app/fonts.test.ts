@@ -79,4 +79,20 @@ describe("the self-hosted typeface", () => {
     expect(order.every((position) => position >= 0)).toBe(true);
     expect(Math.max(...order)).toBe(order[0]);
   });
+
+  it("keeps other scripts' files out of the language picker, whose options name every language", () => {
+    // A closed select's options are shaped with its font: with --font-sans an English page fetched
+    // the Georgian, Cyrillic and Hebrew files ahead of its first paint (the landing page's LCP).
+    const css = readFileSync(path.join(WEB, "src", "app", "globals.css"), "utf8");
+    const stack = /--font-language-names:([^;]+);/.exec(css)?.[1] ?? "";
+    expect([...stack.matchAll(/var\((--[a-z-]+),/g)].map((match) => match[1])).toEqual(["--font-page-script", "--font-brand-latin"]);
+    const pageScripts = [...css.matchAll(/:root:lang\(([a-z]+)\) \{\s*--font-page-script: var\((--[a-z-]+),/g)];
+    expect(Object.fromEntries(pageScripts.map((match) => [match[1], match[2]]))).toEqual({
+      ru: "--font-brand-cyrillic",
+      ka: "--font-brand-georgian",
+      he: "--font-brand-hebrew",
+    });
+    const switcher = readFileSync(path.join(WEB, "src", "components", "LanguageSwitcher.tsx"), "utf8");
+    expect(/<select[\s\S]*?className=\{cn\(\s*"[^"]*\bfont-language-names\b/.test(switcher)).toBe(true);
+  });
 });
