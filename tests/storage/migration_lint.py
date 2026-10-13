@@ -74,6 +74,9 @@ IDEMPOTENT_PATTERNS: tuple[re.Pattern[str], ...] = (
         r"^alter\s+table\s+(?:if\s+exists\s+)?\S+\s+add\s+column\s+if\s+not\s+exists\s"
     ),
     re.compile(r"^comment\s+on\s"),
+    # Granting a privilege that is held, or revoking one that is not,
+    # changes nothing: privilege statements run again as they ran first.
+    re.compile(r"^(?:grant|revoke)\s"),
     re.compile(
         r"^select\s+workshop\.(?:add_lookup_column|create_document_collection)\("
     ),

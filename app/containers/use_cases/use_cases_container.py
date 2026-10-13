@@ -2,6 +2,9 @@ from dependency_injector.providers import Container, Factory
 
 from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
+from app.containers.use_cases.audit_trail_use_cases import (
+    AuditTrailUseCasesContainer,
+)
 from app.containers.use_cases.business_use_cases_container import (
     BusinessUseCasesContainer,
 )
@@ -195,6 +198,14 @@ class UseCasesContainer(BusinessUseCasesContainer):
         IdempotencyUseCasesContainer,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+    )
+    # The audit log's hash chains: views and the daily check (1193).
+    audit_trail: AuditTrailUseCasesContainer = Container(  # type: ignore[assignment]
+        AuditTrailUseCasesContainer,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        platform_use_cases=platform,
     )
     # Outbound webhooks: endpoints, signed deliveries and their retries (1181).
     webhooks: WebhookUseCasesContainer = Container(  # type: ignore[assignment]

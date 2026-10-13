@@ -48,6 +48,7 @@ import {
   type AuditLogEntry,
   type AuditLogPage,
 } from "../_lib/audit";
+import { AuditChainStrip } from "./audit/AuditChainStrip";
 
 const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   view: "settings.audit.actions.view",
@@ -129,6 +130,7 @@ export function AuditTab() {
 
   return (
     <Card title={t("settings.audit.title")} description={t("settings.audit.description")} padded={false}>
+      <AuditChainStrip />
       <div
         role="search"
         aria-label={t("settings.auditFilters.label")}

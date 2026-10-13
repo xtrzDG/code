@@ -35,7 +35,6 @@ from app.repositories.business_repositories import (
 )
 from app.repositories.call_repository import CallRepository
 from app.repositories.channel_repositories import ManagerTelegramLinkRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
@@ -88,6 +87,7 @@ from tests.channels.channels_settings import build_settings
 from tests.channels.faulty_outbox import FaultyOutboundMessageRepository
 from tests.channels.recording_transport import RecordingTransport
 from tests.channels.scripted_customer_pipeline import ScriptedCustomerPipeline
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.platform.worker_fakes import JobStores, build_job_stores
 
@@ -128,7 +128,7 @@ class ChannelsInfrastructure:
         self.usage_event_repo = UsageEventRepository(
             InMemoryDocumentCollectionAdapter(UsageEventDocument)
         )
-        self.audit_log_repo = AuditLogRepository(
+        self.audit_log_repo = audit_log_repository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
         self.profile_repo = BusinessProfileRepository(

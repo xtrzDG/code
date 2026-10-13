@@ -8,7 +8,10 @@ from app.schemas.dto.document_upgrades import (
     StoredDocumentsUpgradeReport,
     UpgradeStoredDocumentsCommand,
 )
-from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.exceptions.application_errors import (
+    NotFoundError,
+    ValidationFailedError,
+)
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 
@@ -75,7 +78,15 @@ class UpgradeStoredDocumentsUseCase(
 def select_collections(
     requested: list[DocumentCollectionName],
 ) -> list[DocumentCollectionName]:
-    """The requested collections in catalog order; all of them when none."""
+    """
+    The requested collections in catalog order; all of them when none.
+    Append-only collections (the audit log) are never rewritten: their old
+    rows read through their upcasters as they are.
+
+    Raises:
+        NotFoundError: a requested name is no document collection.
+        ValidationFailedError: a requested collection is append-only.
+    """
 
     catalog: list[DocumentCollectionName] = [
         definition.name for definition in DOCUMENT_COLLECTIONS
@@ -90,7 +101,22 @@ def select_collections(
             + "."
         )
 
+    append_only: set[DocumentCollectionName] = {
+        definition.name
+        for definition in DOCUMENT_COLLECTIONS
+        if definition.is_append_only
+    }
+    refused: list[DocumentCollectionName] = [
+        name for name in requested if name in append_only
+    ]
+    if refused:
+        raise ValidationFailedError(
+            "Append-only collections are never rewritten: "
+            + ", ".join(str(name) for name in refused)
+            + "."
+        )
+
     if not requested:
-        return catalog
+        return [name for name in catalog if name not in append_only]
 
     return [name for name in catalog if name in requested]

@@ -164,7 +164,11 @@ class AccountsUserUseCases(AccountsRepositories):
             platform_admins=self.platform_admins,
             app_settings=self.settings,
         )
-        self.logout = LogoutUseCase(user_session_repo=self.user_session_repo)
+        self.logout = LogoutUseCase(
+            user_session_repo=self.user_session_repo,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
         self.list_my_sessions = ListMySessionsUseCase(
             user_session_repo=self.user_session_repo,
             session_assurance=self.session_assurance,

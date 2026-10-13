@@ -64,6 +64,10 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       api_budget_fast_burn: "API-Budget schwindet schnell",
       api_budget_slow_burn: "API-Budget schwindet",
       worker_down: "Kein Worker antwortet",
+      bulk_personal_data: "Massenexporte personenbezogener Daten",
+      tenant_hopping: "Admin in vielen Kundenkonten",
+      failed_sign_in_checks: "Anmeldecodes erraten",
+      audit_chain_broken: "Audit-Protokoll verändert",
     },
   },
   errorBudget: {

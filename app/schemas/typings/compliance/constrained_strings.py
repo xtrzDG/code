@@ -3,6 +3,35 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class AuditChainKey(BaseConstrainedTypedString):
+    """
+    Which hash chain of the audit log an entry belongs to: a business's
+    own log (its business id) or the platform's (`platform`, the entries
+    that name no business).
+
+    Example:
+        chain = AuditChainKey("platform")
+    """
+
+    min_length = 8
+    max_length = 80
+    pattern = r"^(platform|business_[0-9A-Za-z-]{1,70})$"
+
+
+class AuditEntryHash(BaseConstrainedTypedString):
+    """
+    SHA-256 of an audit entry's canonical JSON (with the hash of the entry
+    before it in its chain), 64 lowercase hex digits.
+
+    Example:
+        entry_hash = AuditEntryHash("0" * 64)
+    """
+
+    min_length = 64
+    max_length = 64
+    pattern = r"^[0-9a-f]{64}$"
+
+
 class DpaAcceptanceDueDate(BaseConstrainedTypedString):
     """
     The day by which owners accept a new agreement version, ISO 8601

@@ -31,7 +31,8 @@ class DataTaskRegistry(DataTaskRegistryContract):
     - one document migration per collection whose document type has a
       `schema_version` above 1, to that version: rows of an older shape
       are rewritten after the release (`workshop migrate-documents`), and
-      a later version bump makes it pending again;
+      a later version bump makes it pending again; append-only collections
+      (the audit log) are never rewritten, their old rows upcast on read;
     - one backfill per trigger-kept lookup column added to a table that
       already held rows (`lookup_backfills.py`, `workshop backfill-lookup`).
 
@@ -86,7 +87,11 @@ def migration_tasks(
         version: DocumentSchemaVersionNumber | None = declared_schema_version(
             definition.document_type
         )
-        if version is None or int(version) <= FIRST_VERSION:
+        if (
+            version is None
+            or int(version) <= FIRST_VERSION
+            or definition.is_append_only
+        ):
             continue
 
         tasks.append(

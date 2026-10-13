@@ -138,6 +138,8 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       platform_admin: "Plattform-Admin",
       platform_announcement: "Plattform-Ankündigung",
       encryption_keys: "Verschlüsselungsschlüssel",
+      audit_log_entry: "Einträge des Audit-Logs",
+      login_destination: "Anmeldeadresse",
       inbound_event: "Ereignis einer eingehenden Nachricht",
       outbound_message: "Ausgehende Nachricht",
       channel_message_receipt: "Zustellbestätigung",

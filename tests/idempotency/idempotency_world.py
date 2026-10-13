@@ -37,6 +37,7 @@ from app.use_cases.idempotency.finish_idempotent_request_use_case import (
 from app.use_cases.idempotency.purge_idempotency_keys_use_case import (
     PurgeIdempotencyKeysUseCase,
 )
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.e2e.edge_fakes import MovableClock
 
 START: datetime = datetime(2026, 10, 6, 9, 0, tzinfo=UTC)
@@ -82,7 +83,7 @@ class IdempotencyWorld:
 
     @property
     def audit_log(self) -> AuditLogRepository:
-        return AuditLogRepository(self.audit_collection)
+        return audit_log_repository(self.audit_collection)
 
     def claim_use_case(self) -> ClaimIdempotencyKeyUseCase:
         return ClaimIdempotencyKeyUseCase(self.repo, self.clock.wall_clock)

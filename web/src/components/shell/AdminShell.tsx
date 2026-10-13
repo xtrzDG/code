@@ -7,6 +7,7 @@ import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { canOpenAdminPage, type AdminPageKey } from "@/lib/adminPermissions";
 import {
+  ADMIN_AUDIT_PATH,
   ADMIN_METRICS_PATH,
   ADMIN_PARTNERS_PATH,
   ADMIN_PATH,
@@ -16,7 +17,7 @@ import {
   HOME_PATH,
 } from "@/lib/navigation";
 
-import { IconBuilding, IconGauge, IconKey, IconLink, IconPulse, IconShield, IconUsers } from "../icons";
+import { IconBuilding, IconClipboard, IconGauge, IconKey, IconLink, IconPulse, IconShield, IconUsers } from "../icons";
 import { ShellFrame } from "./ShellFrame";
 import type { ShellNavItem } from "./types";
 
@@ -26,8 +27,8 @@ function isUnder(pathname: string, path: string): boolean {
 
 /**
  * Frame of the platform admin pages (/admin/*): the clients, the platform's
- * health (System), the growth metrics, the encryption keys, the admin team,
- * and the way back to the businesses. Each admin sees the pages their role
+ * health (System), the growth metrics, the encryption keys, the audit
+ * trail, the admin team and the way back to the businesses. Each admin sees the pages their role
  * opens (lib/adminPermissions.ts).
  */
 export function AdminShell({ me, initialCollapsed = false, children }: { me: CurrentUserView; initialCollapsed?: boolean; children: ReactNode }) {
@@ -38,8 +39,9 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
   const isSystemPage = isUnder(pathname, ADMIN_SYSTEM_PATH);
   const isTeamPage = isUnder(pathname, ADMIN_TEAM_PATH);
   const isPartnersPage = isUnder(pathname, ADMIN_PARTNERS_PATH);
+  const isAuditPage = isUnder(pathname, ADMIN_AUDIT_PATH);
   const isAdminPage =
-    !isSecurityPage && !isMetricsPage && !isSystemPage && !isTeamPage && !isPartnersPage && isUnder(pathname, ADMIN_PATH);
+    !isSecurityPage && !isMetricsPage && !isSystemPage && !isTeamPage && !isPartnersPage && !isAuditPage && isUnder(pathname, ADMIN_PATH);
   const title = isSecurityPage
     ? t("adminSecurity.nav")
     : isMetricsPage
@@ -50,7 +52,9 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
           ? t("adminTeam.nav")
           : isPartnersPage
             ? t("adminPartners.nav")
-            : t("nav.admin");
+            : isAuditPage
+              ? t("adminAudit.nav")
+              : t("nav.admin");
   const pages: (ShellNavItem & { key: AdminPageKey })[] = [
     { key: "admin", href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, isActive: isAdminPage, inTabBar: true },
     // On call from a phone: the platform's health is one tap away.
@@ -58,6 +62,7 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
     // Phones: the rest under "More", so the tab bar keeps room for its labels.
     { key: "metrics", href: ADMIN_METRICS_PATH, label: t("adminMetrics.nav"), icon: IconGauge, isActive: isMetricsPage, inTabBar: false },
     { key: "security", href: ADMIN_SECURITY_PATH, label: t("adminSecurity.nav"), icon: IconKey, isActive: isSecurityPage, inTabBar: false },
+    { key: "audit", href: ADMIN_AUDIT_PATH, label: t("adminAudit.nav"), icon: IconClipboard, isActive: isAuditPage, inTabBar: false },
     { key: "team", href: ADMIN_TEAM_PATH, label: t("adminTeam.nav"), icon: IconUsers, isActive: isTeamPage, inTabBar: false },
     { key: "partners", href: ADMIN_PARTNERS_PATH, label: t("adminPartners.nav"), icon: IconLink, isActive: isPartnersPage, inTabBar: false },
   ];

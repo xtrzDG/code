@@ -29,11 +29,14 @@ from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ValidationFailedError,
 )
+from app.schemas.exceptions.mfa_errors import WrongCodeError
+from app.schemas.typings.mfa.constrained_integers import MfaAttemptCount
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.shared.session_sweeps import end_sessions
 from app.use_cases.users.mfa.mfa_challenges import (
     EXPIRED_STEP_MESSAGE,
+    MFA_MAX_FAILED_ATTEMPTS,
     consume_mfa_challenge,
     open_mfa_challenge,
     take_mfa_attempt,
@@ -48,6 +51,7 @@ from app.use_cases.users.mfa.mfa_records import (
 )
 from app.use_cases.users.mfa.second_factor_check import SecondFactorCheck
 from app.use_cases.users.sign_in_completion import SignInCompletion
+from app.use_cases.users.sign_in_security_audit import SignInSecurityAudit
 
 SET_UP_FIRST_MESSAGE: str = "Set up your authenticator app first, then enter its code."
 
@@ -64,7 +68,8 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
     it; SESSION_REVOKED with the count) and the change is audited as
     MFA_CHANGED. Checks are limited per
     step and per client network, the step locks after five wrong codes and
-    is used by compare-and-swap, so it opens one session only.
+    is used by compare-and-swap, so it opens one session only. A wrong code
+    is audited as LOGIN_FAILED, the one that locks the step as MFA_LOCKED.
     """
 
     def __init__(
@@ -98,6 +103,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         self._check: SecondFactorCheck = SecondFactorCheck(
             totp_factor_repo, recovery_code_repo, totp_secret_cipher
         )
+        self._security_audit: SignInSecurityAudit = SignInSecurityAudit(
+            audit_log_repo, user_repo, app_settings
+        )
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -125,13 +133,27 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         if user is None:
             raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
 
-        take_mfa_attempt(self._mfa_challenge_repo, challenge, now)
+        attempt: MfaAttemptCount = take_mfa_attempt(
+            self._mfa_challenge_repo, challenge, now
+        )
         factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
         recovery_codes: list[RecoveryCode] | None = None
-        if factor is not None and factor.status is TotpFactorStatus.ACTIVE:
-            self._check.verify(user.id, input_data.code, input_data.recovery_code, now)
-        else:
-            recovery_codes = self._finish_enrollment(user, factor, input_data, now)
+        try:
+            if factor is not None and factor.status is TotpFactorStatus.ACTIVE:
+                self._check.verify(
+                    user.id, input_data.code, input_data.recovery_code, now
+                )
+            else:
+                recovery_codes = self._finish_enrollment(user, factor, input_data, now)
+        except WrongCodeError:
+            self._security_audit.wrong_second_factor(
+                user.id,
+                attempt,
+                MFA_MAX_FAILED_ATTEMPTS,
+                input_data.client_ip_address,
+                now,
+            )
+            raise
 
         consume_mfa_challenge(self._mfa_challenge_repo, challenge, now)
         return self._sign_in.open_session(

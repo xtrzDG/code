@@ -98,4 +98,5 @@ class SecurityUseCasesContainer(AccessUseCasesContainer):
         resealer=secret_resealer,
         wall_clock=time_provider.microsecond_wall_clock,
         totp_resealer=totp_secret_resealer,
+        audit_log_repo=repositories.audit_log_repo,
     )

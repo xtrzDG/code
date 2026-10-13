@@ -40,6 +40,7 @@ from app.use_cases.compliance.erase_processor_copies_use_case import (
     EraseProcessorCopiesUseCase,
 )
 from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.privacy.processor_erasure_doubles import (
     ProcessorErasureBed,
     RecordingJobQueue,
@@ -136,7 +137,9 @@ def test_a_processor_no_longer_set_up_refuses_instead_of_retrying() -> None:
 def build_job(
     bed: ProcessorErasureBed,
 ) -> tuple[EraseProcessorCopiesUseCase, AuditLogRepository]:
-    audit = AuditLogRepository(InMemoryDocumentCollectionAdapter(AuditLogEntryDocument))
+    audit = audit_log_repository(
+        InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
+    )
     clock = WallClock(
         preferred_time_unit_type=Microseconds,
         unix_nanosecond_factory=lambda: 1_790_000_000_000_000_000,

@@ -5,7 +5,6 @@ from typed_time_provider import Microseconds
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
 )
@@ -42,6 +41,7 @@ from app.schemas.typings.monitoring.constrained_integers import (
 from app.schemas.typings.monitoring.strings import AlertDetailText
 from app.schemas.typings.platform_status.constrained_strings import AnnouncementText
 from app.schemas.typings.users.prefixed_id import UserId
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.platform_ops.ops_world import ADMIN, OpsClock
 
 MINUTE: int = 60 * 1_000_000
@@ -109,7 +109,7 @@ class StatusWorld:
         self.alert_repo = PlatformAlertStateRepository(self.alert_states)
         self.announcement_repo = PlatformAnnouncementRepository(self.announcements)
         self.day_repo = PlatformStatusDayRepository(self.days)
-        self.audit_repo = AuditLogRepository(self.audit)
+        self.audit_repo = audit_log_repository(self.audit)
         self.monitors = InMemoryDocumentCollectionAdapter[PlatformMonitorDocument](
             PlatformMonitorDocument
         )

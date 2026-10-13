@@ -17,7 +17,6 @@ from app.registries.legal.subprocessor_catalog import SUBPROCESSORS
 from app.registries.legal.subprocessor_registry import SubprocessorRegistry
 from app.registries.legal.subprocessor_texts import ORIGINAL_LIST_DATE, texts
 from app.repositories.business_repositories import BusinessRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.legal_repositories import (
     SubprocessorAnnouncementRepository,
     SubprocessorNoticeRepository,
@@ -55,6 +54,7 @@ from app.use_cases.legal.send_subprocessor_notices_use_case import (
     SendSubprocessorNoticesUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from tests.compliance.audit_repositories import audit_log_repository
 
 DAY: int = 24 * 60 * 60 * 1_000_000
 # The list as the DPA's first version had it: the real catalog without its
@@ -226,7 +226,7 @@ class NoticeWorld:
             notice_repo=SubprocessorNoticeRepository(self.notices),
             business_repo=BusinessRepository(self.businesses),
             user_repo=UserRepository(self.users),
-            audit_log_repo=AuditLogRepository(self.audit),
+            audit_log_repo=audit_log_repository(self.audit),
             manager_notifier=self.notifier,
             localized_text_resolver=LocalizedTextResolver(),
             wall_clock=self.clock.wall_clock,

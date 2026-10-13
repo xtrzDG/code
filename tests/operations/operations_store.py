@@ -33,7 +33,6 @@ from app.repositories.business_repositories import (
 )
 from app.repositories.calendar_sync_repositories import CalendarBusyTimesRepository
 from app.repositories.campaign_repositories import CampaignMessageRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
@@ -71,6 +70,7 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.domain.waitlist import WaitlistEntryDocument, WaitlistSettingsDocument
 from tests.calendar_sync.recording_busy_time_sync import RecordingBusyTimeSync
 from tests.channels.outbox_fakes import RecordingJobQueue
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.notifications.staff_alert_fakes import RecordingPushQueue, build_staff_alerts
 from tests.operations.builders import DEFAULT_NOW
@@ -164,7 +164,7 @@ class OperationsStore:
                 ActivationEventDocument
             )
         )
-        self.audit_repo = AuditLogRepository(
+        self.audit_repo = audit_log_repository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument
             )

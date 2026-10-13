@@ -33,6 +33,7 @@ from app.use_cases.users.otp_login.login_check_limits import (
 )
 from app.use_cases.users.otp_login.terms_acceptance import record_terms_acceptance
 from app.use_cases.users.sign_in_completion import SignInCompletion
+from app.use_cases.users.sign_in_security_audit import SignInSecurityAudit
 
 
 class VerifyOtpLoginUseCase(
@@ -52,7 +53,9 @@ class VerifyOtpLoginUseCase(
     `mfa_required` with a five-minute second step, and
     VerifyMfaLoginUseCase opens a two-factor session. Everyone else gets a
     one-factor session at once (SignInCompletion: the token is returned
-    once, only its hash is stored, the login is audited and counted). A new
+    once, only its hash is stored, the login is audited and counted); a
+    wrong code is audited as LOGIN_FAILED, the one that locks the code as
+    OTP_LOCKED (`SignInSecurityAudit`). A new
     account keeps where its owner came from (the cabinet's attribution,
     never changed later). The terms of service version the sign-in page
     showed is stored as accepted (`record_terms_acceptance`): continuing
@@ -87,6 +90,9 @@ class VerifyOtpLoginUseCase(
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._legal_text_registry: LegalTextRegistryContract = legal_text_registry
+        self._security_audit: SignInSecurityAudit = SignInSecurityAudit(
+            audit_log_repo, user_repo, app_settings
+        )
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -115,6 +121,8 @@ class VerifyOtpLoginUseCase(
             input_data.challenge_id,
             input_data.code,
             now,
+            self._security_audit,
+            input_data.client_ip_address,
         )
         user, is_new_user = self._find_or_create_user(challenge, input_data, now)
         factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)

@@ -5,6 +5,9 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.audit_chain_collections_container import (
+    AuditChainCollectionsContainer,
+)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -190,4 +193,13 @@ class AppEdgesContainer(containers.DeclarativeContainer):
         config=config,
         time_provider=time_provider,
         utilities=utilities,
+    )
+    # The audit log's view counts, chain checkpoints and checks (1193).
+    audit_chain_collections: AuditChainCollectionsContainer = Container(  # type: ignore[assignment]
+        AuditChainCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+        audit_entry_collections=adapters.collections,
     )

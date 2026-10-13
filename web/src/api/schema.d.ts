@@ -39,6 +39,40 @@ export interface paths {
         patch: operations["platform_status_update_announcement"];
         trace?: never;
     };
+    "/v1/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Platform Audit Log */
+        get: operations["audit_list_platform_audit_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/audit-log/chains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Audit Chain Overview */
+        get: operations["audit_get_audit_chain_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/clients": {
         parameters: {
             query?: never;
@@ -1121,6 +1155,23 @@ export interface paths {
         };
         /** List Audit Log */
         get: operations["compliance_list_audit_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/audit-log/chain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Audit Chain Status */
+        get: operations["audit_get_audit_chain_status"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5881,6 +5932,70 @@ export interface components {
          */
         AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested" | "mfa_changed" | "support_access_start" | "support_access_end" | "session_revoked" | "platform_admin_changed" | "spend_limit_reached" | "admin_trial_extended" | "admin_discount_given" | "admin_credit_granted" | "admin_setup_fee_waived" | "admin_invoice_marked_paid" | "admin_plan_overridden";
         /**
+         * AuditChainOverview
+         * @description The platform's own chain, how many chains the latest checks found
+         *     intact and broken, and the broken ones (at most 50).
+         */
+        AuditChainOverview: {
+            /** Broken */
+            broken?: components["schemas"]["BrokenAuditChainView"][];
+            /** Broken Chains */
+            broken_chains: number;
+            /** Intact Chains */
+            intact_chains: number;
+            platform: components["schemas"]["AuditChainStatusView"];
+        };
+        /**
+         * AuditChainProblem
+         * @description Why a check found an audit hash chain broken, at the first entry that
+         *     fails:
+         *
+         *     - HASH_MISMATCH: the entry's content no longer hashes to its hash (it
+         *       was changed after it was written);
+         *     - LINK_BROKEN: the entry does not name the hash of the entry before it
+         *       (an entry before it was changed, removed or put in);
+         *     - POSITION_GAP: a position is missing (an entry was removed);
+         *     - HEAD_LOST: the newest entry a check saw is gone or changed, and no
+         *       purge checkpoint explains it (the end of the chain was cut off or
+         *       rewritten);
+         *     - CHECKPOINT_MISMATCH: entries a purge checkpoint says are gone are
+         *       still there (the checkpoint was moved to hide them).
+         * @enum {string}
+         */
+        AuditChainProblem: "hash_mismatch" | "link_broken" | "position_gap" | "head_lost" | "checkpoint_mismatch";
+        /**
+         * AuditChainStatus
+         * @description What the latest check of one audit hash chain found: every entry it
+         *     read links to the one before and hashes to its stored hash (INTACT), or
+         *     something does not (BROKEN).
+         * @enum {string}
+         */
+        AuditChainStatus: "intact" | "broken";
+        /**
+         * AuditChainStatusView
+         * @description What the latest daily check of one chain found. `status` is None until
+         *     the first check ran; `verified_through_position` is the newest entry a
+         *     check verified, `purged_through_position` the last one a purge removed
+         *     (the chain then starts after it).
+         */
+        AuditChainStatusView: {
+            /** Broken Position */
+            broken_position?: number | null;
+            /** Checked At */
+            checked_at?: number | null;
+            /**
+             * Entries Checked
+             * @default 0
+             */
+            entries_checked: number;
+            problem?: components["schemas"]["AuditChainProblem"] | null;
+            /** Purged Through Position */
+            purged_through_position?: number | null;
+            status?: components["schemas"]["AuditChainStatus"] | null;
+            /** Verified Through Position */
+            verified_through_position?: number | null;
+        };
+        /**
          * AuditLogEntryView
          * @description One operation on personal data.
          */
@@ -5918,6 +6033,24 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /**
+         * AuditSecurityEvent
+         * @description The security event an audit entry records beside its action (version 6
+         *     of the entry; the action is one the release before already reads):
+         *
+         *     - LOGIN_FAILED (action `login`): a wrong sign-in code or second-factor
+         *       code;
+         *     - OTP_LOCKED and MFA_LOCKED (action `login`): the wrong code that used
+         *       up a sign-in code's or a second step's last attempt;
+         *     - LOGOUT (action `session_revoked`): a person signed out;
+         *     - KEY_ROTATION (action `update` of the encryption keys): a platform
+         *       admin started a key rotation, or the rotation finished.
+         *
+         *     Every such entry names no business: it is in the platform's chain and
+         *     the admin audit view.
+         * @enum {string}
+         */
+        AuditSecurityEvent: "login_failed" | "otp_locked" | "mfa_locked" | "logout" | "key_rotation";
         /**
          * AuthLevel
          * @description How a session was signed in: with the login code alone (ONE_FACTOR) or
@@ -6772,6 +6905,19 @@ export interface components {
             timezone: string;
             /** Value Minor */
             value_minor?: number | null;
+        };
+        /**
+         * BrokenAuditChainView
+         * @description A chain the latest check found broken (`business_id` None: the platform's).
+         */
+        BrokenAuditChainView: {
+            /** Broken Position */
+            broken_position?: number | null;
+            /** Business Id */
+            business_id?: string | null;
+            /** Checked At */
+            checked_at: number;
+            problem?: components["schemas"]["AuditChainProblem"] | null;
         };
         /**
          * BusinessAddress
@@ -13514,10 +13660,12 @@ export interface components {
         /**
          * PlatformAdminPermission
          * @description One thing an admin page or action needs; each role holds a fixed set
-         *     (`app/utilities/security/admin_permissions.py`).
+         *     (`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG
+         *     reads the platform's own audit log: every person's sign-ins, failed
+         *     codes, lockouts and sign-outs with their addresses.
          * @enum {string}
          */
-        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes";
+        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "view_security_log" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes";
         /**
          * PlatformAdminRole
          * @description What a platform admin is for. SUPER runs the platform: every admin
@@ -13593,15 +13741,56 @@ export interface components {
          *     WORKER_DOWN: no background worker wrote its pulse for five minutes,
          *     seen from outside the workers too (the API's pipeline watchdog and
          *     GET /healthz/pipeline): customers' messages are not answered.
+         *     BULK_PERSONAL_DATA: one business exported or erased personal data more
+         *     than 20 times in an hour. TENANT_HOPPING: one platform admin entered or
+         *     changed more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more
+         *     than 50 wrong sign-in codes in an hour for one destination (a phone, an
+         *     e-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the
+         *     daily check found an audit hash chain broken (an entry changed,
+         *     removed or put in).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
          * @enum {string}
          */
         PlatformAlertStatus: "firing" | "resolved";
+        /**
+         * PlatformAuditEntryView
+         * @description One entry of the platform's chain, at its position.
+         */
+        PlatformAuditEntryView: {
+            action: components["schemas"]["AuditAction"];
+            /** Actor Id */
+            actor_id?: string | null;
+            /** Chain Position */
+            chain_position?: number | null;
+            /** Entity */
+            entity: string;
+            /** Entity Id */
+            entity_id?: string | null;
+            /** Id */
+            id: string;
+            /** Ip Address */
+            ip_address?: string | null;
+            /** Occurred At */
+            occurred_at: number;
+            /** Record Count */
+            record_count?: number | null;
+            security_event?: components["schemas"]["AuditSecurityEvent"] | null;
+        };
+        /**
+         * PlatformAuditLogPage
+         * @description One page of the platform's entries; `next_cursor` is None on the last.
+         */
+        PlatformAuditLogPage: {
+            /** Items */
+            items: components["schemas"]["PlatformAuditEntryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /**
          * PlatformBotCommandResult
          * @description How the platform Telegram bot handled one staff message. The webhook
@@ -17378,6 +17567,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnnouncementAdminView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    audit_list_platform_audit_log: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+                action?: string | null;
+                security_event?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAuditLogPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    audit_get_audit_chain_overview: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditChainOverview"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -24406,6 +24770,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditLogPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    audit_get_audit_chain_status: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditChainStatusView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

@@ -70,6 +70,7 @@ from app.use_cases.spend_guard.check_business_spend_use_case import (
     CheckBusinessSpendUseCase,
 )
 from app.utilities.spend.spend_keys import business_limits_id_of
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.operations.fakes import FakeLocalizedTextResolver, RecordingManagerNotifier
 
@@ -215,7 +216,9 @@ def build_spend_world(
     marks = SpendLimitMarkRepository(
         InMemoryDocumentCollectionAdapter(SpendLimitMarkDocument)
     )
-    audit = AuditLogRepository(InMemoryDocumentCollectionAdapter(AuditLogEntryDocument))
+    audit = audit_log_repository(
+        InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
+    )
     notifier = RecordingManagerNotifier()
     jobs = RecordingJobQueue()
     check = CheckBusinessSpendUseCase(

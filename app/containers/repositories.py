@@ -7,6 +7,7 @@ from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
 from app.containers.analytics_repositories import AnalyticsRepositoriesContainer
+from app.containers.audit_chain_repositories import AuditChainRepositoriesContainer
 from app.containers.billing_repositories import BillingRepositoriesContainer
 from app.containers.calendar_sync_repositories import CalendarSyncRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
@@ -57,7 +58,6 @@ from app.repositories.channel_repositories import (
     ManagerTelegramLinkRepository,
 )
 from app.repositories.compliance_repositories import (
-    AuditLogRepository,
     DpaAcceptanceRepository,
 )
 from app.repositories.contact_activity_repository import ContactActivityRepository
@@ -114,6 +114,7 @@ class RepositoriesContainer(
     GrowthRepositoriesContainer,
     CalendarSyncRepositoriesContainer,
     IntegrationRepositoriesContainer,
+    AuditChainRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 
@@ -228,10 +229,6 @@ class RepositoriesContainer(
     usage_event_repo: Singleton[UsageEventRepository] = Singleton(
         UsageEventRepository,
         collection=collections.usage_event_collection,
-    )
-    audit_log_repo: Singleton[AuditLogRepository] = Singleton(
-        AuditLogRepository,
-        collection=collections.audit_log_entry_collection,
     )
     dpa_acceptance_repo: Singleton[DpaAcceptanceRepository] = Singleton(
         DpaAcceptanceRepository,

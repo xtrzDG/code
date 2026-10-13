@@ -1,0 +1,16 @@
+# The daily verify_audit_chain job found a hash chain of the audit log
+# broken: an entry no longer hashes to its hash, does not link to the one
+# before, a position is missing, the end of a chain is gone, or a purge
+# checkpoint does not match. The application cannot change or delete
+# entries (migration 1193), so this means someone with database rights did,
+# or a restore mixed backups. The figure is the number of broken chains.
+code: audit_chain_broken
+severity: sev1
+summary: "The daily check found an audit log hash chain broken: an entry was changed, removed or put in."
+measure: audit chains whose latest check found them broken
+threshold: 0
+unit: count
+window_minutes: 1440
+volume_floor: 0
+source: audit_chain_statuses by status (audit_chain_statuses_doc_status_idx), migration 1193
+runbook: docs/operations/runbooks/audit-chain-broken.md

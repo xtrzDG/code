@@ -46,6 +46,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.fakes import FakeLocalizedTextResolver, FakePhoneNumberParser
 
 # 2026-10-01 09:00:00 UTC: 13:00 in Tbilisi, 05:00 in New York, 18:00 in Tokyo.
@@ -113,7 +114,7 @@ class KnowledgeStore:
                 )
             )
         )
-        self.audit_log_repo: AuditLogRepository = AuditLogRepository(
+        self.audit_log_repo: AuditLogRepository = audit_log_repository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument
             )

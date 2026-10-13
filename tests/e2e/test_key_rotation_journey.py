@@ -9,9 +9,11 @@ from collections.abc import Iterator
 
 import pytest
 
+from app.schemas.constants.compliance import AuditSecurityEvent
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
+from app.utilities.compliance.audit_chain_hashing import PLATFORM_CHAIN_KEY
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import ADMIN_EMAIL
 from tests.e2e.journeys import BUSINESS_BOT_TOKEN, sign_in_and_create_restaurant
@@ -141,3 +143,34 @@ def test_a_second_run_finds_everything_current(rotating: Workshop) -> None:
         2,  # the bot token and the admin's authenticator secret
         0,
     )
+
+
+def test_a_rotation_is_audited_when_started_and_when_finished(
+    rotating: Workshop,
+) -> None:
+    admin_token, admin_session = rotating.sign_in_with_email(ADMIN_EMAIL)
+    started = rotating.client.post(f"{KEYS_URL}/rotate", headers=bearer(admin_token))
+    rotating.run_queued_jobs()
+
+    entries = rotating.container.adapters.collections.audit_log_entry_collection()
+    rotations = sorted(
+        (
+            entry
+            for entry in entries.list_all()
+            if entry.security_event is AuditSecurityEvent.KEY_ROTATION
+        ),
+        key=lambda entry: int(entry.chain_position or 0),
+    )
+    assert started.status_code == 202, started.text
+    assert [str(entry.entity_id) for entry in rotations] == [
+        started.json()["rotation"]["id"]
+    ] * 2
+    # The admin started it; the worker finished it.
+    assert [entry.actor_id for entry in rotations] == [
+        admin_session["user"]["id"],
+        None,
+    ]
+    assert rotations[0].record_count is None
+    assert rotations[1].record_count is not None
+    assert {entry.business_id for entry in rotations} == {None}
+    assert {entry.chain_key for entry in rotations} == {PLATFORM_CHAIN_KEY}

@@ -12,7 +12,6 @@ from app.repositories.analytics_repositories import (
     ProductEventRepository,
     WebVitalSampleRepository,
 )
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.analytics import (
     DeviceClass,
@@ -34,6 +33,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.telemetry.purge_web_vitals_use_case import PurgeWebVitalsUseCase
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.conftest import CollectionFactory
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
 
@@ -153,7 +153,7 @@ def test_the_purge_deletes_vitals_older_than_90_days_and_is_audited(
     repo.add_many([vital(1000, 91), vital(2000, 200), fresh])
     purge = PurgeWebVitalsUseCase(
         web_vital_sample_repo=repo,
-        audit_log_repo=AuditLogRepository(audit_collection),
+        audit_log_repo=audit_log_repository(audit_collection),
         wall_clock=build_fixed_wall_clock(),
     )
     tick = JobTick(job_name=JobName("purge_web_vitals"), scheduled_at=Microseconds(NOW))

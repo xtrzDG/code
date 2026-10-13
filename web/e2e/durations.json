@@ -7,6 +7,7 @@
   "admin-system.spec.ts": 11.4,
   "allowed-sites.spec.ts": 3,
   "apply-changes.spec.ts": 36.6,
+  "audit-trail.spec.ts": 46.2,
   "auth.spec.ts": 9.7,
   "billing-documents.spec.ts": 7,
   "booking-dialog.spec.ts": 11.7,

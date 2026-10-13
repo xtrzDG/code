@@ -14,6 +14,9 @@ from app.containers.orchestrators.admin_action_orchestrators import (
 from app.containers.orchestrators.analytics_orchestrators import (
     AnalyticsOrchestratorsContainer,
 )
+from app.containers.orchestrators.audit_trail_orchestrators import (
+    AuditTrailOrchestratorsContainer,
+)
 from app.containers.orchestrators.compliance_orchestrators import (
     ComplianceOrchestratorsContainer,
 )
@@ -106,6 +109,9 @@ class CoreOrchestratorsContainer(containers.DeclarativeContainer):
     )
     telemetry: TelemetryOrchestratorsContainer = Container(  # type: ignore[assignment]
         TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
+    )
+    audit_trail: AuditTrailOrchestratorsContainer = Container(  # type: ignore[assignment]
+        AuditTrailOrchestratorsContainer, audit_trail_use_cases=use_cases.audit_trail
     )
     reliability: ReliabilityOrchestratorsContainer = Container(  # type: ignore[assignment]
         ReliabilityOrchestratorsContainer,

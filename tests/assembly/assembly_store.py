@@ -25,7 +25,6 @@ from app.repositories.business_repositories import (
     BusinessRepository,
 )
 from app.repositories.compliance_repositories import (
-    AuditLogRepository,
     DpaAcceptanceRepository,
 )
 from app.repositories.conversation_repositories import MessageRepository
@@ -71,6 +70,7 @@ from tests.assembly.fake_locale_registries import (
     FakeLanguageRegistry,
 )
 from tests.assembly.fake_niche_templates import FakeNicheTemplateRegistry
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.access_support import platform_admin
 from tests.foundation.support_access_builders import (
     allow_support_changes,
@@ -145,7 +145,7 @@ class AssemblyStore:
         )
         self.user_repo = UserRepository(InMemoryDocumentCollectionAdapter(UserDocument))
         self.support_grants = in_memory_grant_repo()
-        self.audit_repo = AuditLogRepository(
+        self.audit_repo = audit_log_repository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
         self.subscription_repo = SubscriptionRepository(

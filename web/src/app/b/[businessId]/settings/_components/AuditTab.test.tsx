@@ -58,7 +58,10 @@ describe("AuditTab: the audit log table and its states", () => {
 
   it("explains a failed load with its request id and loads again on Retry", async () => {
     const user = userEvent.setup();
-    answerGet(() => failure(500, { error: "internal_error", message: "database away" }, "req_audit_9"));
+    // Only the log fails here; the tamper check's own failure is AuditChainStrip's test.
+    answerGet((path) =>
+      path === AUDIT_LOG ? failure(500, { error: "internal_error", message: "database away" }, "req_audit_9") : pending(),
+    );
     renderTab();
 
     expect(await screen.findByText(t("errors.codes.internal_error"))).toBeTruthy();
@@ -66,7 +69,7 @@ describe("AuditTab: the audit log table and its states", () => {
     expect(screen.queryByText(/database away/)).toBeNull();
     expect(screen.queryByRole("table")).toBeNull();
 
-    answerGet(() => ok(page([entry])));
+    answerGet((path) => (path === AUDIT_LOG ? ok(page([entry])) : pending()));
     await user.click(screen.getByRole("button", { name: t("common.retry") }));
 
     expect(await screen.findByRole("table", { name: t("settings.audit.title") })).toBeTruthy();

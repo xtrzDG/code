@@ -16,7 +16,6 @@ from app.repositories.booking_repositories import (
 from app.repositories.business_repositories import BusinessRepository
 from app.repositories.call_follow_up_repositories import MissedCallRepository
 from app.repositories.call_repository import CallRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
     ConversationRepository,
     LlmTurnRepository,
@@ -58,6 +57,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.compliance.retention.purge_expired_personal_data_use_case import (
     PurgeExpiredPersonalDataUseCase,
 )
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.media.media_fakes import InMemoryMediaStorage
 from tests.privacy.processor_erasure_doubles import ProcessorErasureBed
 from tests.storage.builders import COUNTRY_SAMPLES, build_business
@@ -119,7 +119,7 @@ class RetentionWorld:
         self.media = MessageMediaRepository(
             build(MessageMediaDocument, "message_media")
         )
-        self.audit = AuditLogRepository(
+        self.audit = audit_log_repository(
             build(AuditLogEntryDocument, "audit_log_entries")
         )
         self.settings = BusinessPrivacySettingsRepository(

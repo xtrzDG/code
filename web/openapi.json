@@ -2403,6 +2403,141 @@
         "title": "AuditAction",
         "type": "string"
       },
+      "AuditChainOverview": {
+        "additionalProperties": false,
+        "description": "The platform's own chain, how many chains the latest checks found\nintact and broken, and the broken ones (at most 50).",
+        "properties": {
+          "broken": {
+            "items": {
+              "$ref": "#/components/schemas/BrokenAuditChainView"
+            },
+            "title": "Broken",
+            "type": "array"
+          },
+          "broken_chains": {
+            "minimum": 0.0,
+            "title": "Broken Chains",
+            "type": "integer"
+          },
+          "intact_chains": {
+            "minimum": 0.0,
+            "title": "Intact Chains",
+            "type": "integer"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/AuditChainStatusView"
+          }
+        },
+        "required": [
+          "platform",
+          "intact_chains",
+          "broken_chains"
+        ],
+        "title": "AuditChainOverview",
+        "type": "object"
+      },
+      "AuditChainProblem": {
+        "description": "Why a check found an audit hash chain broken, at the first entry that\nfails:\n\n- HASH_MISMATCH: the entry's content no longer hashes to its hash (it\n  was changed after it was written);\n- LINK_BROKEN: the entry does not name the hash of the entry before it\n  (an entry before it was changed, removed or put in);\n- POSITION_GAP: a position is missing (an entry was removed);\n- HEAD_LOST: the newest entry a check saw is gone or changed, and no\n  purge checkpoint explains it (the end of the chain was cut off or\n  rewritten);\n- CHECKPOINT_MISMATCH: entries a purge checkpoint says are gone are\n  still there (the checkpoint was moved to hide them).",
+        "enum": [
+          "hash_mismatch",
+          "link_broken",
+          "position_gap",
+          "head_lost",
+          "checkpoint_mismatch"
+        ],
+        "title": "AuditChainProblem",
+        "type": "string"
+      },
+      "AuditChainStatus": {
+        "description": "What the latest check of one audit hash chain found: every entry it\nread links to the one before and hashes to its stored hash (INTACT), or\nsomething does not (BROKEN).",
+        "enum": [
+          "intact",
+          "broken"
+        ],
+        "title": "AuditChainStatus",
+        "type": "string"
+      },
+      "AuditChainStatusView": {
+        "additionalProperties": false,
+        "description": "What the latest daily check of one chain found. `status` is None until\nthe first check ran; `verified_through_position` is the newest entry a\ncheck verified, `purged_through_position` the last one a purge removed\n(the chain then starts after it).",
+        "properties": {
+          "broken_position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Broken Position"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "entries_checked": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Entries Checked",
+            "type": "integer"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditChainProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "purged_through_position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purged Through Position"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditChainStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verified_through_position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Through Position"
+          }
+        },
+        "title": "AuditChainStatusView",
+        "type": "object"
+      },
       "AuditLogEntryView": {
         "additionalProperties": false,
         "description": "One operation on personal data.",
@@ -2522,6 +2657,18 @@
         ],
         "title": "AuditLogPage",
         "type": "object"
+      },
+      "AuditSecurityEvent": {
+        "description": "The security event an audit entry records beside its action (version 6\nof the entry; the action is one the release before already reads):\n\n- LOGIN_FAILED (action `login`): a wrong sign-in code or second-factor\n  code;\n- OTP_LOCKED and MFA_LOCKED (action `login`): the wrong code that used\n  up a sign-in code's or a second step's last attempt;\n- LOGOUT (action `session_revoked`): a person signed out;\n- KEY_ROTATION (action `update` of the encryption keys): a platform\n  admin started a key rotation, or the rotation finished.\n\nEvery such entry names no business: it is in the platform's chain and\nthe admin audit view.",
+        "enum": [
+          "login_failed",
+          "otp_locked",
+          "mfa_locked",
+          "logout",
+          "key_rotation"
+        ],
+        "title": "AuditSecurityEvent",
+        "type": "string"
       },
       "AuthLevel": {
         "description": "How a session was signed in: with the login code alone (ONE_FACTOR) or\nwith the login code and an authenticator or recovery code (TWO_FACTOR).\nPlatform admin pages and businesses that require it take only\nTWO_FACTOR sessions.",
@@ -4909,6 +5056,54 @@
           "created_at"
         ],
         "title": "BookingView",
+        "type": "object"
+      },
+      "BrokenAuditChainView": {
+        "additionalProperties": false,
+        "description": "A chain the latest check found broken (`business_id` None: the platform's).",
+        "properties": {
+          "broken_position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Broken Position"
+          },
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "integer"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditChainProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "checked_at"
+        ],
+        "title": "BrokenAuditChainView",
         "type": "object"
       },
       "BusinessAddress": {
@@ -21883,13 +22078,14 @@
         "type": "object"
       },
       "PlatformAdminPermission": {
-        "description": "One thing an admin page or action needs; each role holds a fixed set\n(`app/utilities/security/admin_permissions.py`).",
+        "description": "One thing an admin page or action needs; each role holds a fixed set\n(`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG\nreads the platform's own audit log: every person's sign-ins, failed\ncodes, lockouts and sign-outs with their addresses.",
         "enum": [
           "view_clients",
           "open_client_cabinet",
           "change_client_cabinet",
           "view_metrics",
           "view_operations",
+          "view_security_log",
           "manage_operations",
           "manage_admins",
           "manage_client_billing",
@@ -22029,7 +22225,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -22047,7 +22243,11 @@
           "answer_budget_slow_burn",
           "api_budget_fast_burn",
           "api_budget_slow_burn",
-          "worker_down"
+          "worker_down",
+          "bulk_personal_data",
+          "tenant_hopping",
+          "failed_sign_in_checks",
+          "audit_chain_broken"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -22060,6 +22260,134 @@
         ],
         "title": "PlatformAlertStatus",
         "type": "string"
+      },
+      "PlatformAuditEntryView": {
+        "additionalProperties": false,
+        "description": "One entry of the platform's chain, at its position.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "chain_position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Position"
+          },
+          "entity": {
+            "title": "Entity",
+            "type": "string"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          },
+          "record_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count"
+          },
+          "security_event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditSecurityEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "entity",
+          "occurred_at"
+        ],
+        "title": "PlatformAuditEntryView",
+        "type": "object"
+      },
+      "PlatformAuditLogPage": {
+        "additionalProperties": false,
+        "description": "One page of the platform's entries; `next_cursor` is None on the last.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformAuditEntryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PlatformAuditLogPage",
+        "type": "object"
       },
       "PlatformBotCommandResult": {
         "description": "How the platform Telegram bot handled one staff message. The webhook\nonly stores the message (QUEUED); the worker then answers it.",
@@ -31648,6 +31976,288 @@
         "summary": "Update Announcement",
         "tags": [
           "platform status"
+        ]
+      }
+    },
+    "/v1/admin/audit-log": {
+      "get": {
+        "operationId": "audit_list_platform_audit_log",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "in": "query",
+            "name": "security_event",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Security Event"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAuditLogPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Platform Audit Log",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/v1/admin/audit-log/chains": {
+      "get": {
+        "operationId": "audit_get_audit_chain_overview",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditChainOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Audit Chain Overview",
+        "tags": [
+          "audit"
         ]
       }
     },
@@ -42977,6 +43587,124 @@
         "summary": "List Audit Log",
         "tags": [
           "compliance"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/audit-log/chain": {
+      "get": {
+        "operationId": "audit_get_audit_chain_status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditChainStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Audit Chain Status",
+        "tags": [
+          "audit"
         ]
       }
     },

@@ -16,7 +16,6 @@ from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.repositories.business_repositories import BusinessRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.access import PlatformAdminPermission, PlatformAdminRole
 from app.schemas.constants.mfa import AuthLevel
@@ -40,6 +39,7 @@ from app.use_cases.authorize_business_access_use_case import (
 )
 from app.utilities.security.platform_admin_ids import derive_platform_admin_id
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.access_support import (
     PLATFORM_ADMIN_EMAIL,
     platform_admin,
@@ -88,7 +88,7 @@ class World:
         return build_authorize_business_access(
             business_repo=self.businesses,
             user_repo=self.users,
-            audit_log_repo=AuditLogRepository(self.audit_entries),
+            audit_log_repo=audit_log_repository(self.audit_entries),
             wall_clock=self.wall_clock,
             session_assurance=self.sessions,
             grant_repo=self.grants,

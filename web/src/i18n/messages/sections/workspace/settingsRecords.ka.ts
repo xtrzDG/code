@@ -141,6 +141,8 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       platform_admin: "პლატფორმის ადმინისტრატორი",
       platform_announcement: "პლატფორმის განცხადება",
       encryption_keys: "დაშიფვრის გასაღებები",
+      audit_log_entry: "ქმედებების ჟურნალის ჩანაწერები",
+      login_destination: "შესვლის მისამართი",
       inbound_event: "შემომავალი მოვლენა",
       outbound_message: "გამავალი შეტყობინება",
       channel_message_receipt: "მიწოდების დადასტურება",

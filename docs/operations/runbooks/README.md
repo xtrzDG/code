@@ -23,6 +23,8 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |
 | [data-breach](data-breach.md) | anyone who suspects one | SEV1, 48 h clock |
 | [error-budget-burn](error-budget-burn.md) | `answer_budget_fast_burn`, `answer_budget_slow_burn`, `api_budget_fast_burn`, `api_budget_slow_burn` | SEV1-SEV2 |
+| [audit-anomaly](audit-anomaly.md) | `bulk_personal_data`, `tenant_hopping`, `failed_sign_in_checks` | SEV2 |
+| [audit-chain-broken](audit-chain-broken.md) | `audit_chain_broken`, a broken chain on Admin → Audit | SEV1 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
 queue lanes and dead letters, channels in ERROR, the last backup. Each

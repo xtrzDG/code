@@ -3,6 +3,34 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class AuditChainCount(BaseConstrainedTypedInt):
+    """How many audit hash chains (businesses' and the platform's) are in a state."""
+
+    ge = 0
+
+
+class AuditChainEntryCount(BaseConstrainedTypedInt):
+    """How many entries of one audit hash chain a check read or a purge removed."""
+
+    ge = 0
+
+
+class AuditChainPosition(BaseConstrainedTypedInt):
+    """
+    The place of an entry in its audit hash chain: 1 for the first entry
+    the chain holds, one more for each entry after it.
+    """
+
+    ge = 1
+
+
+class AuditPurgeBatchSize(BaseConstrainedTypedInt):
+    """How many audit entries one purge statement removes at most."""
+
+    ge = 1
+    le = 10_000
+
+
 class AuditRecordCount(BaseConstrainedTypedInt):
     """
     How many records one audited operation covered, when it covered many
@@ -10,6 +38,25 @@ class AuditRecordCount(BaseConstrainedTypedInt):
     """
 
     ge = 0
+
+
+class AuditRetentionDays(BaseConstrainedTypedInt):
+    """
+    How many days audit entries are kept at least before a purge may
+    remove them: an owner's dispute or an authority's question can reach a
+    year back.
+    """
+
+    ge = 365
+
+
+class AuditViewCount(BaseConstrainedTypedInt):
+    """
+    How many identical views one audited VIEW stands for: the first one and
+    those of the same person, record and address within 5 minutes.
+    """
+
+    ge = 1
 
 
 class DeletedRecordingCount(BaseConstrainedTypedInt):

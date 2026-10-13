@@ -35,6 +35,7 @@ from app.use_cases.localization.build_call_forwarding_instructions_use_case impo
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.localization.builders import build_wall_clock
@@ -63,7 +64,7 @@ def build_cabinet_world() -> CabinetWorld:
     channel_repo = ChannelRepository(
         InMemoryDocumentCollectionAdapter[ChannelDocument](ChannelDocument)
     )
-    audit_log_repo = AuditLogRepository(
+    audit_log_repo = audit_log_repository(
         InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](AuditLogEntryDocument)
     )
     orchestrator = CallForwardingInstructionsOrchestrator(

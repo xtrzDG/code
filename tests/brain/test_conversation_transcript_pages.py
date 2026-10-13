@@ -87,9 +87,10 @@ def test_the_card_pages_back_through_a_long_transcript() -> None:
         for entry in world.audit_log_repo.list_by_business(world.business.id)
         if entry.action is AuditAction.VIEW and str(entry.entity) == "conversation"
     ]
-    # The card and its pages, within five minutes: one entry with a count.
+    # The card and its pages, within five minutes: one entry, counted beside it.
     [view] = views
-    assert view.record_count == 1 + len(pages)
+    counts = world.audit_log_repo.view_counts(world.business.id, [view.id])
+    assert int(counts[view.id]) == 1 + len(pages)
 
 
 def test_earlier_messages_need_a_conversation_of_the_business() -> None:

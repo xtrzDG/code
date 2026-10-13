@@ -9,6 +9,9 @@ import io
 
 from typed_time_provider import Microseconds
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -16,6 +19,11 @@ from app.gateways.http.csv_streaming import stream_csv
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.privacy import CsvExportKind
+from app.schemas.domain.audit_chain import (
+    AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
+    AuditViewCountDocument,
+)
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.listing_filters import AuditLogFilter
 from app.schemas.dto.paging import KeysetSlice
@@ -33,7 +41,13 @@ class GeneratedAuditLog(AuditLogRepository):
     """A log of ENTRY_COUNT entries, newest first, made page by page."""
 
     def __init__(self) -> None:
-        super().__init__(InMemoryDocumentCollectionAdapter(AuditLogEntryDocument))
+        super().__init__(
+            InMemoryDocumentCollectionAdapter(AuditLogEntryDocument),
+            view_counts=InMemoryDocumentCollectionAdapter(AuditViewCountDocument),
+            checkpoints=InMemoryDocumentCollectionAdapter(AuditChainCheckpointDocument),
+            heads=InMemoryDocumentCollectionAdapter(AuditChainHeadDocument),
+            advisory_locks=InMemoryAdvisoryLockAdapter(),
+        )
         self.page_reads: int = 0
         self.largest_read: int = 0
 

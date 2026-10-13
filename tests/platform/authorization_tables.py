@@ -35,6 +35,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/assistant/apply",
         f"DELETE {B}/assistant/drafts/{{version_id}}",
         f"GET {B}/audit-log",
+        f"GET {B}/audit-log/chain",
         f"GET {B}/autotest-cases",
         f"POST {B}/autotest-cases",
         f"PATCH {B}/autotest-cases/{{case_id}}",

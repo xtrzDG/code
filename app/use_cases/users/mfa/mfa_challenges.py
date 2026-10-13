@@ -83,10 +83,10 @@ def take_mfa_attempt(
     mfa_challenge_repo: MfaChallengeRepoContract,
     challenge: MfaChallengeDocument,
     now: Microseconds,
-) -> None:
+) -> MfaAttemptCount:
     """
     Count this check before any code is compared, in one atomic step, so
-    parallel guesses cannot all be compared.
+    parallel guesses cannot all be compared; returns which attempt it is.
 
     Raises:
         AuthenticationRequiredError: a parallel check used the challenge.
@@ -99,7 +99,7 @@ def take_mfa_attempt(
     if attempt is not None:
         if attempt >= MFA_MAX_FAILED_ATTEMPTS:
             logger.warning("Sign-in step %s took its last attempt.", challenge.id)
-        return
+        return attempt
 
     current: MfaChallengeDocument | None = mfa_challenge_repo.get(challenge.id)
     if current is None or current.is_consumed:

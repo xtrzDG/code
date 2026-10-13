@@ -7,7 +7,8 @@ from app.schemas.constants.access import PlatformAdminPermission, PlatformAdminR
 ROLE_PERMISSIONS: Mapping[PlatformAdminRole, frozenset[PlatformAdminPermission]] = {
     PlatformAdminRole.SUPER: frozenset(PlatformAdminPermission),
     # Helps clients: the client list, the platform's health and read-only
-    # looks into a cabinet; never changes, money or the team.
+    # looks into a cabinet; never changes, money, the team or the
+    # platform's security log (every person's sign-ins with addresses).
     PlatformAdminRole.SUPPORT_READONLY: frozenset(
         {
             PlatformAdminPermission.VIEW_CLIENTS,

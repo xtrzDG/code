@@ -89,6 +89,10 @@ figure is above its threshold:
 | `answer_budget_slow_burn` | the answer budget burns over 6 times the sustainable pace in the last 6 hours and the last 30 minutes (at least 20 messages) | SEV2 | [error-budget-burn](runbooks/error-budget-burn.md) |
 | `api_budget_fast_burn` | the API budget burns over 14.4 times the sustainable pace in the last hour and the last 5 minutes (at least 100 requests) | SEV1 | [error-budget-burn](runbooks/error-budget-burn.md) |
 | `api_budget_slow_burn` | the API budget burns over 6 times the sustainable pace in the last 6 hours and the last 30 minutes (at least 100 requests) | SEV2 | [error-budget-burn](runbooks/error-budget-burn.md) |
+| `bulk_personal_data` | one business exported or erased personal data over 20 times in the last hour | SEV2 | [audit-anomaly](runbooks/audit-anomaly.md) |
+| `tenant_hopping` | one platform admin entered or changed over 10 clients' accounts in the last hour | SEV2 | [audit-anomaly](runbooks/audit-anomaly.md) |
+| `failed_sign_in_checks` | over 50 wrong sign-in or second-factor codes in the last hour for one destination | SEV2 | [audit-anomaly](runbooks/audit-anomaly.md) |
+| `audit_chain_broken` | the daily check found an audit log hash chain changed, cut or with an entry put in | SEV1 | [audit-chain-broken](runbooks/audit-chain-broken.md) |
 
 **Burn rates.** The four budget alerts are multi-window burn-rate rules
 on the `service_level_slots` rows. A burn rate of 14.4 for an hour spends

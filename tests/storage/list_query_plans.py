@@ -20,7 +20,6 @@ from app.repositories.booking_repositories import (
 )
 from app.repositories.business_repositories import BusinessRepository
 from app.repositories.client_standing_repository import ClientStandingRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.contact_activity_repository import ContactActivityRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
@@ -56,6 +55,7 @@ from app.schemas.typings.platform.strings import ListItemKey
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.hot_path_rows import BASE_TIME
 from tests.storage.list_query_rows import LIST_BUSINESS_COUNT
 from tests.storage.storage_testing import build_fixed_wall_clock
@@ -99,7 +99,7 @@ class ListRepositories:
         self.questions = UnansweredQuestionRepository(
             self._collection(UnansweredQuestionDocument, "unanswered_questions")
         )
-        self.audit = AuditLogRepository(
+        self.audit = audit_log_repository(
             self._collection(AuditLogEntryDocument, "audit_log_entries")
         )
         self.contacts = ContactRepository(self._collection(ContactDocument, "contacts"))

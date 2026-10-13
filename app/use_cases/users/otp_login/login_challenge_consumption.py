@@ -11,9 +11,11 @@ from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     RateLimitedError,
 )
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
+from app.use_cases.users.sign_in_security_audit import SignInSecurityAudit
 from app.utilities.security.one_time_codes import is_otp_code_matching
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -29,9 +31,14 @@ def consume_login_challenge(
     challenge_id: OtpChallengeId,
     code: OtpCode,
     now: Microseconds,
+    security_audit: SignInSecurityAudit | None = None,
+    client_ip_address: ClientIpAddress | None = None,
 ) -> OtpChallengeDocument:
     """
     The challenge, consumed, when the code matches it.
+
+    With `security_audit` (sign-in), a wrong code is audited as
+    LOGIN_FAILED, and the one that locks the challenge as OTP_LOCKED.
 
     After `otp_max_failed_attempts` wrong codes the challenge is locked:
     every check takes one attempt in one atomic step before the code is
@@ -69,6 +76,10 @@ def consume_login_challenge(
                 "Login code challenge %s locked after %s wrong codes.",
                 challenge.id,
                 int(attempt),
+            )
+        if security_audit is not None:
+            security_audit.wrong_login_code(
+                challenge, attempt, max_attempts, client_ip_address, now
             )
         raise AuthenticationRequiredError(INVALID_CODE_MESSAGE)
 

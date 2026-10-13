@@ -7,6 +7,11 @@ column of their own), every other catalog collection is TENANT.
 from base_pydantic_schemas import PersistentDocument
 
 from app.schemas.domain import help_progress, platform_status
+from app.schemas.domain.audit_chain import (
+    AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
+    AuditChainStatusDocument,
+)
 from app.schemas.domain.billing_profiles import InvoiceCounterDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.client_health_changes import AdminDigestStateDocument
@@ -55,6 +60,10 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         UserSessionDocument,
         BusinessDocument,
         AuditLogEntryDocument,
+        # The platform's own chain names no business (1193).
+        AuditChainCheckpointDocument,
+        AuditChainHeadDocument,
+        AuditChainStatusDocument,
         LlmTurnDocument,
         QueuedJobDocument,
         PeriodicJobRunDocument,

@@ -11,6 +11,9 @@ from app.containers.pipelines.admin_action_pipelines import (
 )
 from app.containers.pipelines.analytics_pipelines import AnalyticsPipelinesContainer
 from app.containers.pipelines.assistant_pipelines import AssistantPipelinesContainer
+from app.containers.pipelines.audit_trail_pipelines import (
+    AuditTrailPipelinesContainer,
+)
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
 from app.containers.pipelines.booking_link_pipelines import (
     BookingLinkPipelinesContainer,
@@ -169,6 +172,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     telemetry: TelemetryPipelinesContainer = Container(  # type: ignore[assignment]
         TelemetryPipelinesContainer, telemetry_orchestrators=orchestrators.telemetry
+    )
+    audit_trail: AuditTrailPipelinesContainer = Container(  # type: ignore[assignment]
+        AuditTrailPipelinesContainer, audit_trail=orchestrators.audit_trail
     )
     reliability: ReliabilityPipelinesContainer = Container(  # type: ignore[assignment]
         ReliabilityPipelinesContainer, reliability=orchestrators.reliability

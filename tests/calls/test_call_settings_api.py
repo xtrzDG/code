@@ -178,7 +178,9 @@ class TestTextBackList:
             )
             if (entry.action.value, str(entry.entity)) == ("view", "missed_call")
         ]
-        assert views.record_count == 2
+        # The second look is counted beside the entry, which never changes.
+        counts = setup.testbed.audit_log_repo.view_counts(setup.business.id, [views.id])
+        assert int(counts[views.id]) == 2
 
     def test_no_text_backs_yet(self, setup: VoiceSetup, client: TestClient) -> None:
         response = client.get(text_backs_path(setup), headers=bearer("owner"))

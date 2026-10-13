@@ -60,6 +60,10 @@ export const platformQueryKeys = {
     partners: () => ["admin", "partners"] as const,
     /** One month's payout report (YYYY-MM). */
     payouts: (month: string) => ["admin", "partners", "payouts", month] as const,
+    /** The tamper check of every audit log (GET /v1/admin/audit-log/chains). */
+    auditChains: () => ["admin", "audit", "chains"] as const,
+    /** The platform's own audit log for one event filter, newest first. */
+    auditLog: (filters: string) => ["admin", "audit", "log", filters] as const,
   },
 
   help: {

@@ -69,6 +69,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from app.use_cases.admin.alerts.data_task_alert_checks import DataTaskAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
+from tests.compliance.audit_trail_store import AuditTrailStore
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.platform_ops.ops_documents import NOW
@@ -173,6 +174,7 @@ class OpsWorld:
             ServiceLevelSlotDocument
         )
         self.slot_repo = ServiceLevelSlotRepository(self.slots)
+        self.audit = AuditTrailStore()
 
     def checks(self) -> PlatformAlertChecks:
         return PlatformAlertChecks(
@@ -186,7 +188,12 @@ class OpsWorld:
             data_task_checks=DataTaskAlertChecks(
                 self.data_task_registry, self.data_task_states
             ),
-            extra_checks=extra_alert_checks(self.slot_repo, self.heartbeat_repo),
+            extra_checks=extra_alert_checks(
+                self.slot_repo,
+                self.heartbeat_repo,
+                self.audit.activity,
+                self.audit.chains,
+            ),
         )
 
     def alerts_use_case(

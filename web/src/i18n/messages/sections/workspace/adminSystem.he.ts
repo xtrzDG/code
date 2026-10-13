@@ -66,6 +66,10 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       api_budget_fast_burn: "תקציב ה-API נשרף מהר",
       api_budget_slow_burn: "תקציב ה-API נשרף",
       worker_down: "אף worker לא עונה",
+      bulk_personal_data: "ייצוא המוני של מידע אישי",
+      tenant_hopping: "מנהל בחשבונות של לקוחות רבים",
+      failed_sign_in_checks: "ניחוש קודי כניסה",
+      audit_chain_broken: "יומן הביקורת שונה",
     },
   },
   errorBudget: {

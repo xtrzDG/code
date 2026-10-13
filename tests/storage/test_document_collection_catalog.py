@@ -13,6 +13,9 @@ from app.containers.adapters import invoicing_collections_container as invoicing
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.audit_chain_collections_container import (
+    AuditChainCollectionsContainer,
+)
 from app.containers.adapters.calendar_sync_collections_container import (
     CalendarSyncCollectionsContainer,
 )
@@ -129,6 +132,8 @@ COLLECTION_CONTAINERS = (
     # Two-way availability (1160).
     CalendarSyncCollectionsContainer,
     IntegrationCollectionsContainer,
+    # The audit log's view counts, chain checkpoints and checks (1193).
+    AuditChainCollectionsContainer,
 )
 
 

@@ -8,6 +8,22 @@ from tests.e2e.harness import Workshop
 from tests.e2e.journeys import open_restaurant
 
 
+def workspace_views(
+    workshop: Workshop, base: str, headers: dict[str, str]
+) -> dict[str, int]:
+    """The owner's audit log: how many views each list entry stands for."""
+
+    page = workshop.client.get(
+        f"{base}/audit-log", params={"action": "view"}, headers=headers
+    )
+    assert page.status_code == 200, page.text
+    return {
+        str(item["entity"]): int(item["record_count"])
+        for item in page.json()["items"]
+        if item["entity"] in {"booking", "lead", "handoff"}
+    }
+
+
 def test_lists_record_the_address_they_were_opened_from(workshop: Workshop) -> None:
     restaurant = open_restaurant(workshop)
     for path in ("bookings", "leads", "handoffs"):
@@ -30,4 +46,6 @@ def test_lists_record_the_address_they_were_opened_from(workshop: Workshop) -> N
         "lead",
     ]
     assert all(entry.ip_address is not None for entry in entries)
-    assert all(int(entry.record_count or 0) == 2 for entry in entries)
+    # The second look is counted beside the entry, which never changes.
+    listed = workspace_views(workshop, restaurant.base, restaurant.headers)
+    assert listed == {"booking": 2, "handoff": 2, "lead": 2}

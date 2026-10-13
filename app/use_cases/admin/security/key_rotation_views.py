@@ -2,10 +2,11 @@
 
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.compliance import AuditAction, AuditSecurityEvent
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.dto.key_rotation import KeyRotationView
+from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -44,15 +45,42 @@ def build_rotation_audit_entry(
     client_ip_address: ClientIpAddress | None,
     now: Microseconds,
 ) -> AuditLogEntryDocument:
-    """A platform admin had every stored secret sealed again (UPDATE)."""
+    """
+    A platform admin had every stored secret sealed again (UPDATE of the
+    encryption keys, the security event KEY_ROTATION).
+    """
 
     return AuditLogEntryDocument(
         business_id=None,
         actor_id=admin_id,
         action=AuditAction.UPDATE,
+        security_event=AuditSecurityEvent.KEY_ROTATION,
         entity=ENCRYPTION_KEYS_AUDIT_ENTITY,
         entity_id=AuditEntityReference(str(rotation.id)),
         ip_address=client_ip_address,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def build_rotation_finished_entry(
+    rotation: KeyRotationDocument,
+    resealed: AuditRecordCount,
+    now: Microseconds,
+) -> AuditLogEntryDocument:
+    """
+    The rotation job finished (KEY_ROTATION, no actor: the worker ran it);
+    `record_count` is how many stored secrets it sealed with the new key.
+    """
+
+    return AuditLogEntryDocument(
+        business_id=None,
+        actor_id=None,
+        action=AuditAction.UPDATE,
+        security_event=AuditSecurityEvent.KEY_ROTATION,
+        entity=ENCRYPTION_KEYS_AUDIT_ENTITY,
+        entity_id=AuditEntityReference(str(rotation.id)),
+        record_count=resealed,
         created_at=now,
         updated_at=now,
     )

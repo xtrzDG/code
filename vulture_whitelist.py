@@ -666,3 +666,10 @@ _.booked_unit_minutes  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.open_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.booked_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.business_ranges  # app/schemas/dto/booking_grid.py (BookingGridDay)
+
+# The audit trail's tamper check (GET …/audit-log/chain and
+# /v1/admin/audit-log/chains): response fields the cabinet's Audit tab and
+# the admin's Audit page read; the code fills them by keyword.
+_.purged_through_position  # app/schemas/dto/audit_chain_views.py
+_.intact_chains  # app/schemas/dto/audit_chain_views.py
+_.broken_chains  # app/schemas/dto/audit_chain_views.py

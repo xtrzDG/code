@@ -19,7 +19,9 @@ class PlatformAdminRole(StrEnum):
 class PlatformAdminPermission(StrEnum):
     """
     One thing an admin page or action needs; each role holds a fixed set
-    (`app/utilities/security/admin_permissions.py`).
+    (`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG
+    reads the platform's own audit log: every person's sign-ins, failed
+    codes, lockouts and sign-outs with their addresses.
     """
 
     VIEW_CLIENTS = "view_clients"
@@ -27,6 +29,7 @@ class PlatformAdminPermission(StrEnum):
     CHANGE_CLIENT_CABINET = "change_client_cabinet"
     VIEW_METRICS = "view_metrics"
     VIEW_OPERATIONS = "view_operations"
+    VIEW_SECURITY_LOG = "view_security_log"
     MANAGE_OPERATIONS = "manage_operations"
     MANAGE_ADMINS = "manage_admins"
     MANAGE_CLIENT_BILLING = "manage_client_billing"

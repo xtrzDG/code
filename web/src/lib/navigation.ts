@@ -59,6 +59,8 @@ export const ADMIN_SYSTEM_PATH = "/admin/system";
 export const ADMIN_TEAM_PATH = "/admin/team";
 /** The partners who bring businesses, their codes and the monthly payouts. */
 export const ADMIN_PARTNERS_PATH = "/admin/partners";
+/** The daily tamper check of every audit log and the platform's own audit log. */
+export const ADMIN_AUDIT_PATH = "/admin/audit";
 /** A partner's own portal: their links, businesses and commissions. */
 export const PARTNER_PATH = "/partner";
 
