@@ -17,6 +17,7 @@ export const depositsHe: Translation<typeof depositsEn> = {
     label: "פיקדון",
     heldUntil: "המקום שמור עד {time}",
     reference: "קוד תשלום: {reference}",
+    referenceFailed: "לא הצלחנו לטעון את קוד התשלום.",
     markPaid: "שולם",
     confirmTitle: "לסמן את הפיקדון כשולם?",
     confirmDescription:
@@ -123,7 +124,6 @@ export const depositsHe: Translation<typeof depositsEn> = {
       templateInvalid:
         "עמוד שממלא את הסכום צריך {amount} בקישור, ורק {amount}, {amount_minor}, {currency} ו-{reference} ממולאים.",
       noPaymentLink: "בחרו אחד מעמודי התשלום שלכם שממלא את הסכום.",
-      depositsOff: "הפיקדונות כבויים.",
       currencyMismatch: "הפיקדון חייב להיות במטבע של העסק.",
       statusChanged: "הפיקדון הזה השתנה בינתיים: הוא כבר לא ממתין לתשלום.",
     },
@@ -144,6 +144,9 @@ export const depositsHe: Translation<typeof depositsEn> = {
     refundDue: "להחזרה",
     noShowWith: "אי-הגעה עם פיקדון ששולם",
     noShowWithout: "אי-הגעה בלי פיקדון",
+    noShowBefore: "אי-הגעה לפני הפיקדונות",
+    noShowSince: "אי-הגעה מאז הפעלת הפיקדונות",
+    enabledSince: "הפיקדונות פעילים מאז {date}",
     noShowCounts: "{noShows} מתוך {finished} ביקורים",
     notEnoughData: "עדיין אין מספיק נתונים: {finished} מתוך {min} ביקורים שהסתיימו",
     off: "הפיקדונות כבויים. הפעילו אותם בהגדרות ← פיקדונות.",

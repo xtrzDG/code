@@ -26,6 +26,7 @@ from app.utilities.deposits.deposit_reminder_texts import (
     DEPOSIT_BOOKING_REMINDER,
 )
 from app.utilities.deposits.deposit_times import day_month_text, hold_end_text
+from app.utilities.deposits.payment_pages import issued_page
 from app.utilities.scheduling.localized_formatting import (
     choose_template_language,
     isolate,
@@ -46,16 +47,12 @@ class DepositNoticeTexts:
         booking: BookingDocument | None,
         now: Microseconds,
     ) -> MessageText | None:
-        """None when the request's payment page is gone (nothing to remind of)."""
+        """
+        None when the request's payment page is gone for good (nothing to
+        remind of); a page the owner removed since still serves it.
+        """
 
-        link = next(
-            (
-                link
-                for link in settings.payment_links
-                if link.id == request.payment_link_id
-            ),
-            None,
-        )
+        link = issued_page(settings, request.payment_link_id)
         if link is None:
             return None
 

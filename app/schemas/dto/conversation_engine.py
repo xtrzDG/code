@@ -123,6 +123,10 @@ class GeneratedReply(ImmutableDTO):
     is_fallback_model: IsFallbackModel = False
     # The options the reply offers (offer_choices), checked with the text.
     choices: ReplyChoices | None = None
+    # The payment lines send_payment_link issued in a turn that failed: the
+    # engine puts them under its handoff text, so a held booking still
+    # reaches its customer with its link (a reply that passed has them).
+    payment_lines: list[MessageText] = Field(default_factory=list[MessageText])
 
 
 class ReplyRecord(ImmutableDTO):

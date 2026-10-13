@@ -9888,12 +9888,21 @@ export interface components {
          *     the no-show rate of bookings that started in the window with a paid
          *     deposit and without one. A booking still waiting for its outcome (not
          *     marked arrived or no-show) counts in neither.
+         *
+         *     Before and after: the no-show rate of every finished booking that
+         *     started in the `days` before deposits were first turned on
+         *     (`enabled_at`), and of those since then within the window; both None
+         *     while deposits were never on (or were on before the platform noted
+         *     when).
          */
         DepositReport: {
             /** Awaiting Count */
             awaiting_count: number;
+            before_deposits?: components["schemas"]["NoShowRate"] | null;
             /** Days */
             days: number;
+            /** Enabled At */
+            enabled_at?: number | null;
             /** Ends At */
             ends_at: number;
             /** Expired Count */
@@ -9908,6 +9917,7 @@ export interface components {
             paid_count: number;
             /** Requested Count */
             requested_count: number;
+            since_deposits?: components["schemas"]["NoShowRate"] | null;
             /** Starts At */
             starts_at: number;
             with_deposit: components["schemas"]["NoShowRate"];

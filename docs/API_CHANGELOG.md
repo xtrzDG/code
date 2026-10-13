@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-12 — deposits and payment links
 
-Spec: `726c92e6f5d5f47b`
+Spec: `afc1b9ee9c9a998a`
 
 - **Added** the deposit settings of a business:
   `GET·PUT /v1/businesses/{business_id}/deposit-settings` (on or off, the
@@ -28,15 +28,18 @@ Spec: `726c92e6f5d5f47b`
   or the banquet requests: `fixed`, `per_guest` or `percent_of_value`,
   from `min_party_size` guests; `policy: null` removes it). Changes are
   owner-only and audited; refusals carry `reasons[].code`
-  (`deposits_off`, `no_payment_link`, `link_not_https`, `link_invalid`,
-  `template_invalid`, `currency_mismatch`, `status_changed`).
+  (`no_payment_link`, `link_not_https`, `link_invalid`,
+  `template_invalid`, `currency_mismatch`, `status_changed`; a policy may
+  be set while deposits are off, so the owner prepares them first).
 - **Added** `GET …/deposits/{deposit_id}` (one deposit: amount, reference,
   page, state and its moments) and `POST …/deposits/{deposit_id}/paid`
   (staff saw the money: the deposit is `paid` and the booking held for it
   confirmed; 409 `status_changed` once its hold ran out).
 - **Added** `GET …/deposit-report?days=7–366` (owners): deposits asked,
   paid and expired, collected and to refund per currency, and the no-show
-  rate of finished bookings with and without a paid deposit;
+  rate of finished bookings with and without a paid deposit, and before
+  and since deposits were first turned on (`enabled_at`,
+  `before_deposits`, `since_deposits`; null while deposits were never on);
   `has_enough_data` is false below `min_sample` finished bookings.
 - **Changed** (additive) the booking view (lists, grid, changes): `deposit`
   (`request_id`, `status`, `amount_minor`, `currency_code`,

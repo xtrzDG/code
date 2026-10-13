@@ -51,10 +51,12 @@ class SendPaymentLinkUseCase(
     is stored AWAITING with its reference, the booking keeps its place
     until the hold ends (PENDING until the release gate opens, then
     PENDING_DEPOSIT), and the payment line in the customer's language goes
-    under the reply; a deposit already waiting is sent again unchanged. A
-    paid one is not asked again, nor one no policy covers (NOT_REQUIRED
-    with the reason). Under the business's booking lock, so a hold, a
-    payment marked and a release never cross.
+    under the reply; a deposit already waiting is sent again unchanged,
+    even after the owner turned deposits off (its hold still stands). A
+    paid one is not asked again, nor a new one while deposits are off or
+    no policy covers it (NOT_REQUIRED with the reason). Under the
+    business's booking lock, so a hold, a payment marked and a release
+    never cross.
     """
 
     def __init__(
@@ -84,15 +86,21 @@ class SendPaymentLinkUseCase(
         settings: DepositSettingsDocument | None = self._settings_repo.get_by_business(
             business.id
         )
-        if settings is None or not settings.is_enabled:
+        if settings is None:
             return not_required(DepositExemption.DEPOSITS_OFF)
 
         now: Microseconds = self._wall_clock.now_unix()
         with self._lock_registry.lock_for(business.id):
             subject = self._subjects.find(input_data)
             if subject is None or not is_still_open(subject, now):
-                return not_required(DepositExemption.NOTHING_OPEN)
+                return not_required(
+                    DepositExemption.NOTHING_OPEN
+                    if settings.is_enabled
+                    else DepositExemption.DEPOSITS_OFF
+                )
 
+            # A deposit asked already is honoured even after the owner turned
+            # deposits off: its hold still stands, so its link goes again.
             earlier: list[DepositRequestDocument] = self._earlier_requests(subject)
             waiting = next(
                 (r for r in earlier if r.status is DepositStatus.AWAITING), None
@@ -109,6 +117,9 @@ class SendPaymentLinkUseCase(
                     else None,
                     lead_id=subject.id if isinstance(subject, LeadDocument) else None,
                 )
+
+            if not settings.is_enabled:
+                return not_required(DepositExemption.DEPOSITS_OFF)
 
             quoted: QuotedDeposit = (
                 quote_booking(settings, subject, business.currency_code)

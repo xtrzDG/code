@@ -17,6 +17,7 @@ export const depositsKa: Translation<typeof depositsEn> = {
     label: "დეპოზიტი",
     heldUntil: "ადგილი დაკავებულია {time}-მდე",
     reference: "გადახდის კოდი: {reference}",
+    referenceFailed: "გადახდის კოდი ვერ ჩაიტვირთა.",
     markPaid: "გადახდილია",
     confirmTitle: "მოვნიშნოთ დეპოზიტი გადახდილად?",
     confirmDescription:
@@ -124,7 +125,6 @@ export const depositsKa: Translation<typeof depositsEn> = {
       templateInvalid:
         "თანხის შემვსებ გვერდს ბმულში {amount} სჭირდება; ივსება მხოლოდ {amount}, {amount_minor}, {currency} და {reference}.",
       noPaymentLink: "აირჩიეთ თქვენი გადახდის გვერდებიდან ერთ-ერთი, რომელიც თანხას ავსებს.",
-      depositsOff: "დეპოზიტები გამორთულია.",
       currencyMismatch: "დეპოზიტი ბიზნესის ვალუტაში უნდა იყოს.",
       statusChanged: "ეს დეპოზიტი ამასობაში შეიცვალა: გადახდას აღარ ელოდება.",
     },
@@ -145,6 +145,9 @@ export const depositsKa: Translation<typeof depositsEn> = {
     refundDue: "დასაბრუნებელი",
     noShowWith: "გამოუცხადებლობა გადახდილი დეპოზიტით",
     noShowWithout: "გამოუცხადებლობა დეპოზიტის გარეშე",
+    noShowBefore: "გამოუცხადებლობა დეპოზიტებამდე",
+    noShowSince: "გამოუცხადებლობა დეპოზიტების ჩართვის შემდეგ",
+    enabledSince: "დეპოზიტები ჩართულია: {date}",
     noShowCounts: "{noShows} {finished} ვიზიტიდან",
     notEnoughData: "ჯერ მონაცემები არ კმარა: {finished} {min} დასრულებული ვიზიტიდან",
     off: "დეპოზიტები გამორთულია. ჩართეთ პარამეტრებში → დეპოზიტები.",

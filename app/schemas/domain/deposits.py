@@ -4,7 +4,7 @@ business asks before it holds a booking or a banquet, where its customers
 pay, and each deposit asked.
 """
 
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -105,17 +105,35 @@ class PaymentLink(PersistentDocument):
     added_at: Microseconds
 
 
+class RetiredPaymentLink(PersistentDocument):
+    """
+    A payment page the owner removed (`retired_at`), kept out of their list
+    so that the deposits already asked on it keep their link: sent again,
+    reminded of. It goes for good once no hold can still need it (the
+    longest hold after `retired_at`).
+    """
+
+    link: PaymentLink
+    retired_at: Microseconds
+
+
 class DepositSettingsDocument(BaseDocument):
     """
     The deposits of one business (one document, the id derived from it):
-    off until the owner turns them on. A booking a policy covers waits
-    `hold_minutes` for its deposit before its place is released; a paid
-    booking cancelled at least `refund_cutoff_hours` before its start gets
-    the deposit back (staff refund it in their merchant account). The
-    policies of resources, services and banquets live here, edited on their
-    cards; a policy naming no page uses `default_payment_link_id`.
+    off until the owner turns them on (`enabled_at`: the first time they
+    did, which the report's no-show rates before and after split on). A
+    booking a policy covers waits `hold_minutes` for its deposit before its
+    place is released; a paid booking cancelled at least
+    `refund_cutoff_hours` before its start gets the deposit back (staff
+    refund it in their merchant account). The policies of resources,
+    services and banquets live here, edited on their cards; a policy naming
+    no page uses `default_payment_link_id`. Pages the owner removed while
+    deposits may still wait on them are `retired_payment_links`.
     """
 
+    # 2: `retired_payment_links` and `enabled_at` (optional; a page removed
+    # before kept no deposit's link, and the first turn-on was not noted).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: DepositSettingsId
     business_id: BusinessId
     is_enabled: AreDepositsEnabled = False
@@ -126,6 +144,10 @@ class DepositSettingsDocument(BaseDocument):
     policies: list[TargetedDepositPolicy] = Field(
         default_factory=list[TargetedDepositPolicy]
     )
+    retired_payment_links: list[RetiredPaymentLink] = Field(
+        default_factory=list[RetiredPaymentLink]
+    )
+    enabled_at: Microseconds | None = None
     updated_by: UserId | None = None
 
 

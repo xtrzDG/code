@@ -125,3 +125,23 @@ def test_a_currency_without_minor_units_passes_whole_amounts() -> None:
     )
 
     assert str(url) == "https://pay.example.com/d?sum=5000"
+
+
+def test_a_capitalised_scheme_and_host_are_kept_in_lower_case() -> None:
+    # A phone's keyboard capitalises the first letter of what the owner types.
+    vetted = vet_payment_link("Https://Pay.Example.com/D?sum={amount}", TEMPLATE)
+
+    assert str(vetted.address) == "https://pay.example.com/D?sum={amount}"
+    assert str(vetted.host) == "pay.example.com"
+
+
+@pytest.mark.parametrize(
+    "address",
+    ["https://pay.example.com/d?sum={amount} x", "https://pay.exa\tmple.com/{amount}"],
+)
+def test_an_address_with_spaces_is_refused_for_them(address: str) -> None:
+    with pytest.raises(ValidationFailedError) as raised:
+        vet_payment_link(address, TEMPLATE)
+
+    assert [str(reason.code) for reason in raised.value.reasons] == ["link_invalid"]
+    assert "spaces" in str(raised.value)

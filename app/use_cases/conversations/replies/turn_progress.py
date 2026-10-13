@@ -147,7 +147,9 @@ def build_reply(
 ) -> GeneratedReply:
     """
     The turn's reply; its model is the one that answered the last round
-    (the version's, or the fallback that stood in for it).
+    (the version's, or the fallback that stood in for it). A reply without
+    text (a failure) keeps the payment lines the turn issued, for the
+    engine to send under its handoff text.
     """
 
     return GeneratedReply(
@@ -172,4 +174,7 @@ def build_reply(
         llm_round_count=LlmRoundCount(progress.rounds_used),
         is_fallback_model=progress.is_fallback_model,
         choices=None if text is None else progress.choices,
+        payment_lines=(
+            [line.line for line in progress.deposit_lines] if text is None else []
+        ),
     )

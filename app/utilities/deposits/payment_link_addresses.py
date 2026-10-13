@@ -69,6 +69,9 @@ def vet_payment_link(raw_address: str, kind: PaymentLinkKind) -> VettedPaymentLi
     """
 
     text: str = raw_address.strip()
+    if any(character.isspace() for character in text):
+        raise _invalid("A payment link may not contain spaces.")
+
     parts: SplitResult = urlsplit(text)
     if parts.scheme.lower() != "https":
         raise deposit_refusal(
@@ -86,11 +89,18 @@ def vet_payment_link(raw_address: str, kind: PaymentLinkKind) -> VettedPaymentLi
     if _is_local_host(host):
         raise _invalid("A payment link must point to a public payment site.")
 
+    # The scheme and the host know no case ("Https://Pay.Example.com/…", as
+    # a phone's keyboard capitalises it): kept in lower case, the rest as typed.
+    typed_prefix: str = f"{parts.scheme}://{parts.netloc}"
+    if not text.lower().startswith(typed_prefix.lower()):
+        raise _invalid("A payment link needs the name of the payment site.")
+
+    text = f"https://{parts.netloc.lower()}{text[len(typed_prefix) :]}"
     _check_placeholders(text, kind)
     try:
         address = PaymentLinkAddress(text)
     except ValueError as error:
-        raise _invalid("A payment link may not contain spaces.") from error
+        raise _invalid("A payment link needs the name of the payment site.") from error
 
     is_secret: bool = _carries_a_key(parts.query) or _carries_a_key(parts.fragment)
     return VettedPaymentLink(

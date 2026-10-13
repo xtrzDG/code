@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Button, Field, Input, LoadingRegion, Select, SkeletonText, useToast } from "@/components/ui";
+import { Alert, Button, ErrorState, Field, Input, LoadingRegion, Select, SkeletonText, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -43,7 +43,9 @@ export function DepositPolicyPanel({
   const settings = useDepositSettings();
 
   if (!settings.data) {
-    return (
+    return settings.error ? (
+      <ErrorState error={settings.error} onRetry={settings.reload} className="py-4" />
+    ) : (
       <LoadingRegion label={t("common.loading")}>
         <SkeletonText lines={2} />
       </LoadingRegion>

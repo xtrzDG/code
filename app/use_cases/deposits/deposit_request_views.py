@@ -2,19 +2,13 @@
 
 from app.schemas.domain.deposits import DepositRequestDocument, DepositSettingsDocument
 from app.schemas.dto.deposits.deposit_views import DepositRequestView
+from app.utilities.deposits.payment_pages import issued_page
 
 
 def build_request_view(
     request: DepositRequestDocument, settings: DepositSettingsDocument | None
 ) -> DepositRequestView:
-    label = next(
-        (
-            link.label
-            for link in ([] if settings is None else settings.payment_links)
-            if link.id == request.payment_link_id
-        ),
-        None,
-    )
+    page = issued_page(settings, request.payment_link_id)
     return DepositRequestView(
         id=request.id,
         subject=request.subject,
@@ -26,7 +20,7 @@ def build_request_view(
         amount_minor=request.amount_minor,
         currency_code=request.currency_code,
         reference=request.reference,
-        payment_link_label=label,
+        payment_link_label=None if page is None else page.label,
         requested_at=request.requested_at,
         hold_expires_at=request.hold_expires_at,
         reminder_sent_at=request.reminder_sent_at,

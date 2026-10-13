@@ -56,6 +56,12 @@ class DepositReport(ImmutableDTO):
     the no-show rate of bookings that started in the window with a paid
     deposit and without one. A booking still waiting for its outcome (not
     marked arrived or no-show) counts in neither.
+
+    Before and after: the no-show rate of every finished booking that
+    started in the `days` before deposits were first turned on
+    (`enabled_at`), and of those since then within the window; both None
+    while deposits were never on (or were on before the platform noted
+    when).
     """
 
     is_enabled: AreDepositsEnabled
@@ -69,4 +75,7 @@ class DepositReport(ImmutableDTO):
     money: list[DepositMoney] = Field(default_factory=list[DepositMoney])
     with_deposit: NoShowRate
     without_deposit: NoShowRate
+    enabled_at: Microseconds | None = None
+    before_deposits: NoShowRate | None = None
+    since_deposits: NoShowRate | None = None
     min_sample: DepositOutcomeCount

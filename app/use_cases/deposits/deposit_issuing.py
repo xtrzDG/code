@@ -46,6 +46,7 @@ from app.utilities.deposits.deposit_line_texts import (
 from app.utilities.deposits.deposit_refusals import deposit_refusal
 from app.utilities.deposits.deposit_times import hold_end_text, minutes_later
 from app.utilities.deposits.lead_deposit_state import show_lead_deposit
+from app.utilities.deposits.payment_pages import issued_page
 from app.utilities.scheduling.zoned_time import load_time_zone
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -138,14 +139,8 @@ class DepositIssuing:
     ) -> PaymentLinkReceipt:
         """The payment line of a waiting request, in its customer's language."""
 
-        link: PaymentLink | None = next(
-            (
-                link
-                for link in settings.payment_links
-                if link.id == request.payment_link_id
-            ),
-            None,
-        )
+        # The page it was asked on, even one the owner removed since.
+        link: PaymentLink | None = issued_page(settings, request.payment_link_id)
         if link is None:
             raise deposit_refusal(
                 DepositRefusalCode.NO_PAYMENT_LINK,

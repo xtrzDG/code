@@ -71,8 +71,8 @@ class DepositRefusalCode(StrEnum):
     the error, so the cabinet and the assistant explain it.
     """
 
-    # The business takes no deposits, or has no payment page for this one.
-    DEPOSITS_OFF = "deposits_off"
+    # The business has no payment page for this deposit (or the page named
+    # is not one of its own).
     NO_PAYMENT_LINK = "no_payment_link"
     # The payment page is not an https address the platform accepts.
     LINK_NOT_HTTPS = "link_not_https"

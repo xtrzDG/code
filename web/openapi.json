@@ -12416,18 +12416,39 @@
       },
       "DepositReport": {
         "additionalProperties": false,
-        "description": "The last `days` until now: the deposits asked, paid and released, the\nmoney collected per currency (paid and kept; returned ones apart), and\nthe no-show rate of bookings that started in the window with a paid\ndeposit and without one. A booking still waiting for its outcome (not\nmarked arrived or no-show) counts in neither.",
+        "description": "The last `days` until now: the deposits asked, paid and released, the\nmoney collected per currency (paid and kept; returned ones apart), and\nthe no-show rate of bookings that started in the window with a paid\ndeposit and without one. A booking still waiting for its outcome (not\nmarked arrived or no-show) counts in neither.\n\nBefore and after: the no-show rate of every finished booking that\nstarted in the `days` before deposits were first turned on\n(`enabled_at`), and of those since then within the window; both None\nwhile deposits were never on (or were on before the platform noted\nwhen).",
         "properties": {
           "awaiting_count": {
             "minimum": 0.0,
             "title": "Awaiting Count",
             "type": "integer"
           },
+          "before_deposits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NoShowRate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "days": {
             "maximum": 366.0,
             "minimum": 7.0,
             "title": "Days",
             "type": "integer"
+          },
+          "enabled_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled At"
           },
           "ends_at": {
             "title": "Ends At",
@@ -12463,6 +12484,16 @@
             "minimum": 0.0,
             "title": "Requested Count",
             "type": "integer"
+          },
+          "since_deposits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NoShowRate"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "starts_at": {
             "title": "Starts At",

@@ -19,6 +19,7 @@ from app.utilities.deposits.deposit_report_math import (
     count_in,
     money_lines,
     no_show_rate,
+    overall_no_show_rate,
 )
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -33,7 +34,9 @@ class GetDepositReportUseCase(UseCaseContract[DepositReportQuery, DepositReport]
     bookings that started in the window with a paid deposit and without
     one, each shown only from MIN_FINISHED_BOOKINGS finished bookings on (a
     smaller group says "not enough data" rather than a misleading share).
-    Counted and summed by the database; test chats left out.
+    Before and after: the no-show rate of every finished booking in the
+    same number of days before deposits were first turned on, and since
+    then. Counted and summed by the database; test chats left out.
     """
 
     def __init__(
@@ -71,10 +74,9 @@ class GetDepositReportUseCase(UseCaseContract[DepositReportQuery, DepositReport]
             business.id, start, end
         )
         paid: list[DepositSumRow] = self._request_repo.sum_paid(business.id, start, end)
-        outcomes: list[BookingOutcomeRow] = self._outcome_repo.count_outcomes(
-            business.id,
-            BookingSearchBoundSeconds(int(start) // MICROSECONDS_PER_SECOND),
-            BookingSearchBoundSeconds(int(end) // MICROSECONDS_PER_SECOND),
+        outcomes: list[BookingOutcomeRow] = self._outcomes(business, start, end)
+        enabled_at: Microseconds | None = (
+            None if settings is None else settings.enabled_at
         )
         return DepositReport(
             is_enabled=settings is not None and settings.is_enabled,
@@ -88,5 +90,43 @@ class GetDepositReportUseCase(UseCaseContract[DepositReportQuery, DepositReport]
             money=money_lines(paid),
             with_deposit=no_show_rate(outcomes, with_deposit=True),
             without_deposit=no_show_rate(outcomes, with_deposit=False),
+            enabled_at=enabled_at,
+            before_deposits=(
+                None
+                if enabled_at is None
+                else overall_no_show_rate(
+                    self._outcomes(
+                        business,
+                        Microseconds(
+                            max(
+                                int(enabled_at)
+                                - int(input_data.days) * MICROSECONDS_PER_DAY,
+                                0,
+                            )
+                        ),
+                        enabled_at,
+                    )
+                )
+            ),
+            since_deposits=(
+                None
+                if enabled_at is None
+                else overall_no_show_rate(
+                    self._outcomes(
+                        business, Microseconds(max(int(enabled_at), int(start))), end
+                    )
+                )
+            ),
             min_sample=MIN_FINISHED_BOOKINGS,
+        )
+
+    def _outcomes(
+        self, business: BusinessDocument, start: Microseconds, end: Microseconds
+    ) -> list[BookingOutcomeRow]:
+        """Bookings that started from `start` to `end`, per status and deposit."""
+
+        return self._outcome_repo.count_outcomes(
+            business.id,
+            BookingSearchBoundSeconds(int(start) // MICROSECONDS_PER_SECOND),
+            BookingSearchBoundSeconds(int(end) // MICROSECONDS_PER_SECOND),
         )

@@ -16,8 +16,9 @@ import { businessPath } from "@/lib/navigation";
 /**
  * Reports → Deposits (owners): the last 30 days of deposits asked, paid,
  * waiting and let go, the money collected and still to return, and how
- * often guests did not come with a paid deposit and without one. A group
- * with too few finished visits says so instead of showing a share.
+ * often guests did not come with a paid deposit and without one, and
+ * before deposits went on and since. A group with too few finished
+ * visits says so instead of showing a share.
  */
 export function DepositsCard() {
   const { t } = useI18n();
@@ -100,6 +101,15 @@ function DepositFigures({ view }: { view: DepositReport }) {
         <NoShowFigure label={t("deposits.report.noShowWith")} rate={view.with_deposit} minSample={view.min_sample} />
         <NoShowFigure label={t("deposits.report.noShowWithout")} rate={view.without_deposit} minSample={view.min_sample} />
       </dl>
+      {view.enabled_at && view.before_deposits && view.since_deposits ? (
+        <section aria-label={t("deposits.report.enabledSince", { date: format.date(view.enabled_at) })} className="space-y-2">
+          <p className="text-xs text-ink-subtle">{t("deposits.report.enabledSince", { date: format.date(view.enabled_at) })}</p>
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <NoShowFigure label={t("deposits.report.noShowBefore")} rate={view.before_deposits} minSample={view.min_sample} />
+            <NoShowFigure label={t("deposits.report.noShowSince")} rate={view.since_deposits} minSample={view.min_sample} />
+          </dl>
+        </section>
+      ) : null}
     </div>
   );
 }

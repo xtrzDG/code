@@ -17,6 +17,7 @@ export const depositsDe: Translation<typeof depositsEn> = {
     label: "Anzahlung",
     heldUntil: "Der Platz ist bis {time} reserviert",
     reference: "Zahlungscode: {reference}",
+    referenceFailed: "Der Zahlungscode konnte nicht geladen werden.",
     markPaid: "Bezahlt",
     confirmTitle: "Anzahlung als bezahlt markieren?",
     confirmDescription:
@@ -125,7 +126,6 @@ export const depositsDe: Translation<typeof depositsEn> = {
       templateInvalid:
         "Eine Seite, die den Betrag einsetzt, braucht {amount} im Link, und nur {amount}, {amount_minor}, {currency} und {reference} werden eingesetzt.",
       noPaymentLink: "Wählen Sie eine Ihrer Zahlungsseiten, die den Betrag einsetzt.",
-      depositsOff: "Anzahlungen sind ausgeschaltet.",
       currencyMismatch: "Die Anzahlung muss in der Währung des Unternehmens sein.",
       statusChanged: "Diese Anzahlung hat sich inzwischen geändert: Sie wartet nicht mehr auf eine Zahlung.",
     },
@@ -146,6 +146,9 @@ export const depositsDe: Translation<typeof depositsEn> = {
     refundDue: "Zu erstatten",
     noShowWith: "Nicht erschienen mit bezahlter Anzahlung",
     noShowWithout: "Nicht erschienen ohne Anzahlung",
+    noShowBefore: "Nicht erschienen vor den Anzahlungen",
+    noShowSince: "Nicht erschienen seit den Anzahlungen",
+    enabledSince: "Anzahlungen aktiv seit {date}",
     noShowCounts: "{noShows} von {finished} Besuchen",
     notEnoughData: "Noch nicht genug Daten: {finished} von {min} abgeschlossenen Besuchen",
     off: "Anzahlungen sind ausgeschaltet. Schalten Sie sie unter Einstellungen → Anzahlungen ein.",

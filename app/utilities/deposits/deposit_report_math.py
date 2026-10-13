@@ -1,7 +1,8 @@
 """
 The arithmetic of the deposits report: money per currency from the summed
-requests, and no-show rates that are shown only when a group has enough
-finished bookings to say anything (an honest "not enough data" below).
+requests, and no-show rates (with and without a paid deposit, before and
+since deposits) that are shown only when a group has enough finished
+bookings to say anything (an honest "not enough data" below).
 """
 
 from collections.abc import Sequence
@@ -82,6 +83,24 @@ def no_show_rate(
         finished += int(row.count)
         if row.status is BookingStatus.NO_SHOW:
             no_shows += int(row.count)
+
+    return rate_of(finished, no_shows)
+
+
+def overall_no_show_rate(rows: Sequence[BookingOutcomeRow]) -> NoShowRate:
+    """The no-show rate of every finished booking, deposit or not."""
+
+    finished: int = sum(
+        int(row.count) for row in rows if row.status in FINISHED_STATUSES
+    )
+    no_shows: int = sum(
+        int(row.count) for row in rows if row.status is BookingStatus.NO_SHOW
+    )
+    return rate_of(finished, no_shows)
+
+
+def rate_of(finished: int, no_shows: int) -> NoShowRate:
+    """The share, once `finished` reaches the sample the report trusts."""
 
     is_enough: bool = finished >= int(MIN_FINISHED_BOOKINGS)
     return NoShowRate(

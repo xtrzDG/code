@@ -59,6 +59,18 @@ export function DepositPayment({
       {deposit.status === "awaiting" && deposit.hold_expires_at ? (
         <p className="text-ink-muted">{t(heldUntilKey, { time: format.dateTime(deposit.hold_expires_at) })}</p>
       ) : null}
+      {request.error && !request.data ? (
+        <Alert
+          tone="warning"
+          action={
+            <Button size="sm" variant="secondary" onClick={request.reload}>
+              {t("common.retry")}
+            </Button>
+          }
+        >
+          {t("deposits.booking.referenceFailed")}
+        </Alert>
+      ) : null}
       {reference ? (
         <p className="text-ink-muted">
           {t("deposits.booking.reference", { reference })}

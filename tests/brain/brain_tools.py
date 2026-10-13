@@ -16,6 +16,7 @@ from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.use_cases.bookings.list_customer_bookings_use_case import (
     ListCustomerBookingsUseCase,
 )
+from app.use_cases.conversations.tools.revenue_tool_handlers import SendPaymentLink
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
 )
@@ -39,6 +40,9 @@ from tests.brain.fake_knowledge_tools import (
     FakeSendLink,
 )
 
+# The payment tool's type is part of what a test world takes.
+__all__ = ["BrainTools", "SendPaymentLink", "build_brain_tools"]
+
 
 @dataclass(frozen=True)
 class BrainTools:
@@ -61,6 +65,7 @@ def build_brain_tools(
         BookingConfirmationRequest, BookingConfirmationReceipt
     ]
     | None = None,
+    send_payment_link: SendPaymentLink | None = None,
 ) -> BrainTools:
     bookings = FakeBookings(timezone=business.timezone)
     search_knowledge = FakeSearchKnowledge(items)
@@ -93,6 +98,7 @@ def build_brain_tools(
         phone_number_parser=PhoneNumberParser(),
         wall_clock=wall_clock,
         send_booking_confirmation=send_booking_confirmation,
+        send_payment_link=send_payment_link,
     )
     return BrainTools(
         bookings=bookings,

@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -38,7 +39,8 @@ class SweepDepositsUseCase(UseCaseContract[JobTick, JobReport]):
        cancelled, its place offered to the waitlist, its calendar event
        removed, the customer told (outbox);
     2. reminders due halfway through a hold go once (outbox), with the same
-       link, and are not looked at again;
+       link (even when the owner removed its page since), and are not
+       looked at again; one that could not be queued is not marked sent;
     3. paid deposits of bookings that ended are settled after the cabinet's
        undo window (REFUND_DUE or KEPT; staff are told of a refund).
     """
@@ -135,9 +137,13 @@ class SweepDepositsUseCase(UseCaseContract[JobTick, JobReport]):
             )
 
     def _remind(self, request: DepositRequestDocument, now: Microseconds) -> bool:
-        """Mark the reminder sent first, so a second worker never sends it again."""
+        """
+        Claim the reminder first (its due time cleared), so a second worker
+        never sends it again; it counts as sent (`reminder_sent_at`) only
+        once the notice was queued.
+        """
 
-        def mark(stored: DepositRequestDocument) -> DepositRequestDocument | None:
+        def claim(stored: DepositRequestDocument) -> DepositRequestDocument | None:
             if (
                 stored.status is not DepositStatus.AWAITING
                 or stored.reminder_due_at is None
@@ -145,11 +151,10 @@ class SweepDepositsUseCase(UseCaseContract[JobTick, JobReport]):
                 return None
 
             stored.reminder_due_at = None
-            stored.reminder_sent_at = now
             stored.updated_at = now
             return stored
 
-        claimed = self._request_repo.update(request.business_id, request.id, mark)
+        claimed = self._request_repo.update(request.business_id, request.id, claim)
         business = self._business_repo.get(request.business_id)
         settings = self._settings_repo.get_by_business(request.business_id)
         if claimed is None or business is None or settings is None:
@@ -165,9 +170,24 @@ class SweepDepositsUseCase(UseCaseContract[JobTick, JobReport]):
             return False
 
         try:
-            return self._notices.send(
+            queued: bool = self._notices.send(
                 business, claimed, DepositNoticeKind.REMINDER, text, now
             )
         except Exception:
             LOGGER.exception("The reminder of deposit %s was not queued.", claimed.id)
             return False
+
+        if queued:
+            self._request_repo.update(business.id, claimed.id, mark_reminded(now))
+        return queued
+
+
+def mark_reminded(
+    now: Microseconds,
+) -> Callable[[DepositRequestDocument], DepositRequestDocument]:
+    def mark(stored: DepositRequestDocument) -> DepositRequestDocument:
+        stored.reminder_sent_at = now
+        stored.updated_at = now
+        return stored
+
+    return mark

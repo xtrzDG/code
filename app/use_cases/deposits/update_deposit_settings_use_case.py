@@ -20,8 +20,9 @@ class UpdateDepositSettingsUseCase(
     cancellation gets it back, and the template that serves the policies
     naming no page (a template of these settings; naming none keeps the
     current one, so turning deposits on never loses the page). Turning
-    deposits off asks no new ones; those already asked keep their hold.
-    Owners only; audited.
+    deposits off asks no new ones; those already asked keep their hold and
+    their link. The first time deposits are on is kept (`enabled_at`), for
+    the report's no-show rates before and after. Owners only; audited.
     """
 
     def __init__(self, changes: DepositSettingsChanges) -> None:
@@ -45,6 +46,9 @@ class UpdateDepositSettingsUseCase(
                 )
 
             settings.is_enabled = request.is_enabled
+            if request.is_enabled and settings.enabled_at is None:
+                # The first time deposits are on: the report's before and after.
+                settings.enabled_at = self._changes.wall_clock.now_unix()
             settings.hold_minutes = request.hold_minutes
             settings.refund_cutoff_hours = request.refund_cutoff_hours
             if request.default_payment_link_id is not None:

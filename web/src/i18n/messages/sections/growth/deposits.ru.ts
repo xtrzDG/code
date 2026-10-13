@@ -17,6 +17,7 @@ export const depositsRu: Translation<typeof depositsEn> = {
     label: "Депозит",
     heldUntil: "Место держим до {time}",
     reference: "Код платежа: {reference}",
+    referenceFailed: "Не удалось загрузить код платежа.",
     markPaid: "Оплачено",
     confirmTitle: "Отметить депозит оплаченным?",
     confirmDescription:
@@ -130,7 +131,6 @@ export const depositsRu: Translation<typeof depositsEn> = {
       templateInvalid:
         "Странице, которая подставляет сумму, нужен {amount} в ссылке; подставляются только {amount}, {amount_minor}, {currency} и {reference}.",
       noPaymentLink: "Выберите одну из своих платёжных страниц, которая подставляет сумму.",
-      depositsOff: "Депозиты выключены.",
       currencyMismatch: "Депозит должен быть в валюте бизнеса.",
       statusChanged: "Этот депозит тем временем изменился: он больше не ждёт оплаты.",
     },
@@ -151,6 +151,9 @@ export const depositsRu: Translation<typeof depositsEn> = {
     refundDue: "Вернуть",
     noShowWith: "Неявки с оплаченным депозитом",
     noShowWithout: "Неявки без депозита",
+    noShowBefore: "Неявки до депозитов",
+    noShowSince: "Неявки с депозитами",
+    enabledSince: "Депозиты включены с {date}",
     noShowCounts: "{noShows} из {finished} визитов",
     notEnoughData: "Пока мало данных: {finished} из {min} завершённых визитов",
     off: "Депозиты выключены. Включите их в Настройках → Депозиты.",

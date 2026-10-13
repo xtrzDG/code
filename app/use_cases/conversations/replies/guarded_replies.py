@@ -8,9 +8,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     TurnProgress,
     build_reply,
 )
-
-# The payment line stands apart from the assistant's words.
-DEPOSIT_LINE_SEPARATOR: str = "\n\n"
+from app.utilities.deposits.payment_line_joining import with_payment_lines
 
 
 def clean_reply(
@@ -60,7 +58,8 @@ def handed_off_reply(
     """
     No reply: the rewrite failed or still had what the guard holds back.
     What the last review found decides the failure (another person's
-    contact details first, then values, then claims).
+    contact details first, then values, then claims). A payment line the
+    turn issued still goes to the customer, under the handoff text.
     """
 
     final: ReplyReview = first if second is None else second
@@ -83,14 +82,8 @@ def with_deposit_lines(text: MessageText, progress: TurnProgress) -> MessageText
     """
     The reply the customer reads: the assistant's words, then each payment
     line send_payment_link issued, as the server wrote it (the model can
-    change neither its amount nor its link).
+    change neither its amount nor its link). A handed-off turn carries its
+    lines too (`build_reply`), under the engine's handoff text.
     """
 
-    if not progress.deposit_lines:
-        return text
-
-    return MessageText(
-        DEPOSIT_LINE_SEPARATOR.join(
-            [str(text).rstrip(), *(str(line.line) for line in progress.deposit_lines)]
-        )
-    )
+    return with_payment_lines(text, [line.line for line in progress.deposit_lines])

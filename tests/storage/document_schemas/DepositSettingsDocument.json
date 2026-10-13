@@ -1,7 +1,7 @@
 {
   "collection": "deposit_settings",
   "document_type": "DepositSettingsDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -17,6 +17,17 @@
           {
             "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "enabled_at": {
+        "anyOf": [
+          {
+            "type": "integer"
           },
           {
             "type": "null"
@@ -230,8 +241,88 @@
         "minimum": 0,
         "type": "integer"
       },
+      "retired_payment_links": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "link": {
+              "additionalProperties": false,
+              "properties": {
+                "added_at": {
+                  "type": "integer"
+                },
+                "address": {
+                  "anyOf": [
+                    {
+                      "maxLength": 2048,
+                      "minLength": 12,
+                      "pattern": "^https://[^\\s/?#]+([/?#][^\\s]*)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "host": {
+                  "type": "string"
+                },
+                "id": {
+                  "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "static",
+                    "template"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "preview": {
+                  "type": "string"
+                },
+                "sealed_address": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "required": [
+                "label",
+                "kind",
+                "host",
+                "preview",
+                "added_at"
+              ],
+              "type": "object"
+            },
+            "retired_at": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "link",
+            "retired_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {
