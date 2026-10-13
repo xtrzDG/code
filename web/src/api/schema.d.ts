@@ -13660,10 +13660,12 @@ export interface components {
         /**
          * PlatformAdminPermission
          * @description One thing an admin page or action needs; each role holds a fixed set
-         *     (`app/utilities/security/admin_permissions.py`).
+         *     (`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG
+         *     reads the platform's own audit log: every person's sign-ins, failed
+         *     codes, lockouts and sign-outs with their addresses.
          * @enum {string}
          */
-        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes";
+        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "view_security_log" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes";
         /**
          * PlatformAdminRole
          * @description What a platform admin is for. SUPER runs the platform: every admin

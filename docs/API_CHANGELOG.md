@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-12 — the audit trail: hash chain status, the platform's audit log
 
-Spec: `8a939e560f961af1`
+Spec: `f619b704e2a66ba5`
 
 - **Added** `GET /v1/businesses/{business_id}/audit-log/chain`
   (`audit_get_audit_chain_status`; owners only): what the daily check of
@@ -24,17 +24,25 @@ Spec: `8a939e560f961af1`
   `verified_through_position`, `purged_through_position` (the retention
   purge's checkpoint), `entries_checked` and `checked_at`.
 - **Added** `GET /v1/admin/audit-log` (`audit_list_platform_audit_log`;
-  platform admins with `view_operations`): the platform's own audit
-  entries (those that name no business: failed sign-ins, lockouts,
-  sign-outs, key rotations), newest first by chain position, a cursor
-  page (`limit`, `cursor`), filters `action` and `security_event`
-  (`login_failed`, `otp_locked`, `mfa_locked`, `logout`,
-  `key_rotation`; anything else is 422). A sign-in code's destination is
-  named by a keyed digest (`entity_id` `dest_…`), never the address.
+  platform admins with the new permission `view_security_log`, which only
+  SUPER admins hold: it lists every person's sign-ins with their
+  addresses): the platform's own audit entries (those that name no
+  business: failed sign-ins, lockouts, sign-outs, two-factor changes,
+  session revocations, key rotations, including entries written before
+  the hash chain, whose `chain_position` is `null`), newest first by the
+  time they were written, a cursor page (`limit`, `cursor`), filters
+  `action` and `security_event` (`login_failed`, `otp_locked`,
+  `mfa_locked`, `logout`, `key_rotation`; anything else is 422). A
+  sign-in code's destination is named by a keyed digest (`entity_id`
+  `dest_…`), never the address.
 - **Added** `GET /v1/admin/audit-log/chains`
-  (`audit_get_audit_chain_overview`; same rights): the platform chain's
+  (`audit_get_audit_chain_overview`; platform admins with
+  `view_operations`, read-only support too): the platform chain's
   status, how many chains were found intact and broken, and the broken
   ones (at most 50) with their position and problem.
+- **Changed** (additive) `PlatformAdminPermission` (in
+  `platform_admin_permissions` of `GET /v1/me`) may be
+  `view_security_log`.
 - **Changed** (additive) `POST /v1/auth/logout` is audited (a `logout`
   entry in the platform's log with the caller's address); its answer is
   unchanged. Wrong sign-in and second-factor codes are audited the same

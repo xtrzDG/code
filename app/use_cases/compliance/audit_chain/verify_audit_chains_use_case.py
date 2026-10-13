@@ -51,7 +51,7 @@ class VerifyAuditChainsUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         verification = AuditChainVerification(self._chain_repo)
-        checked: int = 0
+        checked: list[AuditChainKey] = []
         for chain_key in self._chains():
             previous: AuditChainStatusDocument | None = self._chain_repo.status_of(
                 chain_key
@@ -61,9 +61,9 @@ class VerifyAuditChainsUseCase(UseCaseContract[JobTick, JobReport]):
             )
             self._chain_repo.save_status(status)
             report_check(previous, status)
-            checked += 1
+            checked.append(chain_key)
 
-        return JobReport(processed_count=ProcessedItemCount(checked))
+        return JobReport(processed_count=ProcessedItemCount(len(checked)))
 
     def _chains(self) -> Iterator[AuditChainKey]:
         yield PLATFORM_CHAIN_KEY

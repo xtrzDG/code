@@ -7,10 +7,8 @@ from app.contracts.repositories.audit_chain_repositories import (
     AuditActivityRepoContract,
 )
 from app.repositories.audit.audit_chain_queries import (
-    CHAIN_POSITION_FIELD,
     ENTITY_ID_FIELD,
     SECURITY_EVENT_FIELD,
-    of_chain,
 )
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
@@ -47,10 +45,24 @@ from app.schemas.typings.storage.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.compliance.audit_chain_hashing import PLATFORM_CHAIN_KEY
 from app.utilities.storage.document_lookup_fields import BUSINESS_ID_FIELD
 
 CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
+# What an EXPORT of personal data names: one contact's data, a segment's
+# members, the CSV lists with customers or staff in them (contacts,
+# bookings, leads, conversations, the audit log) and the whole business
+# export (started and downloaded). An invoice or receipt PDF
+# (`billing_document`) is the business's own paper, not personal data.
+PERSONAL_DATA_EXPORTS: tuple[AuditEntityName, ...] = (
+    CONTACT_ENTITY,
+    AuditEntityName("customer_segment"),
+    AuditEntityName("booking"),
+    AuditEntityName("lead"),
+    AuditEntityName("conversation"),
+    AuditEntityName("audit_log"),
+    AuditEntityName("business"),
+    AuditEntityName("business_export"),
+)
 FAILED_CHECK_EVENTS: tuple[AuditSecurityEvent, ...] = (
     AuditSecurityEvent.LOGIN_FAILED,
     AuditSecurityEvent.OTP_LOCKED,
@@ -60,8 +72,10 @@ FAILED_CHECK_EVENTS: tuple[AuditSecurityEvent, ...] = (
 
 class AuditActivityRepository(AuditActivityRepoContract):
     """
-    The audit log across businesses: the platform chain's pages for the
-    admin audit view, and the last hour's operations of every business
+    The audit log across businesses: the platform's own entries (those
+    that name no business, in its chain or written before it, newest first
+    by time over `audit_log_entries_doc_created_at_idx`, 1042) for the
+    admin security log, and the last hour's operations of every business
     grouped in the database (by action and time, `audit_log_entries_
     doc_action_idx`, 1193) for the anomaly alerts.
     """
@@ -79,7 +93,7 @@ class AuditActivityRepository(AuditActivityRepoContract):
         window: KeysetSlice,
         log_filter: PlatformAuditFilter,
     ) -> list[AuditLogEntryDocument]:
-        matches: list[DocumentFieldMatch] = [of_chain(PLATFORM_CHAIN_KEY)]
+        matches: list[DocumentFieldMatch] = []
         if log_filter.action is not None:
             matches.append(field_equals(ACTION_FIELD, log_filter.action))
 
@@ -90,8 +104,10 @@ class AuditActivityRepository(AuditActivityRepoContract):
 
         return self._collection.page_by(
             DocumentPageQuery(
-                where=DocumentFilter(matches=tuple(matches)),
-                sort_fields=(CHAIN_POSITION_FIELD,),
+                where=DocumentFilter(
+                    matches=tuple(matches), missing=(BUSINESS_ID_FIELD,)
+                ),
+                sort_fields=(CREATED_AT_FIELD,),
                 is_descending=True,
                 after=document_position(window.after),
                 limit=DocumentQueryLimit(int(window.limit)),
@@ -103,7 +119,10 @@ class AuditActivityRepository(AuditActivityRepoContract):
     ) -> list[BusinessOperationCount]:
         totals: dict[str, int] = {}
         for where in (
-            DocumentFilter(matches=(field_equals(ACTION_FIELD, AuditAction.EXPORT),)),
+            DocumentFilter(
+                matches=(field_equals(ACTION_FIELD, AuditAction.EXPORT),),
+                among=(field_among(ENTITY_FIELD, PERSONAL_DATA_EXPORTS),),
+            ),
             DocumentFilter(
                 matches=(
                     field_equals(ACTION_FIELD, AuditAction.DELETE),

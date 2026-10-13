@@ -26,6 +26,9 @@
         "pattern": "^(platform|business_[0-9A-Za-z-]{1,70})$",
         "type": "string"
       },
+      "purged_before": {
+        "type": "integer"
+      },
       "purged_count": {
         "minimum": 0,
         "type": "integer"
@@ -52,7 +55,8 @@
       "id",
       "through_position",
       "through_hash",
-      "purged_count"
+      "purged_count",
+      "purged_before"
     ],
     "type": "object"
   }

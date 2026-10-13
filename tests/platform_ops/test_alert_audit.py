@@ -134,6 +134,23 @@ def test_twenty_exports_an_hour_are_allowed_the_next_one_fires_once() -> None:
     )
 
 
+def test_invoice_and_receipt_downloads_are_no_personal_data_exports() -> None:
+    world = OpsWorld()
+    busy = BusinessId()
+    write(
+        world,
+        30,
+        AuditAction.EXPORT,
+        business_of=lambda _: busy,
+        entity="billing_document",
+    )
+    write(world, 3, AuditAction.EXPORT, business_of=lambda _: busy, entity="booking")
+
+    observation = observe(world, PlatformAlertCode.BULK_PERSONAL_DATA)
+
+    assert (observation.is_firing, int(observation.figure)) == (False, 3)
+
+
 def test_an_admin_in_eleven_clients_accounts_fires_once() -> None:
     world = OpsWorld()
     admin = UserId()

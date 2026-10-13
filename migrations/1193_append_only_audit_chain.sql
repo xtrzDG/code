@@ -29,7 +29,13 @@
 --     doing so during the deploy and after a rollback; this release counts
 --     repeated views in `audit_view_counts`, so a chained entry's hash
 --     always holds;
---   * a DELETE inside `workshop.purge_audit_chain` (below).
+--   * a DELETE inside `workshop.purge_audit_chain` (below): the function
+--     switches a transaction-local setting on for its own statements, and
+--     the trigger lets a DELETE through only while that setting is on AND
+--     the deleting role is the function's owner (inside the SECURITY
+--     DEFINER function current_user is its owner). Any session can set a
+--     custom setting, so the setting alone would let every role holding
+--     DELETE delete entries; no other role passes the owner check.
 -- The application's role (the owner of the tables until
 -- W18-DB-ROLES-PASSKEYS gives the application a role of its own) loses
 -- the DELETE and TRUNCATE privileges, and UPDATE on every column but the
@@ -41,17 +47,27 @@
 -- in steps that never leave the owner without the three columns: they
 -- are granted to PUBLIC first (no other role can reach the schema), then
 -- the owner's table-wide UPDATE goes (which drops its column grants), the
--- columns are granted back to it, and PUBLIC loses them again.
+-- columns are granted back to it, and PUBLIC loses them again. So the
+-- application's role still holds UPDATE on those three columns (only the
+-- trigger refuses the change); the release after this one revokes them
+-- (docs/operations/deploys.md, "Two releases at once").
 --
 -- Purges. `workshop.purge_audit_chain(chain, created_before, max_entries)`
 -- removes the oldest entries of one chain (a prefix, up to the first entry
 -- written at or after the cutoff, at most `max_entries`) and the chain's
 -- entries from before the chain, under the chain's advisory lock, and
 -- records the checkpoint `audit_chain_checkpoints` (the last removed
--- position and its hash), so the first entry left still links to it and
--- the chain stays verifiable. It runs with its owner's rights (the role
--- that ran this migration), which grants itself DELETE for the call when
--- it lacks it. Operators run it through `workshop purge-audit-log`.
+-- position, its hash and the cutoff), so the first entry left still links
+-- to it and the chain stays verifiable. It refuses a cutoff younger than
+-- 365 days (the minimum retention, app/utilities/compliance/
+-- audit_retention.py), whoever calls it: entries of the last year are
+-- never removed, and the daily check accepts a checkpoint over the newest
+-- entry it verified only with such a cutoff. It runs with its owner's
+-- rights (the role that ran this migration), which grants itself DELETE
+-- for the call when it lacks it. Operators run it through
+-- `workshop purge-audit-log`. Until W18-DB-ROLES-PASSKEYS gives the
+-- application a role of its own, the application's role owns the function
+-- and so may call it; the retention floor holds for that call too.
 --
 -- Lookup columns (app/utilities/storage/document_lookup_catalog.py):
 --   audit_log_entries     chain_key, chain_position  a chain's head and its
@@ -82,7 +98,12 @@ set search_path = pg_catalog
 as $function$
 begin
     if tg_op = 'DELETE' then
-        if current_setting('workshop.audit_chain_purge', true) = 'on' then
+        if current_setting('workshop.audit_chain_purge', true) = 'on'
+            and current_user = (
+                select pg_get_userbyid(proowner)
+                  from pg_proc
+                 where oid = 'workshop.purge_audit_chain(text,bigint,integer)'::regprocedure
+            ) then
             return old;
         end if;
 
@@ -139,6 +160,8 @@ declare
     removed bigint := 0;
     removed_unchained bigint := 0;
     purged_at bigint := (extract(epoch from clock_timestamp()) * 1000000)::bigint;
+    -- The minimum retention: 365 days in microseconds.
+    retention_floor constant bigint := 365::bigint * 24 * 60 * 60 * 1000000;
     granted boolean := false;
 begin
     if target_chain !~ '^(platform|business_[0-9A-Za-z-]{1,70})$' then
@@ -148,6 +171,11 @@ begin
 
     if max_entries is null or max_entries < 1 or created_before is null then
         raise exception 'a purge needs a cutoff and a positive batch size'
+            using errcode = 'invalid_parameter_value';
+    end if;
+
+    if created_before > purged_at - retention_floor then
+        raise exception 'audit entries are kept at least 365 days: cutoff % is too recent', created_before
             using errcode = 'invalid_parameter_value';
     end if;
 
@@ -205,6 +233,7 @@ begin
                 'through_position', through,
                 'through_hash', through_hash,
                 'purged_count', coalesce(previous_purged, 0) + removed,
+                'purged_before', created_before,
                 'created_at', coalesce(first_created, purged_at),
                 'updated_at', purged_at
             ),
@@ -249,7 +278,7 @@ end;
 $function$;
 
 comment on function workshop.purge_audit_chain(text, bigint, integer) is
-    'Remove the oldest entries of one audit chain before a cutoff and record its checkpoint (1193).';
+    'Remove the oldest entries of one audit chain before a cutoff at least 365 days old and record its checkpoint (1193).';
 
 revoke all on function workshop.purge_audit_chain(text, bigint, integer) from public;
 

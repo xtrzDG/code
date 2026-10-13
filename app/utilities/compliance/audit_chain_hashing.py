@@ -60,6 +60,28 @@ def business_of_chain(chain_key: AuditChainKey) -> BusinessId | None:
     return BusinessId(str(chain_key))
 
 
+def position_after(position: AuditChainPosition | None) -> AuditChainPosition:
+    """
+    The place of the entry that follows `position` in its chain (each
+    entry stands one place after the one before it); the first place when
+    there is none before it.
+    """
+
+    if position is None:
+        return FIRST_POSITION
+
+    return AuditChainPosition(int(position) + 1)
+
+
+def position_before(position: AuditChainPosition) -> AuditChainPosition | None:
+    """The place of the entry before `position`; None before the first."""
+
+    if position == FIRST_POSITION:
+        return None
+
+    return AuditChainPosition(int(position) - 1)
+
+
 def link_entry_and_hash(
     entry: AuditLogEntryDocument,
     position: AuditChainPosition,

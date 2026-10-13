@@ -42,11 +42,11 @@ from app.schemas.typings.storage.constrained_integers import (
     LockWaitSeconds,
 )
 from app.utilities.compliance.audit_chain_hashing import (
-    FIRST_POSITION,
     GENESIS_HASH,
     chain_key_of,
     chain_lock_key,
     link_entry_and_hash,
+    position_after,
 )
 
 # The locked section reads one row and writes two: well under a second.
@@ -135,11 +135,7 @@ class AuditChainAppending:
         """
 
         last_position, prev_hash = end
-        position: AuditChainPosition = (
-            FIRST_POSITION
-            if last_position is None
-            else AuditChainPosition(int(last_position) + 1)
-        )
+        position: AuditChainPosition = position_after(last_position)
         linked, entry_hash = link_entry_and_hash(entry, position, prev_hash)
         if not self._entries.insert_if_absent(str(entry.id), linked):
             return None

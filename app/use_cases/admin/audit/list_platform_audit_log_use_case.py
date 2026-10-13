@@ -19,14 +19,16 @@ class ListPlatformAuditLogUseCase(
     UseCaseContract[PlatformAuditLogQuery, PlatformAuditLogPage]
 ):
     """
-    The platform admin's audit view: the entries that name no business
+    The platform admin's security log: the entries that name no business
     (sign-ins, failed checks and lockouts, sign-outs, two-factor changes,
-    the admin team, key rotations, platform purges), newest first by their
-    place in the platform's chain, one keyset page at a time, optionally of
-    one operation or security event (filtered before paging).
+    session revocations, the admin team, key rotations, platform purges),
+    those of the platform's chain and those written before it, newest
+    first, one keyset page at a time, optionally of one operation or
+    security event (filtered before paging). Each names people and their
+    addresses, so only VIEW_SECURITY_LOG reads it (not read-only support).
 
     Raises:
-        AccessDeniedError: the user may not see the platform's operations.
+        AccessDeniedError: the user may not read the platform's security log.
     """
 
     def __init__(
@@ -45,7 +47,7 @@ class ListPlatformAuditLogUseCase(
         self._authorize_platform_admin.run(
             PlatformAdminAccessRequest(
                 user_id=input_data.user_id,
-                permission=PlatformAdminPermission.VIEW_OPERATIONS,
+                permission=PlatformAdminPermission.VIEW_SECURITY_LOG,
             )
         )
         entries: list[AuditLogEntryDocument]
@@ -58,7 +60,7 @@ class ListPlatformAuditLogUseCase(
                 ),
             ),
             input_data.page,
-            sort_key=lambda entry: int(entry.chain_position or 0),
+            sort_key=lambda entry: int(entry.created_at),
             item_id=lambda entry: str(entry.id),
         )
         return PlatformAuditLogPage(

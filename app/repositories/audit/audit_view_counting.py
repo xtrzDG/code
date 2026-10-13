@@ -109,7 +109,7 @@ class AuditViewCounting:
         def one_more(stored: AuditViewCountDocument) -> AuditViewCountDocument:
             return stored.model_copy(
                 update={
-                    "view_count": AuditViewCount(int(stored.view_count) + 1),
+                    "view_count": one_more_view(stored.view_count),
                     "updated_at": now,
                 }
             )
@@ -123,8 +123,7 @@ class AuditViewCounting:
             AuditViewCountDocument(
                 id=first.id,
                 business_id=business_id,
-                # An entry from before the chain may hold its count still.
-                view_count=AuditViewCount(int(first.record_count or 1) + 1),
+                view_count=one_more_view(views_counted_on(first)),
                 created_at=now,
                 updated_at=now,
             ),
@@ -139,3 +138,21 @@ def is_same_view(stored: AuditLogEntryDocument, entry: AuditLogEntryDocument) ->
         and stored.ip_address == entry.ip_address
         and stored.actor_id == entry.actor_id
     )
+
+
+def views_counted_on(first: AuditLogEntryDocument) -> AuditViewCount:
+    """
+    The views an entry stands for before its count document: one, or the
+    count an entry from before the chain still holds in `record_count`.
+    """
+
+    if first.record_count is None:
+        return AuditViewCount(1)
+
+    return AuditViewCount(max(int(first.record_count), 1))
+
+
+def one_more_view(count: AuditViewCount) -> AuditViewCount:
+    """The count of a view repeated once more."""
+
+    return AuditViewCount(int(count) + 1)

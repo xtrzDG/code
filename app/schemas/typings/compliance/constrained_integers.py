@@ -40,6 +40,16 @@ class AuditRecordCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class AuditRetentionDays(BaseConstrainedTypedInt):
+    """
+    How many days audit entries are kept at least before a purge may
+    remove them: an owner's dispute or an authority's question can reach a
+    year back.
+    """
+
+    ge = 365
+
+
 class AuditViewCount(BaseConstrainedTypedInt):
     """
     How many identical views one audited VIEW stands for: the first one and

@@ -8,9 +8,10 @@ chain verifiable.
 (`uv run python -m app.gateways.cli.purge_audit_log ...` without the image.)
 The application cannot delete audit entries (migration 1193): this command
 calls the database's `workshop.purge_audit_chain`, which runs with the
-rights of the role that ran the migrations, removes the oldest entries of
-each chain in batches and records the chain's checkpoint (the last removed
-position and its hash). Each chain that lost entries gets a RETENTION_PURGE
+rights of the role that ran the migrations, refuses a cutoff younger than
+365 days, removes the oldest entries of each chain in batches and records
+the chain's checkpoint (the last removed position, its hash and the
+cutoff). Each chain that lost entries gets a RETENTION_PURGE
 entry. Run it with the migration role's DATABASE_URL, never from
 `preDeployCommand` (docs/operations/runbooks/audit-chain-broken.md). Exit
 codes: 0 done, 1 the purge failed, 2 the arguments or settings are invalid
@@ -31,6 +32,10 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.dto.audit_trail import AuditLogPurgeCommand, AuditLogPurgeReport
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.compliance.constrained_integers import AuditPurgeBatchSize
+from app.utilities.compliance.audit_retention import (
+    MICROSECONDS_PER_DAY,
+    MINIMUM_AUDIT_RETENTION_DAYS,
+)
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
@@ -39,10 +44,9 @@ EXIT_OK: int = 0
 EXIT_FAILED: int = 1
 EXIT_NOT_CONFIGURED: int = 2
 DEFAULT_BATCH: int = 1_000
-# Audit entries are kept at least a year: an owner's dispute or an
-# authority's question can reach that far back.
-MINIMUM_RETENTION_DAYS: int = 365
-MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
+# Audit entries are kept at least a year (the database's purge function
+# refuses a younger cutoff too).
+MINIMUM_RETENTION_DAYS: int = int(MINIMUM_AUDIT_RETENTION_DAYS)
 
 
 class OverridableProvider(Protocol):

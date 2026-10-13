@@ -30,9 +30,14 @@ from app.utilities.compliance.audit_chain_hashing import (
     chain_key_of,
     compute_entry_hash,
 )
-from tests.compliance.audit_chain.audit_entries import MINUTE, START, entry
+from tests.compliance.audit_chain.audit_entries import (
+    MINUTE,
+    START,
+    TWO_YEARS_LATER,
+    entry,
+    wall_clock_at,
+)
 from tests.compliance.audit_trail_store import AuditTrailStore
-from tests.storage.storage_testing import build_fixed_wall_clock
 
 BUSINESS: BusinessId = BusinessId()
 CHAIN: AuditChainKey = chain_key_of(BUSINESS)
@@ -60,9 +65,9 @@ def check(
     previous: AuditChainStatusDocument | None = None,
     max_entries: int = 100_000,
 ) -> AuditChainStatusDocument:
-    return AuditChainVerification(store.chains, max_entries).verify(
-        CHAIN, previous, NOW
-    )
+    return AuditChainVerification(
+        store.chains, AuditChainEntryCount(max_entries)
+    ).verify(CHAIN, previous, NOW)
 
 
 def test_an_untouched_chain_is_intact_through_its_newest_entry() -> None:
@@ -127,7 +132,7 @@ def test_a_purge_keeps_the_chain_verifiable() -> None:
     store = written(6)
     previous = check(store)
     purges = InMemoryAuditChainPurgeAdapter(
-        store.entries, store.checkpoints, build_fixed_wall_clock()
+        store.entries, store.checkpoints, wall_clock_at(TWO_YEARS_LATER)
     )
 
     removed = purges.purge(
@@ -157,6 +162,7 @@ def test_a_checkpoint_moved_over_entries_still_there_is_found() -> None:
             through_position=AuditChainPosition(2),
             through_hash=hidden.entry_hash,
             purged_count=AuditChainEntryCount(2),
+            purged_before=Microseconds(START),
         ),
     )
 

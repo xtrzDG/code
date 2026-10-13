@@ -89,8 +89,8 @@ def test_security_events_and_chain_checks_reach_owner_and_admin(
     events: list[str | None] = [item["security_event"] for item in log.json()["items"]]
     assert "login_failed" in events
     assert "logout" in events
-    positions = [item["chain_position"] for item in log.json()["items"]]
-    assert positions == sorted(positions, reverse=True)
+    times = [item["occurred_at"] for item in log.json()["items"]]
+    assert times == sorted(times, reverse=True)
     (failure,) = failed.json()["items"]
     assert failure["action"] == "login"
     assert failure["entity"] == "login_destination"

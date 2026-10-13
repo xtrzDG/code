@@ -53,12 +53,17 @@ Rules:
   `app/utilities/storage/document_collection_catalog.py` as well.
 - Migrations after 1114 are online-safe (below);
   `tests/storage/test_migration_safety.py` lints them.
-- `audit_log_entries` is append-only since 1193 (a trigger refuses UPDATE
-  and DELETE, the application's role has neither): no migration changes
-  or removes its rows; old entries leave only through
-  `workshop.purge_audit_chain` (`workshop purge-audit-log`), which keeps
-  each hash chain verifiable. `GRANT` and `REVOKE` are idempotent and may
-  stand in a no-transaction file.
+- `audit_log_entries` is append-only since 1193: a trigger refuses every
+  UPDATE and DELETE, whoever runs it. The application's role has no
+  DELETE or TRUNCATE; it keeps UPDATE on three columns (`business_id`,
+  `document`, `updated_at`) only because the previous release's upsert
+  names them, and the trigger refuses those updates too (the release
+  after 1193 revokes them, docs/operations/deploys.md). No migration
+  changes or removes its rows; old entries leave only through
+  `workshop.purge_audit_chain` (`workshop purge-audit-log`), which refuses
+  entries of the last 365 days and keeps each hash chain verifiable.
+  `GRANT` and `REVOKE` are idempotent and may stand in a no-transaction
+  file.
 
 ## Online-safe migrations
 

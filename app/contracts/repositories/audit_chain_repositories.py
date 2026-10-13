@@ -76,8 +76,9 @@ class AuditActivityRepoContract(RepoContract, Protocol):
         log_filter: PlatformAuditFilter,
     ) -> list[AuditLogEntryDocument]:
         """
-        The platform chain's entries (those that name no business), newest
-        first: one keyset page by chain position.
+        The platform's own entries (those that name no business: its
+        chain's and those written before the chain), newest first: one
+        keyset page by the time they were written.
         """
         raise NotImplementedError
 
@@ -85,7 +86,9 @@ class AuditActivityRepoContract(RepoContract, Protocol):
         self, since: Microseconds
     ) -> list[BusinessOperationCount]:
         """
-        Exports (every EXPORT) and erasures (DELETE of a contact) since
+        Exports of personal data (an EXPORT of a contact, a segment, a
+        list with customers or staff in it, or the whole business; never an
+        invoice or receipt PDF) and erasures (DELETE of a contact) since
         `since`, per business that ran any.
         """
         raise NotImplementedError

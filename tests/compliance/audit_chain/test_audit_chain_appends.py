@@ -7,6 +7,7 @@ before; and the repository never changes or deletes a stored entry.
 import threading
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.audit_chain import AuditChainCheckpointDocument
@@ -147,6 +148,7 @@ def test_a_chain_emptied_by_a_purge_goes_on_after_its_checkpoint() -> None:
             through_position=AuditChainPosition(41),
             through_hash=last_purged,
             purged_count=AuditChainEntryCount(41),
+            purged_before=Microseconds(START),
         ),
     )
 

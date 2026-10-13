@@ -43,9 +43,9 @@ def build_audit_trail_router(
     Routes (bearer token):
         GET /v1/businesses/{business_id}/audit-log/chain  owner: how the
             latest daily check of the business's audit chain went
-        GET /v1/admin/audit-log          platform admin: the entries that
-            name no business, newest first (?limit, ?cursor, ?action,
-            ?security_event)
+        GET /v1/admin/audit-log          platform admin who may read the
+            security log (SUPER): the entries that name no business, newest
+            first (?limit, ?cursor, ?action, ?security_event)
         GET /v1/admin/audit-log/chains   platform admin: the platform's
             chain, how many chains are intact and broken, the broken ones
     """

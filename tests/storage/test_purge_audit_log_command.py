@@ -15,12 +15,15 @@ from app.use_cases.compliance.audit_chain.audit_chain_verification import (
     AuditChainVerification,
 )
 from app.utilities.compliance.audit_chain_hashing import PLATFORM_CHAIN_KEY
-from tests.compliance.audit_chain.audit_entries import START, entry
+from tests.compliance.audit_chain.audit_entries import (
+    START,
+    TWO_YEARS_IN_MINUTES,
+    entry,
+)
 from tests.storage.audit_chain_process import AuditProcess
 
-# Entries written two years before START: past any retention of a year,
-# while the command's own RETENTION_PURGE entry (written now) is not.
-TWO_YEARS_IN_MINUTES: int = 2 * 365 * 24 * 60
+# Entries are written two years before START: past any retention of a
+# year, while the command's own RETENTION_PURGE entry (written now) is not.
 
 
 @pytest.fixture

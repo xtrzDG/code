@@ -3,7 +3,10 @@
 **Alerts** (SEV2, from the audit log's last hour, `ops/alerts/`):
 
 - `bulk_personal_data`: one business exported or erased personal data more
-  than 20 times (EXPORT entries and DELETE of a contact).
+  than 20 times (EXPORT entries of a contact, a segment, a CSV list with
+  customers or staff in it, or the whole business, and DELETE of a
+  contact; invoice and receipt PDFs, entity `billing_document`, are not
+  personal data and do not count).
 - `tenant_hopping`: one platform admin entered or changed more than 10
   different clients' accounts (admin access, support access, trial,
   discount, credit, setup fee, invoice, plan overrides).

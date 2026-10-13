@@ -41,8 +41,12 @@ class AuditChainCheckpointDocument(BaseDocument):
     Where a purge cut a chain (collection `audit_chain_checkpoints`, one
     per chain, under its key): every entry up to `through_position` is
     gone, and `through_hash` is the hash of the last of them, so the first
-    entry left still links to it. Written only by the database's purge
-    function (`workshop.purge_audit_chain`, migration 1193).
+    entry left still links to it. `purged_before` is the latest purge's
+    cutoff: every removed entry was written before it, and the purge
+    function refuses a cutoff younger than the minimum retention
+    (`app/utilities/compliance/audit_retention.py`). Written only by the
+    database's purge function (`workshop.purge_audit_chain`, migration
+    1193).
     """
 
     id: AuditChainKey
@@ -50,6 +54,7 @@ class AuditChainCheckpointDocument(BaseDocument):
     through_position: AuditChainPosition
     through_hash: AuditEntryHash
     purged_count: AuditChainEntryCount
+    purged_before: Microseconds
 
 
 class AuditChainHeadDocument(BaseDocument):

@@ -1,9 +1,11 @@
 # One business exported or erased personal data far more often than an
 # owner does by hand: a stolen owner session or API key draining the
-# customers, or a script gone wrong. Exports are every EXPORT entry of the
-# audit log (CSV and full exports, a contact's data, billing documents),
-# erasures every DELETE of a contact. The figure is the highest count of
-# one business in the last hour; the detail names that business.
+# customers, or a script gone wrong. Exports are the EXPORT entries of
+# personal data (a contact's data, a segment's members, the CSV lists with
+# customers or staff in them, the full business export; never an invoice
+# or receipt PDF), erasures every DELETE of a contact. The figure is the
+# highest count of one business in the last hour; the detail names that
+# business.
 code: bulk_personal_data
 severity: sev2
 summary: One business exported or erased personal data more than 20 times in an hour.

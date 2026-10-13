@@ -279,7 +279,18 @@ tasks leave it alone (older versions upcast on read), and its four new
 lookup columns stay empty for older rows (they are in no chain). A rollback
 keeps the trigger and the privileges: nothing in the previous release
 needs more. Old entries leave only through `workshop purge-audit-log`
-(docs/operations/runbooks/audit-chain-broken.md).
+(docs/operations/runbooks/audit-chain-broken.md); the database's
+`workshop.purge_audit_chain` refuses a cutoff younger than 365 days.
+
+Two contract steps follow, each in a later migration: the release after
+this one (when no instance runs the upsert any more) revokes UPDATE on
+`audit_log_entries (business_id, document, updated_at)` from the
+application's role, so only the trigger's refusal is left as a second
+line; and W18-DB-ROLES-PASSKEYS, which gives the application a role of
+its own, makes a dedicated role own `workshop.purge_audit_chain` (the
+trigger lets only the function's owner delete) and revokes EXECUTE on it
+from the application's role. Until then the application's role owns the
+function and may call it, within the 365-day floor.
 
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are

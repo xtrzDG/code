@@ -34,7 +34,12 @@ from app.use_cases.compliance.audit_chain.audit_chain_verification import (
     AuditChainVerification,
 )
 from app.utilities.compliance.audit_chain_hashing import chain_key_of
-from tests.compliance.audit_chain.audit_entries import MINUTE, START, entry
+from tests.compliance.audit_chain.audit_entries import (
+    MINUTE,
+    START,
+    TWO_YEARS_IN_MINUTES,
+    entry,
+)
 from tests.storage.audit_chain_process import AuditProcess
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import build_fixed_wall_clock
@@ -59,16 +64,14 @@ def test_a_purge_leaves_a_checkpoint_the_chain_goes_on_from(
 ) -> None:
     chain = chain_key_of(BUSINESS)
     for minute in range(6):
-        process.log.append(entry(BUSINESS, minute))
+        process.log.append(entry(BUSINESS, minute - TWO_YEARS_IN_MINUTES))
     verification = AuditChainVerification(process.chains)
     now = build_fixed_wall_clock().now_unix()
     before = verification.verify(chain, None, now)
+    cutoff = Microseconds(START + (4 - TWO_YEARS_IN_MINUTES) * MINUTE)
 
     removed = [
-        process.purges.purge(
-            chain, Microseconds(START + 4 * MINUTE), AuditPurgeBatchSize(3)
-        )
-        for _ in range(3)
+        process.purges.purge(chain, cutoff, AuditPurgeBatchSize(3)) for _ in range(3)
     ]
     process.log.append(entry(BUSINESS, 7))
     after = verification.verify(chain, before, now)
@@ -78,6 +81,7 @@ def test_a_purge_leaves_a_checkpoint_the_chain_goes_on_from(
     assert checkpoint is not None
     assert checkpoint.through_position == AuditChainPosition(4)
     assert int(checkpoint.purged_count) == 4
+    assert checkpoint.purged_before == cutoff
     assert after.status is AuditChainStatus.INTACT
     assert after.verified_through_position == AuditChainPosition(7)
     with (

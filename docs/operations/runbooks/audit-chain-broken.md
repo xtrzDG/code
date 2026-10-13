@@ -10,7 +10,10 @@ without a business: sign-in failures, lockouts, sign-outs, key
 rotations). Each entry stores its position, the previous entry's hash and
 its own hash (SHA-256 of its canonical JSON); entries are appended under
 the chain's advisory lock in the transaction that writes them (migration
-1193). The application's database role cannot update or delete them.
+1193). A trigger refuses every update and deletion of an entry, whoever
+runs it; the application's database role has no DELETE or TRUNCATE on the
+table and keeps UPDATE on three columns only for the previous release's
+upsert, which the trigger refuses as well (the next release revokes it).
 
 ## How it shows
 
@@ -21,7 +24,7 @@ The status names the first bad position and the problem:
 | `hash_mismatch` | an entry's content no longer matches its hash: edited in the database |
 | `link_broken` | an entry's previous hash is not the entry before it: an entry replaced |
 | `position_gap` | a position is missing: an entry deleted |
-| `head_lost` | the last verified entry is gone or changed since the previous check |
+| `head_lost` | the last verified entry is gone or changed since the previous check, or a checkpoint removed it with a cutoff younger than 365 days |
 | `checkpoint_mismatch` | entries the retention purge removed are back, or the checkpoint was edited |
 
 None of these happens through the application. A broken chain means
@@ -61,8 +64,16 @@ Old entries leave only through `workshop purge-audit-log
 --older-than-days N` (at least 365), run by an operator with the
 migration role's `DATABASE_URL`, never from `preDeployCommand`. It
 removes each chain's oldest entries in batches and records the chain's
-checkpoint (the last removed position and its hash), so the rest of the
-chain still verifies; each purged chain gets a `retention_purge` entry.
+checkpoint (the last removed position, its hash and the cutoff), so the
+rest of the chain still verifies; each purged chain gets a
+`retention_purge` entry. The database function itself refuses a cutoff
+younger than 365 days, whoever calls it, and the daily check accepts a
+checkpoint over the newest entry it verified only with such a cutoff.
+
+A purge may run while the daily check walks a chain: the check reads the
+checkpoint again when it meets a gap and starts over from it, so a purge
+in progress never raises `audit_chain_broken`. No need to stop the
+`verify_audit_chain` job first.
 
 ## Afterwards
 

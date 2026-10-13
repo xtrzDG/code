@@ -4,18 +4,24 @@ from app.contracts.audit_chain_purges import AuditChainPurgeAdapterContract
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.schemas.domain.audit_chain import AuditChainCheckpointDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.compliance.constrained_integers import (
     AuditChainEntryCount,
     AuditPurgeBatchSize,
 )
 from app.schemas.typings.compliance.constrained_strings import AuditChainKey
 from app.utilities.compliance.audit_chain_hashing import business_of_chain
+from app.utilities.compliance.audit_retention import (
+    MINIMUM_AUDIT_RETENTION_DAYS,
+    is_cutoff_allowed,
+)
 
 
 class InMemoryAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
     """
     The database function's rules over the in-memory collections (tests and
-    development without a database): the same prefix, the same checkpoint.
+    development without a database): the same retention floor, the same
+    prefix, the same checkpoint.
     """
 
     def __init__(
@@ -38,6 +44,13 @@ class InMemoryAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
         created_before: Microseconds,
         max_entries: AuditPurgeBatchSize,
     ) -> AuditChainEntryCount:
+        now: Microseconds = self._wall_clock.now_unix()
+        if not is_cutoff_allowed(created_before, now):
+            raise ValidationFailedError(
+                "Audit entries are kept at least "
+                f"{int(MINIMUM_AUDIT_RETENTION_DAYS)} days: the cutoff is too recent."
+            )
+
         business_id = business_of_chain(chain_key)
         stored: list[AuditLogEntryDocument] = [
             entry
@@ -64,7 +77,11 @@ class InMemoryAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
 
         if batch:
             self._checkpoint(
-                chain_key, batch[-1], len(batch), self._wall_clock.now_unix()
+                chain_key,
+                batch[-1],
+                AuditChainEntryCount(len(batch)),
+                created_before,
+                now,
             )
 
         return AuditChainEntryCount(len(batch) + len(unchained))
@@ -73,7 +90,8 @@ class InMemoryAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
         self,
         chain_key: AuditChainKey,
         last: AuditLogEntryDocument,
-        removed: int,
+        removed: AuditChainEntryCount,
+        created_before: Microseconds,
         now: Microseconds,
     ) -> None:
         previous = self._checkpoints.get(str(chain_key))
@@ -88,8 +106,10 @@ class InMemoryAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
                 through_position=last.chain_position,
                 through_hash=last.entry_hash,
                 purged_count=AuditChainEntryCount(
-                    removed + (0 if previous is None else int(previous.purged_count))
+                    int(removed)
+                    + (0 if previous is None else int(previous.purged_count))
                 ),
+                purged_before=created_before,
                 created_at=now if previous is None else previous.created_at,
                 updated_at=now,
             ),
