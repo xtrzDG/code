@@ -73,12 +73,22 @@ def test_a_linked_calendar_still_blocks_its_times(
 
 def test_a_failed_refresh_reads_the_busy_times_all_the_same(
     monkeypatch: pytest.MonkeyPatch,
+    busy_time_reads: list[BusinessId],
 ) -> None:
+    """A refresh that raises cannot tell: the stored busy times still block."""
+
     def broken(*_: object) -> bool:
         raise RuntimeError("storage hiccup")
 
     with open_calendar_shop() as shop:
+        shop.edges.feeds.serve(FEED_URL, calendar_ics(PARTY))
+        imported = shop.import_feed()
         facilitator = shop.workshop.container.facilitators.busy_time_sync()
         monkeypatch.setattr(facilitator, "_refresh_stale", broken)
+        busy_time_reads.clear()  # the import's own reads are not availability's
+        free = shop.free_times()
 
-        assert facilitator.refresh_stale(BusinessId(shop.business_id), BUDGET)
+    assert imported.status_code == 201, imported.text
+    assert busy_time_reads == [BusinessId(shop.business_id)]
+    assert free
+    assert "14:00" not in free
