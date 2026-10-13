@@ -86,6 +86,17 @@ describe("AnimatedNumber", () => {
     expect(number.style.width).toBe("");
   });
 
+  it("counts in React's own text node, which then shows what React renders later", () => {
+    const view = render(<AnimatedNumber value={4} format={format} countIn={false} />);
+    const text = numberIn(view.container).firstChild;
+    view.rerender(<AnimatedNumber value={16} format={format} countIn={false} />);
+    runFrame(0);
+    runFrame(2000);
+    expect(numberIn(view.container).firstChild).toBe(text);
+    view.rerender(<AnimatedNumber value={16} format={(value) => `${value} items`} countIn={false} />);
+    expect(numberIn(view.container).textContent).toBe("16 items");
+  });
+
   it("keeps still with the cabinet's own Reduce motion", () => {
     document.documentElement.setAttribute("data-motion", "reduce");
     const view = render(<AnimatedNumber value={4} format={format} countIn={false} />);

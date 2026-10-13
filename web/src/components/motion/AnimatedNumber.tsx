@@ -68,8 +68,18 @@ export function AnimatedNumber({
       return;
     }
     const from = shown.current ?? 0;
+    // Only a new text touches the page (the count repeats a value over several frames), and in
+    // React's own text node, which then keeps showing what React renders later.
     const write = (current: number) => {
-      node.textContent = formatRef.current(current);
+      const text = formatRef.current(current);
+      const only = node.firstChild;
+      if (only instanceof Text && only === node.lastChild) {
+        if (only.data !== text) {
+          only.data = text;
+        }
+      } else if (node.textContent !== text) {
+        node.textContent = text;
+      }
     };
     const settle = () => {
       shown.current = value;
