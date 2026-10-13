@@ -12,6 +12,7 @@ from app.schemas.constants.bookings import (
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.bookable_offers import BookableOfferView, StayQuote
 from app.schemas.dto.brands.sister_locations import SisterLocationOption
+from app.schemas.dto.deposits.deposit_views import BookingDepositView
 from app.schemas.typings.bookings.booleans import (
     IsFullDayAvailability,
     IsOpenOnDate,
@@ -219,7 +220,7 @@ class BookingView(ImmutableDTO):
     customer's language for texts about it. `reminder_sent_at` is when the
     customer's reminder went out (None: not yet). A booking of a service,
     package or room type names it and carries its value (`value_minor` in
-    `currency_code`).
+    `currency_code`). `deposit` is the deposit asked for it, if any.
     """
 
     id: BookingId
@@ -247,6 +248,7 @@ class BookingView(ImmutableDTO):
     service_title: KnowledgeTitle | None = None
     value_minor: BookingValueMinor | None = None
     currency_code: CurrencyCode | None = None
+    deposit: BookingDepositView | None = None
 
 
 class BookingResult(ImmutableDTO):

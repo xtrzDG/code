@@ -21,6 +21,10 @@ LEADS_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(
 # Channels without anything to tap: a call is spoken.
 CHANNELS_WITHOUT_CHOICES: frozenset[ChannelKind] = frozenset({ChannelKind.PHONE})
 
+# A version that makes bookings or requests may ask their deposits.
+DEPOSIT_TAKING_TOOLS: frozenset[AssistantToolName] = frozenset(
+    {AssistantToolName.CREATE_BOOKING, AssistantToolName.CREATE_LEAD}
+)
 # The booking tools join_waitlist follows in a version's list.
 BOOKING_TOOL_ORDER: frozenset[AssistantToolName] = frozenset(
     {
@@ -40,10 +44,11 @@ def select_available_tools(
 ) -> list[AssistantToolName]:
     """
     The version's tools in its order (with list_my_bookings and
-    join_waitlist for a version assembled before they existed), then
-    offer_choices in a chat channel (every version gets it, so options to
-    tap need no new version); in LEADS_ONLY mode only the tools of
-    LEADS_ONLY_TOOLS remain.
+    join_waitlist for a version assembled before they existed), then, in a
+    chat channel, offer_choices (every version gets it, so options to tap
+    need no new version) and send_payment_link for a version that books or
+    takes requests (a deposit's link is written, never spoken); in
+    LEADS_ONLY mode only the tools of LEADS_ONLY_TOOLS remain.
     """
 
     tools: list[AssistantToolName] = with_join_waitlist(
@@ -54,6 +59,12 @@ def select_available_tools(
         and AssistantToolName.OFFER_CHOICES not in tools
     ):
         tools.append(AssistantToolName.OFFER_CHOICES)
+    if (
+        channel not in CHANNELS_WITHOUT_CHOICES
+        and AssistantToolName.SEND_PAYMENT_LINK not in tools
+        and DEPOSIT_TAKING_TOOLS & set(tools)
+    ):
+        tools.append(AssistantToolName.SEND_PAYMENT_LINK)
     if business.service_mode is ServiceMode.LEADS_ONLY:
         return [tool for tool in tools if tool in LEADS_ONLY_TOOLS]
 

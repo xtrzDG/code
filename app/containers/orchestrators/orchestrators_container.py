@@ -182,11 +182,12 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         FeedbackOrchestratorsContainer,
         feedback_use_cases=CoreOrchestratorsContainer.use_cases.feedback,
     )
-    # The waitlist and the rebooking campaigns (1151).
+    # The waitlist and the rebooking campaigns (1151), the deposits (1190).
     growth: GrowthOrchestratorsContainer = Container(  # type: ignore[assignment]
         GrowthOrchestratorsContainer,
         waitlist_use_cases=CoreOrchestratorsContainer.use_cases.waitlist,
         campaign_use_cases=CoreOrchestratorsContainer.use_cases.campaigns,
+        deposit_use_cases=CoreOrchestratorsContainer.use_cases.deposits,
     )
     # Cancel reasons, offers, the seasonal pause and win-back (1161).
     lifecycle: SubscriptionLifecycleOrchestratorsContainer = Container(  # type: ignore[assignment]

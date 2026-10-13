@@ -39,6 +39,7 @@ from app.utilities.conversations.assistant_texts.notice_texts import (
     CONTACT_LIMIT_NOTICE,
 )
 from app.utilities.conversations.farewells import is_farewell
+from app.utilities.deposits.payment_line_joining import with_payment_lines
 from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -59,9 +60,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     claims, other people's contact details). When the model refuses, is
     unavailable, cannot finish or keeps what the guard holds back, the
     conversation goes to a colleague (unless the model already handed it
-    over) and the customer hears so in their language. Before the model is
-    asked, the spend guard checks the business's spend of its day: past
-    its soft limit the turn uses a cheaper model, past its hard limit the
+    over) and the customer hears so in their language (with the payment
+    line of a deposit the turn asked). Before the model is asked, the
+    spend guard checks the business's spend of its day: past its soft
+    limit the turn uses a cheaper model, past its hard limit the
     conversation goes to the team without a model call (`spend_brake`).
     Finally the reply is stored with its usage; on the phone the call ends
     after a handoff or the caller's goodbye.
@@ -156,7 +158,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         text: MessageText | None = generated.text
         handoff_ids: list[HandoffId] = list(generated.created_handoff_ids)
         if generated.failure is not None:
-            text, engine_handoff_id = self._hand_over(turn, generated)
+            handoff_text, engine_handoff_id = self._hand_over(turn, generated)
+            # A deposit the turn asked still reaches the customer with its link.
+            text = with_payment_lines(handoff_text, generated.payment_lines)
             if engine_handoff_id is not None:
                 handoff_ids.append(engine_handoff_id)
 

@@ -108,5 +108,9 @@ export const assistantDe: Translation<typeof assistantEn> = {
       name: "Antworten zum Antippen",
       description: "Zeigt dem Kunden einige Antworten als Schaltflächen – eine Uhrzeit, eine Leistung, Ja oder Nein. Wo ein Kanal keine Schaltflächen hat, kommen sie als nummerierte Liste.",
     },
+    send_payment_link: {
+      name: "Link zur Anzahlung",
+      description: "Sendet den Link zu Ihrer Zahlungsseite, wenn eine Buchung oder Bankettanfrage eine Anzahlung braucht. Der Betrag kommt aus Ihren Anzahlungseinstellungen, der Link von Ihrer Zahlungsseite; der Assistent wählt keines von beiden.",
+    },
   },
 };

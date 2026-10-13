@@ -27,6 +27,7 @@ INTEGER_NAMES: frozenset[str] = frozenset(
         "ConversationQualityHundredths",
         "CostMicroUsd",
         "ClientListPosition",
+        "DepositDueMinor",
         "ExchangeRateDayNumber",
         "LlmTokenCount",
         "LlmTurnSequenceNumber",

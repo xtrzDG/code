@@ -3,8 +3,9 @@
 /**
  * What waits in this conversation, above the transcript: why the
  * assistant called for a person (with its summary and urgency) and the
- * open requests with their status, changed right here. Resolving is in
- * the quick actions at the foot, next to the reply.
+ * open requests with their status, changed right here, and the deposit a
+ * banquet request was asked with "Paid". Resolving is in the quick actions
+ * at the foot, next to the reply.
  */
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
@@ -19,6 +20,7 @@ import { cn } from "@/lib/cn";
 
 import { handoffSummary } from "../../_lib/handoffSummary";
 import { LeadStatusSelect } from "../details/LeadStatusSelect";
+import { RequestDeposit } from "../details/RequestDeposit";
 
 const URGENCY_EDGE = {
   critical: "border-s-danger-solid",
@@ -89,6 +91,11 @@ function RequestWork({
         <p dir="auto" data-user-content className="mt-1 line-clamp-2 text-sm break-words text-ink">
           {lead.details}
         </p>
+        {lead.deposit ? (
+          <div className="mt-2 text-sm">
+            <RequestDeposit lead={lead} />
+          </div>
+        ) : null}
       </div>
       <LeadStatusSelect lead={lead} isPending={isPending} onStatus={onStatus} label={t("inboxCard.work.requestStatus")} />
     </section>

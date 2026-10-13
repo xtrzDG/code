@@ -8,6 +8,7 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.facilitators.growth.growth_bookings_facilitator import (
     GrowthBookingsFacilitator,
 )
@@ -194,7 +195,7 @@ class OperationsStore:
             InMemoryDocumentCollectionAdapter(CalendarBusyTimesDocument)
         )
         self.busy_time_sync = RecordingBusyTimeSync()
-        self.growth = GrowthBookingsFacilitator(
+        self.growth: GrowthBookingsFacilitatorContract = GrowthBookingsFacilitator(
             waitlist_entry_repo=self.waitlist_entry_repo,
             waitlist_settings_repo=self.waitlist_settings_repo,
             campaign_message_repo=self.campaign_message_repo,

@@ -21,6 +21,7 @@ from app.containers.use_cases.campaign_use_cases import CampaignUseCasesContaine
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
 from app.containers.use_cases.customer_use_cases import CustomerUseCasesContainer
+from app.containers.use_cases.deposit_use_cases import DepositUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
@@ -213,6 +214,13 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         account_use_cases=accounts,
         booking_use_cases=bookings,
     )
+    # Deposits and prepayment links: settings, the tool, holds, report (1190).
+    deposits: DepositUseCasesContainer = Container(  # type: ignore[assignment]
+        DepositUseCasesContainer, adapters=adapters, facilitators=facilitators,
+        registries=registries, repositories=repositories,
+        time_provider=time_provider, utilities=utilities,
+        account_use_cases=accounts,
+    )  # fmt: skip
     # Two-way availability: resources' calendars, the sync job, exports (1160).
     calendars: CalendarSyncUseCasesContainer = Container(  # type: ignore[assignment]
         CalendarSyncUseCasesContainer, adapters=adapters, clients=clients,

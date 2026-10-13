@@ -21,7 +21,12 @@ from app.utilities.scheduling.zoned_time import (
 )
 
 ON_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED}
+    {
+        BookingStatus.PENDING,
+        BookingStatus.PENDING_DEPOSIT,
+        BookingStatus.CONFIRMED,
+        BookingStatus.COMPLETED,
+    }
 )
 
 
@@ -80,6 +85,7 @@ class GetTodayQueueUseCase(UseCaseContract[TodayQueueQuery, TodayQueue]):
             upcoming_booking_count=on_count(still_to_start),
             unconfirmed_booking_count=PeriodItemCount(
                 int(still_to_start.get(BookingStatus.PENDING, 0))
+                + int(still_to_start.get(BookingStatus.PENDING_DEPOSIT, 0))
             ),
         )
 

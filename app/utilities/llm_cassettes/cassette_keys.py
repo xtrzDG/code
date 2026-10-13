@@ -5,8 +5,9 @@ A call is identified by its model, its instruction, its tools and its
 transcript. The transcript is made canonical first: every payload is
 re-serialized with sorted keys, and what differs from run to run although
 the conversation is the same (random record ids, the per-turn fence keys
-of customer text, provider tool call ids) is replaced by numbered
-placeholders in order of first appearance. So the same conversation gets
+of customer text, provider tool call ids, deposit payment references) is
+replaced by numbered placeholders in order of first appearance. So the
+same conversation gets
 the same key in every run, and two conversations that refer to the same
 booking twice still differ from ones that refer to two bookings.
 """
@@ -26,14 +27,28 @@ from app.schemas.typings.evaluations.constrained_strings import (
     LlmTranscriptDigest,
 )
 from app.schemas.typings.evaluations.strings import LlmTranscriptTail
+from app.utilities.deposits.deposit_keys import (
+    REFERENCE_ALPHABET,
+    REFERENCE_DIGITS,
+    REFERENCE_LENGTH,
+    REFERENCE_LETTERS,
+)
 
 UUID_PATTERN: str = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+# A deposit's payment reference (deposit_keys): eight characters of its
+# alphabet, letters and at least one digit, wherever the payment line has it.
+DEPOSIT_REFERENCE_PATTERN: str = (
+    rf"(?=[{REFERENCE_ALPHABET}]{{0,{REFERENCE_LENGTH - 1}}}[{REFERENCE_DIGITS}])"
+    rf"(?=[{REFERENCE_ALPHABET}]{{0,{REFERENCE_LENGTH - 1}}}[{REFERENCE_LETTERS}])"
+    rf"[{REFERENCE_ALPHABET}]{{{REFERENCE_LENGTH}}}"
+)
 # (pattern, kind): the first group, when there is one, is kept as written.
 VOLATILE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(rf"\b([a-z][a-z_]*_){UUID_PATTERN}\b"), "id"),
     (re.compile(rf"\b(){UUID_PATTERN}\b"), "uuid"),
     (re.compile(r"(customer_text )[0-9a-f]{8}\b"), "fence"),
     (re.compile(r"\b(toolu_|call_|fc_)[A-Za-z0-9_\-]+\b"), "call"),
+    (re.compile(rf"\b(){DEPOSIT_REFERENCE_PATTERN}\b"), "reference"),
 )
 TRANSCRIPT_SEPARATOR: str = "\n␞\n"
 # The end of the last turn: the customer's words or the tool results.

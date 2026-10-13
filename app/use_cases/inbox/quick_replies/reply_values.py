@@ -18,7 +18,7 @@ from app.utilities.channels.local_moments import format_local_moment
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # A booking that still lies ahead: neither cancelled nor already over.
 UPCOMING_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED}
+    {BookingStatus.PENDING, BookingStatus.PENDING_DEPOSIT, BookingStatus.CONFIRMED}
 )
 
 

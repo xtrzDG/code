@@ -118,6 +118,51 @@ Spec: `f619b704e2a66ba5`
   way (`login_failed`, then `otp_locked` or `mfa_locked`); their answers
   are unchanged too.
 
+## 2026-10-12 — deposits and payment links
+
+Spec: `afc1b9ee9c9a998a`
+
+- **Added** the deposit settings of a business:
+  `GET·PUT /v1/businesses/{business_id}/deposit-settings` (on or off, the
+  hold of 15–1440 minutes, the refund cutoff of 0–720 hours, the default
+  payment page, kept as it is when the request leaves it null; the answer names the business currency and its minor-unit
+  digits), `POST …/deposit-settings/payment-links` (an https page of the
+  owner's own payment provider, fixed or a template with `{amount}`,
+  `{amount_minor}`, `{currency}` and `{reference}`; 201; a page whose query
+  carries a key is stored sealed and shown as `preview`, `is_sealed`),
+  `DELETE …/deposit-settings/payment-links/{link_id}` (204) and
+  `PUT …/deposit-settings/policies` (the deposit of a resource, a service
+  or the banquet requests: `fixed`, `per_guest` or `percent_of_value`,
+  from `min_party_size` guests; `policy: null` removes it). Changes are
+  owner-only and audited; refusals carry `reasons[].code`
+  (`no_payment_link`, `link_not_https`, `link_invalid`,
+  `template_invalid`, `currency_mismatch`, `status_changed`; a policy may
+  be set while deposits are off, so the owner prepares them first).
+- **Added** `GET …/deposits/{deposit_id}` (one deposit: amount, reference,
+  page, state and its moments) and `POST …/deposits/{deposit_id}/paid`
+  (staff saw the money: the deposit is `paid` and the booking held for it
+  confirmed; 409 `status_changed` once its hold ran out).
+- **Added** `GET …/deposit-report?days=7–366` (owners): deposits asked,
+  paid and expired, collected and to refund per currency, and the no-show
+  rate of finished bookings with and without a paid deposit, and before
+  and since deposits were first turned on (`enabled_at`,
+  `before_deposits`, `since_deposits`; null while deposits were never on);
+  `has_enough_data` is false below `min_sample` finished bookings.
+- **Changed** (additive) the booking view (lists, grid, changes): `deposit`
+  (`request_id`, `status`, `amount_minor`, `currency_code`,
+  `hold_expires_at`) when a deposit was asked for it. `status` may become
+  `pending_deposit` (a place held until its deposit is paid) once the
+  `booking_deposits` release gate opens; until then a held booking stays
+  `pending` with `deposit.status` `awaiting`. Clients that do not know
+  `pending_deposit` should treat it like `pending`.
+- **Changed** (additive) the assistant's tool names (`tools` of a version,
+  `tool_name` of a message's tool calls): `send_payment_link`, stored only
+  once the `send_payment_link_tool` release gate opens.
+- **Changed** (additive) the lead row (`GET …/leads`, a conversation's
+  `leads`): `deposit` (same shape as on a booking) once a deposit was asked
+  for a banquet request; `POST …/deposits/{deposit_id}/paid` marks it paid
+  too (the request keeps its status).
+
 ## 2026-10-07 — webhook switch-off notices, bookings written to Cal.com
 
 Spec: `ed36493999d9107b`

@@ -681,3 +681,22 @@ _.brand_name  # app/schemas/dto/users.py (UserMembershipView)
 _.own_item_id  # app/schemas/dto/brands/brand_knowledge.py (LocationSharedItemView)
 _.additional_location_price  # app/schemas/dto/catalog/plan_quotes.py (PlanQuote)
 _.local_additional_location_price  # app/schemas/dto/catalog/plan_quotes.py
+# Deposits (W19-DEPOSITS, 1190): response fields the cabinet reads (the
+# deposit settings card, the booking's deposit line, Reports → Deposits);
+# no Python code reads them.
+_.is_sealed  # app/schemas/dto/deposits/deposit_settings.py (PaymentLinkView)
+_.currency_digits  # app/schemas/dto/deposits/deposit_settings.py, deposit_report.py
+_.payment_link_label  # app/schemas/dto/deposits/deposit_views.py
+_.collected_minor  # app/schemas/dto/deposits/deposit_report.py (DepositMoney)
+_.refund_due_minor  # app/schemas/dto/deposits/deposit_report.py (DepositMoney)
+_.finished_count  # app/schemas/dto/deposits/deposit_report.py (NoShowRate)
+_.no_show_count  # app/schemas/dto/deposits/deposit_report.py (NoShowRate)
+_.has_enough_data  # app/schemas/dto/deposits/deposit_report.py (NoShowRate)
+_.no_show_percent  # app/schemas/dto/deposits/deposit_report.py (NoShowRate)
+_.requested_count  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.paid_count  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.expired_count  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+_.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)

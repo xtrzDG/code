@@ -34,6 +34,8 @@ from app.schemas.typings.storage.constrained_strings import DocumentCollectionNa
 
 SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
+BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
+PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -61,6 +63,41 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("offer_choices")],
+        is_open=False,
+    ),
+    # Deposits (W19, migration 1190): a booking that waits for its deposit
+    # is PENDING (with its deposit AWAITING) until the next release opens
+    # this gate and writes PENDING_DEPOSIT.
+    ReleaseGate(
+        name=BOOKING_DEPOSITS_GATE,
+        collection_name=DocumentCollectionName("bookings"),
+        path=StoredEnumPath("status"),
+        values=[GatedEnumValue("pending_deposit")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=BOOKING_DEPOSITS_GATE,
+        collection_name=DocumentCollectionName("bookings"),
+        path=StoredEnumPath("last_status_change.previous_status"),
+        values=[GatedEnumValue("pending_deposit")],
+        is_open=False,
+    ),
+    # The model tool send_payment_link (W19): offered by the chat
+    # conversations, never written as a version's tool or a stored tool
+    # call until the next release opens these gates (the reply keeps the
+    # payment line it carried).
+    ReleaseGate(
+        name=PAYMENT_LINK_TOOL_GATE,
+        collection_name=DocumentCollectionName("assistant_versions"),
+        path=StoredEnumPath("tools[]"),
+        values=[GatedEnumValue("send_payment_link")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=PAYMENT_LINK_TOOL_GATE,
+        collection_name=DocumentCollectionName("messages"),
+        path=StoredEnumPath("tool_calls[].tool_name"),
+        values=[GatedEnumValue("send_payment_link")],
         is_open=False,
     ),
 )

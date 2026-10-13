@@ -10,6 +10,8 @@ import type { BookingStatus } from "@/components/insights/types";
 
 export const STATUS_STYLE: Record<BookingStatus, { block: string; mark: string }> = {
   pending: { block: "border-warning/45 bg-warning-soft", mark: "bg-warning" },
+  // Held for its deposit: it waits like a request.
+  pending_deposit: { block: "border-warning/45 bg-warning-soft", mark: "bg-warning" },
   confirmed: { block: "border-success/40 bg-success-soft", mark: "bg-success" },
   completed: { block: "border-line-strong/40 bg-surface-muted", mark: "bg-line-strong" },
   no_show: { block: "border-danger/40 bg-danger-soft", mark: "bg-danger" },
@@ -17,7 +19,7 @@ export const STATUS_STYLE: Record<BookingStatus, { block: string; mark: string }
 };
 
 /** The statuses the calendar shows (a cancelled booking frees its place and leaves the grid). */
-export const SHOWN_STATUSES: readonly BookingStatus[] = ["pending", "confirmed", "completed", "no_show"];
+export const SHOWN_STATUSES: readonly BookingStatus[] = ["pending", "pending_deposit", "confirmed", "completed", "no_show"];
 
 /** Closed hours and nights: a quiet hatch over the muted surface. */
 export const CLOSED_STYLE: CSSProperties = {

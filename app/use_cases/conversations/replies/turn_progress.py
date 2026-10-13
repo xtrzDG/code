@@ -14,6 +14,7 @@ from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.assistant_tools import AssistantToolOutcome
 from app.schemas.dto.conversation_engine import GeneratedReply, PreparedTurn
 from app.schemas.dto.conversations import LlmResponse, LlmToolCall
+from app.schemas.dto.deposits.deposit_amounts import IssuedDepositLine
 from app.schemas.dto.reply_safety import VerifierUsage
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
@@ -55,6 +56,10 @@ class TurnProgress:
     is_fallback_model: bool = False
     # The options offer_choices put under the reply (the latest call wins).
     choices: ReplyChoices | None = None
+    # The payment lines send_payment_link put under the reply (one each).
+    deposit_lines: list[IssuedDepositLine] = field(
+        default_factory=list[IssuedDepositLine]
+    )
 
 
 def start_progress(stored_turns: list[LlmTurnDocument]) -> TurnProgress:
@@ -91,7 +96,8 @@ def record_tool_outcome(
     """
     The call, its result (evidence when it succeeded) and what it created;
     offered options are kept for the reply, and their result is no evidence
-    (the guard checks the options themselves).
+    (the guard checks the options themselves); a deposit's payment line is
+    kept for the reply once (sent again, it replaces itself).
     """
 
     progress.tool_calls.append(
@@ -106,6 +112,16 @@ def record_tool_outcome(
         progress.choices = outcome.choices
     elif not outcome.result.is_error:
         progress.tool_results.append(str(outcome.result.result_json))
+
+    if outcome.deposit_line is not None:
+        progress.deposit_lines = [
+            *(
+                line
+                for line in progress.deposit_lines
+                if line.request_id != outcome.deposit_line.request_id
+            ),
+            outcome.deposit_line,
+        ]
 
     if outcome.booking_id is not None:
         progress.created_booking_ids.append(outcome.booking_id)
@@ -131,7 +147,9 @@ def build_reply(
 ) -> GeneratedReply:
     """
     The turn's reply; its model is the one that answered the last round
-    (the version's, or the fallback that stood in for it).
+    (the version's, or the fallback that stood in for it). A reply without
+    text (a failure) keeps the payment lines the turn issued, for the
+    engine to send under its handoff text.
     """
 
     return GeneratedReply(
@@ -156,4 +174,7 @@ def build_reply(
         llm_round_count=LlmRoundCount(progress.rounds_used),
         is_fallback_model=progress.is_fallback_model,
         choices=None if text is None else progress.choices,
+        payment_lines=(
+            [line.line for line in progress.deposit_lines] if text is None else []
+        ),
     )

@@ -22,6 +22,7 @@ from app.schemas.dto.assistant_tools import (
     SearchKnowledgeToolInput,
     SendLinkToolInput,
 )
+from app.schemas.dto.deposits.payment_link_requests import SendPaymentLinkToolInput
 
 INPUT_MODELS: dict[AssistantToolName, type[Any]] = {
     AssistantToolName.SEARCH_KNOWLEDGE: SearchKnowledgeToolInput,
@@ -37,6 +38,7 @@ INPUT_MODELS: dict[AssistantToolName, type[Any]] = {
     AssistantToolName.SEND_LINK: SendLinkToolInput,
     AssistantToolName.RECORD_UNANSWERED_QUESTION: RecordUnansweredQuestionToolInput,
     AssistantToolName.OFFER_CHOICES: OfferChoicesToolInput,
+    AssistantToolName.SEND_PAYMENT_LINK: SendPaymentLinkToolInput,
 }
 
 

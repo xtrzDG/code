@@ -1,7 +1,7 @@
 /**
  * Pure changes of cached inbox data after an action on a conversation:
  * the new assignment on its card and on its rows, a resolved handoff, a
- * request's new status, a note more or less. The screens apply them at
+ * request's new status or paid deposit, a note more or less. The screens apply them at
  * once; the live stream brings the server's own copy right after.
  */
 
@@ -85,6 +85,18 @@ export function cardWithRequestStatus(card: ConversationDetailView, leadId: stri
   return {
     ...card,
     leads: (card.leads ?? []).map((lead) => (lead.id === leadId ? { ...lead, status } : lead)),
+  };
+}
+
+/** The card once staff marked a request's deposit paid (the request keeps its status). */
+export function cardWithPaidRequestDeposit(card: ConversationDetailView, leadId: string): ConversationDetailView {
+  return {
+    ...card,
+    leads: (card.leads ?? []).map((lead) =>
+      lead.id === leadId && lead.deposit
+        ? { ...lead, deposit: { ...lead.deposit, status: "paid", hold_expires_at: null } }
+        : lead,
+    ),
   };
 }
 

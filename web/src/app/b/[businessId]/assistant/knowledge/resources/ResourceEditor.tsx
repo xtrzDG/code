@@ -7,6 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { OpeningInterval, ResourceKind, Weekday } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { DepositPolicyPanel } from "@/components/deposits/DepositPolicyPanel";
 import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "@/components/setup/hours/HoursEditor";
 import { Button, Checkbox, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -64,7 +65,7 @@ export function ResourceEditor({
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const formId = useId();
 
@@ -284,6 +285,11 @@ export function ResourceEditor({
           ) : null}
         </Fieldset>
       </form>
+      {resource && isOwner ? (
+        <div className="mt-6 border-t border-line pt-6">
+          <DepositPolicyPanel target={{ target: "resource", resourceId: resource.id }} />
+        </div>
+      ) : null}
     </Modal>
   );
 }

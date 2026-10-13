@@ -85,7 +85,7 @@ from tests.brain.brain_business_seed import seed_business
 from tests.brain.brain_memory import BrainMemory
 from tests.brain.brain_orchestrators import GuardOptions, build_brain_orchestrators
 from tests.brain.brain_repositories import build_brain_repositories
-from tests.brain.brain_tools import build_brain_tools
+from tests.brain.brain_tools import SendPaymentLink, build_brain_tools
 from tests.brain.business_setups import GEORGIA, BusinessSetup, default_menu
 from tests.brain.fake_booking_tools import FakeBookings, FakeCheckAvailability
 from tests.brain.fake_contact_tools import (
@@ -188,9 +188,7 @@ class BrainWorld:
 
     def usage_events(self) -> list[UsageEventDocument]:
         return self.usage_event_repo.list_by_business_between(
-            self.business.id,
-            Microseconds(0),
-            Microseconds(2**62),
+            self.business.id, Microseconds(0), Microseconds(2**62)
         )
 
     def contacts(self) -> list[ContactDocument]:
@@ -217,6 +215,7 @@ def build_world(
     is_published: bool = True,
     app_base_url: str | None = None,
     guard: GuardOptions | None = None,
+    payment_link: SendPaymentLink | None = None,
 ) -> BrainWorld:
     clock = ManualClock()
     wall_clock: WallClock[Microseconds] = clock.wall_clock()
@@ -230,7 +229,9 @@ def build_world(
         is_published=is_published,
     )
     items = knowledge if knowledge is not None else default_menu(setup)
-    brain_tools = build_brain_tools(repos, seeded.business, items, wall_clock)
+    brain_tools = build_brain_tools(
+        repos, seeded.business, items, wall_clock, send_payment_link=payment_link
+    )
     texts = LocalizedTextResolver()
     orchestrators = build_brain_orchestrators(
         llm,

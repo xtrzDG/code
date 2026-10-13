@@ -152,6 +152,8 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       waitlist_entry: "רשימת המתנה",
       resource_calendar: "יומני משאבים",
       waitlist_settings: "הגדרות רשימת המתנה",
+      deposit_settings: "הגדרות פיקדון",
+      deposit_request: "פיקדון",
       campaign_settings: "הגדרות ביקורים חוזרים",
       campaign_message: "הודעות ביקור חוזר",
       spend_limits: "מגבלות הוצאה יומיות",

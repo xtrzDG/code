@@ -2,6 +2,8 @@
 
 import { IconAlert, IconCalendar, IconPencil } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
+import { DepositPolicyLine } from "@/components/deposits/DepositPolicyLine";
+import type { DepositPolicyView } from "@/components/deposits/depositModel";
 import { Badge, Button, UserSentence } from "@/components/ui";
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useI18n } from "@/i18n/client";
@@ -14,13 +16,14 @@ import { BOOKING_UNIT_LABELS, RESOURCE_KIND_LABELS } from "../ResourceEditor";
 
 /**
  * One bookable resource: name, kind, capacity, units, slot and hours, the
- * services it performs or its room type, how its calendars stand; switch,
- * calendars and edit.
+ * services it performs or its room type, its deposit, how its calendars
+ * stand; switch, calendars and edit.
  */
 export function ResourceRow({
   resource,
   offers,
   calendars,
+  deposit,
   onToggle,
   onCalendars,
   onEdit,
@@ -28,6 +31,8 @@ export function ResourceRow({
   resource: ResourceView;
   offers: readonly KnowledgeItemDetails[];
   calendars?: ResourceSyncSummary;
+  /** Its deposit policy (owners see it; none for no deposit). */
+  deposit?: DepositPolicyView | null;
   onToggle: (isActive: boolean) => void;
   onCalendars: () => void;
   onEdit: () => void;
@@ -70,6 +75,7 @@ export function ResourceRow({
             <UserSentence text={t("knowledge.resources.roomTypeValue")} values={{ name: roomType.title }} />
           </p>
         ) : null}
+        {deposit ? <DepositPolicyLine policy={deposit} /> : null}
         {calendarLine ? (
           <p className={calendarLine.tone === "warning" ? "flex items-center gap-1.5 text-sm text-warning" : "text-sm text-ink-subtle"}>
             {calendarLine.tone === "warning" ? <IconAlert className="size-4 shrink-0" aria-hidden /> : null}

@@ -140,6 +140,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     send_link: "Отправил ссылку",
     record_unanswered_question: "Записал вопрос без ответа",
     offer_choices: "Предложил варианты ответа",
+    send_payment_link: "Отправил ссылку на депозит",
   },
   messageTokens: { one: "{count} токен", few: "{count} токена", many: "{count} токенов", other: "{count} токена" },
   usage: {

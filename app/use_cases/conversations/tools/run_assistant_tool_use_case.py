@@ -68,8 +68,12 @@ from app.use_cases.conversations.tools.request_tool_handlers import (
     run_handoff_to_human,
     run_record_unanswered_question,
 )
+from app.use_cases.conversations.tools.revenue_tool_handlers import (
+    QuoteDeposit,
+    RevenueTools,
+    SendPaymentLink,
+)
 from app.use_cases.conversations.tools.tool_outcomes import error_outcome
-from app.use_cases.conversations.tools.waitlist_tool_handlers import run_join_waitlist
 from app.utilities.conversations.business_today import (
     SCHEDULING_TOOLS,
     BusinessToday,
@@ -107,7 +111,8 @@ class RunAssistantToolUseCase(
     model can act on. Scheduling results and errors state today at the
     business (`business_today`); a past date is refused. A booking a call
     made or moved is confirmed to its guest in writing (not in test chats);
-    offer_choices puts options to tap under the reply.
+    offer_choices puts options to tap under the reply; the waitlist and the
+    deposits are `RevenueTools`.
     """
 
     def __init__(
@@ -135,10 +140,12 @@ class RunAssistantToolUseCase(
         | None = None,
         join_waitlist: UseCaseContract[JoinWaitlistCommand, WaitlistJoinReceipt]
         | None = None,
+        send_payment_link: SendPaymentLink | None = None,
+        quote_deposit: QuoteDeposit | None = None,
     ) -> None:
-        self._join_waitlist: (
-            UseCaseContract[JoinWaitlistCommand, WaitlistJoinReceipt] | None
-        ) = join_waitlist
+        self._revenue: RevenueTools = RevenueTools(
+            join_waitlist, send_payment_link, quote_deposit
+        )
         self._confirmation_hook: BookingConfirmationHook | None = (
             None
             if send_booking_confirmation is None
@@ -218,7 +225,10 @@ class RunAssistantToolUseCase(
                     self._list_my_bookings, call, context, self._today(context)
                 )
             ),
-            AssistantToolName.JOIN_WAITLIST: self._run_join_waitlist,
+            AssistantToolName.JOIN_WAITLIST: lambda call, context: (
+                self._revenue.run_join_waitlist(call, context, self._today(context))
+            ),
+            AssistantToolName.SEND_PAYMENT_LINK: self._revenue.run_send_payment_link,
             AssistantToolName.OFFER_CHOICES: run_offer_choices,
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(
                 self._create_lead, self._phone_number_parser, call, context
@@ -264,17 +274,7 @@ class RunAssistantToolUseCase(
 
         if self._confirmation_hook is not None:
             self._confirmation_hook.after(outcome, context)
-        return outcome
-
-    def _run_join_waitlist(
-        self, call: LlmToolCall, context: AssistantToolContext
-    ) -> AssistantToolOutcome:
-        if self._join_waitlist is None:
-            return error_outcome(call, "This business keeps no waitlist.")
-
-        return run_join_waitlist(
-            self._join_waitlist, call, context, self._today(context)
-        )
+        return self._revenue.with_deposit_hint(outcome, context)
 
     def _today(self, context: AssistantToolContext) -> BusinessToday | None:
         """Today at the business, when its time zone is known."""

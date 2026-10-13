@@ -8,6 +8,7 @@ the storage scope of its business.
 from tests.platform.authorization_brands import OWNER_ONLY_BRAND_OPERATIONS
 from tests.platform.authorization_calendars import OWNER_ONLY_CALENDAR_OPERATIONS
 from tests.platform.authorization_customers import OWNER_ONLY_CUSTOMER_OPERATIONS
+from tests.platform.authorization_deposits import OWNER_ONLY_DEPOSIT_OPERATIONS
 from tests.platform.authorization_integrations import (
     OWNER_ONLY_INTEGRATION_OPERATIONS,
 )
@@ -117,6 +118,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         *OWNER_ONLY_CALENDAR_OPERATIONS,
         *OWNER_ONLY_INTEGRATION_OPERATIONS,
         *OWNER_ONLY_BRAND_OPERATIONS,
+        *OWNER_ONLY_DEPOSIT_OPERATIONS,
     }
 )
 

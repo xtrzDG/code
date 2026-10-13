@@ -39,6 +39,7 @@ export const bookingsEn = {
   },
   status: {
     pending: "Awaiting confirmation",
+    pending_deposit: "Awaiting deposit",
     confirmed: "Confirmed",
     completed: "Completed",
     no_show: "No-show",

@@ -57,6 +57,14 @@ class LeadRepository(LeadListing, LeadRepoContract):
     def get(self, business_id: BusinessId, lead_id: LeadId) -> LeadDocument | None:
         return self._load(business_id, str(lead_id))
 
+    def update(
+        self,
+        business_id: BusinessId,
+        lead_id: LeadId,
+        change: Callable[[LeadDocument], LeadDocument | None],
+    ) -> LeadDocument | None:
+        return self._modify_in_business(business_id, str(lead_id), change)
+
     def list_by_business(self, business_id: BusinessId) -> list[LeadDocument]:
         return sorted(
             self._list_in_business(business_id),

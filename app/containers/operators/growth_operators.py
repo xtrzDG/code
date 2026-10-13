@@ -11,9 +11,10 @@ from app.containers.utilities import UtilitiesContainer
 
 class GrowthOperatorsContainer(containers.DeclarativeContainer):
     """
-    Operators of the waitlist and the rebooking campaigns: the hold expiry
-    and the hourly campaigns run over every business (platform-wide); the
-    offer job and the cabinet's endpoints in their business's scope.
+    Operators of the waitlist, the rebooking campaigns and the deposits: the
+    hold expiry, the hourly campaigns and the deposits' sweep run over every
+    business (platform-wide); the offer job and the cabinet's endpoints in
+    their business's scope.
     """
 
     growth_pipelines: GrowthPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -49,4 +50,31 @@ class GrowthOperatorsContainer(containers.DeclarativeContainer):
     )
     list_campaign_messages_operator = pipeline_operator(
         growth_pipelines.list_campaign_messages_pipeline, storage_scope
+    )
+    get_deposit_settings_operator = pipeline_operator(
+        growth_pipelines.get_deposit_settings_pipeline, storage_scope
+    )
+    update_deposit_settings_operator = pipeline_operator(
+        growth_pipelines.update_deposit_settings_pipeline, storage_scope
+    )
+    add_payment_link_operator = pipeline_operator(
+        growth_pipelines.add_payment_link_pipeline, storage_scope
+    )
+    remove_payment_link_operator = pipeline_operator(
+        growth_pipelines.remove_payment_link_pipeline, storage_scope
+    )
+    set_deposit_policy_operator = pipeline_operator(
+        growth_pipelines.set_deposit_policy_pipeline, storage_scope
+    )
+    get_deposit_request_operator = pipeline_operator(
+        growth_pipelines.get_deposit_request_pipeline, storage_scope
+    )
+    mark_deposit_paid_operator = pipeline_operator(
+        growth_pipelines.mark_deposit_paid_pipeline, storage_scope
+    )
+    get_deposit_report_operator = pipeline_operator(
+        growth_pipelines.get_deposit_report_pipeline, storage_scope
+    )
+    sweep_deposits_operator = platform_pipeline_operator(
+        growth_pipelines.sweep_deposits_pipeline, storage_scope
     )

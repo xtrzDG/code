@@ -10,6 +10,8 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { policyOf } from "@/components/deposits/depositModel";
+import { useDepositSettings } from "@/components/deposits/useDeposits";
 import { ConfirmDialog } from "@/components/ui";
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { Alert, Button, Card, EmptyState, ErrorState, LoadingRegion, SkeletonRows, useToast } from "@/components/ui";
@@ -28,7 +30,8 @@ import { ResourceEditor } from "./ResourceEditor";
 export function ResourcesScreen() {
   const { t, locale } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
+  const deposits = useDepositSettings({ enabled: isOwner });
   const format = useBusinessFormat();
   const niche = useNicheDetails();
   const today = useMemo(() => todayInTimeZone(new Date(), format.timeZone), [format.timeZone]);
@@ -158,6 +161,7 @@ export function ResourcesScreen() {
                 resource={resource}
                 offers={offers.data ?? []}
                 calendars={integrations.data?.resources?.find((summary) => summary.resource_id === resource.id)}
+                deposit={policyOf(deposits.data, { target: "resource", resourceId: resource.id })}
                 onToggle={(isActive) => void setActive(resource, isActive)}
                 onCalendars={() => setCalendarOf({ id: resource.id, name: resource.name })}
                 onEdit={() => setResourceEditor((current) => ({ key: (current?.key ?? 0) + 1, resource }))}

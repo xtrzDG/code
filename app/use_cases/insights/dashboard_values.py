@@ -18,7 +18,12 @@ from app.use_cases.insights.dashboard_timeline import TimelineStretch
 # Bookings that still bring money: made, confirmed or done (not cancelled,
 # not a no-show).
 EARNING_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED}
+    {
+        BookingStatus.PENDING,
+        BookingStatus.PENDING_DEPOSIT,
+        BookingStatus.CONFIRMED,
+        BookingStatus.COMPLETED,
+    }
 )
 
 

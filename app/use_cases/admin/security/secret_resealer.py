@@ -1,9 +1,9 @@
 """
 Seal one business's stored secrets again with the current key: its
 channels' credentials, its Google Calendar tokens and its resources'
-calendar secrets (iCal feed addresses, booking-system keys) and its webhooks'
-signing secrets, each written back only if it did not change meanwhile; and
-register its Telegram bots'
+calendar secrets (iCal feed addresses, booking-system keys), its webhooks'
+signing secrets and its payment pages that carry a key, each written back
+only if it did not change meanwhile; and register its Telegram bots'
 webhooks again with the secret of the current key.
 """
 
@@ -14,6 +14,9 @@ from app.contracts.calendar_sync import ResourceCalendarLinkRepoContract
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.operations import CalendarConnectionRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.deposit_repositories import (
+    DepositSettingsRepoContract,
+)
 from app.contracts.repositories.integration_repositories import (
     WebhookEndpointRepoContract,
 )
@@ -31,6 +34,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.use_cases.admin.security.calendar_link_resealer import reseal_calendar_links
+from app.use_cases.admin.security.payment_link_resealer import reseal_payment_links
 from app.use_cases.admin.security.webhook_secret_resealer import (
     reseal_webhook_endpoints,
 )
@@ -67,7 +71,11 @@ class SecretResealer:
         app_settings: AppSettings,
         calendar_link_repo: ResourceCalendarLinkRepoContract | None = None,
         webhook_endpoint_repo: WebhookEndpointRepoContract | None = None,
+        deposit_settings_repo: DepositSettingsRepoContract | None = None,
     ) -> None:
+        self._deposit_settings_repo: DepositSettingsRepoContract | None = (
+            deposit_settings_repo
+        )
         self._webhook_endpoint_repo: WebhookEndpointRepoContract | None = (
             webhook_endpoint_repo
         )
@@ -112,6 +120,12 @@ class SecretResealer:
         if self._webhook_endpoint_repo is not None:
             reseal_webhook_endpoints(
                 self._webhook_endpoint_repo,
+                business_id,
+                lambda encrypted: self._reseal(encrypted, tally),
+            )
+        if self._deposit_settings_repo is not None:
+            reseal_payment_links(
+                self._deposit_settings_repo,
                 business_id,
                 lambda encrypted: self._reseal(encrypted, tally),
             )

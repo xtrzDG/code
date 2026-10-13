@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.booking_repositories import LeadRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.bookings import LeadStatus
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.dto.bookings import LeadView
@@ -35,22 +36,40 @@ class UpdateLeadStatusUseCase(UseCaseContract[UpdateLeadStatusCommand, LeadView]
         ] = refresh_open_request
 
     def run(self, input_data: UpdateLeadStatusCommand) -> LeadView:
-        lead: LeadDocument | None = self._lead_repo.get(
-            input_data.business_id, input_data.lead_id
+        now: Microseconds = self._wall_clock.now_unix()
+        # One atomic step, so a deposit written meanwhile is never lost.
+        changed: LeadDocument | None = self._lead_repo.update(
+            input_data.business_id,
+            input_data.lead_id,
+            lambda stored: with_status(stored, input_data.status, now),
         )
-        if lead is None:
-            raise NotFoundError(f"Lead {input_data.lead_id} was not found.")
-
-        if lead.status is not input_data.status:
-            lead.status = input_data.status
-            lead.updated_at = self._wall_clock.now_unix()
-            self._lead_repo.save(lead)
-            self._live_events.publish(
-                lead.business_id,
-                LiveEventKind.LEAD_CHANGED,
-                (lead.id,),
-                is_sandbox=lead.is_sandbox,
+        if changed is None:
+            unchanged: LeadDocument | None = self._lead_repo.get(
+                input_data.business_id, input_data.lead_id
             )
-            track_request(lead, self._refresh_open_request)
+            if unchanged is None:
+                raise NotFoundError(f"Lead {input_data.lead_id} was not found.")
 
-        return build_lead_view(lead)
+            return build_lead_view(unchanged)
+
+        self._live_events.publish(
+            changed.business_id,
+            LiveEventKind.LEAD_CHANGED,
+            (changed.id,),
+            is_sandbox=changed.is_sandbox,
+        )
+        track_request(changed, self._refresh_open_request)
+        return build_lead_view(changed)
+
+
+def with_status(
+    lead: LeadDocument, status: LeadStatus, now: Microseconds
+) -> LeadDocument | None:
+    """The lead in its new status; None when it already has it."""
+
+    if lead.status is status:
+        return None
+
+    lead.status = status
+    lead.updated_at = now
+    return lead

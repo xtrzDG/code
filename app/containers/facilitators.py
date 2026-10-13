@@ -241,13 +241,15 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )  # fmt: skip
     suppression_list = privacy.suppression_list
     processor_erasure = privacy.processor_erasure
-    # The waitlist's held places and freed places, campaign bookings (1151).
+    # The waitlist's held and freed places, campaign bookings (1151), deposits.
     growth: GrowthFacilitatorsContainer = Container(  # type: ignore[assignment]
-        GrowthFacilitatorsContainer,
-        repositories=repositories,
-        job_queue=job_queue_facilitator,
+        GrowthFacilitatorsContainer, repositories=repositories, utilities=utilities,
+        job_queue=job_queue_facilitator, staff_alerts=staff_alert_facilitator,
+    )  # fmt: skip
+    growth_bookings, deposit_settlement = (
+        growth.growth_bookings,
+        growth.deposit_settlement,
     )
-    growth_bookings = growth.growth_bookings
     # The reply guard's claim check: a cheap verifier (LLM_VERIFIER_MODEL_ID).
     claim_check: Singleton[ClaimCheckFacilitator] = Singleton(
         ClaimCheckFacilitator,

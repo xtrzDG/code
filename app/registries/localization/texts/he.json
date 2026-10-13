@@ -1,7 +1,10 @@
 {
   "language": "he",
   "review_status": "needs_review",
-  "draft_keys": [],
+  "draft_keys": [
+    "notifications.deposit_refund.title",
+    "notifications.deposit_refund.detail"
+  ],
   "texts": {
     "notifications.staff_alert.handoff_title": "לקוח צריך נציג",
     "notifications.staff_alert.urgent_handoff_title": "דחוף: לקוח צריך נציג",
@@ -649,6 +652,8 @@
     "notifications.webhook_disabled.title": "וובהוק הושבת · {business}",
     "notifications.webhook_disabled.failures_detail": "הכתובת {endpoint} לא מקבלת יותר אירועים: ניסיונות כושלים ברציפות — {failures}. ודאו שהכתובת עובדת והפעילו אותה שוב בהגדרות ← חיבורים.",
     "notifications.webhook_disabled.gone_detail": "הכתובת {endpoint} השיבה שהיא כבר לא קיימת (410) ולא מקבלת יותר אירועים. אם הכתובת השתנתה, עדכנו אותה בהגדרות ← חיבורים והפעילו אותה שוב.",
-    "calendar_sync.booking_system.guest_without_name": "אורח"
+    "calendar_sync.booking_system.guest_without_name": "אורח",
+    "notifications.deposit_refund.title": "פיקדון להחזר · {business}",
+    "notifications.deposit_refund.detail": "{amount}, אסמכתה {reference}: ההזמנה ל-{date} בשעה {time} בוטלה בזמן לפי כללי הפיקדון שלכם. החזירו את הפיקדון בחשבון התשלומים שלכם."
   }
 }

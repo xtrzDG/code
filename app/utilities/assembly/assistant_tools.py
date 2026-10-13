@@ -19,7 +19,7 @@ BOOKING_TOOLS: frozenset[AssistantToolName] = frozenset(
 # Tools the conversation offers by its channel (`select_available_tools`),
 # never part of a version.
 CONVERSATION_TOOLS: frozenset[AssistantToolName] = frozenset(
-    {AssistantToolName.OFFER_CHOICES}
+    {AssistantToolName.OFFER_CHOICES, AssistantToolName.SEND_PAYMENT_LINK}
 )
 
 
@@ -42,7 +42,8 @@ def select_assistant_tools(
     Every tool in declaration order, minus the booking tools for a business
     that does not book directly (it takes requests with create_lead instead)
     and minus send_link when the profile has no links to send. Tools a
-    conversation adds by its channel (offer_choices) are not a version's.
+    conversation adds by its channel (offer_choices, send_payment_link) are
+    not a version's.
     """
 
     return [

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
+import { DepositBadge } from "@/components/deposits/DepositBadge";
 import { IconPlus } from "@/components/icons";
 import { BookingStatusBadge, HandoffStatusBadge, HandoffUrgencyBadge, LeadStatusBadge } from "@/components/insights/Badges";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
@@ -73,6 +74,7 @@ export function LinkedItems({
                     <span className="text-ink-muted">{formatLocalDate(lead.requested_date, locale)}</span>
                   ) : null}
                   <LeadStatusBadge status={lead.status} />
+                  {lead.deposit ? <DepositBadge status={lead.deposit.status} /> : null}
                 </li>
               ))}
             </LinkedGroup>

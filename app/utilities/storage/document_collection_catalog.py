@@ -69,6 +69,7 @@ from app.utilities.storage.brand_collections import BRAND_COLLECTIONS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
+from app.utilities.storage.deposit_collections import DEPOSIT_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
@@ -281,6 +282,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *INTEGRATION_COLLECTIONS,  # Webhooks and API keys (1181).
     *AUDIT_CHAIN_COLLECTIONS,  # View counts, chain checkpoints, checks (1193).
     *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
+    *DEPOSIT_COLLECTIONS,  # Deposits and prepayment links (1190).
 )
 
 

@@ -1,7 +1,10 @@
 {
   "language": "ka",
   "review_status": "reviewed",
-  "draft_keys": [],
+  "draft_keys": [
+    "notifications.deposit_refund.title",
+    "notifications.deposit_refund.detail"
+  ],
   "texts": {
     "notifications.staff_alert.handoff_title": "კლიენტს ადამიანი სჭირდება",
     "notifications.staff_alert.urgent_handoff_title": "სასწრაფო: კლიენტს ადამიანი სჭირდება",
@@ -649,6 +652,8 @@
     "notifications.webhook_disabled.title": "ვებჰუკი გამოირთო · {business}",
     "notifications.webhook_disabled.failures_detail": "მისამართი {endpoint} მოვლენებს აღარ იღებს: ზედიზედ წარუმატებელი მცდელობები — {failures}. შეამოწმეთ, რომ ის მუშაობს, და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
     "notifications.webhook_disabled.gone_detail": "მისამართმა {endpoint} გვიპასუხა, რომ აღარ არსებობს (410), და მოვლენებს აღარ იღებს. თუ მისამართი შეიცვალა, შეცვალეთ და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
-    "calendar_sync.booking_system.guest_without_name": "სტუმარი"
+    "calendar_sync.booking_system.guest_without_name": "სტუმარი",
+    "notifications.deposit_refund.title": "დეპოზიტი დასაბრუნებელია · {business}",
+    "notifications.deposit_refund.detail": "{amount}, გადახდის კოდი {reference}: ჯავშანი {date}, {time}-ზე დროულად გაუქმდა თქვენი დეპოზიტის წესების მიხედვით. დააბრუნეთ დეპოზიტი თქვენს გადახდის კაბინეტში."
   }
 }

@@ -36,6 +36,9 @@ from app.use_cases.conversations.replies.reply_evidence import (
 from app.use_cases.conversations.replies.turn_progress import TurnProgress
 from app.utilities.conversations.reply_choices_text import text_with_options
 from app.utilities.reply_guard.claim_candidates import find_claim_candidates
+from app.utilities.reply_guard.deposit_amount_check import (
+    find_deposit_amount_mismatches,
+)
 
 
 @dataclass(frozen=True)
@@ -90,8 +93,9 @@ class ReplyReview:
 class ReplyReviewer:
     """
     Reviews a reply text against the conversation's evidence: the numbers
-    guard, the personal data check and, when a sentence states a policy or
-    an availability, the claim check's verifier model.
+    guard (and, in a turn that asked a deposit, the deposit's amount), the
+    personal data check and, when a sentence states a policy or an
+    availability, the claim check's verifier model.
     """
 
     def __init__(
@@ -131,10 +135,27 @@ class ReplyReviewer:
             else ClaimCheckResult()
         )
         return ReplyReview(
-            unverified_values=find_unverified_reply_values(evidence, turn, text),
+            unverified_values=unique_values(
+                [
+                    *find_unverified_reply_values(evidence, turn, text),
+                    *find_deposit_amount_mismatches(
+                        text,
+                        [line.amount for line in progress.deposit_lines],
+                        [*turn.version.languages, turn.reply_language],
+                    ),
+                ]
+            ),
             claim_findings=list(result.findings),
             withheld_details=find_withheld_contact_details(
                 self._contact_repo, turn, str(text), evidence
             ),
             verifier_usage=[] if result.usage is None else [result.usage],
         )
+
+
+def unique_values(
+    values: list[UnverifiedReplyValue],
+) -> list[UnverifiedReplyValue]:
+    """The values in order, each once."""
+
+    return list(dict.fromkeys(values))

@@ -39,6 +39,7 @@ export const bookingsRu: Translation<typeof bookingsEn> = {
   },
   status: {
     pending: "Ждёт подтверждения",
+    pending_deposit: "Ждёт депозита",
     confirmed: "Подтверждена",
     completed: "Состоялась",
     no_show: "Неявка",

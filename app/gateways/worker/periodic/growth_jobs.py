@@ -3,8 +3,10 @@ The revenue features' periodic jobs of the background worker: a held
 waitlist place whose hold ran out goes to the next customer within a
 minute (`ExpireWaitlistOffersUseCase`), and the rebooking campaigns write
 to the customers their rule finds every hour
-(`RunRebookingCampaignsUseCase`). Registered with one line each in the
-worker's list of periodic jobs.
+(`RunRebookingCampaignsUseCase`); a deposit's hold that ran out unpaid
+releases its booking, a reminder halfway through goes, a cancelled paid
+booking's deposit is settled, every minute (`SweepDepositsUseCase`).
+Registered in the worker's list of periodic jobs.
 """
 
 from app.contracts.jobs import PeriodicJobOperator
@@ -16,6 +18,8 @@ EXPIRE_WAITLIST_OFFERS_JOB: JobName = JobName("expire_waitlist_offers")
 EXPIRE_WAITLIST_OFFERS_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(60)
 RUN_REBOOKING_CAMPAIGNS_JOB: JobName = JobName("run_rebooking_campaigns")
 RUN_REBOOKING_CAMPAIGNS_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(60 * 60)
+SWEEP_DEPOSITS_JOB: JobName = JobName("sweep_deposits")
+SWEEP_DEPOSITS_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(60)
 
 
 def expire_waitlist_offers_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:
@@ -34,5 +38,15 @@ def run_rebooking_campaigns_job(operator: PeriodicJobOperator) -> PeriodicJobSpe
     return PeriodicJobSpec(
         name=RUN_REBOOKING_CAMPAIGNS_JOB,
         interval_seconds=RUN_REBOOKING_CAMPAIGNS_INTERVAL,
+        operator=operator,
+    )
+
+
+def sweep_deposits_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:
+    """The periodic job spec that runs `operator` every minute."""
+
+    return PeriodicJobSpec(
+        name=SWEEP_DEPOSITS_JOB,
+        interval_seconds=SWEEP_DEPOSITS_INTERVAL,
         operator=operator,
     )

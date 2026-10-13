@@ -138,6 +138,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     send_link: "שלח קישור",
     record_unanswered_question: "רשם שאלה בלי תשובה",
     offer_choices: "הציע תשובות לבחירה",
+    send_payment_link: "שלח קישור לתשלום הפיקדון",
   },
   messageTokens: { one: "טוקן אחד", other: "{count} טוקנים" },
   usage: {

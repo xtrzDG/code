@@ -11,6 +11,8 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AuditChainKey": "business_fd43b272-3035-4a74-a29f-96b1631dd8b5",
     "AuditEntryHash": "a1" * 32,
+    "DepositReference": "DK7Q3M9X",
+    "PaymentLinkAddress": "https://pay.example.com/deposit?sum={amount}&ref={reference}",
     "CampaignMonthKey": "2026-10",
     "BookingSystemResourceId": "1203845",
     "CalendarFeedHost": "www.airbnb.com",

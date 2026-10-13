@@ -1,7 +1,7 @@
 {
   "collection": "leads",
   "document_type": "LeadDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -38,6 +38,62 @@
       },
       "created_at": {
         "type": "integer"
+      },
+      "deposit": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "amount_minor": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "currency_code": {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              "hold_expires_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "request_id": {
+                "pattern": "^deposit_request_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "awaiting",
+                  "paid",
+                  "expired",
+                  "cancelled",
+                  "refund_due",
+                  "kept"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "request_id",
+              "status",
+              "amount_minor",
+              "currency_code"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "details": {
         "type": "string"
@@ -89,7 +145,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "source_channel": {

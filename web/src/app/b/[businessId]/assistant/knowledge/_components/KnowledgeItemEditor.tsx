@@ -7,6 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { DepositPolicyPanel } from "@/components/deposits/DepositPolicyPanel";
 import { Button, Checkbox, Field, Fieldset, Input, Modal, Select, Textarea, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
@@ -68,7 +69,7 @@ export function KnowledgeItemEditor({
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const currency = format.currency;
   const formId = useId();
@@ -252,6 +253,11 @@ export function KnowledgeItemEditor({
           </div>
         ) : null}
       </form>
+      {target.mode === "edit" && isOwner && isBookableKind(form.kind) ? (
+        <div className="mt-6 border-t border-line pt-6">
+          <DepositPolicyPanel target={{ target: "service", serviceItemId: target.id }} />
+        </div>
+      ) : null}
     </Modal>
   );
 }

@@ -7,6 +7,7 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.value_collections_container import (
     ValueCollectionsContainer,
 )
+from app.repositories.booking_outcome_repository import BookingOutcomeRepository
 from app.repositories.customer_source_repository import CustomerSourceRepository
 from app.repositories.origin_booking_count_repository import (
     OriginBookingCountRepository,
@@ -92,5 +93,10 @@ class ValueRepositoriesContainer(containers.DeclarativeContainer):
     # The bookings the waitlist and the campaigns brought (1151).
     origin_booking_count_repo: Singleton[OriginBookingCountRepository] = Singleton(
         OriginBookingCountRepository,
+        booking_collection=insight_collections.booking_collection,
+    )
+    # Bookings with and without a deposit, by how they ended (1190).
+    booking_outcome_repo: Singleton[BookingOutcomeRepository] = Singleton(
+        BookingOutcomeRepository,
         booking_collection=insight_collections.booking_collection,
     )

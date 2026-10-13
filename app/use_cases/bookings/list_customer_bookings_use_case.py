@@ -21,7 +21,12 @@ from app.utilities.scheduling.zoned_time import microseconds_to_seconds
 
 # Still to come, and the ones the business cancelled ("is it still on?").
 LISTED_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.CANCELLED}
+    {
+        BookingStatus.PENDING,
+        BookingStatus.PENDING_DEPOSIT,
+        BookingStatus.CONFIRMED,
+        BookingStatus.CANCELLED,
+    }
 )
 MAX_LISTED_BOOKINGS: DocumentQueryLimit = DocumentQueryLimit(10)
 

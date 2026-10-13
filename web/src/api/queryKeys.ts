@@ -10,6 +10,7 @@
  */
 
 import { brandQueryKeys } from "./brandQueryKeys";
+import { depositQueryKeys } from "./depositQueryKeys";
 import { integrationQueryKeys } from "./integrationQueryKeys";
 import { platformQueryKeys } from "./platformQueryKeys";
 import type { QueryKey } from "./queryKey";
@@ -288,6 +289,7 @@ export const queryKeys = {
   ...integrationQueryKeys,
 
   ...brandQueryKeys,
+  ...depositQueryKeys,
 
   assistantSettings: {
     /** Settings → General: whether the assistant remembers returning customers. */

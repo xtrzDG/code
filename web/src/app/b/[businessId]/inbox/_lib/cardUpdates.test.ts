@@ -4,6 +4,7 @@ import type { ConversationDetailView, HandoffListItem, LeadListItem } from "@/co
 
 import {
   cardWithAssignment,
+  cardWithPaidRequestDeposit,
   cardWithReopenedHandoff,
   cardWithRequestStatus,
   cardWithResolvedHandoff,
@@ -103,6 +104,25 @@ describe("requests and notes", () => {
     const card = cardOf({ leads: [lead("lead_1", "new", 1), lead("lead_2", "won", 2), lead("lead_3", "in_progress", 3)] });
     expect(openRequestsOf(card).map((item) => item.id)).toEqual(["lead_3", "lead_1"]);
     expect(openRequestsOf(cardWithRequestStatus(card, "lead_1", "lost")).map((item) => item.id)).toEqual(["lead_3"]);
+  });
+
+  it("shows a request's deposit paid and leaves its status and the other requests alone", () => {
+    const deposit = {
+      request_id: "deposit_request_1",
+      status: "awaiting",
+      amount_minor: 30000,
+      currency_code: "GEL",
+      hold_expires_at: 5,
+    };
+    const waiting = { ...lead("lead_1", "new", 1), deposit } as LeadListItem;
+    const card = cardOf({ leads: [waiting, lead("lead_2", "new", 2)] });
+
+    const paid = cardWithPaidRequestDeposit(card, "lead_1");
+
+    expect(paid.leads?.[0]?.deposit).toEqual({ ...deposit, status: "paid", hold_expires_at: null });
+    expect(paid.leads?.[0]?.status).toBe("new");
+    expect(paid.leads?.[1]).toBe(card.leads?.[1]);
+    expect(cardWithPaidRequestDeposit(card, "lead_2").leads?.[1]?.deposit).toBeUndefined();
   });
 
   it("counts a note more or less on the conversation's row, never below zero", () => {

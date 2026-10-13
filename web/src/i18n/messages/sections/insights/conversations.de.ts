@@ -142,6 +142,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     send_link: "Hat einen Link gesendet",
     record_unanswered_question: "Hat eine unbeantwortete Frage notiert",
     offer_choices: "Hat Antworten zum Antippen angeboten",
+    send_payment_link: "Hat den Link zur Anzahlung gesendet",
   },
   messageTokens: { one: "{count} Token", other: "{count} Tokens" },
   usage: {
