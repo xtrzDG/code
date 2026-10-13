@@ -1159,7 +1159,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 1
+     "elapsed": 0
     }
    ]
   },
@@ -2164,7 +2164,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -2762,7 +2762,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 16
+     "elapsed": 0
     }
    ]
   },
@@ -3585,7 +3585,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 11
+     "elapsed": 0
     }
    ]
   },
@@ -3647,7 +3647,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 5
+     "elapsed": 0
     }
    ]
   },
@@ -4033,7 +4033,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4164,7 +4164,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -4220,7 +4220,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 9
+     "elapsed": 0
     }
    ]
   },
@@ -4594,7 +4594,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 16
+     "elapsed": 0
     }
    ]
   },
@@ -4956,7 +4956,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 20
+     "elapsed": 0
     }
    ]
   },
@@ -4987,7 +4987,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -5293,7 +5293,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 16
+     "elapsed": 0
     }
    ]
   },
