@@ -1666,7 +1666,11 @@ performance 0.96–0.99, LCP 2.1–2.7 s, blocking time 84–115 ms, CLS 0,
 the slimmer public bundle it was 0.49–0.67, LCP 5.8 s, 414–454 ms, CLS 0.36,
 527 KB and 705 KB.
 
-No layout shift (the e2e test asserts CLS = 0 with the scene). The scene is
+No layout shift (the e2e test asserts CLS = 0 with the scene). The header
+(`TopBar`) holds the first paint until the browser has read all of it
+(`<link rel="expect" blocking="render">` to its last element): a slow phone
+otherwise painted the bar before its language and theme switches and the bar
+then grew under the reader. The scene is
 one draw call per object (orb, shell, halo, six bubbles, six message
 lights, three rings, 220 dust points): 60 fps on a laptop GPU; three.js
 stays at 0.182 because react-three-fiber 9 still uses `THREE.Clock`, which
