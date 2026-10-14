@@ -3505,6 +3505,9 @@
       }
      ]
     },
+    "error": {
+     "$ref": "#/$defs/ImageGenToolCallError"
+    },
     "id": {
      "type": "string"
     },
@@ -3599,6 +3602,69 @@
     "id",
     "status",
     "result"
+   ],
+   "type": "object"
+  },
+  "ImageGenToolCallError": {
+   "properties": {
+    "code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "message": {
+     "type": "string"
+    },
+    "moderation_details": {
+     "$ref": "#/$defs/ImageGenToolCallModerationDetails"
+    },
+    "param": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "type": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "code",
+    "type",
+    "message",
+    "param"
+   ],
+   "type": "object"
+  },
+  "ImageGenToolCallModerationDetails": {
+   "properties": {
+    "categories": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "moderation_stage": {
+     "enum": [
+      "input",
+      "output",
+      "unknown"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "moderation_stage",
+    "categories"
    ],
    "type": "object"
   },
