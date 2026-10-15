@@ -6505,6 +6505,26 @@
       },
       "misalignment": {
        "$ref": "#/$defs/MisalignmentErrorDetailsResource"
+      },
+      "param": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "type": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
       }
      },
      "required": [
