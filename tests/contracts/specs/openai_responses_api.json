@@ -7800,13 +7800,19 @@
      "type": "string"
     },
     "url": {
-     "format": "uri",
-     "type": "string"
+     "anyOf": [
+      {
+       "format": "uri",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
     }
    },
    "required": [
     "type",
-    "url",
     "pattern"
    ],
    "type": "object"
