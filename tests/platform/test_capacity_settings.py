@@ -1,0 +1,123 @@
+"""Request threads, database connections, log format, release and tracing settings."""
+
+import anyio.to_thread
+import pytest
+from fastapi.testclient import TestClient
+
+from app.containers.app import AppContainer
+from app.main import build_application
+from app.schemas.constants.observability import LogFormat
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.platform.constrained_floats import TraceSampleRate
+from app.schemas.typings.platform.constrained_strings import ReleaseVersion
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
+from tests.e2e.workshop_container import replace_provider
+
+PRODUCTION: dict[str, str] = {"APP_ENV": "production", "ENCRYPTION_KEY": "x" * 40}
+
+
+def test_the_database_pool_is_half_the_request_threads_unless_set() -> None:
+    default = assemble_app_settings({})
+    fewer_threads = assemble_app_settings({"THREADPOOL_SIZE": "31"})
+    own_pool = assemble_app_settings({"THREADPOOL_SIZE": "32", "DB_POOL_SIZE": "20"})
+
+    # A thread waiting for the model holds no connection: threads > pool.
+    assert (int(default.threadpool_size), int(default.db_pool_size)) == (64, 32)
+    assert (int(fewer_threads.threadpool_size), int(fewer_threads.db_pool_size)) == (
+        31,
+        16,
+    )
+    assert int(assemble_app_settings({"THREADPOOL_SIZE": "1"}).db_pool_size) == 1
+    assert int(own_pool.db_pool_size) == 20
+    # Model calls: half the request threads by default.
+    assert int(default.llm_max_concurrency) == 32
+    assert (
+        int(assemble_app_settings({"LLM_MAX_CONCURRENCY": "8"}).llm_max_concurrency)
+        == 8
+    )
+
+
+def test_idle_connections_close_and_customer_messages_are_polled_often() -> None:
+    default = assemble_app_settings({})
+    tuned = assemble_app_settings(
+        {
+            "DB_POOL_MIN_SIZE": "0",
+            "DB_POOL_MAX_IDLE_SECONDS": "60",
+            "WORKER_INBOUND_POLL_SECONDS": "5",
+            "TEST_CHAT_MAX_CONCURRENCY": "2",
+        }
+    )
+
+    assert int(default.db_pool_min_size) == 2
+    assert int(default.db_pool_max_idle_seconds) == 300
+    assert int(default.worker_inbound_poll_seconds) == 2
+    assert int(default.test_chat_max_concurrency) == 4
+    assert (
+        int(tuned.db_pool_min_size),
+        int(tuned.db_pool_max_idle_seconds),
+        int(tuned.worker_inbound_poll_seconds),
+        int(tuned.test_chat_max_concurrency),
+    ) == (0, 60, 5, 2)
+
+
+@pytest.mark.parametrize(
+    "environment",
+    [
+        {"THREADPOOL_SIZE": "0"},
+        {"DB_POOL_SIZE": "100000"},
+        {"SENTRY_TRACES_SAMPLE_RATE": "1.5"},
+        {"LOG_FORMAT": "xml"},
+        {"LLM_CALL_TIMEOUT_SECONDS": "0"},
+        {"LLM_MAX_CONCURRENCY": "0"},
+        {"DB_POOL_MIN_SIZE": "-1"},
+        {"DB_POOL_MAX_IDLE_SECONDS": "5"},
+        {"WORKER_INBOUND_POLL_SECONDS": "0"},
+        {"TEST_CHAT_MAX_CONCURRENCY": "0"},
+        {"APP_RELEASE": "not a release!"},
+    ],
+)
+def test_out_of_range_values_stop_the_start(environment: dict[str, str]) -> None:
+    with pytest.raises(ValidationFailedError, match=next(iter(environment))):
+        assemble_app_settings(environment)
+
+
+def test_logs_are_json_in_production_and_text_elsewhere() -> None:
+    assert assemble_app_settings({}).log_format is LogFormat.TEXT
+    assert assemble_app_settings(PRODUCTION).log_format is LogFormat.JSON
+    assert (
+        assemble_app_settings({**PRODUCTION, "LOG_FORMAT": "TEXT"}).log_format
+        is LogFormat.TEXT
+    )
+
+
+def test_the_release_is_named_explicitly_or_by_render() -> None:
+    render = assemble_app_settings({"RENDER_GIT_COMMIT": "4718714c0f2e"})
+    both = assemble_app_settings(
+        {"RENDER_GIT_COMMIT": "4718714c0f2e", "APP_RELEASE": "2026.10.1"}
+    )
+
+    assert assemble_app_settings({}).release_version is None
+    assert render.release_version == ReleaseVersion("4718714c0f2e")
+    assert both.release_version == ReleaseVersion("2026.10.1")
+    assert assemble_app_settings({}).sentry_traces_sample_rate == TraceSampleRate(0.05)
+
+
+def test_startup_sizes_the_request_thread_pool() -> None:
+    container = AppContainer()
+    replace_provider(
+        container.config.app_settings,
+        assemble_app_settings({"THREADPOOL_SIZE": "48", "EMBEDDED_WORKER": "false"}),
+    )
+    application = build_application(container)
+
+    @application.get("/thread-limit")
+    async def thread_limit() -> dict[str, int]:
+        limiter = anyio.to_thread.current_default_thread_limiter()
+        return {"total_tokens": int(limiter.total_tokens)}
+
+    with TestClient(application) as client:
+        response = client.get("/thread-limit")
+
+    assert response.json() == {"total_tokens": 48}

@@ -1,0 +1,9 @@
+{
+  "business_id": "business_abf9d682-620b-49a6-8fa1-f63da1908abe",
+  "channel": "phone",
+  "created_at": 1790000000000000,
+  "id": "suppression_entry_b2d2c1ea-e73e-5638-8e97-a1e7751a793f",
+  "identity_digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

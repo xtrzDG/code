@@ -1,0 +1,35 @@
+{
+  "affected_business_ids": [
+    "business_5307ffbd-dcba-49f4-b43f-87dcfb62ec1d"
+  ],
+  "announcement_id": "announcement_55616a57-4322-44e4-8ec5-402b1059e616",
+  "approximate_record_count": 1,
+  "approximate_subject_count": 1,
+  "created_at": 1790000000000000,
+  "detected_at": 1790000000000000,
+  "expanded_at": 1790000000000000,
+  "expansion_cursor": "business_3b0083d9-88e2-495e-8a53-80f7403cc841",
+  "id": "incident_b3075651-ea80-4329-93e6-d021d9020603",
+  "kind": "outage",
+  "notice_texts": [
+    {
+      "language": "ka",
+      "likely_consequences": "Sample LikelyConsequencesText",
+      "measures": "Sample BreachMeasuresText",
+      "nature": "Sample BreachNatureText",
+      "record_categories": "Sample RecordCategoriesText",
+      "subject_categories": "Sample SubjectCategoriesText"
+    }
+  ],
+  "notified_at": 1790000000000000,
+  "notified_owner_count": 1,
+  "reached_business_count": 1,
+  "reported_by": "user_cd02a890-3a2a-46ee-abc7-5d27f6d2b8c8",
+  "schema_version": "2",
+  "scope": "listed",
+  "severity": "sev1",
+  "started_at": 1790000000000000,
+  "status": "open",
+  "title": "WhatsApp replies delayed",
+  "updated_at": 1790000000000000
+}

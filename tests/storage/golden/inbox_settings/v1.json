@@ -1,0 +1,13 @@
+{
+  "auto_assign_new_handoffs": true,
+  "auto_assign_new_requests": true,
+  "auto_assign_user_ids": [
+    "user_1042ad4e-ceb6-4901-8cdd-d14156d63afc"
+  ],
+  "business_id": "business_2f18687a-a709-43ac-ad0a-b68589e10025",
+  "created_at": 1790000000000000,
+  "id": "inbox_settings_e9ca2dc9-9bbe-57db-968c-af91c4b0dfd8",
+  "last_auto_assigned_user_id": "user_721184b4-132e-4705-a3ea-595d4ae33421",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

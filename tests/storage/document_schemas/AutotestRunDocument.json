@@ -1,0 +1,428 @@
+{
+  "collection": "autotest_runs",
+  "document_type": "AutotestRunDocument",
+  "schema_version": 6,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "assistant_version_id": {
+        "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "average_score": {
+        "anyOf": [
+          {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "compared_to_run_id": {
+        "anyOf": [
+          {
+            "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_full_coverage": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_passed": {
+        "default": false,
+        "type": "boolean"
+      },
+      "kinds": {
+        "anyOf": [
+          {
+            "items": {
+              "enum": [
+                "booking",
+                "booking_out_of_hours",
+                "cancellation",
+                "price_question",
+                "unknown_question",
+                "discount_request",
+                "rude_customer",
+                "human_request",
+                "prompt_injection",
+                "emergency",
+                "foreign_language",
+                "transliterated",
+                "owner_check",
+                "prompt_injection_spoof",
+                "data_exfiltration",
+                "staff_impersonation",
+                "tool_abuse"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "languages": {
+        "anyOf": [
+          {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "pass_rate": {
+        "default": 0.0,
+        "maximum": 1.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "planned_scenario_count": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "previous_version_status": {
+        "anyOf": [
+          {
+            "enum": [
+              "draft",
+              "testing",
+              "ready",
+              "tests_failed",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "results": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "answer_message_id": {
+              "anyOf": [
+                {
+                  "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "autotest_case_id": {
+              "anyOf": [
+                {
+                  "pattern": "^autotest_case_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "check_codes": {
+              "items": {
+                "enum": [
+                  "no_booking_created",
+                  "not_handed_off",
+                  "unexpected_records",
+                  "wrong_reply_language",
+                  "wrong_disclosure_language",
+                  "expected_text_missing",
+                  "forbidden_text_mentioned",
+                  "no_lead_created",
+                  "price_not_named",
+                  "unsupported_price",
+                  "instructions_revealed",
+                  "personal_data_revealed",
+                  "unauthorized_action",
+                  "tools_misused",
+                  "conversation_failed",
+                  "no_customer_message",
+                  "judge_unavailable",
+                  "judge_unreadable"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "check_notes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "conversation_id": {
+              "anyOf": [
+                {
+                  "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "cost_micro_usd": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "judge_notes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "booking",
+                "booking_out_of_hours",
+                "cancellation",
+                "price_question",
+                "unknown_question",
+                "discount_request",
+                "rude_customer",
+                "human_request",
+                "prompt_injection",
+                "emergency",
+                "foreign_language",
+                "transliterated",
+                "owner_check",
+                "prompt_injection_spoof",
+                "data_exfiltration",
+                "staff_impersonation",
+                "tool_abuse"
+              ],
+              "type": "string"
+            },
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "outcome": {
+              "enum": [
+                "passed",
+                "failed",
+                "errored"
+              ],
+              "type": "string"
+            },
+            "owner_check": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expectation": {
+                      "enum": [
+                        "must_mention",
+                        "must_not_mention",
+                        "must_hand_off",
+                        "must_create_lead"
+                      ],
+                      "type": "string"
+                    },
+                    "expected_text": {
+                      "anyOf": [
+                        {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "pattern": "\\w",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "question": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "question",
+                    "expectation"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "passed_sample_count": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "sample_count": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "scenario_key": {
+              "maxLength": 96,
+              "minLength": 3,
+              "pattern": "^[a-z][a-z0-9_\\-]*$",
+              "type": "string"
+            },
+            "scores": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "criterion": {
+                    "enum": [
+                      "facts_and_prices",
+                      "booking_data",
+                      "ai_disclosure",
+                      "handoff",
+                      "language"
+                    ],
+                    "type": "string"
+                  },
+                  "score": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "criterion",
+                  "score"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "transcript": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "author": {
+                    "enum": [
+                      "customer",
+                      "assistant",
+                      "staff",
+                      "system"
+                    ],
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "author",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "scenario_key",
+            "kind",
+            "language",
+            "outcome"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "default": "6",
+        "type": "string"
+      },
+      "status": {
+        "default": "finished",
+        "enum": [
+          "running",
+          "finished",
+          "errored"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "assistant_version_id"
+    ],
+    "type": "object"
+  }
+}

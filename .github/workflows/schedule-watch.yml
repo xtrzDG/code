@@ -1,0 +1,65 @@
+name: Schedule watch
+
+# The scheduled workflows that guard what CI cannot (restore-drill.yml: a
+# backup restores; perf.yml: latency budgets; evals-nightly.yml: answer
+# quality against real models) fail silently when GitHub stops scheduling
+# them (60 days without a push), a secret expires or every run is red.
+# Every morning this checks that each had a successful run in the last
+# 8 days and otherwise opens one issue per workflow (once: an open issue
+# is not opened again; docs/operations/runbooks/README.md, "Game days").
+on:
+  schedule:
+    # 06:37 UTC every day.
+    - cron: "37 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    name: Each guard succeeded within 8 days
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - name: Open an issue for each silent guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          WATCHED: "restore-drill.yml perf.yml evals-nightly.yml"
+          MAX_AGE_DAYS: "8"
+        run: |
+          set -euo pipefail
+          cutoff="$(date -u -d "${MAX_AGE_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)"
+          silent=0
+          for workflow in $WATCHED; do
+            last="$(gh run list --workflow "$workflow" --status success --limit 1 \
+              --json createdAt --jq '.[0].createdAt // ""')"
+            if [[ -n "$last" && ! "$last" < "$cutoff" ]]; then
+              echo "${workflow}: last success ${last}"
+              continue
+            fi
+
+            silent=$((silent + 1))
+            title="Schedule watch: ${workflow} has no successful run in ${MAX_AGE_DAYS} days"
+            if gh issue list --state open --search "in:title \"${title}\"" \
+                --json title --jq '.[].title' | grep -Fxq "$title"; then
+              echo "${workflow}: silent since ${last:-ever}; the issue is open."
+              continue
+            fi
+
+            cat > "$RUNNER_TEMP/body.md" <<BODY
+          The scheduled workflow \`${workflow}\` has had no successful run since ${last:-its first run} (checked ${cutoff} onwards).
+
+          - [ ] Open its runs: Actions → \`${workflow}\`; is it red, or not running at all?
+          - [ ] Not running: GitHub disables schedules after 60 days without a push; enable it again (Actions → the workflow → Enable) and run it by hand.
+          - [ ] Red: fix the cause (an expired secret, a moved fixture, a real regression) and run it by hand until it is green.
+
+          Close this issue with the run that succeeded.
+          BODY
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          done
+          echo "Silent guards: ${silent}"

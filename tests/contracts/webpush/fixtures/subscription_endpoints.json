@@ -1,0 +1,25 @@
+{
+  "source": "The endpoint shapes the browsers' push services hand out (PushSubscription.endpoint); tokens shortened to test values.",
+  "endpoints": [
+    {
+      "service": "fcm",
+      "endpoint": "https://fcm.googleapis.com/fcm/send/dTest0000:APA91bTest0000",
+      "audience": "https://fcm.googleapis.com"
+    },
+    {
+      "service": "autopush",
+      "endpoint": "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABTest0000",
+      "audience": "https://updates.push.services.mozilla.com"
+    },
+    {
+      "service": "apple",
+      "endpoint": "https://web.push.apple.com/QTest0000-device-token",
+      "audience": "https://web.push.apple.com"
+    },
+    {
+      "service": "wns",
+      "endpoint": "https://wns2-par02p.notify.windows.com/w/?token=BQYAAABTest0000",
+      "audience": "https://wns2-par02p.notify.windows.com"
+    }
+  ]
+}

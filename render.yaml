@@ -1,0 +1,1147 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec): everything in
+# Frankfurt (EU), as the concept requires for personal data.
+#
+#   workshop-db       managed Postgres 16, reachable only inside Render
+#   workshop-api      the API (Docker image of ./Dockerfile); migrations run
+#                     before every deploy (`workshop migrate`)
+#   workshop-worker   the workers that answer customers (same image, two
+#                     instances; lanes inbound and outbound)
+#   workshop-batch-worker  the batch worker (same image, more memory; lanes
+#                     default and autotests: exports, imports, summaries,
+#                     reports, autotest runs and the nightly jobs)
+#   workshop-backup   the daily off-site backup (cron, same image): an
+#                     age-encrypted pg_dump to the EU backup bucket
+#                     (docs/operations/backup-restore.md)
+#   workshop-cabinet  the owner cabinet (./web/Dockerfile)
+#
+# Secrets are `sync: false`: the dashboard asks for them when the Blueprint is
+# created (leave unused ones empty) and never overwrites them later. The
+# workers copy exactly the API keys listed below (fromService copies one
+# named key, not the whole service). Any other variable (LLM_MODEL_ID,
+# OPENAI_BASE_URL, LANGFUSE_HOST, RECORDING_RETENTION_DAYS,
+# WORKER_POLL_SECONDS, ...) goes into the env group workshop-backend, which
+# every backend service reads. ENCRYPTION_KEY is generated once and shared; never
+# replace it in place, or stored channel credentials become unreadable: to
+# rotate, put a new key first in ENCRYPTION_KEYS (the env group) and follow
+# docs/operations/backup-restore.md, "Key rotation".
+#
+# The image's ENTRYPOINT is `workshop`; the commands below also name it, so
+# they work whether a platform keeps the ENTRYPOINT or replaces it.
+#
+# Deploys (docs/operations/deploys.md): every service follows the `release`
+# branch and deploys a commit only after all its GitHub checks passed
+# (`autoDeployTrigger: checksPass`), so API, workers and cabinet always run
+# one commit. `release` moves forward only to commits that passed the
+# staging smoke test (render.staging.yaml, .github/workflows/deploy-smoke.yml)
+# or by hand: `git push origin <commit>:release` (create it once before the
+# Blueprint: `git push origin main:release`).
+
+databases:
+  - name: workshop-db
+    region: frankfurt
+    # 8 GB: Render accepts 200 connections from 8 GB on (100 below), which
+    # the API, two customer workers and the batch worker need during a
+    # deploy (docs/operations/capacity.md, "Connection budget"). Changing
+    # the plan restarts the database: a few minutes without it.
+    plan: pro-8gb
+    postgresMajorVersion: "16"
+    databaseName: workshop
+    user: workshop
+    # No public access: only services of this account in the region connect.
+    ipAllowList: []
+
+envVarGroups:
+  - name: workshop-backend
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      # Key of the STOP list's digests: generated once, never rotated.
+      - key: SUPPRESSION_LIST_KEY
+        generateValue: true
+      # Render's proxies and the cabinet (private network) set X-Forwarded-For;
+      # the audit log keeps client IPs. Only these hops are trusted, so uvicorn
+      # reads the header from the right and a forged left-most entry is ignored
+      # (never "*": that takes the left-most entry the client controls).
+      - key: FORWARDED_ALLOW_IPS
+        value: "10.0.0.0/8"
+      - key: DEFAULT_DATA_REGION
+        value: eu
+
+services:
+  - type: web
+    name: workshop-api
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop api
+    preDeployCommand: workshop migrate
+    # Two instances: a deploy or a crashed instance never takes the API down.
+    # Locks (bookings, a customer's turns, login code sends) are Postgres
+    # advisory locks and the rate limits are counted in Postgres, so both
+    # instances share them (docs/LAUNCH.md, "Несколько экземпляров API").
+    numInstances: 2
+    # Readiness: the database answers and every migration of this build is
+    # applied; a busy pool is "degraded" (200) and fails only after 30 s
+    # (GET /healthz is liveness only).
+    healthCheckPath: /readyz
+    # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
+    maxShutdownDelaySeconds: 30
+    # docs/** is ignored, so a new DPA text in docs/legal is built into the
+    # image only by a rebuild: set DPA_DOCUMENT_VERSION with
+    # "Save, rebuild, and deploy" or use Manual Deploy -> "Deploy latest commit"
+    # ("Save and deploy" reuses the old build, without the new text).
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: PORT
+        value: "8000"
+      # Connection budget (docs/operations/capacity.md): during a deploy the
+      # old and new instances run together, 2 x 2 x (12 + 1 LISTEN), plus the
+      # customer workers' 2 x 2 x (16 + 1), the batch worker's 2 x (10 + 1),
+      # the backup's 2, the migration's 1 and 5 kept for superusers and
+      # operators: 150 of the 200 of pro-8gb
+      # (tests/platform/test_connection_budget.py). Requests hold a
+      # connection for a moment, so the threads outnumber the pool. Customer
+      # turns run on the worker; the API's own model calls (the owners' test
+      # chat, imports) are few.
+      - key: THREADPOOL_SIZE
+        value: "40"
+      - key: DB_POOL_SIZE
+        value: "12"
+      - key: LLM_MAX_CONCURRENCY
+        value: "8"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # public https address of this API, e.g. https://workshop-api.onrender.com (webhooks, widget)
+      - key: APP_BASE_URL
+        sync: false
+      # public https address of the cabinet, e.g. https://workshop-cabinet.onrender.com
+      # (Google Calendar and the payment page send owners back there)
+      - key: CABINET_BASE_URL
+        sync: false
+      # public https origin of the cabinet, e.g. https://workshop-cabinet.onrender.com
+      # (cabinet CORS; the payment page returns payers there)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PLATFORM_ADMIN_EMAILS
+        sync: false
+      - key: PLATFORM_ADMIN_PHONE_NUMBERS
+        sync: false
+      # openai (default: gpt-5-mini in an EU data-residency project) or anthropic
+      - key: LLM_PROVIDER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_PROJECT_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # login codes by SMS
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      # login codes by Telegram
+      - key: TELEGRAM_GATEWAY_API_TOKEN
+        sync: false
+      # login codes by WhatsApp
+      - key: WHATSAPP_OTP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_OTP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_OTP_TEMPLATE
+        sync: false
+      - key: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+        sync: false
+      # login codes by e-mail
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURITY
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # bot check of risky login code requests (Cloudflare Turnstile)
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      # phone ranges that never get a login code (E.164 starts)
+      - key: OTP_DENIED_PHONE_PREFIXES
+        sync: false
+      # voice
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        sync: false
+      - key: ZADARMA_API_KEY
+        sync: false
+      - key: ZADARMA_API_SECRET
+        sync: false
+      # call recordings: s3 = encrypted in an EU bucket (docs/LAUNCH.md 4.6);
+      # empty: they stay with ElevenLabs
+      - key: RECORDINGS_STORAGE
+        sync: false
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        sync: false
+      - key: RECORDINGS_S3_REGION
+        sync: false
+      - key: RECORDINGS_S3_BUCKET
+        sync: false
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        sync: false
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        sync: false
+      # WhatsApp, Instagram, Messenger
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_SYSTEM_USER_TOKEN
+        sync: false
+      - key: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_NOTIFICATION_TEMPLATE
+        sync: false
+      # booking reminders after the customer's 24-hour WhatsApp window
+      - key: WHATSAPP_REMINDER_TEMPLATE
+        sync: false
+      # guests' booking confirmations after the 24-hour WhatsApp window
+      - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+        sync: false
+      # a freed waitlist place and a rebooking invitation after the window
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        sync: false
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        sync: false
+      # owners' summaries in WhatsApp from the platform number
+      - key: WHATSAPP_OWNER_REPORT_TEMPLATE
+        sync: false
+      - key: TELEGRAM_PLATFORM_BOT_TOKEN
+        sync: false
+      # staff notifications on cabinet devices (Web Push, VAPID)
+      - key: WEB_PUSH_VAPID_PUBLIC_KEY
+        sync: false
+      - key: WEB_PUSH_VAPID_PRIVATE_KEY
+        sync: false
+      - key: WEB_PUSH_VAPID_SUBJECT
+        sync: false
+      # Google Calendar
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      # payments
+      - key: FLITT_MERCHANT_ID
+        sync: false
+      - key: FLITT_SECRET_KEY
+        sync: false
+      # the seller on invoices (SELLER_LEGAL_NAME, SELLER_COUNTRY_CODE and
+      # PLATFORM_VAT_REGISTERED have defaults; docs/LAUNCH.md 4.7.1)
+      - key: SELLER_TAX_ID
+        sync: false
+      - key: SELLER_ADDRESS
+        sync: false
+      - key: SELLER_EMAIL
+        sync: false
+      # observability
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      # metrics (GET /metrics, the workers' port) and traces
+      # (docs/operations/observability.md)
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: WORKER_METRICS_PORT
+        value: "9464"
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false
+      # platform alerts to the ops chat and inbox (docs/operations/slo.md)
+      - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+        sync: false
+      - key: PLATFORM_ALERT_EMAILS
+        sync: false
+
+  - type: worker
+    name: workshop-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    # Two instances answer customers: a deploy, a crash or a job that kills
+    # its process never leaves customers without replies. A turn cut off
+    # with its process is taken over by the other instance once its lease
+    # ends, and a job that kills its process twice in a row is set aside
+    # (dead, process_died) instead of taking the next one down too.
+    numInstances: 2
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop worker
+    # Running jobs get 25 s after SIGTERM; a cut-off job runs again on
+    # another worker once its lease ends.
+    maxShutdownDelaySeconds: 60
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # The customer role (docs/operations/capacity.md, "Worker roles"):
+      # customer messages and deliveries, and the periodic jobs of those
+      # lanes (booking reminders, the inbox sweeper). Everything else runs
+      # on workshop-batch-worker.
+      - key: WORKER_LANES
+        value: "inbound,outbound"
+      # Its lanes run 12 jobs at once (inbound=8, outbound=4, the defaults
+      # of WORKER_LANE_CONCURRENCY); a job holds one connection at most, and
+      # only a customer turn holds it for long (its lock), so 16 connections
+      # serve them, the periodic thread and the heartbeat. It serves no
+      # requests (connection budget: see workshop-api).
+      - key: THREADPOOL_SIZE
+        value: "20"
+      - key: DB_POOL_SIZE
+        value: "16"
+      - key: LLM_MAX_CONCURRENCY
+        value: "12"
+      - key: APP_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: APP_BASE_URL
+      - key: CABINET_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CABINET_BASE_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CORS_ALLOWED_ORIGINS
+      - key: PLATFORM_ADMIN_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_EMAILS
+      - key: PLATFORM_ADMIN_PHONE_NUMBERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_PHONE_NUMBERS
+      - key: LLM_PROVIDER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LLM_PROVIDER
+      - key: OPENAI_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_API_KEY
+      - key: OPENAI_PROJECT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_PROJECT_ID
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ANTHROPIC_API_KEY
+      - key: TWILIO_ACCOUNT_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_ACCOUNT_SID
+      - key: TWILIO_AUTH_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_AUTH_TOKEN
+      - key: TWILIO_FROM_NUMBER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_FROM_NUMBER
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_MESSAGING_SERVICE_SID
+      - key: TELEGRAM_GATEWAY_API_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_GATEWAY_API_TOKEN
+      - key: WHATSAPP_OTP_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_PHONE_NUMBER_ID
+      - key: WHATSAPP_OTP_ACCESS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_ACCESS_TOKEN
+      - key: WHATSAPP_OTP_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE
+      - key: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_HOST
+      - key: SMTP_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PORT
+      - key: SMTP_SECURITY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_SECURITY
+      - key: SMTP_USERNAME
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PASSWORD
+      - key: SMTP_FROM
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_FROM
+      - key: TURNSTILE_SITE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SITE_KEY
+      - key: TURNSTILE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SECRET_KEY
+      - key: OTP_DENIED_PHONE_PREFIXES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTP_DENIED_PHONE_PREFIXES
+      - key: ELEVENLABS_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_API_KEY
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_WEBHOOK_SECRET
+      - key: ZADARMA_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_KEY
+      - key: ZADARMA_API_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_SECRET
+      - key: RECORDINGS_STORAGE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_STORAGE
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ENDPOINT_URL
+      - key: RECORDINGS_S3_REGION
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_REGION
+      - key: RECORDINGS_S3_BUCKET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_BUCKET
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ACCESS_KEY_ID
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_SECRET_ACCESS_KEY
+      - key: META_APP_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_ID
+      - key: META_APP_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_SECRET
+      - key: META_VERIFY_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_VERIFY_TOKEN
+      - key: WHATSAPP_SYSTEM_USER_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_SYSTEM_USER_TOKEN
+      - key: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+      - key: WHATSAPP_NOTIFICATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_TEMPLATE
+      - key: WHATSAPP_REMINDER_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REMINDER_TEMPLATE
+      - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_WAITLIST_TEMPLATE
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REBOOKING_TEMPLATE
+      - key: WHATSAPP_OWNER_REPORT_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OWNER_REPORT_TEMPLATE
+      - key: TELEGRAM_PLATFORM_BOT_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_PLATFORM_BOT_TOKEN
+      - key: WEB_PUSH_VAPID_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PUBLIC_KEY
+      - key: WEB_PUSH_VAPID_PRIVATE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PRIVATE_KEY
+      - key: WEB_PUSH_VAPID_SUBJECT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_SUBJECT
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_ID
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_SECRET
+      - key: FLITT_MERCHANT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_MERCHANT_ID
+      - key: FLITT_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_SECRET_KEY
+      - key: SELLER_TAX_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_TAX_ID
+      - key: SELLER_ADDRESS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_ADDRESS
+      - key: SELLER_EMAIL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_EMAIL
+      - key: LANGFUSE_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_PUBLIC_KEY
+      - key: LANGFUSE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_SECRET_KEY
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SENTRY_DSN
+      - key: METRICS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: METRICS_TOKEN
+      - key: WORKER_METRICS_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WORKER_METRICS_PORT
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_ENDPOINT
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_HEADERS
+      - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+      - key: PLATFORM_ALERT_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_EMAILS
+
+  - type: worker
+    name: workshop-batch-worker
+    runtime: docker
+    region: frankfurt
+    # Exports, website imports, summaries and autotest runs hold more data
+    # than a customer turn: 2 GB (standard) instead of 512 MB.
+    plan: standard
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop worker
+    maxShutdownDelaySeconds: 60
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # The batch role: other jobs (exports, imports, summaries, reports)
+      # and autotest runs, with the periodic jobs of those lanes. One
+      # instance: while it restarts its jobs wait, customers never do.
+      - key: WORKER_LANES
+        value: "default,autotests"
+      - key: WORKER_LANE_CONCURRENCY
+        value: "default=4,autotests=2"
+      # 6 jobs at once, the periodic thread and the heartbeat: 10
+      # connections (connection budget: see workshop-api).
+      - key: THREADPOOL_SIZE
+        value: "12"
+      - key: DB_POOL_SIZE
+        value: "10"
+      - key: LLM_MAX_CONCURRENCY
+        value: "6"
+      - key: APP_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: APP_BASE_URL
+      - key: CABINET_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CABINET_BASE_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CORS_ALLOWED_ORIGINS
+      - key: PLATFORM_ADMIN_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_EMAILS
+      - key: PLATFORM_ADMIN_PHONE_NUMBERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_PHONE_NUMBERS
+      - key: LLM_PROVIDER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LLM_PROVIDER
+      - key: OPENAI_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_API_KEY
+      - key: OPENAI_PROJECT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_PROJECT_ID
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ANTHROPIC_API_KEY
+      - key: TWILIO_ACCOUNT_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_ACCOUNT_SID
+      - key: TWILIO_AUTH_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_AUTH_TOKEN
+      - key: TWILIO_FROM_NUMBER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_FROM_NUMBER
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_MESSAGING_SERVICE_SID
+      - key: TELEGRAM_GATEWAY_API_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_GATEWAY_API_TOKEN
+      - key: WHATSAPP_OTP_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_PHONE_NUMBER_ID
+      - key: WHATSAPP_OTP_ACCESS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_ACCESS_TOKEN
+      - key: WHATSAPP_OTP_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE
+      - key: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_HOST
+      - key: SMTP_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PORT
+      - key: SMTP_SECURITY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_SECURITY
+      - key: SMTP_USERNAME
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PASSWORD
+      - key: SMTP_FROM
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_FROM
+      - key: TURNSTILE_SITE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SITE_KEY
+      - key: TURNSTILE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SECRET_KEY
+      - key: OTP_DENIED_PHONE_PREFIXES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTP_DENIED_PHONE_PREFIXES
+      - key: ELEVENLABS_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_API_KEY
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_WEBHOOK_SECRET
+      - key: ZADARMA_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_KEY
+      - key: ZADARMA_API_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_SECRET
+      - key: RECORDINGS_STORAGE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_STORAGE
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ENDPOINT_URL
+      - key: RECORDINGS_S3_REGION
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_REGION
+      - key: RECORDINGS_S3_BUCKET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_BUCKET
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ACCESS_KEY_ID
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_SECRET_ACCESS_KEY
+      - key: META_APP_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_ID
+      - key: META_APP_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_SECRET
+      - key: META_VERIFY_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_VERIFY_TOKEN
+      - key: WHATSAPP_SYSTEM_USER_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_SYSTEM_USER_TOKEN
+      - key: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+      - key: WHATSAPP_NOTIFICATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_TEMPLATE
+      - key: WHATSAPP_REMINDER_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REMINDER_TEMPLATE
+      - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_WAITLIST_TEMPLATE
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REBOOKING_TEMPLATE
+      - key: WHATSAPP_OWNER_REPORT_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OWNER_REPORT_TEMPLATE
+      - key: TELEGRAM_PLATFORM_BOT_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_PLATFORM_BOT_TOKEN
+      - key: WEB_PUSH_VAPID_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PUBLIC_KEY
+      - key: WEB_PUSH_VAPID_PRIVATE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PRIVATE_KEY
+      - key: WEB_PUSH_VAPID_SUBJECT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_SUBJECT
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_ID
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_SECRET
+      - key: FLITT_MERCHANT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_MERCHANT_ID
+      - key: FLITT_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_SECRET_KEY
+      - key: SELLER_TAX_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_TAX_ID
+      - key: SELLER_ADDRESS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_ADDRESS
+      - key: SELLER_EMAIL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_EMAIL
+      - key: LANGFUSE_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_PUBLIC_KEY
+      - key: LANGFUSE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_SECRET_KEY
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SENTRY_DSN
+      - key: METRICS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: METRICS_TOKEN
+      - key: WORKER_METRICS_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WORKER_METRICS_PORT
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_ENDPOINT
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_HEADERS
+      - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+      - key: PLATFORM_ALERT_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_EMAILS
+
+  - type: cron
+    name: workshop-backup
+    # The off-site backup: every night a consistent pg_dump of workshop-db,
+    # encrypted with age to BACKUP_AGE_PUBLIC_KEY (public keys only: this
+    # service can write backups, never read them), into an EU bucket of
+    # another provider; retention keeps 30 daily and 12 monthly copies.
+    # Render's own snapshots and point-in-time recovery stay the first line;
+    # this copy survives losing the account or the region. Sentry Crons
+    # (monitor database-backup) alerts when a night is missed.
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop backup
+    # 01:17 UTC, the quietest hour in the EU.
+    schedule: "17 1 * * *"
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # The EU bucket of another provider (AWS eu-central-1, Hetzner,
+      # Scaleway, Cloudflare R2 with the EU jurisdiction): versioning on,
+      # a key allowed to put, list and delete under the prefix only.
+      - key: BACKUP_S3_ENDPOINT_URL
+        sync: false
+      - key: BACKUP_S3_REGION
+        sync: false
+      - key: BACKUP_S3_BUCKET
+        sync: false
+      - key: BACKUP_S3_ACCESS_KEY_ID
+        sync: false
+      - key: BACKUP_S3_SECRET_ACCESS_KEY
+        sync: false
+      # age public keys, comma-separated: the restore drill's and the
+      # offline escrow key's (never a private key here)
+      - key: BACKUP_AGE_PUBLIC_KEY
+        sync: false
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SENTRY_DSN
+
+  - type: web
+    name: workshop-cabinet
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    healthCheckPath: /login
+    buildFilter:
+      paths:
+        - web/**
+    envVars:
+      # The API as the cabinet's server reaches it: its internal address from
+      # the dashboard (workshop-api -> Connect -> Internal), with http:// and
+      # port 8000, e.g. http://workshop-api:8000. Never the public https
+      # address: those requests leave through Render's egress, so the API
+      # sees one egress IP for every owner (audit log, OTP_SENDS_PER_IP_PER_HOUR).
+      - key: BACKEND_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      # the public address of the site (https://app.example.com): canonical
+      # links, hreflang, sitemap.xml and robots.txt of the public pages
+      - key: SITE_URL
+        sync: false
+      # Render's edge appends one X-Forwarded-For hop in front of the cabinet:
+      # only that right-most entry is forwarded to the API.
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      # errors of the cabinet (server and browser); empty: none are sent
+      - key: SENTRY_DSN
+        sync: false

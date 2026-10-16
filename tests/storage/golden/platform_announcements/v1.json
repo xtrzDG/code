@@ -1,0 +1,22 @@
+{
+  "components": [
+    "chat"
+  ],
+  "created_at": 1790000000000000,
+  "created_by": "user_6122859b-a4a5-4dbd-8bb9-d1391b08055b",
+  "expected_end_at": 1790000000000000,
+  "id": "announcement_3805c776-a863-4e22-9df0-3d95279651e7",
+  "level": "info",
+  "messages": [
+    {
+      "language": "ka",
+      "text": "WhatsApp replies are delayed by a few minutes."
+    }
+  ],
+  "resolved_at": 1790000000000000,
+  "schema_version": "1",
+  "starts_at": 1790000000000000,
+  "status": "active",
+  "updated_at": 1790000000000000,
+  "updated_by": "user_3566fa75-ff6a-40b7-96b3-13948f6b50e4"
+}

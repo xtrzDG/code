@@ -1,0 +1,65 @@
+{
+  "$comment": "OpenAI API error bodies (platform.openai.com/docs/guides/error-codes) and the words of the error the platform raises.",
+  "cases": [
+    {
+      "status": 401,
+      "body": {
+        "error": {
+          "message": "Incorrect API key provided: sk-test. You can find your API key at https://platform.openai.com/account/api-keys.",
+          "type": "invalid_request_error",
+          "param": null,
+          "code": "invalid_api_key"
+        }
+      },
+      "expected": "rejected the API key"
+    },
+    {
+      "status": 403,
+      "body": {
+        "error": {
+          "message": "Project does not have access to model gpt-5-mini in this region.",
+          "type": "invalid_request_error",
+          "param": null,
+          "code": "model_not_found"
+        }
+      },
+      "expected": "denied access"
+    },
+    {
+      "status": 429,
+      "body": {
+        "error": {
+          "message": "Rate limit reached for gpt-5-mini on tokens per min (TPM): Limit 200000.",
+          "type": "tokens",
+          "param": null,
+          "code": "rate_limit_exceeded"
+        }
+      },
+      "expected": "rate limit"
+    },
+    {
+      "status": 400,
+      "body": {
+        "error": {
+          "message": "Your input exceeds the context window of this model.",
+          "type": "invalid_request_error",
+          "param": "input",
+          "code": "context_length_exceeded"
+        }
+      },
+      "expected": "rejected the request (HTTP 400)"
+    },
+    {
+      "status": 500,
+      "body": {
+        "error": {
+          "message": "The server had an error while processing your request.",
+          "type": "server_error",
+          "param": null,
+          "code": null
+        }
+      },
+      "expected": "unavailable (HTTP 500)"
+    }
+  ]
+}

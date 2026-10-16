@@ -1,0 +1,115 @@
+{
+  "$comment": "Google API error bodies (developers.google.com/calendar/api/guides/errors) and the reason the availability reads give the cabinet.",
+  "cases": [
+    {
+      "status": 401,
+      "problem": "needs_reconnect",
+      "body": {
+        "error": {
+          "code": 401,
+          "message": "Invalid Credentials",
+          "errors": [
+            {
+              "message": "Invalid Credentials",
+              "domain": "global",
+              "reason": "authError",
+              "location": "Authorization",
+              "locationType": "header"
+            }
+          ],
+          "status": "UNAUTHENTICATED"
+        }
+      }
+    },
+    {
+      "status": 403,
+      "problem": "needs_reconnect",
+      "body": {
+        "error": {
+          "code": 403,
+          "message": "Request had insufficient authentication scopes.",
+          "errors": [
+            {
+              "message": "Request had insufficient authentication scopes.",
+              "domain": "global",
+              "reason": "insufficientPermissions"
+            }
+          ],
+          "status": "PERMISSION_DENIED"
+        }
+      }
+    },
+    {
+      "status": 404,
+      "problem": "not_found",
+      "body": {
+        "error": {
+          "code": 404,
+          "message": "Not Found",
+          "errors": [
+            {
+              "message": "Not Found",
+              "domain": "global",
+              "reason": "notFound"
+            }
+          ],
+          "status": "NOT_FOUND"
+        }
+      }
+    },
+    {
+      "status": 410,
+      "problem": "not_found",
+      "body": {
+        "error": {
+          "code": 410,
+          "message": "Resource has been deleted",
+          "errors": [
+            {
+              "message": "Resource has been deleted",
+              "domain": "global",
+              "reason": "deleted"
+            }
+          ],
+          "status": ""
+        }
+      }
+    },
+    {
+      "status": 429,
+      "problem": "provider_error",
+      "body": {
+        "error": {
+          "code": 429,
+          "message": "Rate Limit Exceeded",
+          "errors": [
+            {
+              "message": "Rate Limit Exceeded",
+              "domain": "global",
+              "reason": "rateLimitExceeded"
+            }
+          ],
+          "status": "RESOURCE_EXHAUSTED"
+        }
+      }
+    },
+    {
+      "status": 500,
+      "problem": "provider_error",
+      "body": {
+        "error": {
+          "code": 500,
+          "message": "Backend Error",
+          "errors": [
+            {
+              "message": "Backend Error",
+              "domain": "global",
+              "reason": "backendError"
+            }
+          ],
+          "status": "INTERNAL"
+        }
+      }
+    }
+  ]
+}

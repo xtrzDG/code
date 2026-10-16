@@ -1,0 +1,9 @@
+{
+  "type": "post_call_audio",
+  "event_timestamp": 1790855130,
+  "data": {
+    "agent_id": "agent_7101k6contract0000",
+    "conversation_id": "conv_8401k6contract0001",
+    "full_audio": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjMuMTAwAAAAAAAAAAAAAAD/+0DAAAAAAAAAAAAAAAAAAAAAAABJbmZvAAAADwAAAAMAAAGwAA=="
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "collection": "referrals",
+  "document_type": "ReferralDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "code": {
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9._-]+$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "first_paid_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^referral_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "owner_kind": {
+        "enum": [
+          "partner",
+          "business"
+        ],
+        "type": "string"
+      },
+      "partner_id": {
+        "anyOf": [
+          {
+            "pattern": "^partner_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "referred_at": {
+        "type": "integer"
+      },
+      "referred_business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "rewarded_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "referred_business_id",
+      "code",
+      "owner_kind",
+      "referred_at"
+    ],
+    "type": "object"
+  }
+}

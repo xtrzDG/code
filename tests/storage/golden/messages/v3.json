@@ -1,0 +1,48 @@
+{
+  "attachments": [
+    {
+      "byte_count": 1,
+      "duration_seconds": 1,
+      "kind": "audio",
+      "location": {
+        "address": "Sample LocationAddress",
+        "latitude": 0.0,
+        "longitude": 0.0,
+        "name": "Sample LocationName"
+      },
+      "media_deleted_at": 1790000000000000,
+      "media_id": "message_media_6403601b-6173-555c-8ef6-199f144602b5",
+      "media_type": "audio/ogg",
+      "problem": "unsupported_kind",
+      "storage_path": "Sample MediaStoragePath",
+      "transcript": "Sample TranscribedVoiceText"
+    }
+  ],
+  "author": "customer",
+  "business_id": "business_69d13362-d6b1-4bcd-b40f-ea6551183f36",
+  "channel": "phone",
+  "conversation_id": "conversation_57225e8c-cff7-4522-be08-a31a0747858f",
+  "cost_micro_usd": 1,
+  "created_at": 1790000000000000,
+  "direction": "inbound",
+  "id": "message_ca767fbd-4747-4f08-b887-9e86ff1d29e3",
+  "input_tokens": 1,
+  "is_fallback_model": true,
+  "language": "ka",
+  "llm_round_count": 1,
+  "model_id": "gpt-5-mini",
+  "output_tokens": 1,
+  "reply_latency_ms": 1,
+  "schema_version": "3",
+  "sent_by": "user_bcccd49e-8c7b-4629-acd1-813a903ceff9",
+  "text": "Sample MessageText",
+  "tool_calls": [
+    {
+      "input_json": "{\"date\": \"2026-09-21\"}",
+      "is_error": true,
+      "result_json": "{\"ok\": true}",
+      "tool_name": "search_knowledge"
+    }
+  ],
+  "updated_at": 1790000000000000
+}

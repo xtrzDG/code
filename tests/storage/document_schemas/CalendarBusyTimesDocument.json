@@ -1,0 +1,89 @@
+{
+  "collection": "calendar_busy_times",
+  "document_type": "CalendarBusyTimesDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "blocks": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "ends_at": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "starts_at": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "starts_at",
+            "ends_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "covers_until": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "feed_id": {
+        "anyOf": [
+          {
+            "pattern": "^ical_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "fetched_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^busy_times_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "resource_id": {
+        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "source": {
+        "enum": [
+          "google",
+          "ical",
+          "booking_system"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "resource_id",
+      "source",
+      "covers_until",
+      "fetched_at"
+    ],
+    "type": "object"
+  }
+}

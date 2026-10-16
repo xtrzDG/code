@@ -1,0 +1,135 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550783881",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Nino Beridze" },
+                "wa_id": "995599123456"
+              }
+            ],
+            "messages": [
+              {
+                "from": "995599123456",
+                "id": "wamid.voice-0001",
+                "timestamp": "1790856000",
+                "type": "audio",
+                "audio": {
+                  "mime_type": "audio/ogg; codecs=opus",
+                  "sha256": "sha256-of-the-voice-note",
+                  "id": "1003383421387256",
+                  "voice": true
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.image-0002",
+                "timestamp": "1790856010",
+                "type": "image",
+                "image": {
+                  "caption": "Is this dish on your menu?",
+                  "mime_type": "image/jpeg",
+                  "sha256": "sha256-of-the-photo",
+                  "id": "1479537139650973"
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.location-0003",
+                "timestamp": "1790856020",
+                "type": "location",
+                "location": {
+                  "address": "Kote Abkhazi St 27, Tbilisi",
+                  "latitude": 41.6912,
+                  "longitude": 44.8073,
+                  "name": "Old Town",
+                  "url": "https://example.com/old-town"
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.sticker-0004",
+                "timestamp": "1790856030",
+                "type": "sticker",
+                "sticker": {
+                  "mime_type": "image/webp",
+                  "sha256": "sha256-of-the-sticker",
+                  "id": "1228429680999497",
+                  "animated": false
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.contacts-0005",
+                "timestamp": "1790856040",
+                "type": "contacts",
+                "contacts": [
+                  {
+                    "name": { "formatted_name": "Giorgi K.", "first_name": "Giorgi" },
+                    "phones": [{ "phone": "+995577223344", "type": "MOBILE", "wa_id": "995577223344" }]
+                  }
+                ]
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.video-0006",
+                "timestamp": "1790856050",
+                "type": "video",
+                "video": {
+                  "caption": "The hall last night",
+                  "mime_type": "video/mp4",
+                  "sha256": "sha256-of-the-video",
+                  "id": "1213596403339870"
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.document-0007",
+                "timestamp": "1790856060",
+                "type": "document",
+                "document": {
+                  "caption": "Our group list",
+                  "filename": "guests.pdf",
+                  "mime_type": "application/pdf",
+                  "sha256": "sha256-of-the-document",
+                  "id": "1166846181421424"
+                }
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.unsupported-0008",
+                "timestamp": "1790856070",
+                "type": "unsupported",
+                "errors": [
+                  {
+                    "code": 131051,
+                    "title": "Message type unknown",
+                    "message": "Message type unknown",
+                    "error_data": { "details": "Message type is currently not supported." }
+                  }
+                ]
+              },
+              {
+                "from": "995599123456",
+                "id": "wamid.reaction-0009",
+                "timestamp": "1790856080",
+                "type": "reaction",
+                "reaction": { "message_id": "wamid.reply-0001", "emoji": "+" }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

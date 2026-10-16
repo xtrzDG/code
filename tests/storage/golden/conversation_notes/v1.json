@@ -1,0 +1,10 @@
+{
+  "author_user_id": "user_8ad20533-78e5-4ea4-a49c-512543789c43",
+  "business_id": "business_fd421f0e-4a88-49b0-b1d1-91d6193b11fc",
+  "conversation_id": "conversation_4effc12e-87f9-450e-8791-959751b5fd05",
+  "created_at": 1790000000000000,
+  "id": "conversation_note_fa782084-eaa1-4827-b06e-98d99075fa91",
+  "schema_version": "1",
+  "text": "Sample ConversationNoteText",
+  "updated_at": 1790000000000000
+}

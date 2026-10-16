@@ -1,0 +1,154 @@
+/*
+ * The hero's poster (HeroFallback): the 3D scene's composition in plain HTML
+ * and CSS — the assistant's orb, its glow, two tilted orbits with a light
+ * running along each, and the six channels' bubbles floating around. It is
+ * what everyone sees first (server-rendered, no WebGL), all a phone ever
+ * shows, and what stays for reduced motion. Animated with transforms and
+ * opacity only (the compositor draws them, no repaints); every animation
+ * stops under prefers-reduced-motion (globals.css). Imported by landing.css.
+ */
+
+@keyframes aw-orbit-turn {
+  from {
+    transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) rotateZ(var(--orbit-turn));
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) rotateZ(calc(var(--orbit-turn) + 1turn));
+  }
+}
+@keyframes aw-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.hero-still {
+  position: absolute;
+  inset: 0;
+  perspective: 60rem;
+}
+.hero-still-glow {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 50%, transparent), transparent 66%);
+  animation: aw-glow-breathe 7s ease-in-out infinite;
+}
+
+/* An orbit seen from above at a slant, turning slowly; its light runs along it. */
+.hero-still-ring {
+  --orbit-tilt: 72deg;
+  --orbit-turn: -14deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid color-mix(in oklab, var(--accent-solid) 40%, transparent);
+  transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) rotateZ(var(--orbit-turn));
+  animation: aw-orbit-turn 16s linear infinite;
+}
+.hero-still-ring::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 70%,
+    color-mix(in oklab, var(--tone-sand) 60%, transparent) 90%,
+    var(--accent) 97%,
+    transparent
+  );
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+}
+.hero-still-ring-wide {
+  --orbit-tilt: 66deg;
+  --orbit-turn: 18deg;
+  width: 96%;
+  opacity: 0.7;
+  animation-duration: 24s;
+  animation-direction: reverse;
+}
+
+.hero-still-orb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 90px -12px color-mix(in oklab, var(--accent-solid) 80%, transparent),
+    inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+.hero-still-orb::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 200deg, var(--accent-solid), var(--tone-sand), var(--accent), var(--tone-rose), var(--accent-solid));
+  filter: blur(14px);
+  animation: var(--animate-spin-slow);
+}
+.hero-still-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 22%),
+    radial-gradient(circle at 50% 50%, transparent 58%, rgb(255 255 255 / 0.45) 100%),
+    radial-gradient(circle at 70% 80%, rgb(24 14 8 / 0.35), transparent 55%);
+}
+
+.hero-still-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7%;
+  width: 27%;
+  aspect-ratio: 1.75;
+  padding: 0 5%;
+  border-radius: 999px 999px 999px 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(to bottom, var(--surface), var(--surface-muted));
+  box-shadow: 0 14px 30px -18px rgb(0 0 0 / 0.55);
+  transform: translate(-50%, -50%);
+  animation: var(--animate-float);
+}
+.hero-still-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.hero-still-badge > svg {
+  width: 62%;
+  height: 62%;
+}
+.hero-still-lines {
+  display: grid;
+  flex: 1;
+  gap: 0.35rem;
+}
+.hero-still-lines > i {
+  display: block;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ink) 75%, transparent);
+}
+.hero-still-lines > i + i {
+  width: 65%;
+  background: color-mix(in oklab, var(--ink) 25%, transparent);
+}

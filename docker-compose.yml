@@ -1,0 +1,138 @@
+# Everything on one machine: Postgres 16, migrations, API, worker, cabinet.
+#
+#   cp .env.example .env        # optional: keys of the external services
+#   docker compose up --build   # cabinet http://localhost:3000, API http://localhost:8000
+#
+# Defaults suit a local run: APP_ENV=development (sign-in codes appear in the
+# API log until a provider is configured), APP_BASE_URL=http://localhost:8000,
+# CABINET_BASE_URL=http://localhost:3000 and
+# CORS_ALLOWED_ORIGINS=http://localhost:3000 (the cabinet; all three follow
+# API_PORT and WEB_PORT), one local ENCRYPTION_KEY for the API and the worker,
+# the cabinet's cookies without "Secure" (plain http). Anything reachable
+# from outside this machine needs its own ENCRYPTION_KEY in .env
+# (docs/LAUNCH.md); APP_ENV=production refuses the public default.
+name: assistant-workshop
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: assistant-workshop-backend:local
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    APP_ENV: ${APP_ENV:-development}
+    # The API's public address follows its published port (API_PORT): the
+    # widget code and its live preview link point there.
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:${API_PORT:-8000}}
+    # The cabinet's address: Google Calendar sends owners back there.
+    CABINET_BASE_URL: ${CABINET_BASE_URL:-http://localhost:${WEB_PORT:-3000}}
+    # The cabinet's origin: the payment page returns payers there.
+    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:${WEB_PORT:-3000}}
+    DATABASE_URL: postgresql://${WORKSHOP_DB_USER:-workshop}:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
+    # One key for the API and the worker (each would otherwise encrypt channel
+    # tokens with its own temporary key). The default is public: for this
+    # machine only; set your own in .env before connecting real channels.
+    ENCRYPTION_KEY: ${ENCRYPTION_KEY:-local-compose-key-for-this-machine-only}
+    # Containers of the compose network (the cabinet) are trusted proxies;
+    # never "*", which would take the left-most X-Forwarded-For entry the
+    # client controls. Without TRUSTED_PROXY_HOPS the cabinet forwards no
+    # client address, so the API logs the cabinet container's address.
+    FORWARDED_ALLOW_IPS: "172.16.0.0/12"
+    # Every sign-in through the cabinet comes from its container's address
+    # here (see above), so the per-address cap of login codes is higher. Set
+    # here, not interpolated: the 10 of a copied .env.example would win.
+    OTP_SENDS_PER_IP_PER_HOUR: "100"
+    # Opt-in demo businesses for a first look (docs/LAUNCH.md, "Демо-данные");
+    # refused with APP_ENV=production.
+    SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+  volumes:
+    - recordings:/app/var/recordings
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+      # Application role and database (docker/postgres/init); not a superuser,
+      # so row-level security applies to it.
+      WORKSHOP_DB_USER: ${WORKSHOP_DB_USER:-workshop}
+      WORKSHOP_DB_PASSWORD: ${WORKSHOP_DB_PASSWORD:-workshop}
+      WORKSHOP_DB_NAME: ${WORKSHOP_DB_NAME:-workshop}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d "$${WORKSHOP_DB_NAME:-workshop}"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *backend
+    command: ["migrate"]
+    volumes: []
+    restart: "no"
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    command: ["api"]
+    # uvicorn finishes open requests for 25 s after SIGTERM.
+    stop_grace_period: 30s
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4)
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 6
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    # Running jobs get 25 s after SIGTERM before the worker exits.
+    stop_grace_period: 60s
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: assistant-workshop-web:local
+    environment:
+      BACKEND_URL: http://api:8000
+      COOKIE_SECURE: "false"
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  recordings:

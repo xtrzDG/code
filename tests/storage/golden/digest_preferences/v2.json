@@ -1,0 +1,16 @@
+{
+  "business_id": "business_36fa167a-e4fd-430b-95a4-54a3accea78b",
+  "channels": [
+    "email"
+  ],
+  "created_at": 1790000000000000,
+  "id": "digest_preferences_321b3de8-0be9-5f99-8646-b30092bd37dd",
+  "is_daily_digest_on": true,
+  "is_monthly_report_on": true,
+  "is_weekly_digest_on": true,
+  "schema_version": "2",
+  "telegram_chat": "Sample ManagerContactAddress",
+  "updated_at": 1790000000000000,
+  "user_id": "user_54c198fe-3965-45f1-a399-b2cd618220c4",
+  "whatsapp_number": "+995599123456"
+}

@@ -1,0 +1,10 @@
+{
+  "business_id": "business_fea67549-7fbc-4ca9-b6c4-e19721ef488d",
+  "code": "not_live_day_1",
+  "created_at": 1790000000000000,
+  "id": "nudge_sent_685c5b7c-cb33-5db3-82dc-9afd7696ddca",
+  "recipient_count": 1,
+  "schema_version": "1",
+  "sent_at": 1790000000000000,
+  "updated_at": 1790000000000000
+}

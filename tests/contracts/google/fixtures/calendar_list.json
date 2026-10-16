@@ -1,0 +1,58 @@
+{
+  "kind": "calendar#calendarList",
+  "etag": "\"p32g9nb5bt6fva0o\"",
+  "nextSyncToken": "sync-token-0000",
+  "items": [
+    {
+      "kind": "calendar#calendarListEntry",
+      "etag": "\"1759309962480000\"",
+      "id": "c_0a1b2c3d4e5f@group.calendar.google.com",
+      "summary": "Room 2",
+      "summaryOverride": "Room 2 (VR)",
+      "timeZone": "Asia/Tbilisi",
+      "colorId": "7",
+      "backgroundColor": "#42d692",
+      "foregroundColor": "#000000",
+      "selected": true,
+      "accessRole": "reader",
+      "defaultReminders": [],
+      "conferenceProperties": {
+        "allowedConferenceSolutionTypes": [
+          "hangoutsMeet"
+        ]
+      }
+    },
+    {
+      "kind": "calendar#calendarListEntry",
+      "etag": "\"1759309962480001\"",
+      "id": "studio@example.com",
+      "summary": "studio@example.com",
+      "timeZone": "Asia/Tbilisi",
+      "colorId": "14",
+      "backgroundColor": "#9fe1e7",
+      "foregroundColor": "#000000",
+      "selected": true,
+      "accessRole": "owner",
+      "defaultReminders": [
+        {
+          "method": "popup",
+          "minutes": 30
+        }
+      ],
+      "notificationSettings": {
+        "notifications": [
+          {
+            "type": "eventCreation",
+            "method": "email"
+          }
+        ]
+      },
+      "primary": true,
+      "conferenceProperties": {
+        "allowedConferenceSolutionTypes": [
+          "hangoutsMeet"
+        ]
+      }
+    }
+  ]
+}

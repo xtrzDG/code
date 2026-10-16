@@ -1,0 +1,178 @@
+{
+  "collection": "subscription_events",
+  "document_type": "SubscriptionEventDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "actor_id": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "cancellation_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "too_expensive",
+              "seasonal_break",
+              "not_enough_use",
+              "missing_feature",
+              "answer_quality",
+              "switched_provider",
+              "closing_business",
+              "other"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "details": {
+        "anyOf": [
+          {
+            "maxLength": 1000,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^subscription_event_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "cancelled",
+          "offer_accepted",
+          "pause_scheduled",
+          "pause_started",
+          "resumed",
+          "win_back_sent"
+        ],
+        "type": "string"
+      },
+      "occurred_at": {
+        "type": "integer"
+      },
+      "offer_kind": {
+        "anyOf": [
+          {
+            "enum": [
+              "pause",
+              "downgrade",
+              "credit"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "pause_months": {
+        "anyOf": [
+          {
+            "maximum": 4,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "pause_starts_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "pause_until": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "recipient_count": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "subscription_id": {
+        "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "win_back_stage": {
+        "anyOf": [
+          {
+            "enum": [
+              "day_14",
+              "day_30"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "business_id",
+      "subscription_id",
+      "kind",
+      "occurred_at"
+    ],
+    "type": "object"
+  }
+}

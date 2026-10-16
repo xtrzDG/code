@@ -1,0 +1,9 @@
+# Assistant Workshop: how to report a security vulnerability (RFC 9116).
+# Please read the policy first; do not report through public issues.
+# Renew Expires before it passes (tests/legal/test_security_documents.py
+# fails 30 days ahead) and add the operator's security mailbox and the
+# Canonical address at launch (docs/LAUNCH.md).
+Contact: https://github.com/xtrzDG/code/security/advisories/new
+Expires: 2027-07-01T00:00:00Z
+Preferred-Languages: en, ru, ka
+Policy: https://github.com/xtrzDG/code/blob/claude/python-backend-project-kxd3qv/SECURITY.md

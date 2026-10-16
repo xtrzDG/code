@@ -1,0 +1,14 @@
+{
+  "attached_at": 1790000000000000,
+  "business_id": "business_18701570-6893-4d30-9cb1-c93be1f334d1",
+  "byte_count": 1,
+  "created_at": 1790000000000000,
+  "duration_seconds": 1,
+  "id": "widget_upload_884636d2-c94f-48cf-a62b-8078fd800a70",
+  "kind": "audio",
+  "media_type": "audio/ogg",
+  "schema_version": "1",
+  "storage_path": "Sample MediaStoragePath",
+  "updated_at": 1790000000000000,
+  "visitor_id": "widget_visitor_074d8e02-ec90-4a1c-99c3-9417cb63394b"
+}

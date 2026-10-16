@@ -1,0 +1,16 @@
+{
+  "checked_at": 1790000000000000,
+  "code": "dead_jobs",
+  "created_at": 1790000000000000,
+  "detail": "Sample AlertDetailText",
+  "figure": 1,
+  "fired_at": 1790000000000000,
+  "notification_count": 1,
+  "notified_at": 1790000000000000,
+  "resolved_at": 1790000000000000,
+  "schema_version": "2",
+  "status": "firing",
+  "threshold": 1,
+  "unit": "count",
+  "updated_at": 1790000000000000
+}

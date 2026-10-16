@@ -1,0 +1,152 @@
+{
+  "collection": "resources",
+  "document_type": "ResourceDocument",
+  "schema_version": 3,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "booking_unit": {
+        "default": "time_slot",
+        "enum": [
+          "time_slot",
+          "night"
+        ],
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "capacity": {
+        "maximum": 10000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "external_calendar_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_active": {
+        "default": true,
+        "type": "boolean"
+      },
+      "kind": {
+        "enum": [
+          "table",
+          "room",
+          "staff",
+          "arena",
+          "bay",
+          "vehicle",
+          "slot"
+        ],
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "room_type_item_id": {
+        "anyOf": [
+          {
+            "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schedule": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "closes_at": {
+              "maximum": 1440,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opens_at": {
+              "maximum": 1439,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "weekday": {
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "type": "integer"
+            }
+          },
+          "required": [
+            "weekday",
+            "opens_at",
+            "closes_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "default": "3",
+        "type": "string"
+      },
+      "serves_item_ids": {
+        "items": {
+          "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "slot_minutes": {
+        "anyOf": [
+          {
+            "maximum": 43200,
+            "minimum": 5,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "unit_count": {
+        "default": 1,
+        "maximum": 1000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "kind",
+      "name",
+      "capacity"
+    ],
+    "type": "object"
+  }
+}

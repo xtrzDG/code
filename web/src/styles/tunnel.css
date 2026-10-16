@@ -1,0 +1,181 @@
+/*
+ * "Create an AI assistant": the tunnel the owner walks through. Rings
+ * recede into the screen around a glowing vanishing point; with every step
+ * the owner moves one ring deeper (the rings glide forward, the one just
+ * passed fades out behind the viewer), and back out again on "Back". The
+ * finale opens the tunnel with a burst of light.
+ *
+ * Imported by src/app/globals.css. Transform and opacity only; under
+ * prefers-reduced-motion globals.css ends every transition and animation
+ * at once, so the rings simply stand still.
+ */
+
+@theme {
+  --animate-ring-burst: aw-ring-burst 1.6s var(--ease-emphasized) forwards;
+  --animate-glow-breathe: aw-glow-breathe 6s ease-in-out infinite alternate;
+
+  @keyframes aw-ring-burst {
+    from {
+      opacity: 0.9;
+      transform: translate(-50%, -50%) scale(0.2);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(3.2);
+    }
+  }
+  @keyframes aw-glow-breathe {
+    from {
+      opacity: 0.55;
+      transform: translate(-50%, -50%) scale(0.92);
+    }
+    to {
+      opacity: 0.85;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+  }
+}
+
+@layer components {
+  .tunnel-depth {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    perspective: 900px;
+    perspective-origin: 50% 40%;
+    /* The edges stay calm: the tunnel lives behind the content. */
+    mask-image: radial-gradient(120% 100% at 50% 40%, black 45%, transparent 100%);
+  }
+
+  .tunnel-glow {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: min(70vmin, 720px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--accent-solid) 40%, transparent),
+      color-mix(in oklab, var(--tone-sand) 10%, transparent) 40%,
+      transparent 65%
+    );
+    animation: var(--animate-glow-breathe);
+  }
+  :root[data-theme="light"] .tunnel-glow {
+    opacity: 0.6;
+  }
+
+  .tunnel-rings {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  .tunnel-ring {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: min(150vmin, 1500px);
+    aspect-ratio: 16 / 10;
+    border-radius: 56px;
+    border: 1px solid color-mix(in oklab, var(--accent) 42%, transparent);
+    box-shadow:
+      inset 0 0 80px -40px color-mix(in oklab, var(--accent-solid) 70%, transparent),
+      0 0 60px -30px color-mix(in oklab, var(--accent-solid) 60%, transparent);
+    opacity: var(--ring-opacity, 0);
+    transform: translate(-50%, -50%) translateZ(var(--ring-z, 0px));
+    transition:
+      transform 1100ms var(--ease-emphasized),
+      opacity 900ms var(--ease-standard);
+    will-change: transform, opacity;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  @media (max-width: 640px) {
+    .tunnel-ring {
+      width: 160vmin;
+      aspect-ratio: 3 / 4;
+      border-radius: 40px;
+    }
+  }
+
+  /* The burst of the finale: rings of light flying out of the tunnel. */
+  .tunnel-burst > span {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: 40vmin;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+    box-shadow: 0 0 40px color-mix(in oklab, var(--accent-solid) 50%, transparent);
+    opacity: 0;
+    animation: var(--animate-ring-burst);
+  }
+  .tunnel-burst > span:nth-child(2) {
+    animation-delay: 180ms;
+    border-color: color-mix(in oklab, var(--tone-sand) 60%, transparent);
+  }
+  .tunnel-burst > span:nth-child(3) {
+    animation-delay: 360ms;
+    border-color: color-mix(in oklab, var(--tone-rose) 55%, transparent);
+  }
+
+  /*
+   * The floor's lines run under the cards on a phone, where the content
+   * fills the screen: they show from md up only.
+   */
+  @media (max-width: 767px) {
+    .tunnel-depth .landing-floor {
+      display: none;
+    }
+  }
+
+  /*
+   * A calm pool of the page colour right behind a screen's content: the
+   * rings and the floor stay at the edges and never cross a heading or a
+   * card. It moves with the screen (it is part of it) and fades out at its
+   * edges, so the tunnel still shows around the content. A faint accent
+   * tint keeps the glow's warmth behind the question.
+   */
+  .tunnel-veil {
+    position: absolute;
+    inset: -2.5rem -2rem;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 3rem;
+    background: radial-gradient(
+      70% 55% at 50% 30%,
+      color-mix(in oklab, var(--accent-solid) 8%, var(--canvas)),
+      var(--canvas)
+    );
+    opacity: 0.94;
+    mask-image:
+      linear-gradient(to bottom, transparent, black 2.5rem, black calc(100% - 2.5rem), transparent),
+      linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+    mask-composite: intersect;
+  }
+  :root[data-theme="light"] .tunnel-veil {
+    opacity: 0.9;
+  }
+
+  /* The progress rail: a line that fills as the owner goes deeper. */
+  .tunnel-rail-fill {
+    transform-origin: left center;
+    transition: transform var(--motion-reveal) var(--ease-emphasized);
+  }
+  :root[dir="rtl"] .tunnel-rail-fill {
+    transform-origin: right center;
+  }
+
+  /* The step's stage keeps a 3D space for the depth transitions. */
+  .tunnel-stage {
+    perspective: 1200px;
+    perspective-origin: 50% 30%;
+  }
+}

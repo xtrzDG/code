@@ -1,0 +1,164 @@
+{
+  "collection": "webhook_endpoints",
+  "document_type": "WebhookEndpointDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "api_key_id": {
+        "anyOf": [
+          {
+            "pattern": "^api_key_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "consecutive_failures": {
+        "default": 0,
+        "maximum": 1000000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "created_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "disabled_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "encrypted_secret": {
+        "type": "string"
+      },
+      "event_types": {
+        "items": {
+          "enum": [
+            "booking.created",
+            "booking.updated",
+            "booking.cancelled",
+            "lead.created",
+            "lead.updated",
+            "handoff.created",
+            "handoff.resolved",
+            "conversation.started",
+            "call.finished",
+            "webhook.test"
+          ],
+          "type": "string"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^webhook_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "label": {
+        "anyOf": [
+          {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_attempt_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_success_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "origin": {
+        "default": "cabinet",
+        "enum": [
+          "cabinet",
+          "api"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "secret_hint": {
+        "maxLength": 4,
+        "minLength": 4,
+        "pattern": "^[A-Za-z0-9_-]{4}$",
+        "type": "string"
+      },
+      "status": {
+        "default": "active",
+        "enum": [
+          "active",
+          "paused",
+          "disabled"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "url": {
+        "maxLength": 2000,
+        "minLength": 12,
+        "pattern": "^https://[^\\s/?#@]+(/[^\\s]*)?$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "business_id",
+      "url",
+      "event_types",
+      "encrypted_secret",
+      "secret_hint"
+    ],
+    "type": "object"
+  }
+}

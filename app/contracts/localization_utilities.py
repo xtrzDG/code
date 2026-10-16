@@ -3,7 +3,9 @@
 from typing import Protocol
 
 from app.contracts.utility_contract import UtilityContract
+from app.schemas.dto.language_detection import DetectedLanguage
 from app.schemas.dto.localization import LocalizedText, PhoneNumberDetails
+from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     LanguageTag,
@@ -49,4 +51,23 @@ class LanguageDetectorContract(UtilityContract, Protocol):
         fallback_language: LanguageTag,
     ) -> LanguageTag:
         """Pick the candidate language the text is most likely written in."""
+        raise NotImplementedError
+
+    def detect_any(
+        self,
+        text: MessageText,
+        version_languages: list[LanguageTag],
+        default_language: LanguageTag,
+        conversation_language: LanguageTag | None,
+        contact_language: LanguageTag | None,
+    ) -> DetectedLanguage:
+        """
+        The language a customer writes in, any language, not only the
+        version's: the script first, then frequent words, distinctive
+        letters and transliteration (Georgian or Russian in Latin letters).
+
+        Short, emoji-only or digit-only messages, and text with too little
+        evidence to switch, keep the conversation language, then the
+        contact's, then `default_language`.
+        """
         raise NotImplementedError

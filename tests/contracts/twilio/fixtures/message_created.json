@@ -1,0 +1,24 @@
+{
+  "account_sid": "AC00000000000000000000000000000000",
+  "api_version": "2010-04-01",
+  "body": "Funicular VR: we could not take your call. Reply here to book.",
+  "date_created": "Thu, 01 Oct 2026 12:00:00 +0000",
+  "date_sent": null,
+  "date_updated": "Thu, 01 Oct 2026 12:00:00 +0000",
+  "direction": "outbound-api",
+  "error_code": null,
+  "error_message": null,
+  "from": null,
+  "messaging_service_sid": "MG00000000000000000000000000000000",
+  "num_media": "0",
+  "num_segments": "1",
+  "price": null,
+  "price_unit": null,
+  "sid": "SM00000000000000000000000000000001",
+  "status": "accepted",
+  "subresource_uris": {
+    "media": "/2010-04-01/Accounts/AC00000000000000000000000000000000/Messages/SM00000000000000000000000000000001/Media.json"
+  },
+  "to": "+995599123456",
+  "uri": "/2010-04-01/Accounts/AC00000000000000000000000000000000/Messages/SM00000000000000000000000000000001.json"
+}

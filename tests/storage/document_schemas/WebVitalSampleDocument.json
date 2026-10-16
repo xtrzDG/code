@@ -1,0 +1,63 @@
+{
+  "collection": "web_vital_samples",
+  "document_type": "WebVitalSampleDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "created_at": {
+        "type": "integer"
+      },
+      "device_class": {
+        "enum": [
+          "mobile",
+          "tablet",
+          "desktop"
+        ],
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^web_vital_sample_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "metric": {
+        "enum": [
+          "lcp",
+          "inp",
+          "cls"
+        ],
+        "type": "string"
+      },
+      "route": {
+        "maxLength": 160,
+        "minLength": 1,
+        "pattern": "^/[A-Za-z0-9_\\-\\[\\]/.]*$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "value": {
+        "maximum": 600000,
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "user_id",
+      "metric",
+      "value",
+      "route",
+      "device_class"
+    ],
+    "type": "object"
+  }
+}

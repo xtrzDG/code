@@ -1,0 +1,161 @@
+{
+  "type": "post_call_transcription",
+  "event_timestamp": 1790855100,
+  "data": {
+    "agent_id": "agent_7101k6contract0000",
+    "conversation_id": "conv_8401k6contract0001",
+    "status": "done",
+    "user_id": null,
+    "transcript": [
+      {
+        "role": "agent",
+        "message": "გამარჯობა! Funicular VR, AI ასისტენტი. რით შემიძლია დაგეხმაროთ?",
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": "audio"
+      },
+      {
+        "role": "user",
+        "message": "მინდა მაგიდა ოთხისთვის შაბათს, საღამოს შვიდზე.",
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "time_in_call_secs": 6,
+        "conversation_turn_metrics": null,
+        "interrupted": false,
+        "source_medium": "audio"
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "tool_calls": [
+          {
+            "type": "webhook",
+            "request_id": "create_booking_r1",
+            "tool_name": "create_booking",
+            "params_as_json": "{\"arguments\": {\"name\": \"Nino\", \"party_size\": 4, \"starts_at\": \"2026-10-03T19:00\"}, \"conversation_id\": \"conv_8401k6contract0001\", \"caller_id\": \"+995599123456\", \"language\": \"ka\"}",
+            "tool_has_been_called": true,
+            "tool_details": {
+              "type": "webhook",
+              "method": "POST",
+              "url": "https://api.example.com/v1/voice/tools/create_booking",
+              "headers": {},
+              "path_params": {},
+              "query_params": {},
+              "body": "{\"arguments\": {\"name\": \"Nino\", \"party_size\": 4, \"starts_at\": \"2026-10-03T19:00\"}}"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "type": "webhook",
+            "request_id": "create_booking_r1",
+            "tool_name": "create_booking",
+            "result_value": "{\"ok\": true, \"tool\": \"create_booking\"}",
+            "is_error": false,
+            "tool_has_been_called": true,
+            "tool_latency_secs": 0.41,
+            "dynamic_variable_updates": []
+          }
+        ],
+        "feedback": null,
+        "time_in_call_secs": 14,
+        "conversation_turn_metrics": null,
+        "interrupted": false,
+        "source_medium": null
+      },
+      {
+        "role": "agent",
+        "message": "დაჯავშნილია: შაბათი, 19:00, ოთხი სტუმარი. დადასტურებას SMS-ით მიიღებთ.",
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "time_in_call_secs": 16,
+        "conversation_turn_metrics": null,
+        "interrupted": false,
+        "source_medium": "audio"
+      }
+    ],
+    "metadata": {
+      "start_time_unix_secs": 1790855000,
+      "accepted_time_unix_secs": 1790855000,
+      "call_duration_secs": 95,
+      "cost": 296,
+      "deletion_settings": {
+        "deletion_time_unix_secs": null,
+        "deleted_logs_at_time_unix_secs": null,
+        "deleted_audio_at_time_unix_secs": null,
+        "deleted_transcript_at_time_unix_secs": null,
+        "delete_transcript_and_pii": false,
+        "delete_audio": false
+      },
+      "feedback": {
+        "overall_score": null,
+        "likes": 0,
+        "dislikes": 0
+      },
+      "authorization_method": "signed_url",
+      "charging": {
+        "dev_discount": false,
+        "tier": "creator",
+        "llm_price": 0.0123,
+        "llm_charge": 12,
+        "call_charge": 284,
+        "free_minutes_consumed": 0,
+        "free_llm_dollars_consumed": 0
+      },
+      "phone_call": {
+        "type": "sip_trunking",
+        "direction": "inbound",
+        "phone_number_id": "phnum_5601k6contract0000",
+        "agent_number": "+995322000000",
+        "external_number": "+995599123456",
+        "call_sid": "sip_call_0000contract"
+      },
+      "termination_reason": "Call ended by remote party",
+      "error": null,
+      "main_language": "ka",
+      "rag_usage": null,
+      "text_only": false,
+      "cost_fiat": 0.1523
+    },
+    "analysis": {
+      "evaluation_criteria_results": {},
+      "data_collection_results": {},
+      "call_successful": "success",
+      "transcript_summary": "The caller booked a table for four on Saturday at 19:00."
+    },
+    "conversation_initiation_client_data": {
+      "conversation_config_override": {
+        "agent": {
+          "prompt": null,
+          "first_message": "გამარჯობა! Funicular VR, AI ასისტენტი. რით შემიძლია დაგეხმაროთ?",
+          "language": "ka"
+        },
+        "tts": {
+          "voice_id": null
+        }
+      },
+      "custom_llm_extra_body": {},
+      "dynamic_variables": {
+        "system__caller_id": "+995599123456",
+        "system__called_number": "+995322000000",
+        "system__conversation_id": "conv_8401k6contract0001",
+        "is_open_now": "yes",
+        "caller_name": "Nino"
+      }
+    },
+    "has_audio": true,
+    "has_user_audio": true,
+    "has_response_audio": true,
+    "has_auxiliary_audio": false
+  }
+}

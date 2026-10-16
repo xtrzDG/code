@@ -1,0 +1,101 @@
+/**
+ * Texts of the cabinet's frame: the five sections and the navigation,
+ * the user menu and installing the app, "Create an AI assistant" before
+ * the assistant exists, the offline page, the live cabinet and the
+ * phone's compact page chrome, and the notice of a new data processing
+ * agreement.
+ *
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
+ *
+ * Each namespace lives in its own file per language under `./shell/`; this
+ * file composes them.
+ */
+
+import type { Translation } from "../../translate";
+import { accountEn } from "./shell/account.en";
+import { accountKa } from "./shell/account.ka";
+import { accountRu } from "./shell/account.ru";
+import { appEn } from "./shell/app.en";
+import { appKa } from "./shell/app.ka";
+import { appRu } from "./shell/app.ru";
+import { chromeEn } from "./shell/chrome.en";
+import { chromeKa } from "./shell/chrome.ka";
+import { chromeRu } from "./shell/chrome.ru";
+import { dpaNoticeEn } from "./shell/dpaNotice.en";
+import { dpaNoticeKa } from "./shell/dpaNotice.ka";
+import { dpaNoticeRu } from "./shell/dpaNotice.ru";
+import { liveEn } from "./shell/live.en";
+import { liveKa } from "./shell/live.ka";
+import { liveRu } from "./shell/live.ru";
+import { navigationEn } from "./shell/navigation.en";
+import { navigationKa } from "./shell/navigation.ka";
+import { navigationRu } from "./shell/navigation.ru";
+import { setupEn } from "./shell/setup.en";
+import { setupKa } from "./shell/setup.ka";
+import { setupRu } from "./shell/setup.ru";
+import { accountHe } from "./shell/account.he";
+import { accountDe } from "./shell/account.de";
+import { appHe } from "./shell/app.he";
+import { appDe } from "./shell/app.de";
+import { chromeHe } from "./shell/chrome.he";
+import { chromeDe } from "./shell/chrome.de";
+import { dpaNoticeHe } from "./shell/dpaNotice.he";
+import { dpaNoticeDe } from "./shell/dpaNotice.de";
+import { liveHe } from "./shell/live.he";
+import { liveDe } from "./shell/live.de";
+import { navigationHe } from "./shell/navigation.he";
+import { navigationDe } from "./shell/navigation.de";
+import { setupHe } from "./shell/setup.he";
+import { setupDe } from "./shell/setup.de";
+
+export const shellEn = {
+  navigation: navigationEn,
+  account: accountEn,
+  setup: setupEn,
+  app: appEn,
+  live: liveEn,
+  chrome: chromeEn,
+  dpaNotice: dpaNoticeEn,
+} as const;
+
+export const shellRu: Translation<typeof shellEn> = {
+  navigation: navigationRu,
+  account: accountRu,
+  setup: setupRu,
+  app: appRu,
+  live: liveRu,
+  chrome: chromeRu,
+  dpaNotice: dpaNoticeRu,
+};
+
+export const shellKa: Translation<typeof shellEn> = {
+  navigation: navigationKa,
+  account: accountKa,
+  setup: setupKa,
+  app: appKa,
+  live: liveKa,
+  chrome: chromeKa,
+  dpaNotice: dpaNoticeKa,
+};
+
+export const shellHe: Translation<typeof shellEn> = {
+  navigation: navigationHe,
+  account: accountHe,
+  setup: setupHe,
+  app: appHe,
+  live: liveHe,
+  chrome: chromeHe,
+  dpaNotice: dpaNoticeHe,
+};
+
+export const shellDe: Translation<typeof shellEn> = {
+  navigation: navigationDe,
+  account: accountDe,
+  setup: setupDe,
+  app: appDe,
+  live: liveDe,
+  chrome: chromeDe,
+  dpaNotice: dpaNoticeDe,
+};

@@ -1,0 +1,31 @@
+{
+  "business_id": "business_77f4de29-bb97-4ed9-b339-e7785a5c0a62",
+  "created_at": 1790000000000000,
+  "created_by": "user_2d398893-c701-4bc1-b034-22c0a8a95d99",
+  "expectation": "must_mention",
+  "expected_text": "vegetarian",
+  "id": "autotest_case_3f4f86f9-5c63-4f46-87f7-e1d69f46aca0",
+  "is_active": true,
+  "language": "ka",
+  "last_probe": {
+    "answer": "Sample MessageText",
+    "answer_message_id": "message_4124707f-5a1c-4fce-ad79-02830b3dd67f",
+    "assistant_version_id": "assistant_version_f8099de3-2e8f-4f44-9a81-1e0d439e3cdf",
+    "check_codes": [
+      "no_booking_created"
+    ],
+    "checked_at": 1790000000000000,
+    "conversation_id": "conversation_902b8365-2d9e-4801-8779-4637250c9ea2",
+    "judge_notes": [
+      "Sample JudgeNote"
+    ],
+    "outcome": "passed"
+  },
+  "question": "Do you have a vegetarian menu?",
+  "schema_version": "2",
+  "source": "owner",
+  "source_conversation_id": "conversation_a3994d2a-cc10-4879-884f-a7a02cfe6543",
+  "source_message_id": "message_20a705d6-f2f1-48bf-8548-6b8349f92ba6",
+  "source_question_id": "unanswered_question_bcea7a7d-80c9-47e1-9453-0a70a6aa80c2",
+  "updated_at": 1790000000000000
+}

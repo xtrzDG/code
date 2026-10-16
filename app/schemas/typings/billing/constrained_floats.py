@@ -14,4 +14,15 @@ class ExchangeRate(BaseConstrainedTypedFloat):
     gt = 0.0
 
 
+class GrossMarginPercent(BaseConstrainedTypedFloat):
+    """
+    Revenue minus provider cost as a percent of revenue (negative for a loss).
+
+    Example:
+        voice_plan_margin = GrossMarginPercent(68.6)
+    """
+
+    le = 100.0
+
+
 # Keep abc order for all non example types, if possible.

@@ -1,0 +1,39 @@
+{
+  "business_id": "business_74cf890f-7e6e-469b-8419-8d6e04e55004",
+  "created_at": 1790000000000000,
+  "default_payment_link_id": "payment_link_d7d6cc6b-6f8e-424b-b711-5270dfe85d4e",
+  "hold_minutes": 15,
+  "id": "deposit_settings_d6bed9cc-a6d1-5852-ab7c-06781cc46d63",
+  "is_enabled": true,
+  "payment_links": [
+    {
+      "added_at": 1790000000000000,
+      "address": "https://pay.example.com/deposit?sum={amount}&ref={reference}",
+      "host": "Sample PaymentLinkHost",
+      "id": "payment_link_54e843c1-e128-4487-a1a7-ca0199634e9b",
+      "kind": "static",
+      "label": "Sample PaymentLinkLabel",
+      "preview": "Sample PaymentLinkPreview",
+      "sealed_address": "Sample EncryptedChannelSecret"
+    }
+  ],
+  "policies": [
+    {
+      "policy": {
+        "amount_minor": 1,
+        "currency_code": "GEL",
+        "min_party_size": 1,
+        "payment_link_id": "payment_link_6fef7fae-58f5-44e6-860d-3014865f02b0",
+        "percent": 1,
+        "rule": "fixed"
+      },
+      "resource_id": "resource_1d1603dd-8a36-4a8e-8f46-1b46d419932c",
+      "service_item_id": "knowledge_item_fcb8dad8-8704-4da4-a3a1-e2ce980fbcef",
+      "target": "resource"
+    }
+  ],
+  "refund_cutoff_hours": 1,
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "updated_by": "user_459ebf43-9670-49be-8493-8c4a6a506b7b"
+}

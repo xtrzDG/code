@@ -1,0 +1,233 @@
+/**
+ * `adminMetrics.*` texts of the platform admin's Metrics page
+ * (/admin/metrics), in English: the reference that ru and ka are typed
+ * against. LCP, INP, CLS, MRR, ARPA and p75 stay as they are: they are the
+ * names founders search for.
+ */
+
+export const adminMetricsEn = {
+  nav: "Metrics",
+  title: "Growth metrics",
+  description:
+    "How owners get from sign-up to paying, what they bring each month and how fast the cabinet feels. From the product's own events; no outside tracker.",
+  filters: {
+    label: "Metric filters",
+    period: "Sign-ups",
+    periods: {
+      last30: "Last 30 days",
+      last90: "Last 90 days",
+      last180: "Last 180 days",
+      last365: "Last 12 months",
+      custom: "Chosen days",
+    },
+    from: "From",
+    to: "To",
+    country: "Country",
+    niche: "Niche",
+    source: "Source",
+    all: "All",
+    clear: "Clear filters",
+  },
+  kpi: {
+    label: "Key numbers",
+    signUps: "Sign-ups",
+    wentLive: "Went live",
+    ofSignUps: "{percent} of sign-ups",
+    timeToLive: "Median time to go live",
+    timeToLiveDetail: "From sign-up to the first assistant live",
+    activation: "Activated within 7 days",
+    activationDetail: {
+      one: "{activated} of {eligible} business; {pending} still in their first week",
+      other: "{activated} of {eligible} businesses; {pending} still in their first week",
+    },
+    trialToPaid: "Trial to paid",
+    trialDetail: {
+      one: "{converted} of {ended} finished trial; {started} started",
+      other: "{converted} of {ended} finished trials; {started} started",
+    },
+    mrr: "MRR",
+    mrrDetail: "{change} in the period",
+    arpa: "ARPA",
+    arpaDetail: {
+      one: "{count} paying account",
+      other: "{count} paying accounts",
+    },
+    margin: "Gross margin",
+    marginDetail: "{revenue} revenue, {cost} provider cost",
+    none: "—",
+  },
+  duration: {
+    minutes: { one: "{count} minute", other: "{count} minutes" },
+    hours: { one: "{count} hour", other: "{count} hours" },
+    days: { one: "{count} day", other: "{count} days" },
+  },
+  funnel: {
+    title: "Funnel",
+    description: "Owners who signed up in the period, at each step they reached after every step before it.",
+    chartLabel: "Funnel of owners from sign-up to paying",
+    owners: {
+      one: "{count} owner",
+      other: "{count} owners",
+    },
+    ofSignUps: "{percent} of sign-ups",
+    fromPrevious: "{percent} of the step before",
+    steps: {
+      signed_up: "Signed up",
+      business_created: "Created a business",
+      launch_attempted: "Tried to launch",
+      went_live: "Went live",
+      channel_connected: "Connected a channel",
+      first_conversation: "First real conversation",
+      paid: "Paying",
+    },
+  },
+  tunnel: {
+    title: "Setup tunnel",
+    description:
+      "Screens of “Create an AI assistant”: owners who entered, finished and skipped each one, and where owners who never went live stopped.",
+    screen: "Screen",
+    entered: "Entered",
+    completed: "Finished",
+    skipped: "Skipped",
+    stopped: "Stopped here",
+    steps: {
+      business: "Business",
+      place: "Place",
+      offer: "Offer",
+      hours: "Hours",
+      people: "People",
+      channels: "Channels",
+      try: "Try it",
+      launch: "Launch",
+    },
+  },
+  admins: {
+    excluded: {
+      one: "Left out: {count} platform admin who signed up as an owner",
+      other: "Left out: {count} platform admins who signed up as owners",
+    },
+    excludedBusinesses: {
+      one: "and {count} business of theirs",
+      other: "and {count} businesses of theirs",
+    },
+    none: "No platform admin signed up as an owner in this period.",
+    included: "Platform admins' own sign-ups and businesses are counted.",
+    include: "Count them",
+    exclude: "Leave them out",
+    note: "Revenue, margin, activation and trials always count every business.",
+  },
+  businesses: {
+    title: "Every business",
+    description:
+      "Businesses created in the period, whoever created them, including an owner's second business: at each step they reached after every step before it.",
+    created: {
+      one: "{count} business created",
+      other: "{count} businesses created",
+    },
+    returning: {
+      one: "{count} of them by an owner who had one before",
+      other: "{count} of them by owners who had one before",
+    },
+    chartLabel: "Funnel of businesses from creation to paying",
+    count: {
+      one: "{count} business",
+      other: "{count} businesses",
+    },
+    ofCreated: "{percent} of created",
+    tunnelTitle: "Setup tunnel by business",
+    tunnelDescription:
+      "Each business created in the period, and each setup that has not created its business yet, counted once on each screen.",
+  },
+  mrr: {
+    title: "MRR movements",
+    description:
+      "Monthly recurring revenue in euros: at the start of the period, what moved it, and at the end. The rates it was converted with are named under the table.",
+    movement: "Movement",
+    amount: "Amount",
+    accounts: "Accounts",
+    start: "MRR at the start",
+    end: "MRR at the end",
+    kinds: {
+      new: "New",
+      reactivation: "Came back",
+      expansion: "Upgrades",
+      contraction: "Downgrades",
+      churn: "Cancelled",
+    },
+    unconverted: "Left out, no exchange rate to euros: {currencies}",
+    rates: "Converted to euros at: {rates}",
+    rate: "1 {currency} = {value} EUR ({source}, {date})",
+    rateStale: "not refreshed since {date}",
+    noConversion: "Every subscription is in euros: nothing was converted.",
+  },
+  margin: {
+    title: "Gross margin",
+    description: "Paid revenue of the period against what its AI, calls and messages cost, in euros.",
+    revenue: "Revenue",
+    cost: "Provider cost",
+    percent: "Margin",
+    accounts: {
+      one: "Over {count} client with revenue or cost",
+      other: "Over {count} clients with revenue or cost",
+    },
+    withoutRate: {
+      one: "{count} client left out: no exchange rate to euros.",
+      other: "{count} clients left out: no exchange rate to euros.",
+    },
+  },
+  cohorts: {
+    title: "Cohorts",
+    description: "Owners by sign-up month, and the share of them with a paying business at the end of each month since.",
+    month: "Sign-up month",
+    signUps: "Sign-ups",
+    wentLive: "Went live",
+    offset: "M{offset}",
+    offsetLabel: "Month {offset} after sign-up",
+    cell: "{month}, month {offset}: {percent} paying",
+    empty: "No owner signed up in this period.",
+  },
+  sources: {
+    title: "Sources",
+    description: "Where owners first came from: the link's campaign or tag, a referral, a hosted chat page or the site that sent them.",
+    source: "Source",
+    signUps: "Sign-ups",
+    wentLive: "Went live",
+    paying: "Paying",
+    payingShare: "Paying share",
+    referralCode: "Referral code",
+    names: {
+      direct: "Direct",
+      unknown: "Unknown",
+      referral: "Referral",
+      hosted_chat: "Hosted chat page",
+    },
+    empty: "No sources yet.",
+  },
+  vitals: {
+    title: "Web Vitals",
+    description: "75th percentile of the cabinet's pages for signed-in people in the period, rated by Google's thresholds.",
+    page: "Page",
+    device: "Device",
+    metric: "Vital",
+    p75: "p75",
+    samples: "Samples",
+    rating: "Rating",
+    milliseconds: "{value} ms",
+    metrics: {
+      lcp: "LCP",
+      inp: "INP",
+      cls: "CLS",
+    },
+    devices: {
+      mobile: "Phone",
+      tablet: "Tablet",
+      desktop: "Desktop",
+    },
+    ratings: {
+      good: "Good",
+      needs_improvement: "Needs work",
+      poor: "Poor",
+    },
+    empty: "No measurements in this period yet.",
+  },
+} as const;

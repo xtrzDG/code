@@ -1,0 +1,50 @@
+{
+  "city": "Sample CityName",
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "data_region": "eu",
+  "default_language": "ka",
+  "id": "business_9d867705-4f6c-491e-895f-5b0b8fdaf952",
+  "languages": [
+    "ka"
+  ],
+  "manager_contacts": [
+    {
+      "address": "Sample ManagerContactAddress",
+      "channel": "telegram",
+      "language": "ka",
+      "name": "Sample ManagerName",
+      "preferences": {
+        "events": [
+          "handoff"
+        ],
+        "quiet_hours": {
+          "ends_at": "22:00",
+          "starts_at": "22:00"
+        }
+      },
+      "telegram_username": "nino_k"
+    }
+  ],
+  "members": [
+    {
+      "role": "owner",
+      "user_id": "user_0a0fcee1-9a54-455c-b0ad-87c3ca3c1758"
+    }
+  ],
+  "name": "Sample BusinessName",
+  "niche_key": "restaurant",
+  "owner_language": "ka",
+  "plan_key": "chat",
+  "public_slug": "cafe-batumi",
+  "published_assistant_version_id": "assistant_version_2c0b0ac7-ae23-406c-972e-0ca21a6430f6",
+  "recording_retention_days": 1,
+  "require_mfa_for_members": true,
+  "revision": 1,
+  "schema_version": "4",
+  "service_mode": "full",
+  "status": "onboarding",
+  "timezone": "Asia/Tbilisi",
+  "updated_at": 1790000000000000
+}

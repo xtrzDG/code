@@ -1,0 +1,55 @@
+{
+  "$comment": "Twilio REST error bodies (www.twilio.com/docs/usage/twilios-response#response-formats-exceptions) and the error class the delivery flow relies on.",
+  "cases": [
+    {
+      "status": 400,
+      "body": {
+        "code": 21211,
+        "message": "Invalid 'To' Phone Number: +99559912XXXX",
+        "more_info": "https://www.twilio.com/docs/errors/21211",
+        "status": 400
+      },
+      "expected": "ProviderRejectedMessageError"
+    },
+    {
+      "status": 400,
+      "body": {
+        "code": 21610,
+        "message": "Attempt to send to unsubscribed recipient",
+        "more_info": "https://www.twilio.com/docs/errors/21610",
+        "status": 400
+      },
+      "expected": "ProviderRejectedMessageError"
+    },
+    {
+      "status": 401,
+      "body": {
+        "code": 20003,
+        "message": "Authenticate",
+        "more_info": "https://www.twilio.com/docs/errors/20003",
+        "status": 401
+      },
+      "expected": "DeliveryNotConfiguredError"
+    },
+    {
+      "status": 429,
+      "body": {
+        "code": 20429,
+        "message": "Too Many Requests",
+        "more_info": "https://www.twilio.com/docs/errors/20429",
+        "status": 429
+      },
+      "expected": "ProviderRateLimitedError"
+    },
+    {
+      "status": 500,
+      "body": {
+        "code": 20500,
+        "message": "Internal Server Error",
+        "more_info": "https://www.twilio.com/docs/errors/20500",
+        "status": 500
+      },
+      "expected": "ExternalServiceError"
+    }
+  ]
+}

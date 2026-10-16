@@ -1,0 +1,19 @@
+{
+  "accrued_at": 1790000000000000,
+  "amount_minor": 1500,
+  "base_minor": 1500,
+  "business_id": "business_76dcbdb7-a784-43f8-8fa6-d10ef072c694",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "id": "commission_entry_4061b299-95e6-409f-be9d-ed5f39bb2cf0",
+  "invoice_id": "invoice_91c28916-d6a8-493e-a04c-d9a872b74ad8",
+  "month": "2026-09",
+  "paid_at": 1790000000000000,
+  "paid_by": "user_b1802f8e-6458-4a48-948e-bcbe2d04663c",
+  "partner_id": "partner_db3a65aa-57e7-48fa-abac-2104cea45d30",
+  "payout_reference": "TBC transfer 2026-11-03 #88123",
+  "rate_basis_points": 1,
+  "schema_version": "1",
+  "status": "accrued",
+  "updated_at": 1790000000000000
+}
