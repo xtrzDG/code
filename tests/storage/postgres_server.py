@@ -3,8 +3,10 @@ A throwaway Postgres 16 server for storage tests.
 
 `initdb` into a fresh temporary directory, `pg_ctl start` listening only on a
 unix socket in that directory (no TCP), stop and delete everything at the
-end. Postgres refuses to run as root, so under root the server processes run
-as the `postgres` (or `nobody`) system user.
+end. A watchdog process (postgres_watchdog.py) does the same if the test
+process dies before it stops its server. Postgres refuses to run as root, so
+under root the server processes run as the `postgres` (or `nobody`) system
+user.
 
 Roles: `workshop_admin` (superuser, creates databases) and `workshop_app`
 (LOGIN, neither superuser nor BYPASSRLS: the application role, which owns the
@@ -16,6 +18,7 @@ import pwd
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import uuid
 from pathlib import Path
@@ -33,6 +36,8 @@ APP_ROLE_NAME: str = "workshop_app"
 REQUIRED_PROGRAMS: tuple[str, ...] = ("initdb", "pg_ctl", "postgres")
 UNPRIVILEGED_USER_NAMES: tuple[str, ...] = ("postgres", "nobody")
 START_TIMEOUT_SECONDS: int = 60
+WATCHDOG_SCRIPT: Path = Path(__file__).with_name("postgres_watchdog.py")
+WATCHDOG_EXIT_TIMEOUT_SECONDS: int = 10
 
 
 def postgres_bin_directory() -> Path:
@@ -55,6 +60,7 @@ class ThrowawayPostgresServer:
         self._root_directory: Path | None = None
         self._port: int = 0
         self._run_as: pwd.struct_passwd | None = None
+        self._watchdog: subprocess.Popen[bytes] | None = None
 
     @property
     def socket_directory(self) -> Path:
@@ -76,6 +82,7 @@ class ThrowawayPostgresServer:
         if os.geteuid() == 0:
             self._run_as = find_unprivileged_user()
             os.chown(root_directory, self._run_as.pw_uid, self._run_as.pw_gid)
+        self._watchdog = self._start_watchdog(root_directory)
 
         data_directory: Path = root_directory / "data"
         self._run(
@@ -106,6 +113,7 @@ class ThrowawayPostgresServer:
         if root_directory is None:
             return
 
+        self._stop_watchdog()
         try:
             self.pause()
         finally:
@@ -156,6 +164,38 @@ class ThrowawayPostgresServer:
             server_options,
             "start",
         )
+
+    def _start_watchdog(self, root_directory: Path) -> subprocess.Popen[bytes]:
+        """Stops the server and deletes its directory if this process dies."""
+
+        run_as: list[str] = (
+            []
+            if self._run_as is None
+            else [str(self._run_as.pw_uid), str(self._run_as.pw_gid)]
+        )
+        return subprocess.Popen(
+            [
+                sys.executable,
+                str(WATCHDOG_SCRIPT),
+                str(os.getpid()),
+                str(self._bin_directory / "pg_ctl"),
+                str(root_directory),
+                *run_as,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+
+    def _stop_watchdog(self) -> None:
+        watchdog: subprocess.Popen[bytes] | None = self._watchdog
+        if watchdog is None:
+            return
+
+        watchdog.terminate()
+        watchdog.wait(timeout=WATCHDOG_EXIT_TIMEOUT_SECONDS)
+        self._watchdog = None
 
     def conninfo(self, database_name: str, role_name: str) -> str:
         return make_conninfo(
