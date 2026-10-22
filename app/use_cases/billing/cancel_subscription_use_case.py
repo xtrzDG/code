@@ -33,6 +33,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.utilities.analytics.billing_event_drafts import billing_event
 
 
@@ -120,9 +121,7 @@ class CancelSubscriptionUseCase(
         pause_end: SubscriptionEventDocument | None = pause_ended_event(
             subscription, now, input_data.user_id
         )
-        if subscription.provider_reference is not None:
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        stop_recurring_charges(self._payment_gateway, subscription)
 
         for invoice in list_open_invoices(
             list_subscription_invoices(self._invoice_repo, subscription)

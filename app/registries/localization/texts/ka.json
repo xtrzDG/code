@@ -654,6 +654,9 @@
     "notifications.webhook_disabled.gone_detail": "მისამართმა {endpoint} გვიპასუხა, რომ აღარ არსებობს (410), და მოვლენებს აღარ იღებს. თუ მისამართი შეიცვალა, შეცვალეთ და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
     "calendar_sync.booking_system.guest_without_name": "სტუმარი",
     "notifications.deposit_refund.title": "დეპოზიტი დასაბრუნებელია · {business}",
-    "notifications.deposit_refund.detail": "{amount}, გადახდის კოდი {reference}: ჯავშანი {date}, {time}-ზე დროულად გაუქმდა თქვენი დეპოზიტის წესების მიხედვით. დააბრუნეთ დეპოზიტი თქვენს გადახდის კაბინეტში."
+    "notifications.deposit_refund.detail": "{amount}, გადახდის კოდი {reference}: ჯავშანი {date}, {time}-ზე დროულად გაუქმდა თქვენი დეპოზიტის წესების მიხედვით. დააბრუნეთ დეპოზიტი თქვენს გადახდის კაბინეტში.",
+    "billing.dunning.retry_declined": "{business}: {amount}-ის ჩამოჭრა ხელახლა ვცადეთ, მაგრამ ბარათი უარყოფილია. შემდეგი მცდელობა: {next_date}. გადახდა ან ბარათის შეცვლა შეგიძლიათ განყოფილებაში „ბილინგი“.",
+    "billing.dunning.last_retry_declined": "{business}: {amount}-ის ჩამოჭრის ბოლო მცდელობა უარყოფილია. გთხოვთ, გადაიხადოთ განყოფილებაში „ბილინგი“ ან შეცვალოთ ბარათი.",
+    "billing.dunning.payment_recovered": "{business}: {amount}-ის გადახდა განმეორებითი მცდელობით შესრულდა. გმადლობთ, ასისტენტი სრულ რეჟიმში აგრძელებს მუშაობას."
   }
 }

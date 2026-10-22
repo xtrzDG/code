@@ -32,6 +32,9 @@ from app.containers.adapters.media_collections_container import (
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
+from app.containers.adapters.payment_retry_collections_container import (
+    PaymentRetryCollectionsContainer,
+)
 from app.containers.adapters.privacy_collections_container import (
     PrivacyCollectionsContainer,
 )
@@ -160,6 +163,14 @@ class AppEdgesContainer(containers.DeclarativeContainer):
     # Billing details and invoice numbers (1114), one more sibling.
     invoicing_collections: InvoicingCollectionsContainer = Container(  # type: ignore[assignment]
         InvoicingCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # The retries of declined automatic charges (1214), one more sibling.
+    payment_retry_collections: PaymentRetryCollectionsContainer = Container(  # type: ignore[assignment]
+        PaymentRetryCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

@@ -8,7 +8,6 @@ from app.contracts.notification_utilities import StaffLinkSignerContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.subscription_lifecycle import OwnerWinBackFacilitatorContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.notifications import StaffLinkTarget
 from app.schemas.constants.subscription_lifecycle import WinBackStage
 from app.schemas.constants.users import BusinessMemberRole
@@ -19,7 +18,6 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.dto.win_back_messages import WinBackMessage
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
@@ -27,6 +25,10 @@ from app.schemas.typings.notifications.constrained_strings import (
 )
 from app.schemas.typings.subscription_lifecycle.constrained_integers import (
     WinBackRecipientCount,
+)
+from app.utilities.billing.owner_billing_contacts import (
+    owner_contact,
+    telegram_contacts,
 )
 from app.utilities.billing.win_back_texts import (
     CONVERSATIONS_LINE,
@@ -111,18 +113,14 @@ class OwnerWinBackFacilitator(OwnerWinBackFacilitatorContract):
         return WinBackRecipientCount(queued)
 
     def _contacts(self, business: BusinessDocument) -> list[ManagerContact]:
-        contacts: list[ManagerContact] = [
-            contact
-            for contact in business.manager_contacts
-            if contact.channel is ManagerContactChannel.TELEGRAM
-        ]
+        contacts: list[ManagerContact] = telegram_contacts(business)
         for member in business.members:
             if member.role is not BusinessMemberRole.OWNER:
                 continue
 
             owner: UserDocument | None = self._user_repo.get(member.user_id)
             if owner is not None:
-                contact: ManagerContact | None = _owner_contact(owner, business)
+                contact: ManagerContact | None = owner_contact(owner, business)
                 if contact is not None:
                     contacts.append(contact)
 
@@ -164,28 +162,3 @@ class OwnerWinBackFacilitator(OwnerWinBackFacilitatorContract):
             resolved = resolved.replace("{" + name + "}", value)
 
         return resolved
-
-
-def _owner_contact(
-    owner: UserDocument, business: BusinessDocument
-) -> ManagerContact | None:
-    """An owner at their sign-in identity, in their cabinet language."""
-
-    name = ManagerName(str(owner.display_name or business.name))
-    if owner.email is not None:
-        return ManagerContact(
-            name=name,
-            channel=ManagerContactChannel.EMAIL,
-            address=ManagerContactAddress(str(owner.email)),
-            language=owner.locale,
-        )
-
-    if owner.phone_number is not None:
-        return ManagerContact(
-            name=name,
-            channel=ManagerContactChannel.WHATSAPP,
-            address=ManagerContactAddress(str(owner.phone_number)),
-            language=owner.locale,
-        )
-
-    return None

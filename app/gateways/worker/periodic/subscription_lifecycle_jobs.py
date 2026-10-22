@@ -3,7 +3,9 @@ The subscription lifecycle's periodic jobs of the background worker:
 seasonal pauses start, bill their months and resume every hour, before the
 grace job looks at the same subscriptions (`RunSubscriptionPausesUseCase`);
 win-back messages go out every hour, in each business's daytime
-(`SendWinBackMessagesUseCase`). Registered with one line each in the
+(`SendWinBackMessagesUseCase`); declined automatic charges are tried
+again every hour once their retry is due (`RetryFailedPaymentsUseCase`,
+days 1, 3 and 6 of the grace period). Registered with one line each in the
 worker's list of periodic jobs.
 """
 
@@ -14,6 +16,7 @@ from app.schemas.typings.platform.constrained_strings import JobName
 
 RUN_SUBSCRIPTION_PAUSES_JOB: JobName = JobName("run_subscription_pauses")
 SEND_WIN_BACK_MESSAGES_JOB: JobName = JobName("send_win_back_messages")
+RETRY_FAILED_PAYMENTS_JOB: JobName = JobName("retry_failed_payments")
 HOURLY: JobIntervalSeconds = JobIntervalSeconds(60 * 60)
 
 
@@ -30,4 +33,12 @@ def send_win_back_messages_job(operator: PeriodicJobOperator) -> PeriodicJobSpec
 
     return PeriodicJobSpec(
         name=SEND_WIN_BACK_MESSAGES_JOB, interval_seconds=HOURLY, operator=operator
+    )
+
+
+def dunning_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:
+    """The periodic job spec that runs `operator` every hour."""
+
+    return PeriodicJobSpec(
+        name=RETRY_FAILED_PAYMENTS_JOB, interval_seconds=HOURLY, operator=operator
     )

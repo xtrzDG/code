@@ -67,6 +67,18 @@ class DiscountPercent(BaseConstrainedTypedInt):
     le = 100
 
 
+class DunningRecipientCount(BaseConstrainedTypedInt):
+    """
+    How many owner addresses (e-mails, Telegram chats) a notice about a
+    retried charge was queued for.
+
+    Example:
+        reached = DunningRecipientCount(2)
+    """
+
+    ge = 0
+
+
 class ExchangeRateDayNumber(BaseConstrainedTypedInt):
     """
     The calendar day a rate was set for as the number YYYYMMDD, so the
@@ -114,6 +126,57 @@ class OverageVoiceMinutes(BaseConstrainedTypedInt):
     """Voice minutes used above the package of a plan in one period."""
 
     ge = 0
+
+
+class PaymentCardExpiryMonth(BaseConstrainedTypedInt):
+    """
+    Month (1 to 12) a saved card expires in, as the payment provider names it.
+
+    Example:
+        expires_in = PaymentCardExpiryMonth(9)
+    """
+
+    ge = 1
+    le = 12
+
+
+class PaymentCardExpiryYear(BaseConstrainedTypedInt):
+    """
+    Four-digit year a saved card expires in.
+
+    Example:
+        expires_in = PaymentCardExpiryYear(2029)
+    """
+
+    ge = 2000
+    le = 2199
+
+
+class PaymentRetryAttempt(BaseConstrainedTypedInt):
+    """
+    Which retry of a declined automatic charge this is (1 to 3): the
+    platform charges the saved card again on days 1, 3 and 6 of the grace
+    period.
+
+    Example:
+        last_try = PaymentRetryAttempt(3)
+    """
+
+    ge = 1
+    le = 3
+
+
+class PaymentRetryDayOffset(BaseConstrainedTypedInt):
+    """
+    Day of the grace period a retry of a declined charge is due on, counted
+    from the decline (day 1 is the next day).
+
+    Example:
+        second_retry_day = PaymentRetryDayOffset(3)
+    """
+
+    ge = 1
+    le = 30
 
 
 class PackageUsagePercent(BaseConstrainedTypedInt):

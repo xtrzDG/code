@@ -259,6 +259,10 @@ services:
         sync: false
       - key: FLITT_SECRET_KEY
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
       # the seller on invoices (SELLER_LEGAL_NAME, SELLER_COUNTRY_CODE and
       # PLATFORM_VAT_REGISTERED have defaults; docs/LAUNCH.md 4.7.1)
       - key: SELLER_TAX_ID
@@ -617,6 +621,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: FLITT_SECRET_KEY
+      - key: STRIPE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: STRIPE_SECRET_KEY
+      - key: STRIPE_WEBHOOK_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: STRIPE_WEBHOOK_SECRET
       - key: SELLER_TAX_ID
         fromService:
           type: web
@@ -997,6 +1011,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: FLITT_SECRET_KEY
+      - key: STRIPE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: STRIPE_SECRET_KEY
+      - key: STRIPE_WEBHOOK_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: STRIPE_WEBHOOK_SECRET
       - key: SELLER_TAX_ID
         fromService:
           type: web

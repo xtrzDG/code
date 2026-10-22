@@ -654,6 +654,9 @@
     "notifications.webhook_disabled.gone_detail": "Die Adresse {endpoint} hat geantwortet, dass es sie nicht mehr gibt (410), und erhält keine Ereignisse mehr. Wenn sie umgezogen ist, ändern Sie sie unter Einstellungen → Integrationen und schalten Sie sie wieder ein.",
     "calendar_sync.booking_system.guest_without_name": "Gast",
     "notifications.deposit_refund.title": "Eine Anzahlung ist zu erstatten · {business}",
-    "notifications.deposit_refund.detail": "{amount}, Referenz {reference}: Die Buchung am {date} um {time} wurde gemäß Ihren Anzahlungsregeln rechtzeitig storniert. Erstatten Sie die Anzahlung in Ihrem Zahlungskonto."
+    "notifications.deposit_refund.detail": "{amount}, Referenz {reference}: Die Buchung am {date} um {time} wurde gemäß Ihren Anzahlungsregeln rechtzeitig storniert. Erstatten Sie die Anzahlung in Ihrem Zahlungskonto.",
+    "billing.dunning.retry_declined": "{business}: Wir haben erneut versucht, {amount} abzubuchen, aber die Karte wurde abgelehnt. Der nächste Versuch ist am {next_date}. Sie können unter „Tarif und Abrechnung“ zahlen oder die Karte ändern.",
+    "billing.dunning.last_retry_declined": "{business}: Der letzte Versuch, {amount} abzubuchen, wurde abgelehnt. Bitte zahlen Sie unter „Tarif und Abrechnung“ oder ändern Sie die Karte.",
+    "billing.dunning.payment_recovered": "{business}: Die Zahlung von {amount} ist beim erneuten Versuch durchgegangen. Danke, der Assistent arbeitet weiter im vollen Betrieb."
   }
 }

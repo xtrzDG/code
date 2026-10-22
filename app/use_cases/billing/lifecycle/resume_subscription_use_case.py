@@ -34,6 +34,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 
 
 class ResumeSubscriptionUseCase(
@@ -143,10 +144,8 @@ class ResumeSubscriptionUseCase(
         ended: SubscriptionEventDocument | None = pause_ended_event(
             subscription, now, input_data.user_id
         )
-        if subscription.provider_reference is not None:
-            # A schedule a pause checkout started from the pause's end.
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        # A schedule a pause checkout started from the pause's end.
+        stop_recurring_charges(self._payment_gateway, subscription)
 
         subscription.status = SubscriptionStatus.ACTIVE
         subscription.period_end = now

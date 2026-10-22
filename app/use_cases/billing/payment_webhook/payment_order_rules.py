@@ -74,9 +74,15 @@ def is_stray_charge(
 def build_order_reference(
     payment_order: PaymentOrderDocument,
 ) -> PaymentProviderReference:
-    """Provider reference of the automatic charges a checkout started."""
+    """
+    Provider reference of the automatic charges a checkout started: the
+    provider's own schedule (Stripe's subscription) once it said which,
+    else our order id (Flitt's schedule runs under it).
+    """
 
-    return PaymentProviderReference(str(payment_order.id))
+    return payment_order.schedule_reference or PaymentProviderReference(
+        str(payment_order.id)
+    )
 
 
 def stop_stray_schedule(
@@ -85,4 +91,6 @@ def stop_stray_schedule(
 ) -> None:
     """Stop the automatic charges of a schedule nothing books any more."""
 
-    payment_gateway.stop_recurring(build_order_reference(payment_order))
+    payment_gateway.stop_recurring(
+        payment_order.provider, build_order_reference(payment_order)
+    )

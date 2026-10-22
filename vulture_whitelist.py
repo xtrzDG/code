@@ -703,3 +703,7 @@ _.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+
+# The card on file (GET /v1/businesses/{id}/billing/payment-method): how the
+# last retry of a declined charge went, read by the cabinet's billing page.
+_.last_outcome  # app/schemas/dto/payment_methods.py

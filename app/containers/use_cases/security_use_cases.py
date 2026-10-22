@@ -82,6 +82,7 @@ class SecurityUseCasesContainer(AccessUseCasesContainer):
         calendar_link_repo=repositories.resource_calendar_link_repo,
         webhook_endpoint_repo=repositories.webhook_endpoint_repo,
         deposit_settings_repo=repositories.deposit_settings_repo,
+        payment_order_repo=repositories.payment_order_repo,
     )
     totp_secret_resealer: Factory[TotpSecretResealer] = Factory(
         TotpSecretResealer,

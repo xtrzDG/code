@@ -39,10 +39,6 @@ from app.use_cases.billing.invoice_usage_overage_use_case import (
 )
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
 from app.use_cases.billing.open_subscription_use_case import OpenSubscriptionUseCase
-from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
-    ProcessPaymentWebhookUseCase,
-)
-from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
@@ -50,6 +46,7 @@ from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.admin_cabinet_parts import build_open_client_cabinet
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
 from tests.billing.billing_infrastructure import BillingInfrastructure
+from tests.billing.payment_parts import PaymentParts, build_payment_parts
 from tests.foundation.access_support import (
     ACCESS_SETTINGS,
     AuthorizeFlaggedAdmin,
@@ -141,17 +138,10 @@ class BillingUseCases(BillingInfrastructure):
             product_events=self.product_events,
             subscription_event_repo=self.subscription_event_repo,
         )
-        self.start_checkout = StartCheckoutUseCase(
-            authorize_business_access=authorize,
-            subscription_repo=self.subscription_repo,
-            invoice_repo=self.invoice_repo,
-            payment_order_repo=self.payment_order_repo,
-            issue_due_invoices=self.issue_due_invoices,
-            payment_gateway=self.payment_gateway,
-            app_settings=self.settings,
-            wall_clock=wall_clock,
-            invoice_issuing=self.invoicing.invoice_issuing,
+        self.payments: PaymentParts = build_payment_parts(
+            self, authorize, self.issue_due_invoices, self.product_events
         )
+        self.start_checkout = self.payments.start_checkout
         self.choose_setup_option = ChooseSetupOptionUseCase(
             subscription_repo=self.subscription_repo,
             invoice_repo=self.invoice_repo,
@@ -175,21 +165,7 @@ class BillingUseCases(BillingInfrastructure):
             change_plan=self.change_plan,
             start_checkout=self.start_checkout,
         )
-        self.process_webhook = ProcessPaymentWebhookUseCase(
-            payment_gateway=self.payment_gateway,
-            payment_order_repo=self.payment_order_repo,
-            subscription_repo=self.subscription_repo,
-            invoice_repo=self.invoice_repo,
-            business_repo=self.business_repo,
-            user_repo=self.user_repo,
-            plan_registry=self.plan_registry,
-            issue_due_invoices=self.issue_due_invoices,
-            manager_notifier=self.notifier,
-            billing_notice_transformer=self.notice_transformer,
-            wall_clock=wall_clock,
-            product_events=self.product_events,
-            referral_earnings=self.referral_earnings,
-        )
+        self.process_webhook = self.payments.process_webhook
         self.end_trials = EndTrialsUseCase(
             business_repo=self.business_repo,
             subscription_repo=self.subscription_repo,

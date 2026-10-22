@@ -1586,6 +1586,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/payment-method": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Payment Method */
+        get: operations["billing_get_payment_method"];
+        put?: never;
+        /** Start Card Setup */
+        post: operations["billing_start_card_setup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/plan": {
         parameters: {
             query?: never;
@@ -4871,6 +4889,23 @@ export interface paths {
         put?: never;
         /** Receive Flitt Webhook */
         post: operations["billing_receive_flitt_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payments/stripe/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receive Stripe Webhook */
+        post: operations["billing_receive_stripe_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8400,6 +8435,19 @@ export interface components {
          * @enum {string}
          */
         CancellationReason: "too_expensive" | "seasonal_break" | "not_enough_use" | "missing_feature" | "answer_quality" | "switched_provider" | "closing_business" | "other";
+        /**
+         * CardSetupSessionView
+         * @description The provider's page that saves the card: Flitt's verification page or
+         *     Stripe's checkout (a first card) or billing portal (a new one).
+         *     `payment_order_id` names the order a saved card reports back to.
+         */
+        CardSetupSessionView: {
+            /** Payment Order Id */
+            payment_order_id?: string | null;
+            provider: components["schemas"]["PaymentProvider"];
+            /** Url */
+            url: string;
+        };
         /**
          * CarrierForwardingInstructions
          * @description Ready-to-dial codes of one named mobile carrier.
@@ -14272,6 +14320,22 @@ export interface components {
          */
         PauseUnavailableReason: "feature_off" | "not_active" | "not_monthly" | "already_paused" | "allowance_used";
         /**
+         * PaymentCardView
+         * @description The saved card: payment system, last four digits and expiry.
+         */
+        PaymentCardView: {
+            /** Brand */
+            brand?: string | null;
+            /** Expiry Month */
+            expiry_month?: number | null;
+            /** Expiry Year */
+            expiry_year?: number | null;
+            /** Last Digits */
+            last_digits?: string | null;
+            /** Saved At */
+            saved_at: number;
+        };
+        /**
          * PaymentLinkKind
          * @description An owner's payment page: one fixed address that charges one amount
          *     (STATIC, named by the policies it fits), or an address template the
@@ -14296,6 +14360,67 @@ export interface components {
             label: string;
             /** Preview */
             preview: string;
+        };
+        /**
+         * PaymentMethodView
+         * @description The card on file of a business. `provider` charges it (the one its
+         *     country is served by when no card is saved yet); `can_save_card` is
+         *     True when a card can be saved or replaced now (a trial or a paid
+         *     subscription without an unpaid bill: an unpaid bill is paid instead,
+         *     which saves the card too); `is_trial_card_prompt_due` asks for a card
+         *     from day 10 of a trial that has none.
+         */
+        PaymentMethodView: {
+            /** Can Save Card */
+            can_save_card: boolean;
+            card?: components["schemas"]["PaymentCardView"] | null;
+            /** Has Auto Debit */
+            has_auto_debit: boolean;
+            /**
+             * Is Trial Card Prompt Due
+             * @default false
+             */
+            is_trial_card_prompt_due: boolean;
+            provider: components["schemas"]["PaymentProvider"];
+            retry?: components["schemas"]["PaymentRetryView"] | null;
+            /** Trial Ends At */
+            trial_ends_at?: number | null;
+        };
+        /**
+         * PaymentProvider
+         * @description Payment service that charges owners: Flitt (concept: auto-debit) in
+         *     Georgia and Armenia, Stripe in the EU, the US and Israel
+         *     (`PaymentProviderRegistry`). STRIPE is stored only once the
+         *     `stripe_payments` release gate opens.
+         * @enum {string}
+         */
+        PaymentProvider: "flitt" | "stripe";
+        /**
+         * PaymentRetryOutcome
+         * @description How one retry of a declined automatic charge went. CLAIMED: a worker
+         *     took it and is charging; APPROVED and DECLINED: the provider's answer
+         *     (its notification settles the invoice); PROCESSING: the answer comes
+         *     by notification; FAILED: the provider could not be reached or refused
+         *     the request; NOT_POSSIBLE: nothing to charge again with (no saved card
+         *     or provider charge); SKIPPED: a later retry was due by the time the job
+         *     ran, so this one was never charged.
+         * @enum {string}
+         */
+        PaymentRetryOutcome: "claimed" | "approved" | "declined" | "processing" | "failed" | "not_possible" | "skipped";
+        /**
+         * PaymentRetryView
+         * @description Where the retries of a declined automatic charge stand: the last one
+         *     made and how it went, the next one due, and the end of the grace
+         *     period after which the assistant only takes requests.
+         */
+        PaymentRetryView: {
+            /** Grace Until */
+            grace_until?: number | null;
+            /** Last Attempt */
+            last_attempt?: number | null;
+            last_outcome?: components["schemas"]["PaymentRetryOutcome"] | null;
+            /** Next Retry At */
+            next_retry_at?: number | null;
         };
         /**
          * PaymentStatus
@@ -28693,6 +28818,191 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingOverview"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    billing_get_payment_method: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    billing_start_card_setup: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** Return Url */
+                    return_url?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardSetupSessionView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -50797,6 +51107,91 @@ export interface operations {
             query?: never;
             header?: {
                 "content-type"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentWebhookReceipt"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    billing_receive_stripe_webhook: {
+        parameters: {
+            query?: never;
+            header?: {
+                "stripe-signature"?: string | null;
             };
             path?: never;
             cookie?: never;

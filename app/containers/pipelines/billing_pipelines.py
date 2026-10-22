@@ -31,6 +31,12 @@ class BillingPipelinesContainer(containers.DeclarativeContainer):
     start_checkout_pipeline = orchestrator_pipeline(
         billing_orchestrators.start_checkout_orchestrator
     )
+    get_payment_method_pipeline = orchestrator_pipeline(
+        billing_orchestrators.get_payment_method_orchestrator
+    )
+    start_card_setup_pipeline = orchestrator_pipeline(
+        billing_orchestrators.start_card_setup_orchestrator
+    )
     subscribe_pipeline = orchestrator_pipeline(
         billing_orchestrators.subscribe_orchestrator
     )
@@ -63,3 +69,4 @@ class BillingPipelinesContainer(containers.DeclarativeContainer):
     refresh_exchange_rates_pipeline = orchestrator_pipeline(
         billing_orchestrators.refresh_exchange_rates_orchestrator
     )
+    dunning_pipeline = orchestrator_pipeline(billing_orchestrators.dunning_orchestrator)

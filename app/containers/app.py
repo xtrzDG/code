@@ -51,6 +51,7 @@ class AppContainer(AppEdgesContainer):
         retention_collections=AppEdgesContainer.adapters.collections,
         retention_call_adapters=AppEdgesContainer.adapters.calls,
         invoicing_collections=AppEdgesContainer.invoicing_collections,
+        retry_collections=AppEdgesContainer.payment_retry_collections,
         payment_collections=AppEdgesContainer.adapters.collections,
         operations_collections=AppEdgesContainer.operations_collections,
         health_collections=AppEdgesContainer.adapters.collections,

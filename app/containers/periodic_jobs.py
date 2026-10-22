@@ -67,6 +67,7 @@ from app.gateways.worker.periodic.send_subprocessor_notices import (
 )
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
 from app.gateways.worker.periodic.subscription_lifecycle_jobs import (
+    dunning_job,
     run_subscription_pauses_job,
     send_win_back_messages_job,
 )
@@ -128,6 +129,7 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             run_subscription_pauses_job,
             operator=operators.lifecycle.run_subscription_pauses_operator,
         ),
+        Factory(dunning_job, operator=operators.billing.dunning_operator),  # 1214
         Factory(
             PeriodicJobSpec,
             name=ENFORCE_GRACE_PERIODS_JOB,
@@ -178,8 +180,7 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             sweep_rate_limit_buckets_job,
             operator=operators.platform.sweep_rate_limit_buckets_operator,
         ),
-        # The inbox's sweeper: lost jobs queued again, unanswered messages
-        # handed to staff.
+        # The inbox's sweeper: lost jobs requeued, unanswered messages to staff.
         Factory(
             sweep_stale_inbound_events_job,
             operator=operators.channels.sweep_stale_inbound_events_operator,

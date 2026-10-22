@@ -37,6 +37,12 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
     start_checkout_operator = pipeline_operator(
         billing_pipelines.start_checkout_pipeline, storage_scope
     )
+    get_payment_method_operator = pipeline_operator(
+        billing_pipelines.get_payment_method_pipeline, storage_scope
+    )
+    start_card_setup_operator = pipeline_operator(
+        billing_pipelines.start_card_setup_pipeline, storage_scope
+    )
     subscribe_operator = pipeline_operator(
         billing_pipelines.subscribe_pipeline, storage_scope
     )
@@ -68,4 +74,8 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
     )
     refresh_exchange_rates_operator = platform_pipeline_operator(
         billing_pipelines.refresh_exchange_rates_pipeline, storage_scope
+    )
+    # Declined automatic charges retried on days 1, 3 and 6 of grace (1214).
+    dunning_operator = platform_pipeline_operator(
+        billing_pipelines.dunning_pipeline, storage_scope
     )

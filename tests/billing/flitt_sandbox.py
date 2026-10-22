@@ -18,6 +18,10 @@ class FlittSandbox:
         default_factory=list[dict[str, object]]
     )
     stopped_orders: list[str] = field(default_factory=list[str])
+    recurring_orders: list[dict[str, object]] = field(
+        default_factory=list[dict[str, object]]
+    )
+    recurring_status: str = "approved"
     refusal: dict[str, object] | None = None
     http_status: int = 200
 
@@ -50,12 +54,23 @@ class FlittSandbox:
                 200, json={"response": {"response_status": "success"}}
             )
 
-        self.checkout_orders.append(order)
-        # As Flitt answers: a signed 2.0 envelope, no response_status.
+        if request.url.path == "/api/recurring/":
+            self.recurring_orders.append(order)
+            answer_fields: dict[str, object] = {
+                "response_status": "success",
+                "order_status": self.recurring_status,
+                "payment_id": 802345900 + len(self.recurring_orders),
+                "response_description": (
+                    "" if self.recurring_status == "approved" else "Card declined"
+                ),
+            }
+        else:
+            self.checkout_orders.append(order)
+            answer_fields = {"checkout_url": CHECKOUT_URL, "payment_id": 802345671}
+
+        # As Flitt answers: a signed 2.0 envelope.
         answer: str = base64.b64encode(
-            json.dumps(
-                {"order": {"checkout_url": CHECKOUT_URL, "payment_id": 802345671}}
-            ).encode()
+            json.dumps({"order": answer_fields}).encode()
         ).decode()
         signature: str = hashlib.sha1(
             f"{FLITT_SECRET_KEY}|{answer}".encode()

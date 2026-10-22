@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
 from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
+from app.containers.use_cases.payment_use_cases import PaymentUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.billing.payment_webhook_orchestrator import (
     PaymentWebhookOrchestrator,
@@ -22,6 +23,7 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
 
     billing_use_cases: BillingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     invoicing_use_cases: InvoicingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    payment_use_cases: PaymentUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Subscribing with payment now: open, switch plan, checkout.
     subscribe_orchestrator: Factory[
@@ -30,7 +32,7 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
         SubscribeOrchestrator,
         open_subscription=billing_use_cases.open_subscription_use_case,
         change_plan=billing_use_cases.change_plan_use_case,
-        start_checkout=billing_use_cases.start_checkout_use_case,
+        start_checkout=payment_use_cases.start_checkout_use_case,
     )
 
     # --- Billing and payments.
@@ -47,14 +49,20 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
         billing_use_cases.cancel_subscription_use_case
     )
     start_checkout_orchestrator = use_case_orchestrator(
-        billing_use_cases.start_checkout_use_case
+        payment_use_cases.start_checkout_use_case
+    )
+    get_payment_method_orchestrator = use_case_orchestrator(
+        payment_use_cases.get_payment_method_use_case
+    )
+    start_card_setup_orchestrator = use_case_orchestrator(
+        payment_use_cases.start_card_setup_use_case
     )
     # The payment is applied, then each invoice it paid is e-mailed.
     process_payment_webhook_orchestrator: Factory[
         OrchestratorContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
     ] = Factory(
         PaymentWebhookOrchestrator,
-        process_payment_webhook=billing_use_cases.process_payment_webhook_use_case,
+        process_payment_webhook=payment_use_cases.process_payment_webhook_use_case,
         send_payment_documents=invoicing_use_cases.send_payment_documents_use_case,
     )
 
@@ -84,4 +92,7 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     )
     refresh_exchange_rates_orchestrator = use_case_orchestrator(
         billing_use_cases.refresh_exchange_rates_use_case
+    )
+    dunning_orchestrator = use_case_orchestrator(
+        payment_use_cases.retry_failed_payments_use_case
     )

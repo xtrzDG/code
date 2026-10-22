@@ -30,6 +30,7 @@ from app.clients.openai.openai_transcription_client import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.stripe.stripe_client import StripeClient
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.clients.telegram.telegram_file_client import TelegramFileClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
@@ -51,6 +52,7 @@ from app.containers.factories import (
     build_whatsapp_authentication_client,
 )
 from app.containers.notification_factories import build_web_push_client
+from app.containers.payment_factories import build_stripe_client
 from app.containers.telemetry_factories import build_pool_instruments
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.channel_clients import ElevenLabsApiClientContract
@@ -114,6 +116,10 @@ class ClientsContainer(containers.DeclarativeContainer):
     )
     flitt_client: Singleton[FlittClient | None] = Singleton(
         build_flitt_client,
+        settings=config.app_settings,
+    )
+    stripe_client: Singleton[StripeClient | None] = Singleton(
+        build_stripe_client,
         settings=config.app_settings,
     )
     langfuse_ingestion_client: Singleton[LangfuseIngestionClient | None] = Singleton(

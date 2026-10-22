@@ -26,6 +26,7 @@ from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSec
 DEFAULT_FLITT_API_BASE_URL: str = "https://pay.flitt.com"
 CHECKOUT_URL_PATH: str = "/api/checkout/url/"
 SUBSCRIPTION_PATH: str = "/api/subscription/"
+RECURRING_PATH: str = "/api/recurring/"
 REQUEST_TIMEOUT_SECONDS: float = 15.0
 SUCCESS_RESPONSE_STATUS: str = "success"
 STOP_SUBSCRIPTION_ACTION: str = "stop"
@@ -74,6 +75,22 @@ class FlittClient(ClientContract):
         """
 
         return self._post(CHECKOUT_URL_PATH, order_parameters)
+
+    def charge_recurring(
+        self,
+        order_parameters: Mapping[str, object],
+    ) -> dict[str, object]:
+        """
+        Charge a saved card's token (`rectoken`) at once; returns the
+        response parameters with the `order_status`. A declined card is an
+        answer, not an error.
+
+        Raises:
+            ExternalServiceError: transport error, HTTP error, bad response
+                signature, or a refusal of the request by Flitt.
+        """
+
+        return self._post(RECURRING_PATH, order_parameters)
 
     def stop_subscription(self, order_id: str) -> None:
         """Stop the automatic charges of a subscription order."""

@@ -16,6 +16,7 @@ from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContaine
 from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
+from app.containers.use_cases.payment_use_cases import PaymentUseCasesContainer
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -169,6 +170,20 @@ class UseCasesContainer(BusinessUseCasesContainer):
     )
     subscription_lifecycle: SubscriptionLifecycleUseCasesContainer = Container(  # type: ignore[assignment]
         SubscriptionLifecycleUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        billing_use_cases=BusinessUseCasesContainer.billing,
+    )
+    # Payments: providers by country, checkout, webhooks, card on file (1214).
+    payments: PaymentUseCasesContainer = Container(  # type: ignore[assignment]
+        PaymentUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,

@@ -1,7 +1,11 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 
-from app.schemas.constants.payments import PaymentProvider, PaymentStatus
+from app.schemas.constants.payments import (
+    PaymentOrderPurpose,
+    PaymentProvider,
+    PaymentStatus,
+)
 from app.schemas.typings.billing.booleans import IsInitialPaymentSettled, IsRefundDue
 from app.schemas.typings.billing.constrained_integers import (
     BillingIntervalMonths,
@@ -19,6 +23,7 @@ from app.schemas.typings.billing.strings import (
     PaymentProviderReference,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 
 
@@ -34,8 +39,17 @@ class PaymentOrderDocument(BaseDocument):
     a second payment of bills already paid, or an automatic charge of a
     schedule the subscription no longer uses; the platform admin refunds
     it.
+
+    Version 2 (R17, optional): its `purpose` (a CARD_SETUP order charges
+    nothing now and only saves the card), the provider's own references of
+    what it started (`schedule_reference`: Stripe's subscription;
+    `customer_reference`: Stripe's customer, whose billing portal updates
+    the card) and the saved card's token (`sealed_card_token`: Flitt's
+    rectoken, sealed with the platform's key ring, for the retries of a
+    declined charge).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: PaymentOrderId = Field(default_factory=PaymentOrderId)
     business_id: BusinessId
     subscription_id: SubscriptionId
@@ -54,3 +68,7 @@ class PaymentOrderDocument(BaseDocument):
     processed_notification_keys: list[PaymentNotificationKey] = Field(
         default_factory=list[PaymentNotificationKey]
     )
+    purpose: PaymentOrderPurpose = PaymentOrderPurpose.CHECKOUT
+    schedule_reference: PaymentProviderReference | None = None
+    customer_reference: PaymentProviderReference | None = None
+    sealed_card_token: EncryptedChannelSecret | None = None

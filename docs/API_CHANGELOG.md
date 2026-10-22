@@ -11,6 +11,28 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-22 — payments by region: Stripe, the card on file and retries
+
+Spec: `b43d331afb64159b`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/payment-method`
+  (owners): the card on file (`PaymentMethodView`: who charges it —
+  `provider` `flitt` or `stripe` —, the card's brand, last four digits and
+  expiry, whether automatic charges run, whether a card can be saved now,
+  the trial's "Save card" prompt from day 10 and where the retries of a
+  declined charge stand: last attempt and outcome, next retry, end of
+  grace).
+- **Added** `POST /v1/businesses/{business_id}/billing/payment-method`
+  (owners, 201, `Idempotency-Key`): the provider's page that saves or
+  replaces the card without charging it now (`CardSetupSessionView`);
+  optional body `{"return_url"}` and `?language=`. 409 when no card can be
+  saved (an unpaid bill is paid instead; a paused or cancelled
+  subscription), 404 without a subscription.
+- **Added** `POST /v1/payments/stripe/webhook` (no token): Stripe events,
+  verified by their `Stripe-Signature` (403 when missing, wrong, stale or
+  Stripe is not configured), applied once each; answers like the Flitt
+  webhook (`PaymentWebhookReceipt`).
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

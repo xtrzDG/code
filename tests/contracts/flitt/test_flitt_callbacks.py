@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import pytest
+from typed_time_provider import Microseconds, WallClock
 
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
@@ -22,6 +23,7 @@ from app.schemas.typings.billing.strings import (
     PaymentWebhookContentType,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from tests.billing.billing_fakes import AdjustableClock
 from tests.billing.billing_settings import APP_BASE_URL
 from tests.billing.billing_testbed import bearer
 from tests.billing.flitt_test_clients import build_client
@@ -29,6 +31,8 @@ from tests.billing.route_world import RouteWorld
 from tests.contracts.contract_files import load_json_fixture, read_fixture_bytes
 from tests.contracts.flitt.flitt_signing import envelope, signed
 from tests.contracts.vendor_schemas import assert_inbound
+
+FIXED_CLOCK: WallClock[Microseconds] = AdjustableClock().wall_clock
 
 SPEC: str = "flitt_api.json"
 WEBHOOK_PATH: str = "/v1/payments/flitt/webhook"
@@ -41,7 +45,9 @@ DOCUMENTED_CALLBACKS: list[str] = [
 
 def adapter() -> FlittPaymentGatewayAdapter:
     return FlittPaymentGatewayAdapter(
-        flitt_client=build_client(), app_base_url=PublicBaseUrl(APP_BASE_URL)
+        flitt_client=build_client(),
+        app_base_url=PublicBaseUrl(APP_BASE_URL),
+        wall_clock=FIXED_CLOCK,
     )
 
 
@@ -89,12 +95,17 @@ def test_callbacks_match_the_documented_shape(fixture: str) -> None:
 def test_recorded_callbacks_verify_and_are_read(
     fixture: str, expected: dict[str, Any]
 ) -> None:
-    notification = adapter().read_notification(
-        PaymentWebhookDelivery(
-            body=PaymentWebhookBody(read_fixture_bytes("flitt", fixture).decode()),
-            content_type=PaymentWebhookContentType("application/json"),
+    notification = (
+        adapter()
+        .read_notification(
+            PaymentWebhookDelivery(
+                body=PaymentWebhookBody(read_fixture_bytes("flitt", fixture).decode()),
+                content_type=PaymentWebhookContentType("application/json"),
+            )
         )
+        .payment
     )
+    assert notification is not None
 
     read: dict[str, Any] = notification.model_dump(mode="json")
     assert {

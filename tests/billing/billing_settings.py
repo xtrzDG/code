@@ -17,6 +17,9 @@ FLITT_MERCHANT_ID: str = "1549901"
 FLITT_SECRET_KEY: str = "test"
 APP_BASE_URL: str = "https://api.assistant.example"
 CABINET_ORIGIN: str = "https://app.assistant.example"
+# Low-entropy test values, never real keys.
+STRIPE_SECRET_KEY: str = "sk_test_0000"
+STRIPE_WEBHOOK_SECRET: str = "whsec_test_0000"
 CHECKOUT_URL: str = "https://pay.flitt.com/merchants/test/default/index.html?token=t1"
 
 

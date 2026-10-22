@@ -53,6 +53,7 @@ from app.adapters.storage.conversation_upgrades import upgrade_conversations_fro
 from app.adapters.storage.knowledge_item_upgrades import (
     upgrade_knowledge_items_from_v1,
 )
+from app.adapters.storage.subscription_upgrades import upgrade_subscriptions_from_v4
 from app.adapters.storage.topic_upgrades import upgrade_conversation_topics_from_v1
 from app.schemas.exceptions.storage_errors import UnreadableStoredDocumentError
 from app.schemas.typings.storage.constrained_integers import (
@@ -91,6 +92,9 @@ DOCUMENT_UPCASTERS: Mapping[
     },
     DocumentCollectionName("knowledge_items"): {
         DocumentSchemaVersionNumber(1): upgrade_knowledge_items_from_v1,
+    },
+    DocumentCollectionName("subscriptions"): {
+        DocumentSchemaVersionNumber(4): upgrade_subscriptions_from_v4,
     },
 }
 NO_UPCASTERS: Mapping[DocumentSchemaVersionNumber, DocumentUpcaster] = {}

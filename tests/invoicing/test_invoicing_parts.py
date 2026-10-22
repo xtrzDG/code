@@ -3,7 +3,7 @@
 import pytest
 from typed_time_provider import Microseconds
 
-from app.adapters.payments.flitt_payment_gateway_adapter import read_card
+from app.adapters.payments.flitt_notification_reader import read_card
 from app.schemas.constants.billing import InvoiceKind, InvoiceStatus
 from app.schemas.constants.invoicing import BillingDocumentKind
 from app.schemas.domain.billing import InvoiceDocument

@@ -53,6 +53,9 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
+from app.containers.adapters.payment_retry_collections_container import (
+    PaymentRetryCollectionsContainer,
+)
 from app.containers.adapters.privacy_collections_container import (
     PrivacyCollectionsContainer,
 )
@@ -138,6 +141,8 @@ COLLECTION_CONTAINERS = (
     # The audit log's view counts, chain checkpoints and checks (1193).
     AuditChainCollectionsContainer,
     BrandCollectionsContainer,  # Brands and their shared knowledge (1192).
+    # The retries of declined automatic charges (1214).
+    PaymentRetryCollectionsContainer,
 )
 
 

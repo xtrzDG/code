@@ -35,6 +35,7 @@ from app.use_cases.shared.billing_records import (
     require_current_subscription,
 )
 from app.use_cases.shared.brand_billing import is_additional_location
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.use_cases.shared.subscription_pricing import price_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -126,9 +127,8 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             return self._overview(business, input_data)
 
         now: Microseconds = self._wall_clock.now_unix()
-        if is_charge_changed and subscription.provider_reference is not None:
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        if is_charge_changed:
+            stop_recurring_charges(self._payment_gateway, subscription)
 
         self._void_outdated_invoices(
             subscription,

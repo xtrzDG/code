@@ -17,6 +17,7 @@ from app.use_cases.billing.payment_webhook.payment_invoice_settlement import (
 from app.use_cases.billing.payment_webhook.payment_order_rules import (
     build_order_reference,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.use_cases.shared.subscription_payment_transitions import (
     resume_cancelled_subscription,
 )
@@ -39,13 +40,7 @@ def settle_checkout_payment(
     REFUND_DUE.
     """
 
-    order_reference: PaymentProviderReference = build_order_reference(payment_order)
-    previous_reference: PaymentProviderReference | None = (
-        subscription.provider_reference
-    )
-    if previous_reference is not None and previous_reference != order_reference:
-        payment_gateway.stop_recurring(previous_reference)
-
+    replace_charge_schedule(payment_gateway, payment_order, subscription)
     outcome: PaymentWebhookOutcome = PaymentWebhookOutcome.APPLIED
     settled_count: int = settle_order_invoices(
         invoice_repo,
@@ -63,9 +58,27 @@ def settle_checkout_payment(
         outcome = PaymentWebhookOutcome.REFUND_DUE
 
     payment_order.is_initial_payment_settled = True
-    subscription.provider_reference = order_reference
     resume_cancelled_subscription(subscription, now)
     return outcome
+
+
+def replace_charge_schedule(
+    payment_gateway: PaymentGatewayAdapterContract,
+    payment_order: PaymentOrderDocument,
+    subscription: SubscriptionDocument,
+) -> None:
+    """
+    The order's automatic charges become the subscription's, at its
+    provider; those of an earlier checkout or card setup stop, so only one
+    schedule ever runs (the earlier card is forgotten with them).
+    """
+
+    order_reference: PaymentProviderReference = build_order_reference(payment_order)
+    if subscription.provider_reference != order_reference:
+        stop_recurring_charges(payment_gateway, subscription)
+
+    subscription.provider_reference = order_reference
+    subscription.payment_provider = payment_order.provider
 
 
 def decline_checkout_payment(

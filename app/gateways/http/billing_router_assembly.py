@@ -7,6 +7,7 @@ from app.gateways.http.billing_document_routes import build_billing_document_rou
 from app.gateways.http.billing_lifecycle_routes import build_billing_lifecycle_router
 from app.gateways.http.billing_routes import build_billing_router
 from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
+from app.gateways.http.payment_method_routes import build_payment_method_router
 from app.gateways.http.user_authentication import CurrentUserDependency
 
 
@@ -14,9 +15,9 @@ def build_billing_routers(
     operators: OperatorsContainer,
     current_user: CurrentUserDependency,
 ) -> list[APIRouter]:
-    """The billing page, plan changes, checkout and the payment webhook; the
-    billing details and the invoice and receipt PDFs; the cancel dialog's
-    offers and the seasonal pause."""
+    """The billing page, plan changes, checkout and the payment webhooks; the
+    card on file; the billing details and the invoice and receipt PDFs; the
+    cancel dialog's offers and the seasonal pause."""
 
     billing = operators.billing
     lifecycle = operators.lifecycle
@@ -28,6 +29,13 @@ def build_billing_routers(
             cancel_subscription_operator=billing.cancel_subscription_operator(),
             start_checkout_operator=billing.start_checkout_operator(),
             subscribe_operator=billing.subscribe_operator(),
+            payment_webhook_operator=billing.process_payment_webhook_operator(),
+            current_user=current_user,
+            idempotent=idempotency_of(operators, current_user),
+        ),
+        build_payment_method_router(
+            get_payment_method_operator=billing.get_payment_method_operator(),
+            start_card_setup_operator=billing.start_card_setup_operator(),
             payment_webhook_operator=billing.process_payment_webhook_operator(),
             current_user=current_user,
             idempotent=idempotency_of(operators, current_user),

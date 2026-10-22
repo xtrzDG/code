@@ -35,6 +35,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.utilities.billing.billing_periods import add_calendar_months
 
 
@@ -141,9 +142,7 @@ class PauseSubscriptionUseCase(
         input_data: PauseSubscriptionCommand,
     ) -> None:
         now: Microseconds = self._wall_clock.now_unix()
-        if subscription.provider_reference is not None:
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        stop_recurring_charges(self._payment_gateway, subscription)
 
         for invoice in list_open_invoices(invoices):
             # A renewal billed ahead for a period the pause now covers.

@@ -13,6 +13,7 @@ from urllib.parse import parse_qsl
 
 import httpx
 import pytest
+from typed_time_provider import Microseconds, WallClock
 
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
@@ -33,6 +34,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 )
 from app.schemas.typings.messaging.strings import SmsMessageText
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
+from tests.billing.billing_fakes import AdjustableClock
 from tests.billing.billing_settings import APP_BASE_URL, FLITT_MERCHANT_ID
 from tests.contracts.flitt.flitt_signing import TEST_SECRET, opened
 from tests.contracts.flitt.test_flitt_requests import checkout_request
@@ -44,6 +46,8 @@ from tests.contracts.live.live_network import (
     sandbox_secrets,
 )
 from tests.contracts.vendor_schemas import assert_inbound, assert_outbound
+
+FIXED_CLOCK: WallClock[Microseconds] = AdjustableClock().wall_clock
 
 pytestmark = pytest.mark.skipif(
     not is_live(), reason="The live smoke runs nightly with CONTRACTS_LIVE=1."
@@ -138,6 +142,7 @@ def test_flitt_test_merchant_checkout(network: RecordingNetwork) -> None:
             transport=network,
         ),
         app_base_url=PublicBaseUrl(APP_BASE_URL),
+        wall_clock=FIXED_CLOCK,
     )
 
     gateway.create_checkout(checkout_request())

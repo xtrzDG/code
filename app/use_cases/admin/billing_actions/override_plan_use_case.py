@@ -33,6 +33,7 @@ from app.use_cases.shared.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.use_cases.shared.subscription_pricing import price_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -122,10 +123,8 @@ class OverridePlanUseCase(UseCaseContract[OverridePlanCommand, AdminActionReceip
                 now,
             )
 
-        reference = subscription.provider_reference
-        if is_charge_changed and reference is not None:
-            self._payment_gateway.stop_recurring(reference)
-            subscription.provider_reference = None
+        if is_charge_changed and subscription.provider_reference is not None:
+            stop_recurring_charges(self._payment_gateway, subscription)
             self._subscription_repo.save(subscription)
 
         self._product_events.record(

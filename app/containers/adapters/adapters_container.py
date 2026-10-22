@@ -28,8 +28,8 @@ from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
 from app.adapters.locks.advisory_lock_adapter_factory import (
     build_advisory_lock_adapter,
 )
-from app.adapters.payments.flitt_payment_gateway_adapter import (
-    FlittPaymentGatewayAdapter,
+from app.adapters.payments.payment_gateway_router_adapter import (
+    PaymentGatewayRouterAdapter,
 )
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
@@ -72,6 +72,7 @@ from app.containers.factories import (
     build_llm_trace_facilitator,
     select_menu_extraction_model_id,
 )
+from app.containers.payment_factories import build_payment_gateway
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
@@ -285,12 +286,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
             settings=config.app_settings,
         ),
     )
-
-    # --- Payments.
-    payment_gateway: Singleton[FlittPaymentGatewayAdapter] = Singleton(
-        FlittPaymentGatewayAdapter,
+    # Payments: Flitt or Stripe by the provider each call names.
+    payment_gateway: Singleton[PaymentGatewayRouterAdapter] = Singleton(
+        build_payment_gateway,
         flitt_client=clients.flitt_client,
-        app_base_url=config.app_settings.provided.app_base_url,
+        stripe_client=clients.stripe_client,
+        settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     # Invoice and receipt PDFs (WeasyPrint, the system's Noto fonts).
     invoice_document_renderer: Singleton[WeasyPrintInvoiceDocumentRendererAdapter] = (
