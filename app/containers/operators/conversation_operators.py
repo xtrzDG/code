@@ -42,6 +42,9 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     archive_call_recording_operator = pipeline_operator(
         conversation_pipelines.archive_call_recording_pipeline, storage_scope
     )
+    discard_call_recording_operator = pipeline_operator(
+        conversation_pipelines.discard_call_recording_pipeline, storage_scope
+    )
 
     # --- Conversation feed.
     list_conversations_operator = pipeline_operator(

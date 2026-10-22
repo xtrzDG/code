@@ -14,6 +14,7 @@ from app.schemas.constants.calls import (
     TextBackStatus,
 )
 from app.schemas.constants.conversations import CallOutcome
+from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine, RecordedCall
 from app.schemas.typings.bookings.constrained_integers import (
@@ -21,11 +22,19 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.businesses.strings import BusinessName
-from app.schemas.typings.calls.booleans import IsCallSummaryGenerated
+from app.schemas.typings.calls.booleans import (
+    IsCallRemembered,
+    IsCallSummaryGenerated,
+    WantsCallMemory,
+)
 from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.strings import ContactName
+from app.schemas.typings.conversations.booleans import IsCallRecordingDeclined
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
+)
+from app.schemas.typings.conversations.constrained_strings import (
+    ConversationSummaryText,
 )
 from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.constrained_integers import (
@@ -60,11 +69,35 @@ class CallSummaryRequest(ImmutableDTO):
     missed_call: MissedCallDocument | None = None
 
 
+class CallSummaryOptions(ImmutableDTO):
+    """
+    What a call's summary request asks besides the staff's languages: the
+    caller's memory (customer memory is on and the call has a conversation
+    to remember), and whether the transcript goes without identifiers (the
+    caller declined the recording).
+    """
+
+    wants_memory: WantsCallMemory = False
+    is_recording_declined: IsCallRecordingDeclined = False
+
+
+class CallSummaryDraft(ImmutableDTO):
+    """
+    What the model wrote for one call: the staff's summaries (none when the
+    call has nothing to summarize or the model failed) and the caller's
+    memory in English (None when not asked for or not written).
+    """
+
+    summaries: list[CallSummary] = Field(default_factory=list[CallSummary])
+    memory: ConversationSummaryText | None = None
+
+
 class CallSummaryOutcome(ImmutableDTO):
     """Whether a summary was written now and how many staff alerts were queued."""
 
     is_generated: IsCallSummaryGenerated = False
     notified_count: DeliveredNotificationCount = DeliveredNotificationCount(0)
+    is_remembered: IsCallRemembered = False
 
 
 class CallBookingNote(ImmutableDTO):

@@ -39,8 +39,9 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingPart]
     playbacks; access is checked for every one of them).
 
     A call of another business, a call without a recording (no consent,
-    purged after the retention period, deleted with the contact's data) and
-    a recording the storage no longer has are all NotFoundError.
+    purged after the retention period, deleted with the contact's data), a
+    call whose caller declined the recording (its audio is being deleted)
+    and a recording the storage no longer has are all NotFoundError.
     """
 
     def __init__(
@@ -72,7 +73,7 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingPart]
         if call is None:
             raise NotFoundError(f"Call {input_data.call_id} was not found.")
 
-        if call.recording_path is None:
+        if call.recording_path is None or call.recording_declined:
             raise NotFoundError(NO_RECORDING_MESSAGE)
 
         audio: RecordingPart | None = self._recording_storage.read(

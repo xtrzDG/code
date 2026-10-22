@@ -36,6 +36,7 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import (
     AwaitsImprovement,
     IsAfterHours,
+    IsCallRecordingDeclined,
     IsFallbackModel,
     IsLlmToolError,
     IsSandboxConversation,
@@ -206,9 +207,10 @@ class MessageDocument(BaseDocument):
     optional. `tool_calls` may name offer_choices once its release gate is
     open (a new value). Version 8 (W19): they may name send_payment_link
     once its release gate is open (a new value; version 7 rows read as is).
+    Version 9 (W20): decline_recording likewise (version 8 rows read as is).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("8")
+    schema_version: SchemaVersion = SchemaVersion("9")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId
@@ -269,7 +271,8 @@ class CallDocument(BaseDocument):
 
     # 2: `guard_verdict` and `unverified_values` (both optional, so version 1
     # needs no upcaster). 3: `summaries` and `summarized_at` (optional too).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: `recording_declined` (False by default: no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: CallId = Field(default_factory=CallId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None
@@ -292,3 +295,6 @@ class CallDocument(BaseDocument):
     # of the business's owner and staff; empty until the call is summarized.
     summaries: list[CallSummary] = Field(default_factory=list[CallSummary])
     summarized_at: Microseconds | None = None
+    # The caller declined the recording: the audio is deleted after the call
+    # and `transcript` is kept without phone, e-mail, card or account numbers.
+    recording_declined: IsCallRecordingDeclined = False

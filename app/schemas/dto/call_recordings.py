@@ -69,6 +69,12 @@ class CallRecordingArchiveJobPayload(ImmutableDTO):
     call_id: CallId
 
 
+class CallRecordingDiscardJobPayload(ImmutableDTO):
+    """Payload of the queued job that deletes a declined call's recording."""
+
+    call_id: CallId
+
+
 class RecordingAudio(ImmutableDTO):
     """The audio of a call recording as stored, with its media type."""
 

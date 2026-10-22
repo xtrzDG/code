@@ -7,8 +7,9 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 
 # Tools offered while bookings are paused (unpaid subscription past grace):
-# taking a request, passing to staff, searching the knowledge base, and
-# telling a customer about the bookings they already have.
+# taking a request, passing to staff, searching the knowledge base, telling
+# a customer about the bookings they already have, and a caller's refusal
+# of the recording (never a paid feature).
 LEADS_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(
     {
         AssistantToolName.CREATE_LEAD,
@@ -16,10 +17,13 @@ LEADS_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(
         AssistantToolName.SEARCH_KNOWLEDGE,
         AssistantToolName.LIST_MY_BOOKINGS,
         AssistantToolName.OFFER_CHOICES,
+        AssistantToolName.DECLINE_RECORDING,
     }
 )
 # Channels without anything to tap: a call is spoken.
 CHANNELS_WITHOUT_CHOICES: frozenset[ChannelKind] = frozenset({ChannelKind.PHONE})
+# Only a call is recorded, so only a caller can decline the recording.
+RECORDED_CHANNELS: frozenset[ChannelKind] = frozenset({ChannelKind.PHONE})
 
 # A version that makes bookings or requests may ask their deposits.
 DEPOSIT_TAKING_TOOLS: frozenset[AssistantToolName] = frozenset(
@@ -47,13 +51,16 @@ def select_available_tools(
     join_waitlist for a version assembled before they existed), then, in a
     chat channel, offer_choices (every version gets it, so options to tap
     need no new version) and send_payment_link for a version that books or
-    takes requests (a deposit's link is written, never spoken); in
-    LEADS_ONLY mode only the tools of LEADS_ONLY_TOOLS remain.
+    takes requests (a deposit's link is written, never spoken), and on a
+    call decline_recording; in LEADS_ONLY mode only the tools of
+    LEADS_ONLY_TOOLS remain.
     """
 
     tools: list[AssistantToolName] = with_join_waitlist(
         with_list_my_bookings(list(version.tools))
     )
+    if channel in RECORDED_CHANNELS:
+        tools = with_decline_recording(tools)
     if (
         channel not in CHANNELS_WITHOUT_CHOICES
         and AssistantToolName.OFFER_CHOICES not in tools
@@ -69,6 +76,33 @@ def select_available_tools(
         return [tool for tool in tools if tool in LEADS_ONLY_TOOLS]
 
     return tools
+
+
+def select_voice_agent_tools(
+    version: AssistantVersionDocument,
+) -> list[AssistantToolName]:
+    """
+    The tools the business's voice agent is built with: the version's, with
+    the tools a version assembled before them gets (list_my_bookings,
+    join_waitlist) and decline_recording. The service mode is not applied:
+    it changes without a new agent, and every tool call is checked against
+    the conversation's tools when it comes in.
+    """
+
+    return with_decline_recording(
+        with_join_waitlist(with_list_my_bookings(list(version.tools)))
+    )
+
+
+def with_decline_recording(
+    tools: list[AssistantToolName],
+) -> list[AssistantToolName]:
+    """Every call offers decline_recording, last: no version stores it."""
+
+    if AssistantToolName.DECLINE_RECORDING in tools:
+        return tools
+
+    return [*tools, AssistantToolName.DECLINE_RECORDING]
 
 
 def with_list_my_bookings(

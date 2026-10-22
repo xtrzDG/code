@@ -3,7 +3,9 @@
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine
+from app.schemas.typings.conversations.booleans import IsCallRecordingDeclined
 from app.schemas.typings.conversations.strings import CallTranscriptText
+from app.utilities.calls.call_transcript_redaction import redact_call_text
 
 # A call shorter than this, or where the caller never spoke, was abandoned.
 MIN_INFORMATIVE_CALL_SECONDS: int = 10
@@ -47,8 +49,13 @@ def determine_call_outcome(
 
 def render_call_transcript(
     transcript: list[FinishedCallTranscriptLine],
+    is_recording_declined: IsCallRecordingDeclined = False,
 ) -> CallTranscriptText | None:
-    """ "[01:05] customer: ..." lines; None for a call without speech."""
+    """
+    "[01:05] customer: ..." lines; None for a call without speech. The
+    transcript of a call whose caller declined the recording keeps no
+    e-mail, account, card or phone numbers (`redact_call_text`).
+    """
 
     if not transcript:
         return None
@@ -56,8 +63,13 @@ def render_call_transcript(
     rendered_lines: list[str] = []
     for line in transcript:
         minutes, seconds = divmod(int(line.offset_seconds), SECONDS_PER_MINUTE)
+        text: str = (
+            redact_call_text(str(line.text))
+            if is_recording_declined
+            else str(line.text)
+        )
         rendered_lines.append(
-            f"[{minutes:02d}:{seconds:02d}] {line.author.value}: {line.text}"
+            f"[{minutes:02d}:{seconds:02d}] {line.author.value}: {text}"
         )
 
     return CallTranscriptText("\n".join(rendered_lines))

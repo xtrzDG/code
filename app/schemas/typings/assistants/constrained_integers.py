@@ -124,4 +124,14 @@ class ScriptedLlmLatencyMilliseconds(BaseConstrainedTypedInt):
     le = 60_000
 
 
+class VoiceAgentRevision(BaseConstrainedTypedInt):
+    """
+    How a business's voice agent is built (its tools, its call settings):
+    the platform's revision when the agent was last set up. An agent of an
+    older revision is set up again by `resync_voice_agents`.
+    """
+
+    ge = 1
+
+
 # Keep abc order for all non example types, if possible.

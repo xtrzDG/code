@@ -3,7 +3,10 @@ from app.contracts.repositories.conversation_repositories import CallRepoContrac
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.conversations import CallDocument
-from app.schemas.dto.call_recordings import CallRecordingArchiveJobPayload
+from app.schemas.dto.call_recordings import (
+    CallRecordingArchiveJobPayload,
+    CallRecordingDiscardJobPayload,
+)
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.booleans import (
     IsRecordingArchiveEnabled,
@@ -12,6 +15,7 @@ from app.schemas.typings.conversations.booleans import (
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
+    DISCARD_CALL_RECORDING_JOB,
 )
 from app.utilities.channels.voice_recordings import read_voice_platform_call_id
 
@@ -26,6 +30,10 @@ class ScheduleRecordingArchiveUseCase(
     under the business's retention). Only with RECORDINGS_STORAGE=s3: in
     development the recording stays with the voice platform. A repeated
     webhook queues it again, which is harmless (the archive is idempotent).
+
+    A call whose caller declined the recording is never archived: the
+    deletion of its audio is queued instead (`discard_call_recording`,
+    whatever the storage), and again by a repeated webhook, harmlessly.
     """
 
     def __init__(
@@ -39,11 +47,23 @@ class ScheduleRecordingArchiveUseCase(
         self._is_archive_enabled: IsRecordingArchiveEnabled = is_archive_enabled
 
     def run(self, input_data: RecordedCall) -> IsRecordingArchiveScheduled:
-        if (
-            not self._is_archive_enabled
-            or input_data.business_id is None
-            or input_data.call_id is None
-        ):
+        if input_data.business_id is None or input_data.call_id is None:
+            return False
+
+        if input_data.is_recording_declined:
+            self._job_queue.enqueue(
+                DISCARD_CALL_RECORDING_JOB,
+                JobPayloadJson(
+                    CallRecordingDiscardJobPayload(
+                        call_id=input_data.call_id
+                    ).model_dump_json()
+                ),
+                business_id=input_data.business_id,
+                lane=JobLane.DEFAULT,
+            )
+            return False
+
+        if not self._is_archive_enabled:
             return False
 
         call: CallDocument | None = self._call_repo.get(

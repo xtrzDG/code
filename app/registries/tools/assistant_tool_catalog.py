@@ -1,6 +1,6 @@
 """
-The model tools of the concept (section 5), and list_my_bookings, with strict
-JSON schemas.
+The model tools of the concept (section 5), list_my_bookings and the phone's
+decline_recording, with strict JSON schemas.
 
 Schemas list every property as required and express optional values as
 `null`, the shape strict tool use accepts at both OpenAI and Anthropic, and
@@ -12,6 +12,9 @@ DTOs, which return errors the model can act on.
 
 import json
 
+from app.registries.tools.decline_recording_specification import (
+    DECLINE_RECORDING_SPECIFICATION,
+)
 from app.registries.tools.join_waitlist_specification import (
     JOIN_WAITLIST_SPECIFICATION,
 )
@@ -233,6 +236,7 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     ),
     AssistantToolName.OFFER_CHOICES: OFFER_CHOICES_SPECIFICATION,
     AssistantToolName.SEND_PAYMENT_LINK: SEND_PAYMENT_LINK_SPECIFICATION,
+    AssistantToolName.DECLINE_RECORDING: DECLINE_RECORDING_SPECIFICATION,
 }
 
 

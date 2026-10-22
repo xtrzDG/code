@@ -1,6 +1,8 @@
 """A small country registry for tests: only what the brain reads from it."""
 
+from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import CountryRegistryContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.schemas.constants.localization import (
     CountryOnboardingStatus,
     DataRegion,
@@ -19,6 +21,9 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.localization.strings import CountryDisplayName
+from app.use_cases.conversations.build_call_greeting_use_case import (
+    BuildCallGreetingUseCase,
+)
 
 # country -> (calling code, currency, time zone, language, consent rule)
 COUNTRIES: dict[str, tuple[int, str, str, str, RecordingConsentRule]] = {
@@ -60,3 +65,15 @@ class FixedCountryRegistry(CountryRegistryContract):
 
 
 FIXED_COUNTRY_REGISTRY = FixedCountryRegistry()
+
+
+def build_call_greeting(
+    business_repo: BusinessRepoContract, texts: LocalizedTextResolverContract
+) -> BuildCallGreetingUseCase:
+    """The call greeting over the fixed countries (their consent rules)."""
+
+    return BuildCallGreetingUseCase(
+        business_repo=business_repo,
+        localized_text_resolver=texts,
+        country_registry=FIXED_COUNTRY_REGISTRY,
+    )

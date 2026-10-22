@@ -13,6 +13,7 @@ from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
 from app.schemas.constants.calls import MissedCallReason
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.domain.call_summaries import CallSummary
+from app.schemas.dto.calls.call_summaries import CallSummaryOptions
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.calls.constrained_strings import CallSummaryText
@@ -58,17 +59,21 @@ class TestSummaryRequest:
                 line(MessageAuthor.ASSISTANT, "Hello!"),
                 line(MessageAuthor.CUSTOMER, "A table for four."),
             ],
+            CallSummaryOptions(),
         )
 
         assert text.split("\n") == [
             "Languages: en, ru",
+            "Memory: no",
             "Business: Funicular VR",
             "Outcome recorded by the platform: booking",
             "Transcript:",
             "Assistant: Hello!",
             "Caller: A table for four.",
         ]
-        assert "unknown" in build_call_summary_request_text("B", None, [EN], [])
+        assert "unknown" in build_call_summary_request_text(
+            "B", None, [EN], [], CallSummaryOptions()
+        )
 
     def test_a_long_transcript_keeps_its_start_and_end(self) -> None:
         lines = [

@@ -16,12 +16,16 @@ from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.orchestrators.channels.post_call_follow_ups import PostCallFollowUps
 from app.orchestrators.voice.missed_call_orchestrator import MissedCallOrchestrator
 from app.registries.localization.country_registry import CountryRegistry
+from app.repositories.assistant_settings_repository import (
+    AssistantSettingsRepository,
+)
 from app.repositories.call_follow_up_repositories import (
     CallSettingsRepository,
     MissedCallRepository,
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import DataRegion
+from app.schemas.domain.assistant_settings import AssistantSettingsDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.conversations import LlmRequest
@@ -122,6 +126,9 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.live_events,
             self.wall_clock,
         )
+        self.assistant_settings_repo = AssistantSettingsRepository(
+            InMemoryDocumentCollectionAdapter(AssistantSettingsDocument)
+        )
         self.summarize_call = SummarizeCallUseCase(
             self.business_repo,
             self.call_repo,
@@ -136,6 +143,9 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.settings,
             self.live_events,
             self.wall_clock,
+            self.conversation_repo,
+            self.conversation_repo,
+            self.assistant_settings_repo,
         )
         self.register_missed_call = RegisterMissedCallUseCase(
             self.business_repo,

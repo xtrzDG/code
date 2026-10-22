@@ -43,6 +43,9 @@ from app.use_cases.voice.finished_call.record_finished_call_use_case import (
 from app.use_cases.voice.recordings.archive_call_recording_use_case import (
     ArchiveCallRecordingUseCase,
 )
+from app.use_cases.voice.recordings.discard_call_recording_use_case import (
+    DiscardCallRecordingUseCase,
+)
 from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
     ScheduleRecordingArchiveUseCase,
 )
@@ -192,6 +195,16 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[QueuedJobInput, JobReport]
     ] = Factory(
         ArchiveCallRecordingUseCase,
+        call_repo=repositories.call_repo,
+        recording_storage=adapters.recording_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The audio of a call whose caller declined the recording, deleted.
+    discard_call_recording_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        DiscardCallRecordingUseCase,
         call_repo=repositories.call_repo,
         recording_storage=adapters.recording_storage,
         audit_log_repo=repositories.audit_log_repo,

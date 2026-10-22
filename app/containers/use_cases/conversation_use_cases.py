@@ -214,6 +214,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         BuildCallGreetingUseCase,
         business_repo=repositories.business_repo,
         localized_text_resolver=utilities.localized_text_resolver,
+        country_registry=registries.country_registry,
     )
     # Voice notes and photos customers send: transcription, the cabinet.
     transcribe_voice_note_use_case: Factory[

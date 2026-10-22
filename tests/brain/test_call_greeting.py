@@ -15,6 +15,9 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
 )
+from app.utilities.conversations.assistant_texts.call_consent_texts import (
+    CALL_RECORDING_CONSENT,
+)
 from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
@@ -116,6 +119,64 @@ def test_recorded_calls_always_say_so_whatever_the_profile_says(
     assert "The call is recorded." in greeting.text
 
 
+@pytest.mark.parametrize(
+    ("country", "language", "expected"),
+    [
+        (
+            "DE",
+            "de",
+            "Hallo! Hier spricht der KI-Assistent von Sakhli. Das Gespräch wird "
+            "aufgezeichnet. Wenn Sie das nicht möchten, sagen Sie es einfach, "
+            "dann sprechen wir ohne Aufzeichnung weiter. Um mit einem Mitarbeiter "
+            "zu sprechen, sagen Sie „Mitarbeiter“.",
+        ),
+        (
+            "US",
+            "en",
+            "Hello! This is the AI assistant of Sakhli. The call is recorded. If "
+            "you do not want it recorded, just say so and we will continue without "
+            'a recording. To talk to a staff member, say "operator".',
+        ),
+    ],
+)
+def test_all_party_consent_countries_let_the_caller_decline_the_recording(
+    country: str, language: str, expected: str
+) -> None:
+    world = build_world(scripted(), BusinessSetup(country_code=country))
+
+    greeting = world.greeting.run(
+        CallGreetingRequest(
+            business_id=world.business.id, language=LanguageTag(language)
+        )
+    )
+
+    assert greeting.text == expected
+
+
+@pytest.mark.parametrize("country", ["GE", "IL"])
+def test_notice_countries_only_say_the_call_is_recorded(country: str) -> None:
+    world = build_world(scripted(), BusinessSetup(country_code=country))
+
+    greeting = world.greeting.run(
+        CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
+    )
+
+    assert "The call is recorded. To talk" in greeting.text
+    assert "without a recording" not in greeting.text
+
+
+def test_a_country_the_platform_does_not_know_asks_for_consent() -> None:
+    world = build_world(scripted())
+    world.business.country_code = CountryCode("ZZ")
+    world.save_business(world.business)
+
+    greeting = world.greeting.run(
+        CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
+    )
+
+    assert "without a recording" in greeting.text
+
+
 def test_greeting_of_an_unknown_business_is_not_found() -> None:
     world = build_world(scripted())
 
@@ -125,7 +186,13 @@ def test_greeting_of_an_unknown_business_is_not_found() -> None:
 
 @pytest.mark.parametrize(
     "text",
-    [AI_DISCLOSURE, CALL_GREETING, CALL_RECORDING_NOTICE, CALL_OPERATOR_HINT],
+    [
+        AI_DISCLOSURE,
+        CALL_GREETING,
+        CALL_RECORDING_NOTICE,
+        CALL_RECORDING_CONSENT,
+        CALL_OPERATOR_HINT,
+    ],
 )
 def test_customer_facing_openers_exist_in_every_supported_text_language(
     text: LocalizedText,

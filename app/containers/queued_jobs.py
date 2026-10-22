@@ -21,6 +21,7 @@ from app.use_cases.knowledge.website_import.start_website_import_use_case import
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
+    DISCARD_CALL_RECORDING_JOB,
 )
 from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
@@ -55,6 +56,10 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             # A finished call's recording moved into the EU object storage.
             ARCHIVE_CALL_RECORDING_JOB: (
                 operators.conversations.archive_call_recording_operator
+            ),
+            # A declined call recording deleted at the voice platform.
+            DISCARD_CALL_RECORDING_JOB: (
+                operators.conversations.discard_call_recording_operator
             ),
             # The outbox: replies and staff notifications sent with retries.
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,

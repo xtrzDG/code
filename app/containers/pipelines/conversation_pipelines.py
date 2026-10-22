@@ -68,6 +68,9 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     archive_call_recording_pipeline = orchestrator_pipeline(
         conversation_orchestrators.archive_call_recording_orchestrator
     )
+    discard_call_recording_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.discard_call_recording_orchestrator
+    )
 
     # --- Conversation feed.
     list_conversations_pipeline = orchestrator_pipeline(

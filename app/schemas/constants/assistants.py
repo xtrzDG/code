@@ -35,6 +35,9 @@ class AssistantToolName(StrEnum):
     # The deposit's payment link for a booking or a banquet request (chat
     # channels only; offered by the conversation, never stored in a version).
     SEND_PAYMENT_LINK = "send_payment_link"
+    # The caller does not want the call recorded (phone calls only; offered
+    # by the call's conversation, never stored in a version).
+    DECLINE_RECORDING = "decline_recording"
 
 
 class AutotestRunStatus(StrEnum):

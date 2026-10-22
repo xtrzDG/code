@@ -1,7 +1,7 @@
 {
   "collection": "assistant_versions",
   "document_type": "AssistantVersionDocument",
-  "schema_version": 9,
+  "schema_version": 10,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -199,7 +199,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "9",
+        "default": "10",
         "type": "string"
       },
       "status": {
@@ -243,7 +243,8 @@
             "send_link",
             "record_unanswered_question",
             "offer_choices",
-            "send_payment_link"
+            "send_payment_link",
+            "decline_recording"
           ],
           "type": "string"
         },
@@ -260,6 +261,18 @@
         "anyOf": [
           {
             "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "voice_agent_revision": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
           },
           {
             "type": "null"

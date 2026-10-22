@@ -14,35 +14,42 @@ from app.contracts.repositories.call_follow_up_repositories import (
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
+    ConversationRepoContract,
+)
+from app.contracts.repositories.customer_memory_repositories import (
+    AssistantSettingsRepoContract,
+    ConversationMemoryRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.live_events import LiveEventKind
-from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.call_summaries import CallSummary
-from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import CallDocument
-from app.schemas.domain.missed_calls import MissedCallDocument
+from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.dto.calls.call_summaries import (
-    CallBookingNote,
     CallReportTextInput,
+    CallSummaryDraft,
+    CallSummaryOptions,
     CallSummaryOutcome,
     CallSummaryRequest,
-    TextBackNote,
 )
 from app.schemas.dto.notifications.staff_alerts import StaffAlertBrief
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
-from app.use_cases.shared.operations_support import display_phone
+from app.use_cases.voice.summaries.call_memory import CallMemory
 from app.use_cases.voice.summaries.call_report_alerts import (
     call_report_alert,
     call_report_texts,
     staff_languages,
+)
+from app.use_cases.voice.summaries.call_report_facts import (
+    CallReportSources,
+    build_call_report_facts,
 )
 from app.use_cases.voice.summaries.call_summary_writer import (
     CallSummaryWriter,
@@ -67,6 +74,13 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
     owner keeps summaries off in Settings → Calls. The finished call is
     announced (`call.finished` for the business's webhooks) after its
     summary, or right away while summaries are off.
+
+    The same model request writes the caller's memory (`CallMemory`): the
+    call's conversation gets an English summary, so the assistant greets a
+    returning caller in any channel as it greets a returning chatter
+    (customer memory on, summaries to staff on or off). A caller who
+    declined the recording is summarized from the transcript without
+    identifiers.
     """
 
     def __init__(
@@ -86,6 +100,9 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         app_settings: AppSettings,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        conversation_repo: ConversationRepoContract,
+        conversation_memory_repo: ConversationMemoryRepoContract,
+        assistant_settings_repo: AssistantSettingsRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._call_repo: CallRepoContract = call_repo
@@ -103,6 +120,13 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._memory: CallMemory = CallMemory(
+            conversation_repo,
+            conversation_memory_repo,
+            contact_repo,
+            assistant_settings_repo,
+            wall_clock,
+        )
 
     def run(self, input_data: CallSummaryRequest) -> CallSummaryOutcome:
         recorded: RecordedCall = input_data.call
@@ -121,16 +145,42 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         )
         if business is None or call is None:
             return CallSummaryOutcome()
+
+        conversation: ConversationDocument | None = self._memory.find_conversation(
+            business, recorded
+        )
         if not self._is_enabled(business):
+            is_remembered: bool = conversation is not None and self._memory.remember(
+                conversation,
+                self._write(business, call, input_data, [], conversation).memory,
+            )
             self._announce(call)
-            return CallSummaryOutcome()
+            return CallSummaryOutcome(is_remembered=is_remembered)
 
         is_generated: bool = False
+        is_remembered = False
         if call.summarized_at is None:
-            call, is_generated = self._summarize(business, call, input_data)
+            draft: CallSummaryDraft = self._write(
+                business,
+                call,
+                input_data,
+                summary_languages(business, staff_languages(business)),
+                conversation,
+            )
+            call, is_generated = self._store(business, call, draft)
+            is_remembered = conversation is not None and self._memory.remember(
+                conversation, draft.memory
+            )
         self._announce(call)
 
-        facts: CallReportTextInput = self._facts(business, call, input_data)
+        facts: CallReportTextInput = build_call_report_facts(
+            business,
+            call,
+            input_data,
+            CallReportSources(
+                self._contact_repo, self._booking_repo, self._phone_number_parser
+            ),
+        )
         notified = self._staff_alerts.alert(
             business,
             call_report_alert(
@@ -147,7 +197,11 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
                 self._report_brief_transformer,
             ),
         )
-        return CallSummaryOutcome(is_generated=is_generated, notified_count=notified)
+        return CallSummaryOutcome(
+            is_generated=is_generated,
+            notified_count=notified,
+            is_remembered=is_remembered,
+        )
 
     def _announce(self, call: CallDocument) -> None:
         """The finished call for the live views' observers (once per call)."""
@@ -162,20 +216,36 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         )
         return settings is None or settings.is_summary_enabled
 
-    def _summarize(
+    def _write(
         self,
         business: BusinessDocument,
         call: CallDocument,
         input_data: CallSummaryRequest,
-    ) -> tuple[CallDocument, bool]:
-        """Write the summary once; a call summarized meanwhile keeps its own."""
+        languages: list[LanguageTag],
+        conversation: ConversationDocument | None,
+    ) -> CallSummaryDraft:
+        """The staff's summaries and, for a call to remember, the memory."""
 
-        summaries: list[CallSummary] = self._writer.write(
+        return self._writer.write(
             business,
             call.outcome,
             input_data.transcript,
-            summary_languages(business, staff_languages(business)),
+            languages,
+            CallSummaryOptions(
+                wants_memory=conversation is not None,
+                is_recording_declined=input_data.call.is_recording_declined,
+            ),
         )
+
+    def _store(
+        self,
+        business: BusinessDocument,
+        call: CallDocument,
+        draft: CallSummaryDraft,
+    ) -> tuple[CallDocument, bool]:
+        """Store the summary once; a call summarized meanwhile keeps its own."""
+
+        summaries: list[CallSummary] = draft.summaries
         now: Microseconds = self._wall_clock.now_unix()
 
         def store(current: CallDocument) -> CallDocument | None:
@@ -194,52 +264,3 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
             return stored, bool(summaries)
 
         return self._call_repo.get(business.id, call.id) or call, False
-
-    def _facts(
-        self,
-        business: BusinessDocument,
-        call: CallDocument,
-        input_data: CallSummaryRequest,
-    ) -> CallReportTextInput:
-        recorded: RecordedCall = input_data.call
-        missed: MissedCallDocument | None = input_data.missed_call
-        contact: ContactDocument | None = (
-            None
-            if recorded.contact_id is None
-            else self._contact_repo.get(business.id, recorded.contact_id)
-        )
-        booking: BookingDocument | None = (
-            None
-            if not recorded.booking_ids
-            else self._booking_repo.get(business.id, recorded.booking_ids[-1])
-        )
-        return CallReportTextInput(
-            business_name=business.name,
-            language=business.owner_language,
-            timezone=business.timezone,
-            started_at=call.started_at,
-            caller_phone=display_phone(
-                self._phone_number_parser, call.from_phone_number
-            ),
-            caller_name=None if contact is None else contact.name,
-            duration_seconds=call.duration_seconds,
-            outcome=call.outcome,
-            booking=(
-                None
-                if booking is None
-                else CallBookingNote(
-                    starts_at=booking.starts_at, party_size=booking.party_size
-                )
-            ),
-            unverified_values=list(call.unverified_values),
-            missed_reason=None if missed is None else missed.reason,
-            text_back=(
-                None
-                if missed is None
-                else TextBackNote(
-                    status=missed.status,
-                    channel=missed.channel,
-                    skip_reason=missed.skip_reason,
-                )
-            ),
-        )

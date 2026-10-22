@@ -22,6 +22,7 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import CallOutcome
@@ -72,6 +73,12 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
     as a reference to the voice platform's storage, the duration as a
     VOICE_SECONDS usage event with the platform cost. A repeated webhook
     refreshes the stored call without billing it again.
+
+    A caller who declined the recording (the agent called
+    decline_recording) gets a call marked `recording_declined`, kept so by
+    every later report of it: its transcript is stored without e-mail,
+    account, card or phone numbers, and the post-call flow queues the
+    deletion of its audio instead of the archive.
     """
 
     def __init__(
@@ -167,7 +174,12 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         call.to_phone_number = assistant_number
         call.started_at = input_data.started_at
         call.duration_seconds = input_data.duration_seconds
-        call.transcript = render_call_transcript(input_data.transcript)
+        call.recording_declined = call.recording_declined or (
+            AssistantToolName.DECLINE_RECORDING in input_data.called_tools
+        )
+        call.transcript = render_call_transcript(
+            input_data.transcript, call.recording_declined
+        )
         call.recording_path = (
             build_voice_platform_recording_path(input_data.provider_call_id)
             if input_data.has_recording
@@ -214,6 +226,7 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             outcome=outcome,
             booking_ids=[booking.id for booking in bookings],
             language=language,
+            is_recording_declined=call.recording_declined,
         )
 
     def _keep_called_number(
