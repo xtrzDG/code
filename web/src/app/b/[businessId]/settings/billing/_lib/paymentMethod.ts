@@ -20,7 +20,7 @@ export type PaymentMethodView = Schema<"PaymentMethodView">;
 export type PaymentCardView = Schema<"PaymentCardView">;
 export type PaymentRetryView = Schema<"PaymentRetryView">;
 export type PaymentProvider = Schema<"PaymentProvider">;
-export type PaymentRetryOutcome = Schema<"PaymentRetryOutcome">;
+type PaymentRetryOutcome = Schema<"PaymentRetryOutcome">;
 export type CardSetupSession = Schema<"CardSetupSessionView">;
 
 /** Retries of a declined automatic charge: on days 1, 3 and 6 of the grace period. */
@@ -50,7 +50,7 @@ const BRAND_NAMES: Record<string, string> = {
   MIR: "Mir",
 };
 
-export const RETRY_OUTCOME_TEXTS: Record<PaymentRetryOutcome, MessageKey> = {
+const RETRY_OUTCOME_TEXTS: Record<PaymentRetryOutcome, MessageKey> = {
   claimed: "billingCard.retry.outcomes.claimed",
   approved: "billingCard.retry.outcomes.approved",
   declined: "billingCard.retry.outcomes.declined",
