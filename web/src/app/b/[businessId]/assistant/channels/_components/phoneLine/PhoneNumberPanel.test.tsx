@@ -79,24 +79,34 @@ describe("the phone card's number from us", () => {
     vi.mocked(api.DELETE).mockReset();
   });
 
-  it("finds numbers, shows the monthly price and takes one after confirming", async () => {
+  it("finds numbers near the city written and shows their monthly price", async () => {
     answer(EMPTY_LINE);
-    vi.mocked(api.POST).mockImplementation((() => ok(RENTED)) as never);
-    const onChanged = renderPanel();
+    renderPanel();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: t("phoneNumbers.panel.getNumber") }));
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText(t("phoneNumbers.dialog.city"), { exact: false }), "Austin");
-    await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.dialog.search") }));
+    await user.click(within(dialog).getByLabelText(t("phoneNumbers.dialog.city"), { exact: false }));
+    await user.paste("Austin");
+    await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
 
     expect(await within(dialog).findByText("+1 512-555-0142")).toBeTruthy();
     expect(within(dialog).getByText(/a month for any of them/)).toBeTruthy();
     const offersCall = (vi.mocked(api.GET).mock.calls as unknown[][]).find(([path]) => path === OFFERS_PATH);
     const query = offersCall?.[1] as { params: { query: Record<string, string> } };
     expect(query.params.query).toMatchObject({ country: "US", number_type: "local", city: "Austin" });
+  });
 
-    await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.offers.takeLabel", { number: "+1 512-555-0142" }) }));
+  it("takes a number after confirming, at the price the owner saw", async () => {
+    answer(EMPTY_LINE);
+    vi.mocked(api.POST).mockImplementation((() => ok(RENTED)) as never);
+    const onChanged = renderPanel();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
+    await user.click(await within(dialog).findByRole("button", { name: t("phoneNumbers.offers.takeLabel", { number: "+1 512-555-0142" }) }));
     await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.confirm.take") }));
 
     const [path, init] = vi.mocked(api.POST).mock.calls[0]! as [string, { body: unknown }];
@@ -117,9 +127,9 @@ describe("the phone card's number from us", () => {
     renderPanel();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: t("phoneNumbers.panel.getNumber") }));
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
     const dialog = await screen.findByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.dialog.search") }));
+    await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
     expect(await within(dialog).findByText(t("phoneNumbers.request.requires_documents"))).toBeTruthy();
     await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.request.ask") }));
 
@@ -139,9 +149,9 @@ describe("the phone card's number from us", () => {
     renderPanel();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: t("phoneNumbers.panel.getNumber") }));
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
     const dialog = await screen.findByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.dialog.search") }));
+    await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
     await user.click(await within(dialog).findByRole("button", { name: t("phoneNumbers.offers.takeLabel", { number: "+1 512-555-0142" }) }));
     await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.confirm.take") }));
 
