@@ -19,6 +19,7 @@ def test_lanes_default_to_customer_messages_first() -> None:
         JobLane.OUTBOUND: 4,
         JobLane.DEFAULT: 2,
         JobLane.AUTOTESTS: 2,
+        JobLane.OPS: 1,
     }
 
 
@@ -34,6 +35,7 @@ def test_lanes_left_out_keep_their_default() -> None:
         JobLane.OUTBOUND: 4,
         JobLane.DEFAULT: 2,
         JobLane.AUTOTESTS: 1,
+        JobLane.OPS: 1,
     }
 
 

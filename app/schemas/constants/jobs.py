@@ -34,13 +34,17 @@ class JobLane(StrEnum):
     """
     Worker lane of a queued job. Each lane has its own threads in every
     worker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up
-    a customer message or a notification.
+    a customer message or a notification. OPS carries the platform alerts
+    on a thread of their own, so the alerts of a provider outage never wait
+    behind the sends that outage holds up (behind the release gate
+    `ops_lane` until the next release: until then they use OUTBOUND).
     """
 
     INBOUND = "inbound"
     OUTBOUND = "outbound"
     DEFAULT = "default"
     AUTOTESTS = "autotests"
+    OPS = "ops"
 
 
 class PeriodicJobRunStatus(StrEnum):

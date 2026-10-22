@@ -14,6 +14,7 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import OutboundMessageKind
+from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.outbound_messages import (
@@ -99,7 +100,12 @@ def route_customer_template(
                 parameters,
             )
 
-    return OutboundRoute(parts=[message.text], send_part=send_part, channel=channel)
+    return OutboundRoute(
+        parts=[message.text],
+        send_part=send_part,
+        provider=OutboundProvider.META,
+        channel=channel,
+    )
 
 
 def build_template_usage_event(

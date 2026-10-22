@@ -13,7 +13,6 @@ from app.contracts.monitoring import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.constants.handoffs import ManagerContactChannel
-from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.monitoring import (
     AlertNoticeKind,
     PlatformAlertCode,
@@ -41,6 +40,7 @@ from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.alert_episodes import EpisodeStep, next_episode_step
 from app.use_cases.admin.alerts.alert_rules import PLATFORM_ALERT_RULES
 from app.use_cases.admin.alerts.alert_texts import compose_alert_message
+from app.utilities.jobs.platform_alert_lane import platform_alert_lane
 
 logger: logging.Logger = logging.getLogger(__name__)
 SEND_PLATFORM_ALERT_JOB: JobName = JobName("send_platform_alert")
@@ -156,7 +156,7 @@ class CheckPlatformAlertsUseCase(UseCaseContract[JobTick, JobReport]):
                 SEND_PLATFORM_ALERT_JOB,
                 JobPayloadJson(delivery.model_dump_json()),
                 None,
-                lane=JobLane.OUTBOUND,
+                lane=platform_alert_lane(),
                 serial_key=recipient_serial_key(channel, address),
             )
 

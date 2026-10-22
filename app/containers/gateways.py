@@ -50,6 +50,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
         release=config.app_settings.provided.release_version,
+        circuit_breaker=adapters.circuit_breaker,
     )
     # Pickup delays, dead jobs and the spans of queued jobs.
     job_telemetry: Factory[JobTelemetry] = Factory(

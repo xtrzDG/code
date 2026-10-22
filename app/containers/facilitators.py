@@ -142,11 +142,11 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     staff_notification_sender: Singleton[StaffNotificationSenderFacilitator] = (
         Singleton(
             StaffNotificationSenderFacilitator,
-            telegram_client=clients.telegram_bot_client,
-            whatsapp_templates=adapters.whatsapp_channel_adapter,
+            telegram_client=adapters.platform_bot_client,
+            whatsapp_templates=adapters.whatsapp_template_sender,
             app_settings=config.app_settings,
-            email_client=clients.smtp_email_client,
-            sms_client=clients.twilio_messaging_client,
+            email_client=adapters.guarded_email_sender,
+            sms_client=adapters.guarded_sms_sender,
         )
     )
     push_notification_queue: Singleton[PushNotificationQueueFacilitator] = Singleton(

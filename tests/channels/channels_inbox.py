@@ -15,10 +15,14 @@ from app.facilitators.notifications.staff_delivery_recorder_facilitator import (
 from app.facilitators.notifications.staff_notification_sender_facilitator import (
     StaffNotificationSenderFacilitator,
 )
+from app.facilitators.resilience.outbound_bulkhead_facilitator import (
+    OutboundBulkheadFacilitator,
+)
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
 )
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.typings.resilience.constrained_integers import ProviderSlotCount
 from app.use_cases.channels.inbox.accept_platform_bot_update_use_case import (
     AcceptPlatformBotUpdateUseCase,
 )
@@ -145,6 +149,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.wall_clock,
             self.whatsapp_adapter,
             self.billing_attachments,
+            OutboundBulkheadFacilitator(ProviderSlotCount(2)),
         )
         self.record_outbound_attempt = RecordOutboundAttemptUseCase(
             self.outbound_message_repo,

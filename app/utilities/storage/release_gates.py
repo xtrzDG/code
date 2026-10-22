@@ -36,6 +36,7 @@ SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
 BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
 PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
+OPS_LANE_GATE: ReleaseGateName = ReleaseGateName("ops_lane")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -98,6 +99,17 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("send_payment_link")],
+        is_open=False,
+    ),
+    # The platform alerts' own worker lane (W20): this release reads the
+    # lane `ops` and runs its thread; the alerts are queued in it once the
+    # next release opens this gate (until then they use the outbound lane,
+    # where each provider holds at most half of the threads).
+    ReleaseGate(
+        name=OPS_LANE_GATE,
+        collection_name=DocumentCollectionName("queued_jobs"),
+        path=StoredEnumPath("lane"),
+        values=[GatedEnumValue("ops")],
         is_open=False,
     ),
 )

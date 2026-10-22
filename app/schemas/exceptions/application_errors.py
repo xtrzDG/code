@@ -84,6 +84,22 @@ class ProviderRateLimitedError(ExternalServiceError):
         self.retry_after_seconds: RetryAfterSeconds | None = retry_after_seconds
 
 
+class ProviderCircuitOpenError(ExternalServiceError):
+    """
+    The provider's circuit breaker is open: it failed again and again just
+    now, so no call was made. Trying again after `retry_after_seconds`
+    (when the circuit lets a trial call through) can succeed.
+    """
+
+    def __init__(
+        self,
+        *args: object,
+        retry_after_seconds: RetryAfterSeconds | None = None,
+    ) -> None:
+        super().__init__(*args)
+        self.retry_after_seconds: RetryAfterSeconds | None = retry_after_seconds
+
+
 class ProviderRejectedMessageError(ExternalServiceError):
     """
     A messaging platform refused this message for good (a 4xx other than a

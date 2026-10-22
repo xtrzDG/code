@@ -8,6 +8,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import DeliveryFailureKind, DeliveryFailureReason
+from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
@@ -152,6 +153,9 @@ class OutboundAttempt(ImmutableDTO):
     decides the retry, `reason` says it to the owner).
     `channel` is the business channel a reply was sent with (its health
     follows the outcome only while it still has that connection).
+    `busy_provider` is set when nothing was tried: that provider's share of
+    the worker's outbound threads was taken, so the message comes back in a
+    few seconds without counting an attempt.
     """
 
     message: OutboundMessageDocument
@@ -163,3 +167,4 @@ class OutboundAttempt(ImmutableDTO):
     error: DeliveryErrorText | None = None
     retry_after_seconds: RetryAfterSeconds | None = None
     attempted_at: Microseconds
+    busy_provider: OutboundProvider | None = None

@@ -21,6 +21,9 @@ class OutboundAttemptOutcome(StrEnum):
     RETRY = "retry"
     # Failed for good: a refusal, no provider, or the last attempt.
     DEAD = "dead"
+    # Not tried: the provider's share of the worker's outbound threads was
+    # taken (it is slow or hanging); the message comes back in seconds.
+    DEFERRED = "deferred"
 
 
 class LlmCallOutcome(StrEnum):

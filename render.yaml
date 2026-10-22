@@ -322,15 +322,15 @@ services:
           property: connectionString
       # The customer role (docs/operations/capacity.md, "Worker roles"):
       # customer messages and deliveries, and the periodic jobs of those
-      # lanes (booking reminders, the inbox sweeper). Everything else runs
-      # on workshop-batch-worker.
+      # lanes (booking reminders, the inbox sweeper), and the platform
+      # alerts' own lane (ops). Everything else runs on workshop-batch-worker.
       - key: WORKER_LANES
-        value: "inbound,outbound"
-      # Its lanes run 12 jobs at once (inbound=8, outbound=4, the defaults
-      # of WORKER_LANE_CONCURRENCY); a job holds one connection at most, and
-      # only a customer turn holds it for long (its lock), so 16 connections
-      # serve them, the periodic thread and the heartbeat. It serves no
-      # requests (connection budget: see workshop-api).
+        value: "inbound,outbound,ops"
+      # Its lanes run 13 jobs at once (inbound=8, outbound=4, ops=1, the
+      # defaults of WORKER_LANE_CONCURRENCY); a job holds one connection at
+      # most, and only a customer turn holds it for long (its lock), so 16
+      # connections serve them, the periodic thread and the heartbeat. It
+      # serves no requests (connection budget: see workshop-api).
       - key: THREADPOOL_SIZE
         value: "20"
       - key: DB_POOL_SIZE

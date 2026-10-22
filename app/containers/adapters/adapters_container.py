@@ -28,9 +28,6 @@ from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
 from app.adapters.locks.advisory_lock_adapter_factory import (
     build_advisory_lock_adapter,
 )
-from app.adapters.payments.flitt_payment_gateway_adapter import (
-    FlittPaymentGatewayAdapter,
-)
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
 )
@@ -63,6 +60,9 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.process_adapters_container import (
     ProcessAdaptersContainer,
 )
+from app.containers.adapters.provider_resilience_container import (
+    ProviderResilienceContainer,
+)
 from app.containers.adapters.security_adapters_container import (
     SecurityAdaptersContainer,
 )
@@ -79,9 +79,6 @@ from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
-from app.facilitators.resilience.circuit_breaker_facilitator import (
-    CircuitBreakerFacilitator,
-)
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -191,13 +188,26 @@ class AdaptersContainer(containers.DeclarativeContainer):
     voice_webhook_adapter = calls.voice_webhook_adapter
     voice_agent_provisioner = calls.voice_agent_provisioner
 
-    # --- Messaging channels.
+    # --- Circuit breakers and the outbound lane's bulkheads (W20).
+    resilience: ProviderResilienceContainer = Container(  # type: ignore[assignment]
+        ProviderResilienceContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
+    circuit_breaker = resilience.circuit_breaker
+    outbound_bulkhead = resilience.outbound_bulkhead
+    platform_bot_client = resilience.platform_bot_client
+    payment_gateway = resilience.payment_gateway
+    guarded_email_sender = resilience.email_sender
+    guarded_sms_sender = resilience.sms_sender
+
+    # --- Messaging channels, each behind its provider's circuit.
     channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]
-        ChannelAdaptersContainer, clients=clients, config=config, utilities=utilities
-    )
+        ChannelAdaptersContainer, clients=clients, config=config,
+        utilities=utilities, resilience=resilience,
+    )  # fmt: skip
     telegram_channel_adapter = channels.telegram_channel_adapter
-    # Also the WhatsApp template sender (staff notifications).
     whatsapp_channel_adapter = channels.whatsapp_channel_adapter
+    whatsapp_template_sender = channels.whatsapp_template_sender
     messenger_channel_adapter = channels.messenger_channel_adapter
     instagram_channel_adapter = channels.instagram_channel_adapter
 
@@ -220,11 +230,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         RoutingLlmAdapter,
         openai_adapter=openai_llm_adapter,
         anthropic_adapter=anthropic_llm_adapter,
-        circuit_breaker=Singleton(
-            CircuitBreakerFacilitator,
-            monotonic_clock=time_provider.monotonic_clock,
-            metrics=utilities.service_metrics,
-        ),
+        circuit_breaker=resilience.circuit_breaker,
         scripted_adapter=offline_llm_adapter,
         fallback_model_id=config.app_settings.provided.reply_speed.llm_fallback_model_id,
     )
@@ -286,12 +292,6 @@ class AdaptersContainer(containers.DeclarativeContainer):
         ),
     )
 
-    # --- Payments.
-    payment_gateway: Singleton[FlittPaymentGatewayAdapter] = Singleton(
-        FlittPaymentGatewayAdapter,
-        flitt_client=clients.flitt_client,
-        app_base_url=config.app_settings.provided.app_base_url,
-    )
     # Invoice and receipt PDFs (WeasyPrint, the system's Noto fonts).
     invoice_document_renderer: Singleton[WeasyPrintInvoiceDocumentRendererAdapter] = (
         Singleton(WeasyPrintInvoiceDocumentRendererAdapter)

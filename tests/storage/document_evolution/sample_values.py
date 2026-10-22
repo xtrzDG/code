@@ -137,6 +137,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "InvoiceSeries": "AW",
     "PaymentCardLastDigits": "4242",
     "TaxpayerIdentificationNumber": "405123456",
+    "CircuitName": "provider:meta",
 }
 
 # Unconstrained text that still has a format in practice.

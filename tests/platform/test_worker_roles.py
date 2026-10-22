@@ -25,7 +25,9 @@ from tests.platform.connection_budget import (
 )
 from tests.platform.environment_sources import read
 
-CUSTOMER_LANES: frozenset[JobLane] = frozenset({JobLane.INBOUND, JobLane.OUTBOUND})
+CUSTOMER_LANES: frozenset[JobLane] = frozenset(
+    {JobLane.INBOUND, JobLane.OUTBOUND, JobLane.OPS}
+)
 BATCH_LANES: frozenset[JobLane] = frozenset({JobLane.DEFAULT, JobLane.AUTOTESTS})
 # Threads of a worker besides its lanes that may hold a connection: the
 # periodic thread (its jobs, the reaper) and the lease heartbeat.

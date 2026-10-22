@@ -1,7 +1,7 @@
 {
   "collection": "queued_jobs",
   "document_type": "QueuedJobDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -52,7 +52,8 @@
           "inbound",
           "outbound",
           "default",
-          "autotests"
+          "autotests",
+          "ops"
         ],
         "type": "string"
       },
@@ -125,7 +126,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "serial_key": {

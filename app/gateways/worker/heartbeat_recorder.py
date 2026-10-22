@@ -5,8 +5,14 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.health import WorkerHeartbeatRepoContract
+from app.contracts.resilience import CircuitBreakerContract
 from app.contracts.storage import StorageScopeContract
-from app.schemas.domain.jobs import PeriodicJobResult, WorkerHeartbeatDocument
+from app.schemas.domain.jobs import (
+    PeriodicJobResult,
+    WorkerCircuitState,
+    WorkerHeartbeatDocument,
+)
+from app.schemas.dto.resilience import CircuitSnapshot
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_strings import (
     ReleaseVersion,
@@ -16,6 +22,7 @@ from app.schemas.typings.platform.prefixed_id import WorkerInstanceId
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+MICROSECONDS_PER_SECOND: int = 1_000_000
 # Pulses of processes that stopped (restarts, deploys) are deleted after
 # this long, when a worker starts.
 HEARTBEAT_RETENTION_SECONDS: int = 24 * 60 * 60
@@ -25,7 +32,8 @@ UNKNOWN_HOST_NAME: WorkerHostName = WorkerHostName("unknown")
 class WorkerHeartbeatRecorder:
     """
     Writes the pulse of this worker process (`worker_heartbeats`): which
-    build it runs, since when, and how its periodic jobs ended last. The
+    build it runs, since when, how its periodic jobs ended last, and how
+    its circuit breakers stand (GET /v1/admin/system shows them). The
     worker beats on every tick of its periodic thread, so GET /readyz can
     tell how long ago a worker was last alive. A pulse that cannot be
     written (the database is down) is logged and skipped: the worker goes
@@ -39,7 +47,9 @@ class WorkerHeartbeatRecorder:
         wall_clock: WallClock[Microseconds],
         release: ReleaseVersion | None,
         host_name: WorkerHostName | None = None,
+        circuit_breaker: CircuitBreakerContract | None = None,
     ) -> None:
+        self._circuit_breaker: CircuitBreakerContract | None = circuit_breaker
         self._heartbeat_repo: WorkerHeartbeatRepoContract = heartbeat_repo
         self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -81,6 +91,7 @@ class WorkerHeartbeatRecorder:
             started_at=self._started_at,
             beat_at=now,
             periodic_results=list(periodic_results),
+            circuits=self._circuits(now),
             created_at=self._started_at,
             updated_at=now,
         )
@@ -89,6 +100,32 @@ class WorkerHeartbeatRecorder:
                 self._heartbeat_repo.save(heartbeat)
         except ApplicationError as error:
             LOGGER.warning("Worker heartbeat was not written: %s", error)
+
+    def _circuits(self, now: Microseconds) -> list[WorkerCircuitState]:
+        if self._circuit_breaker is None:
+            return []
+
+        return [
+            circuit_state(snapshot, now)
+            for snapshot in self._circuit_breaker.snapshot()
+        ]
+
+
+def circuit_state(snapshot: CircuitSnapshot, now: Microseconds) -> WorkerCircuitState:
+    """A circuit as the pulse stores it: when it opened, by the wall clock."""
+
+    return WorkerCircuitState(
+        circuit=snapshot.circuit,
+        state=snapshot.state,
+        recent_failures=snapshot.recent_failures,
+        opened_at=(
+            None
+            if snapshot.open_for_seconds is None
+            else Microseconds(
+                int(now) - int(snapshot.open_for_seconds) * MICROSECONDS_PER_SECOND
+            )
+        ),
+    )
 
 
 def current_host_name() -> WorkerHostName:
