@@ -16,8 +16,9 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.locks import AdvisoryLockAdapterContract
-from app.contracts.storage import StorageUnitOfWorkContract
+from app.contracts.storage import StorageScopeContract, StorageUnitOfWorkContract
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.schemas.typings.storage.constrained_strings import AdvisoryLockKey
 
@@ -49,6 +50,10 @@ class PostgresAdvisoryLockAdapter(AdvisoryLockAdapterContract):
       model call (`idle_in_transaction_session_timeout` would end it) and a
       waiting turn holds one connection, not two (customer messages).
 
+    A lock taken for a business holds a connection of the tenant pool,
+    otherwise of the platform pool (the scope of the running code); the
+    keys are the database's, so both pools' holders exclude each other.
+
     Waiters of one key in this process queue on a process lock first, so a
     burst of one customer's messages holds one database connection, not one
     per message. A wait longer than `wait` (lock_timeout) fails with
@@ -57,11 +62,13 @@ class PostgresAdvisoryLockAdapter(AdvisoryLockAdapterContract):
 
     def __init__(
         self,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
+        storage_scope: StorageScopeContract,
         unit_of_work: StorageUnitOfWorkContract,
         process_locks: ProcessLocks | None = None,
     ) -> None:
-        self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._connection_pools: PostgresConnectionPools = connection_pools
+        self._storage_scope: StorageScopeContract = storage_scope
         self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
         self._process_locks: ProcessLocks = (
             ProcessLocks() if process_locks is None else process_locks
@@ -76,7 +83,7 @@ class PostgresAdvisoryLockAdapter(AdvisoryLockAdapterContract):
         deadline: float = time.monotonic() + int(wait)
         with (
             self._process_locks.held(key, float(int(wait))),
-            self._connection_pool.pinned_connection() as connection,
+            self._scope_pool().pinned_connection() as connection,
             self._unit_of_work.unit_of_work(),
         ):
             acquire_lock(connection, TRANSACTION_LOCK, key, wait, deadline)
@@ -91,7 +98,7 @@ class PostgresAdvisoryLockAdapter(AdvisoryLockAdapterContract):
         deadline: float = time.monotonic() + int(wait)
         with (
             self._process_locks.held(key, float(int(wait))),
-            self._connection_pool.pinned_connection() as connection,
+            self._scope_pool().pinned_connection() as connection,
         ):
             with connection.transaction():
                 # The statement limit too: the server's default (seconds)
@@ -103,6 +110,9 @@ class PostgresAdvisoryLockAdapter(AdvisoryLockAdapterContract):
                 yield
             finally:
                 release_session_lock(connection, key)
+
+    def _scope_pool(self) -> PostgresConnectionPoolClient:
+        return self._connection_pools.for_scope(self._storage_scope.current())
 
 
 def acquire_lock(

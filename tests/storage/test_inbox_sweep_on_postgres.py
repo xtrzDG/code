@@ -17,6 +17,7 @@ from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.repositories.delivery_repositories import InboundEventRepository
@@ -105,7 +106,9 @@ class Intake:
         self.jobs: JobStores = build_postgres_job_stores(
             connection_pool, postgres_collections
         )
-        self.unit_of_work = PostgresUnitOfWorkAdapter(connection_pool, storage_scope)
+        self.unit_of_work = PostgresUnitOfWorkAdapter(
+            PostgresConnectionPools.single(connection_pool), storage_scope
+        )
         self.queue = JobQueueFacilitator(
             job_repo=self.jobs.job_repo,
             wall_clock=build_fixed_wall_clock(),
@@ -203,7 +206,7 @@ def sweep_plan_indexes(
     try:
         events = InboundEventRepository(
             PostgresCollectionFactory(
-                connection_pool=recording_pool,
+                connection_pools=PostgresConnectionPools.single(recording_pool),
                 storage_scope=storage_scope,
                 wall_clock=build_fixed_wall_clock(),
             )(InboundEventDocument, "inbound_events")

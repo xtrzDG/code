@@ -13,9 +13,7 @@ import anyio.to_thread
 from fastapi import FastAPI
 from starlette.types import Lifespan
 
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
@@ -293,8 +291,8 @@ def configure_platform_bot(app_container: AppContainer) -> None:
 
 
 def close_postgres_pool(app_container: AppContainer) -> None:
-    connection_pool: PostgresConnectionPoolClient | None = (
-        app_container.clients.postgres_pool()
+    connection_pools: PostgresConnectionPools | None = (
+        app_container.clients.postgres_pools()
     )
-    if connection_pool is not None:
-        connection_pool.close()
+    if connection_pools is not None:
+        connection_pools.close()

@@ -130,7 +130,9 @@ class FailingPool:
 
     @contextmanager
     def connection(
-        self, acquire_timeout_seconds: float | None = None
+        self,
+        acquire_timeout_seconds: float | None = None,
+        joins_open_transaction: bool = True,
     ) -> Generator[PostgresConnection]:
         del acquire_timeout_seconds
         raise self._error

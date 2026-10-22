@@ -199,14 +199,18 @@ def build_random_chat(
 
 @pytest.fixture
 def read_session(
-    collections: CollectionFactory, request: pytest.FixtureRequest
+    collections: CollectionFactory,
+    request: pytest.FixtureRequest,
+    storage_scope: StorageScopeContext,
 ) -> StorageReadSessionContract | None:
     """On Postgres the polls read in a read session, as in the API."""
 
     if not isinstance(collections, PostgresCollectionFactory):
         return None
 
-    return PostgresReadSessionAdapter(request.getfixturevalue("connection_pool"))
+    return PostgresReadSessionAdapter(
+        request.getfixturevalue("connection_pools"), storage_scope
+    )
 
 
 def test_every_cursor_gets_the_whole_chats_answer(

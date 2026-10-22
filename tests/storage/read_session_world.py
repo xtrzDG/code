@@ -19,6 +19,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.users import UserDocument
@@ -35,10 +36,14 @@ class CountingPool(PostgresConnectionPoolClient):
 
     @contextmanager
     def connection(
-        self, acquire_timeout_seconds: float | None = None
+        self,
+        acquire_timeout_seconds: float | None = None,
+        joins_open_transaction: bool = True,
     ) -> Generator[PostgresConnection]:
         self.borrowed += 1
-        with super().connection(acquire_timeout_seconds) as connection:
+        with super().connection(
+            acquire_timeout_seconds, joins_open_transaction
+        ) as connection:
             yield connection
 
 
@@ -46,14 +51,15 @@ class ReadSessionWorld:
     def __init__(self, pool: CountingPool, scope: StorageScopeContext) -> None:
         self.pool = pool
         self.scope = scope
-        factory = PostgresCollectionFactory(pool, scope, build_fixed_wall_clock())
+        self.pools = PostgresConnectionPools.single(pool)
+        factory = PostgresCollectionFactory(self.pools, scope, build_fixed_wall_clock())
         self.channels: PostgresDocumentCollectionAdapter[ChannelDocument] = factory(
             ChannelDocument, "channels"
         )
         self.users: PostgresDocumentCollectionAdapter[UserDocument] = factory(
             UserDocument, "users"
         )
-        self.sessions = PostgresReadSessionAdapter(pool)
+        self.sessions = PostgresReadSessionAdapter(self.pools, scope)
         self.business_id = BusinessId()
         self.channel = self.add_channel(self.business_id)
         self.other_channel = self.add_channel(BusinessId())

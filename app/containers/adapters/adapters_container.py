@@ -150,22 +150,22 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # pool; in-process locks without a database).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
         build_advisory_lock_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
     )
     # Request counters of the rate limits (Postgres: shared by every
     # instance; in memory without a database).
     rate_limit_buckets: Singleton[RateLimitBucketAdapterContract] = Singleton(
         build_rate_limit_bucket_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )
 
     # --- The cabinet's live updates between processes: Postgres
     # NOTIFY/LISTEN with DATABASE_URL, else in this process.
     live_event_bus: Singleton[LiveEventBusAdapterContract] = Singleton(
         build_live_event_bus_adapter,
-        connection_pool=clients.postgres_pool,
-        database_url=config.app_settings.provided.database_url,
+        connection_pool=clients.postgres_platform_pool,
+        database_url=clients.listen_database_url,
         listen_database_url=config.app_settings.provided.live_events_database_url,
     )
 

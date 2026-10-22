@@ -9,15 +9,13 @@ from app.adapters.locks.postgres_advisory_lock_adapter import (
 from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
     PostgresUnitOfWorkAdapter,
 )
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.storage import StorageScopeContract
 
 
 def build_advisory_lock_adapter(
-    connection_pool: PostgresConnectionPoolClient | None,
+    connection_pools: PostgresConnectionPools | None,
     storage_scope: StorageScopeContract,
 ) -> AdvisoryLockAdapterContract:
     """
@@ -26,10 +24,11 @@ def build_advisory_lock_adapter(
     whose documents live in this process) locks of this process.
     """
 
-    if connection_pool is None:
+    if connection_pools is None:
         return InMemoryAdvisoryLockAdapter()
 
     return PostgresAdvisoryLockAdapter(
-        connection_pool=connection_pool,
-        unit_of_work=PostgresUnitOfWorkAdapter(connection_pool, storage_scope),
+        connection_pools=connection_pools,
+        storage_scope=storage_scope,
+        unit_of_work=PostgresUnitOfWorkAdapter(connection_pools, storage_scope),
     )

@@ -1,8 +1,11 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import Callable, DependenciesContainer, Singleton
 
-from app.adapters.storage.postgres.document_collection_factory import (
-    build_postgres_connection_pool,
+from app.adapters.storage.postgres.connection_pools_factory import (
+    application_database_url,
+    build_owner_pool,
+    build_postgres_connection_pools,
+    platform_pool_of,
 )
 from app.clients.anthropic.anthropic_messages_client import AnthropicMessagesClient
 from app.clients.ecb.ecb_rates_client import EcbRatesClient
@@ -30,6 +33,7 @@ from app.clients.openai.openai_transcription_client import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.clients.telegram.telegram_file_client import TelegramFileClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
@@ -63,16 +67,32 @@ class ClientsContainer(containers.DeclarativeContainer):
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # One pool for every Postgres collection; None without DATABASE_URL. It
-    # reports waits and connections in use, and traces its statements.
-    postgres_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
-        build_postgres_connection_pool,
+    # The tenant and the platform pool (one pool on DATABASE_URL without the
+    # two role addresses); None without DATABASE_URL. They report waits and
+    # connections in use, and trace their statements.
+    postgres_pools: Singleton[PostgresConnectionPools | None] = Singleton(
+        build_postgres_connection_pools,
         settings=config.app_settings,
         instruments=Singleton(
             build_pool_instruments,
             metrics=utilities.service_metrics,
             span_tracer=utilities.span_tracer,
         ),
+    )
+    # The platform pool alone: adapters of platform tables (job claims,
+    # rate limits, wake-ups, database sizes).
+    postgres_platform_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
+        platform_pool_of, connection_pools=postgres_pools
+    )
+    # One connection as the tables' owner, for the maintenance commands
+    # only the owner may run (the audit purge); the API and the worker
+    # never build it.
+    postgres_owner_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
+        build_owner_pool, settings=config.app_settings
+    )
+    # The LISTEN connections' address: the platform role's, else DATABASE_URL.
+    listen_database_url = Callable(
+        application_database_url, settings=config.app_settings
     )
     # SDK clients are created on first use, so no API key is needed to start.
     openai_responses_client: Singleton[OpenAiResponsesClient] = Singleton(

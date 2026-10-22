@@ -20,6 +20,7 @@ from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.clients.postgres.postgres_notification_listener import ListenerConnection
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.schemas.constants.jobs import JobLane
@@ -66,7 +67,9 @@ def build_api_queue(
     """The queue of an API process: NOTIFY on its pool, in a unit of work."""
 
     stores = build_postgres_job_stores(connection_pool, postgres_collections)
-    unit_of_work = PostgresUnitOfWorkAdapter(connection_pool, storage_scope)
+    unit_of_work = PostgresUnitOfWorkAdapter(
+        PostgresConnectionPools.single(connection_pool), storage_scope
+    )
     api_wakeup = PostgresJobWakeupAdapter(
         connection_pool=connection_pool,
         connect=lambda: pytest.fail("the API process never listens"),

@@ -10,15 +10,10 @@ from collections.abc import Generator
 
 import pytest
 
-from app.adapters.locks.postgres_advisory_lock_adapter import (
-    PostgresAdvisoryLockAdapter,
-)
-from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
-    PostgresUnitOfWorkAdapter,
-)
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.audit_chain import (
@@ -45,6 +40,7 @@ from tests.storage.hot_path_seeding import (
     insert_documents,
     plan_nodes,
 )
+from tests.storage.postgres_roles import advisory_locks_on
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -122,8 +118,9 @@ def test_an_append_to_a_long_chain_reads_its_head_by_key_and_sorts_nothing(
     recording_pool = RecordingConnectionPool(seeded_database_url)
     explaining_pool = PostgresConnectionPoolClient(seeded_database_url, max_size=1)
     scope = StorageScopeContext()
+    recording_pools = PostgresConnectionPools.single(recording_pool)
     collections = PostgresCollectionFactory(
-        connection_pool=recording_pool,
+        connection_pools=recording_pools,
         storage_scope=scope,
         wall_clock=build_fixed_wall_clock(),
     )
@@ -134,9 +131,7 @@ def test_an_append_to_a_long_chain_reads_its_head_by_key_and_sorts_nothing(
             AuditChainCheckpointDocument, "audit_chain_checkpoints"
         ),
         heads=collections(AuditChainHeadDocument, "audit_chain_heads"),
-        advisory_locks=PostgresAdvisoryLockAdapter(
-            recording_pool, PostgresUnitOfWorkAdapter(recording_pool, scope)
-        ),
+        advisory_locks=advisory_locks_on(recording_pools, scope),
     )
     appended = entry(LONG_CHAIN, LONG_CHAIN_LENGTH + 1, action=AuditAction.EXPORT)
     try:

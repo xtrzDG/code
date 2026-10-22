@@ -7,15 +7,14 @@ import pytest
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.adapters.storage.postgres.connection_pools_factory import (
+    build_postgres_connection_pools,
+)
 from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
-    build_postgres_connection_pool,
 )
 from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
-)
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
 )
 from app.gateways.cli.migrate import main
 from app.repositories.business_repositories import BusinessRepository
@@ -38,6 +37,11 @@ from tests.storage.builders import (
     build_contact,
     build_owner,
 )
+from tests.storage.postgres_roles import (
+    PLATFORM_LOGIN_ROLE,
+    TENANT_LOGIN_ROLE,
+    RoleDatabase,
+)
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 
@@ -52,7 +56,7 @@ def test_without_database_url_collections_live_in_memory() -> None:
     contact = build_contact(COUNTRY_SAMPLES[1], BusinessId())
 
     assert isinstance(users, InMemoryDocumentCollectionAdapter)
-    assert build_postgres_connection_pool(settings) is None
+    assert build_postgres_connection_pools(settings) is None
     # A tenant collection is fail-closed in memory too.
     with pytest.raises(UnscopedStorageAccessError, match="ContactDocument"):
         contacts.upsert(str(contact.id), contact)
@@ -73,28 +77,36 @@ def test_unsafe_collection_names_are_rejected(collection_name: str) -> None:
         )
 
 
-def test_with_database_url_collections_are_postgres_tables(
-    database_url: DatabaseUrl,
+def test_with_the_role_addresses_collections_use_two_pools(
+    role_urls: RoleDatabase,
 ) -> None:
     settings = assemble_app_settings(
-        {"DATABASE_URL": database_url, "DB_POOL_SIZE": "2"}
+        {**role_urls.environment(), "DB_POOL_SIZE": "2", "DB_PLATFORM_POOL_SIZE": "3"}
     )
-    connection_pool = build_postgres_connection_pool(settings)
-    assert isinstance(connection_pool, PostgresConnectionPoolClient)
-    assert connection_pool.max_size == 2
-    with connection_pool.connection() as connection:
-        timeouts = connection.execute(
-            "select current_setting('statement_timeout'), "
-            "current_setting('idle_in_transaction_session_timeout')"
-        ).fetchone()
-    assert timeouts == ("10s", "30s")
+    connection_pools = build_postgres_connection_pools(settings)
+    assert connection_pools is not None
+    assert not connection_pools.is_single
+    assert (connection_pools.tenant.max_size, connection_pools.platform.max_size) == (
+        2,
+        3,
+    )
+    for pool, role in (
+        (connection_pools.tenant, TENANT_LOGIN_ROLE),
+        (connection_pools.platform, PLATFORM_LOGIN_ROLE),
+    ):
+        with pool.connection() as connection:
+            timeouts = connection.execute(
+                "select current_user::text, current_setting('statement_timeout'), "
+                "current_setting('idle_in_transaction_session_timeout')"
+            ).fetchone()
+        assert timeouts == (role, "10s", "30s")
     storage_scope = StorageScopeContext()
     try:
         businesses = build_document_collection(
             BusinessDocument,
             "businesses",
             settings,
-            connection_pool=connection_pool,
+            connection_pools=connection_pools,
             storage_scope=storage_scope,
             wall_clock=build_fixed_wall_clock(),
         )
@@ -102,7 +114,7 @@ def test_with_database_url_collections_are_postgres_tables(
             ContactDocument,
             "contacts",
             settings,
-            connection_pool=connection_pool,
+            connection_pools=connection_pools,
             storage_scope=storage_scope,
         )
         assert isinstance(businesses, PostgresDocumentCollectionAdapter)
@@ -126,7 +138,20 @@ def test_with_database_url_collections_are_postgres_tables(
         with storage_scope.scoped_to_business(business.id):
             assert contacts.list_all() == [contact]
     finally:
-        connection_pool.close()
+        connection_pools.close()
+
+
+def test_without_the_role_addresses_one_pool_serves_both(
+    database_url: DatabaseUrl,
+) -> None:
+    settings = assemble_app_settings({"DATABASE_URL": database_url})
+    connection_pools = build_postgres_connection_pools(settings)
+    assert connection_pools is not None
+    try:
+        assert connection_pools.is_single
+        assert connection_pools.tenant is connection_pools.platform
+    finally:
+        connection_pools.close()
 
 
 def test_defaults_build_a_working_but_closed_adapter(database_url: DatabaseUrl) -> None:

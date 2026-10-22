@@ -12,6 +12,7 @@ from app.adapters.storage.postgres.scoped_transactions import scoped_transaction
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.storage import StorageScopeContract, StorageUnitOfWorkContract
 
 UNIT_OF_WORK_LABEL: str = "unit of work"
@@ -20,16 +21,19 @@ UNIT_OF_WORK_LABEL: str = "unit of work"
 class PostgresUnitOfWorkAdapter(StorageUnitOfWorkContract):
     """
     A unit of work on Postgres: the block pins one connection of the pool
-    (`pinned_connection`), opens one transaction on it with the row level
-    security scope of the running code (in the same round trip,
-    `scoped_transaction`).
+    of the running code's scope (the tenant pool for a business, the
+    platform pool otherwise; `pinned_connection`), opens one transaction on
+    it with the row level security scope of the running code (in the same
+    round trip, `scoped_transaction`).
 
     Every storage operation of the same thread inside the block runs on
-    that connection as a savepoint of the unit: it sets the scope it needs
-    itself, in the round trip that opens the savepoint (a document
-    collection its scope, platform tables the platform scope), so a
-    platform-wide write of the unit never leaves the bypass on for the
-    tenant write after it, and its error rolls back only itself.
+    that connection as a savepoint of the unit, whichever pool it would use
+    on its own: it sets the scope it needs itself, in the round trip that
+    opens the savepoint (a document collection its scope; platform tables
+    such as the job queue the unit's business when the unit is a
+    business's), and its error rolls back only itself. A business's unit
+    therefore runs on the tenant role from its first statement to its
+    commit: nothing inside it sees another business.
     The block's writes commit together when it ends, or roll back together
     when it raises; the transaction-scoped advisory locks taken inside end
     with it. A unit inside a unit is a savepoint of the outer one.
@@ -37,20 +41,22 @@ class PostgresUnitOfWorkAdapter(StorageUnitOfWorkContract):
 
     def __init__(
         self,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
         storage_scope: StorageScopeContract,
     ) -> None:
-        self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._connection_pools: PostgresConnectionPools = connection_pools
         self._storage_scope: StorageScopeContract = storage_scope
 
     @contextmanager
     def unit_of_work(self) -> Generator[None]:
+        scope = self._storage_scope.current()
+        connection_pool: PostgresConnectionPoolClient = (
+            self._connection_pools.for_scope(scope)
+        )
         try:
             with (
-                self._connection_pool.pinned_connection(),
-                scoped_transaction(
-                    self._connection_pool, self._storage_scope.current()
-                ),
+                connection_pool.pinned_connection(),
+                scoped_transaction(connection_pool, scope),
             ):
                 yield
         except psycopg.Error as error:

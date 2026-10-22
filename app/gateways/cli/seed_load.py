@@ -99,9 +99,9 @@ def main(
         print(f"Storing the load dataset failed: {error}", file=error_stream)
         return EXIT_FAILED
     finally:
-        connection_pool = container.clients.postgres_pool()
-        if connection_pool is not None:
-            connection_pool.close()
+        connection_pools = container.clients.postgres_pools()
+        if connection_pools is not None:
+            connection_pools.close()
 
     manifest_json: str = manifest.model_dump_json(indent=2)
     if parsed.manifest == STANDARD_OUTPUT:

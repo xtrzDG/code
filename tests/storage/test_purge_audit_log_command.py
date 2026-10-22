@@ -9,7 +9,6 @@ from typed_time_provider import Microseconds
 from app.gateways.cli.purge_audit_log import main
 from app.schemas.constants.compliance import AuditAction, AuditChainStatus
 from app.schemas.typings.compliance.constrained_integers import AuditChainPosition
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.compliance.audit_chain.audit_chain_verification import (
     AuditChainVerification,
@@ -21,14 +20,15 @@ from tests.compliance.audit_chain.audit_entries import (
     entry,
 )
 from tests.storage.audit_chain_process import AuditProcess
+from tests.storage.postgres_roles import RoleDatabase
 
 # Entries are written two years before START: past any retention of a
 # year, while the command's own RETENTION_PURGE entry (written now) is not.
 
 
 @pytest.fixture
-def process(database_url: DatabaseUrl) -> Generator[AuditProcess]:
-    opened = AuditProcess(database_url)
+def process(role_urls: RoleDatabase) -> Generator[AuditProcess]:
+    opened = AuditProcess(role_urls)
     try:
         yield opened
     finally:
@@ -36,13 +36,15 @@ def process(database_url: DatabaseUrl) -> Generator[AuditProcess]:
 
 
 def test_the_command_purges_old_entries_and_the_chain_still_verifies(
-    process: AuditProcess, database_url: DatabaseUrl
+    process: AuditProcess, role_urls: RoleDatabase
 ) -> None:
     for minute in range(5):
         process.log.append(
             entry(None, minute - TWO_YEARS_IN_MINUTES, action=AuditAction.LOGIN)
         )
-    environment = {"DATABASE_URL": str(database_url)}
+    # As in production: the roles' addresses are set, the purge runs as
+    # the migration role anyway.
+    environment = role_urls.environment()
     output, again_output = io.StringIO(), io.StringIO()
 
     code = main(["--older-than-days", "365", "--batch", "2"], environment, output)

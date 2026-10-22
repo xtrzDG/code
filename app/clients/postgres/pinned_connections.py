@@ -1,13 +1,22 @@
 """
-The connection pinned to the running request or job, and small helpers of
+The connections pinned to the running request or job, and small helpers of
 the pool's connections (session options, transaction state).
 
 A pin keeps one borrowed connection for a block of code: everything the
-same thread does with the pool inside the block runs on it. Session-level
+same thread does with that pool inside the block runs on it. Session-level
 state therefore holds for the whole block (a session advisory lock, an
 open unit-of-work transaction), and the block needs one connection however
 many statements it runs, so a thread holding a lock never waits for a
 second connection that other lock holders keep busy.
+
+The tenant and the platform pool of a process share one registry
+(`PinnedConnections`). A pin belongs to the pool that lent its connection,
+and the other pool's users reach it only while a transaction is open on it
+(a unit of work): work inside a unit joins its transaction whichever pool
+it would use on its own, so the unit's writes commit together, on the
+unit's role. Outside such a transaction each pool keeps to its own
+connections: a read session or a session lock of one pool never carries
+the other pool's statements.
 """
 
 import threading
@@ -36,41 +45,77 @@ class ConnectionLender(Protocol):
         """The block in which other code uses the pinned connection."""
         ...
 
+    def is_lent(self) -> bool:
+        """Whether other code uses the pinned connection right now."""
+        ...
+
 
 @dataclass(frozen=True)
 class ConnectionPin:
-    """A connection pinned by one thread (a copied context in another
-    thread does not share it: psycopg connections are not shared by
-    concurrent statements), and the pin's lender, if any."""
+    """A connection pinned by one thread for the pool `owner` (a copied
+    context in another thread does not share it: psycopg connections are
+    not shared by concurrent statements), and the pin's lender, if any."""
 
     connection: PostgresConnection
     thread_id: int
+    owner: object
     lender: ConnectionLender | None = None
+
+    def holds_open_transaction(self) -> bool:
+        """A unit of work's transaction (not a lender's own one) is open on it."""
+
+        is_lender_busy: bool = self.lender is not None and not self.lender.is_lent()
+        return not is_lender_busy and not is_idle(self.connection)
 
 
 class PinnedConnections:
-    """The pins of one pool, kept per context like the storage scope."""
+    """
+    The pins of the pools of one process, kept per context like the
+    storage scope: a stack per thread, the innermost pin last.
+    """
 
     def __init__(self) -> None:
-        self._current_pin: ContextVar[ConnectionPin | None] = ContextVar(
-            "postgres_connection_pin",
-            default=None,
+        self._pins: ContextVar[tuple[ConnectionPin, ...]] = ContextVar(
+            "postgres_connection_pins",
+            default=(),
         )
 
-    def current(self) -> PostgresConnection | None:
-        """The connection this thread pinned, or None outside a pin."""
+    def current(self, owner: object) -> PostgresConnection | None:
+        """The connection this thread pinned for `owner`, or None outside a pin."""
 
-        pin: ConnectionPin | None = self._pin_of_thread()
+        pin: ConnectionPin | None = self._own_pin(owner)
         return None if pin is None else pin.connection
 
-    @contextmanager
-    def lent(self) -> Generator[PostgresConnection | None]:
+    def open_transaction(self) -> PostgresConnection | None:
         """
-        The connection this thread pinned, for a block of other code (None
-        outside a pin): the pin's lender first ends what it keeps open.
+        The innermost pinned connection of this thread when a unit of
+        work's transaction is open on it (whichever pool lent it), else None.
         """
 
-        pin: ConnectionPin | None = self._pin_of_thread()
+        thread_pins: list[ConnectionPin] = self._pins_of_thread()
+        if not thread_pins or not thread_pins[-1].holds_open_transaction():
+            return None
+
+        return thread_pins[-1].connection
+
+    @contextmanager
+    def lent(
+        self, owner: object, joins_open_transaction: bool = True
+    ) -> Generator[PostgresConnection | None]:
+        """
+        For a block of other code: the connection of the open transaction
+        of this thread (unless `joins_open_transaction` is off), else the
+        connection this thread pinned for `owner` (its lender first ends
+        what it keeps open), else None.
+        """
+
+        if joins_open_transaction:
+            joined: PostgresConnection | None = self.open_transaction()
+            if joined is not None:
+                yield joined
+                return
+
+        pin: ConnectionPin | None = self._own_pin(owner)
         if pin is None or pin.lender is None:
             yield None if pin is None else pin.connection
             return
@@ -80,26 +125,35 @@ class PinnedConnections:
 
     @contextmanager
     def pinned(
-        self, connection: PostgresConnection, lender: ConnectionLender | None = None
+        self,
+        connection: PostgresConnection,
+        owner: object,
+        lender: ConnectionLender | None = None,
     ) -> Generator[None]:
-        token: Token[ConnectionPin | None] = self._current_pin.set(
-            ConnectionPin(
-                connection=connection,
-                thread_id=threading.get_ident(),
-                lender=lender,
-            )
+        pin = ConnectionPin(
+            connection=connection,
+            thread_id=threading.get_ident(),
+            owner=owner,
+            lender=lender,
+        )
+        token: Token[tuple[ConnectionPin, ...]] = self._pins.set(
+            (*self._pins.get(), pin)
         )
         try:
             yield
         finally:
-            self._current_pin.reset(token)
+            self._pins.reset(token)
 
-    def _pin_of_thread(self) -> ConnectionPin | None:
-        pin: ConnectionPin | None = self._current_pin.get()
-        if pin is None or pin.thread_id != threading.get_ident():
-            return None
+    def _own_pin(self, owner: object) -> ConnectionPin | None:
+        for pin in reversed(self._pins_of_thread()):
+            if pin.owner is owner:
+                return pin
 
-        return pin
+        return None
+
+    def _pins_of_thread(self) -> list[ConnectionPin]:
+        thread_id: int = threading.get_ident()
+        return [pin for pin in self._pins.get() if pin.thread_id == thread_id]
 
 
 def build_session_options(

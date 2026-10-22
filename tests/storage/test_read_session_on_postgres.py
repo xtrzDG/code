@@ -116,7 +116,7 @@ def test_a_read_in_another_scope_rescopes_the_transaction_and_back(
 def test_a_session_is_plain_inside_a_unit_of_work_nested_or_unscoped(
     world: ReadSessionWorld,
 ) -> None:
-    unit = PostgresUnitOfWorkAdapter(world.pool, world.scope)
+    unit = PostgresUnitOfWorkAdapter(world.pools, world.scope)
     uncommitted = ChannelDocument(business_id=world.business_id, kind=ChannelKind.PHONE)
     with world.scope.scoped_to_business(world.business_id):
         with unit.unit_of_work(), world.sessions.read_session():

@@ -11,25 +11,16 @@ from dataclasses import dataclass
 
 import pytest
 
-from app.adapters.locks.postgres_advisory_lock_adapter import (
-    PostgresAdvisoryLockAdapter,
-)
-from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
-    PostgresUnitOfWorkAdapter,
-)
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.schemas.typings.storage.constrained_strings import AdvisoryLockKey
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import build_contact
 from tests.storage.conftest import PostgresCollectionFactory
+from tests.storage.postgres_roles import RoleDatabase, advisory_locks_on
 from tests.storage.rls_contacts import GEORGIA
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -56,25 +47,23 @@ class Taker:
 
 
 class LockingProcess:
-    """What one API process has: a pool, a scope, locks and contacts."""
+    """What one API process has: its pools, a scope, locks and contacts."""
 
     def __init__(
         self,
-        database_url: DatabaseUrl,
+        database: RoleDatabase,
         statement_timeout_seconds: int | None = None,
     ) -> None:
-        self.pool = PostgresConnectionPoolClient(
-            database_url,
-            max_size=4,
-            statement_timeout_seconds=statement_timeout_seconds,
+        self.pools = database.pools(
+            max_size=4, statement_timeout_seconds=statement_timeout_seconds
         )
+        # The test's own probes borrow from the tenant pool.
+        self.pool = self.pools.tenant
         self.scope = StorageScopeContext()
-        self.locks = PostgresAdvisoryLockAdapter(
-            self.pool, PostgresUnitOfWorkAdapter(self.pool, self.scope)
-        )
+        self.locks = advisory_locks_on(self.pools, self.scope)
         self.contacts: DocumentCollectionAdapterContract[ContactDocument] = (
             PostgresCollectionFactory(
-                connection_pool=self.pool,
+                connection_pools=self.pools,
                 storage_scope=self.scope,
                 wall_clock=build_fixed_wall_clock(),
             )(ContactDocument, "contacts")
@@ -97,13 +86,13 @@ class LockingProcess:
 
 
 @pytest.fixture
-def processes(database_url: DatabaseUrl) -> Generator[tuple[LockingProcess, ...]]:
-    first, second = LockingProcess(database_url), LockingProcess(database_url)
+def processes(role_urls: RoleDatabase) -> Generator[tuple[LockingProcess, ...]]:
+    first, second = LockingProcess(role_urls), LockingProcess(role_urls)
     try:
         yield first, second
     finally:
-        first.pool.close()
-        second.pool.close()
+        first.pools.close()
+        second.pools.close()
 
 
 def hold_in_thread(
@@ -247,10 +236,10 @@ def test_a_session_lock_spans_committed_writes_on_one_connection(
 
 
 def test_a_session_lock_waits_past_the_statement_timeout(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
-    first = LockingProcess(database_url)
-    second = LockingProcess(database_url, statement_timeout_seconds=1)
+    first = LockingProcess(role_urls)
+    second = LockingProcess(role_urls, statement_timeout_seconds=1)
     try:
         release = threading.Event()
         holder = hold_in_thread(first, release, is_session=True)
@@ -268,8 +257,8 @@ def test_a_session_lock_waits_past_the_statement_timeout(
             row = connection.execute("show statement_timeout").fetchone()
         assert row == ("1s",)
     finally:
-        first.pool.close()
-        second.pool.close()
+        first.pools.close()
+        second.pools.close()
 
 
 def test_a_session_lock_on_a_dead_connection_is_never_pooled_again(
@@ -277,7 +266,11 @@ def test_a_session_lock_on_a_dead_connection_is_never_pooled_again(
 ) -> None:
     first, second = processes
 
-    with first.locks.hold_with_session(KEY, WAIT):
+    # In a business's scope, as a customer's turn holds it: on the tenant pool.
+    with (
+        first.scope.scoped_to_business(BusinessId()),
+        first.locks.hold_with_session(KEY, WAIT),
+    ):
         with first.pool.connection() as connection:
             row = connection.execute("select pg_backend_pid()").fetchone()
         assert row is not None

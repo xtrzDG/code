@@ -1,6 +1,7 @@
 """
-The audit log is append-only on Postgres (migration 1193): the
-application's role cannot change, delete or empty it, a tampered row is
+The audit log is append-only on Postgres (migrations 1193 and 1200): no
+role that writes it (the application's tenant and platform roles, the
+tables' owner) can change, delete or empty it, a tampered row is
 found by the chain's check, the previous release keeps writing during
 a deploy (its upsert still inserts; its count of a repeated view changes
 nothing), and a chain's head left behind never forks the chain.
@@ -17,7 +18,6 @@ from app.schemas.constants.compliance import AuditAction, AuditChainProblem
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import AuditChainPosition
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.compliance.audit_chain.audit_chain_verification import (
@@ -26,11 +26,15 @@ from app.use_cases.compliance.audit_chain.audit_chain_verification import (
 from app.utilities.compliance.audit_chain_hashing import chain_key_of
 from tests.compliance.audit_chain.audit_entries import entry
 from tests.storage.audit_chain_process import AuditProcess
-from tests.storage.postgres_server import ThrowawayPostgresServer
+from tests.storage.postgres_roles import (
+    PLATFORM_LOGIN_ROLE,
+    TENANT_LOGIN_ROLE,
+    RoleDatabase,
+)
+from tests.storage.postgres_server import APP_ROLE_NAME, ThrowawayPostgresServer
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 BUSINESS: BusinessId = BusinessId()
-PLATFORM_WIDE: LiteralString = "select set_config('app.bypass_rls', 'on', false)"
 CHANGE_COUNT: LiteralString = (
     "update workshop.audit_log_entries "
     "set document = jsonb_set(document, '{record_count}', '7') "
@@ -55,27 +59,44 @@ FORBIDDEN_CHANGES: tuple[LiteralString, ...] = (
 
 
 @pytest.fixture
-def process(database_url: DatabaseUrl) -> Generator[AuditProcess]:
-    opened = AuditProcess(database_url)
+def process(role_urls: RoleDatabase) -> Generator[AuditProcess]:
+    opened = AuditProcess(role_urls)
     try:
         yield opened
     finally:
         opened.close()
 
 
+@pytest.fixture(params=["owner", TENANT_LOGIN_ROLE, PLATFORM_LOGIN_ROLE])
+def writer_role(
+    request: pytest.FixtureRequest,
+    postgres_server: ThrowawayPostgresServer,
+    database_name: str,
+) -> Generator[psycopg.Connection[tuple[object, ...]]]:
+    """
+    A role that writes audit entries: the application's two roles, and the
+    tables' owner (the previous release's role during a deploy).
+    """
+
+    role = APP_ROLE_NAME if request.param == "owner" else str(request.param)
+    with psycopg.connect(
+        postgres_server.conninfo(database_name, role), autocommit=True
+    ) as connection:
+        yield connection
+
+
 @pytest.fixture
 def app_role(
     postgres_server: ThrowawayPostgresServer, database_name: str
 ) -> Generator[psycopg.Connection[tuple[object, ...]]]:
-    """The application's own role, seeing every business."""
+    """The previous release's role (the tables' owner), seeing every business."""
 
     with postgres_server.app_connection(database_name) as connection:
-        connection.execute(PLATFORM_WIDE)
         yield connection
 
 
-def test_the_application_role_cannot_change_delete_or_empty_entries(
-    process: AuditProcess, app_role: psycopg.Connection[tuple[object, ...]]
+def test_no_writer_role_can_change_delete_or_empty_entries(
+    process: AuditProcess, writer_role: psycopg.Connection[tuple[object, ...]]
 ) -> None:
     stored = entry(BUSINESS)
     process.log.append(stored)
@@ -83,7 +104,7 @@ def test_the_application_role_cannot_change_delete_or_empty_entries(
     for statement in FORBIDDEN_CHANGES:
         parameters = (str(stored.id),) if "%s" in statement else ()
         with pytest.raises(errors.InsufficientPrivilege):
-            app_role.execute(statement, parameters)
+            writer_role.execute(statement, parameters)
 
     assert process.entries.get(str(stored.id)) == process.chains.head_of(
         chain_key_of(BUSINESS)

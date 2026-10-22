@@ -27,7 +27,6 @@ from app.schemas.typings.compliance.constrained_integers import (
 )
 from app.schemas.typings.compliance.strings import AuditEntityReference
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.audit_alert_checks import ADMIN_TENANT_ACTIONS
 from app.use_cases.compliance.audit_chain.audit_chain_verification import (
@@ -41,6 +40,7 @@ from tests.compliance.audit_chain.audit_entries import (
     entry,
 )
 from tests.storage.audit_chain_process import AuditProcess
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -49,8 +49,8 @@ OTHER: BusinessId = BusinessId()
 
 
 @pytest.fixture
-def process(database_url: DatabaseUrl) -> Generator[AuditProcess]:
-    opened = AuditProcess(database_url)
+def process(role_urls: RoleDatabase) -> Generator[AuditProcess]:
+    opened = AuditProcess(role_urls)
     try:
         yield opened
     finally:
@@ -88,13 +88,12 @@ def test_a_purge_leaves_a_checkpoint_the_chain_goes_on_from(
         postgres_server.app_connection(database_name) as connection,
         pytest.raises(errors.InsufficientPrivilege),
     ):
-        connection.execute("select set_config('app.bypass_rls', 'on', false)")
         connection.execute("delete from workshop.audit_log_entries")
 
 
 def test_a_purge_refuses_a_chain_that_is_no_chain(process: AuditProcess) -> None:
     with (
-        process.pool.transaction() as connection,
+        process.owner_pool.transaction() as connection,
         pytest.raises(psycopg.errors.InvalidParameterValue),
     ):
         connection.execute("select workshop.purge_audit_chain('users', 0, 10)")

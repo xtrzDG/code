@@ -39,7 +39,7 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     # the migration files of this build.
     database_probe: Singleton[DatabaseProbeAdapterContract] = Singleton(
         build_database_probe_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
     )
     migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
         SqlFileMigrationSourceAdapter,
@@ -48,20 +48,21 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     # One storage transaction for a block (Postgres), None in memory.
     storage_unit_of_work: Singleton[StorageUnitOfWorkContract | None] = Singleton(
         build_unit_of_work_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
     )
     # Several reads in one transaction (Postgres), None in memory.
     storage_read_session: Singleton[StorageReadSessionContract | None] = Singleton(
         build_read_session_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
+        storage_scope=utilities.storage_scope,
     )
     # Queued jobs wake idle lane threads at once: Postgres NOTIFY/LISTEN
     # reaches the worker processes, the in-process signal without a database.
     job_wakeup: Singleton[JobWakeupContract] = Singleton(
         build_job_wakeup_adapter,
-        connection_pool=clients.postgres_pool,
-        database_url=config.app_settings.provided.database_url,
+        connection_pool=clients.postgres_platform_pool,
+        database_url=clients.listen_database_url,
         listen_database_url=config.app_settings.provided.live_events_database_url,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -69,5 +70,5 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     # in memory).
     data_task_batches: Singleton[DataTaskBatchAdapterContract] = Singleton(
         build_data_task_batch_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )

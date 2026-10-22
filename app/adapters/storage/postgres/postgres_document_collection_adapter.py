@@ -50,16 +50,18 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     table has row-level security (enabled and forced): each operation runs in
     its own transaction that first sets the scope with SET LOCAL semantics.
     For TENANT collections the scope is the ambient `StorageScopeContract`
-    scope: inside `scoped_to_business(...)` a read sees only that business's
-    rows (the query also filters by it, so the index is used) and writing or
-    overwriting another business's row fails with AccessDeniedError. Outside
-    of a business scope, and always for PLATFORM collections, the transaction
-    runs platform-wide (`app.bypass_rls = on`).
+    scope: inside `scoped_to_business(...)` the operation borrows from the
+    tenant pool, whose role sees only that business's rows (the query also
+    filters by it, so the index is used), and writing or overwriting
+    another business's row fails with AccessDeniedError, whatever settings
+    the session changes. PLATFORM collections, and tenant collections
+    inside `platform_wide()`, use the platform pool, whose role sees every
+    business (migration 1200). Inside a unit of work every operation joins
+    the unit's transaction and role (`PostgresConnectionPools`).
 
-    RLS here guards against application mistakes, not against someone who
-    can run arbitrary SQL with the application's role (they can set the same
-    settings). Connect with a role that is neither superuser nor BYPASSRLS,
-    otherwise Postgres skips the policies.
+    The tenant role never connects as the tables' owner, a superuser or a
+    BYPASSRLS role: the pools refuse to start on such a role
+    (`app/gateways/database_roles_check.py`).
 
     Documents are written as validated JSON stamped with the current
     `schema_version` and read back from the JSONB text tolerantly (unknown

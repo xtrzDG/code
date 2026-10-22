@@ -19,6 +19,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.telemetry_factories import build_pool_instruments
 from app.repositories.conversation_repositories import ConversationRepository
 from app.schemas.constants.channels import ChannelKind
@@ -93,7 +94,9 @@ def test_a_repository_read_is_a_span_without_its_parameters(
 ) -> None:
     storage_scope = StorageScopeContext()
     collections = PostgresCollectionFactory(
-        traced_pool, storage_scope, build_fixed_wall_clock()
+        PostgresConnectionPools.single(traced_pool),
+        storage_scope,
+        build_fixed_wall_clock(),
     )
     conversations = ConversationRepository(
         collections(ConversationDocument, "conversations")

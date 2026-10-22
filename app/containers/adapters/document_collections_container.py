@@ -211,12 +211,12 @@ class DocumentCollectionsContainer(containers.DeclarativeContainer):
     queued_job_claims: Singleton[QueuedJobClaimAdapterContract] = Singleton(
         build_queued_job_claim_adapter,
         collection=queued_job_collection,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )
     periodic_job_run_store: Singleton[PeriodicJobRunStoreAdapterContract] = Singleton(
         build_periodic_job_run_store_adapter,
         collection=periodic_job_run_collection,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )
     channel_message_receipt_collection = document_collection(
         ChannelMessageReceiptDocument,

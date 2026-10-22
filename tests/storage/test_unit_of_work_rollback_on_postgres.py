@@ -14,16 +14,13 @@ import pytest
 from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
     PostgresUnitOfWorkAdapter,
 )
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import build_contact
 from tests.storage.conftest import PostgresCollectionFactory
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.rls_contacts import GEORGIA, ISRAEL
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -31,24 +28,26 @@ LOCK_KEY: int = 4_242_001
 
 
 class Units:
-    def __init__(self, database_url: DatabaseUrl) -> None:
-        self.pool = PostgresConnectionPoolClient(database_url, max_size=2)
+    def __init__(self, database: RoleDatabase) -> None:
+        self.pools = database.pools(max_size=2)
+        # Business units run on the tenant pool.
+        self.pool = self.pools.tenant
         self.scope = StorageScopeContext()
-        self.adapter = PostgresUnitOfWorkAdapter(self.pool, self.scope)
+        self.adapter = PostgresUnitOfWorkAdapter(self.pools, self.scope)
         self.contacts = PostgresCollectionFactory(
-            connection_pool=self.pool,
+            connection_pools=self.pools,
             storage_scope=self.scope,
             wall_clock=build_fixed_wall_clock(),
         )(ContactDocument, "contacts")
 
 
 @pytest.fixture
-def units(database_url: DatabaseUrl) -> Generator[Units]:
-    world = Units(database_url)
+def units(role_urls: RoleDatabase) -> Generator[Units]:
+    world = Units(role_urls)
     try:
         yield world
     finally:
-        world.pool.close()
+        world.pools.close()
 
 
 def test_a_database_failure_is_raised_as_its_application_error_and_rolls_back(

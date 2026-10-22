@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import MessageAuthor
@@ -160,7 +161,7 @@ def test_upsert_overwrites_and_keeps_first_write_time(
     platform_scope: StorageScopeContext,
 ) -> None:
     knowledge_items = PostgresCollectionFactory(
-        connection_pool=connection_pool,
+        connection_pools=PostgresConnectionPools.single(connection_pool),
         storage_scope=platform_scope,
         wall_clock=build_ticking_wall_clock(step_microseconds=10),
     )(KnowledgeItemDocument, "knowledge_items")

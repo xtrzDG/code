@@ -6,19 +6,14 @@ out complete; a document migration walks its table in keyset batches.
 
 from typed_time_provider import Microseconds
 
-from app.adapters.locks.postgres_advisory_lock_adapter import (
-    PostgresAdvisoryLockAdapter,
-)
 from app.adapters.storage.persisted_document_codec import parse_stored_object
 from app.adapters.storage.postgres.postgres_data_task_batch_adapter import (
     PostgresDataTaskBatchAdapter,
 )
-from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
-    PostgresUnitOfWorkAdapter,
-)
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.registries.locks.data_task_lock_registry import DataTaskLockRegistry
 from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.repositories.data_task_state_repository import DataTaskStateRepository
@@ -65,6 +60,7 @@ from tests.storage.evolution_documents import (
     NoteV2,
     build_note_v1,
 )
+from tests.storage.postgres_roles import advisory_locks_on
 from tests.storage.storage_testing import build_fixed_wall_clock
 from tests.storage.stored_rows import read_stored, write_stored
 
@@ -97,7 +93,6 @@ def forget_lookups(connection_pool: PostgresConnectionPoolClient) -> None:
     """The rows as a release before 1122 left them: the columns are empty."""
 
     with connection_pool.transaction() as connection:
-        connection.execute("select set_config('app.bypass_rls', 'on', true)")
         connection.execute(
             "update workshop.knowledge_items "
             "set doc_updated_at = null, doc_is_active = null"
@@ -119,6 +114,7 @@ def knowledge_page(
 
 def test_a_lookup_column_fills_after_the_deploy_and_the_list_is_complete(
     connection_pool: PostgresConnectionPoolClient,
+    connection_pools: PostgresConnectionPools,
     postgres_collections: PostgresCollectionFactory,
     storage_scope: StorageScopeContext,
 ) -> None:
@@ -131,13 +127,9 @@ def test_a_lookup_column_fills_after_the_deploy_and_the_list_is_complete(
     runner = RunDataTasksUseCase(
         registry=registry,
         state_repo=states,
-        batches=PostgresDataTaskBatchAdapter(connection_pool),
-        locks=DataTaskLockRegistry(
-            PostgresAdvisoryLockAdapter(
-                connection_pool,
-                PostgresUnitOfWorkAdapter(connection_pool, storage_scope),
-            )
-        ),
+        # The worker's platform pool, as in production.
+        batches=PostgresDataTaskBatchAdapter(connection_pools.platform),
+        locks=DataTaskLockRegistry(advisory_locks_on(connection_pools, storage_scope)),
         pulse_repo=Pulses(),
         wall_clock=build_fixed_wall_clock(),
         release=None,

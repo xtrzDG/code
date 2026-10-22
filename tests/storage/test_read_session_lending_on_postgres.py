@@ -87,7 +87,7 @@ def test_a_unit_of_work_in_a_session_runs_in_its_own_transaction(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
 ) -> None:
-    unit = PostgresUnitOfWorkAdapter(world.pool, world.scope)
+    unit = PostgresUnitOfWorkAdapter(world.pools, world.scope)
     kept = ChannelDocument(business_id=world.business_id, kind=ChannelKind.PHONE)
     dropped = ChannelDocument(business_id=world.business_id, kind=ChannelKind.PHONE)
     with (

@@ -17,9 +17,7 @@ import signal
 import threading
 from types import FrameType
 
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.gateways.metrics.metrics_rendering import start_worker_metrics
 from app.gateways.metrics.worker_metrics_server import WorkerMetricsServer
@@ -86,15 +84,15 @@ def install_stop_signal_handlers(stop_event: threading.Event) -> None:
 
 
 def shut_down(app_container: AppContainer) -> None:
-    """Send the remaining traces and spans, close the Postgres pool."""
+    """Send the remaining traces and spans, close the Postgres pools."""
 
     app_container.adapters.llm_trace_facilitator().flush()
     finish_telemetry(app_container)
-    connection_pool: PostgresConnectionPoolClient | None = (
-        app_container.clients.postgres_pool()
+    connection_pools: PostgresConnectionPools | None = (
+        app_container.clients.postgres_pools()
     )
-    if connection_pool is not None:
-        connection_pool.close()
+    if connection_pools is not None:
+        connection_pools.close()
 
 
 def run_from_environment() -> int:
