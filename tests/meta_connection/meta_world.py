@@ -15,6 +15,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.clients.meta.meta_oauth_client import MetaOAuthClient
 from app.clients.meta.meta_pages_client import MetaPagesClient
 from app.clients.meta.whatsapp_onboarding_client import WhatsAppOnboardingClient
+from app.contracts.session_assurance import StepUpGuardContract
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.meta_connection_routes import build_meta_connection_router
 from app.gateways.http.user_authentication import build_current_user_dependency
@@ -64,8 +65,13 @@ def meta_settings(**overrides: str) -> AppSettings:
 
 
 class MetaWorld(CabinetSetup):
-    def __init__(self, settings: AppSettings | None = None) -> None:
+    def __init__(
+        self,
+        settings: AppSettings | None = None,
+        step_up: StepUpGuardContract | None = None,
+    ) -> None:
         super().__init__(settings or meta_settings())
+        step_up = step_up or AllowStepUp()
         testbed = self.testbed
         self.graph = testbed.meta_transport
         self.state_repo = MetaConnectionStateRepository(
@@ -79,7 +85,7 @@ class MetaWorld(CabinetSetup):
             "audit_log_repo": testbed.audit_log_repo,
             "product_events": testbed.product_events,
             "storage_scope": StorageScopeContext(),
-            "step_up": AllowStepUp(),
+            "step_up": step_up,
             "app_settings": testbed.settings,
             "wall_clock": testbed.wall_clock,
         }
@@ -114,6 +120,7 @@ class MetaWorld(CabinetSetup):
                     StartMetaConnectionUseCase(
                         testbed.authorize_business_access,
                         self.state_repo,
+                        step_up,
                         testbed.settings,
                         testbed.wall_clock,
                     )

@@ -83,6 +83,7 @@ class MetaConnectionUseCasesContainer(containers.DeclarativeContainer):
         StartMetaConnectionUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         state_repo=repositories.meta_connection_state_repo,
+        step_up=utilities.step_up_guard,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

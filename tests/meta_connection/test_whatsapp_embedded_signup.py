@@ -18,7 +18,7 @@ CODE: str = "AQB-test-code-0000-0000"
 
 
 def reasons(response: object) -> list[str]:
-    body = getattr(response, "json")()
+    body = response.json()
     return [reason["code"] for reason in body.get("reasons") or []]
 
 

@@ -3,11 +3,13 @@
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+from app.contracts.session_assurance import StepUpGuardContract
 from app.schemas.constants.meta_connection import MetaConnectionPurpose
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.exceptions.mfa_errors import StepUpRequiredError
 from app.schemas.typings.meta_connection.constrained_strings import (
     MetaConnectionState,
 )
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.use_cases.channels.meta_connection.meta_states import hash_state, take_state
 from tests.meta_connection.meta_graph_scripts import (
     META_APP_ID,
@@ -17,6 +19,11 @@ from tests.meta_connection.meta_graph_scripts import (
 from tests.meta_connection.meta_world import MetaWorld, meta_settings
 
 CODE: str = "AQB-test-code-0000-0000"
+
+
+class NotConfirmedRecently(StepUpGuardContract):
+    def require_recent_authentication(self) -> None:
+        raise StepUpRequiredError("Confirm it is you first.")
 
 
 def reason_codes(body: dict[str, object]) -> list[object]:
@@ -98,6 +105,14 @@ class TestStart:
         assert no_signup.status_code == 422
         assert reason_codes(no_signup.json()) == ["meta_not_configured"]
         assert pages_still.status_code == 201
+
+    def test_the_owner_confirms_it_is_them_before_meta_opens(self) -> None:
+        world = MetaWorld(step_up=NotConfirmedRecently())
+
+        response = world.start("whatsapp")
+
+        assert response.status_code == 401
+        assert world.state_repo.list_of_business(world.business.id) == []
 
     def test_ended_and_surplus_sign_ins_are_dropped(self) -> None:
         world = MetaWorld()

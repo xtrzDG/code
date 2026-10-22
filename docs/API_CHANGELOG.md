@@ -20,7 +20,9 @@ Spec: `10fbeae1f6f73037`
   set up; `pages`: the page picker), with the Meta app id and Graph API
   version the cabinet loads the Facebook SDK with. Members may read it.
 - **Added** `POST /v1/businesses/{business_id}/channels/meta/sign-in` (201,
-  owner, `{"purpose": "whatsapp" | "pages"}`): starts one sign-in and returns
+  owner, recent sign-in: the step-up comes before Meta's window opens, so
+  Meta's short-lived code never waits for it; `{"purpose": "whatsapp" |
+  "pages"}`): starts one sign-in and returns
   its one-time `state` (15 minutes; only its hash is stored), the app id,
   the Embedded Signup `configuration_id` (WhatsApp) or the `permissions` to
   ask for (pages). 422 `meta_not_configured` when the server has no Meta app.

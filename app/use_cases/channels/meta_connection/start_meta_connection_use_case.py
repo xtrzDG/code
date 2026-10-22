@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.meta_connection import MetaConnectionStateRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.meta_connection import (
@@ -53,6 +54,11 @@ class StartMetaConnectionUseCase(
     owner's token for long. Without the platform's Meta app (or, for
     WhatsApp, its signup configuration) the start is refused as
     `meta_not_configured`.
+
+    Starting is an owner's sensitive step (step-up): the session confirms
+    it is its person here, before Meta's window opens, because the code
+    Meta hands back lives about thirty seconds and must not wait for a
+    confirmation when the signup completes.
     """
 
     def __init__(
@@ -61,6 +67,7 @@ class StartMetaConnectionUseCase(
             BusinessAccessRequest, BusinessDocument
         ],
         state_repo: MetaConnectionStateRepoContract,
+        step_up: StepUpGuardContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -68,6 +75,7 @@ class StartMetaConnectionUseCase(
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
         self._state_repo: MetaConnectionStateRepoContract = state_repo
+        self._step_up: StepUpGuardContract = step_up
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -79,6 +87,7 @@ class StartMetaConnectionUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         purpose: MetaConnectionPurpose = input_data.request.purpose
         app: MetaAppCredentials | None = meta_app_of(self._app_settings)
         configuration_id: MetaConfigurationId | None = (

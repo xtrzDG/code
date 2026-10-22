@@ -36,9 +36,7 @@ class TestCommentReplySettings:
         }
         stored = world.stored(ChannelKind.INSTAGRAM).comment_replies
         assert stored is not None and stored.is_on
-        assert world.testbed.audit_actions(world.business.id) == [
-            ("update", "channel")
-        ]
+        assert world.testbed.audit_actions(world.business.id) == [("update", "channel")]
 
     def test_off_keeps_the_keywords_and_text(self) -> None:
         world = with_instagram()
