@@ -17,11 +17,8 @@ import type { PasskeyListView, PasskeyView } from "@/api/types";
 import { RecoveryCodesPanel } from "@/components/security/RecoveryCodesPanel";
 import { Alert, Button, Card, ConfirmDialog, Modal, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import {
-  canUsePasskeys,
-  createPasskey,
-  PasskeyCeremonyError,
-} from "@/lib/security/passkeyCeremony";
+import { createPasskey, PasskeyCeremonyError } from "@/lib/security/passkeyCeremony";
+import { usePasskeySupport } from "@/lib/security/usePasskeySupport";
 
 import { PasskeyRow } from "./PasskeyRow";
 import { RenamePasskeyDialog } from "./RenamePasskeyDialog";
@@ -44,7 +41,7 @@ export function PasskeysCard({
   const [renaming, setRenaming] = useState<PasskeyView | null>(null);
   const [removing, setRemoving] = useState<PasskeyView | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
-  const isSupported = canUsePasskeys();
+  const isSupported = usePasskeySupport();
   const items = list.items ?? [];
 
   const reload = async () => {
@@ -108,7 +105,7 @@ export function PasskeysCard({
       <div className="space-y-4">
         {!list.is_available ? (
           <p className="text-sm text-ink-muted">{t("passkeys.unavailable")}</p>
-        ) : !isSupported ? (
+        ) : isSupported === false ? (
           <p className="text-sm text-ink-muted">{t("passkeys.unsupported")}</p>
         ) : list.is_recommended || items.length === 0 ? (
           <p className="text-sm text-ink-muted">{t("passkeys.recommended")}</p>
@@ -128,7 +125,7 @@ export function PasskeysCard({
           <p className="text-sm text-ink-subtle">{t("passkeys.empty")}</p>
         ) : null}
         {problem ? <Alert tone="warning">{problem}</Alert> : null}
-        {list.is_available && isSupported ? (
+        {list.is_available && isSupported === true ? (
           <Button
             isLoading={isAdding}
             loadingText={t("passkeys.adding")}

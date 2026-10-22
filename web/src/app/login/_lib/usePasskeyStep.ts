@@ -19,8 +19,9 @@ import {
 } from "@/api/passkeyAuth";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { canUsePasskeys, createPasskey, signWithPasskey } from "@/lib/security/passkeyCeremony";
+import { createPasskey, signWithPasskey } from "@/lib/security/passkeyCeremony";
 import { passkeyProblem } from "@/lib/security/passkeyProblem";
+import { usePasskeySupport } from "@/lib/security/usePasskeySupport";
 
 export function usePasskeyStep(
   step: SecondStepRequired,
@@ -31,7 +32,7 @@ export function usePasskeyStep(
   const challengeId = step.mfa_challenge.mfa_challenge_id;
   const methods = step.mfa_challenge.methods ?? [];
   const enrollmentMethods = step.mfa_challenge.enrollment_methods ?? [];
-  const isSupported = canUsePasskeys();
+  const isSupported = usePasskeySupport() === true;
   const [isWorking, setWorking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 

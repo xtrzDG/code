@@ -45,6 +45,7 @@ import { SetupEntry } from "./setup/SetupEntry";
 import { SetupHero } from "./setup/SetupHero";
 import { ShellFrame } from "./ShellFrame";
 import { DpaBanner } from "./DpaBanner";
+import { SecurityNudgeBanner } from "./SecurityNudgeBanner";
 import { SupportBanner } from "./SupportBanner";
 import type { ShellNavItem } from "./types";
 import { useMemberRole } from "./useMemberRole";
@@ -143,6 +144,8 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           <SupportBanner />
           {/* A new data processing agreement to accept (owners). */}
           {isConversationPath(pathname) ? null : <DpaBanner />}
+          {/* After go-live: the owner's reminder to turn on a second factor. */}
+          {isConversationPath(pathname) ? null : <SecurityNudgeBanner />}
           {isConversationPath(pathname) ? null : <CoachMarkSlot page={page} />}
           {children}
           <MilestoneCelebrations />

@@ -30,10 +30,10 @@ export class PasskeyCeremonyError extends Error {
 
 /** Whether this browser can use passkeys at all. */
 export function canUsePasskeys(): boolean {
+  // `globalThis`: no window while the server renders.
   return (
-    typeof window !== "undefined" &&
-    typeof window.PublicKeyCredential === "function" &&
-    typeof navigator.credentials?.create === "function"
+    typeof globalThis.PublicKeyCredential === "function" &&
+    typeof globalThis.navigator?.credentials?.create === "function"
   );
 }
 

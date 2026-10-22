@@ -3,8 +3,10 @@
 /**
  * "Confirm it is you": shown when the API asks a sensitive action to be
  * confirmed (src/api/stepUp.ts). People with an authenticator app enter
- * its code (or a recovery code); others get a login code at their own
- * phone or e-mail (one sent moments ago is offered again: stepUpAsker.ts).
+ * its code (or a recovery code); people with a passkey may use it instead
+ * (with passkeys alone, nothing is sent unless they ask for a code);
+ * others get a login code at their own phone or e-mail (one sent moments
+ * ago is offered again: stepUpAsker.ts).
  * Once confirmed, the waiting requests run again by themselves; cancelling
  * leaves them refused. Loaded by StepUpDialog only when a confirmation is
  * asked for.
@@ -26,6 +28,8 @@ import {
   useToast,
 } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { canUsePasskeys } from "@/lib/security/passkeyCeremony";
+import { usePasskeySupport } from "@/lib/security/usePasskeySupport";
 import {
   RECOVERY_CODE_EXAMPLE,
   isCompleteOneTimeCode,
@@ -34,8 +38,14 @@ import {
 import { createStepUpAsker } from "@/lib/security/stepUpAsker";
 
 import { OneTimeCodeField } from "./OneTimeCodeField";
+import { StepUpPasskeyOption } from "./StepUpPasskeyOption";
+import { useStepUpPasskey } from "./useStepUpPasskey";
 
 const stepUp = createStepUpAsker(() => unwrap(api.POST("/v1/auth/step-up")));
+/** A login code instead of a passkey (asked on purpose: it is sent). */
+const loginCodeStepUp = createStepUpAsker(() =>
+  unwrap(api.POST("/v1/auth/step-up", { body: { method: "login_code" } })),
+);
 
 export default function StepUpForm() {
   const { t } = useI18n();
@@ -46,10 +56,21 @@ export default function StepUpForm() {
   const [useRecovery, setUseRecovery] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [isChecking, setChecking] = useState(false);
+  const passkey = useStepUpPasskey(() => {
+    toast.success(t("mfa.stepUp.confirmed"));
+    settleStepUp(true);
+  });
+  const isPasskeySupported = usePasskeySupport();
+  const canPasskey = Boolean(challenge?.passkey_available) && isPasskeySupported === true;
+  const isPasskeyOnly = challenge?.method === "passkey";
 
-  const resend = async () => {
+  // A code asked for on purpose (passkeys alone send nothing) is resent the same way.
+  const [isCodeOnRequest, setCodeOnRequest] = useState(false);
+
+  const askLoginCode = async (options: { onRequest: boolean; fresh: boolean }) => {
     try {
-      const next = await stepUp.ask({ fresh: true });
+      const next = await (options.onRequest ? loginCodeStepUp : stepUp).ask({ fresh: options.fresh });
+      setCodeOnRequest(options.onRequest);
       setProblem(null);
       setChallenge(next);
       setCode("");
@@ -57,15 +78,22 @@ export default function StepUpForm() {
       toast.error(toApiError(error));
     }
   };
+  const resend = () => askLoginCode({ onRequest: isCodeOnRequest, fresh: true });
 
   useEffect(() => {
     let isCurrent = true;
-    // How to confirm (without an authenticator, a login code is sent).
+    // How to confirm (without an authenticator or a passkey, a login code is sent).
     stepUp.ask().then(
       (next) => {
-        if (isCurrent) {
-          setChallenge(next);
+        if (!isCurrent) {
+          return;
         }
+        if (next.method === "passkey" && !canUsePasskeys()) {
+          // Passkeys only, and this browser cannot use them: a code instead.
+          void askLoginCode({ onRequest: true, fresh: false });
+          return;
+        }
+        setChallenge(next);
       },
       (error: unknown) => {
         toast.error(toApiError(error));
@@ -101,6 +129,7 @@ export default function StepUpForm() {
     try {
       await unwrap(api.POST("/v1/auth/step-up/verify", { body }));
       stepUp.forget();
+      loginCodeStepUp.forget();
       toast.success(t("mfa.stepUp.confirmed"));
       settleStepUp(true);
     } catch (caught) {
@@ -136,19 +165,37 @@ export default function StepUpForm() {
           <Button variant="secondary" onClick={() => settleStepUp(false)}>
             {t("common.cancel")}
           </Button>
-          <Button
-            type="submit"
-            form="step-up-form"
-            isLoading={isChecking}
-            loadingText={t("mfa.stepUp.confirming")}
-            disabled={!challenge}
-          >
-            {t("mfa.stepUp.confirm")}
-          </Button>
+          {isPasskeyOnly ? (
+            <Button
+              isLoading={passkey.isWorking}
+              loadingText={t("passkeys.signIn.waiting")}
+              onClick={() => void passkey.confirm()}
+            >
+              {t("passkeys.stepUp.use")}
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              form="step-up-form"
+              isLoading={isChecking}
+              loadingText={t("mfa.stepUp.confirming")}
+              disabled={!challenge || passkey.isWorking}
+            >
+              {t("mfa.stepUp.confirm")}
+            </Button>
+          )}
         </>
       }
     >
-      {challenge ? (
+      {challenge && isPasskeyOnly ? (
+        <StepUpPasskeyOption
+          isOnly
+          isWorking={passkey.isWorking}
+          problem={passkey.problem}
+          onConfirm={() => void passkey.confirm()}
+          onUseLoginCode={() => void askLoginCode({ onRequest: true, fresh: false })}
+        />
+      ) : challenge ? (
         <form
           id="step-up-form"
           noValidate
@@ -158,6 +205,15 @@ export default function StepUpForm() {
             void confirm(code);
           }}
         >
+          {canPasskey ? (
+            <StepUpPasskeyOption
+              isOnly={false}
+              isWorking={passkey.isWorking}
+              problem={passkey.problem}
+              onConfirm={() => void passkey.confirm()}
+              onUseLoginCode={() => void askLoginCode({ onRequest: true, fresh: false })}
+            />
+          ) : null}
           <p className="text-sm text-ink-muted">{instruction}</p>
           {useRecovery ? (
             <Field
