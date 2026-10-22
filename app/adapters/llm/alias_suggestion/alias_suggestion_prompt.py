@@ -9,6 +9,9 @@ from app.schemas.dto.knowledge_aliases import AliasSuggestionItem
 MAX_OUTPUT_TOKENS: int = 6_000
 FENCE_TAG: str = "item_titles"
 FENCE_KEY_BYTES: int = 4
+INSTRUCTIONS_OPENING: str = (
+    "You help a small business answer customers in all of its languages. "
+)
 
 
 def new_fence_key() -> str:
@@ -21,8 +24,8 @@ def build_instructions(fence_key: str) -> str:
     """The system prompt: the task, the answer's shape, the rules, the fence."""
 
     return (
-        "You help a small business answer customers in all of its languages. "
-        "You get the titles of its knowledge items (questions customers ask, "
+        INSTRUCTIONS_OPENING
+        + "You get the titles of its knowledge items (questions customers ask, "
         "dishes, services, rooms, products, rules) and write each title in "
         "the languages listed under its `to`, the way a customer of this "
         "business would write it in that language.\n"

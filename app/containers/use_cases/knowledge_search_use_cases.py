@@ -1,5 +1,6 @@
-from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory, Singleton
+from dataclasses import dataclass
+
+from dependency_injector.providers import Factory, Singleton
 
 from app.adapters.embeddings.knowledge_embedding_store_factory import (
     build_knowledge_embedding_store,
@@ -40,33 +41,48 @@ from app.use_cases.knowledge.knowledge_search_choice import choose_knowledge_sea
 from app.use_cases.knowledge.search_knowledge_use_case import SearchKnowledgeUseCase
 
 
-class KnowledgeSearchUseCasesContainer(containers.DeclarativeContainer):
+@dataclass(frozen=True)
+class KnowledgeSearchProviders:
     """
-    Knowledge across languages (R17-CROSS-LANG-SEARCH): the search tool
-    (hybrid with EMBEDDINGS_API_KEY, lexical without), aliases suggested by
-    the assistants' model, and the `index_knowledge` job that keeps aliases
-    and vectors current.
+    Knowledge across languages (R17-CROSS-LANG-SEARCH): the embeddings
+    endpoint and store, the alias model, the search tool (hybrid with
+    EMBEDDINGS_API_KEY, lexical without), aliases on request and the
+    `index_knowledge` job. `KnowledgeUseCasesContainer` holds them as its
+    own providers, over its own edges.
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
-    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
-    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
-    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
-    repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
-    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
-    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    text_embedder: Singleton[TextEmbedderContract]
+    embedding_store: Singleton[KnowledgeEmbeddingStoreContract]
+    alias_suggester: Singleton[KnowledgeAliasSuggesterContract]
+    search_knowledge_use_case: Factory[
+        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
+    ]
+    suggest_knowledge_aliases_use_case: Factory[
+        UseCaseContract[SuggestKnowledgeAliasesCommand, KnowledgeItemDetails]
+    ]
+    index_knowledge_use_case: Factory[UseCaseContract[QueuedJobInput, JobReport]]
 
-    # --- The embeddings endpoint (OpenAI EU) and the vectors (pgvector).
-    openai_embeddings_client: Singleton[OpenAiEmbeddingsClient] = Singleton(
-        OpenAiEmbeddingsClient,
-        api_key=config.app_settings.provided.embeddings.api_key,
-        base_url=config.app_settings.provided.openai_base_url,
-        project_id=config.app_settings.provided.openai_project_id,
-    )
+
+def build_knowledge_search_providers(
+    adapters: AdaptersContainer,
+    clients: ClientsContainer,
+    config: ConfigContainer,
+    registries: RegistriesContainer,
+    repositories: RepositoriesContainer,
+    time_provider: TimeProviderContainer,
+    utilities: UtilitiesContainer,
+) -> KnowledgeSearchProviders:
+    """The providers of the cross-language search over the given edges."""
+
     text_embedder: Singleton[TextEmbedderContract] = Singleton(
         build_text_embedder,
         settings=config.app_settings,
-        client=openai_embeddings_client,
+        client=Singleton(
+            OpenAiEmbeddingsClient,
+            api_key=config.app_settings.provided.embeddings.api_key,
+            base_url=config.app_settings.provided.openai_base_url,
+            project_id=config.app_settings.provided.openai_project_id,
+        ),
     )
     embedding_store: Singleton[KnowledgeEmbeddingStoreContract] = Singleton(
         build_knowledge_embedding_store,
@@ -81,55 +97,44 @@ class KnowledgeSearchUseCasesContainer(containers.DeclarativeContainer):
         llm_adapter=adapters.llm_adapter,
         model_id=config.app_settings.provided.llm_model_id,
     )
-
-    # --- The model tool search_knowledge and the cabinet's search test.
-    lexical_search_use_case: Factory[
-        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
-    ] = Factory(
-        SearchKnowledgeUseCase,
-        business_repo=repositories.business_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
-    )
-    hybrid_search_use_case: Factory[
-        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
-    ] = Factory(
-        EmbeddingSearchKnowledgeUseCase,
-        business_repo=repositories.business_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
+    knowledge = {
+        "business_repo": repositories.business_repo,
+        "knowledge_item_repo": repositories.knowledge_item_repo,
+    }
+    return KnowledgeSearchProviders(
         text_embedder=text_embedder,
         embedding_store=embedding_store,
-    )
-    search_knowledge_use_case: Factory[
-        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
-    ] = Factory(
-        choose_knowledge_search,
-        text_embedder=text_embedder,
-        hybrid_search=hybrid_search_use_case,
-        lexical_search=lexical_search_use_case,
-    )
-
-    # --- Aliases on request, and the indexing job.
-    suggest_knowledge_aliases_use_case: Factory[
-        UseCaseContract[SuggestKnowledgeAliasesCommand, KnowledgeItemDetails]
-    ] = Factory(
-        SuggestKnowledgeAliasesUseCase,
-        business_repo=repositories.business_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        resource_repo=repositories.resource_repo,
-        usage_event_repo=repositories.usage_event_repo,
         alias_suggester=alias_suggester,
-        language_detector=utilities.language_detector,
-        admit_owner_action=admit_owner_action_factory(registries, time_provider),
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    # The worker's job (INDEX_KNOWLEDGE_JOB).
-    index_knowledge_use_case: Factory[UseCaseContract[QueuedJobInput, JobReport]] = (
-        Factory(
+        search_knowledge_use_case=Factory(
+            choose_knowledge_search,
+            text_embedder=text_embedder,
+            hybrid_search=Factory(
+                EmbeddingSearchKnowledgeUseCase,
+                **knowledge,
+                brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
+                text_embedder=text_embedder,
+                embedding_store=embedding_store,
+            ),
+            lexical_search=Factory(
+                SearchKnowledgeUseCase,
+                **knowledge,
+                brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
+            ),
+        ),
+        suggest_knowledge_aliases_use_case=Factory(
+            SuggestKnowledgeAliasesUseCase,
+            **knowledge,
+            resource_repo=repositories.resource_repo,
+            usage_event_repo=repositories.usage_event_repo,
+            alias_suggester=alias_suggester,
+            language_detector=utilities.language_detector,
+            admit_owner_action=admit_owner_action_factory(registries, time_provider),
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+        # The worker's job (INDEX_KNOWLEDGE_JOB).
+        index_knowledge_use_case=Factory(
             IndexKnowledgeUseCase,
-            business_repo=repositories.business_repo,
-            knowledge_item_repo=repositories.knowledge_item_repo,
+            **knowledge,
             brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
             usage_event_repo=repositories.usage_event_repo,
             alias_suggester=alias_suggester,
@@ -137,5 +142,5 @@ class KnowledgeSearchUseCasesContainer(containers.DeclarativeContainer):
             text_embedder=text_embedder,
             embedding_store=embedding_store,
             wall_clock=time_provider.microsecond_wall_clock,
-        )
+        ),
     )

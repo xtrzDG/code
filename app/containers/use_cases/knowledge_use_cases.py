@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import Container, DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
@@ -8,7 +8,8 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.knowledge_search_use_cases import (
-    KnowledgeSearchUseCasesContainer,
+    KnowledgeSearchProviders,
+    build_knowledge_search_providers,
 )
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -99,16 +100,12 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # Knowledge across languages: the search tool, aliases, indexing.
-    knowledge_search: KnowledgeSearchUseCasesContainer = Container(  # type: ignore[assignment]
-        KnowledgeSearchUseCasesContainer,
-        adapters=adapters,
-        clients=clients,
-        config=config,
-        registries=registries,
-        repositories=repositories,
-        time_provider=time_provider,
-        utilities=utilities,
+    _search: KnowledgeSearchProviders = build_knowledge_search_providers(
+        adapters, clients, config, registries, repositories, time_provider, utilities
     )
+    text_embedder = _search.text_embedder
+    embedding_store = _search.embedding_store
+    alias_suggester = _search.alias_suggester
 
     # --- Niche templates and the profile wizard.
     list_niche_templates_use_case: Factory[
@@ -237,12 +234,10 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # Hybrid with EMBEDDINGS_API_KEY, lexical without (knowledge_search).
-    search_knowledge_use_case = knowledge_search.search_knowledge_use_case
-    suggest_knowledge_aliases_use_case = (
-        knowledge_search.suggest_knowledge_aliases_use_case
-    )
-    index_knowledge_use_case = knowledge_search.index_knowledge_use_case
+    # Hybrid with EMBEDDINGS_API_KEY, lexical without.
+    search_knowledge_use_case = _search.search_knowledge_use_case
+    suggest_knowledge_aliases_use_case = _search.suggest_knowledge_aliases_use_case
+    index_knowledge_use_case = _search.index_knowledge_use_case
     get_price_use_case: Factory[
         UseCaseContract[PriceLookupQuery, PriceLookupResult]
     ] = Factory(

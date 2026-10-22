@@ -1,5 +1,8 @@
 """Menu, packages, FAQ and policies of the Tbilisi demo restaurant (in Russian,
-the owner's language; the assistant answers in the guest's language)."""
+the owner's language; the assistant answers in the guest's language). The
+first questions and two dishes carry the owner's approved aliases in
+Georgian and English: the hosted page's starter questions and the search in
+the guest's language."""
 
 from functools import partial
 
@@ -33,6 +36,7 @@ def build_restaurant_knowledge(
             "Хачапури по-имеретински",
             price_minor=1800,
             body="Круглый, с имеретинским сыром внутри. На 2–3 человек.",
+            aliases=[("ka", "იმერული ხაჭაპური"), ("en", "Imeretian khachapuri")],
         ),
         item(
             DISH,
@@ -40,6 +44,10 @@ def build_restaurant_knowledge(
             price_minor=180,
             body="Цена за 1 штуку, заказ от 5 штук. Варим 15 минут.",
             tags=["bestseller"],
+            aliases=[
+                ("ka", "ხინკალი საქონლისა და ღორის ხორცით"),
+                ("en", "Beef and pork khinkali"),
+            ],
         ),
         item(
             DISH,
@@ -143,18 +151,27 @@ def build_restaurant_knowledge(
             body="Своей парковки нет. Рядом городская платная парковка на улице "
             "Котэ Абхази — 2 лари в час. Удобнее приехать на такси.",
             source=KnowledgeItemSource.PROFILE,
+            aliases=[("ka", "გაქვთ პარკინგი?"), ("en", "Is there parking?")],
         ),
         item(
             KnowledgeItemKind.FAQ,
             "Можно ли прийти с детьми?",
             body="Да: есть детские стулья, детское меню и закрытый двор.",
             source=KnowledgeItemSource.PROFILE,
+            aliases=[
+                ("ka", "შეიძლება ბავშვებთან ერთად მოსვლა?"),
+                ("en", "Can I come with children?"),
+            ],
         ),
         item(
             KnowledgeItemKind.FAQ,
             "Когда у вас живая музыка?",
             body="По пятницам и субботам с 20:00 — гитара и грузинское многоголосие.",
             source=KnowledgeItemSource.PROFILE,
+            aliases=[
+                ("ka", "როდის გაქვთ ცოცხალი მუსიკა?"),
+                ("en", "When do you have live music?"),
+            ],
         ),
         item(
             KnowledgeItemKind.FAQ,
@@ -162,6 +179,7 @@ def build_restaurant_knowledge(
             body="Доставляем через Wolt и Glovo по Тбилиси, ссылка — в разделе "
             "доставки.",
             source=KnowledgeItemSource.PROFILE,
+            aliases=[("ka", "გაქვთ მიტანის სერვისი?"), ("en", "Do you deliver?")],
         ),
         item(
             KnowledgeItemKind.FAQ,

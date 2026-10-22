@@ -3,6 +3,9 @@
 import json
 import re
 
+from app.adapters.llm.alias_suggestion.alias_suggestion_prompt import (
+    INSTRUCTIONS_OPENING as ALIAS_INSTRUCTIONS_OPENING,
+)
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
@@ -69,6 +72,7 @@ class WorkshopModelScript:
         self.assistant_calls: int = 0
         self.customer_calls: int = 0
         self.judge_calls: int = 0
+        self.alias_calls: int = 0
         self.tool_calls: list[str] = []
         self.booking_request: JsonObject = {}
 
@@ -92,6 +96,11 @@ class WorkshopModelScript:
 
         if str(request.system_prompt) == CONVERSATION_SUMMARY_SYSTEM_PROMPT:
             return say("The customer asked about a table and booked one.")
+
+        if str(request.system_prompt).startswith(ALIAS_INSTRUCTIONS_OPENING):
+            # The knowledge's aliases (index_knowledge): none suggested.
+            self.alias_calls += 1
+            return say('{"items": []}')
 
         if not request.tools:
             self.customer_calls += 1
