@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds
 
+from app.contracts.ip_countries import IpCountryLookupAdapterContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.mfa import AuthLevel
@@ -13,6 +14,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
     ClientIpAddress,
 )
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.booleans import IsCurrentSession
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.security.user_agents import describe_device
@@ -21,9 +23,14 @@ USER_SESSION_ENTITY: AuditEntityName = AuditEntityName("user_session")
 
 
 def session_view(
-    session: UserSessionDocument, is_current: IsCurrentSession
+    session: UserSessionDocument,
+    is_current: IsCurrentSession,
+    ip_countries: IpCountryLookupAdapterContract,
 ) -> UserSessionView:
-    """A session from before devices were recorded shows its sign-in time."""
+    """
+    A session from before devices were recorded shows its sign-in time;
+    each address comes with its approximate country (none when unknown).
+    """
 
     return UserSessionView(
         id=session.id,
@@ -31,12 +38,21 @@ def session_view(
         auth_level=session.auth_level or AuthLevel.ONE_FACTOR,
         created_at=session.created_at,
         created_ip=session.created_ip,
+        created_country=country_of(ip_countries, session.created_ip),
         last_seen_at=session.last_seen_at or session.created_at,
         last_seen_ip=session.last_seen_ip,
+        last_seen_country=country_of(ip_countries, session.last_seen_ip),
         expires_at=session.expires_at,
         idle_expires_at=session.idle_expires_at,
         is_current=is_current,
     )
+
+
+def country_of(
+    ip_countries: IpCountryLookupAdapterContract,
+    ip_address: ClientIpAddress | None,
+) -> CountryCode | None:
+    return None if ip_address is None else ip_countries.country_of(ip_address)
 
 
 def audit_sessions_ended(

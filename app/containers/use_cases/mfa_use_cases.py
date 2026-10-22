@@ -146,6 +146,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         user_session_repo=repositories.user_session_repo,
         session_assurance=utilities.session_assurance,
         wall_clock=time_provider.microsecond_wall_clock,
+        ip_countries=adapters.ip_country_lookup,
     )
     revoke_session_use_case: Factory[UseCaseContract[RevokeSessionCommand, None]] = (
         Factory(

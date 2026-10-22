@@ -67,6 +67,7 @@ from tests.users.accounts_recorders import (
     RecordingVoiceAgentRemoval,
 )
 from tests.users.accounts_repositories import AccountsRepositories
+from tests.users.fake_ip_countries import TEST_IP_COUNTRIES, FixedIpCountries
 from tests.users.login_protection_fakes import FakeBotCheck, RecordingCapAlerts
 
 
@@ -182,6 +183,7 @@ class AccountsUserUseCases(AccountsRepositories):
             user_session_repo=self.user_session_repo,
             session_assurance=self.session_assurance,
             wall_clock=wall_clock,
+            ip_countries=FixedIpCountries(TEST_IP_COUNTRIES),
         )
         self.revoke_session = RevokeSessionUseCase(
             user_session_repo=self.user_session_repo,

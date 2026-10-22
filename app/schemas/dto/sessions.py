@@ -11,6 +11,7 @@ from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import SessionDeviceKind, SessionSweepReason
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.booleans import IsCurrentSession
 from app.schemas.typings.users.constrained_strings import SessionUserAgent
@@ -63,7 +64,9 @@ class UserSessionView(ImmutableDTO):
     where and when it signed in, when it was last used and from where,
     how it was signed in, and when it ends by itself (unused until
     `idle_expires_at`, or at `expires_at` whatever happens). The request's
-    own session is `is_current`.
+    own session is `is_current`. `created_country` and `last_seen_country`
+    are the approximate countries of the addresses (an offline GeoLite2
+    lookup; None when unknown or not set up).
     """
 
     id: UserSessionId
@@ -71,8 +74,10 @@ class UserSessionView(ImmutableDTO):
     auth_level: AuthLevel
     created_at: Microseconds
     created_ip: ClientIpAddress | None = None
+    created_country: CountryCode | None = None
     last_seen_at: Microseconds
     last_seen_ip: ClientIpAddress | None = None
+    last_seen_country: CountryCode | None = None
     expires_at: Microseconds
     idle_expires_at: Microseconds | None = None
     is_current: IsCurrentSession = False

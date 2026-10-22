@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.ip_countries import IpCountryLookupAdapterContract
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -15,8 +16,9 @@ class ListMySessionsUseCase(UseCaseContract[SessionsQuery, UserSessionList]):
     """
     The person's signed-in devices (Account → Security): every live
     session with its browser, system, addresses and times, the request's
-    own first, then the most recently used. Ended sessions are left out
-    (the daily purge deletes them).
+    own first, then the most recently used, each address with the
+    approximate country an offline database places it in. Ended sessions
+    are left out (the daily purge deletes them).
     """
 
     def __init__(
@@ -24,7 +26,9 @@ class ListMySessionsUseCase(UseCaseContract[SessionsQuery, UserSessionList]):
         user_session_repo: UserSessionRepoContract,
         session_assurance: SessionAssuranceContract,
         wall_clock: WallClock[Microseconds],
+        ip_countries: IpCountryLookupAdapterContract,
     ) -> None:
+        self._ip_countries: IpCountryLookupAdapterContract = ip_countries
         self._user_session_repo: UserSessionRepoContract = user_session_repo
         self._session_assurance: SessionAssuranceContract = session_assurance
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -43,7 +47,8 @@ class ListMySessionsUseCase(UseCaseContract[SessionsQuery, UserSessionList]):
             if not is_session_over(session, now)
         ]
         views: list[UserSessionView] = [
-            session_view(session, is_current=session.id == current) for session in live
+            session_view(session, session.id == current, self._ip_countries)
+            for session in live
         ]
         views.sort(key=lambda view: (not view.is_current, -int(view.last_seen_at)))
         return UserSessionList(items=views)

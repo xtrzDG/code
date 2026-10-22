@@ -18,6 +18,7 @@ from app.repositories.delivery_repositories import (
     OutboundMessageRepository,
 )
 from app.repositories.mfa_repositories import MfaChallengeRepository
+from app.repositories.passkey_repositories import PasskeyChallengeRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserSessionRepository,
@@ -32,6 +33,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -39,6 +41,7 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.passkeys import PasskeyChallengeDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -52,6 +55,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.passkeys.constrained_strings import WebAuthnChallenge
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
@@ -98,6 +102,17 @@ def challenge(created_at: int) -> OtpChallengeDocument:
 def second_step(created_at: int) -> MfaChallengeDocument:
     return MfaChallengeDocument(
         user_id=UserId(),
+        expires_at=Microseconds(created_at + 300_000_000),
+        created_at=Microseconds(created_at),
+        updated_at=Microseconds(created_at),
+    )
+
+
+def ceremony(created_at: int) -> PasskeyChallengeDocument:
+    return PasskeyChallengeDocument(
+        user_id=UserId(),
+        purpose=PasskeyCeremonyPurpose.SIGN_IN,
+        challenge=WebAuthnChallenge("test-challenge-0000000000"),
         expires_at=Microseconds(created_at + 300_000_000),
         created_at=Microseconds(created_at),
         updated_at=Microseconds(created_at),
@@ -199,6 +214,12 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     old_step, fresh_step = second_step(NOW - DAY - 1), second_step(NOW - HOUR)
     second_steps.save(old_step)
     second_steps.save(fresh_step)
+    ceremonies = PasskeyChallengeRepository(
+        collections(PasskeyChallengeDocument, "passkey_challenges")
+    )
+    old_ceremony, fresh_ceremony = ceremony(NOW - DAY - 1), ceremony(NOW - HOUR)
+    ceremonies.save(old_ceremony)
+    ceremonies.save(fresh_ceremony)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
@@ -209,12 +230,13 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         audit_log_repo=audit,
         wall_clock=build_fixed_wall_clock(),
         mfa_challenge_repo=second_steps,
+        passkey_challenge_repo=ceremonies,
     )
 
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 8
+    assert report.processed_count == 9
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
@@ -226,6 +248,8 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     assert [m.id for m in missed_collection.list_all()] == [fresh_missed.id]
     assert second_steps.get(old_step.id) is None
     assert second_steps.get(fresh_step.id) == fresh_step
+    assert ceremonies.get(old_ceremony.id) is None
+    assert ceremonies.get(fresh_ceremony.id) == fresh_ceremony
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
@@ -234,6 +258,7 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         "missed_call",
         "otp_challenge",
         "outbound_message",
+        "passkey_challenge",
         "user_session",
     ]
     assert {entry.action for entry in entries} == {AuditAction.RETENTION_PURGE}

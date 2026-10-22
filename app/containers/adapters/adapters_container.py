@@ -176,6 +176,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
     secret_cipher = security.secret_cipher
     totp_secret_cipher = security.totp_secret_cipher
     passkey_ceremony = security.passkey_ceremony
+    ip_country_lookup = security.ip_country_lookup
     # Call recordings and the archives of full business exports.
     files: FileStorageAdaptersContainer = Container(  # type: ignore[assignment]
         FileStorageAdaptersContainer,
