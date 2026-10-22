@@ -618,7 +618,11 @@ Messenger бизнесов, а также для кодов входа и уве
   добавьте домен кабинета в «Allowed Domains for the JavaScript SDK» и включите
   «Login with the JavaScript SDK»; страницы «Каналы» и шаг «Каналы» в мастере
   разрешают SDK Facebook (`connect.facebook.net`) и его окно только у себя
-  (политика CSP в `web/src/server/contentSecurityPolicy.ts`).
+  (политика CSP в `web/src/server/contentSecurityPolicy.ts`, заголовок
+  `Cross-Origin-Opener-Policy: same-origin-allow-popups` в
+  `web/next.config.ts`). Начало входа через Facebook просит владельца
+  подтвердить, что это он (как и другие действия с каналами), — до окна Meta,
+  чтобы короткоживущий код окна не ждал.
 - Проверка приложения (App Review) и статус Tech Provider — самая долгая часть,
   начинайте её заранее: расширенный доступ к `whatsapp_business_management`,
   `whatsapp_business_messaging`, `pages_messaging`, `pages_show_list`,
