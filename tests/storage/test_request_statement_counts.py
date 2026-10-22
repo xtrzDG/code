@@ -21,7 +21,7 @@ from collections.abc import Callable, Generator
 import pytest
 from httpx2 import Response
 
-from app.schemas.typings.platform.strings import DatabaseUrl
+from tests.storage.postgres_roles import RoleDatabase, role_database
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.request_cost_world import (
     RequestCostWorld,
@@ -56,12 +56,12 @@ def world(
     database_name: str = postgres_server.create_database(
         template_name=migrated_template_database
     )
-    database_url: DatabaseUrl = postgres_server.app_database_url(database_name)
-    opened: RequestCostWorld = open_request_cost_world(database_url)
+    role_urls: RoleDatabase = role_database(postgres_server, database_name)
+    opened: RequestCostWorld = open_request_cost_world(role_urls)
     try:
         yield opened
     finally:
-        opened.pool.close()
+        opened.pools.close()
         postgres_server.drop_database(database_name)
 
 

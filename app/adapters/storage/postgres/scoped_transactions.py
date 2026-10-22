@@ -11,6 +11,11 @@ same way (`savepoint_in_scope`): released when the block ends, rolled
 back to (which also restores the scope before it) when it raises. Either
 way no statement of the block runs before its scope is set, exactly as
 with a `set_config` round trip of its own, one round trip earlier.
+
+A platform-wide read outside a transaction (`scoped_read`) needs neither:
+the platform role sees every row whatever `app.business_id` says
+(migration 1200), so its statements run on their own, one round trip
+each instead of three.
 """
 
 from collections.abc import Generator
@@ -68,6 +73,27 @@ def scoped_transaction(
         )
         with finished(connection, RELEASE, ROLLBACK_TO):
             yield connection
+
+
+@contextmanager
+def scoped_read(
+    connection_pool: PostgresConnectionPoolClient, scope: StorageScope
+) -> Generator[PostgresConnection]:
+    """
+    One read in `scope`: platform-wide on an idle connection, its
+    statements in autocommit (read committed gives each statement its own
+    snapshot in a transaction too); otherwise as `scoped_transaction`.
+    """
+
+    if scope.kind is StorageScopeKind.PLATFORM:
+        with connection_pool.connection() as connection:
+            if is_idle(connection):
+                yield connection
+                return
+
+    # A business's read, or one inside a unit of work's open transaction.
+    with scoped_transaction(connection_pool, scope) as connection:
+        yield connection
 
 
 def joined_scope(connection: PostgresConnection, scope: StorageScope) -> StorageScope:

@@ -20,7 +20,10 @@ from app.adapters.storage.postgres.postgres_session_settings import (
     translate_storage_error,
 )
 from app.adapters.storage.postgres.read_sessions import read_session_connection
-from app.adapters.storage.postgres.scoped_transactions import scoped_transaction
+from app.adapters.storage.postgres.scoped_transactions import (
+    scoped_read,
+    scoped_transaction,
+)
 from app.clients.postgres.postgres_connection_pool_client import PostgresConnection
 from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.storage import StorageScopeContract
@@ -103,7 +106,8 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         """
         Like `_transaction`, for a read: inside a read session of this
         pool (`PostgresReadSessionAdapter`) the read is one statement of
-        the session's transaction, in this read's scope.
+        the session's transaction, in this read's scope; a platform-wide
+        read outside any transaction needs none (`scoped_read`).
         """
 
         scope: StorageScope = self._effective_scope()
@@ -117,8 +121,11 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
                 yield connection, business_id_of(scope)
                 return
 
-        with self._transaction_in(scope) as opened:
-            yield opened
+        with (
+            self._translated_errors(),
+            scoped_read(self._connection_pools.for_scope(scope), scope) as connection,
+        ):
+            yield connection, business_id_of(scope)
 
     @contextmanager
     def _transaction_in(
