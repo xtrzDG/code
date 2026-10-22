@@ -103,10 +103,17 @@ def test_only_the_admin_sees_the_system_page(workshop: Workshop) -> None:
         "outbound",
         "default",
         "autotests",
+        "ops",
     ]
     assert all(lane["dead"] == 0 for lane in view["lanes"])
     [worker] = view["workers"]
     assert worker["is_stale"] is False and worker["age_seconds"] == 0
+    # The pulse carries the providers' circuit breakers, all closed.
+    assert {"provider:meta", "provider:telegram", "provider:platform_bot"} <= {
+        circuit["circuit"] for circuit in view["circuits"]
+    }
+    assert {circuit["state"] for circuit in view["circuits"]} == {"closed"}
+    assert len(worker["circuits"]) == len(view["circuits"])
     # The in-memory store has no database to measure, and nothing backs up.
     assert view["database_bytes"] is None and view["tables"] == []
     assert view["last_backup"] is None and view["is_backup_overdue"] is True
