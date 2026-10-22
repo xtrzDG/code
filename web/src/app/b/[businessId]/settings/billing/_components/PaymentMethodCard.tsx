@@ -93,36 +93,40 @@ function SavedCard({ card }: { card: PaymentCardView }) {
   const state = cardExpiryState(card, now);
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <div className="flex aspect-[1.586] w-44 shrink-0 flex-col justify-between rounded-xl border border-line-strong bg-surface-muted p-3 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-xs font-semibold tracking-wide text-ink">{brand ?? " "}</span>
-          <IconCard aria-hidden className="size-4 shrink-0 text-accent" />
-        </div>
-        <div>
-          {card.last_digits ? (
-            <p className="font-mono text-sm text-ink tabular-nums" dir="ltr">
-              <span className="sr-only">{t("billingCard.endingIn", { digits: card.last_digits })}</span>
-              <span aria-hidden="true">•••• {card.last_digits}</span>
+    <div className="space-y-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex aspect-[1.586] w-44 shrink-0 flex-col justify-between rounded-xl border border-line-strong bg-surface-muted p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-xs font-semibold tracking-wide text-ink">{brand ?? " "}</span>
+            <IconCard aria-hidden className="size-4 shrink-0 text-accent" />
+          </div>
+          <div>
+            {card.last_digits ? (
+              <p className="font-mono text-sm text-ink tabular-nums" dir="ltr">
+                <span className="sr-only">{t("billingCard.endingIn", { digits: card.last_digits })}</span>
+                <span aria-hidden="true">•••• {card.last_digits}</span>
+              </p>
+            ) : null}
+            <p className="mt-1 font-mono text-xs text-ink-muted tabular-nums" dir="ltr">
+              {expiry ?? " "}
             </p>
-          ) : null}
-          <p className="mt-1 font-mono text-xs text-ink-muted tabular-nums" dir="ltr">
-            {expiry ?? " "}
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <p className="text-base font-semibold text-ink">
+            {brand}
+            {brand && card.last_digits ? " " : null}
+            {card.last_digits ? <bdi dir="ltr">•••• {card.last_digits}</bdi> : null}
           </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+            <span>{expiry ? t("billingCard.expires", { date: expiry }) : t("billingCard.noExpiry")}</span>
+            {state === "expired" ? <Badge tone="danger">{t("billingCard.expiryStates.expired")}</Badge> : null}
+            {state === "expiring" ? <Badge tone="warning">{t("billingCard.expiryStates.expiring")}</Badge> : null}
+          </div>
         </div>
       </div>
-      <div className="min-w-0 flex-1 space-y-2">
-        <p className="text-base font-semibold text-ink">
-          {[brand, card.last_digits ? `•••• ${card.last_digits}` : null].filter(Boolean).join(" ")}
-        </p>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-          <span>{expiry ? t("billingCard.expires", { date: expiry }) : t("billingCard.noExpiry")}</span>
-          {state === "expired" ? <Badge tone="danger">{t("billingCard.expiryStates.expired")}</Badge> : null}
-          {state === "expiring" ? <Badge tone="warning">{t("billingCard.expiryStates.expiring")}</Badge> : null}
-        </div>
-        {state === "expired" ? <p className="text-sm text-ink-muted">{t("billingCard.expiredHint")}</p> : null}
-        {state === "expiring" ? <p className="text-sm text-ink-muted">{t("billingCard.expiringHint")}</p> : null}
-      </div>
+      {state === "expired" ? <p className="text-sm text-ink-muted">{t("billingCard.expiredHint")}</p> : null}
+      {state === "expiring" ? <p className="text-sm text-ink-muted">{t("billingCard.expiringHint")}</p> : null}
     </div>
   );
 }

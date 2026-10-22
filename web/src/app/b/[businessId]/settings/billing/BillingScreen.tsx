@@ -139,7 +139,7 @@ export function BillingScreen({ isCheckoutReturn, isCardReturn }: { isCheckoutRe
           ) : null}
 
           <TrialCardPrompt
-            view={card.method.data}
+            view={showCardNotice ? undefined : card.method.data}
             nowUs={nowUs}
             canManage={isOwner}
             isOpening={card.isOpening}
