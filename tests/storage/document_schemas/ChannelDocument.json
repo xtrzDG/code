@@ -1,13 +1,54 @@
 {
   "collection": "channels",
   "document_type": "ChannelDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "comment_replies": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "is_on": {
+                "default": false,
+                "type": "boolean"
+              },
+              "keywords": {
+                "items": {
+                  "maxLength": 50,
+                  "minLength": 1,
+                  "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "reply_text": {
+                "anyOf": [
+                  {
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "created_at": {
         "type": "integer"
@@ -27,6 +68,17 @@
         "anyOf": [
           {
             "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "encrypted_registration_pin": {
+        "anyOf": [
+          {
+            "type": "string"
           },
           {
             "type": "null"
@@ -198,7 +250,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "status": {
@@ -250,6 +302,20 @@
               }
             },
             "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "whatsapp_business_account_id": {
+        "anyOf": [
+          {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9]{1,32}$",
+            "type": "string"
           },
           {
             "type": "null"

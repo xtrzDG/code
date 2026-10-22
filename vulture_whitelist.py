@@ -63,8 +63,7 @@ _.ExampleConstrainedInt  # app/schemas/typings/constrained_integers.py
 _.ExampleConstrainedString  # app/schemas/typings/constrained_strings.py
 
 # Settings reserved for planned work: ZADARMA_* for the telephony
-# integration (R5) and META_APP_ID for Meta app review (R15).
-_.meta_app_id  # app/schemas/configurations/app_settings.py
+# integration (R5).
 _.zadarma_api_key  # app/schemas/configurations/app_settings.py
 _.zadarma_api_secret  # app/schemas/configurations/app_settings.py
 
@@ -703,3 +702,8 @@ _.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+
+# Meta's self-serve connection (1212): what the cabinet's Facebook SDK opens
+# Meta's window with; filled by keyword, read only by the cabinet.
+_.graph_api_version  # app/schemas/dto/channels/meta_connection.py
+_.permissions  # app/schemas/dto/channels/meta_connection.py

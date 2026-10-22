@@ -112,9 +112,18 @@ class ChannelDocument(BaseDocument):
     `app/utilities/channels/channel_activity.py`); `last_error_reason`
     classifies `last_error` in the cabinet's terms (None for a reason
     written before version 4).
+
+    Version 5 (Meta's self-serve connection), all optional: a WhatsApp
+    channel connected through Embedded Signup keeps its business account
+    (`whatsapp_business_account_id`), its own token as `encrypted_secret`
+    (a number connected by hand has none and is sent with the platform's
+    system user token) and the two-step PIN its number was registered with
+    (`encrypted_registration_pin`, so registering again keeps it). An
+    Instagram channel keeps its comment-to-DM settings (`comment_replies`).
+    Version 4 rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: ChannelId = Field(default_factory=ChannelId)
     business_id: BusinessId
     kind: ChannelKind
