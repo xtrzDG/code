@@ -144,6 +144,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       outbound: "მიწოდება",
       default: "სხვა ამოცანები",
       autotests: "ავტოტესტები",
+      ops: "პლატფორმის გაფრთხილებები",
     },
   },
   deadLetters: {

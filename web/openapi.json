@@ -714,7 +714,7 @@
       },
       "AdminSystemView": {
         "additionalProperties": false,
-        "description": "The platform at `checked_at`: workers, queue lanes and dead letters,\nchannels that need the team, database size by table (None without\nPostgres), the last backup and restore drill, and the platform alerts.",
+        "description": "The platform at `checked_at`: workers and their circuit breakers\n(`circuits`, across the live workers, those not closed first), queue\nlanes and dead letters, channels that need the team, database size by\ntable (None without Postgres), the last backup and restore drill, and\nthe platform alerts.",
         "properties": {
           "alerts": {
             "items": {
@@ -738,6 +738,13 @@
           "checked_at": {
             "title": "Checked At",
             "type": "integer"
+          },
+          "circuits": {
+            "items": {
+              "$ref": "#/components/schemas/CircuitSummaryView"
+            },
+            "title": "Circuits",
+            "type": "array"
           },
           "database_bytes": {
             "anyOf": [
@@ -814,6 +821,7 @@
         "required": [
           "checked_at",
           "workers",
+          "circuits",
           "lanes",
           "dead_jobs",
           "channels_in_error",
@@ -8458,6 +8466,70 @@
           }
         },
         "title": "ChurnView",
+        "type": "object"
+      },
+      "CircuitState": {
+        "description": "A circuit breaker's state: CLOSED lets calls through and counts their\nfailures; OPEN refuses calls until its wait is over; HALF_OPEN lets one\ntrial call through, whose outcome closes or opens the circuit again.",
+        "enum": [
+          "closed",
+          "open",
+          "half_open"
+        ],
+        "title": "CircuitState",
+        "type": "string"
+      },
+      "CircuitSummaryView": {
+        "additionalProperties": false,
+        "description": "One circuit across the live workers (pulses not stale): the worst state\nany of them reports (open, then half-open, then closed), how many of\nthem report it not closed out of how many report it, the failures they\ncounted within the window, and when the earliest of them opened.",
+        "properties": {
+          "circuit": {
+            "maxLength": 160,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_]*:[A-Za-z0-9][A-Za-z0-9._:@\\-]*$",
+            "title": "Circuit",
+            "type": "string"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "recent_failures": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Recent Failures",
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CircuitState"
+          },
+          "workers_not_closed": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Workers Not Closed",
+            "type": "integer"
+          },
+          "workers_reporting": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Workers Reporting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "circuit",
+          "state",
+          "workers_not_closed",
+          "workers_reporting",
+          "recent_failures"
+        ],
+        "title": "CircuitSummaryView",
         "type": "object"
       },
       "ClaimFinding": {
@@ -17401,12 +17473,13 @@
         "type": "string"
       },
       "JobLane": {
-        "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification.",
+        "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification. OPS carries the platform alerts\non a thread of their own, so the alerts of a provider outage never wait\nbehind the sends that outage holds up (behind the release gate\n`ops_lane` until the next release: until then they use OUTBOUND).",
         "enum": [
           "inbound",
           "outbound",
           "default",
-          "autotests"
+          "autotests",
+          "ops"
         ],
         "title": "JobLane",
         "type": "string"
@@ -32982,9 +33055,49 @@
         "title": "WizardStepView",
         "type": "object"
       },
+      "WorkerCircuitView": {
+        "additionalProperties": false,
+        "description": "One circuit breaker of a worker process at its last pulse: a provider\nthe platform sends through (`provider:meta`, ...) or a language model\n(`openai:gpt-5-mini`), the failures a closed circuit counted within its\nwindow, and when a circuit that is not closed opened.",
+        "properties": {
+          "circuit": {
+            "maxLength": 160,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_]*:[A-Za-z0-9][A-Za-z0-9._:@\\-]*$",
+            "title": "Circuit",
+            "type": "string"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "recent_failures": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Recent Failures",
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CircuitState"
+          }
+        },
+        "required": [
+          "circuit",
+          "state",
+          "recent_failures"
+        ],
+        "title": "WorkerCircuitView",
+        "type": "object"
+      },
       "WorkerPulseView": {
         "additionalProperties": false,
-        "description": "One worker process that beat within the last day: its build, since when\nit runs, how old its last pulse is (stale after five minutes) and the\nperiodic jobs whose last run in it failed.",
+        "description": "One worker process that beat within the last day: its build, since when\nit runs, how old its last pulse is (stale after five minutes), the\nperiodic jobs whose last run in it failed, and its circuit breakers.",
         "properties": {
           "age_seconds": {
             "minimum": 0.0,
@@ -32994,6 +33107,13 @@
           "beat_at": {
             "title": "Beat At",
             "type": "integer"
+          },
+          "circuits": {
+            "items": {
+              "$ref": "#/components/schemas/WorkerCircuitView"
+            },
+            "title": "Circuits",
+            "type": "array"
           },
           "failing_jobs": {
             "items": {
@@ -33046,7 +33166,8 @@
           "beat_at",
           "age_seconds",
           "is_stale",
-          "failing_jobs"
+          "failing_jobs",
+          "circuits"
         ],
         "title": "WorkerPulseView",
         "type": "object"

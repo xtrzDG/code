@@ -20,6 +20,7 @@ export const LANE_NAMES: Readonly<Record<JobLane, MessageKey>> = {
   outbound: "adminSystem.lanes.names.outbound",
   default: "adminSystem.lanes.names.default",
   autotests: "adminSystem.lanes.names.autotests",
+  ops: "adminSystem.lanes.names.ops",
 };
 
 /** Why a dead job died; a job that took its worker down is the one to look into first. */

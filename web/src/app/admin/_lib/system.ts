@@ -8,6 +8,8 @@
 import type { Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
 
+import { openCircuitCount } from "./circuits";
+
 export type AdminSystem = Schema<"AdminSystemView">;
 export type AlertState = Schema<"AlertStateView">;
 export type AlertUnit = Schema<"AlertUnit">;
@@ -167,12 +169,16 @@ export function sortWorkers(workers: readonly WorkerPulse[]): WorkerPulse[] {
   return [...workers].sort((a, b) => Number(b.is_stale) - Number(a.is_stale) || a.host_name.localeCompare(b.host_name));
 }
 
-/** How many things want a look now: firing alerts, stale workers, dead jobs, channels in error. */
+/**
+ * How many things want a look now: firing alerts, stale workers, provider
+ * circuits that are not closed, dead jobs, channels in error.
+ */
 export function attentionCount(system: AdminSystem): number {
   const deadJobs = system.dead_jobs.reduce((total, tally) => total + tally.count, 0);
   return (
     system.alerts.filter((alert) => alert.status === "firing").length +
     system.workers.filter((worker) => worker.is_stale).length +
+    openCircuitCount(system.circuits) +
     deadJobs +
     system.channels_in_error_count
   );

@@ -143,6 +143,7 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       outbound: "Zustellungen",
       default: "Andere Jobs",
       autotests: "Autotests",
+      ops: "Plattform-Alarme",
     },
   },
   deadLetters: {
