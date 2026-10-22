@@ -142,6 +142,7 @@ class CoreOrchestratorsContainer(containers.DeclarativeContainer):
         SecurityOrchestratorsContainer,
         security_use_cases=use_cases.security,
         mfa_use_cases=use_cases.mfa,
+        passkey_use_cases=use_cases.passkeys,
     )
     analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
         AnalyticsOrchestratorsContainer,

@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import TotpFactorRepoContract
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.session_assurance import (
     SessionAssuranceContract,
     StepUpGuardContract,
@@ -60,7 +61,9 @@ class UpdateBusinessSecurityUseCase(
         step_up: StepUpGuardContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -104,5 +107,9 @@ class UpdateBusinessSecurityUseCase(
             )
         )
         return build_business_security_view(
-            stored, self._totp_factor_repo, assurance, input_data.user_id
+            stored,
+            self._totp_factor_repo,
+            self._passkey_repo,
+            assurance,
+            input_data.user_id,
         )

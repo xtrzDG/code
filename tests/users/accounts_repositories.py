@@ -70,6 +70,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.compliance.audit_repositories import audit_log_repository
+from tests.foundation.passkey_repositories import in_memory_passkey_repo
 from tests.foundation.support_access_builders import (
     in_memory_grant_repo,
     in_memory_platform_admin_repo,
@@ -187,6 +188,7 @@ class AccountsRepositories:
                 MfaChallengeDocument
             )
         )
+        self.passkey_repo = in_memory_passkey_repo()
         self.session_assurance = SessionAssuranceContext()
         # Platform access: the admin team and support's grants (1103).
         self.platform_admin_repo = in_memory_platform_admin_repo()

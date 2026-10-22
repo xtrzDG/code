@@ -12,6 +12,7 @@ from app.schemas.domain.mfa import (
     RecoveryCodeDocument,
     TotpFactorDocument,
 )
+from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 
@@ -20,9 +21,9 @@ class SecurityCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of key management (migration 1063: the latest
     re-encryption of the stored secrets), of two-factor sign-in
-    (migration 1082: authenticators, recovery codes, second sign-in steps)
-    and of platform access (migration 1103: the admin team, support's
-    grants of access to a business).
+    (migration 1082: authenticators, recovery codes, second sign-in steps;
+    1201: passkeys and their ceremonies) and of platform access (migration
+    1103: the admin team, support's grants of access to a business).
     A sibling of DocumentCollectionsContainer with the same storage factory.
     """
 
@@ -58,6 +59,22 @@ class SecurityCollectionsContainer(containers.DeclarativeContainer):
     mfa_challenge_collection = document_collection(
         MfaChallengeDocument,
         "mfa_challenges",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    passkey_collection = document_collection(
+        PasskeyDocument,
+        "passkeys",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    passkey_challenge_collection = document_collection(
+        PasskeyChallengeDocument,
+        "passkey_challenges",
         config,
         clients,
         utilities,

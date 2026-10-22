@@ -105,3 +105,38 @@ class SecurityOperatorsContainer(containers.DeclarativeContainer):
     end_support_access_operator = pipeline_operator(
         security_pipelines.end_support_access_pipeline, storage_scope
     )
+
+    # --- Passkeys (platform collections, unscoped; 1201).
+    list_passkeys_operator = pipeline_operator(
+        security_pipelines.list_passkeys_pipeline, storage_scope
+    )
+    start_passkey_registration_operator = pipeline_operator(
+        security_pipelines.start_passkey_registration_pipeline, storage_scope
+    )
+    finish_passkey_registration_operator = pipeline_operator(
+        security_pipelines.finish_passkey_registration_pipeline, storage_scope
+    )
+    rename_passkey_operator = pipeline_operator(
+        security_pipelines.rename_passkey_pipeline, storage_scope
+    )
+    remove_passkey_operator = pipeline_operator(
+        security_pipelines.remove_passkey_pipeline, storage_scope
+    )
+    start_passkey_sign_in_operator = pipeline_operator(
+        security_pipelines.start_passkey_sign_in_pipeline, storage_scope
+    )
+    verify_passkey_sign_in_operator = pipeline_operator(
+        security_pipelines.verify_passkey_sign_in_pipeline, storage_scope
+    )
+    start_passkey_enrollment_operator = pipeline_operator(
+        security_pipelines.start_passkey_enrollment_pipeline, storage_scope
+    )
+    finish_passkey_enrollment_operator = pipeline_operator(
+        security_pipelines.finish_passkey_enrollment_pipeline, storage_scope
+    )
+    start_passkey_step_up_operator = pipeline_operator(
+        security_pipelines.start_passkey_step_up_pipeline, storage_scope
+    )
+    verify_passkey_step_up_operator = pipeline_operator(
+        security_pipelines.verify_passkey_step_up_pipeline, storage_scope
+    )

@@ -110,6 +110,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         product_events=facilitators.product_events,
         platform_admins=registries.platform_admin_registry,
         sign_in_notices=facilitators.sign_in_notice_facilitator,
+        passkey_repo=repositories.passkey_repo,
     )
     start_mfa_login_enrollment_use_case: Factory[
         UseCaseContract[StartMfaEnrollmentCommand, TotpEnrollmentView]
@@ -135,6 +136,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         session_assurance=utilities.session_assurance,
         app_settings=config.app_settings,
         platform_admins=registries.platform_admin_registry,
+        passkey_repo=repositories.passkey_repo,
     )
     # The person's signed-in devices (1103).
     list_my_sessions_use_case: Factory[
@@ -194,6 +196,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
             step_up=utilities.step_up_guard,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            passkey_repo=repositories.passkey_repo,
         )
     )
     regenerate_recovery_codes_use_case: Factory[
@@ -207,6 +210,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         step_up=utilities.step_up_guard,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        passkey_repo=repositories.passkey_repo,
     )
 
     # --- Confirming a sensitive action (step-up).
@@ -217,6 +221,8 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         totp_factor_repo=repositories.totp_factor_repo,
         start_otp_login=account_use_cases.start_otp_login_use_case,
+        passkey_repo=repositories.passkey_repo,
+        passkey_ceremony=adapters.passkey_ceremony,
     )
     verify_step_up_use_case: Factory[
         UseCaseContract[VerifyStepUpCommand, SessionAssuranceView]
@@ -242,6 +248,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         totp_factor_repo=repositories.totp_factor_repo,
         session_assurance=utilities.session_assurance,
+        passkey_repo=repositories.passkey_repo,
     )
     update_business_security_use_case: Factory[
         UseCaseContract[UpdateBusinessSecurityCommand, BusinessSecurityView]
@@ -254,4 +261,5 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         step_up=utilities.step_up_guard,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        passkey_repo=repositories.passkey_repo,
     )

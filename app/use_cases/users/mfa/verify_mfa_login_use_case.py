@@ -10,6 +10,7 @@ from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import (
     UserRepoContract,
     UserSessionRepoContract,
@@ -61,7 +62,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
     The second step of a sign-in opens a two-factor session.
 
     A person with an authenticator enters its code or one of their
-    recovery codes (SecondFactorCheck). A platform admin without one has
+    recovery codes (SecondFactorCheck); a person whose second factor is a
+    passkey may use a recovery code here (the passkey itself answers
+    through VerifyPasskeySignInUseCase). A platform admin without one has
     just set it up (StartMfaLoginEnrollmentUseCase): its first code turns
     it on, a new set of recovery codes comes back with the session (shown
     once), the admin's earlier sessions end (they were signed in without
@@ -88,7 +91,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         product_events: RecordProductEventFacilitatorContract,
         platform_admins: PlatformAdminRegistryContract,
         sign_in_notices: SignInNoticeFacilitatorContract,
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._user_repo: UserRepoContract = user_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
@@ -139,7 +144,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
         recovery_codes: list[RecoveryCode] | None = None
         try:
-            if factor is not None and factor.status is TotpFactorStatus.ACTIVE:
+            if (factor is not None and factor.status is TotpFactorStatus.ACTIVE) or int(
+                self._passkey_repo.count_for_user(user.id)
+            ) > 0:
                 self._check.verify(
                     user.id, input_data.code, input_data.recovery_code, now
                 )

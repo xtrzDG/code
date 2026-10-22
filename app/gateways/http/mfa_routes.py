@@ -22,6 +22,7 @@ from app.schemas.dto.mfa import (
     StartMfaEnrollmentCommand,
     StartMfaEnrollmentRequest,
     StartStepUpCommand,
+    StartStepUpRequest,
     StepUpChallengeView,
     TotpEnrollmentView,
     VerifyMfaLoginCommand,
@@ -37,6 +38,7 @@ read_verify_mfa_body = build_json_body_dependency(VerifyMfaLoginRequest)
 read_enroll_body = build_json_body_dependency(StartMfaEnrollmentRequest)
 read_confirm_body = build_json_body_dependency(ConfirmTotpRequest)
 read_step_up_body = build_json_body_dependency(VerifyStepUpRequest)
+read_start_step_up_body = build_json_body_dependency(StartStepUpRequest, optional=True)
 
 
 def build_mfa_router(
@@ -68,7 +70,8 @@ def build_mfa_router(
         POST   /v1/auth/mfa/enroll           a platform admin without an
                authenticator sets one up while signing in
         POST   /v1/auth/step-up              how to confirm it is you (sends a
-               login code when there is no authenticator)
+               login code when there is no authenticator and no passkey,
+               or when the body asks for one)
         POST   /v1/auth/step-up/verify       confirm: sensitive actions work again
         GET    /v1/me/security               the person's two-factor sign-in
         POST   /v1/me/mfa/totp               start setting up an authenticator
@@ -112,14 +115,20 @@ def build_mfa_router(
             )
         )
 
-    @router.post("/v1/auth/step-up")
+    @router.post(
+        "/v1/auth/step-up",
+        openapi_extra=describe_json_body(StartStepUpRequest, optional=True),
+    )
     def start_step_up(
         request: Request,
         user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[StartStepUpRequest, Depends(read_start_step_up_body)],
     ) -> StepUpChallengeView:
         return start_step_up_operator.operate(
             StartStepUpCommand(
-                user_id=user_id, client_ip_address=read_client_ip_address(request)
+                user_id=user_id,
+                client_ip_address=read_client_ip_address(request),
+                method=body.method,
             )
         )
 

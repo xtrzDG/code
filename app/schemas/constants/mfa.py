@@ -17,10 +17,12 @@ class StepUpMethod(StrEnum):
     """
     How a signed-in person confirms it is them before a sensitive action: a
     code of their authenticator app (or a recovery code) when they have one,
-    otherwise a new login code sent to their phone or e-mail.
+    else one of their passkeys, otherwise a new login code sent to their
+    phone or e-mail. Answers only (never stored).
     """
 
     TOTP = "totp"
+    PASSKEY = "passkey"
     LOGIN_CODE = "login_code"
 
 

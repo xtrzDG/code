@@ -5,19 +5,19 @@ from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import (
     SessionAssuranceContract,
     StepUpGuardContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.mfa import TotpFactorStatus
 from app.schemas.constants.users import SessionSweepReason
-from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.dto.mfa import MfaChangeCommand, RecoveryCodesView
 from app.schemas.dto.sessions import SessionSweep
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.use_cases.shared.second_factors import has_second_factor
 from app.use_cases.shared.session_sweeps import lower_sessions, own_session
 from app.use_cases.users.mfa.mfa_records import (
     RECOVERY_CODES_ENTITY,
@@ -26,7 +26,8 @@ from app.use_cases.users.mfa.mfa_records import (
 )
 
 NO_AUTHENTICATOR_MESSAGE: str = (
-    "Recovery codes come with an authenticator; set one up first."
+    "Recovery codes come with a second factor; add a passkey or an "
+    "authenticator app first."
 )
 
 
@@ -35,7 +36,8 @@ class RegenerateRecoveryCodesUseCase(
 ):
     """
     A new set of recovery codes (shown once) replaces the old one, used or
-    not, after the person confirms it is them (step-up). A session opened
+    not, after the person confirms it is them (step-up); the person has a
+    second factor (an authenticator or a passkey). A session opened
     with an old code (a stolen sheet) must not keep two-factor rights, so
     every other session of theirs counts as one factor until it confirms
     again with the authenticator; the request's own session, which has
@@ -52,7 +54,9 @@ class RegenerateRecoveryCodesUseCase(
         step_up: StepUpGuardContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
         self._user_session_repo: UserSessionRepoContract = user_session_repo
@@ -62,10 +66,9 @@ class RegenerateRecoveryCodesUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: MfaChangeCommand) -> RecoveryCodesView:
-        factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(
-            input_data.user_id
-        )
-        if factor is None or factor.status is not TotpFactorStatus.ACTIVE:
+        if not has_second_factor(
+            self._totp_factor_repo, self._passkey_repo, input_data.user_id
+        ):
             raise ConflictError(NO_AUTHENTICATOR_MESSAGE)
 
         self._step_up.require_recent_authentication()

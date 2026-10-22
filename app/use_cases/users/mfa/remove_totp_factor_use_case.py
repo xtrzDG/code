@@ -5,6 +5,7 @@ from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -21,13 +22,15 @@ from app.use_cases.users.mfa.mfa_records import TOTP_FACTOR_ENTITY, audit_mfa_ch
 class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
     """
     The person removes their authenticator (a new phone, a lost app),
-    after confirming it is them (step-up): its recovery codes go with it,
-    and every session of theirs (this one and those on other devices)
-    counts as one factor again, so no session keeps two-factor rights the
-    person can no longer prove. The change is audited as MFA_CHANGED with
-    how many sessions were lowered. A platform admin is asked to set up a
-    new authenticator at their next sign-in; until then the admin pages
-    refuse all their sessions.
+    after confirming it is them (step-up). While a passkey of theirs is
+    left, it remains their second factor and nothing else changes.
+    Otherwise its recovery codes go with it, and every session of theirs
+    (this one and those on other devices) counts as one factor again, so
+    no session keeps two-factor rights the person can no longer prove. The
+    change is audited as MFA_CHANGED with how many sessions were lowered. A
+    platform admin left without a second factor is asked to set one up at
+    their next sign-in; until then the admin pages refuse all their
+    sessions.
     """
 
     def __init__(
@@ -38,7 +41,9 @@ class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
         step_up: StepUpGuardContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
         self._user_session_repo: UserSessionRepoContract = user_session_repo
@@ -56,17 +61,19 @@ class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
         self._step_up.require_recent_authentication()
         now: Microseconds = self._wall_clock.now_unix()
         self._totp_factor_repo.delete_for_user(input_data.user_id)
-        self._recovery_code_repo.delete_for_user(input_data.user_id)
-        lowered: DocumentCount = lower_sessions(
-            self._user_session_repo,
-            SessionSweep(
-                user_id=input_data.user_id,
-                actor_id=input_data.user_id,
-                reason=SessionSweepReason.AUTHENTICATOR_REMOVED,
-                client_ip_address=input_data.client_ip_address,
-                now=now,
-            ),
-        )
+        lowered: DocumentCount | None = None
+        if int(self._passkey_repo.count_for_user(input_data.user_id)) == 0:
+            self._recovery_code_repo.delete_for_user(input_data.user_id)
+            lowered = lower_sessions(
+                self._user_session_repo,
+                SessionSweep(
+                    user_id=input_data.user_id,
+                    actor_id=input_data.user_id,
+                    reason=SessionSweepReason.AUTHENTICATOR_REMOVED,
+                    client_ip_address=input_data.client_ip_address,
+                    now=now,
+                ),
+            )
         audit_mfa_change(
             self._audit_log_repo,
             input_data.user_id,

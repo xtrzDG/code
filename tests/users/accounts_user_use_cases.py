@@ -10,6 +10,9 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
 from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
     InMemoryRateLimitBucketAdapter,
 )
+from app.adapters.security.webauthn_passkey_ceremony_adapter import (
+    WebAuthnPasskeyCeremonyAdapter,
+)
 from app.contracts.session_assurance import StepUpGuardContract
 from app.registries.legal.legal_text_registry import LegalTextRegistry
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
@@ -159,6 +162,9 @@ class AccountsUserUseCases(AccountsRepositories):
             platform_admins=self.platform_admins,
             sign_in_notices=self.sign_in_notices,
             legal_text_registry=self.legal_text_registry,
+            passkey_repo=self.passkey_repo,
+            recovery_code_repo=self.recovery_code_repo,
+            passkey_ceremony=WebAuthnPasskeyCeremonyAdapter(self.settings),
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,

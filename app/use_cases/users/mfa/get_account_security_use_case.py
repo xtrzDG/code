@@ -3,6 +3,7 @@ from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -18,7 +19,8 @@ from app.schemas.typings.users.prefixed_id import UserId
 class GetAccountSecurityUseCase(UseCaseContract[UserId, AccountSecurityView]):
     """
     The signed-in person's two-factor sign-in (Account → Security): their
-    authenticator, how many unused recovery codes are left, how the current
+    authenticator and how many passkeys they have, how many unused
+    recovery codes are left, how the current
     session is signed in, and whether they must use two factors (a
     platform admin, by the admin team of now).
     """
@@ -31,7 +33,9 @@ class GetAccountSecurityUseCase(UseCaseContract[UserId, AccountSecurityView]):
         session_assurance: SessionAssuranceContract,
         app_settings: AppSettings,
         platform_admins: PlatformAdminRegistryContract,
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._user_repo: UserRepoContract = user_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
@@ -57,6 +61,7 @@ class GetAccountSecurityUseCase(UseCaseContract[UserId, AccountSecurityView]):
             totp_confirmed_at=None if factor is None else factor.confirmed_at,
             totp_last_used_at=None if factor is None else factor.last_used_at,
             recovery_codes_left=RecoveryCodeCount(unused_codes),
+            passkey_count=self._passkey_repo.count_for_user(user.id),
             auth_level=assurance.auth_level
             if assurance is not None and is_own_session
             else None,

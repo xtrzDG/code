@@ -10,6 +10,10 @@ from app.repositories.mfa_repositories import (
     RecoveryCodeRepository,
     TotpFactorRepository,
 )
+from app.repositories.passkey_repositories import (
+    PasskeyChallengeRepository,
+    PasskeyRepository,
+)
 from app.repositories.platform_admin_repository import PlatformAdminRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
@@ -19,7 +23,7 @@ from app.repositories.support_access_grant_repository import (
 class SecurityRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of key management (migration 1063), two-factor
-    sign-in (migration 1082) and platform access (migration 1103).
+    sign-in (migration 1082, passkeys 1201) and platform access (1103).
     `RepositoriesContainer` extends it, so they are read as
     `repositories.key_rotation_repo`, `repositories.totp_factor_repo`…
     """
@@ -41,6 +45,14 @@ class SecurityRepositoriesContainer(containers.DeclarativeContainer):
     mfa_challenge_repo: Singleton[MfaChallengeRepository] = Singleton(
         MfaChallengeRepository,
         collection=security_collections.mfa_challenge_collection,
+    )
+    passkey_repo: Singleton[PasskeyRepository] = Singleton(
+        PasskeyRepository,
+        collection=security_collections.passkey_collection,
+    )
+    passkey_challenge_repo: Singleton[PasskeyChallengeRepository] = Singleton(
+        PasskeyChallengeRepository,
+        collection=security_collections.passkey_challenge_collection,
     )
     platform_admin_repo: Singleton[PlatformAdminRepository] = Singleton(
         PlatformAdminRepository,

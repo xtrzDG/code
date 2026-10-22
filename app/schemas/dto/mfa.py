@@ -30,6 +30,8 @@ from app.schemas.typings.mfa.strings import (
     TotpIssuerName,
     TotpProvisioningUri,
 )
+from app.schemas.typings.passkeys.booleans import IsPasskeySignInAvailable
+from app.schemas.typings.passkeys.constrained_integers import PasskeyCount
 from app.schemas.typings.users.constrained_strings import OtpCode, SessionUserAgent
 from app.schemas.typings.users.prefixed_id import (
     OtpChallengeId,
@@ -123,34 +125,51 @@ class RecoveryCodesView(ImmutableDTO):
 class AccountSecurityView(ImmutableDTO):
     """
     The signed-in person's two-factor sign-in: their authenticator (None:
-    none set up), how many recovery codes are left, and how the current
-    session is signed in. `is_mfa_required`: a platform admin, who must use
-    an authenticator.
+    none set up), how many passkeys they have (GET /v1/me/passkeys lists
+    them), how many recovery codes are left, and how the current session
+    is signed in. `is_mfa_required`: a platform admin, who must use a
+    second factor.
     """
 
     totp_status: TotpFactorStatus | None = None
     totp_confirmed_at: Microseconds | None = None
     totp_last_used_at: Microseconds | None = None
     recovery_codes_left: RecoveryCodeCount = RecoveryCodeCount(0)
+    passkey_count: PasskeyCount = PasskeyCount(0)
     auth_level: AuthLevel | None = None
     authenticated_at: Microseconds | None = None
     step_up_max_age_seconds: StepUpMaxAgeSeconds
     is_mfa_required: IsMfaRequired = False
 
 
+class StartStepUpRequest(ImmutableDTO):
+    """
+    How the person would rather confirm (optional body): `login_code` sends
+    a login code even to a person with a passkey (no authenticator app).
+
+    Example: {"method": "login_code"}.
+    """
+
+    method: StepUpMethod | None = None
+
+
 class StartStepUpCommand(ImmutableDTO):
     user_id: UserId
     client_ip_address: ClientIpAddress | None = None
+    method: StepUpMethod | None = None
 
 
 class StepUpChallengeView(ImmutableDTO):
     """
     How to confirm it is you: with an authenticator code (or a recovery
-    code), or with the login code just sent (`login_code`).
+    code), with a passkey (`POST /v1/auth/step-up/passkey`), or with the
+    login code just sent (`login_code`). `passkey_available`: the person
+    may use a passkey instead of the authenticator app.
     """
 
     method: StepUpMethod
     login_code: OtpChallengeView | None = None
+    passkey_available: IsPasskeySignInAvailable = False
 
 
 class VerifyStepUpRequest(ImmutableDTO):
