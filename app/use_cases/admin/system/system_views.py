@@ -26,6 +26,7 @@ from app.schemas.typings.backups.constrained_integers import BackupFreshnessHour
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.monitoring.constrained_integers import WorkerPulseAgeSeconds
 from app.use_cases.admin.alerts.stale_workers import is_pulse_stale, pulse_age_seconds
+from app.use_cases.admin.system.circuit_views import worker_circuit_view
 
 MICROSECONDS_PER_HOUR: int = 60 * 60 * 1_000_000
 # A resolved alert stays on the page for a day, so the team sees what
@@ -48,6 +49,7 @@ def worker_view(pulse: WorkerHeartbeatDocument, now: Microseconds) -> WorkerPuls
             for result in pulse.periodic_results
             if result.outcome is PeriodicJobOutcome.FAILED
         ],
+        circuits=[worker_circuit_view(circuit) for circuit in pulse.circuits],
     )
 
 

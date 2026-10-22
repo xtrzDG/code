@@ -14,6 +14,7 @@ from app.clients.flitt.flitt_protocol import (
     parse_callback_parameters,
     require_mapping,
 )
+from app.clients.http.provider_timeouts import provider_timeout
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
@@ -26,7 +27,10 @@ from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSec
 DEFAULT_FLITT_API_BASE_URL: str = "https://pay.flitt.com"
 CHECKOUT_URL_PATH: str = "/api/checkout/url/"
 SUBSCRIPTION_PATH: str = "/api/subscription/"
-REQUEST_TIMEOUT_SECONDS: float = 15.0
+# A payment's answer may be slow, and an answer cut off leaves the charge
+# unknown: Flitt keeps its longer read budget (the connection still fails
+# fast).
+READ_TIMEOUT_SECONDS: float = 15.0
 SUCCESS_RESPONSE_STATUS: str = "success"
 STOP_SUBSCRIPTION_ACTION: str = "stop"
 MAX_REPORTED_ERROR_LENGTH: int = 200
@@ -56,7 +60,7 @@ class FlittClient(ClientContract):
         )
         self._http_client: httpx.Client = httpx.Client(
             base_url=base_url.rstrip("/"),
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=provider_timeout(READ_TIMEOUT_SECONDS),
             transport=transport,
         )
 

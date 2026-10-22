@@ -17,6 +17,7 @@ from app.schemas.constants.monitoring import (
     PlatformAlertCode,
     PlatformAlertStatus,
 )
+from app.schemas.constants.resilience import CircuitState
 from app.schemas.typings.backups.constrained_integers import BackupArchiveSize
 from app.schemas.typings.backups.constrained_strings import DatabaseTableName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -52,6 +53,11 @@ from app.schemas.typings.platform.constrained_strings import (
     WorkerHostName,
 )
 from app.schemas.typings.platform.prefixed_id import WorkerInstanceId
+from app.schemas.typings.resilience.constrained_integers import (
+    CircuitFailureCount,
+    CircuitWorkerCount,
+)
+from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -59,11 +65,41 @@ class AdminSystemQuery(ImmutableDTO):
     user_id: UserId
 
 
+class WorkerCircuitView(ImmutableDTO):
+    """
+    One circuit breaker of a worker process at its last pulse: a provider
+    the platform sends through (`provider:meta`, ...) or a language model
+    (`openai:gpt-5-mini`), the failures a closed circuit counted within its
+    window, and when a circuit that is not closed opened.
+    """
+
+    circuit: CircuitName
+    state: CircuitState
+    recent_failures: CircuitFailureCount
+    opened_at: Microseconds | None = None
+
+
+class CircuitSummaryView(ImmutableDTO):
+    """
+    One circuit across the live workers (pulses not stale): the worst state
+    any of them reports (open, then half-open, then closed), how many of
+    them report it not closed out of how many report it, the failures they
+    counted within the window, and when the earliest of them opened.
+    """
+
+    circuit: CircuitName
+    state: CircuitState
+    workers_not_closed: CircuitWorkerCount
+    workers_reporting: CircuitWorkerCount
+    recent_failures: CircuitFailureCount
+    opened_at: Microseconds | None = None
+
+
 class WorkerPulseView(ImmutableDTO):
     """
     One worker process that beat within the last day: its build, since when
-    it runs, how old its last pulse is (stale after five minutes) and the
-    periodic jobs whose last run in it failed.
+    it runs, how old its last pulse is (stale after five minutes), the
+    periodic jobs whose last run in it failed, and its circuit breakers.
     """
 
     worker_id: WorkerInstanceId
@@ -74,6 +110,7 @@ class WorkerPulseView(ImmutableDTO):
     age_seconds: WorkerPulseAgeSeconds
     is_stale: IsWorkerPulseStale
     failing_jobs: list[JobName]
+    circuits: list[WorkerCircuitView]
 
 
 class LaneView(ImmutableDTO):
@@ -156,13 +193,16 @@ class AlertStateView(ImmutableDTO):
 
 class AdminSystemView(ImmutableDTO):
     """
-    The platform at `checked_at`: workers, queue lanes and dead letters,
-    channels that need the team, database size by table (None without
-    Postgres), the last backup and restore drill, and the platform alerts.
+    The platform at `checked_at`: workers and their circuit breakers
+    (`circuits`, across the live workers, those not closed first), queue
+    lanes and dead letters, channels that need the team, database size by
+    table (None without Postgres), the last backup and restore drill, and
+    the platform alerts.
     """
 
     checked_at: Microseconds
     workers: list[WorkerPulseView]
+    circuits: list[CircuitSummaryView]
     lanes: list[LaneView]
     dead_jobs: list[DeadJobTally]
     channels_in_error: list[ChannelIssueView]

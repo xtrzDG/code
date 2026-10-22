@@ -16,6 +16,7 @@ from app.schemas.exceptions.application_errors import (
     ProviderRejectedMessageError,
     WhatsAppTemplateRejectedError,
 )
+from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_integers import WorkerLaneConcurrency
 from app.schemas.typings.resilience.constrained_integers import ProviderSlotCount
 from app.schemas.typings.resilience.constrained_strings import CircuitName
@@ -67,14 +68,18 @@ def guarded_circuits() -> tuple[CircuitName, ...]:
     return tuple(provider_circuit(provider) for provider in GUARDED_PROVIDERS)
 
 
-def is_provider_outage(error: ExternalServiceError) -> bool:
+def is_provider_outage(error: ApplicationError) -> bool:
     """
     A failure that counts against the provider's circuit: a timeout, a
     connection error, a 5xx (an ExternalServiceError the provider did not
-    answer with a refusal).
+    answer with a refusal). A business's own setting that stopped the call
+    before it left (missing credentials, an invalid target) says nothing
+    about the provider.
     """
 
-    return not isinstance(error, ANSWERED_FAILURES)
+    return isinstance(error, ExternalServiceError) and not isinstance(
+        error, ANSWERED_FAILURES
+    )
 
 
 def customer_channel_provider(channel: ChannelKind) -> OutboundProvider | None:

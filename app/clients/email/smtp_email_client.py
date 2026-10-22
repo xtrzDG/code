@@ -6,6 +6,7 @@ from email import policy
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
 
+from app.clients.email.smtp_connections import open_smtp_connection
 from app.contracts.messaging_clients import EmailSenderClientContract
 from app.schemas.constants.messaging import SmtpSecurity
 from app.schemas.dto.messaging import EmailAttachment
@@ -27,7 +28,6 @@ from app.schemas.typings.messaging.strings import (
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
-CONNECT_TIMEOUT_SECONDS: float = 15.0
 # Bodies go out base64 or quoted-printable when not plain ASCII: 8-bit data
 # needs BODY=8BITMIME (RFC 6152), which smtplib does not send by itself.
 SEVEN_BIT_POLICY = policy.default.clone(cte_type="7bit")
@@ -45,17 +45,17 @@ def connect_to_smtp_server(
     security: SmtpSecurity,
     tls_context: ssl.SSLContext,
 ) -> smtplib.SMTP:
-    """A connected client; TLS from the start for SMTP_SECURITY=ssl."""
+    """
+    A connected client; TLS from the start for SMTP_SECURITY=ssl. It
+    connects within 3 s and waits 10 s at most for each answer
+    (`smtp_connections`).
+    """
 
-    if security is SmtpSecurity.SSL:
-        return smtplib.SMTP_SSL(
-            str(host),
-            int(port),
-            timeout=CONNECT_TIMEOUT_SECONDS,
-            context=tls_context,
-        )
-
-    return smtplib.SMTP(str(host), int(port), timeout=CONNECT_TIMEOUT_SECONDS)
+    return open_smtp_connection(
+        str(host),
+        int(port),
+        tls_context if security is SmtpSecurity.SSL else None,
+    )
 
 
 class SmtpEmailClient(EmailSenderClientContract):

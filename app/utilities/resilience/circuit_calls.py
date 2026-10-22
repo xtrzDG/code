@@ -8,10 +8,8 @@ import logging
 from collections.abc import Callable
 
 from app.contracts.resilience import CircuitBreakerContract
-from app.schemas.exceptions.application_errors import (
-    ExternalServiceError,
-    ProviderCircuitOpenError,
-)
+from app.schemas.exceptions.application_errors import ProviderCircuitOpenError
+from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.utilities.resilience.provider_circuits import is_provider_outage
@@ -27,13 +25,13 @@ def call_through_circuit[T](
     """
     The call's result. A provider outage (a timeout, a connection error, a
     5xx) counts against the circuit; an answer of the provider (a success,
-    a refusal, a rate limit) closes a half-open circuit and resets the
-    failures of a closed one.
+    a refusal, a rate limit) or a call the business's own setting stopped
+    closes a half-open circuit and resets the failures of a closed one.
 
     Raises:
         ProviderCircuitOpenError: the circuit is open, nothing was sent;
             `retry_after_seconds` says when it lets a trial call through.
-        ExternalServiceError: whatever the call raised.
+        ApplicationError: whatever the call raised.
     """
 
     if not circuit_breaker.allows_call(circuit):
@@ -47,7 +45,7 @@ def call_through_circuit[T](
 
     try:
         result: T = call()
-    except ExternalServiceError as error:
+    except ApplicationError as error:
         if is_provider_outage(error):
             circuit_breaker.record_failure(circuit)
         else:

@@ -65,7 +65,7 @@ def move_the_clock(container: AppContainer, clock_file: Path) -> None:
 def use_fake_providers(container: AppContainer, provider_url: str) -> None:
     """Meta and OpenAI behind the test's server; requests give up in 1 s."""
 
-    meta_graph_client.REQUEST_TIMEOUT_SECONDS = PROVIDER_TIMEOUT_SECONDS
+    meta_graph_client.REQUEST_TIMEOUT = httpx.Timeout(PROVIDER_TIMEOUT_SECONDS)
     meta_typing_client.TYPING_TIMEOUT_SECONDS = PROVIDER_TIMEOUT_SECONDS
     meta_url = f"{provider_url}/meta"
     replace_provider(

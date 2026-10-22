@@ -7,7 +7,6 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.spend_guard import SpendLimitNoticeFacilitatorContract
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.constants.handoffs import ManagerContactChannel
-from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.dto.platform_alerts import PlatformAlertDelivery
@@ -18,6 +17,7 @@ from app.schemas.typings.handoffs.strings import ManagerContactAddress
 from app.schemas.typings.monitoring.strings import PlatformAlertMessage
 from app.schemas.typings.platform.constrained_strings import JobName, JobSerialKey
 from app.schemas.typings.platform.strings import JobPayloadJson
+from app.utilities.jobs.platform_alert_lane import platform_alert_lane
 from app.utilities.spend.spend_notice_texts import (
     OWNER_NOTICES,
     TEAM_NOTICES,
@@ -36,7 +36,7 @@ class SpendLimitNoticeFacilitator(SpendLimitNoticeFacilitatorContract):
     daily spend limit: each owner through the staff outbox (their sign-in
     e-mail or phone, in their language), the team as `send_platform_alert`
     jobs to the platform alert recipients (PLATFORM_ALERT_*), in the
-    outbound lane. Queuing never raises: a failure is logged and the turn
+    alerts' lane. Queuing never raises: a failure is logged and the turn
     goes on.
     """
 
@@ -89,7 +89,7 @@ class SpendLimitNoticeFacilitator(SpendLimitNoticeFacilitatorContract):
                         ).model_dump_json()
                     ),
                     None,
-                    lane=JobLane.OUTBOUND,
+                    lane=platform_alert_lane(),
                     serial_key=team_serial_key(channel, address),
                 )
             except ApplicationError:
