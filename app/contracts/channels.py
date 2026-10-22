@@ -141,10 +141,13 @@ class WhatsAppTemplateAdapterContract(AdapterContract, Protocol):
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[MessageText],
+        credential: ChannelSecret | None = None,
     ) -> ProviderMessageId | None:
         """
-        The sent message's id. Raises ExternalServiceError (unknown template,
-        closed number, ...).
+        The sent message's id. `credential` is the number's own token (a
+        business number connected through Embedded Signup); None sends with
+        the platform's system user token. Raises ExternalServiceError
+        (unknown template, closed number, ...).
         """
         raise NotImplementedError
 

@@ -7,6 +7,7 @@ from app.contracts.channel_clients import (
     MetaTypingClientContract,
 )
 from app.contracts.channels import ChannelAdapterContract
+from app.contracts.meta_connection import MetaPrivateReplyClientContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.domain.message_media import InboundAttachment
@@ -19,6 +20,7 @@ from app.schemas.dto.channels.channel_webhooks import (
 )
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
+    DeliveryNotConfiguredError,
     ExternalServiceError,
 )
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
@@ -73,7 +75,8 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
     The `referral` of a tagged link
     or an ad that came with the message is where the customer came from; a
     referral to an open thread without a message has nothing to answer
-    and is skipped.
+    and is skipped. A message to a comment's author (`reply_to_comment_id`
+    of the target) goes as the comment's private reply, in one piece.
     """
 
     webhook_object: ClassVar[str]
@@ -85,10 +88,14 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         meta_client: MetaGraphApiClientContract,
         app_settings: AppSettings,
         typing_client: MetaTypingClientContract | None = None,
+        private_reply_client: MetaPrivateReplyClientContract | None = None,
     ) -> None:
         self._meta_client: MetaGraphApiClientContract = meta_client
         self._app_settings: AppSettings = app_settings
         self._typing_client: MetaTypingClientContract | None = typing_client
+        self._private_reply_client: MetaPrivateReplyClientContract | None = (
+            private_reply_client
+        )
 
     def verify_signature(
         self,
@@ -157,6 +164,19 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             raise ExternalServiceError(
                 f"The {self.channel_kind.value} account of this business is not "
                 "connected."
+            )
+
+        if target.reply_to_comment_id is not None:
+            if self._private_reply_client is None:
+                raise DeliveryNotConfiguredError(
+                    f"{self.channel_kind.value} private replies are not set up."
+                )
+
+            return ChannelSendReceipt(
+                delivered=DeliveredMessageCount(1),
+                provider_message_id=self._private_reply_client.send_private_reply(
+                    credential, target.reply_to_comment_id, text
+                ),
             )
 
         def send_part(

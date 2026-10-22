@@ -25,6 +25,7 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.meta_connection.constrained_strings import MetaCommentId
 from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 
@@ -95,15 +96,18 @@ class ChannelDeliveryTarget(ImmutableDTO):
     Where a message to a customer goes: the business's account in a channel
     and the customer inside it.
 
-    `credential` is the decrypted bot or page token (None for WhatsApp, which
-    uses the platform token). It is excluded from the representation so it
-    never reaches logs.
+    `credential` is the decrypted bot or page token, or a WhatsApp number's
+    own token from Embedded Signup (None for a number connected by hand,
+    which uses the platform token). It is excluded from the representation
+    so it never reaches logs. `reply_to_comment_id` makes the message
+    Instagram's private reply to that comment (None: an ordinary message).
     """
 
     channel: ChannelKind
     account_id: ChannelExternalId | None = None
     channel_user_id: ChannelUserId
     credential: ChannelSecret | None = Field(default=None, repr=False)
+    reply_to_comment_id: MetaCommentId | None = None
 
 
 class ChannelSendReceipt(ImmutableDTO):

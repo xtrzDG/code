@@ -11,6 +11,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.channels import WhatsAppTemplateAdapterContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import OutboundMessageKind
@@ -22,6 +23,8 @@ from app.schemas.domain.outbound_messages import (
     OutboundTemplate,
 )
 from app.schemas.exceptions.application_errors import (
+    ChannelCredentialRejectedError,
+    ExternalServiceError,
     ValidationFailedError,
     WhatsAppTemplateRejectedError,
 )
@@ -30,10 +33,11 @@ from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateLanguageCode,
 )
-from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.channels.strings import ChannelSecret, ProviderMessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.use_cases.channels.outbox.outbound_routes import OutboundRoute
 from app.utilities.channels.channel_health import is_channel_active
+from app.utilities.channels.delivery_targets import decrypt_channel_secret
 
 FALLBACK_TEMPLATE_LANGUAGE: WhatsAppTemplateLanguageCode = WhatsAppTemplateLanguageCode(
     "en"
@@ -47,11 +51,14 @@ def route_customer_template(
     template: OutboundTemplate,
     channel_repo: ChannelRepoContract,
     whatsapp_templates: WhatsAppTemplateAdapterContract,
+    secret_cipher: SecretCipherAdapterContract | None = None,
 ) -> OutboundRoute:
     """
     One template message from the business's WhatsApp number as it is
-    now. Raises ValidationFailedError when it is not a WhatsApp message or
-    the number was disconnected.
+    now, with the number's own token when it has one (Embedded Signup).
+    Raises ValidationFailedError when it is not a WhatsApp message or the
+    number was disconnected, ChannelCredentialRejectedError when its token
+    cannot be read.
     """
 
     channel: ChannelDocument | None = channel_repo.get(recipient.channel_id)
@@ -72,6 +79,15 @@ def route_customer_template(
             "The WhatsApp number of this business is not connected."
         ) from error
 
+    try:
+        credential: ChannelSecret | None = (
+            None
+            if secret_cipher is None
+            else decrypt_channel_secret(channel, secret_cipher)
+        )
+    except ExternalServiceError as error:
+        raise ChannelCredentialRejectedError(str(error)) from error
+
     parameters: list[MessageText] = list(template.body_parameters) or [message.text]
 
     def send_part(part: MessageText) -> ProviderMessageId | None:
@@ -83,6 +99,7 @@ def route_customer_template(
                 template.name,
                 template.language_code,
                 parameters,
+                credential,
             )
         except WhatsAppTemplateRejectedError:
             if (
@@ -97,6 +114,7 @@ def route_customer_template(
                 template.name,
                 FALLBACK_TEMPLATE_LANGUAGE,
                 parameters,
+                credential,
             )
 
     return OutboundRoute(parts=[message.text], send_part=send_part, channel=channel)
