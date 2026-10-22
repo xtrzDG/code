@@ -29,4 +29,20 @@ class PhoneNumberLabel(BaseConstrainedTypedString):
     max_length = 64
 
 
+class RentedLineNumber(BaseConstrainedTypedString):
+    """
+    The E.164 number of a line the platform rents for a business from a
+    carrier: the business's own phone line, never a person's number (so
+    an erasure of a customer's data never looks for it). Built from the
+    number the carrier sold, which the phone number parser validated.
+
+    Example:
+        line = RentedLineNumber("+15125550142")
+    """
+
+    min_length = 8
+    max_length = 16
+    pattern = r"^\+[1-9][0-9]{6,14}$"
+
+
 # Keep abc order for all non example types, if possible.

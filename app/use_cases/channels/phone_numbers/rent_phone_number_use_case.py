@@ -42,6 +42,7 @@ from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.exceptions.phone_number_errors import PhoneNumberUnavailableError
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
 from app.schemas.typings.telephony.strings import PhoneNumberLocality
 from app.use_cases.channels.phone_numbers.phone_line_lookups import (
     find_answering_agent,
@@ -215,7 +216,8 @@ class RentPhoneNumberUseCase(
             business_id=business.id,
             provider=provisioned.provider,
             provider_number_id=provisioned.provider_number_id,
-            phone_number=provisioned.phone_number,
+            # The number the carrier sold, as the business's line.
+            phone_number=RentedLineNumber(str(provisioned.phone_number)),
             country_code=details.country_code,
             number_type=command.request.number_type,
             # The offer's city as the search showed it (display only).

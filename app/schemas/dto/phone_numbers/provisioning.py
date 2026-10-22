@@ -14,6 +14,7 @@ from app.schemas.typings.telephony.constrained_integers import PhoneNumberOfferC
 from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberCityQuery,
     PhoneNumberLabel,
+    RentedLineNumber,
 )
 from app.schemas.typings.telephony.strings import (
     PhoneNumberLocality,
@@ -76,7 +77,7 @@ class VoicePlatformImport(ImmutableDTO):
     business's agent when it has one (None: imported now, assigned later).
     """
 
-    phone_number: E164PhoneNumber
+    phone_number: RentedLineNumber
     label: PhoneNumberLabel
     agent_id: VoiceAgentId | None = None
 

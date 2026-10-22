@@ -46,7 +46,7 @@ def connect_phone(
     if (
         rented is not None
         and rented.status is PhoneNumberStatus.ACTIVE
-        and rented.phone_number != details.e164
+        and str(rented.phone_number) != str(details.e164)
     ):
         raise ConflictError(
             "The business rents a number from us for its phone line. Turn the "

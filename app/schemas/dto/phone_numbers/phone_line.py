@@ -27,7 +27,10 @@ from app.schemas.typings.telephony.booleans import (
     ArePhoneNumbersSelfServe,
     IsPhoneNumberAttached,
 )
-from app.schemas.typings.telephony.constrained_strings import PhoneNumberCityQuery
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberCityQuery,
+    RentedLineNumber,
+)
 from app.schemas.typings.telephony.strings import (
     PhoneNumberLocality,
     PhoneNumberRegion,
@@ -52,7 +55,7 @@ class RentedPhoneNumberView(ImmutableDTO):
     minutes after it was taken).
     """
 
-    phone_number: E164PhoneNumber
+    phone_number: RentedLineNumber
     display_number: FormattedPhoneNumber
     country_code: CountryCode
     number_type: PhoneNumberType

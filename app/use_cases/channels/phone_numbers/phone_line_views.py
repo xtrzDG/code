@@ -23,11 +23,13 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
+from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
 from app.use_cases.shared.subscription_pricing import quote_money
 
 
 def display_number(
-    phone_number_parser: PhoneNumberParserContract, phone_number: E164PhoneNumber
+    phone_number_parser: PhoneNumberParserContract,
+    phone_number: E164PhoneNumber | RentedLineNumber,
 ) -> FormattedPhoneNumber:
     """ "+1 512-555-0142"; the number itself when no numbering plan knows it."""
 

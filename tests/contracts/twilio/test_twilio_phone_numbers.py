@@ -192,7 +192,8 @@ def test_documented_errors_become_the_errors_the_picker_shows(
             return twilio.buy_number(PURCHASE)
         if case["operation"] == "search":
             return twilio.list_available_numbers(search_query())
-        return twilio.release_number(ProviderPhoneNumberId("PN" + "0" * 30 + "42"))
+        twilio.release_number(ProviderPhoneNumberId("PN" + "0" * 30 + "42"))
+        return None
 
     if case["expected"] == "unavailable":
         with pytest.raises(PhoneNumberUnavailableError):

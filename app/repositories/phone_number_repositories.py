@@ -16,11 +16,11 @@ from app.schemas.domain.phone_numbers import (
 from app.schemas.dto.storage_pages import DocumentPagePosition, DocumentPageQuery
 from app.schemas.dto.storage_queries import DocumentFilter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger
 from app.schemas.typings.storage.strings import StoredDocumentKey
+from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
 from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
 from app.utilities.telephony.phone_number_keys import phone_number_request_id_of
 
@@ -61,7 +61,7 @@ class PhoneNumberRepository(
 
         return None
 
-    def find_holder(self, phone_number: E164PhoneNumber) -> PhoneNumberDocument | None:
+    def find_holder(self, phone_number: RentedLineNumber) -> PhoneNumberDocument | None:
         for number in self._collection.list_by_fields(
             [field_equals(PHONE_NUMBER_FIELD, phone_number)]
         ):

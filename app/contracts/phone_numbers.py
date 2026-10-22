@@ -29,10 +29,10 @@ from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
-    E164PhoneNumber,
 )
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
 from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
 from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
 
@@ -118,7 +118,7 @@ class PhoneNumberRepoContract(RepoContract, Protocol):
         """The business's number that is ACTIVE or being given back, if any."""
         raise NotImplementedError
 
-    def find_holder(self, phone_number: E164PhoneNumber) -> PhoneNumberDocument | None:
+    def find_holder(self, phone_number: RentedLineNumber) -> PhoneNumberDocument | None:
         """
         Across businesses (call it platform-wide): the rental that holds
         this number now (ACTIVE or RELEASING), if any.

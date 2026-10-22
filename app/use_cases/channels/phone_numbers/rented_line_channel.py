@@ -7,7 +7,7 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelExternalId
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
 from app.utilities.channels.delivery_targets import find_business_channel
 
 
@@ -29,7 +29,7 @@ def connected_number(channel: ChannelDocument | None) -> ChannelExternalId | Non
 def connect_rented_line(
     channel_repo: ChannelRepoContract,
     business_id: BusinessId,
-    phone_number: E164PhoneNumber,
+    phone_number: RentedLineNumber,
     now: Microseconds,
 ) -> tuple[ChannelDocument, bool]:
     """
@@ -58,7 +58,7 @@ def connect_rented_line(
 def disconnect_rented_line(
     channel_repo: ChannelRepoContract,
     business_id: BusinessId,
-    phone_number: E164PhoneNumber,
+    phone_number: RentedLineNumber,
     now: Microseconds,
 ) -> bool:
     """

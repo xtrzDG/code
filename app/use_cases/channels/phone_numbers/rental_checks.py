@@ -19,7 +19,10 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from app.schemas.typings.telephony.constrained_strings import PhoneNumberLabel
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberLabel,
+    RentedLineNumber,
+)
 from app.use_cases.channels.phone_numbers.rented_line_channel import (
     connected_number,
     find_phone_channel,
@@ -78,7 +81,9 @@ def require_unclaimed_number(
     """
 
     with storage_scope.platform_wide():
-        holder: PhoneNumberDocument | None = phone_number_repo.find_holder(phone_number)
+        holder: PhoneNumberDocument | None = phone_number_repo.find_holder(
+            RentedLineNumber(str(phone_number))
+        )
         channel: ChannelDocument | None = channel_repo.find_by_external_id(
             ChannelKind.PHONE, ChannelExternalId(str(phone_number))
         )

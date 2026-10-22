@@ -17,10 +17,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,
-    E164PhoneNumber,
 )
 from app.schemas.typings.telephony.constrained_integers import PhoneNumberRentalMinor
-from app.schemas.typings.telephony.constrained_strings import PhoneNumberCityQuery
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberCityQuery,
+    RentedLineNumber,
+)
 from app.schemas.typings.telephony.prefixed_id import (
     PhoneNumberId,
     PhoneNumberRequestId,
@@ -59,7 +61,7 @@ class PhoneNumberDocument(BaseDocument):
     business_id: BusinessId
     provider: PhoneNumberProvider
     provider_number_id: ProviderPhoneNumberId
-    phone_number: E164PhoneNumber
+    phone_number: RentedLineNumber
     country_code: CountryCode
     number_type: PhoneNumberType
     locality: PhoneNumberLocality | None = None

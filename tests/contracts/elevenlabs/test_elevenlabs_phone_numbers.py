@@ -15,10 +15,12 @@ from app.schemas.dto.phone_numbers.provisioning import VoicePlatformImport
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
 from app.schemas.typings.platform.strings import PlatformSecret
-from app.schemas.typings.telephony.constrained_strings import PhoneNumberLabel
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberLabel,
+    RentedLineNumber,
+)
 from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
 from tests.channels.recording_transport import RecordingTransport
 from tests.contracts.contract_files import load_json_fixture
@@ -37,7 +39,7 @@ def client(transport: RecordingTransport) -> ElevenLabsPhoneNumbersClient:
 
 def import_request(agent_id: str | None) -> VoicePlatformImport:
     return VoicePlatformImport(
-        phone_number=E164PhoneNumber("+15125550142"),
+        phone_number=RentedLineNumber("+15125550142"),
         label=PhoneNumberLabel("Austin Coffee Lab"),
         agent_id=None if agent_id is None else VoiceAgentId(agent_id),
     )

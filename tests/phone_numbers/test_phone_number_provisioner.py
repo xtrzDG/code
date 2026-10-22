@@ -39,7 +39,10 @@ from app.schemas.typings.telephony.constrained_integers import (
     PhoneNumberOfferCount,
     PhoneNumberPriceMarkupPercent,
 )
-from app.schemas.typings.telephony.constrained_strings import PhoneNumberLabel
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberLabel,
+    RentedLineNumber,
+)
 from app.schemas.typings.telephony.strings import (
     ProviderPhoneNumberId,
     VoicePlatformPhoneNumberId,
@@ -110,7 +113,7 @@ def test_renting_imports_and_releasing_removes_from_elevenlabs_first() -> None:
     )
     voice_id = provisioner.import_number(
         VoicePlatformImport(
-            phone_number=rented.phone_number,
+            phone_number=RentedLineNumber(str(rented.phone_number)),
             label=PhoneNumberLabel("Austin Coffee Lab"),
             agent_id=VoiceAgentId("agent_7"),
         )
