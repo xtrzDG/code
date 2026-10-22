@@ -53,7 +53,6 @@ export const passkeysEn = {
     use: "Confirm with a passkey",
     description:
       "Confirm with the passkey on this device or your phone. Nothing is sent.",
-    useLoginCode: "Send me a login code instead",
     orCode: "or enter a code",
   },
   errors: {

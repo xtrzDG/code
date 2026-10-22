@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-22 — passkeys, the second-factor reminder, device countries
 
-Spec: `a3821cd153ca3abd`
+Spec: `11fff31cc2af3e44`
 
 - **Added** passkeys (WebAuthn) in Account → Security: `GET
   /v1/me/passkeys` (the person's passkeys, `is_available` when the server
@@ -37,6 +37,15 @@ Spec: `a3821cd153ca3abd`
   person can answer with, preferred first (`methods`), and what a platform
   admin may enrol (`enrollment_methods`); `AccountSecurityView.passkey_count`;
   `StepUpChallengeView.passkey_available`.
+- **Changed** (additive) step-up for a person whose second factor is a
+  passkey: `POST /v1/auth/step-up` answers `method` `passkey` (or the new
+  `recovery_code` while none of their passkeys can sign) and sends no login
+  code; `POST /v1/auth/step-up/verify` takes a `recovery_code` from them
+  (two factors) and refuses a login code (422). Only a person with no
+  second factor confirms with a login code. `POST /v1/auth/mfa/enroll`
+  answers 409 when the person already has a second factor, and `POST
+  /v1/me/passkeys/registration` is limited to ten requests per person in
+  ten minutes (429 with Retry-After, shared with the passkey step-up).
 - **Added** the owner's reminder to protect customers' data with a second
   factor: `GET /v1/businesses/{business_id}/security-nudge` (owners and
   staff; shown to owners of a live business without one) and `PUT

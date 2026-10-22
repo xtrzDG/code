@@ -90,6 +90,7 @@ class PasskeyUseCasesContainer(containers.DeclarativeContainer):
         ceremony=adapters.passkey_ceremony,
         step_up=utilities.step_up_guard,
         wall_clock=time_provider.microsecond_wall_clock,
+        rate_limit_registry=registries.request_rate_limit_registry,
     )
     finish_passkey_registration_use_case: Factory[
         UseCaseContract[FinishPasskeyRegistrationCommand, PasskeyAddedView]

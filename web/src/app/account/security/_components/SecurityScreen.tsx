@@ -51,7 +51,9 @@ export function SecurityScreen({
   };
 
   const isTwoFactor = security.auth_level === "two_factor";
-  const isActive = security.totp_status === "active";
+  // Recovery codes stand in for any second factor: the app or a passkey.
+  const hasSecondFactor =
+    security.totp_status === "active" || security.passkey_count > 0;
 
   return (
     <div className="space-y-6">
@@ -88,7 +90,7 @@ export function SecurityScreen({
         account={account}
         onChanged={refresh}
       />
-      {isActive ? (
+      {hasSecondFactor ? (
         <RecoveryCodesCard
           left={security.recovery_codes_left ?? 0}
           account={account}

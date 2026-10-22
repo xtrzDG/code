@@ -142,29 +142,19 @@ class AccountSecurityView(ImmutableDTO):
     is_mfa_required: IsMfaRequired = False
 
 
-class StartStepUpRequest(ImmutableDTO):
-    """
-    How the person would rather confirm (optional body): `login_code` sends
-    a login code even to a person with a passkey (no authenticator app).
-
-    Example: {"method": "login_code"}.
-    """
-
-    method: StepUpMethod | None = None
-
-
 class StartStepUpCommand(ImmutableDTO):
     user_id: UserId
     client_ip_address: ClientIpAddress | None = None
-    method: StepUpMethod | None = None
 
 
 class StepUpChallengeView(ImmutableDTO):
     """
     How to confirm it is you: with an authenticator code (or a recovery
-    code), with a passkey (`POST /v1/auth/step-up/passkey`), or with the
+    code), with a passkey (`POST /v1/auth/step-up/passkey`) or a recovery
+    code, with a recovery code alone (`recovery_code`: passkeys none of
+    which can sign now), or, for a person with no second factor, with the
     login code just sent (`login_code`). `passkey_available`: the person
-    may use a passkey instead of the authenticator app.
+    may use a passkey now.
     """
 
     method: StepUpMethod
@@ -174,8 +164,9 @@ class StepUpChallengeView(ImmutableDTO):
 
 class VerifyStepUpRequest(ImmutableDTO):
     """
-    The confirmation: `code` of the authenticator, a `recovery_code`, or the
-    `login_code` of the challenge `/v1/auth/step-up` sent.
+    The confirmation: `code` of the authenticator, a `recovery_code` (with
+    an authenticator or passkeys), or the `login_code` of the challenge
+    `/v1/auth/step-up` sent (only for a person without a second factor).
     """
 
     code: TotpCode | None = None

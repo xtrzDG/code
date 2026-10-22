@@ -11,5 +11,4 @@ export const securityNudgeKa: Translation<typeof securityNudgeEn> = {
     "თქვენი გუნდი გაიზარდა: კლიენტების მონაცემებს მეტი ადამიანი ხედავს. ჩართეთ მეორე ფაქტორი.",
   action: "ჩართვა",
   dismiss: "ახლა არა",
-  dismissLabel: "მეორე ფაქტორის შეხსენების დამალვა",
 };

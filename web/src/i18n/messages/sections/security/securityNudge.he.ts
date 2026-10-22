@@ -11,5 +11,4 @@ export const securityNudgeHe: Translation<typeof securityNudgeEn> = {
     "הצוות שלכם גדל: יותר אנשים יכולים לראות את נתוני הלקוחות. הפעילו גורם שני.",
   action: "הפעלה",
   dismiss: "לא עכשיו",
-  dismissLabel: "הסתרת התזכורת על גורם שני",
 };

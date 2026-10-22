@@ -51,8 +51,8 @@ export const securityDe: Translation<typeof securityEn> = {
     title: "Diese Sitzung",
     twoFactor: "Angemeldet mit Anmeldecode und zweitem Faktor.",
     oneFactor: "Nur mit einem Anmeldecode angemeldet.",
-    upgrade: "Mit der App bestätigen",
-    upgraded: "Diese Sitzung gilt jetzt als mit der App angemeldet",
+    upgrade: "Mit dem zweiten Faktor bestätigen",
+    upgraded: "Diese Sitzung gilt jetzt als mit zwei Faktoren angemeldet",
   },
   team: {
     title: "Zwei-Faktor-Anmeldung für das Team",

@@ -3,10 +3,12 @@
 /**
  * "Confirm it is you": shown when the API asks a sensitive action to be
  * confirmed (src/api/stepUp.ts). People with an authenticator app enter
- * its code (or a recovery code); people with a passkey may use it instead
- * (with passkeys alone, nothing is sent unless they ask for a code);
- * others get a login code at their own phone or e-mail (one sent moments
- * ago is offered again: stepUpAsker.ts).
+ * its code (or a recovery code); people with a passkey may use it instead.
+ * With passkeys alone, nothing is sent: the passkey or a recovery code
+ * (a recovery code alone while no passkey can sign, or this browser has
+ * no passkeys); a login code never stands in for the second factor. Only
+ * people with no second factor get a login code at their own phone or
+ * e-mail (one sent moments ago is offered again: stepUpAsker.ts).
  * Once confirmed, the waiting requests run again by themselves; cancelling
  * leaves them refused. Loaded by StepUpDialog only when a confirmation is
  * asked for.
@@ -42,10 +44,6 @@ import { StepUpPasskeyOption } from "./StepUpPasskeyOption";
 import { useStepUpPasskey } from "./useStepUpPasskey";
 
 const stepUp = createStepUpAsker(() => unwrap(api.POST("/v1/auth/step-up")));
-/** A login code instead of a passkey (asked on purpose: it is sent). */
-const loginCodeStepUp = createStepUpAsker(() =>
-  unwrap(api.POST("/v1/auth/step-up", { body: { method: "login_code" } })),
-);
 
 export default function StepUpForm() {
   const { t } = useI18n();
@@ -62,15 +60,11 @@ export default function StepUpForm() {
   });
   const isPasskeySupported = usePasskeySupport();
   const canPasskey = Boolean(challenge?.passkey_available) && isPasskeySupported === true;
-  const isPasskeyOnly = challenge?.method === "passkey";
+  const isPasskeyOnly = challenge?.method === "passkey" && !useRecovery;
 
-  // A code asked for on purpose (passkeys alone send nothing) is resent the same way.
-  const [isCodeOnRequest, setCodeOnRequest] = useState(false);
-
-  const askLoginCode = async (options: { onRequest: boolean; fresh: boolean }) => {
+  const resend = async () => {
     try {
-      const next = await (options.onRequest ? loginCodeStepUp : stepUp).ask({ fresh: options.fresh });
-      setCodeOnRequest(options.onRequest);
+      const next = await stepUp.ask({ fresh: true });
       setProblem(null);
       setChallenge(next);
       setCode("");
@@ -78,20 +72,21 @@ export default function StepUpForm() {
       toast.error(toApiError(error));
     }
   };
-  const resend = () => askLoginCode({ onRequest: isCodeOnRequest, fresh: true });
 
   useEffect(() => {
     let isCurrent = true;
-    // How to confirm (without an authenticator or a passkey, a login code is sent).
+    // How to confirm (without any second factor, a login code is sent).
     stepUp.ask().then(
       (next) => {
         if (!isCurrent) {
           return;
         }
-        if (next.method === "passkey" && !canUsePasskeys()) {
-          // Passkeys only, and this browser cannot use them: a code instead.
-          void askLoginCode({ onRequest: true, fresh: false });
-          return;
+        if (
+          next.method === "recovery_code" ||
+          (next.method === "passkey" && !canUsePasskeys())
+        ) {
+          // No passkey can sign here: one of the recovery codes instead.
+          setUseRecovery(true);
         }
         setChallenge(next);
       },
@@ -118,18 +113,17 @@ export default function StepUpForm() {
     setChecking(true);
     setProblem(null);
     const body =
-      challenge.method === "totp"
-        ? useRecovery
-          ? { recovery_code: recoveryCode }
-          : { code: digits }
-        : {
+      challenge.method === "login_code"
+        ? {
             challenge_id: challenge.login_code?.challenge_id,
             login_code: digits,
-          };
+          }
+        : useRecovery
+          ? { recovery_code: recoveryCode }
+          : { code: digits };
     try {
       await unwrap(api.POST("/v1/auth/step-up/verify", { body }));
       stepUp.forget();
-      loginCodeStepUp.forget();
       toast.success(t("mfa.stepUp.confirmed"));
       settleStepUp(true);
     } catch (caught) {
@@ -193,7 +187,7 @@ export default function StepUpForm() {
           isWorking={passkey.isWorking}
           problem={passkey.problem}
           onConfirm={() => void passkey.confirm()}
-          onUseLoginCode={() => void askLoginCode({ onRequest: true, fresh: false })}
+          onUseRecoveryCode={() => setUseRecovery(true)}
         />
       ) : challenge ? (
         <form
@@ -211,7 +205,7 @@ export default function StepUpForm() {
               isWorking={passkey.isWorking}
               problem={passkey.problem}
               onConfirm={() => void passkey.confirm()}
-              onUseLoginCode={() => void askLoginCode({ onRequest: true, fresh: false })}
+              onUseRecoveryCode={() => setUseRecovery(true)}
             />
           ) : null}
           <p className="text-sm text-ink-muted">{instruction}</p>
@@ -258,7 +252,7 @@ export default function StepUpForm() {
                   ? t("mfa.secondStep.useApp")
                   : t("mfa.secondStep.useRecovery")}
               </Button>
-            ) : (
+            ) : challenge.method === "login_code" ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -266,7 +260,7 @@ export default function StepUpForm() {
               >
                 {t("mfa.stepUp.resend")}
               </Button>
-            )}
+            ) : null}
           </div>
         </form>
       ) : (

@@ -29030,7 +29030,7 @@
       },
       "StepUpChallengeView": {
         "additionalProperties": false,
-        "description": "How to confirm it is you: with an authenticator code (or a recovery\ncode), with a passkey (`POST /v1/auth/step-up/passkey`), or with the\nlogin code just sent (`login_code`). `passkey_available`: the person\nmay use a passkey instead of the authenticator app.",
+        "description": "How to confirm it is you: with an authenticator code (or a recovery\ncode), with a passkey (`POST /v1/auth/step-up/passkey`) or a recovery\ncode, with a recovery code alone (`recovery_code`: passkeys none of\nwhich can sign now), or, for a person with no second factor, with the\nlogin code just sent (`login_code`). `passkey_available`: the person\nmay use a passkey now.",
         "properties": {
           "login_code": {
             "anyOf": [
@@ -29058,10 +29058,11 @@
         "type": "object"
       },
       "StepUpMethod": {
-        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\nelse one of their passkeys, otherwise a new login code sent to their\nphone or e-mail. Answers only (never stored).",
+        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\nelse one of their passkeys (or a recovery code), a recovery code alone\nwhen they have passkeys none of which can sign now, otherwise (no second\nfactor at all) a new login code sent to their phone or e-mail. Answers\nonly (never stored).",
         "enum": [
           "totp",
           "passkey",
+          "recovery_code",
           "login_code"
         ],
         "title": "StepUpMethod",
@@ -42235,38 +42236,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": false,
-                "description": "How the person would rather confirm (optional body): `login_code` sends\na login code even to a person with a passkey (no authenticator app).\n\nExample: {\"method\": \"login_code\"}.",
-                "properties": {
-                  "method": {
-                    "anyOf": [
-                      {
-                        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\nelse one of their passkeys, otherwise a new login code sent to their\nphone or e-mail. Answers only (never stored).",
-                        "enum": [
-                          "totp",
-                          "passkey",
-                          "login_code"
-                        ],
-                        "title": "StepUpMethod",
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "title": "StartStepUpRequest",
-                "type": "object"
-              }
-            }
-          },
-          "required": false
-        },
         "responses": {
           "200": {
             "content": {
@@ -42698,7 +42667,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The confirmation: `code` of the authenticator, a `recovery_code`, or the\n`login_code` of the challenge `/v1/auth/step-up` sent.",
+                "description": "The confirmation: `code` of the authenticator, a `recovery_code` (with\nan authenticator or passkeys), or the `login_code` of the challenge\n`/v1/auth/step-up` sent (only for a person without a second factor).",
                 "properties": {
                   "challenge_id": {
                     "anyOf": [

@@ -53,7 +53,6 @@ export const passkeysRu: Translation<typeof passkeysEn> = {
     use: "Подтвердить ключом доступа",
     description:
       "Подтвердите ключом доступа на этом устройстве или телефоне. Ничего не отправляем.",
-    useLoginCode: "Прислать код входа",
     orCode: "или введите код",
   },
   errors: {

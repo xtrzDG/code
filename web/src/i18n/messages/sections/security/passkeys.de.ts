@@ -53,7 +53,6 @@ export const passkeysDe: Translation<typeof passkeysEn> = {
     use: "Mit Passkey bestätigen",
     description:
       "Bestätigen Sie mit dem Passkey auf diesem Gerät oder Ihrem Telefon. Es wird nichts gesendet.",
-    useLoginCode: "Stattdessen einen Anmeldecode senden",
     orCode: "oder einen Code eingeben",
   },
   errors: {

@@ -11,5 +11,4 @@ export const securityNudgeDe: Translation<typeof securityNudgeEn> = {
     "Ihr Team ist gewachsen: Mehr Menschen sehen die Daten Ihrer Kunden. Schalten Sie einen zweiten Faktor ein.",
   action: "Einschalten",
   dismiss: "Nicht jetzt",
-  dismissLabel: "Erinnerung an den zweiten Faktor ausblenden",
 };

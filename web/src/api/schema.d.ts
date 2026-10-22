@@ -17036,9 +17036,11 @@ export interface components {
         /**
          * StepUpChallengeView
          * @description How to confirm it is you: with an authenticator code (or a recovery
-         *     code), with a passkey (`POST /v1/auth/step-up/passkey`), or with the
+         *     code), with a passkey (`POST /v1/auth/step-up/passkey`) or a recovery
+         *     code, with a recovery code alone (`recovery_code`: passkeys none of
+         *     which can sign now), or, for a person with no second factor, with the
          *     login code just sent (`login_code`). `passkey_available`: the person
-         *     may use a passkey instead of the authenticator app.
+         *     may use a passkey now.
          */
         StepUpChallengeView: {
             login_code?: components["schemas"]["OtpChallengeView"] | null;
@@ -17053,11 +17055,13 @@ export interface components {
          * StepUpMethod
          * @description How a signed-in person confirms it is them before a sensitive action: a
          *     code of their authenticator app (or a recovery code) when they have one,
-         *     else one of their passkeys, otherwise a new login code sent to their
-         *     phone or e-mail. Answers only (never stored).
+         *     else one of their passkeys (or a recovery code), a recovery code alone
+         *     when they have passkeys none of which can sign now, otherwise (no second
+         *     factor at all) a new login code sent to their phone or e-mail. Answers
+         *     only (never stored).
          * @enum {string}
          */
-        StepUpMethod: "totp" | "passkey" | "login_code";
+        StepUpMethod: "totp" | "passkey" | "recovery_code" | "login_code";
         /**
          * SubProcessor
          * @description The sub-processors that may keep copies of a business's customer data
@@ -24232,13 +24236,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    method?: ("totp" | "passkey" | "login_code") | null;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

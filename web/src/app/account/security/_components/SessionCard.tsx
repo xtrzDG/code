@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * How this session is signed in. With an authenticator set up but a
- * session from the login code alone (an older sign-in), a code from the
- * app counts the session as two-factor (the step-up dialog).
+ * How this session is signed in. With a second factor set up (the
+ * authenticator app or a passkey) but a session from the login code alone
+ * (an older sign-in), confirming with it counts the session as two-factor
+ * (the step-up dialog: the app's code, a passkey or a recovery code).
  */
 
 import { useState } from "react";
@@ -24,7 +25,9 @@ export function SessionCard({
   const toast = useToast();
   const [isConfirming, setConfirming] = useState(false);
   const isTwoFactor = security.auth_level === "two_factor";
-  const canUpgrade = !isTwoFactor && security.totp_status === "active";
+  const hasSecondFactor =
+    security.totp_status === "active" || security.passkey_count > 0;
+  const canUpgrade = !isTwoFactor && hasSecondFactor;
 
   const upgrade = async () => {
     setConfirming(true);

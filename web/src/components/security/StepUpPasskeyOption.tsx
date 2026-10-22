@@ -3,7 +3,8 @@
 /**
  * The passkey way to "confirm it is you". Alone (`isOnly`: the person has
  * passkeys and no authenticator app, so nothing was sent) it is the whole
- * form, with a login code on request; beside a code form it is one button
+ * form, with a recovery code on request (never a login code: it must not
+ * stand in for the second factor); beside a code form it is one button
  * above it.
  */
 
@@ -15,13 +16,13 @@ export function StepUpPasskeyOption({
   isWorking,
   problem,
   onConfirm,
-  onUseLoginCode,
+  onUseRecoveryCode,
 }: {
   isOnly: boolean;
   isWorking: boolean;
   problem: string | null;
   onConfirm: () => void;
-  onUseLoginCode: () => void;
+  onUseRecoveryCode: () => void;
 }) {
   const { t } = useI18n();
   const problemLine = problem ? (
@@ -35,8 +36,8 @@ export function StepUpPasskeyOption({
       <div className="space-y-4">
         <p className="text-sm text-ink-muted">{t("passkeys.stepUp.description")}</p>
         {problemLine}
-        <Button variant="ghost" size="sm" disabled={isWorking} onClick={onUseLoginCode}>
-          {t("passkeys.stepUp.useLoginCode")}
+        <Button variant="ghost" size="sm" disabled={isWorking} onClick={onUseRecoveryCode}>
+          {t("mfa.secondStep.useRecovery")}
         </Button>
       </div>
     );

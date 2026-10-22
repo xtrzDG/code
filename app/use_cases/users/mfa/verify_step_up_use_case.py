@@ -6,6 +6,7 @@ from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserRepoContract,
@@ -27,6 +28,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
+from app.use_cases.shared.second_factors import has_second_factor
 from app.use_cases.users.mfa.mfa_check_limits import (
     refuse_too_frequent_second_factor_checks,
 )
@@ -40,6 +42,9 @@ from app.utilities.security.two_factor_policy import wrong_code
 MICROSECONDS_PER_SECOND: int = 1_000_000
 NO_SESSION_MESSAGE: str = "Sign in again to confirm it is you."
 LOGIN_CODE_NEEDED_MESSAGE: str = "Enter the login code we sent you."
+RECOVERY_CODE_NEEDED_MESSAGE: str = (
+    "Confirm with your passkey or enter one of your recovery codes."
+)
 
 
 class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceView]):
@@ -48,10 +53,14 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
     may do sensitive actions for STEP_UP_MAX_AGE_SECONDS again.
 
     With an authenticator: its code or a recovery code (SecondFactorCheck),
-    and the session counts as two factors from now on. Without one: the
-    login code StartStepUpUseCase sent to their own phone or e-mail (a code
-    sent to anyone else's is refused). Checks are limited per person and
-    per client network; the session stays valid whatever the outcome.
+    and the session counts as two factors from now on. With passkeys and
+    no authenticator: a recovery code here (a passkey answers at
+    VerifyPasskeyStepUpUseCase), two factors too; a login code is refused,
+    so a stolen session with the mailbox or phone cannot reach the
+    second-factor changes. Without any second factor: the login code
+    StartStepUpUseCase sent to their own phone or e-mail (a code sent to
+    anyone else's is refused), one factor. Checks are limited per person
+    and per client network; the session stays valid whatever the outcome.
     """
 
     def __init__(
@@ -66,8 +75,10 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
         self._user_repo: UserRepoContract = user_repo
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_session_repo: UserSessionRepoContract = user_session_repo
@@ -101,6 +112,13 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
         auth_level: AuthLevel = AuthLevel.ONE_FACTOR
         if factor is not None and factor.status is TotpFactorStatus.ACTIVE:
             self._check.verify(user.id, input_data.code, input_data.recovery_code, now)
+            auth_level = AuthLevel.TWO_FACTOR
+        elif has_second_factor(self._totp_factor_repo, self._passkey_repo, user.id):
+            # Passkeys only: the second factor or a recovery code, never a
+            # login code alone.
+            if input_data.recovery_code is None:
+                raise ValidationFailedError(RECOVERY_CODE_NEEDED_MESSAGE)
+            self._check.verify(user.id, None, input_data.recovery_code, now)
             auth_level = AuthLevel.TWO_FACTOR
         else:
             self._check_login_code(user, input_data, now)

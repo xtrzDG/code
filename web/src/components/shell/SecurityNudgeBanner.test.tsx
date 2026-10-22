@@ -57,6 +57,21 @@ describe("SecurityNudgeBanner: the owner's reminder to turn on a second factor",
     expect(action.getAttribute("href")).toBe(`/account/security?next=${encodeURIComponent("/b/business_1/bookings")}`);
   });
 
+  it.each(["en", "ru", "ka", "he", "de"] as const)(
+    "names Not now by its visible words, in %s (WCAG 2.5.3)",
+    async (locale) => {
+      const { t } = textsIn(locale);
+      answerGet(() => ok(shown));
+      renderBanner(live, locale);
+
+      const notNow = await screen.findByRole("button", { name: t("securityNudge.dismiss") });
+      expect(notNow.textContent).toContain(t("securityNudge.dismiss"));
+      expect(notNow.getAttribute("aria-label")).toBeNull();
+      const described = document.getElementById(notNow.getAttribute("aria-describedby") ?? "");
+      expect(described?.textContent).toBe(t("securityNudge.title"));
+    },
+  );
+
   it("says why it is back once the team has grown", async () => {
     const { t } = textsIn("en");
     answerGet(() => ok({ ...shown, team_size: 3, reason: "team_grew" }));
@@ -76,7 +91,7 @@ describe("SecurityNudgeBanner: the owner's reminder to turn on a second factor",
     }) as never);
     renderBanner();
 
-    await userEvent.click(await screen.findByRole("button", { name: t("securityNudge.dismissLabel") }));
+    await userEvent.click(await screen.findByRole("button", { name: t("securityNudge.dismiss") }));
 
     expect(vi.mocked(api.PUT)).toHaveBeenCalledWith("/v1/businesses/{business_id}/security-nudge/dismissal", {
       params: { path: { business_id: "business_1" } },

@@ -53,7 +53,6 @@ export const passkeysKa: Translation<typeof passkeysEn> = {
     use: "დადასტურება წვდომის გასაღებით",
     description:
       "დაადასტურეთ ამ მოწყობილობის ან ტელეფონის წვდომის გასაღებით. არაფერს ვაგზავნით.",
-    useLoginCode: "შესვლის კოდის გამოგზავნა",
     orCode: "ან შეიყვანეთ კოდი",
   },
   errors: {

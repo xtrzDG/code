@@ -55,8 +55,8 @@ export const securityEn = {
     title: "This session",
     twoFactor: "Signed in with a login code and a second factor.",
     oneFactor: "Signed in with a login code only.",
-    upgrade: "Confirm with the app",
-    upgraded: "This session now counts as signed in with the app",
+    upgrade: "Confirm with your second factor",
+    upgraded: "This session now counts as signed in with two factors",
   },
   team: {
     title: "Two-factor sign-in for the team",

@@ -12,5 +12,4 @@ export const securityNudgeEn = {
     "Your team has grown: more people can open your customers' data. Turn on a second factor.",
   action: "Turn on",
   dismiss: "Not now",
-  dismissLabel: "Hide the second-factor reminder",
 } as const;

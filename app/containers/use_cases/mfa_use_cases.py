@@ -123,6 +123,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         rate_limit_registry=registries.request_rate_limit_registry,
+        passkey_repo=repositories.passkey_repo,
     )
 
     # --- Account → Security.
@@ -239,6 +240,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         rate_limit_registry=registries.request_rate_limit_registry,
+        passkey_repo=repositories.passkey_repo,
     )
 
     # --- A business's two-factor requirement for its team.

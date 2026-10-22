@@ -11,5 +11,4 @@ export const securityNudgeRu: Translation<typeof securityNudgeEn> = {
     "Ваша команда выросла: данные клиентов видит больше людей. Включите второй фактор.",
   action: "Включить",
   dismiss: "Не сейчас",
-  dismissLabel: "Скрыть напоминание о втором факторе",
 };

@@ -13,6 +13,7 @@ from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.strings import RawEmailAddressInput
 from app.use_cases.shared.second_factors import (
     has_active_authenticator,
+    has_second_factor,
     usable_passkeys,
 )
 
@@ -21,10 +22,14 @@ class StartStepUpUseCase(UseCaseContract[StartStepUpCommand, StepUpChallengeView
     """
     The signed-in person is about to confirm it is them before a sensitive
     action. With an authenticator, its code (or a recovery code) will do,
-    and nothing is sent; a passkey too (`passkey_available`). Without one,
-    a passkey will do, and nothing is sent, unless the person asks for a
-    login code (`method`: login_code). Otherwise a new login code goes to
-    the phone or e-mail they sign in with, through the sign-in's own send
+    and nothing is sent; a passkey too (`passkey_available`). With passkeys
+    and no authenticator, a passkey or a recovery code will do (PASSKEY),
+    or only a recovery code while none of their passkeys can sign here
+    (RECOVERY_CODE); nothing is sent, and a request for a login code is
+    not honoured: a code at the mailbox or phone must never stand in for
+    the second factor (it would let a stolen session swap the passkeys).
+    Only a person with no second factor gets a new login code, at the
+    phone or e-mail they sign in with, through the sign-in's own send
     (channels, abuse limits and caps; the user's language); confirming
     with it alone counts as one factor.
     """
@@ -58,11 +63,15 @@ class StartStepUpUseCase(UseCaseContract[StartStepUpCommand, StepUpChallengeView
                 method=StepUpMethod.TOTP, passkey_available=has_passkey
             )
 
-        if has_passkey and input_data.method is not StepUpMethod.LOGIN_CODE:
+        if has_passkey:
             return StepUpChallengeView(
                 method=StepUpMethod.PASSKEY,
                 passkey_available=True,
             )
+
+        if has_second_factor(self._totp_factor_repo, self._passkey_repo, user.id):
+            # Passkeys that cannot sign now (suspended, or no relying party).
+            return StepUpChallengeView(method=StepUpMethod.RECOVERY_CODE)
 
         is_phone: bool = (
             user.login_method is LoginMethod.PHONE and user.phone_number is not None

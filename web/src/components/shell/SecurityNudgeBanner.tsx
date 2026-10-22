@@ -10,6 +10,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId } from "react";
 
 import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
@@ -26,6 +27,7 @@ export function SecurityNudgeBanner() {
   const { t } = useI18n();
   const { business, isOwner } = useBusiness();
   const pathname = usePathname();
+  const titleId = useId();
   const path = { business_id: business.id };
   const nudge = useQuery(
     queryKeys.securityNudge.detail(business.id),
@@ -49,7 +51,9 @@ export function SecurityNudgeBanner() {
     >
       <IconShield className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
       <div className="min-w-0 flex-1 basis-60 space-y-1">
-        <p className="font-medium text-ink">{t("securityNudge.title")}</p>
+        <p id={titleId} className="font-medium text-ink">
+          {t("securityNudge.title")}
+        </p>
         <p className="text-ink-muted">
           {t(nudge.data.reason === "team_grew" ? "securityNudge.teamGrew" : "securityNudge.description")}
         </p>
@@ -61,7 +65,8 @@ export function SecurityNudgeBanner() {
         <Button
           variant="ghost"
           size="sm"
-          aria-label={t("securityNudge.dismissLabel")}
+          // Named by its visible words (WCAG 2.5.3); the title says what it hides.
+          aria-describedby={titleId}
           isLoading={putAway.isPending}
           onClick={() => void putAway.run()}
         >

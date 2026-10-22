@@ -52,7 +52,6 @@ export const passkeysHe: Translation<typeof passkeysEn> = {
     use: "אישור עם מפתח גישה",
     description:
       "אשרו עם מפתח הגישה שבמכשיר הזה או בטלפון. לא נשלח דבר.",
-    useLoginCode: "שלחו לי קוד כניסה במקום",
     orCode: "או הזינו קוד",
   },
   errors: {
