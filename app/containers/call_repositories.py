@@ -6,14 +6,20 @@ from app.repositories.call_follow_up_repositories import (
     CallSettingsRepository,
     MissedCallRepository,
 )
+from app.repositories.phone_number_repositories import (
+    PhoneNumberRepository,
+    PhoneNumberRequestRepository,
+)
 
 
 class CallRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of what follows a phone call (migration 1051): callers
     who did not get through with their text-backs, and each business's
-    call settings. `RepositoriesContainer` extends it, so they are read as
-    `repositories.missed_call_repo` like every other repository.
+    call settings; the numbers rented for businesses and the requests for
+    numbers the platform team arranges (1213). `RepositoriesContainer`
+    extends it, so they are read as `repositories.missed_call_repo` like
+    every other repository.
     """
 
     call_adapters: CallAdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -23,4 +29,11 @@ class CallRepositoriesContainer(containers.DeclarativeContainer):
     )
     call_settings_repo: Singleton[CallSettingsRepository] = Singleton(
         CallSettingsRepository, collection=call_adapters.call_settings_collection
+    )
+    phone_number_repo: Singleton[PhoneNumberRepository] = Singleton(
+        PhoneNumberRepository, collection=call_adapters.phone_number_collection
+    )
+    phone_number_request_repo: Singleton[PhoneNumberRequestRepository] = Singleton(
+        PhoneNumberRequestRepository,
+        collection=call_adapters.phone_number_request_collection,
     )

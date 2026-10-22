@@ -5,6 +5,7 @@ its period and its operator: `GatewaysContainer.periodic_jobs`.
 
 from dependency_injector.providers import Factory, List
 
+from app.containers.billing_jobs import billing_job_specs
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.activation_follow_up import (
@@ -33,6 +34,7 @@ from app.gateways.worker.periodic.growth_jobs import (
     run_rebooking_campaigns_job,
     sweep_deposits_job,
 )
+from app.gateways.worker.periodic.phone_number_jobs import maintain_phone_numbers_job
 from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_business_exports import (
     purge_business_exports_job,
@@ -67,7 +69,6 @@ from app.gateways.worker.periodic.send_subprocessor_notices import (
 )
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
 from app.gateways.worker.periodic.subscription_lifecycle_jobs import (
-    run_subscription_pauses_job,
     send_win_back_messages_job,
 )
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
@@ -86,10 +87,6 @@ HOUR_SECONDS: int = 60 * MINUTE_SECONDS
 DAY_SECONDS: int = 24 * HOUR_SECONDS
 
 PURGE_EXPIRED_RECORDINGS_JOB: JobName = JobName("purge_expired_recordings")
-END_TRIALS_JOB: JobName = JobName("end_trials")
-ENFORCE_GRACE_PERIODS_JOB: JobName = JobName("enforce_grace_periods")
-CHECK_PACKAGE_USAGE_JOB: JobName = JobName("check_package_usage")
-INVOICE_USAGE_OVERAGE_JOB: JobName = JobName("invoice_usage_overage")
 SEND_BOOKING_REMINDERS_JOB: JobName = JobName("send_booking_reminders")
 FLUSH_LLM_TRACES_JOB: JobName = JobName("flush_llm_traces")
 PURGE_FINISHED_JOBS_JOB: JobName = JobName("purge_finished_jobs")
@@ -99,11 +96,8 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
     """The periodic jobs, each run by its operator."""
 
     # Periodic jobs in the order they run within a tick, each once per
-    # period (day or interval) across workers: trials end before grace
-    # periods are enforced, so an expired trial and its grace period are
-    # handled in the same hour; minutes above the package are billed before
-    # the grace job looks for unpaid bills, and seasonal pauses start or end
-    # before it looks at their subscriptions.
+    # period (day or interval) across workers; the billing jobs keep the
+    # order `billing_jobs.py` explains.
     return List(
         Factory(
             PeriodicJobSpec,
@@ -111,35 +105,8 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             interval_seconds=JobIntervalSeconds(DAY_SECONDS),
             operator=operators.compliance.purge_expired_recordings_operator,
         ),
-        Factory(
-            PeriodicJobSpec,
-            name=END_TRIALS_JOB,
-            interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.billing.end_trials_operator,
-        ),
-        Factory(
-            PeriodicJobSpec,
-            name=INVOICE_USAGE_OVERAGE_JOB,
-            interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.billing.invoice_usage_overage_operator,
-        ),
-        # Seasonal pauses start and end before the grace job (1161).
-        Factory(
-            run_subscription_pauses_job,
-            operator=operators.lifecycle.run_subscription_pauses_operator,
-        ),
-        Factory(
-            PeriodicJobSpec,
-            name=ENFORCE_GRACE_PERIODS_JOB,
-            interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.billing.enforce_grace_periods_operator,
-        ),
-        Factory(
-            PeriodicJobSpec,
-            name=CHECK_PACKAGE_USAGE_JOB,
-            interval_seconds=JobIntervalSeconds(DAY_SECONDS),
-            operator=operators.billing.check_package_usage_operator,
-        ),
+        # Billing, in its own order (`billing_jobs.py`).
+        *billing_job_specs(operators),
         Factory(
             PeriodicJobSpec,
             name=SEND_BOOKING_REMINDERS_JOB,
@@ -151,6 +118,11 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         # Busy times of resources' outside calendars, every five minutes.
         Factory(
             sync_calendars_job, operator=operators.calendars.sync_due_calendars_operator
+        ),
+        # Rented phone numbers returned, kept with their agent (1213).
+        Factory(
+            maintain_phone_numbers_job,
+            operator=operators.calls.maintain_phone_numbers_operator,
         ),
         Factory(
             PeriodicJobSpec,

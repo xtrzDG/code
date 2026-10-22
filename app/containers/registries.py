@@ -38,6 +38,7 @@ from app.registries.locks.data_task_lock_registry import DataTaskLockRegistry
 from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
+from app.registries.locks.phone_line_lock_registry import PhoneLineLockRegistry
 from app.registries.locks.platform_alert_lock_registry import (
     PlatformAlertLockRegistry,
 )
@@ -51,6 +52,9 @@ from app.registries.public_site.public_demo_directory_registry import (
     PublicDemoDirectoryRegistry,
 )
 from app.registries.public_site.public_demo_slots import build_public_demo_slots
+from app.registries.telephony.phone_number_country_registry import (
+    PhoneNumberCountryRegistry,
+)
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 from app.registries.turns.turn_slot_registry import (
     TurnSlotRegistry,
@@ -176,6 +180,14 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # One lock for reserving login code sends (the hourly limits).
     login_code_send_lock_registry: Singleton[LoginCodeSendLockRegistry] = Singleton(
         LoginCodeSendLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # Rented phone numbers (1213): one lock per business around its phone
+    # line, and the countries where an owner takes a number at once.
+    phone_line_lock_registry: Singleton[PhoneLineLockRegistry] = Singleton(
+        PhoneLineLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    phone_number_country_registry: Singleton[PhoneNumberCountryRegistry] = Singleton(
+        PhoneNumberCountryRegistry
     )
     # Numbers a login code is never sent to (premium rate, satellite, ...).
     high_cost_phone_number_registry: Singleton[HighCostPhoneNumberRegistry] = Singleton(

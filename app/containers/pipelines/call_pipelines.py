@@ -8,7 +8,10 @@ from app.containers.provider_chains import orchestrator_pipeline
 
 
 class CallPipelinesContainer(containers.DeclarativeContainer):
-    """Pipelines of the telephony line's webhook, text-backs and Settings → Calls."""
+    """
+    Pipelines of the telephony line's webhook, text-backs, Settings → Calls
+    and the phone line's rented number (1213).
+    """
 
     calls: CallOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -23,3 +26,22 @@ class CallPipelinesContainer(containers.DeclarativeContainer):
         calls.update_call_settings_orchestrator
     )
     list_text_backs_pipeline = orchestrator_pipeline(calls.list_text_backs_orchestrator)
+    get_phone_line_pipeline = orchestrator_pipeline(calls.get_phone_line_orchestrator)
+    search_phone_numbers_pipeline = orchestrator_pipeline(
+        calls.search_phone_numbers_orchestrator
+    )
+    rent_phone_number_pipeline = orchestrator_pipeline(
+        calls.rent_phone_number_orchestrator
+    )
+    request_phone_number_pipeline = orchestrator_pipeline(
+        calls.request_phone_number_orchestrator
+    )
+    cancel_phone_number_request_pipeline = orchestrator_pipeline(
+        calls.cancel_phone_number_request_orchestrator
+    )
+    maintain_phone_numbers_pipeline = orchestrator_pipeline(
+        calls.maintain_phone_numbers_orchestrator
+    )
+    bill_phone_number_rentals_pipeline = orchestrator_pipeline(
+        calls.bill_phone_number_rentals_orchestrator
+    )

@@ -9,6 +9,7 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.phone_number_use_cases import PhoneNumberUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -113,6 +114,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    phone_number_use_cases: PhoneNumberUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     receive_telegram_webhook_use_case: Factory[
         UseCaseContract[TelegramWebhookRequest, list[RoutedInboundMessage]]
@@ -161,6 +163,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         product_events=facilitators.product_events,
         step_up=utilities.step_up_guard,
+        phone_number_repo=repositories.phone_number_repo,
     )
     set_whatsapp_staff_template_use_case: Factory[
         UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]
@@ -201,6 +204,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
+        give_back_phone_number=phone_number_use_cases.give_back_phone_number_use_case,
     )
     list_channels_use_case: Factory[
         UseCaseContract[ChannelListQuery, list[ChannelView]]

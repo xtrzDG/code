@@ -22,6 +22,7 @@ from app.containers.use_cases.notification_use_cases import (
 from app.containers.use_cases.pending_change_use_cases import (
     PendingChangeUseCasesContainer,
 )
+from app.containers.use_cases.phone_number_use_cases import PhoneNumberUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 
@@ -158,6 +159,19 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
+    # Numbers rented for businesses' phone lines (1213).
+    phone_numbers: PhoneNumberUseCasesContainer = Container(  # type: ignore[assignment]
+        PhoneNumberUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]
         ChannelUseCasesContainer,
         facilitators=CoreUseCasesContainer.facilitators,
@@ -170,6 +184,7 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
         voice_use_cases=voice,
+        phone_number_use_cases=phone_numbers,
     )
     deliveries: DeliveryUseCasesContainer = Container(  # type: ignore[assignment]
         DeliveryUseCasesContainer,

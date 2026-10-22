@@ -115,6 +115,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     calls: CallOrchestratorsContainer = Container(  # type: ignore[assignment]
         CallOrchestratorsContainer,
         call_use_cases=CoreOrchestratorsContainer.use_cases.calls,
+        phone_number_use_cases=CoreOrchestratorsContainer.use_cases.phone_numbers,
     )
     conversations: ConversationOrchestratorsContainer = Container(  # type: ignore[assignment]
         ConversationOrchestratorsContainer,
