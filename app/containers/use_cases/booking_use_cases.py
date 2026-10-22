@@ -36,6 +36,7 @@ from app.schemas.dto.operations.bookings import (
     RevertBookingStatusCommand,
     UpdateBookingCommand,
 )
+from app.use_cases.bookings.booking_status_transition import BookingStatusTransition
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
@@ -201,42 +202,34 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # Staff changes of a booking and their Undo share one transition.
+    booking_status_transition: Factory[BookingStatusTransition] = Factory(
+        BookingStatusTransition,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        resource_repo=repositories.resource_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        booking_repo=repositories.booking_repo,
+        contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        lock_registry=registries.business_lock_registry,
+        calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     update_booking_use_case: Factory[
         UseCaseContract[UpdateBookingCommand, BookingView]
     ] = Factory(
         UpdateBookingUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
-        booking_repo=repositories.booking_repo,
-        resource_repo=repositories.resource_repo,
+        transition=booking_status_transition,
         contact_repo=repositories.contact_repo,
         audit_log_repo=repositories.audit_log_repo,
-        lock_registry=registries.business_lock_registry,
-        calendar_sync=facilitators.calendar_sync_facilitator,
-        live_events=facilitators.event_publisher,
-        growth=facilitators.growth_bookings,
-        busy_times_repo=repositories.calendar_busy_times_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
     )
     revert_booking_status_use_case: Factory[
         UseCaseContract[RevertBookingStatusCommand, BookingView]
-    ] = Factory(
-        RevertBookingStatusUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
-        booking_repo=repositories.booking_repo,
-        contact_repo=repositories.contact_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        lock_registry=registries.business_lock_registry,
-        calendar_sync=facilitators.calendar_sync_facilitator,
-        live_events=facilitators.event_publisher,
-        growth=facilitators.growth_bookings,
-        busy_times_repo=repositories.calendar_busy_times_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
+    ] = Factory(RevertBookingStatusUseCase, transition=booking_status_transition)
     send_booking_reminders_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
             SendBookingRemindersUseCase,

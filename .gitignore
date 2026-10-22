@@ -68,6 +68,8 @@ coverage.xml
 .playwright-cli/
 .playwright/
 playwright-report/
+# jscpd's report (the duplication ratchet, .jscpd.json)
+.jscpd-report/
 test-results/
 output/
 

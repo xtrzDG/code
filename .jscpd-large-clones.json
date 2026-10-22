@@ -1,0 +1,207 @@
+{
+  "clones": [
+    {
+      "files": [
+        "app/adapters/channels/meta_page_channel_adapter.py",
+        "app/adapters/channels/whatsapp_channel_adapter.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/adapters/storage/in_memory_document_collection.py",
+        "app/adapters/storage/postgres/postgres_document_collection_adapter.py"
+      ],
+      "count": 2
+    },
+    {
+      "files": [
+        "app/registries/niches/templates/b2b_supply_template.py",
+        "app/registries/niches/templates/car_rental_and_tours_template.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/registries/niches/templates/b2b_supply_template.py",
+        "app/registries/niches/templates/education_template.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/registries/niches/templates/b2b_supply_template.py",
+        "app/registries/niches/templates/event_venue_template.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/registries/niches/templates/b2b_supply_template.py",
+        "app/registries/niches/templates/home_services_template.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/schemas/domain/assistants.py",
+        "app/schemas/dto/assistants/assistant_views.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/schemas/domain/customer_segments.py",
+        "app/schemas/dto/customers/customer_segments.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/schemas/domain/value_reports.py",
+        "app/schemas/dto/value/value_model.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/transformers/notifications/booking_reminder_transformer.py",
+        "app/transformers/notifications/reschedule_confirmation_transformer.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/billing/enforce_grace_periods_use_case.py",
+        "app/use_cases/billing/lifecycle/run_subscription_pauses_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/bookings/create_booking_use_case.py",
+        "app/use_cases/bookings/reschedule_booking_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/brands/remove_brand_location_use_case.py",
+        "app/use_cases/brands/remove_brand_member_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/channels/set_whatsapp_staff_template_use_case.py",
+        "app/use_cases/channels/set_whatsapp_staff_templates_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/compliance/purge_expired_message_media_use_case.py",
+        "app/use_cases/compliance/purge_stale_widget_uploads_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/contacts/change_customer_blocking_use_case.py",
+        "app/use_cases/contacts/change_customer_card_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/feedback/request/feedback_routes.py",
+        "app/use_cases/shared/proactive_routes.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/feedback/request/feedback_sending.py",
+        "app/use_cases/shared/proactive_letters.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/platform_status/create_announcement_use_case.py",
+        "app/use_cases/platform_status/update_announcement_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/setup/dismiss_setup_guide_use_case.py",
+        "app/use_cases/setup/start_phone_check_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "app/use_cases/sharing/get_share_links_use_case.py",
+        "app/use_cases/sharing/set_public_slug_use_case.py"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/admin/_components/metrics/BusinessGrowthCards.tsx",
+        "web/src/app/admin/_components/metrics/FunnelCard.tsx"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/admin/_components/system/AnnouncementDialog.tsx",
+        "web/src/app/admin/_components/system/IncidentAnnouncementFields.tsx"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/api/auth/mfa/verify/route.ts",
+        "web/src/app/api/auth/verify/route.ts"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/b/[businessId]/assistant/knowledge/import/MenuImportScreen.tsx",
+        "web/src/components/setup/offer/OfferImport.tsx"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/b/[businessId]/inbox/_components/conversation/VoiceNotePlayer.tsx",
+        "web/src/app/b/[businessId]/inbox/_components/details/CallRecordingPlayer.tsx"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/b/[businessId]/inbox/_lib/useMediaQuery.ts",
+        "web/src/lib/useMediaQuery.ts"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/app/status/_components/MonitoringDelayedNotice.tsx",
+        "web/src/components/shell/LiveStatus.tsx"
+      ],
+      "count": 1
+    },
+    {
+      "files": [
+        "web/src/components/ui/Drawer.tsx",
+        "web/src/components/ui/Modal.tsx"
+      ],
+      "count": 1
+    }
+  ]
+}

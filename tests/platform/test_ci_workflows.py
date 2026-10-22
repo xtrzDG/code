@@ -17,7 +17,10 @@ USES_PATTERN: re.Pattern[str] = re.compile(
 )
 PINNED_PATTERN: re.Pattern[str] = re.compile(r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$")
 VERSION_COMMENT_PATTERN: re.Pattern[str] = re.compile(r"^\s+#\s+v\d+(\.\d+)*\s*$")
-DOWNLOAD_PATTERN: re.Pattern[str] = re.compile(r"https://\S+/releases/download/")
+# Release archives and prebuilt npm tarballs fetched outside a lockfile.
+DOWNLOAD_PATTERN: re.Pattern[str] = re.compile(
+    r"https://\S+/releases/download/|https://registry\.npmjs\.org/\S+/-/"
+)
 
 
 def workflow_paths() -> list[Path]:

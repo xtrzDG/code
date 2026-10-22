@@ -26,6 +26,7 @@ from app.use_cases.businesses.create_business_use_case import CreateBusinessUseC
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
+from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
 from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
 from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
@@ -257,7 +258,7 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
             step_up=self.step_up,
         )
-        self.remove_member = RemoveMemberUseCase(
+        member_mutations = MemberMutationGuard(
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
@@ -267,13 +268,7 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
             step_up=self.step_up,
         )
+        self.remove_member = RemoveMemberUseCase(member_mutations=member_mutations)
         self.change_member_role = ChangeMemberRoleUseCase(
-            authorize_business_access=self.authorize_business_access,
-            business_repo=self.business_repo,
-            user_repo=self.user_repo,
-            brand_repo=self.brand_repo,
-            audit_log_repo=self.audit_log_repo,
-            business_view_transformer=business_view_transformer,
-            wall_clock=wall_clock,
-            step_up=self.step_up,
+            member_mutations=member_mutations
         )
