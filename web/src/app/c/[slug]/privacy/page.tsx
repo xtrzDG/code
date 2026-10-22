@@ -31,8 +31,10 @@ function requestedLanguage(raw: string | string[] | undefined): PageLanguage | n
 }
 
 /**
- * The periods the business chose in Settings → Privacy, named in a reviewed
- * language; a draft's "How long" names none, so it needs no values.
+ * The periods the business chose in Settings → Privacy (and, when its AI
+ * assistant answers the phone, how long call recordings are kept), named
+ * in a reviewed language; a draft's "How long" names none, so it needs no
+ * values.
  */
 function keptPeriods(language: string, view: HostedChatView): MessageValues {
   if (!isLocale(language)) {
@@ -42,6 +44,7 @@ function keptPeriods(language: string, view: HostedChatView): MessageValues {
   return {
     conversations: periodLabel(tp, view.conversation_retention_days),
     modelRecords: daysLabel(tp, view.llm_turn_retention_days),
+    ...(view.phone_calls ? { recordings: periodLabel(tp, view.phone_calls.recording_retention_days) } : {}),
   };
 }
 
@@ -61,7 +64,8 @@ export async function generateMetadata({ searchParams }: PageProps<"/c/[slug]/pr
  * language among the business's customer languages, as the chat itself:
  * the reviewed texts in English, Russian and Georgian, a draft marked for
  * review (with a link to the English text, which prevails) in the other
- * languages of the chat widget.
+ * languages of the chat widget. When the business's AI assistant answers
+ * its phone, a "Phone calls" section says how calls are recorded.
  */
 export default async function PrivacyNoticePage({ params, searchParams }: PageProps<"/c/[slug]/privacy">) {
   const { slug } = await params;
@@ -90,6 +94,15 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
   // The business's name is user content: each sentence keeps its placeholder and `UserSentence` shows it.
   const names = { business: view.business_name };
   const naming = (key: Parameters<typeof text>[0], values?: MessageValues): SentenceWithUserValues => ({ text: text(key, values), values: names });
+  const periods = keptPeriods(notice.language, view);
+  // Calls answered by the AI assistant: recorded, the caller told (or asked, where the law wants consent), and free to decline.
+  const calls = view.phone_calls;
+  const callSentences = (phone: NonNullable<typeof calls>): SentenceWithUserValues[] => [
+    naming("callsRecorded"),
+    naming(phone.recording_consent_rule === "all_party_consent" ? "callsConsent" : "callsNotice"),
+    naming("callsDecline"),
+    naming("callsKept", periods),
+  ];
   const sections = [
     { title: text("whoTitle"), body: [naming("who")] },
     {
@@ -98,7 +111,8 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
     },
     { title: text("whyTitle"), body: [naming("why")] },
     { title: text("sharedTitle"), body: [naming("shared")] },
-    { title: text("keptTitle"), body: [naming("kept", keptPeriods(notice.language, view))] },
+    { title: text("keptTitle"), body: [naming("kept", periods)] },
+    ...(calls ? [{ title: text("callsTitle"), body: callSentences(calls) }] : []),
     { title: text("rightsTitle"), body: [naming("rights")] },
   ];
   const address = hostedChatPath(view.slug ?? slug);

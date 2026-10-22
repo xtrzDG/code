@@ -11580,9 +11580,12 @@ export interface components {
          *     asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
          *     the start of the call. A caller may decline anywhere: the audio is then
          *     deleted and a transcript without contact or card numbers kept.
+         *     Recordings and transcripts are kept `recording_retention_days`.
          */
         HostedChatPhoneCalls: {
             recording_consent_rule: components["schemas"]["RecordingConsentRule"];
+            /** Recording Retention Days */
+            recording_retention_days: number;
         };
         /**
          * HostedChatView

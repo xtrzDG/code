@@ -134,6 +134,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     cancel_booking: "Отменил бронь",
     reschedule_booking: "Перенёс бронь",
     list_my_bookings: "Нашёл брони клиента",
+    decline_recording: "Отметил отказ от записи звонка",
     join_waitlist: "Записал в лист ожидания",
     create_lead: "Создал заявку",
     handoff_to_human: "Передал человеку",

@@ -13,14 +13,15 @@ label and a migration path).
 
 ## 2026-10-22 — calls: recording consent, call memory and voice health
 
-Spec: `217c73642ae6d3cc`
+Spec: `e8b56b82aaf7d4d5`
 
 - **Added** `phone_calls` on the hosted chat's view (`GET
   /v1/public/chat/{address}`, `HostedChatPhoneCalls`): set while the
   business's AI assistant answers its phone, with the
   `recording_consent_rule` of its country (`notice`, or
-  `all_party_consent`: callers are asked at the start of the call). The
-  privacy notice states the policy from it.
+  `all_party_consent`: callers are asked at the start of the call) and
+  the `recording_retention_days` its recordings and transcripts are kept.
+  The privacy notice states the policy from it.
 - **Added** `recording_declined` on a conversation's calls (`CallDocument`
   version 4): the caller declined the recording, so the call has no
   recording (`GET …/calls/{call_id}/recording` answers 404) and its

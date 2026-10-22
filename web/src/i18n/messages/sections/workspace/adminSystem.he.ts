@@ -59,6 +59,7 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       otp_cap_trips: "הגעה למכסת קודי הכניסה",
       quality_drop: "איכות השיחות ירדה",
       spend_spike: "זינוק בהוצאות",
+      voice_health: "תקלות בעוזר הטלפוני",
       spend_budget: "התקציב היומי כמעט נוצל",
       backfill_stalled: "משימת נתונים נתקעה",
       answer_budget_fast_burn: "תקציב המענה נשרף מהר",

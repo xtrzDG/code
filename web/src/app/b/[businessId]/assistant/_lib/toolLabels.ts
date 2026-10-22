@@ -23,4 +23,8 @@ export const TOOL_LABELS: Record<AssistantToolName, { name: MessageKey; descript
     name: "assistant.tools.send_payment_link.name",
     description: "assistant.tools.send_payment_link.description",
   },
+  decline_recording: {
+    name: "assistant.tools.decline_recording.name",
+    description: "assistant.tools.decline_recording.description",
+  },
 };

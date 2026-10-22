@@ -93,6 +93,7 @@ export const assistantDe: Translation<typeof assistantEn> = {
     cancel_booking: { name: "Buchung stornieren", description: "Storniert die Buchung eines Kunden." },
     reschedule_booking: { name: "Buchung verschieben", description: "Verschiebt eine Buchung auf eine andere Zeit." },
     list_my_bookings: { name: "Meine Buchungen nachsehen", description: "Nennt Kunden ihre eigenen anstehenden Buchungen." },
+    decline_recording: { name: "Anruf nicht aufzeichnen", description: "Hält im Telefonat fest, dass der Anrufer keine Aufzeichnung möchte: Nach dem Anruf wird das Audio gelöscht, und nur ein Transkript ohne Telefon-, Karten- und Kontonummern bleibt." },
     join_waitlist: {
       name: "Auf die Warteliste setzen",
       description: "Wenn der Tag ausgebucht ist, setzt er den Kunden auf die Warteliste; ein frei gewordener Platz wird ihm angeboten.",

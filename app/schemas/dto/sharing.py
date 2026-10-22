@@ -12,6 +12,9 @@ from app.schemas.domain.business_privacy_settings import (
 )
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.dto.channels.widget import WidgetLanguageView
+from app.schemas.typings.businesses.constrained_integers import (
+    RecordingRetentionDays,
+)
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import AddressText, BusinessName
@@ -112,9 +115,11 @@ class HostedChatPhoneCalls(ImmutableDTO):
     asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
     the start of the call. A caller may decline anywhere: the audio is then
     deleted and a transcript without contact or card numbers kept.
+    Recordings and transcripts are kept `recording_retention_days`.
     """
 
     recording_consent_rule: RecordingConsentRule
+    recording_retention_days: RecordingRetentionDays
 
 
 class HostedChatView(ImmutableDTO):

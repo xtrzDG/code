@@ -132,6 +132,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     cancel_booking: "გააუქმა ჯავშანი",
     reschedule_booking: "გადაიტანა ჯავშანი",
     list_my_bookings: "მოძებნა კლიენტის ჯავშნები",
+    decline_recording: "აღნიშნა ზარის ჩაწერაზე უარი",
     join_waitlist: "ჩაწერა მოლოდინის სიაში",
     create_lead: "შექმნა მოთხოვნა",
     handoff_to_human: "გადასცა ადამიანს",

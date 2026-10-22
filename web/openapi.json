@@ -15657,14 +15657,21 @@
       },
       "HostedChatPhoneCalls": {
         "additionalProperties": false,
-        "description": "How the business's AI phone assistant treats calls, for its privacy\nnotice: calls are recorded; where the law of the business's country\nasks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at\nthe start of the call. A caller may decline anywhere: the audio is then\ndeleted and a transcript without contact or card numbers kept.",
+        "description": "How the business's AI phone assistant treats calls, for its privacy\nnotice: calls are recorded; where the law of the business's country\nasks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at\nthe start of the call. A caller may decline anywhere: the audio is then\ndeleted and a transcript without contact or card numbers kept.\nRecordings and transcripts are kept `recording_retention_days`.",
         "properties": {
           "recording_consent_rule": {
             "$ref": "#/components/schemas/RecordingConsentRule"
+          },
+          "recording_retention_days": {
+            "maximum": 3650.0,
+            "minimum": 1.0,
+            "title": "Recording Retention Days",
+            "type": "integer"
           }
         },
         "required": [
-          "recording_consent_rule"
+          "recording_consent_rule",
+          "recording_retention_days"
         ],
         "title": "HostedChatPhoneCalls",
         "type": "object"

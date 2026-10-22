@@ -93,6 +93,7 @@ export const assistantHe: Translation<typeof assistantEn> = {
     cancel_booking: { name: "ביטול הזמנה", description: "מבטל הזמנה של לקוח." },
     reschedule_booking: { name: "העברת הזמנה", description: "מעביר הזמנה למועד אחר." },
     list_my_bookings: { name: "ההזמנות שלי", description: "מספר ללקוחות על ההזמנות העתידיות שלהם." },
+    decline_recording: { name: "בלי הקלטת השיחה", description: "בשיחת טלפון מסמן שהמתקשר לא רוצה הקלטה: אחרי השיחה האודיו נמחק ונשמר רק תמלול בלי מספרי טלפון, כרטיסים וחשבונות." },
     join_waitlist: { name: "הוספה לרשימת ההמתנה", description: "כשהיום מלא, מכניס את הלקוח לרשימת ההמתנה; מקום שמתפנה מוצע לו." },
     create_lead: { name: "רישום פנייה", description: "מעביר פנייה (אירוע, קבוצה, הזמנה) למנהל." },
     handoff_to_human: { name: "העברה לאדם", description: "מעביר את השיחה לצוות שלכם." },

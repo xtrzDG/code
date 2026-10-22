@@ -86,7 +86,8 @@ def test_a_notice_country_states_that_calls_are_recorded(workshop: Workshop) -> 
     answer_calls(workshop, business)
 
     assert public_chat(workshop, business)["phone_calls"] == {
-        "recording_consent_rule": "notice"
+        "recording_consent_rule": "notice",
+        "recording_retention_days": 90,
     }
 
 
@@ -97,7 +98,8 @@ def test_an_all_party_consent_country_states_that_callers_are_asked(
     answer_calls(workshop, business, country="DE")
 
     assert public_chat(workshop, business)["phone_calls"] == {
-        "recording_consent_rule": "all_party_consent"
+        "recording_consent_rule": "all_party_consent",
+        "recording_retention_days": 90,
     }
 
 

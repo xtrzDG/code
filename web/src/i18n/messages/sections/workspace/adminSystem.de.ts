@@ -57,6 +57,7 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       otp_cap_trips: "Limit für Anmeldecodes erreicht",
       quality_drop: "Gesprächsqualität gesunken",
       spend_spike: "Sprung bei den Kosten",
+      voice_health: "Telefonassistent fällt aus",
       spend_budget: "Tagesbudget fast aufgebraucht",
       backfill_stalled: "Eine Datenaufgabe hängt",
       answer_budget_fast_burn: "Antwortbudget schwindet schnell",

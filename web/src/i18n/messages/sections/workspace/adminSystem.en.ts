@@ -59,6 +59,7 @@ export const adminSystemEn = {
       otp_cap_trips: "Login code cap reached",
       quality_drop: "Conversation quality dropped",
       spend_spike: "Spend spike",
+      voice_health: "Phone assistant fails",
       spend_budget: "Daily budget nearly used",
       backfill_stalled: "A data task stalled",
       answer_budget_fast_burn: "Answer budget burns fast",

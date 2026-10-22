@@ -45,4 +45,7 @@ def describe_phone_calls(
     except UnknownCountryError:
         rule = RecordingConsentRule.ALL_PARTY_CONSENT
 
-    return HostedChatPhoneCalls(recording_consent_rule=rule)
+    return HostedChatPhoneCalls(
+        recording_consent_rule=rule,
+        recording_retention_days=business.recording_retention_days,
+    )
