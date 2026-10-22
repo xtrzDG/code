@@ -4,12 +4,14 @@ import { useId, useMemo, useRef, useState } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Switch } from "@/components/content/Switch";
+import { useNonce } from "@/components/csp/NonceProvider";
 import { IconFile } from "@/components/icons";
 import { useReferralProgram } from "@/components/referrals/useReferralProgram";
 import { Button, Field, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { directionOf } from "@/lib/hostedChat/language";
 import { hostedChatTexts } from "@/lib/hostedChat/texts";
+import { trustedOwnMarkup } from "@/lib/csp/trustedMarkup";
 import { languageName } from "@/lib/format";
 import { poweredByText } from "@/lib/referrals/poweredByTexts";
 import { linkWithSource, withPoweredByFooter } from "@/lib/referrals/referralLinks";
@@ -18,10 +20,12 @@ import type { QrMatrix } from "../_lib/qrCode";
 import { buildTableCardHtml, printFrame } from "../_lib/tableCard";
 import { useShareMark } from "../_lib/useShareMark";
 
-/** A6 at 96 CSS pixels per inch: 105 × 148 mm. */
-const CARD_WIDTH_PX = 397;
-const CARD_HEIGHT_PX = 559;
-const PREVIEW_SCALE = 0.5;
+/**
+ * The preview: the A6 card at 96 CSS pixels per inch (105 × 148 mm, 397 ×
+ * 559 px) in a frame scaled to half, inside a box of the scaled size.
+ */
+const PREVIEW_BOX = "h-[279.5px] w-[198.5px]";
+const CARD_FRAME = "h-[559px] w-[397px] scale-50";
 
 /** The `src` tag of sign-ups that came from the printed card's "Powered by" line. */
 const CARD_SOURCE = "table_card";
@@ -59,6 +63,7 @@ export function TableCardPanel({
   const poweredBy = program.data?.powered_by ?? null;
   const poweredByUrl = poweredBy?.url ? linkWithSource(poweredBy.url, CARD_SOURCE) : null;
   const hintId = useId();
+  const nonce = useNonce();
 
   const html = useMemo(() => {
     const texts = hostedChatTexts(language);
@@ -71,9 +76,9 @@ export function TableCardPanel({
       accent,
       heading: texts.scanToChat,
       hint: texts.cardHint,
-    });
-    return withPoweredByFooter(card, poweredByText(language), poweredByUrl);
-  }, [accent, businessName, language, linkText, matrix, poweredByUrl]);
+    }, nonce);
+    return trustedOwnMarkup(withPoweredByFooter(card, poweredByText(language), poweredByUrl));
+  }, [accent, businessName, language, linkText, matrix, nonce, poweredByUrl]);
 
   return (
     <div className="space-y-3 border-t border-line pt-5">
@@ -94,18 +99,14 @@ export function TableCardPanel({
           )}
         </Field>
       ) : null}
-      <div
-        className="mx-auto overflow-hidden rounded-lg shadow-md ring-1 ring-line"
-        style={{ width: CARD_WIDTH_PX * PREVIEW_SCALE, height: CARD_HEIGHT_PX * PREVIEW_SCALE }}
-      >
+      <div className={`mx-auto overflow-hidden rounded-lg shadow-md ring-1 ring-line ${PREVIEW_BOX}`}>
         <iframe
           ref={frame}
           title={t("share.cardPreview")}
           srcDoc={html}
           tabIndex={-1}
           data-testid="table-card-preview"
-          className="pointer-events-none origin-top-left border-0 bg-white rtl:origin-top-right"
-          style={{ width: CARD_WIDTH_PX, height: CARD_HEIGHT_PX, transform: `scale(${PREVIEW_SCALE})` }}
+          className={`pointer-events-none origin-top-left border-0 bg-white rtl:origin-top-right ${CARD_FRAME}`}
         />
       </div>
       {poweredBy ? (

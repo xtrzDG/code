@@ -1,4 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+
+import { NonceProvider } from "@/components/csp/NonceProvider";
+import { TrustedTypesScript } from "@/components/csp/TrustedTypesScript";
 
 import { MotionPreferenceProvider } from "@/components/motion/MotionPreference";
 import { MotionProvider } from "@/components/motion/MotionProvider";
@@ -13,6 +17,7 @@ import { BRAND_TYPEFACE_CLASS } from "@/lib/brandFonts";
 import { cn } from "@/lib/cn";
 import { motionAttribute } from "@/lib/motionPreference";
 import { themeColors } from "@/lib/theme";
+import { NONCE_HEADER } from "@/server/contentSecurityPolicy";
 import { getMotionPreference } from "@/server/motionPreference";
 import { preloadBrandFonts } from "@/server/brandFontPreload";
 import { getTheme } from "@/server/theme";
@@ -39,12 +44,15 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, messages, direction }, theme, motion, viewerTimeZone] = await Promise.all([
+  const [{ locale, messages, direction }, theme, motion, viewerTimeZone, requestHeaders] = await Promise.all([
     getI18n(),
     getTheme(),
     getMotionPreference(),
     getViewerTimeZone(),
+    headers(),
   ]);
+  // The proxy's nonce: the Trusted Types policy runs with it, nonce'd <style> elements use it.
+  const nonce = requestHeaders.get(NONCE_HEADER) ?? undefined;
   // A public page's client components get only their own texts (i18n/publicScope.ts).
   const clientTexts = await getClientTexts(messages);
   // The cabinet's pages use the brand typeface and preload its files (styles/typeface.css); the
@@ -65,22 +73,27 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       data-motion={motionAttribute(motion)}
       className={cn("h-full", brandTypeface && BRAND_TYPEFACE_CLASS)}
     >
+      <head>
+        <TrustedTypesScript nonce={nonce} />
+      </head>
       <body className="min-h-full bg-canvas text-ink antialiased">
         <WebVitalsReporter />
-        <I18nProvider locale={locale} messages={clientTexts.messages} scope={clientTexts.scope}>
-          <ThemeProvider initialTheme={theme}>
-            <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
-              <MotionPreferenceProvider initialPreference={motion}>
-                <MotionProvider animates={clientTexts.scope === "full"}>
-                  <ToastProvider>
-                    {children}
-                    <StepUpDialog />
-                  </ToastProvider>
-                </MotionProvider>
-              </MotionPreferenceProvider>
-            </ViewerTimeZoneProvider>
-          </ThemeProvider>
-        </I18nProvider>
+        <NonceProvider nonce={nonce}>
+          <I18nProvider locale={locale} messages={clientTexts.messages} scope={clientTexts.scope}>
+            <ThemeProvider initialTheme={theme}>
+              <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
+                <MotionPreferenceProvider initialPreference={motion}>
+                  <MotionProvider animates={clientTexts.scope === "full"}>
+                    <ToastProvider>
+                      {children}
+                      <StepUpDialog />
+                    </ToastProvider>
+                  </MotionProvider>
+                </MotionPreferenceProvider>
+              </ViewerTimeZoneProvider>
+            </ThemeProvider>
+          </I18nProvider>
+        </NonceProvider>
       </body>
     </html>
   );

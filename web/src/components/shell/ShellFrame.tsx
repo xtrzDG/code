@@ -14,7 +14,7 @@
  * conversations and bookings (components/CommandPalette).
  */
 
-import { startTransition, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { startTransition, useMemo, useState, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
 import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
@@ -122,7 +122,11 @@ export function ShellFrame({
     <CommandPaletteProvider links={items.filter((item) => !item.secondary)} searchScope={searchScope}>
     <PageHelpProvider help={pageHelp}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
-    <div data-shell-frame="" className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
+    <div
+      data-shell-frame=""
+      data-collapsed={collapsed || undefined}
+      className="min-h-dvh [--sidebar-width:16rem] data-collapsed:[--sidebar-width:4.5rem]"
+    >
       <ServiceWorker />
       <a
         href="#main"

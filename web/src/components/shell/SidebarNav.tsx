@@ -15,6 +15,7 @@ import { useId, useState } from "react";
 
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { useMountedAfterHydration } from "@/lib/csp/clientStyle";
 import { springTransition, tweenTransition } from "@/lib/motion";
 
 import { IconChevronRight } from "../icons";
@@ -28,6 +29,7 @@ function SubPages({ pages, onNavigate }: { pages: readonly ShellSubLink[]; onNav
   const [showAdvanced, setShowAdvanced] = useState(() => advanced.some((page) => page.isActive));
   const advancedId = useId();
   const isAdvancedOpen = showAdvanced || advanced.some((page) => page.isActive);
+  const unfolds = useMountedAfterHydration();
 
   const renderPage = (page: ShellSubLink) => (
     <li key={page.href}>
@@ -58,9 +60,10 @@ function SubPages({ pages, onNavigate }: { pages: readonly ShellSubLink[]; onNav
   );
 
   return (
+    // Opening another section unfolds its pages; the section the server rendered open is simply open.
     <m.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
+      initial={unfolds ? { opacity: 0, height: 0 } : undefined}
+      animate={unfolds ? { opacity: 1, height: "auto" } : undefined}
       transition={tweenTransition("base", "emphasized")}
       className="overflow-hidden"
     >
