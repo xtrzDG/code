@@ -98,9 +98,16 @@ test.describe("the public site", () => {
     await pricing.scrollIntoViewIfNeeded();
     await expect(pricing.getByTestId("plan-price").first()).toHaveText(/^\$\d+$/);
     await expect(pricing.getByTestId("plan-price-euros").first()).toContainText(/€\d+/);
-    // A price book is never an estimate: no "≈" and no raw conversion.
-    expect(await pricing.innerText()).not.toContain("≈");
-    expect(await pricing.innerText()).not.toMatch(/\$[\d,]+\.\d{2}/);
+    // A price book is never an estimate: no "≈" and no raw conversion. The
+    // only amounts with cents are the annual prices: twelve of the book's
+    // whole monthly prices less the annual discount, as they are billed.
+    const text = await pricing.innerText();
+    expect(text).not.toContain("≈");
+    const linesWithCents = text.split("\n").filter((line) => /\$[\d,]+\.\d{2}/.test(line));
+    expect(linesWithCents.length).toBeGreaterThan(0);
+    for (const line of linesWithCents) {
+      expect(line).toMatch(/a year, \d+% less$/);
+    }
   });
 
   test("prices a country without a price book in euros first, any conversion rounded", async ({ page, request }) => {

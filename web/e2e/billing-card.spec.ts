@@ -36,7 +36,7 @@ test("a trial owner without a card is asked to save one that charges nothing now
   const card = cardRegion(page);
   await expect(card.getByText(texts.noCard)).toBeVisible();
   await expect(card.getByText(texts.noCardTrial)).toBeVisible();
-  await expect(card.getByText(texts.facts.provider)).toBeVisible();
+  await expect(card.getByText(texts.facts.provider, { exact: true })).toBeVisible();
   await expect(card.getByText("Flitt", { exact: true })).toBeVisible();
   await expect(card.getByText(texts.noCharge)).toBeVisible();
   await expect(card.getByRole("button", { name: texts.save })).toBeVisible();
