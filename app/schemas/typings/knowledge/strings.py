@@ -3,6 +3,10 @@
 from base_typed_string import BaseTypedString
 
 
+class EmbeddingInputText(BaseTypedString):
+    """A text sent to the embedding model: a search query or an item's text."""
+
+
 class KnowledgeAttributeValue(BaseTypedString):
     """Value of a structured knowledge attribute."""
 

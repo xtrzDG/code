@@ -1,7 +1,11 @@
 from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 
-from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
+from app.schemas.constants.knowledge import (
+    KnowledgeAliasStatus,
+    KnowledgeItemKind,
+    KnowledgeItemSource,
+)
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -13,6 +17,7 @@ from app.schemas.typings.knowledge.constrained_integers import (
     ServiceDurationMinutes,
 )
 from app.schemas.typings.knowledge.constrained_strings import (
+    KnowledgeAliasText,
     KnowledgeAttributeKey,
     KnowledgeShareKey,
     KnowledgeTag,
@@ -37,6 +42,18 @@ class KnowledgeAttribute(PersistentDocument):
 
     key: KnowledgeAttributeKey
     value: KnowledgeAttributeValue
+
+
+class KnowledgeAlias(PersistentDocument):
+    """
+    The item's title in one more language of the business, or a synonym
+    customers use. Search matches it like the title; an APPROVED alias in
+    a visitor's language is a starter question of the website chat.
+    """
+
+    language: LanguageTag
+    text: KnowledgeAliasText
+    status: KnowledgeAliasStatus = KnowledgeAliasStatus.APPROVED
 
 
 class SeasonalNightlyRate(PersistentDocument):
@@ -68,6 +85,10 @@ class KnowledgeItemDocument(BaseDocument):
     item in their `serves_item_ids` or as their `room_type_item_id`), and
     for room types the `seasonal_rates` of a night (`price_minor` is the
     nightly rate outside every season).
+
+    `aliases` hold the title in the business's other languages (and
+    synonyms): suggested by one model call when a version is assembled or
+    an import is confirmed, reviewed by the owner in the editor.
     """
 
     # 2: `buffer_minutes`, `performer_resource_ids` and `seasonal_rates`
@@ -77,7 +98,9 @@ class KnowledgeItemDocument(BaseDocument):
     # item ("Fix this answer"; optional, None for every other item).
     # 4: `shared_key`, the brand's shared item this location item replaces
     # (R17-BRANDS; optional, None for every older item).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 5: `aliases`, the title in other languages of the business
+    # (R17-CROSS-LANG-SEARCH; optional, empty for every older item).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
     kind: KnowledgeItemKind
@@ -96,6 +119,7 @@ class KnowledgeItemDocument(BaseDocument):
         default_factory=list[KnowledgeAttribute]
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
+    aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER
     is_active: IsKnowledgeItemActive = True
     import_batch_id: MenuImportBatchId | None = None

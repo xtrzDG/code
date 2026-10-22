@@ -23,6 +23,18 @@ class KnowledgeItemSource(StrEnum):
     MENU_IMPORT = "menu_import"
 
 
+class KnowledgeAliasStatus(StrEnum):
+    """
+    Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+    by the model (searched, but never offered to visitors as a starter
+    question) or APPROVED by the owner (typed by them, or a suggestion
+    they accepted in the editor).
+    """
+
+    SUGGESTED = "suggested"
+    APPROVED = "approved"
+
+
 class AnswerCorrectionScope(StrEnum):
     """
     What an owner's correction of an assistant answer teaches: a question
