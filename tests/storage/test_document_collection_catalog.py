@@ -47,6 +47,9 @@ from app.containers.adapters.legal_collections_container import (
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
+from app.containers.adapters.meta_collections_container import (
+    MetaConnectionCollectionsContainer,
+)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
@@ -138,6 +141,7 @@ COLLECTION_CONTAINERS = (
     # The audit log's view counts, chain checkpoints and checks (1193).
     AuditChainCollectionsContainer,
     BrandCollectionsContainer,  # Brands and their shared knowledge (1192).
+    MetaConnectionCollectionsContainer,  # Facebook sign-ins (1212).
 )
 
 
