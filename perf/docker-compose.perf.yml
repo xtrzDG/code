@@ -33,13 +33,16 @@ services:
     environment:
       <<: *load-environment
       FORWARDED_ALLOW_IPS: "*"
-      # Four API processes with production's pool and threads (render.yaml,
-      # workshop-api: DB_POOL_SIZE 12, THREADPOOL_SIZE 40). Production runs
-      # two instances of one process each, on half a CPU each; here four
-      # share the runner's CPUs with Postgres, k6 and the worker
-      # (docs/operations/capacity.md, "Widget polls: less Python per poll").
+      # Four API processes with production's pools and threads (render.yaml,
+      # workshop-api: DB_POOL_SIZE 10, DB_PLATFORM_POOL_SIZE 4,
+      # THREADPOOL_SIZE 40; the two role addresses come from
+      # docker-compose.yml). Production runs two instances of one process
+      # each, on half a CPU each; here four share the runner's CPUs with
+      # Postgres, k6 and the worker (docs/operations/capacity.md, "Widget
+      # polls: less Python per poll").
       WEB_CONCURRENCY: "4"
-      DB_POOL_SIZE: "12"
+      DB_POOL_SIZE: "10"
+      DB_PLATFORM_POOL_SIZE: "4"
       THREADPOOL_SIZE: "40"
     extra_hosts: *offline-providers
 
@@ -47,11 +50,13 @@ services:
     environment:
       <<: *load-environment
       # Production's worker (render.yaml, workshop-worker): one instance,
-      # 20 threads, 16 connections, 12 model calls at once and the default
-      # lanes (inbound=8). Connections: 4 x (12 + 1) API + (16 + 1) worker
-      # + 1 migrate = 70 of Postgres's 100.
+      # 20 threads, 14 + 4 connections, 12 model calls at once and the
+      # default lanes (inbound=8). Connections: 4 x (10 + 4 + 1) API +
+      # (14 + 4 + 1) worker + 14 seed-load + 1 migrate + 3 reserved = 97 of
+      # Postgres's 100 (tests/platform/test_load_stack_budget.py).
       THREADPOOL_SIZE: "20"
-      DB_POOL_SIZE: "16"
+      DB_POOL_SIZE: "14"
+      DB_PLATFORM_POOL_SIZE: "4"
       LLM_MAX_CONCURRENCY: "12"
     extra_hosts: *offline-providers
 

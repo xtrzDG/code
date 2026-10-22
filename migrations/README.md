@@ -48,17 +48,35 @@ Rules:
   no-transaction file, and only there.
 - A new document collection is one line:
   `select workshop.create_document_collection('collection_name');` — it
-  creates the table, its indexes and the row-level security policy (see
-  `0001_document_collections.sql` for the design). Add the name to
-  `app/utilities/storage/document_collection_catalog.py` as well.
+  creates the table, its indexes and, since 1200, the two role policies
+  (`workshop.apply_role_policies`: `tenant_isolation` for
+  `workshop_tenant`, rows of the business in `app.business_id` only;
+  `platform_access` for `workshop_platform`, every row; see
+  `0001_document_collections.sql` and `1200_tenant_and_platform_roles.sql`
+  for the design). A collection whose rows never name a business (people,
+  their sessions and factors, the platform's own operations) is
+  `select workshop.create_platform_collection('collection_name');`
+  instead: the same table, and the tenant role holds no privilege on it.
+  Add the name to `app/utilities/storage/document_collection_catalog.py`
+  as well; `tests/storage/test_tenant_and_platform_roles_migration.py`
+  checks that the tenant role is kept from exactly the platform
+  collections without `business_id`.
+- No policy may read `app.bypass_rls` any more, and no grant may give
+  `workshop_tenant` a way past its business: what a session sees follows
+  its role (docs/operations/deploys.md, "Database roles"). New tables of
+  the schema get both groups' select, insert, update and delete by the
+  default privileges of 1200; revoke what a group must not have in the
+  same file.
 - Migrations after 1114 are online-safe (below);
   `tests/storage/test_migration_safety.py` lints them.
 - `audit_log_entries` is append-only since 1193: a trigger refuses every
-  UPDATE and DELETE, whoever runs it. The application's role has no
-  DELETE or TRUNCATE; it keeps UPDATE on three columns (`business_id`,
-  `document`, `updated_at`) only because the previous release's upsert
-  names them, and the trigger refuses those updates too (the release
-  after 1193 revokes them, docs/operations/deploys.md). No migration
+  UPDATE and DELETE, whoever runs it. Since 1200 the application's two
+  roles (`workshop_tenant`, `workshop_platform`) may only select and
+  insert there; the tables' owner keeps UPDATE on three columns
+  (`business_id`, `document`, `updated_at`) only because the release
+  before 1200, which connects as the owner, upserts with them, and the
+  trigger refuses those updates too (a later release revokes them,
+  docs/operations/deploys.md). No migration
   changes or removes its rows; old entries leave only through
   `workshop.purge_audit_chain` (`workshop purge-audit-log`), which refuses
   entries of the last 365 days and keeps each hash chain verifiable.

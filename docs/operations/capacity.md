@@ -493,6 +493,21 @@ The availability (21), dashboard (28), widget poll (8) and Telegram
 webhook (14 in 2 transactions) counts are unchanged with all six
 packages merged.
 
+**Wave 20: two database roles (2026-10-22).** A request now runs on two
+pools (`docs/operations/deploys.md`, "Database roles"), and a business's
+read session can no longer turn platform-wide in the middle of its
+transaction: the tenant role sees one business whatever the session sets.
+Its platform reads (the business, the audit entries) left the session
+and became transactions of their own, two round trips more each
+(`begin` with the scope, the read, `commit`). The platform role sees
+every row whatever `app.business_id` says, so a platform-wide read
+outside a transaction now runs as one statement in autocommit
+(`scoped_read`), and the counts fell instead: `/v1/me` 12, the
+conversation list 21, the card 30, availability 18, the dashboard 25,
+the widget poll 8 and the Telegram webhook 12 in 2 transactions,
+counted over both pools together (`tests/storage/statement_trace.py`,
+`traced_together`). The budgets stay where they were.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by
@@ -543,7 +558,8 @@ packages merged.
   `/admin/system`: the `inbound` lane's oldest wait; the
   `inbound_backlog` alert pages above 120 s, `docs/operations/slo.md`).
 - **Database connections.** Every process keeps up to `DB_POOL_SIZE`
-  connections (half of `THREADPOOL_SIZE` unless set) and closes those idle
+  connections of the tenant role (half of `THREADPOOL_SIZE` unless set)
+  and `DB_PLATFORM_POOL_SIZE` of the platform role, and closes those idle
   for `DB_POOL_MAX_IDLE_SECONDS` (300) down to `DB_POOL_MIN_SIZE` (2), so a
   burst's peak does not stay open. `THREADPOOL_SIZE` stays above
   `DB_POOL_SIZE`: a request holds a connection for milliseconds, and one
@@ -564,8 +580,8 @@ customers:
 
 | Service | Instances, plan | Lanes | Shared periodic jobs | Sizing |
 | --- | --- | --- | --- | --- |
-| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults), `DB_POOL_SIZE` 16, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
-| `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 10, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
+| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults), `DB_POOL_SIZE` 14 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
+| `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 8 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
 
 - A periodic job belongs to a lane (`PeriodicJobSpec.lane`, `default`
   unless set); a worker runs the shared ones of its lanes, still once
@@ -573,7 +589,7 @@ customers:
   runs the process-local ones (the model-call trace flush). The reaper
   and the lease heartbeat run on every worker.
 - Two customer workers: one can die or deploy while the other answers
-  ("When a worker dies" below). A third adds 2 x 17 connections at a
+  ("When a worker dies" below). A third adds 2 x 19 connections at a
   deploy.
 - `tests/platform/test_worker_roles.py` keeps it so: every lane is
   served by exactly one role in both Blueprints (a lane nobody serves
@@ -724,22 +740,33 @@ before. `tests/platform/test_connection_budget.py` reads every Blueprint
 and checks, per role,
 
 ```
-  2 x API instances            x (DB_POOL_SIZE + 1 LISTEN)
-+ 2 x customer worker instances x (DB_POOL_SIZE + 1 LISTEN)
-+ 2 x batch worker instances    x (DB_POOL_SIZE + 1 LISTEN)
+  2 x API instances             x (DB_POOL_SIZE + DB_PLATFORM_POOL_SIZE + 1 LISTEN)
++ 2 x customer worker instances x (DB_POOL_SIZE + DB_PLATFORM_POOL_SIZE + 1 LISTEN)
++ 2 x batch worker instances    x (DB_POOL_SIZE + DB_PLATFORM_POOL_SIZE + 1 LISTEN)
 + backup 2 + migrate 1 + reserved 5        <=   the plan's limit
 ```
 
 (reserved: Postgres's three superuser connections, an operator's psql and
-Render's own checks). Production (`render.yaml`): 2 x 2 x (12 + 1) = 52
-for the API, 2 x 2 x (16 + 1) = 68 for the customer workers,
-2 x 1 x (10 + 1) = 22 for the batch worker, 2 + 1 + 5: 150 of 200, room
-for a third customer worker or larger pools. Staging (one API, one
-worker serving every lane, `basic-256mb`): 2 x 13 + 2 x 19 + 8 = 72 of
-100. The defaults (64 threads, 32 connections) would not fit: a
-Blueprint without `DB_POOL_SIZE` on any service fails the test.
+Render's own checks). Every process has two pools since migration 1200
+(`docs/operations/deploys.md`, "Database roles"): `DB_POOL_SIZE`
+connections of the tenant role, which serve everything in a business's
+scope, and `DB_PLATFORM_POOL_SIZE` of the platform role (sign-in, the job
+queue's claims, rate limits, platform-wide work: short statements, so a
+smaller pool; default a quarter of `DB_POOL_SIZE`, at least 2).
+Production (`render.yaml`): 2 x 2 x (10 + 4 + 1) = 60 for the API,
+2 x 2 x (14 + 4 + 1) = 76 for the customer workers, 2 x 1 x (8 + 4 + 1)
+= 26 for the batch worker, 2 + 1 + 5: 170 of 200. The tenant pools gave
+up two connections each (12 to 10, 16 to 14, 10 to 8) for the platform
+pools, so the work a process can run at once stays about the same while
+the second pool fits; there is no room left for a third customer worker
+without one of the routes below. Staging (one API, one worker serving
+every lane, `basic-256mb`): 2 x (10 + 4 + 1) + 2 x (18 + 4 + 1) + 8 = 84
+of 100. The defaults (64 threads, 32 + 8 connections) would not fit: a
+Blueprint without `DB_POOL_SIZE` on any service fails the test, and so
+does a worker without `DB_PLATFORM_POOL_SIZE`.
 
-The worker roles need 150 connections at a deploy, more than the 100 of
+The worker roles need 170 connections at a deploy (150 before the
+second pool), more than the 100 of
 the plan before (`basic-256mb`); of the routes below the larger plan won: PgBouncer in session mode multiplexes
 nothing a busy pool holds (every customer turn keeps its connection for
 the turn's advisory lock), adds a service to run and monitor, and the
@@ -760,9 +787,9 @@ Blueprint and the test together:
   (`app/adapters/locks/postgres_advisory_lock_adapter.py`), and LISTEN
   needs a session (`LIVE_EVENTS_DATABASE_URL` then names the direct
   address). Count PgBouncer's limit, not the pools, in the test.
-- **Smaller pools.** Lower `DB_POOL_SIZE` per process; requests queue
-  for a connection a little longer, and readiness stays green while they
-  do.
+- **Smaller pools.** Lower `DB_POOL_SIZE` or `DB_PLATFORM_POOL_SIZE`
+  per process; requests queue for a connection a little longer, and
+  readiness stays green while they do.
 
 ## How lists stay fast as history grows
 

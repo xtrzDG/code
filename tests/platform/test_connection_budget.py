@@ -45,17 +45,17 @@ def test_production_counts_every_api_and_worker_instance_and_the_backup() -> Non
     budget = connection_budget("render.yaml")
 
     # Two API instances, two customer workers and one batch worker, each
-    # with the tenant and the platform pool of its role: 174 of the 200 of
+    # with the tenant and the platform pool of its role: 170 of the 200 of
     # pro-8gb.
     assert budget.parts == {
         "reserved": RESERVED_CONNECTIONS,
         "workshop-api (migrate)": MIGRATE_CONNECTIONS,
-        "workshop-api": DEPLOY_OVERLAP * 2 * (10 + 5 + LISTEN_CONNECTIONS),
+        "workshop-api": DEPLOY_OVERLAP * 2 * (10 + 4 + LISTEN_CONNECTIONS),
         "workshop-worker": DEPLOY_OVERLAP * 2 * (14 + 4 + LISTEN_CONNECTIONS),
         "workshop-batch-worker": DEPLOY_OVERLAP * (8 + 4 + LISTEN_CONNECTIONS),
         "workshop-backup": BACKUP_CONNECTIONS,
     }
-    assert (budget.plan, budget.limit, budget.worst_case) == ("pro-8gb", 200, 174)
+    assert (budget.plan, budget.limit, budget.worst_case) == ("pro-8gb", 200, 170)
 
 
 @pytest.mark.parametrize("blueprint_path", BLUEPRINTS)

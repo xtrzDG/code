@@ -76,6 +76,81 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
    refuses while a data task is open. Without it every promotion stops
    with a message that names the variable.
 
+## Database roles
+
+Since migration 1200 the API and the workers connect with two login roles
+of their own; the migration role (`DATABASE_URL`, the tables' owner) only
+migrates and maintains. Row-level security follows the role a session
+logged in with, not a setting the application could change: a tenant
+session sees the rows of the business in `app.business_id` and nothing
+else, even after `set app.bypass_rls = 'on'` (no policy reads that
+setting any more). An SQL injection or a mistaken `platform_wide()` call
+therefore cannot switch tenant isolation off
+(`tests/storage/test_authorization_matrix_postgres.py` tries it).
+
+| Variable | Login role | Sees | Used by |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | the migration role: owns the tables, member of `workshop_platform` | every row | `workshop migrate` (pre-deploy), backups, the restore drill, `workshop purge-audit-log` |
+| `DATABASE_URL_TENANT` | member of `workshop_tenant` | one business's rows; no privilege at all on the tables whose rows name no business (people, their sessions and factors, the platform's own operations); `schema_migrations` read-only, `audit_log_entries` select and insert only | the tenant pool: everything in a business's scope |
+| `DATABASE_URL_PLATFORM` | member of `workshop_platform` | every row | the platform pool: sign-in, the job queue, rate limits, `platform_wide()` work, the LISTEN connections |
+
+`DB_POOL_SIZE` sizes the tenant pool, `DB_PLATFORM_POOL_SIZE` the platform
+pool (default: a quarter of `DB_POOL_SIZE`, at least 2); a process holds
+both plus one LISTEN connection (`docs/operations/capacity.md`,
+"Connection budget"). Production refuses to start without both
+addresses, and the API and every worker check their roles at start: a
+tenant role that is a superuser, BYPASSRLS, a member of
+`workshop_platform` or of the tables' owner, or not a member of
+`workshop_tenant` (or a platform role that is a superuser, owns the
+tables or is outside `workshop_platform`) stops production and logs a
+warning elsewhere. Without the two addresses
+(local development, tests) one pool on `DATABASE_URL` serves both scopes,
+and only the queries' own business filters keep businesses apart.
+
+### Setting the roles up (once per database server)
+
+Before the first deploy of migration 1200, connect with `psql` as a role
+with CREATEROLE (on Render: the database's own user, **Connect →
+External**) and run:
+
+```sql
+-- The groups. Migration 1200 creates them itself when its role has
+-- CREATEROLE; a second run reports that they exist.
+create role workshop_tenant nologin nosuperuser nobypassrls;
+create role workshop_platform nologin nosuperuser nobypassrls;
+-- The migration role (the user of DATABASE_URL) joins the platform group,
+-- so the release before 1200, which connects as it, keeps every row.
+grant workshop_platform to <migration role>;
+-- The application's login roles, one per group, never a superuser.
+create role workshop_tenant_app login nosuperuser nobypassrls
+  nocreatedb nocreaterole in role workshop_tenant;
+create role workshop_platform_app login nosuperuser nobypassrls
+  nocreatedb nocreaterole in role workshop_platform;
+\password workshop_tenant_app
+\password workshop_platform_app
+```
+
+Then set `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on
+`workshop-api` (the Blueprint asks for them, `sync: false`): the host,
+port and database of `DATABASE_URL` (Connect → Internal) with the login
+role and its password, for example
+`postgresql://workshop_tenant_app:<password>@<internal host>:5432/<database>`.
+The workers copy both from the API (`fromService`); staging does the same
+with its own roles and passwords. Only then deploy the release with 1200:
+it refuses to start in production without the addresses, while the
+release before it ignores them. When `workshop migrate` stops with
+"must be a member of workshop_platform", the groups exist but the
+migration role is not in `workshop_platform`: run the `grant` above and
+deploy again. A `LIVE_EVENTS_DATABASE_URL` (a direct session past a
+transaction pooler) should log in as the platform role too.
+
+Docker Compose creates all of this at the first start of its database
+volume (`docker/postgres/init/01-create-app-role.sh`, login roles
+`workshop_tenant_app` and `workshop_platform_app` with the database
+password). A volume created before 1200 has no login roles: run the SQL
+above in `docker compose exec postgres psql -U postgres -d workshop`, or
+start from a new volume.
+
 ## Two releases at once
 
 During a Render deploy the old and the new instances serve together for a
@@ -511,3 +586,24 @@ report a broken flow right after a deploy:
    to `release` as usual.
 
 Staging rolls back the same way (without step 2: it follows `main`).
+
+### Rolling back past 1200
+
+The release before migration 1200 runs on the migrated database as it
+is: it connects as the migration role, which joined `workshop_platform`,
+so it reads and writes every row, and its queries keep filtering by
+business. The database's own isolation of its scopes is gone until the
+old policies are back. To give them back, once the rollback above is
+done (no release with 1200 runs any more), connect as the migration role
+and run:
+
+```sql
+select workshop.revert_tenant_and_platform_roles();
+```
+
+It restores every table's `business_isolation` policy (business id or
+`app.bypass_rls`), takes the groups' privileges away and removes the
+record of 1200, so the next deploy of a release with 1200 applies it
+again. The groups, the login roles and the two addresses stay; the old
+release ignores them, and the migration role stays in
+`workshop_platform`, which no policy names any more.

@@ -14,9 +14,6 @@ from typed_time_provider import Microseconds
 from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
     PostgresUnitOfWorkAdapter,
 )
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
 from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
@@ -96,7 +93,7 @@ class Intake:
 
     def __init__(
         self,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
         postgres_collections: PostgresCollectionFactory,
         storage_scope: StorageScopeContext,
     ) -> None:
@@ -104,11 +101,10 @@ class Intake:
             postgres_collections(InboundEventDocument, "inbound_events")
         )
         self.jobs: JobStores = build_postgres_job_stores(
-            connection_pool, postgres_collections
+            connection_pools.platform, postgres_collections
         )
-        self.unit_of_work = PostgresUnitOfWorkAdapter(
-            PostgresConnectionPools.single(connection_pool), storage_scope
-        )
+        # The same pools as the collections: the unit's writes join it.
+        self.unit_of_work = PostgresUnitOfWorkAdapter(connection_pools, storage_scope)
         self.queue = JobQueueFacilitator(
             job_repo=self.jobs.job_repo,
             wall_clock=build_fixed_wall_clock(),
@@ -136,11 +132,11 @@ class Intake:
 
 @pytest.fixture
 def intake(
-    connection_pool: PostgresConnectionPoolClient,
+    connection_pools: PostgresConnectionPools,
     postgres_collections: PostgresCollectionFactory,
     platform_scope: StorageScopeContext,
 ) -> Intake:
-    return Intake(connection_pool, postgres_collections, platform_scope)
+    return Intake(connection_pools, postgres_collections, platform_scope)
 
 
 def test_a_crash_between_storing_and_queuing_leaves_neither(intake: Intake) -> None:

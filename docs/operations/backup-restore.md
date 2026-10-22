@@ -50,9 +50,11 @@ What each scenario costs:
    row-level security and the number of policies.
 2. `pg_dump --format=custom --snapshot=<that snapshot>` dumps exactly the
    counted state while the platform keeps writing. It runs as the
-   application role with the application's own RLS switch
-   (`app.bypass_rls=on` for that session only, `--enable-row-security`),
-   so no superuser or BYPASSRLS role exists anywhere. The password goes in
+   migration role, the tables' owner (`DATABASE_URL`): since migration
+   1200 a member of `workshop_platform`, whose policies show it every row
+   (`--enable-row-security`; the session still sets `app.bypass_rls=on`
+   for databases before 1200), so no superuser or BYPASSRLS role exists
+   anywhere. The password goes in
    `PGPASSWORD`, never on the command line.
 3. The dump is encrypted in the [age](https://age-encryption.org/v1)
    format (X25519, ChaCha20-Poly1305 in 64 KiB chunks;
@@ -166,18 +168,28 @@ everything new; the others only open and verify what they sealed.
    does not know, so that line of the preamble is left out for older
    servers. The target is a new database `restore_drill_<random>` of the
    throwaway server in
-   `RESTORE_CHECK_DATABASE_URL` (a role that may create databases; never
-   production's server).
+   `RESTORE_CHECK_DATABASE_URL` (a role that may create databases and
+   roles, CREATEDB and CREATEROLE; never production's server). The dumped
+   policies name the groups `workshop_tenant` and `workshop_platform` of
+   migration 1200, so the drill creates them on that server before the
+   restore when they are missing; a role without CREATEROLE needs an
+   administrator to create them once and grant it `workshop_tenant` with
+   ADMIN OPTION.
 3. Checks, each failure one line of the report:
    - every table has exactly the dumped number of rows, no table is missing
      or extra, the RLS tables and policies are the dumped ones;
    - the migrations are this checkout's (same names and checksums, no gap;
      newer ones are listed as pending, a restore applies them);
-   - row-level security still isolates businesses: as a role bound by RLS
-     (a throwaway NOLOGIN role when the restoring role is a superuser),
-     no table shows a row without a business scope, and in one business's
-     scope every table shows exactly that business's rows; a business table
-     without RLS fails too;
+   - row-level security still isolates businesses: the restoring role
+     (the owner, a member of `workshop_platform`) counts one business's
+     rows, then a throwaway NOLOGIN member of `workshop_tenant` (the
+     tenant pool's kind of role) switches `app.bypass_rls` on, as an
+     injected statement would, and must still see no row without a
+     business scope and, in that business's scope, exactly its rows in
+     every table; a business table without RLS fails too. A backup from
+     before 1200 is probed as before: as a role bound by RLS (a throwaway
+     NOLOGIN role when the restoring role is a superuser), without the
+     switch;
    - the newest backup is at most `BACKUP_MAX_AGE_HOURS` (26) old.
 4. The scratch database and the probe role are dropped (`--keep-database`
    keeps the database: that is a real restore, below).
@@ -224,10 +236,10 @@ string as `DATABASE_URL` of `workshop-api`, `workshop-worker` and
 
 | Step | Time |
 | --- | --- |
-| 1. A new Postgres 16 in the EU (Render in another account, or any EU provider); create the application role (neither superuser nor BYPASSRLS) with `CREATEDB` for the restore | 15 min |
+| 1. A new Postgres 16 in the EU (Render in another account, or any EU provider); create the migration role (neither superuser nor BYPASSRLS) with `CREATEDB` and `CREATEROLE` for the restore, and the groups and login roles of `docs/operations/deploys.md`, "Database roles" | 15 min |
 | 2. On a trusted machine with the drill or escrow identity: restore the newest backup (below) | 30–60 min (about 10 min per GB of dump) |
 | 3. `workshop migrate` against the restored database (migrations newer than the backup) | 5 min |
-| 4. Point `DATABASE_URL` of the API, the worker and the backup cron at it; `ENCRYPTION_KEYS`/`ENCRYPTION_KEY` must hold the keys of the backup's night; deploy | 20 min |
+| 4. Point `DATABASE_URL` of the API, the worker and the backup cron at it, and `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` of the API (the workers copy them) at the new login roles; `ENCRYPTION_KEYS`/`ENCRYPTION_KEY` must hold the keys of the backup's night; deploy | 20 min |
 | 5. Checks below; tell owners what happened since the backup | 15 min |
 
 Restoring with this code base (it checks everything the drill checks and
@@ -257,9 +269,11 @@ pg_restore --no-owner --no-acl --file=- dump.pgc \
       --no-psqlrc --single-transaction --set ON_ERROR_STOP=1
 ```
 
-Restore as the application role so that it owns the tables (row-level
-security is forced, so it binds the owner as well); `pg_restore` 17 or
-newer. The `sed` leaves out the one setting of pg_restore 17's preamble
+Restore as the migration role so that it owns the tables (row-level
+security is forced, so it binds the owner as well); create the groups
+`workshop_tenant` and `workshop_platform` first (the dumped policies name
+them, and the restore stops without them) and grant `workshop_platform`
+to the migration role; `pg_restore` 17 or newer. The `sed` leaves out the one setting of pg_restore 17's preamble
 that a Postgres 16 server refuses (`unrecognized configuration parameter
 "transaction_timeout"`); on Postgres 17 it may stay.
 

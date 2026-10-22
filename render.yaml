@@ -107,10 +107,10 @@ services:
         value: "8000"
       # Connection budget (docs/operations/capacity.md): during a deploy the
       # old and new instances run together, each with its tenant pool, its
-      # platform pool and a LISTEN connection: 2 x 2 x (10 + 5 + 1), plus the
+      # platform pool and a LISTEN connection: 2 x 2 x (10 + 4 + 1), plus the
       # customer workers' 2 x 2 x (14 + 4 + 1), the batch worker's
       # 2 x (8 + 4 + 1), the backup's 2, the migration's 1 and 5 kept for
-      # superusers and operators: 174 of the 200 of pro-8gb
+      # superusers and operators: 170 of the 200 of pro-8gb
       # (tests/platform/test_connection_budget.py). Requests hold a
       # connection for a moment, so the threads outnumber the pool. Customer
       # turns run on the worker; the API's own model calls (the owners' test
@@ -121,7 +121,7 @@ services:
       - key: DB_POOL_SIZE
         value: "10"
       - key: DB_PLATFORM_POOL_SIZE
-        value: "5"
+        value: "4"
       - key: LLM_MAX_CONCURRENCY
         value: "8"
       # The migration role, the tables' owner: `workshop migrate` (the
