@@ -7,6 +7,7 @@ at the time of day it was declined), before the grace period ends.
 from typed_time_provider import Microseconds
 
 from app.schemas.typings.billing.constrained_integers import (
+    GracePeriodDays,
     PaymentRetryAttempt,
     PaymentRetryDayOffset,
 )
@@ -22,11 +23,11 @@ LAST_RETRY_ATTEMPT: PaymentRetryAttempt = RETRY_SCHEDULE[-1][0]
 
 
 def find_grace_start(
-    grace_until: Microseconds, grace_days: int, timezone: TimezoneName
+    grace_until: Microseconds, grace_days: GracePeriodDays, timezone: TimezoneName
 ) -> Microseconds:
     """When the grace period began: its end, `grace_days` local days back."""
 
-    return add_local_days(grace_until, -grace_days, timezone)
+    return add_local_days(grace_until, -int(grace_days), timezone)
 
 
 def retry_due_at(

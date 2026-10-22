@@ -45,6 +45,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.transformers.notifications.staff_alert_texts",
     "app.transformers.notifications.value_digest_texts",
     "app.transformers.billing.billing_texts",
+    "app.utilities.billing.dunning_texts",
     "app.utilities.billing.win_back_texts",
     "app.utilities.deposits.deposit_refund_texts",
     "app.utilities.integrations.webhook_disabled_texts",

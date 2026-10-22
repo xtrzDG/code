@@ -14,7 +14,10 @@ from app.registries.billing.payment_regions import (
 )
 from app.schemas.configurations.payment_settings import PaymentSettings
 from app.schemas.constants.payments import PaymentProvider, PaymentStatus
-from app.schemas.typings.billing.constrained_integers import PaymentRetryAttempt
+from app.schemas.typings.billing.constrained_integers import (
+    GracePeriodDays,
+    PaymentRetryAttempt,
+)
 from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -90,7 +93,7 @@ def test_stripe_waits_for_its_release_gate() -> None:
 
 def test_retries_fall_on_local_days_one_three_and_six() -> None:
     grace_until = add_local_days(DECLINED_AT, 7, BERLIN)
-    grace_start = find_grace_start(grace_until, 7, BERLIN)
+    grace_start = find_grace_start(grace_until, GracePeriodDays(7), BERLIN)
 
     due = [
         retry_due_at(grace_start, PaymentRetryAttempt(attempt), BERLIN)

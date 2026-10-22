@@ -65,7 +65,7 @@ def find_grace_start_of(
 
     return find_grace_start(
         subscription.grace_until,
-        int(plan_registry.get(subscription.plan_key).grace_period_days),
+        plan_registry.get(subscription.plan_key).grace_period_days,
         business.timezone,
     )
 
