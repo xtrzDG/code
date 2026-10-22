@@ -19,7 +19,7 @@ const DIRECTIVE = /^[a-z][a-z-]{1,40}$/;
 /** What a browser puts in place of a URL ("inline", "eval", "trusted-types-sink", ...). */
 const KEYWORD = /^[a-z][a-z-]{1,40}$/;
 
-export const CSP_REPORT_CONTENT_TYPES = ["application/csp-report", "application/reports+json", "application/json"];
+const CSP_REPORT_CONTENT_TYPES = ["application/csp-report", "application/reports+json", "application/json"];
 
 export interface CspViolation {
   /** The page's path, e.g. "/b/business_1/overview" ("/r/[token]" for a booking page). */
