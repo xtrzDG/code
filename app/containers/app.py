@@ -126,6 +126,7 @@ class AppContainer(AppEdgesContainer):
         OperatorsContainer,
         pipelines=pipelines,
         utilities=AppEdgesContainer.utilities,
+        feedback_root=use_cases.feedback.root,
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
         GatewaysContainer,

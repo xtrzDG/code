@@ -31,7 +31,6 @@ from app.containers.pipelines.conversation_pipelines import (
 from app.containers.pipelines.customer_pipelines import CustomerPipelinesContainer
 from app.containers.pipelines.data_task_pipelines import DataTaskPipelinesContainer
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
-from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.growth_pipelines import GrowthPipelinesContainer
 from app.containers.pipelines.idempotency_pipelines import (
     IdempotencyPipelinesContainer,
@@ -214,10 +213,6 @@ class PipelinesContainer(containers.DeclarativeContainer):
     booking_links: BookingLinkPipelinesContainer = Container(  # type: ignore[assignment]
         BookingLinkPipelinesContainer,
         booking_link_orchestrators=orchestrators.booking_links,
-    )
-    feedback: FeedbackPipelinesContainer = Container(  # type: ignore[assignment]
-        FeedbackPipelinesContainer,
-        feedback=orchestrators.feedback,
     )
     growth: GrowthPipelinesContainer = Container(  # type: ignore[assignment]
         GrowthPipelinesContainer,

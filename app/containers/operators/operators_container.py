@@ -1,7 +1,8 @@
 from dependency_injector import containers
-from dependency_injector.providers import Container, DependenciesContainer
+from dependency_injector.providers import Container, DependenciesContainer, Dependency
 
 from app.containers.container_edges import composed_container_edge
+from app.containers.feedback.feedback_root import FeedbackRoot
 from app.containers.operators.account_operators import AccountOperatorsContainer
 from app.containers.operators.admin_action_operators import (
     AdminActionOperatorsContainer,
@@ -84,6 +85,8 @@ class OperatorsContainer(containers.DeclarativeContainer):
 
     pipelines: PipelinesContainer = composed_container_edge(PipelinesContainer)  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The feedback context's typed root builds its own chain (ADR 0010).
+    feedback_root: Dependency[FeedbackRoot] = Dependency(instance_of=FeedbackRoot)
 
     accounts: AccountOperatorsContainer = Container(  # type: ignore[assignment]
         AccountOperatorsContainer,
@@ -232,8 +235,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
     )
     feedback: FeedbackOperatorsContainer = Container(  # type: ignore[assignment]
         FeedbackOperatorsContainer,
-        feedback_pipelines=pipelines.feedback,
-        utilities=utilities,
+        root=feedback_root,
     )
     growth: GrowthOperatorsContainer = Container(  # type: ignore[assignment]
         GrowthOperatorsContainer,

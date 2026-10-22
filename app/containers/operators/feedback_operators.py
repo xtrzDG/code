@@ -1,42 +1,52 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import Dependency, Factory
 
-from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
-from app.containers.provider_chains import (
-    pipeline_operator,
-    platform_pipeline_operator,
+from app.containers.feedback.feedback_operator_factories import (
+    FeedbackOperatorFactories,
 )
-from app.containers.utilities import UtilitiesContainer
+from app.containers.feedback.feedback_root import FeedbackRoot
+from app.contracts.operator_contract import OperatorContract
+from app.schemas.dto.feedback.feedback_requests import (
+    FeedbackRequestPage,
+    FeedbackRequestPageQuery,
+)
+from app.schemas.dto.feedback.review_links import ReviewLinkTarget, ReviewLinkVisit
+from app.schemas.dto.feedback.review_settings import (
+    ReviewSettingsQuery,
+    ReviewSettingsView,
+    UpdateReviewSettingsCommand,
+)
+from app.schemas.dto.feedback.review_stats import ReviewStatsQuery, ReviewStatsView
+from app.schemas.dto.jobs import JobReport, JobTick
 
 
 class FeedbackOperatorsContainer(containers.DeclarativeContainer):
     """
-    Operators of the feedback after visits: the periodic job over every
-    business that asks (platform-wide), the review link a customer opens
-    (its input names no business, so it runs unscoped and the use case
-    finds the business itself) and Settings → Reviews (in the business's
-    scope).
+    Operators of the feedback after visits, built by the context's typed
+    root (app/containers/feedback/, ADR 0010) and exposed here for the
+    routers and the periodic job: the job over every business that asks
+    (platform-wide), the review link a customer opens and Settings →
+    Reviews.
     """
 
-    feedback_pipelines: FeedbackPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
-    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    storage_scope = utilities.storage_scope
+    root: Dependency[FeedbackRoot] = Dependency(instance_of=FeedbackRoot)
+    operators = root.provided.operators
 
-    request_visit_feedback_operator = platform_pipeline_operator(
-        feedback_pipelines.request_visit_feedback_pipeline, storage_scope
+    request_visit_feedback_operator: Factory[OperatorContract[JobTick, JobReport]] = (
+        Factory(FeedbackOperatorFactories.request_visit_feedback, operators)
     )
-    open_review_link_operator = pipeline_operator(
-        feedback_pipelines.open_review_link_pipeline, storage_scope
-    )
-    get_review_settings_operator = pipeline_operator(
-        feedback_pipelines.get_review_settings_pipeline, storage_scope
-    )
-    update_review_settings_operator = pipeline_operator(
-        feedback_pipelines.update_review_settings_pipeline, storage_scope
-    )
-    get_review_stats_operator = pipeline_operator(
-        feedback_pipelines.get_review_stats_pipeline, storage_scope
-    )
-    list_feedback_requests_operator = pipeline_operator(
-        feedback_pipelines.list_feedback_requests_pipeline, storage_scope
-    )
+    open_review_link_operator: Factory[
+        OperatorContract[ReviewLinkVisit, ReviewLinkTarget]
+    ] = Factory(FeedbackOperatorFactories.open_review_link, operators)
+    get_review_settings_operator: Factory[
+        OperatorContract[ReviewSettingsQuery, ReviewSettingsView]
+    ] = Factory(FeedbackOperatorFactories.get_review_settings, operators)
+    update_review_settings_operator: Factory[
+        OperatorContract[UpdateReviewSettingsCommand, ReviewSettingsView]
+    ] = Factory(FeedbackOperatorFactories.update_review_settings, operators)
+    get_review_stats_operator: Factory[
+        OperatorContract[ReviewStatsQuery, ReviewStatsView]
+    ] = Factory(FeedbackOperatorFactories.get_review_stats, operators)
+    list_feedback_requests_operator: Factory[
+        OperatorContract[FeedbackRequestPageQuery, FeedbackRequestPage]
+    ] = Factory(FeedbackOperatorFactories.list_feedback_requests, operators)

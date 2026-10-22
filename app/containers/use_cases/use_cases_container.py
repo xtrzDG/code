@@ -12,7 +12,10 @@ from app.containers.use_cases.business_use_cases_container import (
 from app.containers.use_cases.core_use_cases_container import CoreUseCasesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
-from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
+from app.containers.use_cases.feedback_use_cases import (
+    FeedbackUseCasesContainer,
+    feedback_root,
+)
 from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
@@ -117,15 +120,18 @@ class UseCasesContainer(BusinessUseCasesContainer):
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
     )
+    # The pilot of the typed composition root (ADR 0010).
     feedback: FeedbackUseCasesContainer = Container(  # type: ignore[assignment]
         FeedbackUseCasesContainer,
-        time_provider=CoreUseCasesContainer.time_provider,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        facilitators=CoreUseCasesContainer.facilitators,
-        repositories=CoreUseCasesContainer.repositories,
-        registries=CoreUseCasesContainer.registries,
-        utilities=CoreUseCasesContainer.utilities,
-        config=CoreUseCasesContainer.config,
+        root=feedback_root(
+            account_use_cases=CoreUseCasesContainer.accounts,
+            config=CoreUseCasesContainer.config,
+            facilitators=CoreUseCasesContainer.facilitators,
+            registries=CoreUseCasesContainer.registries,
+            repositories=CoreUseCasesContainer.repositories,
+            time_provider=CoreUseCasesContainer.time_provider,
+            utilities=CoreUseCasesContainer.utilities,
+        ),
     )
     analytics: AnalyticsUseCasesContainer = Container(  # type: ignore[assignment]
         AnalyticsUseCasesContainer,
