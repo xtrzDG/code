@@ -136,7 +136,7 @@ export function AliasChips({
                 </ul>
               )}
               <label htmlFor={inputId} className="sr-only">
-                {t("knowledge.aliases.addLabel", { language: name })}
+                {t("knowledge.aliases.placeholder", { language: name })}
               </label>
               <div className="flex gap-2">
                 <Input
@@ -162,8 +162,10 @@ export function AliasChips({
                     }));
                   }}
                 />
+                {/* Named for its language: the dialog has its own "Add" (save) button. */}
                 <Button
                   variant="secondary"
+                  aria-label={t("knowledge.aliases.addLabel", { language: name })}
                   leadingIcon={<IconPlus className="size-4" aria-hidden />}
                   onClick={() => add(language)}
                 >

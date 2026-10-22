@@ -114,7 +114,7 @@ describe("KnowledgeItemEditor: the item's names in the business's other language
     expect(chips("ru")).toEqual([["Хачапури по-имеретински", "approved"]]);
 
     const russian = screen.getByRole("textbox", {
-      name: t("knowledge.aliases.addLabel", {
+      name: t("knowledge.aliases.placeholder", {
         language: languageName("ru", "en"),
       }),
     });
@@ -156,7 +156,7 @@ describe("KnowledgeItemEditor: the item's names in the business's other language
       ],
     });
     const georgian = screen.getByRole("textbox", {
-      name: t("knowledge.aliases.addLabel", {
+      name: t("knowledge.aliases.placeholder", {
         language: languageName("ka", "en"),
       }),
     });
@@ -204,7 +204,7 @@ describe("KnowledgeItemEditor: the item's names in the business's other language
     renderEditor();
 
     const hebrew = screen.getByRole("textbox", {
-      name: t("knowledge.aliases.addLabel", {
+      name: t("knowledge.aliases.placeholder", {
         language: languageName("he", "en"),
       }),
     });
