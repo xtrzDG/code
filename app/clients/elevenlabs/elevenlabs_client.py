@@ -2,6 +2,7 @@ from urllib.parse import quote
 
 import httpx
 
+from app.clients.elevenlabs.elevenlabs_errors import raise_for_error
 from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.call_recordings import RecordingAudio
@@ -169,22 +170,7 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
         return parse_json_object(response.content) or {}
 
     def _raise_for_error(self, response: httpx.Response, path: str) -> None:
-        """ExternalServiceError with the platform's reason for an HTTP error."""
-
-        if response.status_code < 400:
-            return
-
-        body: JsonObject = parse_json_object(response.content) or {}
-        detail: object = body.get("detail")
-        detail_text: str = detail if isinstance(detail, str) else ""
-        detail_object: JsonObject | None = read_object(body, "detail")
-        if detail_object is not None:
-            detail_text = read_text(detail_object, "message") or ""
-
-        raise ExternalServiceError(
-            f"ElevenLabs {path.split('/')[3]} request returned HTTP "
-            f"{response.status_code}{': ' + detail_text if detail_text else ''}."
-        )
+        raise_for_error(response, path)
 
 
 def conversation_path(conversation_id: ProviderCallId) -> str:
