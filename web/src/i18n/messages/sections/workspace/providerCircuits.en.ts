@@ -7,7 +7,7 @@
 export const providerCircuitsEn = {
   title: "Provider circuits",
   description:
-    "Every provider the workers send through has a circuit breaker. Five failures within a minute open it: messages wait without a call, and one trial goes through 30 s later. Each provider holds at most half of a worker's delivery threads.",
+    "Every provider the workers send through has a circuit breaker. Five failures within a minute open it: messages wait without a call, and one trial goes through 30 s later. Each provider holds at most half of a worker's delivery threads.",
   none: "No worker has reported its circuits",
   noneDescription: "Workers report their circuits with every beat; a worker of an older release reports none.",
   circuit: "Circuit",

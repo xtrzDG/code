@@ -6,7 +6,7 @@ import type { providerCircuitsEn } from "./providerCircuits.en";
 export const providerCircuitsDe: Translation<typeof providerCircuitsEn> = {
   title: "Schutzschalter der Anbieter",
   description:
-    "Jeder Anbieter, über den die Worker senden, hat einen Schutzschalter. Fünf Fehler in einer Minute öffnen ihn: Nachrichten warten ohne Aufruf, und 30 s später geht ein Probeversand durch. Ein Anbieter belegt höchstens die Hälfte der Zustell-Threads eines Workers.",
+    "Jeder Anbieter, über den die Worker senden, hat einen Schutzschalter. Fünf Fehler in einer Minute öffnen ihn: Nachrichten warten ohne Aufruf, und 30 s später geht ein Probeversand durch. Ein Anbieter belegt höchstens die Hälfte der Zustell-Threads eines Workers.",
   none: "Kein Worker hat seine Schutzschalter gemeldet",
   noneDescription: "Worker melden ihre Schutzschalter mit jedem Lebenszeichen; ein Worker eines älteren Releases meldet keine.",
   circuit: "Schutzschalter",

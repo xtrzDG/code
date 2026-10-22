@@ -1,5 +1,5 @@
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 from app.contracts.resilience import OutboundBulkheadContract
@@ -26,7 +26,7 @@ class OutboundBulkheadFacilitator(OutboundBulkheadContract):
         }
 
     @contextmanager
-    def reserve(self, provider: OutboundProvider) -> Iterator[IsProviderSlotTaken]:
+    def reserve(self, provider: OutboundProvider) -> Generator[IsProviderSlotTaken]:
         semaphore: threading.BoundedSemaphore = self._semaphores[provider]
         if not semaphore.acquire(blocking=False):
             yield False
