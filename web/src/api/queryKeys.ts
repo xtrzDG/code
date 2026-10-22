@@ -226,6 +226,8 @@ export const queryKeys = {
     lifecycle: (businessId: Id, locale: Locale) => ["billing", businessId, "lifecycle", locale] as const,
     /** Every plan priced as this business is billed (a further location of a brand pays less). */
     plans: (businessId: Id, locale: Locale) => ["billing", businessId, "plans", locale] as const,
+    /** The card the automatic charges go to and where the retries of a declined one stand. */
+    paymentMethod: (businessId: Id) => ["billing", businessId, "paymentMethod"] as const,
   },
 
   settings: {
