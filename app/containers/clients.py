@@ -1,8 +1,7 @@
 from dependency_injector import containers
-from dependency_injector.providers import Callable, DependenciesContainer, Singleton
+from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.adapters.storage.postgres.connection_pools_factory import (
-    application_database_url,
     build_owner_pool,
     build_postgres_connection_pools,
     platform_pool_of,
@@ -89,10 +88,6 @@ class ClientsContainer(containers.DeclarativeContainer):
     # never build it.
     postgres_owner_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
         build_owner_pool, settings=config.app_settings
-    )
-    # The LISTEN connections' address: the platform role's, else DATABASE_URL.
-    listen_database_url = Callable(
-        application_database_url, settings=config.app_settings
     )
     # SDK clients are created on first use, so no API key is needed to start.
     openai_responses_client: Singleton[OpenAiResponsesClient] = Singleton(

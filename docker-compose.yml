@@ -30,7 +30,12 @@ x-backend: &backend
     CABINET_BASE_URL: ${CABINET_BASE_URL:-http://localhost:${WEB_PORT:-3000}}
     # The cabinet's origin: the payment page returns payers there.
     CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:${WEB_PORT:-3000}}
+    # The migration role (the tables' owner) and the two login roles of the
+    # application's pools (docker/postgres/init, migration 1200). A volume
+    # made before them lacks the roles: see docs/LAUNCH.md, "Database roles".
     DATABASE_URL: postgresql://${WORKSHOP_DB_USER:-workshop}:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
+    DATABASE_URL_TENANT: postgresql://${WORKSHOP_DB_USER:-workshop}_tenant_app:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
+    DATABASE_URL_PLATFORM: postgresql://${WORKSHOP_DB_USER:-workshop}_platform_app:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
     # One key for the API and the worker (each would otherwise encrypt channel
     # tokens with its own temporary key). The default is public: for this
     # machine only; set your own in .env before connecting real channels.
@@ -58,8 +63,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: postgres
-      # Application role and database (docker/postgres/init); not a superuser,
-      # so row-level security applies to it.
+      # Application roles and database (docker/postgres/init); none is a
+      # superuser, so row-level security applies to them.
       WORKSHOP_DB_USER: ${WORKSHOP_DB_USER:-workshop}
       WORKSHOP_DB_PASSWORD: ${WORKSHOP_DB_PASSWORD:-workshop}
       WORKSHOP_DB_NAME: ${WORKSHOP_DB_NAME:-workshop}

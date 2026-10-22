@@ -4,7 +4,7 @@ storage transactions and the job queue's wake-ups between processes.
 """
 
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import Callable, DependenciesContainer, Singleton
 
 from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.jobs.job_wakeup_adapter_factory import build_job_wakeup_adapter
@@ -13,6 +13,9 @@ from app.adapters.storage.data_task_batch_adapter_factory import (
 )
 from app.adapters.storage.database_role_inspection_factory import (
     build_database_role_inspection_adapter,
+)
+from app.adapters.storage.postgres.connection_pools_factory import (
+    application_database_url,
 )
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     BUILD_MIGRATIONS_DIRECTORY,
@@ -71,7 +74,7 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     job_wakeup: Singleton[JobWakeupContract] = Singleton(
         build_job_wakeup_adapter,
         connection_pool=clients.postgres_platform_pool,
-        database_url=clients.listen_database_url,
+        database_url=Callable(application_database_url, settings=config.app_settings),
         listen_database_url=config.app_settings.provided.live_events_database_url,
         wall_clock=time_provider.microsecond_wall_clock,
     )

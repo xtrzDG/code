@@ -7,21 +7,25 @@ skipped without the binaries).
 from tests.storage.conftest import (
     collections,
     connection_pool,
+    connection_pools,
     database_name,
     database_url,
     migrated_template_database,
     postgres_collections,
     postgres_server,
+    role_urls,
     storage_scope,
 )
 
 __all__ = [
     "collections",
     "connection_pool",
+    "connection_pools",
     "database_name",
     "database_url",
     "migrated_template_database",
     "postgres_collections",
     "postgres_server",
+    "role_urls",
     "storage_scope",
 ]

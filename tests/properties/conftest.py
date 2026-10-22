@@ -15,23 +15,27 @@ from hypothesis import settings
 
 from tests.storage.conftest import (
     connection_pool,
+    connection_pools,
     database_name,
     database_url,
     migrated_template_database,
     platform_scope,
     postgres_collections,
     postgres_server,
+    role_urls,
     storage_scope,
 )
 
 __all__ = [
     "connection_pool",
+    "connection_pools",
     "database_name",
     "database_url",
     "migrated_template_database",
     "platform_scope",
     "postgres_collections",
     "postgres_server",
+    "role_urls",
     "storage_scope",
 ]
 

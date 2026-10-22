@@ -13,8 +13,6 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_integer,
 )
 
-ROLE_URL_VARIABLES: tuple[str, str] = ("DATABASE_URL_TENANT", "DATABASE_URL_PLATFORM")
-
 
 class DatabaseRoleSettingsSection(TypedDict):
     """The `AppSettings` field of the two database roles."""

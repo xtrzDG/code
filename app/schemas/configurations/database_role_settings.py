@@ -20,7 +20,3 @@ class DatabaseRoleSettings(ImmutableDTO):
     tenant_url: DatabaseUrl | None = Field(default=None, repr=False)
     platform_url: DatabaseUrl | None = Field(default=None, repr=False)
     platform_pool_size: DatabasePoolSize = DatabasePoolSize(8)
-
-    @property
-    def has_separate_roles(self) -> bool:
-        return self.tenant_url is not None and self.platform_url is not None

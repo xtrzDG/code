@@ -20,12 +20,11 @@ from app.adapters.storage.postgres.read_sessions import read_session_of
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.exceptions.storage_errors import UnscopedStorageAccessError
-from app.schemas.typings.platform.strings import DatabaseUrl
-from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import COUNTRY_SAMPLES, build_owner
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.read_session_world import (
-    CountingPool,
     ReadSessionWorld,
+    role_world,
     scope_settings,
     transaction_status,
     visible_channel_count,
@@ -33,12 +32,9 @@ from tests.storage.read_session_world import (
 
 
 @pytest.fixture
-def world(database_url: DatabaseUrl) -> Iterator[ReadSessionWorld]:
-    pool = CountingPool(database_url, max_size=4)
-    try:
-        yield ReadSessionWorld(pool, StorageScopeContext())
-    finally:
-        pool.close()
+def world(role_urls: RoleDatabase) -> Iterator[ReadSessionWorld]:
+    with role_world(role_urls, max_size=4) as session_world:
+        yield session_world
 
 
 def test_the_reads_of_a_session_share_one_connection(world: ReadSessionWorld) -> None:
@@ -76,14 +72,14 @@ def test_the_transaction_begins_at_the_first_read_in_its_scope(
 
     assert before_read is pq.TransactionStatus.IDLE
     assert in_read is pq.TransactionStatus.INTRANS
-    assert settings == (str(world.business_id), "off")
+    assert settings == (str(world.business_id),)
     assert visible == 1
     # The session committed its reads and gave the connection back.
     assert transaction_status(connection) is pq.TransactionStatus.IDLE
     assert world.pool.idle_connection_count() == 1
 
 
-def test_a_read_in_another_scope_rescopes_the_transaction_and_back(
+def test_a_platform_read_in_a_business_session_runs_on_the_platform_pool(
     world: ReadSessionWorld,
 ) -> None:
     owner = build_owner(COUNTRY_SAMPLES[0])
@@ -95,20 +91,21 @@ def test_a_read_in_another_scope_rescopes_the_transaction_and_back(
         world.sessions.read_session(),
     ):
         world.pool.borrowed = 0
+        world.platform_pool.borrowed = 0
         world.channels.get(str(world.channel.id))
         connection = world.session().connection
-        # A platform collection: read platform-wide in the same transaction.
+        # A platform collection: the tenant role may not read it, so the
+        # read is a transaction of its own on the platform pool.
         user = world.users.get(str(owner.id))
-        platform_settings = scope_settings(connection)
         foreign = world.channels.get(str(world.other_channel.id))
         tenant_settings = scope_settings(connection)
         visible = visible_channel_count(connection)
 
     assert user == owner
-    assert platform_settings == ("", "on")
-    # Back in the business's scope: the other business stays hidden.
+    assert world.platform_pool.borrowed == 1
+    # The session stays in the business's scope: the other business hidden.
     assert foreign is None
-    assert tenant_settings == (str(world.business_id), "off")
+    assert tenant_settings == (str(world.business_id),)
     assert visible == 1
     assert world.pool.borrowed == 0
 

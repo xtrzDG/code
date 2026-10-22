@@ -34,6 +34,9 @@ from app.adapters.payments.flitt_payment_gateway_adapter import (
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
 )
+from app.adapters.storage.postgres.connection_pools_factory import (
+    application_database_url,
+)
 from app.containers.adapters.calendar_sync_collections_container import (
     CalendarSyncCollectionsContainer,
 )
@@ -160,12 +163,11 @@ class AdaptersContainer(containers.DeclarativeContainer):
         connection_pool=clients.postgres_platform_pool,
     )
 
-    # --- The cabinet's live updates between processes: Postgres
-    # NOTIFY/LISTEN with DATABASE_URL, else in this process.
+    # --- The cabinet's live updates between processes (Postgres NOTIFY/LISTEN).
     live_event_bus: Singleton[LiveEventBusAdapterContract] = Singleton(
         build_live_event_bus_adapter,
         connection_pool=clients.postgres_platform_pool,
-        database_url=clients.listen_database_url,
+        database_url=Callable(application_database_url, settings=config.app_settings),
         listen_database_url=config.app_settings.provided.live_events_database_url,
     )
 

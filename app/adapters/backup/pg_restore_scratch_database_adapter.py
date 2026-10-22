@@ -111,9 +111,7 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
             probes: list[IsolationProbe] = []
             if facts.secured_tables:
                 has_role_policies: bool = uses_role_policies(connection)
-                business_id, expected = count_own_rows(
-                    connection, facts.secured_tables
-                )
+                business_id, expected = count_own_rows(connection, facts.secured_tables)
                 with bound_role(connection, has_role_policies):
                     probes = probe_isolation(
                         connection, business_id, expected, has_role_policies
