@@ -12310,8 +12310,12 @@ export interface components {
         /**
          * InstagramCommentRepliesView
          * @description The Instagram account's comment-to-DM as the cabinet shows it.
+         *     `is_available` says whether this release answers comments yet (its
+         *     release gate is open); the settings are kept either way.
          */
         InstagramCommentRepliesView: {
+            /** Is Available */
+            is_available: boolean;
             /** Is On */
             is_on: boolean;
             /** Keywords */

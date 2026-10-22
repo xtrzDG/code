@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-22 — Meta: connect with Facebook, page picker, comment replies
 
-Spec: `10fbeae1f6f73037`
+Spec: `3127740f5d6b11a5`
 
 - **Added** `GET /v1/businesses/{business_id}/channels/meta/sign-in`: whether
   this server offers "Continue with Facebook" (`whatsapp`: Embedded Signup is
@@ -53,7 +53,8 @@ Spec: `10fbeae1f6f73037`
   day and 60 per business an hour). 422 `comment_keywords_missing`,
   `comment_reply_missing`; 404 without a connected Instagram.
 - **Changed** (additive) `ChannelView.comment_replies` (Instagram only, else
-  null). `InboundEventKind` may be `comment_trigger` and `OutboundMessageKind`
+  null; `is_available` says whether this release answers comments yet: the
+  settings are kept while it is false). `InboundEventKind` may be `comment_trigger` and `OutboundMessageKind`
   `comment_reply`, and an outbox customer may name the `comment_id` it
   answers; this release stores neither kind yet (release gate
   `instagram_comment_replies`).

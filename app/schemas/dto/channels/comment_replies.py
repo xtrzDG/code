@@ -8,7 +8,10 @@ from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
-from app.schemas.typings.meta_connection.booleans import IsCommentReplyOn
+from app.schemas.typings.meta_connection.booleans import (
+    IsCommentReplyAvailable,
+    IsCommentReplyOn,
+)
 from app.schemas.typings.meta_connection.constrained_strings import (
     CommentReplyText,
     CommentTriggerKeyword,
@@ -45,9 +48,14 @@ class SetInstagramCommentRepliesCommand(ImmutableDTO):
 
 
 class InstagramCommentRepliesView(ImmutableDTO):
-    """The Instagram account's comment-to-DM as the cabinet shows it."""
+    """
+    The Instagram account's comment-to-DM as the cabinet shows it.
+    `is_available` says whether this release answers comments yet (its
+    release gate is open); the settings are kept either way.
+    """
 
     is_on: IsCommentReplyOn
+    is_available: IsCommentReplyAvailable
     keywords: list[CommentTriggerKeyword] = Field(
         default_factory=list[CommentTriggerKeyword]
     )

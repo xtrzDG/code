@@ -1,5 +1,7 @@
 """The Instagram card's comment-to-DM settings."""
 
+import pytest
+
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from tests.meta_connection.meta_world import MetaWorld
 
@@ -31,6 +33,8 @@ class TestCommentReplySettings:
         assert response.status_code == 200, response.text
         assert response.json()["comment_replies"] == {
             "is_on": True,
+            # This release keeps the settings; the next one answers comments.
+            "is_available": False,
             "keywords": ["menu", "price list"],
             "reply_text": "Hi! Here is our menu.",
         }
@@ -48,9 +52,16 @@ class TestCommentReplySettings:
 
         assert response.json()["comment_replies"] == {
             "is_on": False,
+            "is_available": False,
             "keywords": ["menu"],
             "reply_text": "Later",
         }
+
+    @pytest.mark.usefixtures("next_release")
+    def test_the_next_release_says_comments_are_answered(self) -> None:
+        response = with_instagram().set_comment_replies(ON)
+
+        assert response.json()["comment_replies"]["is_available"] is True
 
     def test_on_needs_a_keyword_and_a_reply(self) -> None:
         world = with_instagram()

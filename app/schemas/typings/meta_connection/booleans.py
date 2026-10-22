@@ -5,6 +5,7 @@ Example:
 """
 
 HasLinkedInstagramAccount = bool
+IsCommentReplyAvailable = bool
 IsCommentReplyOn = bool
 IsMetaConnectionStateConsumed = bool
 IsMetaSignInAvailable = bool

@@ -17207,8 +17207,12 @@
       },
       "InstagramCommentRepliesView": {
         "additionalProperties": false,
-        "description": "The Instagram account's comment-to-DM as the cabinet shows it.",
+        "description": "The Instagram account's comment-to-DM as the cabinet shows it.\n`is_available` says whether this release answers comments yet (its\nrelease gate is open); the settings are kept either way.",
         "properties": {
+          "is_available": {
+            "title": "Is Available",
+            "type": "boolean"
+          },
           "is_on": {
             "title": "Is On",
             "type": "boolean"
@@ -17239,7 +17243,8 @@
           }
         },
         "required": [
-          "is_on"
+          "is_on",
+          "is_available"
         ],
         "title": "InstagramCommentRepliesView",
         "type": "object"
