@@ -4,6 +4,8 @@ at startup so a misconfigured DATABASE_URL_TENANT (the migration role, a
 superuser, a member of workshop_platform) is caught before any request.
 """
 
+from typing import LiteralString
+
 import psycopg
 from psycopg.rows import TupleRow
 
@@ -23,7 +25,7 @@ ACQUIRE_TIMEOUT_SECONDS: float = 5.0
 # USAGE: the group's policies apply to the role. MEMBER: the role is the
 # group (or the owner) or may `set role` to it, which a statement smuggled
 # into a request could do as well.
-POOL_ROLE_QUERY: str = """
+POOL_ROLE_QUERY: LiteralString = """
 select
     r.rolname,
     r.rolsuper,

@@ -14,6 +14,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.conversation_repositories import ContactRepository
 from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.constants.channels import ChannelKind
@@ -83,7 +84,9 @@ def test_list_query_uses_its_index(
     recording_pool = RecordingConnectionPool(list_database_url)
     explaining_pool = PostgresConnectionPoolClient(list_database_url, max_size=1)
     storage_scope = StorageScopeContext()
-    repositories = ListRepositories(recording_pool, storage_scope)
+    repositories = ListRepositories(
+        PostgresConnectionPools.single(recording_pool), storage_scope
+    )
     try:
         # The seeded rows carry only their lookup fields and do not decode;
         # the recorded SQL is what this test checks.

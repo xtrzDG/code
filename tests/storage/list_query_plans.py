@@ -9,9 +9,6 @@ from typed_time_provider import Microseconds
 from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
 )
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
 from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.booking_repositories import (
     BookingRepository,
@@ -85,10 +82,10 @@ PERIOD = ActivityPeriod(
 class ListRepositories:
     def __init__(
         self,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
         storage_scope: StorageScopeContext,
     ) -> None:
-        self._pool = connection_pool
+        self._pools = connection_pools
         self._scope = storage_scope
         self.conversations = ConversationRepository(
             self._collection(ConversationDocument, "conversations")
@@ -125,7 +122,7 @@ class ListRepositories:
         return PostgresDocumentCollectionAdapter[StoredDocument](
             document_type=document_type,
             collection_name=DocumentCollectionName(name),
-            connection_pools=PostgresConnectionPools.single(self._pool),
+            connection_pools=self._pools,
             storage_scope=self._scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(document_type),
