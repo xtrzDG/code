@@ -6,7 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -81,6 +81,21 @@ class KnowledgeItemRepoContract(
         message_id: MessageId,
     ) -> KnowledgeItemDocument | None:
         """The item an owner corrected this assistant answer with (indexed)."""
+        raise NotImplementedError
+
+    def update(
+        self,
+        business_id: BusinessId,
+        item_id: KnowledgeItemId,
+        change: Callable[[KnowledgeItemDocument], KnowledgeItemDocument | None],
+    ) -> KnowledgeItemDocument | None:
+        """
+        Store what `change` makes of the item as stored now, in one step: no
+        other write of the item comes in between (an owner's edit while a
+        background job adds aliases is never lost). None, and nothing
+        written, for a missing item, one of another business, or when
+        `change` returns None.
+        """
         raise NotImplementedError
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:

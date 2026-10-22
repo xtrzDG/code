@@ -20,6 +20,9 @@ from app.utilities.config_helpers.app_settings.capacity_settings_section import 
 from app.utilities.config_helpers.app_settings.compliance_settings_section import (
     read_compliance_settings,
 )
+from app.utilities.config_helpers.app_settings.embedding_settings_section import (
+    read_embedding_settings,
+)
 from app.utilities.config_helpers.app_settings.encryption_key_settings_section import (
     read_encryption_key_settings,
 )
@@ -167,6 +170,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ),
         **read_backup_settings(environment_variables),
         **read_media_settings(environment_variables),
+        **read_embedding_settings(environment_variables),
         **read_reply_speed_settings(environment_variables, llm_provider),
         **read_reply_safety_settings(environment_variables, llm_provider),
         **read_platform_alert_settings(environment_variables),
