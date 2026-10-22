@@ -114,9 +114,6 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ConnectMetaPageCommand) -> ChannelView:
-        if input_data.channel not in PAGE_CHANNELS:
-            raise NotFoundError("Only Messenger and Instagram connect a page.")
-
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
                 user_id=input_data.user_id,
@@ -124,6 +121,9 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        if input_data.channel not in PAGE_CHANNELS:
+            raise NotFoundError("Only Messenger and Instagram connect a page.")
+
         self._step_up.require_recent_authentication()
         app: MetaAppCredentials | None = meta_app_of(self._app_settings)
         if app is None:

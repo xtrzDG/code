@@ -12,6 +12,7 @@ from tests.platform.authorization_deposits import OWNER_ONLY_DEPOSIT_OPERATIONS
 from tests.platform.authorization_integrations import (
     OWNER_ONLY_INTEGRATION_OPERATIONS,
 )
+from tests.platform.authorization_meta import OWNER_ONLY_META_OPERATIONS
 from tests.platform.authorization_requests import BUSINESS_PREFIX as B
 
 CORRECTION: str = (
@@ -119,6 +120,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         *OWNER_ONLY_INTEGRATION_OPERATIONS,
         *OWNER_ONLY_BRAND_OPERATIONS,
         *OWNER_ONLY_DEPOSIT_OPERATIONS,
+        *OWNER_ONLY_META_OPERATIONS,
     }
 )
 
