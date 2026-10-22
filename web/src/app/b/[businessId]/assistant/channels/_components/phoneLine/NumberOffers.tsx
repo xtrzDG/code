@@ -12,7 +12,7 @@ import { Alert, Button } from "@/components/ui";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 
-import { teamArrangesReason, type PhoneNumberOffer, type PhoneNumberOffers } from "../../_lib/phoneLine";
+import { numberInText, teamArrangesReason, type PhoneNumberOffer, type PhoneNumberOffers } from "../../_lib/phoneLine";
 
 export function NumberOffers({
   offers,
@@ -107,7 +107,7 @@ export function TakeNumberConfirm({
   return (
     <section aria-labelledby="phone-take-title" className="space-y-3 rounded-xl border border-accent/40 bg-accent-soft/40 p-4">
       <h3 id="phone-take-title" className="text-base font-semibold text-ink">
-        {t("phoneNumbers.confirm.title", { number: offer.display_number })}
+        {t("phoneNumbers.confirm.title", { number: numberInText(offer.display_number) })}
       </h3>
       <ul className="list-disc space-y-1 ps-5 text-sm text-ink-muted">
         <li>{t("phoneNumbers.confirm.price", { price })}</li>

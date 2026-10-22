@@ -6,6 +6,7 @@ import {
   cityQuery,
   groupCountries,
   initialCountry,
+  numberInText,
   rentBody,
   rentedNumberState,
   teamArrangesReason,
@@ -90,6 +91,10 @@ describe("the phone line", () => {
     expect(teamArrangesReason("requires_documents")).toBe("phoneNumbers.request.requires_documents");
     expect(teamArrangesReason("on_request")).toBe("phoneNumbers.request.on_request");
     expect(teamArrangesReason("self_serve")).toBeNull();
+  });
+
+  it("keeps a number in a sentence left to right", () => {
+    expect(numberInText("+1 512-555-0142")).toBe("\u2066+1 512-555-0142\u2069");
   });
 
   it("searches near a city only when one is written", () => {

@@ -16,7 +16,7 @@ import { Badge, Button, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/lib/countries";
 
-import { rentedNumberState, type PhoneNumberRequest, type RentedPhoneNumber } from "../../_lib/phoneLine";
+import { numberInText, rentedNumberState, type PhoneNumberRequest, type RentedPhoneNumber } from "../../_lib/phoneLine";
 import { usePhoneLine, usePhoneLineActions } from "../../_lib/usePhoneLine";
 import { GetNumberDialog } from "./GetNumberDialog";
 
@@ -82,7 +82,7 @@ export function PhoneNumberPanel({
           line={data}
           onRented={(number) => {
             setOpen(false);
-            toast.success(t("phoneNumbers.confirm.done", { number: number.display_number }));
+            toast.success(t("phoneNumbers.confirm.done", { number: numberInText(number.display_number) }));
             onChanged?.();
           }}
           onRequested={() => {

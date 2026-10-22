@@ -26,6 +26,14 @@ export const PHONE_NUMBER_REFUSALS: ReasonMessages = {
   price_changed: () => ({ key: "phoneNumbers.refusals.priceChanged" }),
 };
 
+/**
+ * A phone number inside a sentence: kept left to right (Unicode LRI ... PDI)
+ * so "+1 512-555-0142?" does not come apart in a Hebrew sentence.
+ */
+export function numberInText(displayNumber: string): string {
+  return `\u2066${displayNumber}\u2069`;
+}
+
 /** One rented number's state on the card: answering, still being attached, or going back. */
 export function rentedNumberState(number: RentedPhoneNumber): MessageKey {
   if (number.status !== "active") {
