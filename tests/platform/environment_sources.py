@@ -3,8 +3,8 @@
 Sources of truth:
 
 - the settings assembler (`app/utilities/config_helpers/app_settings/`) and
-  the provider SDKs for the backend; `.env.example` and the "Окружение"
-  table of `README.md` for people;
+  the provider SDKs for the backend; `.env.example` and the "Variables"
+  table of `docs/dev/environment.md` for people;
 - `web/src` (the cabinet's server code) for the cabinet; `web/.env.example`
   and the "Environment" table of `web/README.md` for people;
 - `docker-compose.yml` and `render.yaml` for the deployments;
@@ -126,3 +126,8 @@ def workflow_variables() -> set[str]:
 
 
 README: str = "README.md"
+# The developer guides the README links (docs/dev/): the environment table,
+# the API table and the operations guide are checked against the code.
+ENVIRONMENT_GUIDE: str = "docs/dev/environment.md"
+API_GUIDE: str = "docs/dev/api.md"
+OPERATIONS_GUIDE: str = "docs/dev/operations.md"

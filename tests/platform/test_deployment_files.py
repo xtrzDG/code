@@ -188,3 +188,4 @@ def test_the_cabinet_reaches_the_api_only_by_its_internal_address() -> None:
     assert "Never the public https" in comment
     assert "подойдёт и публичный адрес API" not in read("docs/LAUNCH.md")
     assert "или публичный)" not in read("README.md")
+    assert "or the public" not in read("docs/dev/operations.md")

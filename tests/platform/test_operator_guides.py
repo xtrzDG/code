@@ -1,4 +1,4 @@
-"""The launch guide and the README name only what exists and explain the setup."""
+"""The launch guide and the developer guides name only what exists."""
 
 import json
 import re
@@ -14,7 +14,9 @@ from tests.platform.deployment_variables import (
     render_services,
 )
 from tests.platform.environment_sources import (
+    API_GUIDE,
     LAUNCH_GUIDE,
+    OPERATIONS_GUIDE,
     README,
     ROOT,
     VARIABLE_NAME,
@@ -34,6 +36,12 @@ UNDESCRIBED_ROUTES: frozenset[str] = frozenset(
 
 # The guide names the curated country data relative to this folder.
 REGISTRIES: Path = ROOT / "app" / "registries"
+
+# Every developer guide of docs/dev/ (the README links them all).
+DEVELOPER_GUIDES: tuple[str, ...] = tuple(
+    path.relative_to(ROOT).as_posix()
+    for path in sorted((ROOT / "docs" / "dev").glob("*.md"))
+)
 
 
 def test_the_launch_guide_names_only_what_exists() -> None:
@@ -65,12 +73,13 @@ def test_the_launch_guide_names_only_what_exists() -> None:
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
 HTTP_METHODS: frozenset[str] = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"})
 API_ADDRESS_WITH_EXTRA_SCHEME: re.Pattern[str] = re.compile(
-    r"https?://<(?:APP_BASE_URL|адрес API)>"
+    r"https?://<(?:APP_BASE_URL|адрес API|API address)>"
 )
 
 # The old claim that the Render worker takes every value of the API.
 COPIES_EVERY_VALUE: re.Pattern[str] = re.compile(
     r"(копирует|берёт) все значения|воркер возьмёт их сам|copies the API's values"
+    r"|takes every value of the API"
 )
 
 # Russian labels of the cabinet the guide names (web/src/i18n, workspace).
@@ -95,7 +104,7 @@ def test_render_docs_send_undeclared_variables_to_the_shared_group() -> None:
     services: dict[str, set[str]] = render_services()
     undeclared: set[str] = backend_variables() - services["workshop-worker"]
     assert {"LLM_MODEL_ID", "OPENAI_BASE_URL", "WORKER_POLL_SECONDS"} <= undeclared
-    for path in (LAUNCH_GUIDE, README, "render.yaml"):
+    for path in (LAUNCH_GUIDE, OPERATIONS_GUIDE, "render.yaml"):
         text: str = read(path)
         assert "workshop-backend" in text, path
         assert not re.search(COPIES_EVERY_VALUE, text), path
@@ -105,7 +114,7 @@ def test_the_guides_do_not_put_a_scheme_before_the_api_address() -> None:
     # APP_BASE_URL (PublicBaseUrl) already starts with https://, and the guides
     # define "адрес API" as that value: "https://<APP_BASE_URL>" would become
     # "https://https://...".
-    for path in (README, LAUNCH_GUIDE):
+    for path in (README, LAUNCH_GUIDE, *DEVELOPER_GUIDES):
         assert API_ADDRESS_WITH_EXTRA_SCHEME.findall(read(path)) == [], path
 
 
@@ -161,9 +170,9 @@ def test_a_new_dpa_version_is_switched_on_with_a_rebuild() -> None:
 
 
 def readme_api_routes() -> set[tuple[str, str]]:
-    """(method, path) pairs named in the "## HTTP API" table of README.md."""
+    """(method, path) pairs named in the "## HTTP API" table of the API guide."""
 
-    lines: list[str] = read(README).splitlines()
+    lines: list[str] = read(API_GUIDE).splitlines()
     routes: set[tuple[str, str]] = set()
     for line in lines[lines.index("## HTTP API") + 1 :]:
         if line.startswith("## "):
@@ -199,7 +208,7 @@ def readme_api_routes() -> set[tuple[str, str]]:
     return routes
 
 
-def test_the_readme_api_table_lists_every_described_route() -> None:
+def test_the_api_guide_lists_every_described_route() -> None:
     described: set[tuple[str, str]] = {
         (method.upper(), re.sub(r"\{[^}]*\}", "{}", path))
         for path, operations in json.loads(read(OPENAPI_DESCRIPTION))["paths"].items()

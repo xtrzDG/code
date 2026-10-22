@@ -24,6 +24,7 @@ from tests.platform.deployment_variables import (
     REQUIRED_CABINET_VARIABLES,
 )
 from tests.platform.environment_sources import (
+    ENVIRONMENT_GUIDE,
     assembler_variables,
     backend_variables,
     cabinet_variables,
@@ -90,8 +91,8 @@ def test_every_env_example_variable_is_read() -> None:
     assert unread == set()
 
 
-def test_the_readme_environment_table_lists_every_backend_variable() -> None:
-    table: set[str] = table_variables("README.md", "## Окружение")
+def test_the_environment_guide_lists_every_backend_variable() -> None:
+    table: set[str] = table_variables(ENVIRONMENT_GUIDE, "## Variables")
     expected: set[str] = backend_variables() | DEPLOYMENT_VARIABLES
 
     assert expected - table == set()

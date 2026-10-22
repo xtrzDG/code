@@ -12,6 +12,11 @@ supersedes the old one (and the old one's status says so).
 | [0003](0003-cabinet-backend-for-frontend.md) | The cabinet talks to the API only through its own server (BFF) | Accepted |
 | [0004](0004-python-worker-with-postgres-queue.md) | Background work in a Python worker on a queue in Postgres | Accepted |
 | [0005](0005-typed-domain-primitives.md) | Typed domain primitives instead of raw str/int/float | Accepted |
+| [0006](0006-transactional-outbox-and-atomic-intake.md) | A transactional outbox for everything customers receive, and atomic intake | Accepted |
+| [0007](0007-online-safe-migrations.md) | Online-safe migrations and trigger-filled lookup columns | Accepted |
+| [0008](0008-offline-replay-evals.md) | Offline replay evaluations on every change, live ones every night | Accepted |
+| [0009](0009-document-evolution-and-the-enum-rule.md) | Documents evolve by expand and contract; enum values ship a release ahead | Accepted |
+| [0010](0010-composition-root.md) | One composition root: a provider graph today, typed roots from now on | Accepted |
 
 Template for a new record (`NNNN-short-title.md`):
 
