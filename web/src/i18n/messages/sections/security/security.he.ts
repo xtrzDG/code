@@ -47,7 +47,7 @@ export const securityHe: Translation<typeof securityEn> = {
   },
   session: {
     title: "ההתחברות הזו",
-    twoFactor: "התחברתם עם קוד כניסה ועם אפליקציית האימות.",
+    twoFactor: "התחברתם עם קוד כניסה ועם גורם שני.",
     oneFactor: "התחברתם עם קוד כניסה בלבד.",
     upgrade: "אישור באמצעות האפליקציה",
     upgraded: "ההתחברות הזו נחשבת עכשיו כהתחברות עם האפליקציה",

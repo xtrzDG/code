@@ -55,10 +55,12 @@ export function installTrustedTypesPolicy(win: TrustedTypesWindow, scriptOrigins
         return null;
       }
     },
+    // The address stays as it was written: React and Next.js's chunk loader find a
+    // script already on the page by its src attribute, so "/_next/…" must not become absolute.
     createScriptURL: function (value) {
       try {
         const url = new URL(value, win.document.baseURI);
-        return url.origin === pageOrigin || scriptOrigins.indexOf(url.origin) !== -1 ? url.href : null;
+        return url.origin === pageOrigin || scriptOrigins.indexOf(url.origin) !== -1 ? value : null;
       } catch {
         return null;
       }

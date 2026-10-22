@@ -63,9 +63,11 @@ export function PasskeysCard({
           },
         }),
       );
-      toast.success(t("passkeys.added"));
       if (added.recovery_codes && added.recovery_codes.length > 0) {
+        // The first second factor: the codes come first, the toast once they are put away.
         setCodes(added.recovery_codes);
+      } else {
+        toast.success(t("passkeys.added"));
       }
       await reload();
     } catch (caught) {
@@ -77,6 +79,11 @@ export function PasskeysCard({
     } finally {
       setAdding(false);
     }
+  };
+
+  const closeCodes = () => {
+    setCodes(null);
+    toast.success(t("passkeys.added"));
   };
 
   const remove = async () => {
@@ -148,14 +155,14 @@ export function PasskeysCard({
 
       <Modal
         open={codes !== null}
-        onClose={() => setCodes(null)}
+        onClose={closeCodes}
         title={t("mfa.recovery.title")}
       >
         {codes ? (
           <RecoveryCodesPanel
             codes={codes}
             account={account}
-            onDone={() => setCodes(null)}
+            onDone={closeCodes}
             doneLabel={t("common.done")}
           />
         ) : null}

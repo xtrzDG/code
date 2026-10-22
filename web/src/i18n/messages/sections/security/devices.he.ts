@@ -20,7 +20,7 @@ export const devicesHe: Translation<typeof devicesEn> = {
   lastUsed: "שימוש אחרון {date}",
   from: "מ-{address}",
   fromCountry: "מ-{address} ({country})",
-  twoFactor: "עם אפליקציית האימות",
+  twoFactor: "עם גורם שני",
   oneFactor: "עם קוד כניסה",
   ends: "יסתיים מעצמו {date}",
   end: "התנתקות",

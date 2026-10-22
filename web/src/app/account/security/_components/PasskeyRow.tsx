@@ -31,7 +31,8 @@ export function PasskeyRow({
       <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-ink-muted">
         <IconKey className="size-4" aria-hidden />
       </span>
-      <div className="min-w-0 flex-1 space-y-1">
+      {/* On a phone the buttons go under the text (in line with it) instead of squeezing it. */}
+      <div className="min-w-0 flex-1 basis-48 space-y-1">
         <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
           <span className="break-words">{passkey.name}</span>
           {passkey.is_synced ? (
@@ -45,7 +46,7 @@ export function PasskeyRow({
           </p>
         ) : null}
       </div>
-      <div className="flex shrink-0 gap-2">
+      <div className="ms-12 flex shrink-0 gap-2 sm:ms-0">
         <Button
           variant="ghost"
           size="sm"

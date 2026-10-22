@@ -54,10 +54,13 @@ describe("the Trusted Types default policy", () => {
     expect(rules.createScript("alert(1)")).toBeNull();
   });
 
-  it("loads scripts from the page's origin and the listed ones only", () => {
+  it("loads scripts from the page's origin and the listed ones only, their address as written", () => {
     const rules = installedRules();
 
-    expect(rules.createScriptURL("/_next/static/chunks/app.js")).toBe("https://cabinet.example.com/_next/static/chunks/app.js");
+    // Kept relative: React and the chunk loader look a loaded script up by its src attribute.
+    expect(rules.createScriptURL("/_next/static/chunks/app.js")).toBe("/_next/static/chunks/app.js");
+    expect(rules.createScriptURL("https://cabinet.example.com/sw.js")).toBe("https://cabinet.example.com/sw.js");
+    expect(rules.createScriptURL("//evil.example/x.js")).toBeNull();
     expect(rules.createScriptURL("https://challenges.cloudflare.com/turnstile/v0/api.js")).toBe(
       "https://challenges.cloudflare.com/turnstile/v0/api.js",
     );

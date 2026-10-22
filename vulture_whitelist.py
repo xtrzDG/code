@@ -703,12 +703,8 @@ _.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
-# Passkeys (W20-PASSKEYS-CSP, 1201): the WebAuthn options the browser reads
-# (app/schemas/dto/passkey_ceremonies.py), the transports a browser reports
-# (parsed by value, app/schemas/constants/passkeys.py), and response fields
-# the cabinet reads (app/schemas/dto/mfa.py, passkeys.py, sessions.py).
+# Passkeys (1201): WebAuthn fields the browser and cabinet read; transports by value.
 _.rp, _.algorithms, _.timeout_ms, _.exclude_credentials, _.allow_credentials
-_.resident_key, _.user_verification  # passkey_ceremonies.py
-_.USB, _.NFC, _.BLE, _.SMART_CARD, _.HYBRID, _.CABLE  # WebAuthnTransport
-_.passkey_count, _.passkey_available, _.is_recommended  # dto/mfa.py, passkeys.py
-_.created_country, _.last_seen_country  # dto/sessions.py (UserSessionView)
+_.resident_key, _.user_verification, _.passkey_count, _.passkey_available
+_.USB, _.NFC, _.BLE, _.SMART_CARD, _.HYBRID, _.CABLE, _.is_recommended
+_.created_country, _.last_seen_country

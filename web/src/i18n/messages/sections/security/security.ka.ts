@@ -53,7 +53,7 @@ export const securityKa: Translation<typeof securityEn> = {
   },
   session: {
     title: "ეს სესია",
-    twoFactor: "შესვლა შესრულდა შესვლის კოდით და ავთენტიფიკატორის აპით.",
+    twoFactor: "შესვლა შესრულდა შესვლის კოდით და მეორე ფაქტორით.",
     oneFactor: "შესვლა შესრულდა მხოლოდ შესვლის კოდით.",
     upgrade: "აპით დადასტურება",
     upgraded: "ახლა ეს სესია აპით შესვლად ითვლება",

@@ -49,7 +49,7 @@ export const securityDe: Translation<typeof securityEn> = {
   },
   session: {
     title: "Diese Sitzung",
-    twoFactor: "Angemeldet mit Anmeldecode und Authenticator-App.",
+    twoFactor: "Angemeldet mit Anmeldecode und zweitem Faktor.",
     oneFactor: "Nur mit einem Anmeldecode angemeldet.",
     upgrade: "Mit der App bestätigen",
     upgraded: "Diese Sitzung gilt jetzt als mit der App angemeldet",
