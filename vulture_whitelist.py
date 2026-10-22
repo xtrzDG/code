@@ -414,6 +414,8 @@ _.expiring_credentials  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.database_bytes  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.last_restore_drill  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.alerts  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.workers_not_closed  # app/schemas/dto/admin_system.py (CircuitSummaryView)
+_.workers_reporting  # app/schemas/dto/admin_system.py (CircuitSummaryView)
 _.notice_languages  # app/schemas/dto/incidents.py (IncidentView)
 
 # Where customers came from and the owner's summary channels: response

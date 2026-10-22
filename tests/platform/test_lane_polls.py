@@ -89,6 +89,7 @@ def test_customer_messages_are_polled_more_often_than_the_rest() -> None:
         JobLane.OUTBOUND: WorkerLanePollSeconds(15),
         JobLane.DEFAULT: WorkerLanePollSeconds(15),
         JobLane.AUTOTESTS: WorkerLanePollSeconds(15),
+        JobLane.OPS: WorkerLanePollSeconds(15),
     }
     # Never slower than the other lanes, and the same without its own value.
     capped = build_lane_poll_seconds(WorkerPollSeconds(5), WorkerLanePollSeconds(30))
