@@ -11,7 +11,10 @@ from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
+from app.contracts.voice_platform import (
+    VoiceAgentLockRegistryContract,
+    VoiceAgentProvisionerAdapterContract,
+)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheckCode
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
@@ -27,16 +30,15 @@ from app.schemas.dto.go_live import (
     GoLiveReadinessRequest,
 )
 from app.schemas.dto.setup.setup_progress import ActivationEventRecord
-from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
 from app.schemas.exceptions.application_errors import (
     ConflictError,
-    ExternalServiceError,
 )
-from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.assistants.constrained_integers import VoiceAgentRevision
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
+from app.use_cases.shared.voice_agent_setup import VoiceAgentSetup
 from app.utilities.assembly.go_live_refusals import (
     build_check_reason,
     describe_go_live_refusal,
@@ -44,11 +46,15 @@ from app.utilities.assembly.go_live_refusals import (
     is_voice_configured,
 )
 from app.utilities.assembly.version_retirement import retire_other_versions
-from app.utilities.assembly.voice_agents import find_existing_voice_agent_id
+from app.utilities.assembly.voice_agents import (
+    VOICE_AGENT_REVISION,
+    find_existing_voice_agent_id,
+)
 from app.utilities.businesses.business_revisions import build_stale_revision_error
-from app.utilities.channels.voice_service import find_transfer_phone_number
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+# A re-sync of the agent (`resync_voice_agents`) holds the lock for seconds.
+VOICE_AGENT_LOCK_WAIT: LockWaitSeconds = LockWaitSeconds(60)
 
 # Whether an untested version may go live is decided by publishing (a
 # platform admin may force it); rollback restores a version that was live.
@@ -70,13 +76,13 @@ class ActivateAssistantVersionUseCase(
     is a ConflictError whose reasons carry the check codes, and nothing
     changes. The autotests are the caller's decision. With voice enabled, the
     business's voice agent is created or updated first from the same
-    version: its phone instruction, a greeting in every language, the chat's tool
-    definitions and the public base URL for the tool webhooks. The agent id
-    of earlier versions is reused (one agent per business). In opening
-    hours a caller may be put through to the profile's handoff phone (or a
-    manager reachable by phone). The agent gets the version's phone
-    instruction (spoken facts, no links). If that fails,
-    ExternalServiceError is raised and nothing is published. Then the
+    version (`VoiceAgentSetup`: its phone instruction, a greeting in every
+    language, the chat's tools with decline_recording, the transfer in
+    opening hours), reusing the agent id of earlier versions (one agent per
+    business), and the version records the agent's VOICE_AGENT_REVISION.
+    The agent's setup and the go-live hold the agent's lock, so the agents'
+    re-sync never sets up the agent from the version going out. If the
+    setup fails, ExternalServiceError is raised and nothing is published. Then the
     business goes live with this version (see `_store_business`: a save
     made meanwhile is never overwritten), the previously published version
     is archived, older versions that never went live are discarded, and
@@ -104,6 +110,7 @@ class ActivateAssistantVersionUseCase(
         record_activation_event: UseCaseContract[ActivationEventRecord, None],
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        voice_agent_locks: VoiceAgentLockRegistryContract,
     ) -> None:
         self._check_go_live_readiness: UseCaseContract[
             GoLiveReadinessRequest, GoLiveReadiness
@@ -114,16 +121,14 @@ class ActivateAssistantVersionUseCase(
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
         )
-        self._voice_agent_provisioner: VoiceAgentProvisionerAdapterContract = (
-            voice_agent_provisioner
+        self._voice_agent_setup: VoiceAgentSetup = VoiceAgentSetup(
+            business_profile_repo,
+            voice_agent_provisioner,
+            build_call_greeting,
+            assistant_tool_catalog,
+            app_settings,
         )
-        self._build_call_greeting: UseCaseContract[
-            CallGreetingRequest,
-            CallGreeting,
-        ] = build_call_greeting
-        self._assistant_tool_catalog: AssistantToolCatalogContract = (
-            assistant_tool_catalog
-        )
+        self._voice_agent_locks: VoiceAgentLockRegistryContract = voice_agent_locks
         self._start_trial_at_go_live: UseCaseContract[
             GoLiveTrialRequest, GoLiveTrial
         ] = start_trial_at_go_live
@@ -148,12 +153,26 @@ class ActivateAssistantVersionUseCase(
                 reasons=[build_check_reason(check) for check in failures],
             )
 
+        with self._voice_agent_locks.lock_agent(business.id, VOICE_AGENT_LOCK_WAIT):
+            return self._activate(input_data, readiness)
+
+    def _activate(
+        self,
+        input_data: AssistantVersionActivation,
+        readiness: GoLiveReadiness,
+    ) -> AssistantVersionDocument:
+        """Set up the voice agent and go live, holding the agent's lock."""
+
+        business: BusinessDocument = input_data.business
+        version: AssistantVersionDocument = input_data.version
         versions: list[AssistantVersionDocument] = (
             self._assistant_version_repo.list_by_business(business.id)
         )
         voice_agent_id: VoiceAgentId | None = version.voice_agent_id
+        revision: VoiceAgentRevision | None = version.voice_agent_revision
         if version.is_voice_enabled and is_voice_configured(readiness):
             voice_agent_id = self._provision_voice_agent(business, version, versions)
+            revision = VOICE_AGENT_REVISION
         elif version.is_voice_enabled:
             LOGGER.warning(
                 "Version %s of business %s goes live without a voice agent: "
@@ -179,6 +198,7 @@ class ActivateAssistantVersionUseCase(
         version.status = AssistantVersionStatus.PUBLISHED
         version.published_at = now
         version.voice_agent_id = voice_agent_id
+        version.voice_agent_revision = revision
         version.updated_at = now
         self._assistant_version_repo.save(version)
         self._record_activation_event.run(
@@ -236,54 +256,6 @@ class ActivateAssistantVersionUseCase(
         version: AssistantVersionDocument,
         versions: list[AssistantVersionDocument],
     ) -> VoiceAgentId:
-        base_url: PublicBaseUrl | None = self._app_settings.app_base_url
-        if base_url is None:
-            raise ExternalServiceError(
-                "The voice agent cannot be set up: APP_BASE_URL for its tool "
-                "webhooks is not configured."
-            )
-
-        try:
-            spec = VoiceAgentSpec(
-                business_id=business.id,
-                existing_agent_id=find_existing_voice_agent_id(versions, version),
-                business_name=business.name,
-                languages=list(version.languages),
-                default_language=version.default_language,
-                # The phone instruction; a version assembled before it
-                # existed keeps using its chat instruction.
-                prompt_text=version.phone_prompt_text or version.prompt_text,
-                greetings=self._build_greetings(business, version),
-                tools=self._assistant_tool_catalog.list_definitions(version.tools),
-                tool_webhook_base_url=base_url,
-                transfer_phone_number=find_transfer_phone_number(
-                    business,
-                    self._business_profile_repo.get_by_business(business.id),
-                ),
-            )
-            return self._voice_agent_provisioner.upsert_agent(spec)
-        except ExternalServiceError:
-            raise
-        except ApplicationError as error:
-            raise ExternalServiceError(
-                f"The voice agent could not be set up: {error}"
-            ) from error
-
-    def _build_greetings(
-        self,
-        business: BusinessDocument,
-        version: AssistantVersionDocument,
-    ) -> list[VoiceGreeting]:
-        greetings: list[VoiceGreeting] = []
-        for language in version.languages:
-            greeting: CallGreeting = self._build_call_greeting.run(
-                CallGreetingRequest(business_id=business.id, language=language)
-            )
-            if any(existing.language == greeting.language for existing in greetings):
-                continue
-
-            greetings.append(
-                VoiceGreeting(language=greeting.language, text=greeting.text)
-            )
-
-        return greetings
+        return self._voice_agent_setup.set_up(
+            business, version, find_existing_voice_agent_id(versions, version)
+        )

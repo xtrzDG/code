@@ -86,7 +86,10 @@ CALL_RECORDING_CONSENT: LocalizedText = build_localized_text(
         "এই কলটি রেকর্ড করা হচ্ছে। আপনি রেকর্ড করতে না চাইলে শুধু বলুন, আমরা "
         "রেকর্ড ছাড়াই কথা চালিয়ে যাব।"
     ),
-    bs="Poziv se snima. Ako ne želite da se snima, samo recite i nastavit ćemo bez snimanja.",
+    bs=(
+        "Poziv se snima. Ako ne želite da se snima, samo recite i nastavit "
+        "ćemo bez snimanja."
+    ),
     ca=(
         "La trucada s'està enregistrant. Si no voleu que s'enregistri, només "
         "cal que ho digueu i continuarem sense enregistrament."
@@ -123,7 +126,10 @@ CALL_RECORDING_CONSENT: LocalizedText = build_localized_text(
         "यह कॉल रिकॉर्ड की जा रही है। अगर आप रिकॉर्डिंग नहीं चाहते, तो बस बता "
         "दीजिए, हम बिना रिकॉर्डिंग के बात जारी रखेंगे।"
     ),
-    hr="Poziv se snima. Ako ne želite snimanje, samo recite i nastavit ćemo bez snimanja.",
+    hr=(
+        "Poziv se snima. Ako ne želite snimanje, samo recite i nastavit ćemo "
+        "bez snimanja."
+    ),
     hu=(
         "A hívást rögzítjük. Ha nem szeretné, hogy rögzítsük, csak mondja, és "
         "felvétel nélkül folytatjuk."
@@ -132,7 +138,10 @@ CALL_RECORDING_CONSENT: LocalizedText = build_localized_text(
         "Panggilan ini direkam. Jika Anda tidak ingin direkam, cukup katakan "
         "dan kami akan melanjutkan tanpa rekaman."
     ),
-    ko="이 통화는 녹음됩니다. 녹음을 원하지 않으시면 말씀해 주세요. 녹음 없이 계속하겠습니다.",
+    ko=(
+        "이 통화는 녹음됩니다. 녹음을 원하지 않으시면 말씀해 주세요. "
+        "녹음 없이 계속하겠습니다."
+    ),
     lt=(
         "Pokalbis įrašomas. Jei nenorite, kad jis būtų įrašomas, tiesiog "
         "pasakykite ir tęsime be įrašo."
@@ -182,7 +191,10 @@ CALL_RECORDING_CONSENT: LocalizedText = build_localized_text(
         "Samtalet spelas in. Om du inte vill det räcker det att säga till, så "
         "fortsätter vi utan inspelning."
     ),
-    sw="Simu hii inarekodiwa. Ikiwa hutaki irekodiwe, sema tu na tutaendelea bila kurekodi.",
+    sw=(
+        "Simu hii inarekodiwa. Ikiwa hutaki irekodiwe, sema tu na tutaendelea "
+        "bila kurekodi."
+    ),
     th=("การสนทนานี้มีการบันทึกเสียง หากคุณไม่ต้องการให้บันทึก เพียงแจ้งเรา แล้วเราจะคุยต่อโดยไม่บันทึก"),
     ur=(
         "یہ کال ریکارڈ کی جا رہی ہے۔ اگر آپ ریکارڈنگ نہیں چاہتے تو بس بتا دیں، "

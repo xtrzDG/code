@@ -161,9 +161,12 @@ def test_booking_flow_runs_tool_rounds_and_stores_everything() -> None:
     assert tool_results_turn["content"][0]["type"] == "tool_result"
     assert len(llm.inner.requests) == 3
     assert len(llm.inner.requests[2].transcript) == 5
-    assert [tool.name for tool in llm.inner.requests[0].tools] == list(
-        AssistantToolName
-    )
+    # Every tool but decline_recording: only a call is recorded.
+    assert [tool.name for tool in llm.inner.requests[0].tools] == [
+        tool
+        for tool in AssistantToolName
+        if tool is not AssistantToolName.DECLINE_RECORDING
+    ]
 
     outbound = world.messages(reply.conversation_id)[-1]
     assert outbound.direction is MessageDirection.OUTBOUND

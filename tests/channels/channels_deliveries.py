@@ -27,6 +27,9 @@ from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.voice_webhooks import PostCallWebhookOutcome
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.voice.recordings.recording_archive_paths import (
+    DISCARD_CALL_RECORDING_JOB,
+)
 from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
@@ -103,6 +106,9 @@ class ChannelsDeliveries(ChannelsMedia):
             ),
             SEND_TEXT_BACK_JOB: as_job_operator(
                 UseCaseOrchestrator(self.send_text_back)
+            ),
+            DISCARD_CALL_RECORDING_JOB: as_job_operator(
+                UseCaseOrchestrator(self.discard_call_recording)
             ),
         }
 

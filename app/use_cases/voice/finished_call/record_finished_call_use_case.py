@@ -180,11 +180,14 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         call.transcript = render_call_transcript(
             input_data.transcript, call.recording_declined
         )
-        call.recording_path = (
-            build_voice_platform_recording_path(input_data.provider_call_id)
-            if input_data.has_recording
-            else None
-        )
+        if existing_call is None or not call.recording_declined:
+            # A declined call's later reports leave its recording to the
+            # discard job: deleted audio never comes back.
+            call.recording_path = (
+                build_voice_platform_recording_path(input_data.provider_call_id)
+                if input_data.has_recording
+                else None
+            )
         call.cost_micro_usd = input_data.cost_micro_usd
         call.outcome = outcome
         call.updated_at = now

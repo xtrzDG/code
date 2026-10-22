@@ -264,3 +264,17 @@ def test_byte_ranges_are_clamped_to_the_body() -> None:
     assert resolve_byte_span(span(10), 10) is None
     assert resolve_byte_span(span(suffix=0), 10) is None
     assert resolve_byte_span(span(0), 0) is None
+
+
+def test_a_declined_recording_is_never_played_even_before_its_deletion() -> None:
+    playback = Playback(build_world(scripted(say("Hello!"))))
+    playback.storage.recording_storage.recordings[RECORDING_PATH] = AUDIO
+    call = playback.add_call()
+    call.recording_declined = True
+    playback.world.call_repo.save(call)
+
+    response = playback.play(call.id, token="owner")
+
+    assert response.status_code == 404
+    assert playback.storage.recording_storage.reads == []
+    assert playback.recording_views() == []

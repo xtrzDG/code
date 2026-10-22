@@ -19,6 +19,7 @@ from app.schemas.typings.platform.constrained_strings import EnvironmentVariable
 from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.assembly.assistant_tools import CONVERSATION_TOOLS
+from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
@@ -66,9 +67,15 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
     assert spec.default_language == LanguageTag("ka")
     assert [greeting.language for greeting in spec.greetings] == spec.languages
     assert str(spec.greetings[0].text).startswith("[ka] AI assistant here")
+    # The version's tools, then decline_recording, which every call offers.
     assert [tool.name for tool in spec.tools] == [
-        tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS
+        *(tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS),
+        AssistantToolName.DECLINE_RECORDING,
     ]
+    assert (
+        testbed.version(business.id, version.id).voice_agent_revision
+        == VOICE_AGENT_REVISION
+    )
     assert spec.tool_webhook_base_url == "https://api.example.com"
     assert [str(request.language) for request in testbed.call_greeting.requests] == [
         "ka",

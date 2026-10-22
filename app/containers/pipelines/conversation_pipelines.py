@@ -71,6 +71,9 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     discard_call_recording_pipeline = orchestrator_pipeline(
         conversation_orchestrators.discard_call_recording_orchestrator
     )
+    resync_voice_agents_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.resync_voice_agents_orchestrator
+    )
 
     # --- Conversation feed.
     list_conversations_pipeline = orchestrator_pipeline(
