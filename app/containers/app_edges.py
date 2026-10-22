@@ -29,6 +29,9 @@ from app.containers.adapters.legal_collections_container import (
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
+from app.containers.adapters.meta_collections_container import (
+    MetaConnectionCollectionsContainer,
+)
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
@@ -209,6 +212,14 @@ class AppEdgesContainer(containers.DeclarativeContainer):
     # Brands: chains of locations and their shared knowledge (1192).
     brand_collections: BrandCollectionsContainer = Container(  # type: ignore[assignment]
         BrandCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # Facebook sign-ins of the Channels page (1212).
+    meta_collections: MetaConnectionCollectionsContainer = Container(  # type: ignore[assignment]
+        MetaConnectionCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

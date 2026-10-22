@@ -40,6 +40,9 @@ from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.legal_pipelines import LegalPipelinesContainer
 from app.containers.pipelines.memory_pipelines import MemoryPipelinesContainer
+from app.containers.pipelines.meta_connection_pipelines import (
+    MetaConnectionPipelinesContainer,
+)
 from app.containers.pipelines.notification_pipelines import (
     NotificationPipelinesContainer,
 )
@@ -157,6 +160,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
         delivery_use_cases=use_cases.deliveries,
         reply_speed_use_cases=use_cases.reply_speed,
         conversation_pipelines=conversations,
+        meta_use_cases=use_cases.meta_connection,
     )
     billing: BillingPipelinesContainer = Container(  # type: ignore[assignment]
         BillingPipelinesContainer,
@@ -227,6 +231,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
         SubscriptionLifecyclePipelinesContainer,
         lifecycle=orchestrators.lifecycle,
     )
+    meta_connection: MetaConnectionPipelinesContainer = Container(  # type: ignore[assignment]
+        MetaConnectionPipelinesContainer, meta=orchestrators.meta_connection
+    )  # fmt: skip
     calendars: CalendarSyncPipelinesContainer = Container(  # type: ignore[assignment]
         CalendarSyncPipelinesContainer, calendars=orchestrators.calendars
     )  # fmt: skip

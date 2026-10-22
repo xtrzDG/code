@@ -45,6 +45,9 @@ from app.containers.orchestrators.knowledge_orchestrators import (
 from app.containers.orchestrators.memory_orchestrators import (
     MemoryOrchestratorsContainer,
 )
+from app.containers.orchestrators.meta_connection_orchestrators import (
+    MetaConnectionOrchestratorsContainer,
+)
 from app.containers.orchestrators.notification_orchestrators import (
     NotificationOrchestratorsContainer,
 )
@@ -196,6 +199,11 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     lifecycle: SubscriptionLifecycleOrchestratorsContainer = Container(  # type: ignore[assignment]
         SubscriptionLifecycleOrchestratorsContainer,
         lifecycle=CoreOrchestratorsContainer.use_cases.subscription_lifecycle,
+    )
+    meta_connection: MetaConnectionOrchestratorsContainer = Container(  # type: ignore[assignment]
+        MetaConnectionOrchestratorsContainer,
+        meta_use_cases=CoreOrchestratorsContainer.use_cases.meta_connection,
+        delivery_use_cases=CoreOrchestratorsContainer.use_cases.deliveries,
     )
     calendars: CalendarSyncOrchestratorsContainer = Container(  # type: ignore[assignment]
         CalendarSyncOrchestratorsContainer,

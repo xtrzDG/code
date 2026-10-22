@@ -46,6 +46,7 @@ class AppContainer(AppEdgesContainer):
         calendar_sync_collections=AppEdgesContainer.adapters.calendar_sync_collections,
         integration_collections=AppEdgesContainer.integration_collections,
         brand_collections=AppEdgesContainer.brand_collections,
+        meta_collections=AppEdgesContainer.meta_collections,
         legal_collections=AppEdgesContainer.legal_collections,
         privacy_collections=AppEdgesContainer.privacy_collections,
         retention_collections=AppEdgesContainer.adapters.collections,

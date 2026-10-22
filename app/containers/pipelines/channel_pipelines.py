@@ -10,6 +10,9 @@ from app.containers.pipelines.conversation_pipelines import (
 from app.containers.provider_chains import orchestrator_pipeline
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
+from app.containers.use_cases.meta_connection_use_cases import (
+    MetaConnectionUseCasesContainer,
+)
 from app.containers.use_cases.reply_speed_use_cases import (
     ReplySpeedUseCasesContainer,
 )
@@ -22,6 +25,9 @@ from app.orchestrators.channels.inbox.inbound_burst_answers import (
 )
 from app.orchestrators.channels.inbox.process_inbound_message_orchestrator import (
     ProcessInboundMessageOrchestrator,
+)
+from app.orchestrators.channels.meta_webhook_orchestrator import (
+    MetaWebhookOrchestrator,
 )
 from app.orchestrators.channels.widget_message_orchestrator import (
     WidgetMessageOrchestrator,
@@ -47,6 +53,7 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     reply_speed_use_cases: ReplySpeedUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_pipelines: ConversationPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
+    meta_use_cases: MetaConnectionUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Messaging webhooks and the website widget: webhooks store their
     # messages in the inbox; the worker answers them through the pipeline.
@@ -58,12 +65,14 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
         acknowledge_webhook=channel_use_cases.acknowledge_telegram_taps_use_case,
     )
+    # Meta's messages, then Instagram comments that ask for a private reply.
     meta_webhook_orchestrator: Factory[
         OrchestratorContract[MetaWebhookRequest, ChannelWebhookOutcome]
     ] = Factory(
-        ChannelWebhookOrchestrator[MetaWebhookRequest],
+        MetaWebhookOrchestrator,
         receive_webhook=channel_use_cases.receive_meta_webhook_use_case,
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
+        accept_comments=meta_use_cases.accept_instagram_comments_use_case,
     )
     widget_message_orchestrator: Factory[
         OrchestratorContract[WidgetMessageCommand, WidgetMessageAcceptedView]

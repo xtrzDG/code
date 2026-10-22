@@ -37,6 +37,7 @@ from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.legal_operators import LegalOperatorsContainer
 from app.containers.operators.memory_operators import MemoryOperatorsContainer
+from app.containers.operators.meta_connection_operators import MetaOperatorsContainer
 from app.containers.operators.notification_operators import (
     NotificationOperatorsContainer,
 )
@@ -153,6 +154,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     channels: ChannelOperatorsContainer = Container(  # type: ignore[assignment]
         ChannelOperatorsContainer,
         channel_pipelines=pipelines.channels,
+        utilities=utilities,
+    )
+    meta_connection: MetaOperatorsContainer = Container(  # type: ignore[assignment]
+        MetaOperatorsContainer,
+        meta_pipelines=pipelines.meta_connection,
         utilities=utilities,
     )
     billing: BillingOperatorsContainer = Container(  # type: ignore[assignment]

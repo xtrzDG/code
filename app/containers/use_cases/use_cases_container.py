@@ -16,6 +16,9 @@ from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContaine
 from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
+from app.containers.use_cases.meta_connection_use_cases import (
+    MetaConnectionUseCasesContainer,
+)
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -96,6 +99,19 @@ class UseCasesContainer(BusinessUseCasesContainer):
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         platform_use_cases=platform,
+    )
+    # Meta's self-serve connection and Instagram comment-to-DM (1212).
+    meta_connection: MetaConnectionUseCasesContainer = Container(  # type: ignore[assignment]
+        MetaConnectionUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
     )
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]
         SharingUseCasesContainer,

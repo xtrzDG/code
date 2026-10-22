@@ -46,4 +46,5 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
         meta_client=clients.meta_graph_client,
         app_settings=config.app_settings,
         typing_client=clients.meta_typing_client,
+        private_reply_client=clients.meta_private_reply_client,
     )
