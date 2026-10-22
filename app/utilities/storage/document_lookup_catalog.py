@@ -217,11 +217,14 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The inbox by arrival (the purge) and by status and arrival (the
     # sweeper of stale events, 1094).
     # A customer's events by their account and conversations (erasure, 1113).
+    # The voice platform's reports among them by arrival (`channel`, 1020's
+    # generated column, filtered on the arrival index: voice_health).
     DocumentCollectionName("inbound_events"): (
         integer_field("created_at"),
         text_field("status"),
         text_field("customer_channel_user_id"),
         text_field("conversation_id"),
+        filter_field("channel"),
     ),
     DocumentCollectionName("outbound_messages"): (
         text_field("recipient_key"),

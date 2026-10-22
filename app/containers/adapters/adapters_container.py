@@ -131,10 +131,6 @@ class AdaptersContainer(containers.DeclarativeContainer):
         CalendarSyncCollectionsContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,
     )  # fmt: skip
-    calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
-        CallAdaptersContainer, clients=clients, config=config,
-        time_provider=time_provider, utilities=utilities,
-    )  # fmt: skip
 
     # Readiness, storage transactions and the job queue's wake-ups.
     processes: ProcessAdaptersContainer = Container(  # type: ignore[assignment]
@@ -159,6 +155,11 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_rate_limit_bucket_adapter,
         connection_pool=clients.postgres_pool,
     )
+    calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
+        CallAdaptersContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+        rate_limit_buckets=rate_limit_buckets,
+    )  # fmt: skip
 
     # --- The cabinet's live updates between processes: Postgres
     # NOTIFY/LISTEN with DATABASE_URL, else in this process.
@@ -181,6 +182,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         clients=clients,
         config=config,
         time_provider=time_provider,
+        elevenlabs_client=calls.elevenlabs_client,
     )
     own_recording_storage = files.own_recording_storage
     platform_recording_storage = files.platform_recording_storage

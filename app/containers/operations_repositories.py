@@ -30,6 +30,7 @@ from app.repositories.service_level_repositories import (
     ServiceLevelSourceRepository,
 )
 from app.repositories.system_health_repository import SystemHealthRepository
+from app.repositories.voice_activity_repository import VoiceActivityRepository
 
 
 class OperationsRepositoriesContainer(containers.DeclarativeContainer):
@@ -56,6 +57,11 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
         handoff_collection=health_collections.handoff_collection,
         outbound_collection=health_collections.outbound_message_collection,
         message_collection=health_collections.message_collection,
+    )
+    # The voice platform's finished-call reports (voice_health).
+    voice_activity_repo: Singleton[VoiceActivityRepository] = Singleton(
+        VoiceActivityRepository,
+        inbound_event_collection=health_collections.inbound_event_collection,
     )
     platform_alert_state_repo: Singleton[PlatformAlertStateRepository] = Singleton(
         PlatformAlertStateRepository,

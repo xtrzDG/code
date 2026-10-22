@@ -93,6 +93,7 @@ figure is above its threshold:
 | `tenant_hopping` | one platform admin entered or changed over 10 clients' accounts in the last hour | SEV2 | [audit-anomaly](runbooks/audit-anomaly.md) |
 | `failed_sign_in_checks` | over 50 wrong sign-in or second-factor codes in the last hour for one destination | SEV2 | [audit-anomaly](runbooks/audit-anomaly.md) |
 | `audit_chain_broken` | the daily check found an audit log hash chain changed, cut or with an entry put in | SEV1 | [audit-chain-broken](runbooks/audit-chain-broken.md) |
+| `voice_health` | over 2 ElevenLabs API calls failed in the last 15-30 minutes, or no finished-call report in the last 3 hours while each of the 7 days before had at least 3 in those hours | SEV2 | [voice-outage](runbooks/voice-outage.md) |
 
 **Burn rates.** The four budget alerts are multi-window burn-rate rules
 on the `service_level_slots` rows. A burn rate of 14.4 for an hour spends

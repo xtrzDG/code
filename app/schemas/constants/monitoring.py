@@ -31,7 +31,9 @@ class PlatformAlertCode(StrEnum):
     than 50 wrong sign-in codes in an hour for one destination (a phone, an
     e-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the
     daily check found an audit hash chain broken (an entry changed,
-    removed or put in).
+    removed or put in). VOICE_HEALTH: calls of the voice platform's API
+    fail, or its finished-call reports stopped while the 7 days before
+    expect calls at this time of day.
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -55,6 +57,7 @@ class PlatformAlertCode(StrEnum):
     TENANT_HOPPING = "tenant_hopping"
     FAILED_SIGN_IN_CHECKS = "failed_sign_in_checks"
     AUDIT_CHAIN_BROKEN = "audit_chain_broken"
+    VOICE_HEALTH = "voice_health"
 
 
 class PlatformAlertStatus(StrEnum):
@@ -80,13 +83,16 @@ class AlertUnit(StrEnum):
 class PlatformSignal(StrEnum):
     """
     Events every process counts in shared windows for the platform alerts:
-    model calls, the failed ones among them, and login codes a platform cap
-    refused.
+    model calls, the failed ones among them, login codes a platform cap
+    refused, and calls of the voice platform's API (ElevenLabs) with the
+    failed ones among them.
     """
 
     LLM_CALL = "llm_call"
     LLM_ERROR = "llm_error"
     OTP_CAP_TRIP = "otp_cap_trip"
+    VOICE_API_CALL = "voice_api_call"
+    VOICE_API_ERROR = "voice_api_error"
 
 
 class MaintenanceRunKind(StrEnum):

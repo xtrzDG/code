@@ -10,7 +10,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [llm-outage](llm-outage.md) | `llm_errors` | SEV1 |
 | [meta-outage](meta-outage.md) | `outbound_failures`, channels in ERROR | SEV2 |
 | [telegram-outage](telegram-outage.md) | `outbound_failures` | SEV2 |
-| [voice-outage](voice-outage.md) | Sentry, owners (calls not answered) | SEV2 |
+| [voice-outage](voice-outage.md) | `voice_health`, Sentry, owners (calls not answered) | SEV2 |
 | [worker-down](worker-down.md) | `worker_down`, `inbound_backlog` (the API's watchdog), `GET /healthz/pipeline` 503 | SEV1 |
 | [stuck-worker](stuck-worker.md) | `dead_jobs`, `inbound_backlog`, `stale_worker`, Sentry Crons | SEV1-SEV2 |
 | [database-failover](database-failover.md) | `GET /readyz` 503 (uptime monitor), `worker_down` | SEV1 |

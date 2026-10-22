@@ -1,7 +1,7 @@
 """Files the platform keeps: call recordings and full business exports."""
 
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import DependenciesContainer, Dependency, Singleton
 
 from app.adapters.exports.export_archive_storage_factory import (
     build_export_archive_storage,
@@ -32,6 +32,8 @@ class FileStorageAdaptersContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The ElevenLabsApiClientContract, counted for the alerts (call adapters).
+    elevenlabs_client: Dependency[object] = Dependency()
 
     # Recordings the platform keeps itself: EU object storage encrypted per
     # business (RECORDINGS_STORAGE=s3), files of this server in development.
@@ -45,7 +47,7 @@ class FileStorageAdaptersContainer(containers.DeclarativeContainer):
     platform_recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = (
         Singleton(
             ElevenLabsRecordingStorageAdapter,
-            elevenlabs_client=clients.elevenlabs_client,
+            elevenlabs_client=elevenlabs_client,
             fallback=own_recording_storage,
         )
     )
