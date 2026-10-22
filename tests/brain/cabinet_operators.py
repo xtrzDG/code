@@ -273,6 +273,7 @@ def build_cabinet_operators(
                     ConfirmImportedItemsUseCase(
                         authorize_business_access=world.authorize,
                         knowledge_item_repo=world.knowledge_item_repo,
+                        job_queue=storage.outbox.job_queue,
                         wall_clock=world.clock.wall_clock(),
                     )
                 )

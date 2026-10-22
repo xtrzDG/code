@@ -1,6 +1,18 @@
 """In-memory wiring of the knowledge slice for tests (no network, fixed clock)."""
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
+from app.adapters.storage.in_memory_document_collection import (
+    InMemoryDocumentCollectionAdapter,
+)
+from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
+from app.repositories.billing_repositories import UsageEventRepository
+from app.schemas.domain.billing import UsageEventDocument
+from app.use_cases.knowledge.aliases.suggest_knowledge_aliases_use_case import (
+    SuggestKnowledgeAliasesUseCase,
+)
 from app.use_cases.knowledge.create_knowledge_item_use_case import (
     CreateKnowledgeItemUseCase,
 )
@@ -45,11 +57,16 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
     ListScheduleExceptionsUseCase,
 )
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
+from app.use_cases.spend_guard.admit_owner_action_use_case import (
+    AdmitOwnerActionUseCase,
+)
+from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
+from tests.knowledge.cross_language.fakes import PhraseBookAliasSuggester
 from tests.knowledge.knowledge_store import KnowledgeStore
 
 
@@ -151,6 +168,23 @@ class KnowledgeHarness(KnowledgeStore):
             knowledge_item_repo=self.knowledge_item_repo,
             resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
+            wall_clock=self.wall_clock,
+        )
+        self.alias_suggester = PhraseBookAliasSuggester()
+        self.usage_event_repo = UsageEventRepository(
+            InMemoryDocumentCollectionAdapter[UsageEventDocument](UsageEventDocument)
+        )
+        self.suggest_knowledge_aliases = SuggestKnowledgeAliasesUseCase(
+            business_repo=self.business_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
+            usage_event_repo=self.usage_event_repo,
+            alias_suggester=self.alias_suggester,
+            language_detector=LanguageDetector(),
+            admit_owner_action=AdmitOwnerActionUseCase(
+                RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
+                self.wall_clock,
+            ),
             wall_clock=self.wall_clock,
         )
         self.search_knowledge = SearchKnowledgeUseCase(

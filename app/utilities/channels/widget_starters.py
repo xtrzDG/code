@@ -2,10 +2,13 @@
 Starter questions of the website chat: one-tap chips before the visitor
 writes, taken from the business's FAQ in the owner's order (the first
 questions are the ones the owner put first), at most three per language.
-A customer language the FAQ has no question in gets the niche's own
-frequent questions that any business of the niche can answer (the
-starter registry's ready answers, in English, Russian and Georgian), so
-a visitor sees chips in their own language, not in the owner's.
+A question is offered in the language it is written in and, through the
+aliases the owner approved, in the business's other languages (a Georgian
+visitor taps the Georgian alias of a Russian question). A customer
+language still without a chip gets the niche's own frequent questions
+that any business of the niche can answer (the starter registry's ready
+answers, in English, Russian and Georgian), so a visitor sees chips in
+their own language, not in the owner's.
 """
 
 from collections.abc import Sequence
@@ -17,6 +20,8 @@ from app.schemas.dto.channels.widget import WidgetStarterQuestionView
 from app.schemas.dto.setup.starter_catalog import StarterFaqDefinition
 from app.schemas.typings.channels.strings import WidgetStarterQuestionText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.knowledge.aliases.alias_rules import approved_aliases_in
+from app.utilities.knowledge.aliases.alias_targets import item_languages
 
 STARTER_QUESTIONS_PER_LANGUAGE: int = 3
 # A chip holds a short question; a longer title is an answer, not a chip.
@@ -45,31 +50,47 @@ def build_starter_questions(
     Up to three questions per customer language, in the owner's order. A
     question is in the languages its FAQ item names; one that names none
     is in the language it is written in (detected among the business's
-    languages, the default language when unsure).
+    languages, the default language when unsure). In each other language
+    of the business it is the first alias the owner approved there, if
+    any (a suggestion nobody reviewed is never offered).
     """
 
     candidates: list[LanguageTag] = list(languages)
-    counts: dict[str, int] = {}
     starters: list[WidgetStarterQuestionView] = []
+    counts: dict[str, int] = {}
+
+    def offer(language: LanguageTag, text: str) -> None:
+        if counts.get(str(language), 0) >= STARTER_QUESTIONS_PER_LANGUAGE:
+            return
+
+        counts[str(language)] = counts.get(str(language), 0) + 1
+        starters.append(
+            WidgetStarterQuestionView(
+                language=language, text=WidgetStarterQuestionText(text)
+            )
+        )
+
     for item in items:
         if not is_starter_candidate(item):
             continue
 
-        question: str = str(item.title).strip()
-        item_languages: list[LanguageTag] = [
-            language for language in item.languages if language in candidates
-        ] or [language_detector.detect(question, candidates, default_language)]
-        for language in item_languages:
-            if counts.get(str(language), 0) >= STARTER_QUESTIONS_PER_LANGUAGE:
+        own: list[LanguageTag] = item_languages(
+            item, candidates, default_language, language_detector
+        )
+        for language in own:
+            offer(language, str(item.title).strip())
+
+        for language in candidates:
+            if language in own:
                 continue
 
-            counts[str(language)] = counts.get(str(language), 0) + 1
-            starters.append(
-                WidgetStarterQuestionView(
-                    language=language,
-                    text=WidgetStarterQuestionText(question),
-                )
-            )
+            alias_texts: list[str] = [
+                str(alias.text).strip()
+                for alias in approved_aliases_in(item, language)
+                if len(str(alias.text).strip()) <= MAX_STARTER_QUESTION_LENGTH
+            ]
+            if alias_texts:
+                offer(language, alias_texts[0])
 
     return starters
 

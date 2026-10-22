@@ -49,9 +49,7 @@ def build_instructions(fence_key: str) -> str:
     )
 
 
-def build_titles_message(
-    items: Sequence[AliasSuggestionItem], fence_key: str
-) -> str:
+def build_titles_message(items: Sequence[AliasSuggestionItem], fence_key: str) -> str:
     """The user turn: the numbered items as JSON inside the fence."""
 
     payload: str = json.dumps(

@@ -154,6 +154,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             update_knowledge_item_operator=knowledge.update_knowledge_item_operator(),
             delete_knowledge_item_operator=knowledge.delete_knowledge_item_operator(),
             search_knowledge_operator=knowledge.search_knowledge_operator(),
+            suggest_aliases_operator=knowledge.suggest_knowledge_aliases_operator(),
         ),
         build_menu_import_router(
             import_menu_operator=knowledge.import_menu_operator(),

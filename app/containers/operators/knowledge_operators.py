@@ -59,6 +59,13 @@ class KnowledgeOperatorsContainer(containers.DeclarativeContainer):
     search_knowledge_operator = pipeline_operator(
         knowledge_pipelines.search_knowledge_pipeline, storage_scope
     )
+    suggest_knowledge_aliases_operator = pipeline_operator(
+        knowledge_pipelines.suggest_knowledge_aliases_pipeline, storage_scope
+    )
+    # The worker's job of one business (INDEX_KNOWLEDGE_JOB).
+    index_knowledge_operator = pipeline_operator(
+        knowledge_pipelines.index_knowledge_pipeline, storage_scope
+    )
 
     # --- Resources and schedule exceptions.
     list_resources_operator = pipeline_operator(

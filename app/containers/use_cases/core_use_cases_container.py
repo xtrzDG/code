@@ -45,12 +45,9 @@ from app.containers.utilities import UtilitiesContainer
 class CoreUseCasesContainer(containers.DeclarativeContainer):
     """
     The edges every use case context draws on and the contexts the others
-    build on: accounts (and their two-factor sign-in), the catalog,
-    compliance, invoicing, knowledge, menu import, scheduling, bookings, the
-    team inbox, follow-ups, exports and reply speed. `UseCasesContainer` extends it
-    with the contexts that depend on these and reads them as
-    `CoreUseCasesContainer.<name>`; one instance copies all of them
-    together, so the overridden edges reach every context.
+    build on (accounts, catalog, knowledge, scheduling, bookings, ...).
+    `UseCasesContainer` extends it with the contexts that depend on these,
+    as `CoreUseCasesContainer.<name>`; overridden edges reach every context.
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -144,6 +141,9 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     )
     knowledge: KnowledgeUseCasesContainer = Container(  # type: ignore[assignment]
         KnowledgeUseCasesContainer,
+        adapters=adapters,
+        clients=clients,
+        config=config,
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,

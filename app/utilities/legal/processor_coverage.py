@@ -28,6 +28,9 @@ PROVIDER_CLIENT_MODULES: dict[LlmProvider, ClientModuleName] = {
 # Voice notes are transcribed by OpenAI's speech-to-text on every
 # deployment with a real model (LLM_TRANSCRIBE_MODEL).
 TRANSCRIPTION_CLIENT_MODULE: ClientModuleName = ClientModuleName("openai")
+# The knowledge search's embeddings: OpenAI's EU endpoint, only with
+# EMBEDDINGS_API_KEY.
+EMBEDDINGS_CLIENT_MODULE: ClientModuleName = ClientModuleName("openai")
 
 
 def quality_judge_model_id(settings: AppSettings) -> LlmModelId:
@@ -80,6 +83,9 @@ def configured_client_module(
             return None
 
         return model_client_module(quality_judge_model_id(settings))
+
+    if flow is ProcessorFlow.KNOWLEDGE_EMBEDDINGS:
+        return None if settings.embeddings.api_key is None else EMBEDDINGS_CLIENT_MODULE
 
     if settings.llm_provider is LlmProvider.SCRIPTED:
         return None

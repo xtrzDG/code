@@ -28,8 +28,9 @@ class ProcessorFlow(StrEnum):
     processor use, `app/registries/legal/processor_use_catalog.py`): the
     assistant's replies, the check of their claims, conversation summaries,
     the judge of automatic checks, the nightly quality sample of real
-    conversations and the transcription of voice notes. A sub-processor
-    entry lists the flows its purpose covers.
+    conversations, the transcription of voice notes and the embeddings of
+    the knowledge search (the model's search queries and the business's
+    knowledge). A sub-processor entry lists the flows its purpose covers.
     """
 
     ASSISTANT_REPLIES = "assistant_replies"
@@ -38,6 +39,7 @@ class ProcessorFlow(StrEnum):
     AUTOTEST_JUDGE = "autotest_judge"
     QUALITY_SAMPLING = "quality_sampling"
     TRANSCRIPTION = "transcription"
+    KNOWLEDGE_EMBEDDINGS = "knowledge_embeddings"
 
 
 class ProcessorDataCategory(StrEnum):

@@ -29,6 +29,7 @@ SUBPROCESSOR_NOTICE_DAYS: SubprocessorNoticeDays = SubprocessorNoticeDays(30)
 # The order of the DPA's table.
 TABLE_ORDER: tuple[str, ...] = (
     "openai",
+    "openai_knowledge_search",
     "elevenlabs",
     "zadarma",
     "meta",
