@@ -144,8 +144,9 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           <SupportBanner />
           {/* A new data processing agreement to accept (owners). */}
           {isConversationPath(pathname) ? null : <DpaBanner />}
-          {/* After go-live: the owner's reminder to turn on a second factor. */}
-          {isConversationPath(pathname) ? null : <SecurityNudgeBanner />}
+          {/* After go-live: the owner's reminder to turn on a second factor. Not over the inbox, a work
+              surface: on a phone the list under it would jump up as a conversation opens. */}
+          {page === "inbox" ? null : <SecurityNudgeBanner />}
           {isConversationPath(pathname) ? null : <CoachMarkSlot page={page} />}
           {children}
           <MilestoneCelebrations />

@@ -1882,4 +1882,10 @@ Its motion and 3D hero: see [Motion](#motion).
   `passkey_clone_suspected` and marked in the list. `e2e/passkeys.spec.ts`
   uses Chromium's virtual authenticator over CDP
   (`e2e/support/webauthn.ts`), rewinding its counter to play the copy.
+- The second-factor reminder (`components/shell/SecurityNudgeBanner.tsx`):
+  over an owner's cabinet once the business is live and the owner has no
+  second factor; "Not now" puts it away until the team grows past one
+  person (the API decides, `GET …/security-nudge`). It is not shown over
+  the Inbox: on a phone the list would jump up under it as a conversation
+  opens (the motion-budget spec counts that as a layout shift).
 - After sign-in the cabinet only redirects to same-site paths (`safeNextPath`).
