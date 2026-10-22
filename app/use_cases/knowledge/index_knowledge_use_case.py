@@ -111,6 +111,14 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
                 self._knowledge_item_repo, self._brand_knowledge_item_repo, business
             ),
         )
+        LOGGER.info(
+            "Knowledge index of business %s: %d items named, %d embedded, "
+            "%d vectors forgotten.",
+            business.id,
+            named,
+            refreshed.embedded_count,
+            refreshed.forgotten_count,
+        )
         if alias_failure is not None and not input_data.is_final_attempt:
             raise alias_failure
 
