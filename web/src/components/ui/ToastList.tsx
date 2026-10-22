@@ -12,6 +12,7 @@ import { AnimatePresence, LazyMotion, MotionConfig } from "motion/react";
 import * as m from "motion/react-m";
 import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 
+import { useNonce } from "@/components/csp/NonceProvider";
 import { useMotionPreference } from "@/components/motion/MotionPreference";
 import domMax from "@/components/motion/motionFeatures";
 import { cn } from "@/lib/cn";
@@ -143,13 +144,15 @@ function ToastList({ items, onDismiss, closeLabel }: ToastListProps) {
   // and back (a remount), the toasts on screen stay where they are.
   const [risesIn] = useState(() => !hasMounted);
   const { preference } = useMotionPreference();
+  // "popLayout" holds a leaving toast in place with a <style> element: it needs the page's nonce.
+  const nonce = useNonce();
   useEffect(() => {
     hasMounted = true;
   }, []);
   return (
     // Its own animation features and reduced-motion rule: the public site loads no other motion (MotionProvider).
     <LazyMotion features={domMax}>
-      <MotionConfig reducedMotion={preference === "reduce" ? "always" : "user"}>
+      <MotionConfig reducedMotion={preference === "reduce" ? "always" : "user"} nonce={nonce}>
         <AnimatePresence initial={risesIn} mode="popLayout">
           {items.map((item) => (
             <ToastCard key={item.id} item={item} onDismiss={onDismiss} closeLabel={closeLabel} />
