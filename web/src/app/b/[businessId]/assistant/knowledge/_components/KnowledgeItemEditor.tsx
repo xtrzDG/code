@@ -27,12 +27,15 @@ import {
   type KnowledgeItemCreateBody,
   type KnowledgeItemPatchBody,
 } from "@/lib/knowledge/form";
+import { aliasesInLanguages, aliasLanguages } from "@/lib/knowledge/aliases";
 import { kindHasPrice } from "@/lib/knowledge/kinds";
 import { isBookableKind } from "@/lib/offers";
 
+import { AliasChips } from "./AliasChips";
 import { KIND_LABELS } from "./hooks";
 import { OfferFields } from "./OfferFields";
 import { PriceFields } from "./PriceFields";
+import { useAliasSuggestions } from "./useAliasSuggestions";
 
 /** What the editor opens with: a new item of a kind, or an existing item. */
 export type KnowledgeEditorTarget =
@@ -74,9 +77,11 @@ export function KnowledgeItemEditor({
   const currency = format.currency;
   const formId = useId();
 
-  const [initial] = useState<KnowledgeForm>(() =>
-    target.mode === "create" ? emptyKnowledgeForm(target.kind) : knowledgeFormFromItem(target.item, currency),
-  );
+  // Names in a language the business no longer uses are left out (the API refuses them).
+  const [initial, setInitial] = useState<KnowledgeForm>(() => {
+    const opened = target.mode === "create" ? emptyKnowledgeForm(target.kind) : knowledgeFormFromItem(target.item, currency);
+    return { ...opened, aliases: aliasesInLanguages(opened.aliases, business.languages) };
+  });
   const [form, setForm] = useState<KnowledgeForm>(initial);
   const [errors, setErrors] = useState<KnowledgeFormErrors>({});
 
@@ -102,6 +107,16 @@ export function KnowledgeItemEditor({
       }),
     settled,
   );
+
+  const suggestAliases = useAliasSuggestions({
+    itemId: target.mode === "edit" ? target.id : null,
+    titleChanged: form.title.trim() !== initial.title.trim(),
+    current: form.aliases,
+    onStored: (stored, merged) => {
+      setInitial((current) => ({ ...current, aliases: stored }));
+      setForm((current) => ({ ...current, aliases: merged }));
+    },
+  });
 
   const change = (patch: Partial<KnowledgeForm>) => {
     setForm((current) => ({ ...current, ...patch }));
@@ -240,6 +255,14 @@ export function KnowledgeItemEditor({
               ))}
             </div>
           </Fieldset>
+        ) : null}
+        {business.languages.length > 1 || form.aliases.length > 0 ? (
+          <AliasChips
+            languages={aliasLanguages(business.languages, form.languages, form.aliases)}
+            rows={form.aliases}
+            onChange={(aliases) => change({ aliases })}
+            suggest={suggestAliases}
+          />
         ) : null}
         {showActiveToggle ? (
           <div className="sm:col-span-6">

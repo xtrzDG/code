@@ -18,6 +18,7 @@ import {
   moneyInputProblem,
   parseDecimalInput,
 } from "../format";
+import { aliasRowsFrom, sameAliases, type AliasRow } from "./aliases";
 import { kindHasPrice } from "./kinds";
 import {
   offerCreateFields,
@@ -52,6 +53,8 @@ export interface KnowledgeForm {
   performerIds: string[];
   seasons: SeasonRow[];
   languages: string[];
+  /** The item's names in the business's other languages (see aliases.ts). */
+  aliases: AliasRow[];
   isActive: boolean;
 }
 
@@ -68,13 +71,16 @@ export function emptyKnowledgeForm(kind: KnowledgeItemKind): KnowledgeForm {
     performerIds: [],
     seasons: [],
     languages: [],
+    aliases: [],
     isActive: true,
   };
 }
 
 /** What the editor opens with for a stored item (the offer fields may be missing on older callers). */
 export type KnowledgeFormSource = Pick<KnowledgeItemDetails, "kind" | "title" | "body" | "price_minor" | "duration_minutes"> &
-  Partial<Pick<KnowledgeItemDetails, "languages" | "is_active" | "buffer_minutes" | "performer_resource_ids" | "seasonal_rates">>;
+  Partial<
+    Pick<KnowledgeItemDetails, "languages" | "aliases" | "is_active" | "buffer_minutes" | "performer_resource_ids" | "seasonal_rates">
+  >;
 
 export function knowledgeFormFromItem(item: KnowledgeFormSource, currency: string): KnowledgeForm {
   return {
@@ -88,6 +94,7 @@ export function knowledgeFormFromItem(item: KnowledgeFormSource, currency: strin
     duration: item.duration_minutes ? String(item.duration_minutes) : "",
     ...offerFormFromItem(item, currency),
     languages: [...(item.languages ?? [])],
+    aliases: aliasRowsFrom(item.aliases),
     isActive: item.is_active ?? true,
   };
 }
@@ -148,6 +155,7 @@ export function knowledgeCreateBody(form: KnowledgeForm, currency: string): Know
     duration_minutes: durationMinutes(form),
     ...offerCreateFields(form, currency),
     languages: form.languages,
+    aliases: form.aliases,
     is_active: form.isActive,
   };
 }
@@ -182,6 +190,9 @@ export function knowledgePatchBody(form: KnowledgeForm, initial: KnowledgeForm, 
   Object.assign(patch, offerPatchFields(form, initial, currency));
   if (!sameLanguages(form.languages, initial.languages)) {
     patch.languages = form.languages;
+  }
+  if (!sameAliases(form.aliases, initial.aliases)) {
+    patch.aliases = form.aliases;
   }
   if (form.isActive !== initial.isActive) {
     patch.is_active = form.isActive;
