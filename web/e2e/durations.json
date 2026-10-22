@@ -44,6 +44,7 @@
   "language.spec.ts": 8.6,
   "legal-consent.spec.ts": 4.3,
   "live.spec.ts": 4.1,
+  "meta-connect.spec.ts": 26.5,
   "motion-budget.spec.ts": 119.0,
   "navigation.spec.ts": 46.3,
   "notifications.spec.ts": 9,
