@@ -76,6 +76,9 @@ class UsageKind(StrEnum):
     WHATSAPP_TEMPLATE = "whatsapp_template"
     TRANSFER_SECONDS = "transfer_seconds"
     TRANSCRIPTION_SECONDS = "transcription_seconds"
+    # A month of a number the platform rents for the business (W21); written
+    # once the release gate `phone_number_rental` opens.
+    NUMBER_RENTAL = "number_rental"
 
 
 class InvoiceKind(StrEnum):
@@ -84,6 +87,9 @@ class InvoiceKind(StrEnum):
     SERVICE_PERIOD = "service_period"
     SETUP_FEE = "setup_fee"
     USAGE_OVERAGE = "usage_overage"
+    # A month of a rented phone number (W21), behind the release gate
+    # `phone_number_rental` like its usage kind.
+    NUMBER_RENTAL = "number_rental"
 
 
 class PackageMetric(StrEnum):

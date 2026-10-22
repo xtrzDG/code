@@ -145,9 +145,13 @@ class InvoiceDocument(BaseDocument):
     (`credit_minor`), so `subtotal_minor` is the price minus both; and a
     payment a platform admin recorded by hand (`manual_payment`: a bank
     transfer or cash, with its reference).
+
+    Version 4 (W21): the kind `number_rental`, a month of a phone number the
+    platform rents for the business; written once the release gate
+    `phone_number_rental` opens. Nothing else changed: no upcaster.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: InvoiceId = Field(default_factory=InvoiceId)
     business_id: BusinessId
     subscription_id: SubscriptionId | None = None
@@ -180,9 +184,12 @@ class UsageEventDocument(BaseDocument):
     Metered usage with provider cost (concept table `usage_events`).
 
     Version 2: the kind `transcription_seconds` (voice notes transcribed).
+    Version 3 (W21): the kind `number_rental`, one month of a rented phone
+    number (quantity 1, the carrier's monthly price as the cost); written
+    once the release gate `phone_number_rental` opens.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: UsageEventId = Field(default_factory=UsageEventId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None

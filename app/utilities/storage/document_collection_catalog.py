@@ -80,6 +80,7 @@ from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
 from app.utilities.storage.media_collections import MEDIA_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
+from app.utilities.storage.phone_number_collections import PHONE_NUMBER_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.quality_collections import QUALITY_COLLECTIONS
 from app.utilities.storage.referral_collections import REFERRAL_COLLECTIONS
@@ -278,6 +279,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *GROWTH_COLLECTIONS,  # The waitlist and rebooking campaigns (1151).
     *IDEMPOTENCY_COLLECTIONS,  # Idempotency keys of creating requests (1174).
     *INTEGRATION_COLLECTIONS,  # Webhooks and API keys (1181).
+    *PHONE_NUMBER_COLLECTIONS,  # Rented phone numbers and requests (1213).
     *AUDIT_CHAIN_COLLECTIONS,  # View counts, chain checkpoints, checks (1193).
     *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
     *DEPOSIT_COLLECTIONS,  # Deposits and prepayment links (1190).

@@ -36,6 +36,7 @@ SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
 BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
 PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
+PHONE_NUMBER_RENTAL_GATE: ReleaseGateName = ReleaseGateName("phone_number_rental")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -98,6 +99,24 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("send_payment_link")],
+        is_open=False,
+    ),
+    # Rented phone numbers (W21, migration 1213): a rental month is a usage
+    # event and an invoice of the kind `number_rental`; the rental job bills
+    # no month until the next release opens these gates, then catches up
+    # from each number's `billed_until`.
+    ReleaseGate(
+        name=PHONE_NUMBER_RENTAL_GATE,
+        collection_name=DocumentCollectionName("usage_events"),
+        path=StoredEnumPath("kind"),
+        values=[GatedEnumValue("number_rental")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=PHONE_NUMBER_RENTAL_GATE,
+        collection_name=DocumentCollectionName("invoices"),
+        path=StoredEnumPath("kind"),
+        values=[GatedEnumValue("number_rental")],
         is_open=False,
     ),
 )

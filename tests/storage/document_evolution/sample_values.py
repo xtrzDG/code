@@ -14,6 +14,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "DepositReference": "DK7Q3M9X",
     "PaymentLinkAddress": "https://pay.example.com/deposit?sum={amount}&ref={reference}",
     "CampaignMonthKey": "2026-10",
+    "PhoneNumberCityQuery": "Austin",
     "BookingSystemResourceId": "1203845",
     "CalendarFeedHost": "www.airbnb.com",
     "IcalExportTokenHash": "ab" * 32,

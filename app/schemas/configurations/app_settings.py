@@ -4,6 +4,7 @@ from pydantic import Field
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
+from app.schemas.configurations.phone_number_settings import PhoneNumberSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.public_api_settings import PublicApiSettings
@@ -228,8 +229,7 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     is_llm_raw_text_traced: IsLlmRawTextTraced = False
     cors_allowed_origins: list[PublicBaseUrl]
-    # Request threads (THREADPOOL_SIZE) and Postgres connections of one
-    # process (DB_POOL_SIZE; a thread waiting for the model holds none).
+    # Request threads (THREADPOOL_SIZE), a process's DB connections (DB_POOL_SIZE).
     threadpool_size: ThreadPoolSize = ThreadPoolSize(64)
     db_pool_size: DatabasePoolSize = DatabasePoolSize(32)
     # Idle connections close after DB_POOL_MAX_IDLE_SECONDS down to
@@ -249,8 +249,7 @@ class AppSettings(ImmutableDTO):
     # The API runs the background worker in a thread of its own process
     # (EMBEDDED_WORKER; see `read_embedded_worker`).
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)
-    # Development only: the API fills an empty instance with demo businesses
-    # at startup (SEED_DEMO_DATA; refused in production).
+    # Development only: demo businesses at startup (SEED_DEMO_DATA, not production).
     is_demo_data_seeding_enabled: IsDemoDataSeedingEnabled = IsDemoDataSeedingEnabled(
         False
     )
@@ -298,3 +297,4 @@ class AppSettings(ImmutableDTO):
     growth: GrowthSettings = Field(default_factory=GrowthSettings)
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
     public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)
+    phone_numbers: PhoneNumberSettings = Field(default_factory=PhoneNumberSettings)
