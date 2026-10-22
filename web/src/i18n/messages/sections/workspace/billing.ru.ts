@@ -126,6 +126,7 @@ export const billingRu: Translation<typeof billingEn> = {
       service_period: "Обслуживание",
       setup_fee: "Подключение",
       usage_overage: "Сверх пакета",
+      number_rental: "Аренда номера телефона",
     },
     status: {
       issued: "Не оплачен",

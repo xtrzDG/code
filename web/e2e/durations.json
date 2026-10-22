@@ -50,6 +50,7 @@
   "one-truth.spec.ts": 2.8,
   "phone-layout.spec.ts": 8.8,
   "phone-loop.spec.ts": 3.7,
+  "phone-numbers.spec.ts": 12,
   "profile-edit.spec.ts": 24.9,
   "profile-sections.spec.ts": 38,
   "pseudo-locale-ltr.spec.ts": 87.3,

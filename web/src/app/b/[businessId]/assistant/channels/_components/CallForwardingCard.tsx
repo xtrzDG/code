@@ -4,7 +4,7 @@ import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
-import { useBusiness } from "@/components/business/BusinessContext";
+import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
 import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
@@ -12,6 +12,7 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
 import { dialHref, sortForwardingCodes, type CallForwardingCondition } from "../_lib/channels";
+import { usePhoneLine } from "../_lib/usePhoneLine";
 
 const CONDITION_LABELS: Record<CallForwardingCondition, MessageKey> = {
   no_answer: "channels.forwarding.condition.no_answer",
@@ -33,6 +34,9 @@ export function CallForwardingCard() {
     }),
   );
   const data = instructions.data;
+  // A number rented from us: the forwarding target is that number, billed monthly.
+  const rented = usePhoneLine(business.id).data?.rented_number;
+  const { money } = useBusinessFormat();
 
   return (
     <Card title={t("channels.forwarding.title")} description={t("channels.forwarding.description")}>
@@ -52,6 +56,14 @@ export function CallForwardingCard() {
                 <p className="text-lg font-semibold tracking-wide text-ink" dir="ltr">
                   {data.assistant_phone_number_display}
                 </p>
+                {rented && rented.phone_number === data.assistant_phone_number ? (
+                  <p className="text-xs text-ink-subtle">
+                    {t("phoneNumbers.panel.rentedTitle")} ·{" "}
+                    {t("phoneNumbers.panel.monthly", {
+                      price: money(rented.monthly_price.money.amount_minor, rented.monthly_price.money.currency_code),
+                    })}
+                  </p>
+                ) : null}
               </div>
             </div>
             <CopyButton value={data.assistant_phone_number} />

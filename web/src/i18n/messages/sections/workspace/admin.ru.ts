@@ -151,6 +151,7 @@ export const adminRu: Translation<typeof adminEn> = {
       whatsapp_template: "Шаблоны WhatsApp",
       transfer_seconds: "Переводы звонков, секунды",
       transcription_seconds: "Распознанные голосовые сообщения, секунды",
+      number_rental: "Аренда номеров телефона, месяцы",
     },
     autotestsTitle: "Непройденные проверки",
     noFailedTests: "В последнем прогоне все проверки пройдены.",

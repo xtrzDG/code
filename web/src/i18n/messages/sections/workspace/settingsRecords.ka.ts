@@ -168,6 +168,8 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       partner: "პარტნიორი",
       partner_code: "პარტნიორის კოდი",
       partner_payout: "პარტნიორის ანაზღაურება",
+      phone_number: "ტელეფონის ნომერი",
+      phone_number_request: "ტელეფონის ნომრის მოთხოვნა",
     },
   },
   roles: {

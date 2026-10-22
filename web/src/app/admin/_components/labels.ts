@@ -66,6 +66,7 @@ export const USAGE_KIND_LABELS: Record<Schema<"UsageKind">, MessageKey> = {
   whatsapp_template: "admin.detail.usageKinds.whatsapp_template",
   transfer_seconds: "admin.detail.usageKinds.transfer_seconds",
   transcription_seconds: "admin.detail.usageKinds.transcription_seconds",
+  number_rental: "admin.detail.usageKinds.number_rental",
 };
 
 export const OUTCOME_LABELS: Record<Schema<"AutotestOutcome">, MessageKey> = {
@@ -114,6 +115,7 @@ export const INVOICE_KIND_LABELS: Record<Schema<"InvoiceKind">, MessageKey> = {
   service_period: "billing.invoices.kinds.service_period",
   setup_fee: "billing.invoices.kinds.setup_fee",
   usage_overage: "billing.invoices.kinds.usage_overage",
+  number_rental: "billing.invoices.kinds.number_rental",
 };
 
 export const RATE_SOURCE_LABELS: Record<Schema<"ExchangeRateSource">, MessageKey> = {

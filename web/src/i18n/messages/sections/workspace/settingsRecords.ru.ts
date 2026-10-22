@@ -183,6 +183,8 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       partner: "Партнёр",
       partner_code: "Код партнёра",
       partner_payout: "Выплата партнёру",
+      phone_number: "Номер телефона",
+      phone_number_request: "Запрос номера телефона",
     },
   },
   roles: {

@@ -3,9 +3,10 @@
 /**
  * "Where do your customers write?" as state: the website chat (on unless
  * the owner turned it off before), a Telegram bot connected with the token
- * from @BotFather, and the business's own chat page once the website chat
- * is on. Continue switches the website chat as chosen; with no channel on,
- * the step is skipped for now.
+ * from @BotFather, the business's own chat page once the website chat
+ * is on, and the phone line once a number is taken (TunnelPhoneCard).
+ * Continue switches the website chat as chosen; with no channel on, the
+ * step is skipped for now.
  */
 
 import { useState } from "react";
@@ -30,6 +31,7 @@ export function useChannelsStep(ctx: StepContext) {
   const channels = useQuery(channelsQuery.key, channelsQuery.fetch, { requireFresh: true });
   const web = findChannel(channels.data, "web_chat");
   const telegram = findChannel(channels.data, "telegram");
+  const phone = findChannel(channels.data, "phone");
   const [webChoice, setWebChoice] = useState<boolean | null>(null);
   const isWebOn = webChoice ?? (web ? isChannelOn(web) : true);
   const share = useQuery(
@@ -70,7 +72,7 @@ export function useChannelsStep(ctx: StepContext) {
   const finish = async () => {
     setFinishing(true);
     try {
-      let isAnyOn = isChannelOn(telegram);
+      let isAnyOn = isChannelOn(telegram) || isChannelOn(phone);
       if (isWebOn && !isChannelOn(web)) {
         const run = connect.run("web", {});
         void track(run.then((result) => result.ok));
@@ -120,6 +122,8 @@ export function useChannelsStep(ctx: StepContext) {
       isConnecting: connect.isPending && token !== "",
       connect: connectTelegram,
     },
+    /** The phone line (a number taken from us in this step connects it). */
+    phone,
     isFinishing,
     finish,
   };

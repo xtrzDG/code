@@ -95,6 +95,7 @@ def test_a_changed_price_is_shown_before_anything_is_bought() -> None:
         world.rent_austin_number(owner, business, price=shown)
 
     assert "now GEL5.00 (it was GEL4.00)" in str(refusal.value)
+    assert [str(reason.code) for reason in refusal.value.reasons] == ["price_changed"]
     assert world.provisioner.bought == []
     assert world.phone_number_repo.find_held(business.id) is None
 
@@ -104,9 +105,10 @@ def test_a_number_someone_else_took_is_refused() -> None:
     world.provisioner.taken_numbers.add(str(AUSTIN_NUMBER))
     owner, business = world.owner_and_business()
 
-    with pytest.raises(PhoneNumberUnavailableError):
+    with pytest.raises(PhoneNumberUnavailableError) as refusal:
         world.rent_austin_number(owner, business)
 
+    assert [str(reason.code) for reason in refusal.value.reasons] == ["number_taken"]
     assert world.phone_number_repo.find_held(business.id) is None
     assert world.channel_repo.list_by_business(business.id) == []
 

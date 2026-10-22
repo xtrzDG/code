@@ -165,6 +165,8 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       partner: "Partner",
       partner_code: "Partnercode",
       partner_payout: "Partnerauszahlung",
+      phone_number: "Telefonnummer",
+      phone_number_request: "Anfrage für Telefonnummer",
     },
   },
   roles: {

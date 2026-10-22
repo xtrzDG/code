@@ -136,6 +136,7 @@ export const adminEn = {
       whatsapp_template: "WhatsApp templates",
       transfer_seconds: "Call transfers, seconds",
       transcription_seconds: "Voice messages transcribed, seconds",
+      number_rental: "Phone numbers rented, months",
     },
     autotestsTitle: "Failed checks",
     noFailedTests: "No failed checks in the latest run.",

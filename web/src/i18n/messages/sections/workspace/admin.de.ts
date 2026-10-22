@@ -137,6 +137,7 @@ export const adminDe: Translation<typeof adminEn> = {
       whatsapp_template: "WhatsApp-Vorlagen",
       transfer_seconds: "Anrufweiterleitungen, Sekunden",
       transcription_seconds: "Transkribierte Sprachnachrichten, Sekunden",
+      number_rental: "Gemietete Telefonnummern, Monate",
     },
     autotestsTitle: "Fehlgeschlagene Prüfungen",
     noFailedTests: "Keine fehlgeschlagenen Prüfungen im letzten Durchlauf.",

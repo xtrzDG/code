@@ -11,6 +11,39 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-22 — phone numbers: take one in the cabinet, or ask the team
+
+Spec: `a37263ba9930d60e`
+
+- **Added** `GET /v1/businesses/{business_id}/phone-line?language=` (any
+  member): the number the business rents from the platform (its place,
+  monthly price, status and whether it answers with the voice agent yet),
+  an open request to the platform team, whether this server rents numbers
+  by itself (`are_numbers_self_serve`), the countries where a number is
+  taken at once (`self_serve_countries`) and the business's own country.
+- **Added** `GET /v1/businesses/{business_id}/phone-line/offers?country=&number_type=&city=&language=`
+  (owners; 30 an hour, 429 with Retry-After past it): numbers on offer and
+  the owner's monthly price of any of them. `availability` is `self_serve`,
+  `requires_documents` (the country's regulator wants the business's
+  documents) or `on_request` (this server rents none of that kind); the
+  last two carry no offers.
+- **Added** `POST /v1/businesses/{business_id}/phone-line/number` (owners;
+  step-up; Idempotency-Key) → 201: takes one offer at the monthly price the
+  owner saw and connects the phone channel with it. 409 with the reason
+  `number_taken` (someone took it since the search) or `price_changed`
+  (search again for the new price); 409 when the business already rents a
+  number or its phone channel carries another number.
+- **Added** `POST /v1/businesses/{business_id}/phone-line/request` (owners;
+  Idempotency-Key) → 201 and `DELETE …/phone-line/request` (owners) → 204:
+  ask the platform team for a number it arranges by hand, and cancel it.
+- **Changed** (behaviour) `DELETE /v1/businesses/{business_id}/channels/phone`
+  gives a rented number back (it stops being billed and returns to the
+  carrier within minutes); `PUT …/channels/phone` refuses another number
+  while one is rented (409).
+- **Changed** (additive) `InvoiceKind` and `UsageKind` may be
+  `number_rental`: a rented number's month, invoiced on its own once the
+  release gate `phone_number_rental` opens.
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

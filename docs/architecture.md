@@ -1234,6 +1234,38 @@ WhatsApp, где продолжится ответ клиента; при отк
 платформы; временный сбой повторяет очередь задач. Настройки — коллекция
 `call_settings`, страница «Настройки → Звонки».
 
+## Номер от платформы (W21)
+
+Контекст `phone_numbers` (`app/use_cases/channels/phone_numbers/`, маршруты
+`app/gateways/http/phone_number_routes.py`): владелец берёт номер для
+звонков сам, на карточке «Телефон» и на шаге каналов туннеля.
+
+- `PhoneNumberProvisionerAdapterContract` — поиск по стране, виду и городу,
+  месячная цена, покупка, импорт в голосовую платформу, назначение агента,
+  возврат. Адаптер `TwilioPhoneNumberProvisionerAdapter` (Twilio + импорт в
+  ElevenLabs) выбирается `PHONE_NUMBER_PROVIDER=twilio`; без него или без
+  ключей — `UnconfiguredPhoneNumberProvisionerAdapter`, и поиск отвечает
+  `on_request`. Реестр `phone_number_countries.py` решает, где номер берётся
+  сразу (`self_serve`), а где регулятор требует документы бизнеса
+  (`requires_documents`, по умолчанию для стран вне реестра): тогда владелец
+  отправляет запрос (`phone_number_requests`), команда получает письмо на
+  `PLATFORM_ADMIN_EMAILS` через outbox.
+- `RentPhoneNumberUseCase` под замком телефонной линии бизнеса
+  (`PhoneLineLockRegistryContract`, advisory lock в Postgres) сверяет цену,
+  которую видел владелец (`PhoneNumberRentalMinor` в валюте бизнеса;
+  изменилась — 409 `price_changed`), покупает номер, пишет
+  `phone_numbers` (ACTIVE, `billed_until`), подключает канал «Телефон» и
+  назначает агента; номер, который успели купить другие, — 409
+  `number_taken`. Каждое действие с номером пишется в журнал аудита.
+- Отключение канала «Телефон» переводит номер в RELEASING; задача
+  `maintain_phone_numbers` (каждые 5 минут, `platform_wide`) удаляет его из
+  ElevenLabs и возвращает оператору, импортирует и переназначает ACTIVE-номера
+  при смене агента и закрывает запрос, когда канал подключён.
+- Задача `bill_phone_number_rentals` (раз в час) в начале каждого месяца
+  аренды выставляет счёт вида `number_rental` и пишет событие использования
+  `NUMBER_RENTAL` с себестоимостью оператора; оба вида закрыты воротами
+  выпуска `phone_number_rental` (`docs/operations/deploys.md`).
+
 ## Отзыв после визита и отказ от рассылок
 
 Контекст `feedback` (`app/use_cases/feedback/`, маршруты `review_routes.py`):

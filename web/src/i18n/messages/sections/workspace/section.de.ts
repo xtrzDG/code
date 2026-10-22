@@ -32,6 +32,7 @@ import { dataTasksDe } from "./dataTasks.de";
 import { formFieldsDe } from "./formFields.de";
 import { loginOptionsDe } from "./loginOptions.de";
 import { notificationsDe } from "./notifications.de";
+import { phoneNumbersDe } from "./phoneNumbers.de";
 import { privacyNoticeDe } from "./privacyNotice.de";
 import { privacyRetentionDe } from "./privacyRetention.de";
 import { qualityDe } from "./quality.de";
@@ -53,6 +54,7 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   settings: { ...settingsDe, ...settingsRecordsDe },
   notifications: notificationsDe,
   callSettings: callSettingsDe,
+  phoneNumbers: phoneNumbersDe,
   reviewSettings: reviewSettingsDe,
   calendarSync: calendarSyncDe,
   apiIntegrations: apiIntegrationsDe,

@@ -17274,7 +17274,8 @@
         "enum": [
           "service_period",
           "setup_fee",
-          "usage_overage"
+          "usage_overage",
+          "number_rental"
         ],
         "title": "InvoiceKind",
         "type": "string"
@@ -23156,6 +23157,74 @@
         "title": "PendingOwnerCheckView",
         "type": "object"
       },
+      "PhoneLineView": {
+        "additionalProperties": false,
+        "description": "The phone card: the rented number (None: the business rents none, its\nline is its own or not connected yet), an open request (None: none),\nwhether this server rents numbers by itself\n(`are_numbers_self_serve`), the countries where an owner picks a number\nand has it at once (`self_serve_countries`; elsewhere the team arranges\nit), and the country the card starts with (the business's).",
+        "properties": {
+          "are_numbers_self_serve": {
+            "title": "Are Numbers Self Serve",
+            "type": "boolean"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "default_country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Default Country Code",
+            "type": "string"
+          },
+          "open_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberRequestView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rented_number": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RentedPhoneNumberView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "self_serve_countries": {
+            "items": {
+              "maxLength": 2,
+              "minLength": 2,
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
+            },
+            "title": "Self Serve Countries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id",
+          "are_numbers_self_serve",
+          "default_country_code"
+        ],
+        "title": "PhoneLineView",
+        "type": "object"
+      },
+      "PhoneNumberAvailability": {
+        "description": "How a business gets a number in a country.\n\nSELF_SERVE: the owner picks one in the cabinet and has it at once.\nREQUIRES_DOCUMENTS: the country's regulator wants the business's papers\n(an address or a company proof), so the platform team arranges the\nnumber from an admin request. ON_REQUEST: this server rents no numbers\nby itself (no carrier configured) or the carrier sells none there, so\nthe team arranges it too.",
+        "enum": [
+          "self_serve",
+          "requires_documents",
+          "on_request"
+        ],
+        "title": "PhoneNumberAvailability",
+        "type": "string"
+      },
       "PhoneNumberDetails": {
         "additionalProperties": false,
         "description": "A phone number of any country, validated against its numbering plan.",
@@ -23229,6 +23298,169 @@
           "other"
         ],
         "title": "PhoneNumberKind",
+        "type": "string"
+      },
+      "PhoneNumberOfferList": {
+        "additionalProperties": false,
+        "description": "What a search found. SELF_SERVE: `offers` (possibly none near that\ncity) at `monthly_price`, the owner's price of any of them.\nREQUIRES_DOCUMENTS or ON_REQUEST: no offers; the owner asks the team.",
+        "properties": {
+          "availability": {
+            "$ref": "#/components/schemas/PhoneNumberAvailability"
+          },
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "monthly_price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "number_type": {
+            "$ref": "#/components/schemas/PhoneNumberType"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumberOfferView"
+            },
+            "title": "Offers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "country_code",
+          "number_type",
+          "availability"
+        ],
+        "title": "PhoneNumberOfferList",
+        "type": "object"
+      },
+      "PhoneNumberOfferView": {
+        "additionalProperties": false,
+        "description": "One number the owner may take now.",
+        "properties": {
+          "display_number": {
+            "title": "Display Number",
+            "type": "string"
+          },
+          "locality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locality"
+          },
+          "phone_number": {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "title": "Phone Number",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          }
+        },
+        "required": [
+          "phone_number",
+          "display_number"
+        ],
+        "title": "PhoneNumberOfferView",
+        "type": "object"
+      },
+      "PhoneNumberRequestStatus": {
+        "description": "An owner's request for a number the team arranges by hand.",
+        "enum": [
+          "open",
+          "done",
+          "cancelled"
+        ],
+        "title": "PhoneNumberRequestStatus",
+        "type": "string"
+      },
+      "PhoneNumberRequestView": {
+        "additionalProperties": false,
+        "description": "The owner's request for a number the platform team arranges by hand.",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]*\\S[^\\x00-\\x1f\\x7f]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "number_type": {
+            "$ref": "#/components/schemas/PhoneNumberType"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PhoneNumberRequestStatus"
+          }
+        },
+        "required": [
+          "country_code",
+          "number_type",
+          "status",
+          "requested_at"
+        ],
+        "title": "PhoneNumberRequestView",
+        "type": "object"
+      },
+      "PhoneNumberStatus": {
+        "description": "ACTIVE: rented, answering for the business. RELEASING: given up (the\nphone channel was turned off, or nobody pays for it any more); the\nmaintenance job returns it to the carrier and the voice platform.\nRELEASED: returned; the row stays as the record of the rental.",
+        "enum": [
+          "active",
+          "releasing",
+          "released"
+        ],
+        "title": "PhoneNumberStatus",
+        "type": "string"
+      },
+      "PhoneNumberType": {
+        "description": "What kind of number: a city (geographic) line, a mobile number, or a\ntoll-free one. The carrier's price list prices each kind per country.",
+        "enum": [
+          "local",
+          "mobile",
+          "toll_free"
+        ],
+        "title": "PhoneNumberType",
         "type": "string"
       },
       "PhoneTestLinkView": {
@@ -25954,6 +26186,70 @@
           "powered_by"
         ],
         "title": "ReferralProgramView",
+        "type": "object"
+      },
+      "RentedPhoneNumberView": {
+        "additionalProperties": false,
+        "description": "The number the platform rents for the business: where it is from, what\nit costs a month (fixed when it was taken), ACTIVE or RELEASING (being\ngiven back), and whether calls to it reach the voice agent yet\n(`is_attached`: false until the business has an agent, or for a few\nminutes after it was taken).",
+        "properties": {
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "display_number": {
+            "title": "Display Number",
+            "type": "string"
+          },
+          "is_attached": {
+            "title": "Is Attached",
+            "type": "boolean"
+          },
+          "locality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locality"
+          },
+          "monthly_price": {
+            "$ref": "#/components/schemas/QuotedMoney"
+          },
+          "number_type": {
+            "$ref": "#/components/schemas/PhoneNumberType"
+          },
+          "phone_number": {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "title": "Phone Number",
+            "type": "string"
+          },
+          "rented_at": {
+            "title": "Rented At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PhoneNumberStatus"
+          }
+        },
+        "required": [
+          "phone_number",
+          "display_number",
+          "country_code",
+          "number_type",
+          "monthly_price",
+          "status",
+          "is_attached",
+          "rented_at"
+        ],
+        "title": "RentedPhoneNumberView",
         "type": "object"
       },
       "ReplyChoices": {
@@ -29980,7 +30276,8 @@
           "whatsapp_reply",
           "whatsapp_template",
           "transfer_seconds",
-          "transcription_seconds"
+          "transcription_seconds",
+          "number_rental"
         ],
         "title": "UsageKind",
         "type": "string"
@@ -68363,6 +68660,830 @@
         "summary": "Update Notification Preferences",
         "tags": [
           "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/phone-line": {
+      "get": {
+        "operationId": "phone_numbers_get_phone_line",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneLineView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Phone Line",
+        "tags": [
+          "phone_numbers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/phone-line/number": {
+      "post": {
+        "operationId": "phone_numbers_rent_phone_number",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The number the owner chose, its kind, the monthly price the cabinet\nshowed (the purchase is refused when the price changed meanwhile) and\nthe city the search named for it (kept for the card only).",
+                "properties": {
+                  "locality": {
+                    "anyOf": [
+                      {
+                        "maxLength": 60,
+                        "minLength": 1,
+                        "pattern": "^[^\\x00-\\x1f\\x7f]*\\S[^\\x00-\\x1f\\x7f]*$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Locality"
+                  },
+                  "monthly_price": {
+                    "additionalProperties": false,
+                    "description": "Amount in minor units of an ISO 4217 currency.",
+                    "properties": {
+                      "amount_minor": {
+                        "minimum": 0,
+                        "title": "Amount Minor",
+                        "type": "integer"
+                      },
+                      "currency_code": {
+                        "maxLength": 3,
+                        "minLength": 3,
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency Code",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount_minor",
+                      "currency_code"
+                    ],
+                    "title": "Money",
+                    "type": "object"
+                  },
+                  "number_type": {
+                    "description": "What kind of number: a city (geographic) line, a mobile number, or a\ntoll-free one. The carrier's price list prices each kind per country.",
+                    "enum": [
+                      "local",
+                      "mobile",
+                      "toll_free"
+                    ],
+                    "title": "PhoneNumberType",
+                    "type": "string"
+                  },
+                  "phone_number": {
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "pattern": "^\\+[1-9][0-9]{6,14}$",
+                    "title": "Phone Number",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "phone_number",
+                  "number_type",
+                  "monthly_price"
+                ],
+                "title": "RentPhoneNumberRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentedPhoneNumberView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Rent Phone Number",
+        "tags": [
+          "phone_numbers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/phone-line/offers": {
+      "get": {
+        "operationId": "phone_numbers_search_phone_numbers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": true,
+            "schema": {
+              "title": "Country",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "number_type",
+            "required": true,
+            "schema": {
+              "title": "Number Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneNumberOfferList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Search Phone Numbers",
+        "tags": [
+          "phone_numbers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/phone-line/request": {
+      "delete": {
+        "operationId": "phone_numbers_cancel_phone_number_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Cancel Phone Number Request",
+        "tags": [
+          "phone_numbers"
+        ]
+      },
+      "post": {
+        "operationId": "phone_numbers_request_phone_number",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Where the owner would like a number the team arranges by hand.",
+                "properties": {
+                  "city": {
+                    "anyOf": [
+                      {
+                        "maxLength": 60,
+                        "minLength": 1,
+                        "pattern": "^[^\\x00-\\x1f\\x7f]*\\S[^\\x00-\\x1f\\x7f]*$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "City"
+                  },
+                  "country_code": {
+                    "maxLength": 2,
+                    "minLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "title": "Country Code",
+                    "type": "string"
+                  },
+                  "number_type": {
+                    "description": "What kind of number: a city (geographic) line, a mobile number, or a\ntoll-free one. The carrier's price list prices each kind per country.",
+                    "enum": [
+                      "local",
+                      "mobile",
+                      "toll_free"
+                    ],
+                    "title": "PhoneNumberType",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "country_code",
+                  "number_type"
+                ],
+                "title": "PhoneNumberRequestBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneNumberRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Request Phone Number",
+        "tags": [
+          "phone_numbers"
         ]
       }
     },

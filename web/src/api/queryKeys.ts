@@ -210,6 +210,8 @@ export const queryKeys = {
     snippet: (businessId: Id) => ["channels", businessId, "snippet"] as const,
     /** The websites allowed to show the website chat. */
     allowedOrigins: (businessId: Id) => ["channels", businessId, "allowedOrigins"] as const,
+    /** The phone line: a number rented from the platform, a request to the team. */
+    phoneLine: (businessId: Id, locale: Locale) => ["channels", businessId, "phoneLine", locale] as const,
     callForwarding: (businessId: Id, locale: Locale) => ["channels", businessId, "callForwarding", locale] as const,
     calendar: (businessId: Id) => ["channels", businessId, "calendar"] as const,
     /** Share links of every tag (`share(id, "")` is the untagged set). */

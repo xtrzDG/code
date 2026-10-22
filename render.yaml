@@ -199,6 +199,9 @@ services:
         sync: false
       - key: ZADARMA_API_SECRET
         sync: false
+      # numbers owners take in the cabinet: twilio, or empty (docs/LAUNCH.md 4.6)
+      - key: PHONE_NUMBER_PROVIDER
+        sync: false
       # call recordings: s3 = encrypted in an EU bucket (docs/LAUNCH.md 4.6);
       # empty: they stay with ElevenLabs
       - key: RECORDINGS_STORAGE
@@ -492,6 +495,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: ZADARMA_API_SECRET
+      - key: PHONE_NUMBER_PROVIDER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PHONE_NUMBER_PROVIDER
       - key: RECORDINGS_STORAGE
         fromService:
           type: web
@@ -872,6 +880,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: ZADARMA_API_SECRET
+      - key: PHONE_NUMBER_PROVIDER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PHONE_NUMBER_PROVIDER
       - key: RECORDINGS_STORAGE
         fromService:
           type: web

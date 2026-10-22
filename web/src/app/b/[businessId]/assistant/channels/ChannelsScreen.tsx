@@ -25,6 +25,7 @@ import { ChannelsSkeleton } from "./_components/ChannelsSkeleton";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
+import { PhoneNumberPanel } from "./_components/phoneLine/PhoneNumberPanel";
 import { ShareSection } from "./_components/ShareSection";
 import { STAFF_TEMPLATES_ID, StaffTemplatesEditor } from "./_components/StaffTemplatesEditor";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
@@ -231,6 +232,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
                         onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
                       />
                     ) : null}
+                    {kind === "phone" ? <PhoneNumberPanel canManage={isOwner} showGetNumber={!isChannelOn(channel)} onChanged={channels.reload} /> : null}
                   </ChannelCard>
                 );
               })}

@@ -41,14 +41,4 @@ class PhoneNumberRentalMinor(BaseConstrainedTypedInt):
     le = 10_000_000
 
 
-class PhoneNumberSearchesPerHour(BaseConstrainedTypedInt):
-    """
-    How many number searches one business may run an hour (each one asks the
-    carrier's API): 1 to 600.
-    """
-
-    ge = 1
-    le = 600
-
-
 # Keep abc order for all non example types, if possible.
