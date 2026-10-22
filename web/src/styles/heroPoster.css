@@ -125,6 +125,41 @@
   transform: translate(-50%, -50%);
   animation: var(--animate-float);
 }
+/*
+ * The six bubbles on an ellipse around the orb, each a step behind the one
+ * before in its float (BUBBLE_ANGLES in HeroFallback.tsx; a unit test keeps
+ * the two in step). Here rather than a style attribute, which the Content
+ * Security Policy refuses.
+ */
+.hero-still-bubble[data-bubble="0"] {
+  left: 16.93%;
+  top: 32.51%;
+}
+.hero-still-bubble[data-bubble="1"] {
+  left: 68.31%;
+  top: 20.86%;
+  animation-delay: -0.9s;
+}
+.hero-still-bubble[data-bubble="2"] {
+  left: 88.62%;
+  top: 45.41%;
+  animation-delay: -1.8s;
+}
+.hero-still-bubble[data-bubble="3"] {
+  left: 80.73%;
+  top: 70.32%;
+  animation-delay: -2.7s;
+}
+.hero-still-bubble[data-bubble="4"] {
+  left: 29.33%;
+  top: 77.99%;
+  animation-delay: -3.6s;
+}
+.hero-still-bubble[data-bubble="5"] {
+  left: 11.85%;
+  top: 56.86%;
+  animation-delay: -4.5s;
+}
 .hero-still-badge {
   display: grid;
   flex: none;

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import type { Query } from "@/api/useQuery";
 import { IconStar } from "@/components/icons";
-import { Card, ErrorState, SkeletonRows } from "@/components/ui";
+import { BarFill, Card, ErrorState, SkeletonRows } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 
@@ -85,7 +85,7 @@ function StatsBody({ stats, isLinkTracked }: { stats: ReviewStatsView; isLinkTra
                 <IconStar className="size-3.5 text-ink-muted" />
               </span>
               <span aria-hidden className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-muted">
-                <span className="block h-full rounded-full bg-accent" style={{ width: `${bar.share}%` }} />
+                <BarFill as="span" percent={bar.share} className="block h-full rounded-full bg-accent" />
               </span>
               <span aria-hidden className="w-10 shrink-0 text-end tabular-nums text-ink-muted">
                 {number(bar.count)}

@@ -13,6 +13,7 @@ import { IconAlert, IconCheck } from "@/components/icons";
 import { Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { useClientStyle } from "@/lib/csp/clientStyle";
 import {
   LAUNCH_STAGES,
   launchProgress,
@@ -65,6 +66,7 @@ export function LaunchProgress({
   const { t } = useI18n();
   const states = stageStates(view);
   const progress = launchProgress(view);
+  const fillStyle = useClientStyle({ transform: `scaleX(${Math.max(progress, 0.02)})` });
   const isChecking = view.stage === "checking" && (view.checks_total ?? 0) > 0;
 
   return (
@@ -80,7 +82,7 @@ export function LaunchProgress({
         >
           <span
             className="tunnel-rail-fill absolute inset-y-0 start-0 w-full rounded-full bg-[linear-gradient(90deg,var(--accent-solid),var(--success))] shadow-[0_0_24px_var(--accent-solid)]"
-            style={{ transform: `scaleX(${Math.max(progress, 0.02)})` }}
+            style={fillStyle}
           />
         </div>
       )}

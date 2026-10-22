@@ -8,12 +8,25 @@
  * and the last). On phones the line stays and "3 / 8" stands beside it.
  */
 
-import type { CSSProperties } from "react";
-
 import { IconCheck } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { placeIndex, TUNNEL_STEPS, type RailState, type TunnelPlace, type TunnelStep } from "@/lib/tunnel/steps";
+
+/**
+ * The line's fill at each station (a class, since the Content Security
+ * Policy refuses a style attribute): station k of the eight fills k/7.
+ */
+const RAIL_FILLS = [
+  "[transform:translateY(-50%)_scaleX(0)]",
+  "[transform:translateY(-50%)_scaleX(0.142857)]",
+  "[transform:translateY(-50%)_scaleX(0.285714)]",
+  "[transform:translateY(-50%)_scaleX(0.428571)]",
+  "[transform:translateY(-50%)_scaleX(0.571429)]",
+  "[transform:translateY(-50%)_scaleX(0.714286)]",
+  "[transform:translateY(-50%)_scaleX(0.857143)]",
+  "[transform:translateY(-50%)_scaleX(1)]",
+] as const;
 
 export interface TunnelRailProps {
   place: TunnelPlace;
@@ -26,7 +39,6 @@ export interface TunnelRailProps {
 export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) {
   const { t } = useI18n();
   const current = placeIndex(place);
-  const fill = Math.min(current, TUNNEL_STEPS.length - 1) / (TUNNEL_STEPS.length - 1);
   const last = TUNNEL_STEPS.length - 1;
 
   return (
@@ -39,8 +51,10 @@ export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) 
           <span aria-hidden className="absolute inset-x-1 top-1/2 h-px -translate-y-1/2 bg-line" />
           <span
             aria-hidden
-            className="tunnel-rail-fill absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-solid via-tone-sand to-accent-solid"
-            style={{ transform: `translateY(-50%) scaleX(${fill})` } as CSSProperties}
+            className={cn(
+              "tunnel-rail-fill absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-solid via-tone-sand to-accent-solid",
+              RAIL_FILLS[Math.min(current, last)],
+            )}
           />
           {TUNNEL_STEPS.map((step, index) => {
             const isCurrent = index === current;

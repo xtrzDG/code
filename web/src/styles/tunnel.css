@@ -62,6 +62,7 @@
       color-mix(in oklab, var(--tone-sand) 10%, transparent) 40%,
       transparent 65%
     );
+    transform: translate(-50%, -50%);
     animation: var(--animate-glow-breathe);
   }
   :root[data-theme="light"] .tunnel-glow {

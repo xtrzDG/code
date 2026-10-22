@@ -1,6 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
+
+import { NoncedStyle } from "@/components/csp/NoncedStyle";
 
 import { accentColors } from "../_lib/accentColors";
+import { accentRule } from "../_lib/accentRule";
 import type { PageLanguage } from "../_lib/hostedChatRequest";
 
 import "@/styles/hostedChat.css";
@@ -8,7 +11,8 @@ import "@/styles/hostedChat.css";
 /**
  * The page around the hosted chat and its notices: the visitor's language
  * and direction, the business's accent colour (made readable the way the
- * widget makes it, see accentColors), the system's colours.
+ * widget makes it, see accentColors), the system's colours. The accent is
+ * a nonce'd rule, not a style attribute (the Content Security Policy).
  */
 export function HostedChatShell({
   page,
@@ -20,9 +24,10 @@ export function HostedChatShell({
   children: ReactNode;
 }) {
   const colors = accent ? accentColors(accent) : null;
-  const style = colors ? ({ "--hc-accent": colors.accent, "--hc-on-accent": colors.onAccent } as CSSProperties) : undefined;
+  const rule = colors ? accentRule("main.hc-page", { "--hc-accent": colors.accent, "--hc-on-accent": colors.onAccent }) : null;
   return (
-    <main className="hc-page" lang={page.language} dir={page.direction} style={style}>
+    <main className="hc-page" lang={page.language} dir={page.direction}>
+      {rule ? <NoncedStyle css={rule} /> : null}
       {children}
     </main>
   );

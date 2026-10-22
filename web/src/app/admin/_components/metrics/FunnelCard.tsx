@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import { BarFill, Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { barPercent, type FunnelStepView, type TunnelStepView } from "../../_lib/metrics";
@@ -24,7 +24,7 @@ export function FunnelCard({ steps, format }: { steps: readonly FunnelStepView[]
             <span className="text-sm font-medium text-ink">{t(`adminMetrics.funnel.steps.${step.step}`)}</span>
             <div className="min-w-0">
               <div className="h-3 overflow-hidden rounded-full bg-surface-muted" aria-hidden>
-                <div className="h-full rounded-full bg-current text-chart-1" style={{ width: `${barPercent(step.owners, max)}%` }} />
+                <BarFill percent={barPercent(step.owners, max)} className="h-full rounded-full bg-current text-chart-1" />
               </div>
               <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-muted">
                 <span className="font-medium text-ink tabular-nums">{tp("adminMetrics.funnel.owners", step.owners)}</span>

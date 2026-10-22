@@ -1,8 +1,10 @@
 /**
  * The cabinet's security headers: a Content Security Policy with a fresh
- * nonce on every page and no page breaking it, the isolation headers, the
- * BFF's body limit, and the bot check of the sign-in page (Cloudflare
- * Turnstile, faked here: the API asks for it, the page shows it).
+ * nonce on every page, no inline style and Trusted Types, and no page
+ * breaking it (the route tour checks every other route, support/tour.ts);
+ * its violation reports; the isolation headers, the BFF's body limit, and
+ * the bot check of the sign-in page (Cloudflare Turnstile, faked here: the
+ * API asks for it, the page shows it).
  */
 
 import type { Page } from "@playwright/test";
@@ -10,6 +12,7 @@ import type { Page } from "@playwright/test";
 import { BUSINESS_PAGES, setupPath } from "../src/lib/navigation";
 
 import { uniqueEmail } from "./support/api";
+import { expectStrictPolicy, policyViolations, watchPolicyViolations } from "./support/csp";
 import { expect, test } from "./support/fixtures";
 import { emulateCapableDesktop } from "./support/heroScene";
 import { waitForNetworkQuiet } from "./support/network";
@@ -33,29 +36,15 @@ window.turnstile = {
 };
 `;
 
-/** Collects every CSP violation the page reports, from the first script on. */
-async function watchPolicyViolations(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const violations: string[] = [];
-    (window as unknown as { __cspViolations: string[] }).__cspViolations = violations;
-    document.addEventListener("securitypolicyviolation", (event) => {
-      violations.push(`${event.violatedDirective} ${event.blockedURI}`);
-    });
-  });
-}
-
-async function policyViolations(page: Page): Promise<string[]> {
-  return page.evaluate(() => (window as unknown as { __cspViolations: string[] }).__cspViolations);
-}
-
 async function openAndCheck(page: Page, path: string): Promise<string> {
   const response = await page.goto(path);
   expect(response, path).not.toBeNull();
   await waitForNetworkQuiet(page);
   expect(await policyViolations(page), `${path} broke the Content Security Policy`).toEqual([]);
   const policy = response?.headers()["content-security-policy"] ?? "";
-  expect(policy, path).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
+  expectStrictPolicy(policy, path);
   expect(policy, path).toContain("frame-ancestors 'none'");
+  expect(response?.headers()["reporting-endpoints"], path).toBe('csp="/api/csp-report"');
   return policy;
 }
 
@@ -124,6 +113,56 @@ test.describe("Content Security Policy", () => {
     expect(headers["x-content-type-options"]).toBe("nosniff");
     // A production build always sends HSTS; browsers honour it only over HTTPS.
     expect(headers["strict-transport-security"]).toContain("max-age=63072000");
+  });
+});
+
+test.describe("the policy in the browser", () => {
+  test("refuses a style attribute and markup a script makes up, and reports both", async ({ page, consoleErrors }) => {
+    consoleErrors.allow(/Refused to apply inline style|requires 'TrustedHTML' assignment/);
+    await watchPolicyViolations(page);
+    await openAndCheck(page, "/login");
+
+    const outcome = await page.evaluate(() => {
+      const probe = document.createElement("p");
+      document.body.append(probe);
+      probe.setAttribute("style", "outline: 3px solid red");
+      const styled = getComputedStyle(probe).outlineWidth;
+      let markup = "set";
+      try {
+        probe.innerHTML = '<img src="x" alt="">';
+      } catch (error) {
+        markup = error instanceof TypeError ? "refused" : "other";
+      }
+      probe.textContent = "plain text still works";
+      return { styled, markup, text: probe.textContent };
+    });
+
+    expect(outcome).toEqual({ styled: "0px", markup: "refused", text: "plain text still works" });
+    await expect.poll(async () => (await policyViolations(page)).map((line) => line.split(" ")[0])).toEqual(
+      expect.arrayContaining(["style-src-attr", "require-trusted-types-for"]),
+    );
+  });
+});
+
+test.describe("violation reports", () => {
+  const REPORT = {
+    "csp-report": {
+      "document-uri": "http://localhost/b/business_1/overview?view=all",
+      "effective-directive": "style-src-attr",
+      "blocked-uri": "inline",
+    },
+  };
+
+  test("are accepted from browsers and anything else is refused", async ({ page }) => {
+    const send = (data: string, contentType = "application/csp-report") =>
+      page.request.post("/api/csp-report", { data, headers: { "content-type": contentType } });
+
+    expect((await send(JSON.stringify(REPORT))).status()).toBe(204);
+    const batch = [{ type: "csp-violation", url: "http://localhost/help", body: { effectiveDirective: "img-src", blockedURL: "inline" } }];
+    expect((await send(JSON.stringify(batch), "application/reports+json")).status()).toBe(204);
+    expect((await send(JSON.stringify(REPORT), "text/plain")).status()).toBe(415);
+    expect((await send("not json")).status()).toBe(400);
+    expect((await send("x".repeat(20 * 1024))).status()).toBe(413);
   });
 });
 

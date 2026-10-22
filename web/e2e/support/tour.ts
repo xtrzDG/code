@@ -16,6 +16,7 @@
 
 import type { Page } from "@playwright/test";
 
+import { policyViolations, watchPolicyViolations } from "./csp";
 import { WEB_URL } from "./env";
 import { expect } from "./fixtures";
 import { waitForNetworkQuiet } from "./network";
@@ -24,8 +25,12 @@ const TBILISI = "Asia/Tbilisi";
 /** A page walk opens every route twice and waits for the network each time. */
 export const TOUR_TIMEOUT_MS = 240_000;
 
-/** Opens a route as a first-time reader and again with the remembered zone. */
+/**
+ * Opens a route as a first-time reader and again with the remembered zone;
+ * neither view may break the Content Security Policy (support/csp.ts).
+ */
 export async function visitTwice(page: Page, path: string): Promise<void> {
+  await watchPolicyViolations(page);
   // Clearing one cookie clears them all and adds the others back: a request
   // in flight meanwhile (the page a click just opened) goes without the
   // session and ends it. So the page settles first.
@@ -36,6 +41,7 @@ export async function visitTwice(page: Page, path: string): Promise<void> {
     expect(response?.status(), `${path} (${visit})`).toBeLessThan(400);
     await expect(page.locator("h1").first(), `${path} (${visit})`).toBeVisible();
     await waitForNetworkQuiet(page);
+    expect(await policyViolations(page), `${path} (${visit}) broke the Content Security Policy`).toEqual([]);
   }
   const cookie = (await page.context().cookies(WEB_URL)).find((item) => item.name === "aw_tz");
   expect(decodeURIComponent(cookie?.value ?? ""), `the browser remembered its zone on ${path}`).toBe(TBILISI);

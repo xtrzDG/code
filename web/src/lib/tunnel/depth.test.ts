@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { advance, alive, burst, GRAVITY, RING_COUNT, RING_GAP, ringsAt, seededRandom } from "./depth";
+import { advance, alive, burst, GRAVITY, RING_COUNT, RING_GAP, ringClass, ringsAt, seededRandom } from "./depth";
 
 describe("tunnel rings", () => {
   it("surround the screen and recede, fading with depth", () => {
     const rings = ringsAt(0);
     expect(rings).toHaveLength(RING_COUNT + 1);
-    expect(rings[0]).toEqual({ key: -1, z: RING_GAP, opacity: 0 });
-    expect(rings[1]).toEqual({ key: 0, z: -0, opacity: 1 });
+    expect(rings[0]).toEqual({ key: -1, depth: -1, z: RING_GAP, opacity: 0 });
+    expect(rings[1]).toEqual({ key: 0, depth: 0, z: -0, opacity: 1 });
     expect(rings.at(-1)?.z).toBe(-(RING_COUNT - 1) * RING_GAP);
     const opacities = rings.slice(1).map((ring) => ring.opacity);
     expect([...opacities].sort((a, b) => b - a)).toEqual(opacities);
@@ -21,7 +21,13 @@ describe("tunnel rings", () => {
     expect(ring(3, before)?.z).toBe(-RING_GAP);
     expect(ring(3, after)?.z).toBe(-0);
     // The one around the screen is passed: behind the viewer, invisible.
-    expect(ring(2, after)).toEqual({ key: 2, z: RING_GAP, opacity: 0 });
+    expect(ring(2, after)).toEqual({ key: 2, depth: -1, z: RING_GAP, opacity: 0 });
+  });
+
+  it("are placed by classes that carry the same depth and fade", () => {
+    for (const ring of ringsAt(4)) {
+      expect(ringClass(ring.depth)).toBe(`[--ring-z:${ring.z === 0 ? 0 : ring.z}px] [--ring-opacity:${ring.opacity}]`);
+    }
   });
 });
 

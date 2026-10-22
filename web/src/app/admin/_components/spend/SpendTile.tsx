@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Badge, Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
+import { Badge, BarFill, Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -72,7 +72,7 @@ function SpendBody({ spend }: { spend: PlatformSpend }) {
               aria-valuenow={Math.min(percent, 100)}
               className="h-2 overflow-hidden rounded-full bg-surface-muted ring-1 ring-line/60"
             >
-              <div className={cn("h-full rounded-full", BAR_TONES[budgetTone(percent)])} style={{ width: `${Math.min(percent, 100)}%` }} />
+              <BarFill percent={percent} className={cn("h-full rounded-full", BAR_TONES[budgetTone(percent)])} />
             </div>
             <p className="text-sm text-ink-muted">
               {t("adminSpend.budget", { percent: formatNumber(percent, locale), amount: usd(spend.budget_micro_usd) })}

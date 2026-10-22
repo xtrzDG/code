@@ -2,6 +2,7 @@
 
 export { Alert } from "./Alert";
 export { Badge, type BadgeTone } from "./Badge";
+export { BarFill } from "./BarFill";
 export { Button, ButtonLink, buttonClasses, type ButtonSize, type ButtonVariant } from "./Button";
 export { Card } from "./Card";
 export { ConfirmDialog } from "./ConfirmDialog";

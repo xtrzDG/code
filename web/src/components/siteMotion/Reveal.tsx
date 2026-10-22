@@ -16,20 +16,21 @@
 import { useEffect, useRef, type RefObject } from "react";
 
 import type { MotionBlockProps } from "@/components/motion/elements";
+import { cn } from "@/lib/cn";
+import { revealClasses, type RevealDelay, type RevealDepth } from "@/lib/motionClasses";
 
 import { onceInView } from "./inView";
-import { revealStyle } from "./revealStyle";
 
 export interface RevealProps extends MotionBlockProps {
   /** 0 = rise only; 1 = also come from further back (scale, tilt). */
-  depth?: number;
+  depth?: RevealDepth;
   /** Seconds after it is seen. */
-  delay?: number;
+  delay?: RevealDelay;
   /** Share of the element that must be visible before it reveals. */
   amount?: number;
 }
 
-export function Reveal({ as = "div", depth = 0, delay = 0, amount = 0.25, style, children, ...props }: RevealProps) {
+export function Reveal({ as = "div", depth = 0, delay = 0, amount = 0.25, className, children, ...props }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
     const element = ref.current;
@@ -38,7 +39,12 @@ export function Reveal({ as = "div", depth = 0, delay = 0, amount = 0.25, style,
   // Every tag takes the same attributes here; one element type keeps the ref simple.
   const Element = as as "div";
   return (
-    <Element ref={ref as RefObject<HTMLDivElement>} data-reveal="" style={revealStyle(depth, delay, style)} {...props}>
+    <Element
+      ref={ref as RefObject<HTMLDivElement>}
+      data-reveal=""
+      className={cn(revealClasses(depth, delay), className) || undefined}
+      {...props}
+    >
       {children}
     </Element>
   );

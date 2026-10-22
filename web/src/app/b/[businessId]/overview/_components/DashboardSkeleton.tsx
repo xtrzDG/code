@@ -1,5 +1,8 @@
 import { Skeleton, SkeletonCard } from "@/components/ui";
 
+/** The trend's placeholder bars (classes: no style attribute passes the Content Security Policy). */
+const TREND_BARS = ["h-[40%]", "h-[65%]", "h-[30%]", "h-[80%]", "h-[55%]", "h-[90%]", "h-[45%]", "h-[70%]", "h-[35%]", "h-[60%]", "h-[75%]", "h-[50%]"];
+
 /** One KPI tile: a label, a big number and a hint, sized like StatTile. */
 function KpiTileSkeleton({ hint }: { hint: boolean }) {
   return (
@@ -24,8 +27,8 @@ export function DashboardPeriodSkeleton() {
       <div className="rounded-2xl border border-line bg-surface p-5">
         <Skeleton className="h-4 w-36" />
         <div className="mt-5 flex h-36 items-end gap-2">
-          {[40, 65, 30, 80, 55, 90, 45, 70, 35, 60, 75, 50].map((height, index) => (
-            <Skeleton key={index} className="flex-1 rounded-sm" style={{ height: `${height}%` }} />
+          {TREND_BARS.map((height, index) => (
+            <Skeleton key={index} className={`flex-1 rounded-sm ${height}`} />
           ))}
         </div>
       </div>

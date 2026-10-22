@@ -15,18 +15,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { scrollEdges, type ScrollEdges } from "@/lib/scrollEdges";
 
-const FADE = "2rem";
-
-function maskFor(edges: ScrollEdges): string | undefined {
-  if (edges.left && edges.right) {
-    return `linear-gradient(to right, transparent, black ${FADE}, black calc(100% - ${FADE}), transparent)`;
-  }
-  if (edges.left) {
-    return `linear-gradient(to right, transparent, black ${FADE})`;
-  }
-  return edges.right ? `linear-gradient(to left, transparent, black ${FADE})` : undefined;
-}
-
 export function ScrollRow({ children, className }: { children: ReactNode; className?: string }) {
   const row = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState<ScrollEdges>({ left: false, right: false });
@@ -53,14 +41,13 @@ export function ScrollRow({ children, className }: { children: ReactNode; classN
     };
   }, []);
 
-  const mask = maskFor(edges);
+  // The fades are CSS on the data attributes (src/styles/shell.css).
   return (
     <div
       ref={row}
       data-scroll-row=""
       data-fade-left={edges.left || undefined}
       data-fade-right={edges.right || undefined}
-      style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
       className={cn("scroll-px-8 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}
     >
       {children}

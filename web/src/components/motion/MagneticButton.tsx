@@ -13,6 +13,7 @@ import * as m from "motion/react-m";
 import type { PointerEvent, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { useHydrated } from "@/lib/csp/clientStyle";
 import { SPRINGS } from "@/lib/motion";
 import { magneticOffset } from "@/lib/motionMath";
 
@@ -34,6 +35,8 @@ export function MagneticButton({
   const reduced = useMotionPreference().isCalm;
   const x = useSpring(0, SPRINGS.bouncy);
   const y = useSpring(0, SPRINGS.bouncy);
+  // No style attribute in the server's HTML (the Content Security Policy refuses it).
+  const hydrated = useHydrated();
 
   const onPointerMove = (event: PointerEvent<HTMLSpanElement>) => {
     if (reduced || event.pointerType !== "mouse") {
@@ -56,7 +59,7 @@ export function MagneticButton({
   return (
     <m.span
       className={cn("inline-flex", className)}
-      style={{ x, y }}
+      style={hydrated ? { x, y } : undefined}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
     >

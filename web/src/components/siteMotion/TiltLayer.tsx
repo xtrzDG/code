@@ -3,10 +3,11 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { tiltDepthClass, type TiltDepth } from "@/lib/motionClasses";
 
-export function TiltLayer({ depth, children, className }: { depth: number; children: ReactNode; className?: string }) {
+export function TiltLayer({ depth, children, className }: { depth: TiltDepth; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("transform-3d", className)} style={{ transform: `translateZ(${depth}px)` }}>
+    <div className={cn("transform-3d", tiltDepthClass(depth), className)}>
       {children}
     </div>
   );

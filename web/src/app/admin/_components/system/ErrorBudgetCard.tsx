@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatedNumber } from "@/components/motion";
-import { Badge, Card, EmptyState, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
+import { Badge, BarFill, Card, EmptyState, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
@@ -118,7 +118,7 @@ function ObjectiveTile({ objective }: { objective: ObjectiveBudget }) {
         aria-valuenow={Math.round(share * 100)}
         className="h-2 overflow-hidden rounded-full bg-surface-muted ring-1 ring-line/60"
       >
-        <div className={cn("h-full rounded-full", BAR_TONES[tone])} style={{ width: `${share * 100}%` }} />
+        <BarFill percent={share * 100} className={cn("h-full rounded-full", BAR_TONES[tone])} />
       </div>
       <p className={cn("text-sm", tone === "danger" ? "text-danger" : "text-ink-muted")}>
         {permille >= 0

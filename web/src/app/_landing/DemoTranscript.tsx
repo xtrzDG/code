@@ -7,6 +7,9 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import type { DemoEntry, DemoFailure, DemoOutcome } from "@/lib/publicSite/demoChat";
 
+/** The typing dots, each 160 ms behind the one before (classes: the CSP refuses a style attribute). */
+const TYPING_DOTS = ["[animation-delay:0ms]", "[animation-delay:160ms]", "[animation-delay:320ms]"] as const;
+
 const OUTCOME_ICONS: Record<DemoOutcome, typeof IconCalendar> = {
   booking: IconCalendar,
   request: IconClipboard,
@@ -77,12 +80,11 @@ export function DemoTranscript({
       {isSending ? (
         <p className={cn(bubble, "flex w-fit items-center gap-1 rounded-es-md bg-accent-soft text-ink-muted")}>
           <span className="sr-only">{t("publicDemo.typing")}</span>
-          {[0, 1, 2].map((dot) => (
+          {TYPING_DOTS.map((delay) => (
             <span
-              key={dot}
+              key={delay}
               aria-hidden
-              className="size-1.5 animate-pulse rounded-full bg-ink-subtle motion-reduce:animate-none"
-              style={{ animationDelay: `${dot * 160}ms` }}
+              className={cn("size-1.5 animate-pulse rounded-full bg-ink-subtle motion-reduce:animate-none", delay)}
             />
           ))}
         </p>

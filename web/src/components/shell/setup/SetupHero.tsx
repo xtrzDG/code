@@ -15,7 +15,7 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconArrowRight, IconClock } from "@/components/icons";
 import { FadeIn, MagneticButton, TiltCard } from "@/components/motion";
-import { ButtonLink, UserSentence } from "@/components/ui";
+import { BarFill, ButtonLink, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { setupPath } from "@/lib/navigation";
 import { stepStates, TUNNEL_STEPS } from "@/lib/tunnel/steps";
@@ -79,9 +79,9 @@ export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
                 aria-label={tp("setup.progress", progress.total, { done: progress.done, total: progress.total })}
                 className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted"
               >
-                <div
+                <BarFill
+                  percent={Math.round((progress.done / progress.total) * 100)}
                   className="h-full rounded-full bg-accent-solid transition-[width] duration-(--motion-slow)"
-                  style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }}
                 />
               </div>
             </div>

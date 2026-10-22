@@ -5,13 +5,19 @@
  */
 
 import type { MotionBlockProps } from "@/components/motion/elements";
+import { cn } from "@/lib/cn";
+import { revealClasses, type RevealDepth } from "@/lib/motionClasses";
 
-import { revealStyle } from "./revealStyle";
-
-export function StaggerItem({ as = "div", depth = 0, style, children, ...props }: MotionBlockProps & { depth?: number }) {
+export function StaggerItem({
+  as = "div",
+  depth = 0,
+  className,
+  children,
+  ...props
+}: MotionBlockProps & { depth?: RevealDepth }) {
   const Element = as;
   return (
-    <Element data-reveal="" data-reveal-item="" style={revealStyle(depth, 0, style)} {...props}>
+    <Element data-reveal="" data-reveal-item="" className={cn(revealClasses(depth, 0), className) || undefined} {...props}>
       {children}
     </Element>
   );

@@ -10,16 +10,15 @@
  * pieces. Only `LoadingRegion` speaks to screen readers; the shapes are hidden.
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
 /** One shimmering block; size it with classes (`h-4 w-32`, `size-10 rounded-full`). */
-export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
+export function Skeleton({ className }: { className?: string }) {
   return (
     <span
       aria-hidden
-      style={style}
       // skeleton-shimmer: a light sweeping across (a transform, src/styles/motion.css).
       className={cn("skeleton-shimmer block rounded-md bg-surface-muted", className)}
     />

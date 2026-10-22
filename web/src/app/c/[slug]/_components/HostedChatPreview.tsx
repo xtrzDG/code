@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
-
+import { NoncedStyle } from "@/components/csp/NoncedStyle";
 import type { PreviewLook } from "@/lib/hostedChat/preview";
 import type { HostedChatView } from "@/server/hostedChat";
 
+import { accentRule } from "../_lib/accentRule";
 import type { PageLanguage } from "../_lib/hostedChatRequest";
 
 import "@/styles/hostedChatPreview.css";
@@ -28,9 +28,10 @@ export function HostedChatPreview({
   nonce: string | undefined;
 }) {
   const accent = look.color ?? view.accent_color;
-  const style = accent ? ({ "--hc-accent": accent } as CSSProperties) : undefined;
+  const rule = accent ? accentRule("main.hc-preview", { "--hc-accent": accent }) : null;
   return (
-    <main className="hc-preview" lang={page.language} dir={page.direction} style={style}>
+    <main className="hc-preview" lang={page.language} dir={page.direction}>
+      {rule ? <NoncedStyle css={rule} /> : null}
       {/* A website shape only: the chat is what the owner looks at. */}
       <div className="hc-preview-site" aria-hidden>
         <div className="hc-preview-bar">

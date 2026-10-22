@@ -9,9 +9,8 @@
  * so it costs nothing on a phone and stands still with reduced motion.
  */
 
-import type { CSSProperties } from "react";
-
-import { ringsAt } from "@/lib/tunnel/depth";
+import { cn } from "@/lib/cn";
+import { ringClass, ringsAt } from "@/lib/tunnel/depth";
 
 export function TunnelBackdrop({ depth, burst = false }: { depth: number; burst?: boolean }) {
   return (
@@ -21,14 +20,10 @@ export function TunnelBackdrop({ depth, burst = false }: { depth: number; burst?
         <span />
         <span />
       </div>
-      <div className="tunnel-glow" style={{ transform: "translate(-50%, -50%)" }} />
+      <div className="tunnel-glow" />
       <div className="tunnel-rings">
         {ringsAt(depth).map((ring) => (
-          <span
-            key={ring.key}
-            className="tunnel-ring"
-            style={{ "--ring-z": `${ring.z}px`, "--ring-opacity": ring.opacity } as CSSProperties}
-          />
+          <span key={ring.key} className={cn("tunnel-ring", ringClass(ring.depth))} />
         ))}
       </div>
       <div className="landing-floor">

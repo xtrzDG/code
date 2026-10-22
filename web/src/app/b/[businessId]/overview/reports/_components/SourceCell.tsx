@@ -1,6 +1,7 @@
 "use client";
 
 import { formatPercent } from "@/components/insights/numbers";
+import { BarFill } from "@/components/ui";
 import { sourceChannels, sourceRowName } from "@/components/value/sourceLabel";
 import type { CustomerSourceRow } from "@/components/value/sourcesModel";
 import { useI18n } from "@/i18n/client";
@@ -21,7 +22,7 @@ export function SourceCell({ row, share }: { row: CustomerSourceRow; share: numb
       <span className="block font-medium break-words text-ink">{name}</span>
       {details ? <span className="block text-xs break-all text-ink-subtle">{details}</span> : null}
       <span className="mt-1.5 block h-1.5 max-w-40 rounded-full bg-surface-muted" aria-hidden>
-        <span className="block h-full rounded-full bg-accent-solid" style={{ width: `${Math.max(share, 2)}%` }} />
+        <BarFill as="span" percent={Math.max(share, 2)} className="block h-full rounded-full bg-accent-solid" />
       </span>
       <span className="sr-only">{t("sources.share", { percent: formatPercent(share, locale) })}</span>
     </span>

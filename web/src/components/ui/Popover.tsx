@@ -111,10 +111,12 @@ export function Popover({
       popover={hasTopLayer() ? "manual" : undefined}
       role="dialog"
       aria-label={label}
-      // Unplaced for the one frame it is measured: transparent, not hidden, so the content may take the focus (a calendar's day).
-      style={placement ? { top: placement.top, left: placement.left } : { top: 0, left: 0, opacity: 0 }}
+      // Placed through the CSSOM (no style attribute in the server's HTML: the CSP refuses it).
+      style={placement ? { top: placement.top, left: placement.left } : undefined}
       className={cn(
         "animate-settle fixed inset-auto z-50 m-0 overflow-visible rounded-xl border border-line bg-surface p-3 text-ink shadow-2xl",
+        // Unplaced for the one frame it is measured: transparent, not hidden, so the content may take the focus (a calendar's day).
+        placement ? null : "top-0 start-0 opacity-0",
         className,
       )}
     >
