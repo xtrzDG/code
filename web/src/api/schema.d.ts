@@ -6247,7 +6247,7 @@ export interface components {
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -8060,11 +8060,16 @@ export interface components {
             outcome?: components["schemas"]["CallOutcome"] | null;
             /** Provider Call Id */
             provider_call_id: string;
+            /**
+             * Recording Declined
+             * @default false
+             */
+            recording_declined: boolean;
             /** Recording Path */
             recording_path?: string | null;
             /**
              * Schema Version
-             * @default 3
+             * @default 4
              */
             schema_version: string;
             /** Started At */
@@ -11569,6 +11574,17 @@ export interface components {
             topic: components["schemas"]["HelpTopic"];
         };
         /**
+         * HostedChatPhoneCalls
+         * @description How the business's AI phone assistant treats calls, for its privacy
+         *     notice: calls are recorded; where the law of the business's country
+         *     asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
+         *     the start of the call. A caller may decline anywhere: the audio is then
+         *     deleted and a transcript without contact or card numbers kept.
+         */
+        HostedChatPhoneCalls: {
+            recording_consent_rule: components["schemas"]["RecordingConsentRule"];
+        };
+        /**
          * HostedChatView
          * @description What the hosted chat page needs before the widget loads: the business,
          *     its current address (`slug`; a page opened under an older address or
@@ -11584,6 +11600,8 @@ export interface components {
          *     owner's own booking page, else the button starts a booking in the
          *     chat). `powered_by_url` is the platform's "Powered by" link with the
          *     business's referral code (None when a Plus owner switched it off).
+         *     `phone_calls` is set when the business's AI assistant answers its phone
+         *     (its live version has voice and its number is connected).
          */
         HostedChatView: {
             /** Accent Color */
@@ -11618,6 +11636,7 @@ export interface components {
             llm_turn_retention_days: number;
             /** Maps Url */
             maps_url?: string | null;
+            phone_calls?: components["schemas"]["HostedChatPhoneCalls"] | null;
             position?: components["schemas"]["WidgetPosition"] | null;
             /** Powered By Url */
             powered_by_url?: string | null;
@@ -13318,6 +13337,7 @@ export interface components {
          *     optional. `tool_calls` may name offer_choices once its release gate is
          *     open (a new value). Version 8 (W19): they may name send_payment_link
          *     once its release gate is open (a new value; version 7 rows read as is).
+         *     Version 9 (W20): decline_recording likewise (version 8 rows read as is).
          */
         MessageDocument: {
             /** Attachments */
@@ -13377,7 +13397,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 8
+             * @default 9
              */
             schema_version: string;
             /** Sent By */
@@ -14700,10 +14720,12 @@ export interface components {
          *     than 50 wrong sign-in codes in an hour for one destination (a phone, an
          *     e-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the
          *     daily check found an audit hash chain broken (an entry changed,
-         *     removed or put in).
+         *     removed or put in). VOICE_HEALTH: calls of the voice platform's API
+         *     fail, or its finished-call reports stopped while the 7 days before
+         *     expect calls at this time of day.
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.

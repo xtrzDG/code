@@ -2058,7 +2058,8 @@
           "send_link",
           "record_unanswered_question",
           "offer_choices",
-          "send_payment_link"
+          "send_payment_link",
+          "decline_recording"
         ],
         "title": "AssistantToolName",
         "type": "string"
@@ -6955,6 +6956,11 @@
             "title": "Provider Call Id",
             "type": "string"
           },
+          "recording_declined": {
+            "default": false,
+            "title": "Recording Declined",
+            "type": "boolean"
+          },
           "recording_path": {
             "anyOf": [
               {
@@ -6967,7 +6973,7 @@
             "title": "Recording Path"
           },
           "schema_version": {
-            "default": "3",
+            "default": "4",
             "title": "Schema Version",
             "type": "string"
           },
@@ -15649,9 +15655,23 @@
         "title": "HelpTopicView",
         "type": "object"
       },
+      "HostedChatPhoneCalls": {
+        "additionalProperties": false,
+        "description": "How the business's AI phone assistant treats calls, for its privacy\nnotice: calls are recorded; where the law of the business's country\nasks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at\nthe start of the call. A caller may decline anywhere: the audio is then\ndeleted and a transcript without contact or card numbers kept.",
+        "properties": {
+          "recording_consent_rule": {
+            "$ref": "#/components/schemas/RecordingConsentRule"
+          }
+        },
+        "required": [
+          "recording_consent_rule"
+        ],
+        "title": "HostedChatPhoneCalls",
+        "type": "object"
+      },
       "HostedChatView": {
         "additionalProperties": false,
-        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).\n\nAs a \"link in bio\" page it also shows the business: its opening hours\n(local minutes of the day in `timezone`), its address with a map link\nand a booking button when it takes bookings (`booking_url`: the\nowner's own booking page, else the button starts a booking in the\nchat). `powered_by_url` is the platform's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).",
+        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).\n\nAs a \"link in bio\" page it also shows the business: its opening hours\n(local minutes of the day in `timezone`), its address with a map link\nand a booking button when it takes bookings (`booking_url`: the\nowner's own booking page, else the button starts a booking in the\nchat). `powered_by_url` is the platform's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).\n`phone_calls` is set when the business's AI assistant answers its phone\n(its live version has voice and its number is connected).",
         "properties": {
           "accent_color": {
             "anyOf": [
@@ -15766,6 +15786,16 @@
               }
             ],
             "title": "Maps Url"
+          },
+          "phone_calls": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HostedChatPhoneCalls"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "position": {
             "anyOf": [
@@ -20061,7 +20091,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).\nVersion 9 (W20): decline_recording likewise (version 8 rows read as is).",
         "properties": {
           "attachments": {
             "items": {
@@ -20227,7 +20257,7 @@
             "title": "Reply Latency Ms"
           },
           "schema_version": {
-            "default": "8",
+            "default": "9",
             "title": "Schema Version",
             "type": "string"
           },
@@ -23615,7 +23645,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in).",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day.",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -23637,7 +23667,8 @@
           "bulk_personal_data",
           "tenant_hopping",
           "failed_sign_in_checks",
-          "audit_chain_broken"
+          "audit_chain_broken",
+          "voice_health"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
