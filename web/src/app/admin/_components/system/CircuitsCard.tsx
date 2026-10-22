@@ -30,11 +30,11 @@ export function CircuitsCard({ circuits }: { circuits: readonly CircuitSummary[]
               <Th>{t("providerCircuits.circuit")}</Th>
               <Th>{t("providerCircuits.state")}</Th>
               {/* The two long headings wrap, so the table keeps its width in every language. */}
-              <Th align="right" className="min-w-28 whitespace-normal">
-                {t("providerCircuits.workers")}
+              <Th align="right" className="w-36">
+                <span className="block whitespace-normal">{t("providerCircuits.workers")}</span>
               </Th>
-              <Th align="right" className="min-w-28 whitespace-normal">
-                {t("providerCircuits.failures")}
+              <Th align="right" className="w-36">
+                <span className="block whitespace-normal">{t("providerCircuits.failures")}</span>
               </Th>
               <Th>{t("providerCircuits.opened")}</Th>
             </Tr>
