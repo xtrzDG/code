@@ -102,6 +102,7 @@ def to_item_details(
         tags=list(item.tags),
         attributes=list(item.attributes),
         languages=list(item.languages),
+        aliases=list(item.aliases),
         source=item.source,
         is_active=item.is_active,
         created_at=item.created_at,

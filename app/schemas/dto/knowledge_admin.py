@@ -10,7 +10,11 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
-from app.schemas.domain.knowledge import KnowledgeAttribute, SeasonalNightlyRate
+from app.schemas.domain.knowledge import (
+    KnowledgeAlias,
+    KnowledgeAttribute,
+    SeasonalNightlyRate,
+)
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.prefixed_id import ResourceId
@@ -52,6 +56,10 @@ class KnowledgeItemInput(ImmutableDTO):
     resources that perform or provide them (`performer_resource_ids`, of
     this business); room types may have `seasonal_rates` per night (seasons
     may not overlap; `price_minor` is the rate outside them).
+
+    `aliases` name the item in the business's other languages (at most
+    three per language): an owner's alias is APPROVED, a model's
+    suggestion the owner has not reviewed yet SUGGESTED.
     """
 
     kind: KnowledgeItemKind
@@ -70,6 +78,7 @@ class KnowledgeItemInput(ImmutableDTO):
         default_factory=list[KnowledgeAttribute]
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
+    aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
     is_active: IsKnowledgeItemActive = True
 
 
@@ -93,7 +102,10 @@ class KnowledgeItemPatch(ImmutableDTO):
     optional field (body, price, duration, buffer). `is_active` switches the
     item on or off for the assistant without deleting it. A new
     `performer_resource_ids` list is who performs the item from now on: a
-    resource left out no longer lists it among its services either.
+    resource left out no longer lists it among its services either. A new
+    `aliases` list is the item's whole set of aliases from now on; without
+    it a new title keeps only the owner's approved aliases (the model's
+    suggestions translated the old title).
     """
 
     kind: KnowledgeItemKind | None = None
@@ -108,6 +120,7 @@ class KnowledgeItemPatch(ImmutableDTO):
     tags: list[KnowledgeTag] | None = None
     attributes: list[KnowledgeAttribute] | None = None
     languages: list[LanguageTag] | None = None
+    aliases: list[KnowledgeAlias] | None = None
     is_active: IsKnowledgeItemActive | None = None
 
 
@@ -186,6 +199,8 @@ class KnowledgeItemDetails(ImmutableDTO):
     side (the item names them, or they list the item as a service or as
     their room type). `shared_key`: the brand's shared fact this item
     replaces in this location (None: an item of the location's own).
+    `aliases`: the item in the business's other languages, the owner's
+    (APPROVED) and the model's suggestions waiting for review (SUGGESTED).
     """
 
     id: KnowledgeItemId
@@ -207,6 +222,7 @@ class KnowledgeItemDetails(ImmutableDTO):
         default_factory=list[KnowledgeAttribute]
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
+    aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
     source: KnowledgeItemSource
     is_active: IsKnowledgeItemActive
     created_at: Microseconds

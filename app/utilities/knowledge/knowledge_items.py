@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
+from app.utilities.knowledge.aliases.alias_rules import carry_aliases, check_aliases
 from app.utilities.knowledge.knowledge_item_checks import (
     check_attributes,
     check_body,
@@ -81,6 +82,7 @@ def build_knowledge_item(
         tags=unique_tags(item_input.tags),
         attributes=check_attributes(item_input.attributes),
         languages=unique_languages(item_input.languages),
+        aliases=check_aliases(item_input.aliases, business.languages),
         source=source,
         is_active=item_input.is_active,
         created_at=now,
@@ -97,7 +99,8 @@ def replace_knowledge_item(
 ) -> KnowledgeItemDocument:
     """An item with every field replaced (id, source, creation, the
     `LINEAGE_FIELDS` and the unset `BOOKING_FIELDS` kept: the wizard
-    re-saves offers without them)."""
+    re-saves offers without them; unset aliases carried as an edit of the
+    title carries them)."""
 
     kept: dict[str, object] = {
         field: getattr(existing, field)
@@ -111,11 +114,17 @@ def replace_knowledge_item(
         source=existing.source,
         now=now,
     )
+    carried: dict[str, object] = (
+        {}
+        if "aliases" in item_input.model_fields_set
+        else {"aliases": carry_aliases(existing, item_input.title)}
+    )
     return replacement.model_copy(
         update={
             "id": existing.id,
             "created_at": existing.created_at,
             **lineage_of(existing),
+            **carried,
         }
     )
 

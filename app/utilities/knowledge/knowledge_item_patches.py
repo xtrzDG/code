@@ -11,7 +11,9 @@ from app.schemas.dto.knowledge_admin import KnowledgeItemPatch
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
+from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.utilities.knowledge.aliases.alias_rules import carry_aliases, check_aliases
 from app.utilities.knowledge.knowledge_item_checks import (
     check_attributes,
     check_body,
@@ -33,6 +35,7 @@ REQUIRED_PATCH_FIELDS: tuple[str, ...] = (
     "tags",
     "attributes",
     "languages",
+    "aliases",
     "is_active",
 )
 
@@ -50,7 +53,9 @@ def patch_knowledge_item(
     A field explicitly set to null clears it; required fields (kind, title,
     lists, active flag) cannot be cleared. A stored price is kept untouched
     unless the patch changes the price or the currency. Where the item
-    came from (`lineage_of`) stays as it was.
+    came from (`lineage_of`) stays as it was. Without new `aliases` the
+    item keeps its aliases (`carry_aliases`: a new title drops the model's
+    suggestions).
     """
 
     provided: set[str] = patch.model_fields_set
@@ -70,11 +75,14 @@ def patch_knowledge_item(
     kind: KnowledgeItemKind = (
         existing.kind if patch.kind is None else check_kind(template, patch.kind)
     )
+    title: KnowledgeTitle = (
+        existing.title if patch.title is None else check_title(patch.title)
+    )
     return KnowledgeItemDocument(
         id=existing.id,
         business_id=existing.business_id,
         kind=kind,
-        title=existing.title if patch.title is None else check_title(patch.title),
+        title=title,
         body=check_body(patch.body) if "body" in provided else existing.body,
         price_minor=price_minor,
         currency_code=currency_code,
@@ -117,6 +125,11 @@ def patch_knowledge_item(
             existing.languages
             if patch.languages is None
             else unique_languages(patch.languages)
+        ),
+        aliases=(
+            carry_aliases(existing, title)
+            if patch.aliases is None
+            else check_aliases(patch.aliases, business.languages)
         ),
         source=existing.source,
         is_active=existing.is_active if patch.is_active is None else patch.is_active,
