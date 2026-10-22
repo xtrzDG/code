@@ -763,7 +763,7 @@ Render's own checks). Production (`render.yaml`): 2 x 2 x (12 + 1) = 52
 for the API, 2 x 2 x (16 + 1) = 68 for the customer workers,
 2 x 1 x (10 + 1) = 22 for the batch worker, 2 + 1 + 5: 150 of 200, room
 for a third customer worker or larger pools. Staging (one API, one
-worker serving every lane, `basic-256mb`): 2 x 13 + 2 x 19 + 8 = 72 of
+worker serving every lane, `basic-256mb`): 2 x 13 + 2 x 20 + 8 = 74 of
 100. The defaults (64 threads, 32 connections) would not fit: a
 Blueprint without `DB_POOL_SIZE` on any service fails the test.
 
