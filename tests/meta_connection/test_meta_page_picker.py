@@ -1,5 +1,7 @@
 """The page picker: Messenger and Instagram connected with a picked page."""
 
+from typing import Any
+
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.meta_connection.constrained_strings import (
     MetaConnectionState,
@@ -21,7 +23,7 @@ from tests.meta_connection.meta_world import MetaWorld
 CODE: str = "AQD-test-code-0000-0000"
 
 
-def listed(world: MetaWorld, scripted: bool = False) -> tuple[str, dict[str, object]]:
+def listed(world: MetaWorld, scripted: bool = False) -> tuple[str, dict[str, Any]]:
     if not scripted:
         script_pages(world.graph)
     state = world.started_state("pages")
@@ -36,8 +38,7 @@ class TestPageList:
 
         state, body = listed(world)
 
-        pages = body["pages"]
-        assert isinstance(pages, list)
+        pages: list[dict[str, Any]] = body["pages"]
         assert [entry["page_id"] for entry in pages] == [PICKED_PAGE_ID, PLAIN_PAGE_ID]
         assert pages[0]["has_instagram"] is True
         assert pages[0]["instagram_account_id"] == PICKED_INSTAGRAM_ID
@@ -78,7 +79,7 @@ class TestPageList:
 
         _, body = listed(world, scripted=True)
 
-        assert len(body["pages"]) == 2  # type: ignore[arg-type]
+        assert len(body["pages"]) == 2
         second = world.graph.requests_to("/me/accounts")[1]
         assert second.url.params["after"] == "cursor-1"
 

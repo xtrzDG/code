@@ -2,6 +2,7 @@
 
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from app.contracts.session_assurance import StepUpGuardContract
 from app.schemas.constants.meta_connection import MetaConnectionPurpose
@@ -26,10 +27,9 @@ class NotConfirmedRecently(StepUpGuardContract):
         raise StepUpRequiredError("Confirm it is you first.")
 
 
-def reason_codes(body: dict[str, object]) -> list[object]:
-    reasons = body.get("reasons")
-    assert isinstance(reasons, list)
-    return [reason["code"] for reason in reasons]
+def reason_codes(body: dict[str, Any]) -> list[str]:
+    reasons: list[dict[str, Any]] = body.get("reasons") or []
+    return [str(reason["code"]) for reason in reasons]
 
 
 class TestSignInOptions:
@@ -139,12 +139,12 @@ class TestStateUse:
         state = world.started_state("whatsapp")
         barrier = threading.Barrier(2)
 
-        def finish() -> int:
+        def finish(_attempt: int) -> int:
             barrier.wait()
             return world.complete({"state": state, "code": CODE}).status_code
 
         with ThreadPoolExecutor(max_workers=2) as pool:
-            statuses = sorted(pool.map(lambda _: finish(), range(2)))
+            statuses = sorted(pool.map(finish, range(2)))
 
         assert statuses == [200, 422]
         assert len(world.graph.requests_to("/oauth/access_token")) == 1

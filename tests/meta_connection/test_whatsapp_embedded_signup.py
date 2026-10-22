@@ -1,7 +1,10 @@
 """WhatsApp Embedded Signup: from the cabinet's sign-in to a working number."""
 
+from typing import Any
+
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.typings.channels.strings import ChannelExternalId
+from tests.channels.channels_payloads import HttpResponse
 from tests.meta_connection.meta_graph_scripts import (
     BUSINESS_TOKEN,
     OTHER_NUMBER_ID,
@@ -17,9 +20,10 @@ from tests.meta_connection.meta_world import MetaWorld
 CODE: str = "AQB-test-code-0000-0000"
 
 
-def reasons(response: object) -> list[str]:
-    body = response.json()
-    return [reason["code"] for reason in body.get("reasons") or []]
+def reasons(response: HttpResponse) -> list[str]:
+    body: dict[str, Any] = response.json()
+    entries: list[dict[str, Any]] = body.get("reasons") or []
+    return [str(reason["code"]) for reason in entries]
 
 
 class TestEmbeddedSignup:
