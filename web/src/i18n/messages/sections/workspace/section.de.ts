@@ -31,6 +31,7 @@ import { dataExportsDe } from "./dataExports.de";
 import { dataTasksDe } from "./dataTasks.de";
 import { formFieldsDe } from "./formFields.de";
 import { loginOptionsDe } from "./loginOptions.de";
+import { metaConnectDe } from "./metaConnect.de";
 import { notificationsDe } from "./notifications.de";
 import { privacyNoticeDe } from "./privacyNotice.de";
 import { privacyRetentionDe } from "./privacyRetention.de";
@@ -47,6 +48,7 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   channels: channelsDe,
   channelPages: channelPagesDe,
   channelSetup: channelSetupDe,
+  metaConnect: metaConnectDe,
   loginOptions: loginOptionsDe,
   billing: billingDe,
   billingLifecycle: billingLifecycleDe,

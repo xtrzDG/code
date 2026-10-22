@@ -9,10 +9,19 @@
  * /api/*) and to Cloudflare Turnstile, may not be framed, frames only its
  * own pages (the Channels page's live chat preview) and Turnstile, and
  * forms post only to itself or to the Flitt checkout.
+ *
+ * The pages where an owner signs in with Facebook (lib/metaSignInPages.ts)
+ * also let Facebook's JavaScript SDK run (loaded by the connect dialog, so
+ * 'strict-dynamic' admits it; the host is the fallback of older browsers),
+ * call Facebook, show its images and frame its sign-in pages.
  */
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 const FLITT_CHECKOUT_ORIGIN = "https://pay.flitt.com";
+const FACEBOOK_SDK_ORIGIN = "https://connect.facebook.net";
+/** Facebook's pages: its sign-in dialogs and the frames its SDK talks through. */
+const FACEBOOK_PAGE_ORIGINS = ["https://www.facebook.com", "https://web.facebook.com", "https://staticxx.facebook.com"];
+const FACEBOOK_API_ORIGINS = ["https://www.facebook.com", "https://graph.facebook.com"];
 /** Request header with the page's nonce, for Server Components that need it. */
 export const NONCE_HEADER = "x-nonce";
 const NONCE_BYTES = 16;
@@ -30,7 +39,10 @@ export function buildContentSecurityPolicy(options: {
   isDevelopment: boolean;
   /** Served over HTTPS: every request of the page goes over HTTPS too. */
   isHttps: boolean;
+  /** A page where the owner signs in with Facebook (lib/metaSignInPages.ts). */
+  allowsFacebookSignIn?: boolean;
 }): string {
+  const facebook = options.allowsFacebookSignIn === true;
   const directives = [
     "default-src 'self'",
     [
@@ -38,14 +50,15 @@ export function buildContentSecurityPolicy(options: {
       `'nonce-${options.nonce}'`,
       "'strict-dynamic'",
       TURNSTILE_ORIGIN,
+      ...(facebook ? [FACEBOOK_SDK_ORIGIN] : []),
       ...(options.isDevelopment ? ["'unsafe-eval'"] : []),
     ].join(" "),
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    ["img-src 'self' data: blob:", ...(facebook ? ["https://www.facebook.com"] : [])].join(" "),
     "font-src 'self' data:",
     "media-src 'self' blob:",
-    `connect-src 'self' ${TURNSTILE_ORIGIN}`,
-    `frame-src 'self' ${TURNSTILE_ORIGIN}`,
+    [`connect-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_API_ORIGINS : [])].join(" "),
+    [`frame-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_PAGE_ORIGINS : [])].join(" "),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",

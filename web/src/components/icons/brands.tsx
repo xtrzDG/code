@@ -37,6 +37,13 @@ export const IconTelegram = (props: IconProps) => (
   </Icon>
 );
 
+/** Facebook's "f", for "Continue with Facebook" (the sign-in, not a channel). */
+export const IconFacebook = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V9H7v3.5h2V21h3.5v-8.5H15l.5-3.5h-3V7a1 1 0 0 1 1-1H15Z" />
+  </Icon>
+);
+
 /** The mark of any customer channel, by its key (`phone`, `web_chat` included). */
 export const IconChannelMark = ({ mark, ...props }: IconProps & { mark: ChannelMarkKey }) => (
   <Icon {...props}>

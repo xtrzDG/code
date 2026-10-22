@@ -19,14 +19,19 @@ import {
   type ChannelView,
   type ConnectableChannel,
 } from "../_lib/channels";
+import { isMetaChannel } from "../_lib/metaSignIn";
+import { useResumeFacebook } from "../_lib/useResumeFacebook";
 import { ChannelHealthPanel } from "./ChannelHealthPanel";
 import { CHANNEL_ACCOUNT_LABELS, CHANNEL_BLURBS, CHANNEL_ICONS, CHANNEL_NAMES, CHANNEL_STATE_LABELS } from "./channelMeta";
+import { CommentRepliesEditor } from "./CommentRepliesEditor";
 
 /**
  * One customer channel: status, account, how it is doing (last messages
  * each way, a problem in plain words with its fix), settings of its own
- * (`children`, e.g. WhatsApp's templates for late replies) and connect /
- * disconnect for the owner.
+ * (`children`, e.g. WhatsApp's templates for late replies; Instagram's
+ * replies to comments) and connect / disconnect for the owner. A Meta
+ * channel's dialog reopens by itself after the page was loaded again for
+ * Facebook's sign-in (_lib/useResumeFacebook.ts).
  */
 export function ChannelCard({
   kind,
@@ -61,6 +66,7 @@ export function ChannelCard({
   const account = accountLabel(kind, channel?.account_id);
   const accountLabelKey = CHANNEL_ACCOUNT_LABELS[kind];
   const headingId = `channel-${kind}-title`;
+  useResumeFacebook(isMetaChannel(kind) ? kind : null, canManage, onConnect);
 
   const connectLabel = isOn ? t("channels.reconnect") : kind === "web_chat" ? t("channels.turnOn") : t("channels.connect");
 
@@ -124,6 +130,10 @@ export function ChannelCard({
         ) : null}
 
         {children}
+        {kind === "instagram" && channel && isOn ? (
+          // Starts again from the saved settings whenever they change.
+          <CommentRepliesEditor key={JSON.stringify(channel.comment_replies ?? null)} channel={channel} canManage={canManage} />
+        ) : null}
 
         {canManage ? (
           <div className="mt-auto flex flex-wrap gap-2 pt-5">

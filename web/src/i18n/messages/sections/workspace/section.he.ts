@@ -31,6 +31,7 @@ import { dataExportsHe } from "./dataExports.he";
 import { dataTasksHe } from "./dataTasks.he";
 import { formFieldsHe } from "./formFields.he";
 import { loginOptionsHe } from "./loginOptions.he";
+import { metaConnectHe } from "./metaConnect.he";
 import { notificationsHe } from "./notifications.he";
 import { privacyNoticeHe } from "./privacyNotice.he";
 import { privacyRetentionHe } from "./privacyRetention.he";
@@ -47,6 +48,7 @@ export const workspaceHe: Translation<typeof workspaceEn> = {
   channels: channelsHe,
   channelPages: channelPagesHe,
   channelSetup: channelSetupHe,
+  metaConnect: metaConnectHe,
   loginOptions: loginOptionsHe,
   billing: billingHe,
   billingLifecycle: billingLifecycleHe,
