@@ -75,13 +75,14 @@ def test_languages_route_lists_right_to_left_languages(client: TestClient) -> No
     assert by_tag["he"]["display_name"] == "עברית"
 
 
-def test_plans_route_quotes_lari_for_georgia_and_estimated_dollars_for_the_usa(
+def test_plans_route_quotes_lari_for_georgia_and_dollars_for_the_usa(
     client: TestClient,
 ) -> None:
     georgia = read_json(
         client.get("/v1/catalog/plans", params={"country_code": "GE", "language": "ru"})
     )
     usa = read_json(client.get("/v1/catalog/plans", params={"country_code": "us"}))
+    japan = read_json(client.get("/v1/catalog/plans", params={"country_code": "JP"}))
 
     voice = next(q for q in georgia["quotes"] if q["plan_key"] == "voice_and_chat")
     assert voice["name"] == "Голос + чат"
@@ -93,9 +94,16 @@ def test_plans_route_quotes_lari_for_georgia_and_estimated_dollars_for_the_usa(
     assert georgia["exchange_rate"]["rate"] == 2.9552
     assert georgia["exchange_rate"]["rate_value"] == "2.9552"
     assert usa["local_currency_code"] == "USD"
-    assert all(quote["local_monthly_price"]["is_estimated"] for quote in usa["quotes"])
+    usa_voice = next(q for q in usa["quotes"] if q["plan_key"] == "voice_and_chat")
+    assert usa_voice["local_monthly_price"] == {
+        "money": {"amount_minor": 19900, "currency_code": "USD"},
+        "text": "$199.00",
+        "is_estimated": False,
+    }
     assert usa["exchange_rate"]["rate_date"] == "2026-10-01"
     assert usa["exchange_rate"]["source"] == "Platform planning rate"
+    # No book and no rate for yen: nothing local is invented.
+    assert all(quote["local_monthly_price"] is None for quote in japan["quotes"])
 
 
 def test_plans_route_requires_a_country(client: TestClient) -> None:

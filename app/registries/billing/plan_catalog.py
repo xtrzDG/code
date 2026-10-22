@@ -1,10 +1,11 @@
 """
 Plans from the concept ("Цены и тарифы", ТЗ section 9).
 
-Prices are set in EUR. The price book adds explicit prices in local
-currencies: in Georgia the concept lists 293 / 517 / 1 031 GEL a month and
-443 GEL setup. The overage price has no price-book entry: the concept gives
-it as "≈ 0.44 GEL", a conversion of 0.15 EUR.
+Prices are set in EUR. The price books (`local_price_books.py`) add
+explicit, rounded prices in local currencies: in Georgia the concept lists
+293 / 517 / 1 031 GEL a month and 443 GEL setup; USD, AMD, ILS, KZT and
+PLN have books of their own. The overage price has no price-book entry: the
+concept gives it as "≈ 0.44 GEL", a conversion of 0.15 EUR.
 
 The setup fee is per setup option: the owner who sets the assistant up in
 the cabinet's guided setup (SELF_SERVE) pays nothing; DONE_FOR_YOU, where
@@ -14,7 +15,7 @@ Chains (R17, concept: Plus "сети из 2–3 точек"): a brand pays one s
 fee, with its first location, and each further location of the brand pays
 the plan's additional-location price a month instead of the plan price.
 These prices are the product's own (the concept names none) and, like
-every price here, have explicit lari in the price book.
+every price here, have explicit amounts in every price book.
 """
 
 from app.schemas.constants.billing import PlanKey, SetupOption
@@ -32,7 +33,6 @@ from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.localization.owner_texts import owner_text
 
 PLAN_BASE_CURRENCY: CurrencyCode = CurrencyCode("EUR")
-GEORGIAN_LARI: CurrencyCode = CurrencyCode("GEL")
 SETUP_FEE: Money = Money(
     amount_minor=MoneyAmountMinor(15000),
     currency_code=PLAN_BASE_CURRENCY,
@@ -68,13 +68,6 @@ def build_eur_price(amount_in_cents: int) -> Money:
     return Money(
         amount_minor=MoneyAmountMinor(amount_in_cents),
         currency_code=PLAN_BASE_CURRENCY,
-    )
-
-
-def build_gel_price(amount_in_tetri: int) -> Money:
-    return Money(
-        amount_minor=MoneyAmountMinor(amount_in_tetri),
-        currency_code=GEORGIAN_LARI,
     )
 
 
@@ -131,22 +124,3 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         additional_location_monthly_price=build_eur_price(24900),
     ),
 )
-
-# Explicit local prices (concept: GEL price book). Never derived from a rate.
-LOCAL_MONTHLY_PRICE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
-    PlanKey.CHAT: (build_gel_price(29300),),
-    PlanKey.VOICE_AND_CHAT: (build_gel_price(51700),),
-    PlanKey.PLUS: (build_gel_price(103100),),
-}
-# The DONE_FOR_YOU setup fee; SELF_SERVE is free in every currency.
-LOCAL_SETUP_FEE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
-    PlanKey.CHAT: (build_gel_price(44300),),
-    PlanKey.VOICE_AND_CHAT: (build_gel_price(44300),),
-    PlanKey.PLUS: (build_gel_price(44300),),
-}
-# Each further location of a brand, a month (explicit lari, like the plans).
-LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
-    PlanKey.CHAT: (build_gel_price(20400),),
-    PlanKey.VOICE_AND_CHAT: (build_gel_price(36900),),
-    PlanKey.PLUS: (build_gel_price(73500),),
-}

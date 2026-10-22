@@ -92,20 +92,32 @@ test.describe("the public site", () => {
     expect(robots).toContain("Disallow: /b/");
   });
 
-  test("prices a country without a price book in euros first, the conversion rounded", async ({ page, request }) => {
+  test("prices a country with a regional price book in its own currency, euros beside it", async ({ page }) => {
     await page.goto("/en?country=US");
     const pricing = page.locator("#pricing");
     await pricing.scrollIntoViewIfNeeded();
-    await expect(pricing.getByTestId("plan-price").first()).toHaveText(/^€\d+$/);
-    await expect(pricing.getByTestId("plan-price-converted").first()).toContainText(/≈ \$\d+(?!\.)/);
-    // No raw conversion anywhere: "$1,145.97"-style amounts never appear.
+    await expect(pricing.getByTestId("plan-price").first()).toHaveText(/^\$\d+$/);
+    await expect(pricing.getByTestId("plan-price-euros").first()).toContainText(/€\d+/);
+    // A price book is never an estimate: no "≈" and no raw conversion.
+    expect(await pricing.innerText()).not.toContain("≈");
     expect(await pricing.innerText()).not.toMatch(/\$[\d,]+\.\d{2}/);
-    // The note names the rate the API priced with: the ECB's once the
-    // worker has read it (CI reaches the bank), else the planning rate.
-    const response = await request.get(`${API_URL}/v1/catalog/plans?country_code=US&language=en`);
+  });
+
+  test("prices a country without a price book in euros first, any conversion rounded", async ({ page, request }) => {
+    await page.goto("/en?country=JP");
+    const pricing = page.locator("#pricing");
+    await pricing.scrollIntoViewIfNeeded();
+    await expect(pricing.getByTestId("plan-price").first()).toHaveText(/^€\d+$/);
+    // A yen estimate exists only once the worker has stored the ECB's rate.
+    const response = await request.get(`${API_URL}/v1/catalog/plans?country_code=JP&language=en`);
     const { exchange_rate: rate } = (await response.json()) as Schema<"PlanQuoteList">;
-    expect(rate).toBeTruthy();
-    await expect(pricing.getByTestId("pricing-notes")).toContainText(en.publicPricing.rateSources[rateSourceKey(rate!)]);
+    if (rate) {
+      await expect(pricing.getByTestId("plan-price-converted").first()).toContainText(/≈ ¥[\d,]+(?!\.)/);
+      await expect(pricing.getByTestId("pricing-notes")).toContainText(en.publicPricing.rateSources[rateSourceKey(rate)]);
+    } else {
+      await expect(pricing.getByTestId("plan-price-converted")).toHaveCount(0);
+    }
+    expect(await pricing.innerText()).not.toMatch(/¥[\d,]+\.\d{2}/);
   });
 
   test("switches a public page to another language at its own address", async ({ page }) => {

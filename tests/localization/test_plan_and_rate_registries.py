@@ -71,7 +71,7 @@ def test_list_all_is_in_plan_order() -> None:
     ]
 
 
-def test_price_book_has_lari_prices_and_no_invented_currencies() -> None:
+def test_price_books_have_explicit_prices_and_no_invented_currencies() -> None:
     gel = CurrencyCode("GEL")
 
     assert PLANS.find_local_monthly_price(PlanKey.CHAT, gel) == money(29300, "GEL")
@@ -83,8 +83,14 @@ def test_price_book_has_lari_prices_and_no_invented_currencies() -> None:
     assert PLANS.find_local_monthly_price(PlanKey.PLUS, CurrencyCode("EUR")) == money(
         34900, "EUR"
     )
-    assert PLANS.find_local_monthly_price(PlanKey.CHAT, CurrencyCode("USD")) is None
-    assert PLANS.find_local_setup_fee(PlanKey.CHAT, CurrencyCode("AMD")) is None
+    assert PLANS.find_local_monthly_price(PlanKey.CHAT, CurrencyCode("USD")) == money(
+        10900, "USD"
+    )
+    assert PLANS.find_local_setup_fee(PlanKey.CHAT, CurrencyCode("AMD")) == money(
+        6490000, "AMD"
+    )
+    assert PLANS.find_local_monthly_price(PlanKey.CHAT, CurrencyCode("JPY")) is None
+    assert PLANS.find_local_setup_fee(PlanKey.CHAT, CurrencyCode("GBP")) is None
 
 
 def test_returned_plans_are_copies() -> None:

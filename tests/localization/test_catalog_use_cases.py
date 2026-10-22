@@ -213,8 +213,13 @@ def test_country_list_says_which_countries_have_explicit_prices() -> None:
         str(country.country_code): country.has_price_book for country in countries
     }
 
-    # The lari price book and the plans' own euros; dollars are conversions.
+    # The local price books and the plans' own euros; yen are conversions.
     assert price_books["GE"] is True
     assert price_books["DE"] is True
-    assert price_books["US"] is False
+    assert price_books["US"] is True
+    assert price_books["AM"] is True
+    assert price_books["IL"] is True
+    assert price_books["KZ"] is True
+    assert price_books["PL"] is True
+    assert price_books["JP"] is False
     assert price_books["RU"] is False
