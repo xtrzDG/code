@@ -79,6 +79,7 @@ from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
 from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
 from app.utilities.storage.media_collections import MEDIA_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
+from app.utilities.storage.meta_collections import META_CONNECTION_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.quality_collections import QUALITY_COLLECTIONS
@@ -281,6 +282,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *AUDIT_CHAIN_COLLECTIONS,  # View counts, chain checkpoints, checks (1193).
     *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
     *DEPOSIT_COLLECTIONS,  # Deposits and prepayment links (1190).
+    *META_CONNECTION_COLLECTIONS,  # Facebook sign-ins of the Channels page (1212).
 )
 
 

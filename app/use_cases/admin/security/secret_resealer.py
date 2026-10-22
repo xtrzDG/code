@@ -35,6 +35,9 @@ from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.use_cases.admin.security.calendar_link_resealer import reseal_calendar_links
 from app.use_cases.admin.security.payment_link_resealer import reseal_payment_links
+from app.use_cases.admin.security.registration_pin_resealer import (
+    reseal_registration_pins,
+)
 from app.use_cases.admin.security.webhook_secret_resealer import (
     reseal_webhook_endpoints,
 )
@@ -108,6 +111,11 @@ class SecretResealer:
             ):
                 self._renew_webhook(channel, sealed, tally)
 
+        reseal_registration_pins(
+            self._channel_repo,
+            business_id,
+            lambda encrypted: self._reseal(encrypted, tally),
+        )
         connection = self._calendar_connection_repo.get_by_business(business_id)
         if connection is not None:
             self._reseal_calendar(connection, tally)

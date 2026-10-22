@@ -16,6 +16,12 @@ from app.schemas.typings.channels.strings import (
     ChannelExternalId,
     EncryptedChannelSecret,
 )
+from app.schemas.typings.meta_connection.booleans import IsCommentReplyOn
+from app.schemas.typings.meta_connection.constrained_strings import (
+    CommentReplyText,
+    CommentTriggerKeyword,
+    WhatsAppBusinessAccountId,
+)
 from app.schemas.typings.sharing.constrained_strings import (
     InstagramUsername,
     MetaPageUsername,
@@ -57,6 +63,22 @@ class ChannelPublicProfile(PersistentDocument):
     whatsapp_number: WhatsAppNumberDigits | None = None
     page_username: MetaPageUsername | None = None
     instagram_username: InstagramUsername | None = None
+
+
+class InstagramCommentReplies(PersistentDocument):
+    """
+    Comment-to-DM of an Instagram account: when it is on, a comment under
+    the account's posts that holds one of `keywords` (any letter case) gets
+    `reply_text` once, as a private reply (the person can then write to the
+    assistant). Off until the owner turns it on; a reply needs both a
+    keyword and a text.
+    """
+
+    is_on: IsCommentReplyOn = False
+    keywords: list[CommentTriggerKeyword] = Field(
+        default_factory=list[CommentTriggerKeyword]
+    )
+    reply_text: CommentReplyText | None = None
 
 
 class ChannelDocument(BaseDocument):
@@ -112,3 +134,8 @@ class ChannelDocument(BaseDocument):
     credential_checked_at: Microseconds | None = None
     last_inbound_at: Microseconds | None = None
     last_outbound_at: Microseconds | None = None
+    whatsapp_business_account_id: WhatsAppBusinessAccountId | None = None
+    encrypted_registration_pin: EncryptedChannelSecret | None = Field(
+        default=None, repr=False
+    )
+    comment_replies: InstagramCommentReplies | None = None

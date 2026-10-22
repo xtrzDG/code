@@ -36,6 +36,7 @@ SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
 BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
 PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
+COMMENT_REPLIES_GATE: ReleaseGateName = ReleaseGateName("instagram_comment_replies")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -98,6 +99,24 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("send_payment_link")],
+        is_open=False,
+    ),
+    # Instagram comment-to-DM (W21, migration 1212): a comment that names one
+    # of the owner's keywords is an inbox event COMMENT_TRIGGER and its
+    # private reply an outbox message COMMENT_REPLY. Until the next release
+    # opens this gate, comments are read and left alone (nothing stored).
+    ReleaseGate(
+        name=COMMENT_REPLIES_GATE,
+        collection_name=DocumentCollectionName("inbound_events"),
+        path=StoredEnumPath("kind"),
+        values=[GatedEnumValue("comment_trigger")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=COMMENT_REPLIES_GATE,
+        collection_name=DocumentCollectionName("outbound_messages"),
+        path=StoredEnumPath("kind"),
+        values=[GatedEnumValue("comment_reply")],
         is_open=False,
     ),
 )

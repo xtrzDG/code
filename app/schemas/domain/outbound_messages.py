@@ -39,6 +39,7 @@ from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.schemas.typings.feedback.prefixed_id import FeedbackRequestId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.meta_connection.constrained_strings import MetaCommentId
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
     PushNotificationTag,
@@ -52,11 +53,15 @@ class CustomerRecipient(PersistentDocument):
     """
     A customer in the business's channel. The credential is read from the
     channel at send time (never stored here), so a reconnected bot is used.
+    `comment_id` names the Instagram comment a private reply answers (the
+    platform delivers it to the comment's author; None for every other
+    message).
     """
 
     channel_id: ChannelId
     channel: ChannelKind
     channel_user_id: ChannelUserId
+    comment_id: MetaCommentId | None = None
 
 
 class OutboundTemplate(PersistentDocument):
@@ -142,9 +147,14 @@ class OutboundMessageDocument(BaseDocument):
     quick replies or an inline keyboard under the reply's last part. A
     release that does not know them sends the text alone, which already
     ends with their prompt.
+
+    Version 8: the kind `comment_reply` (the private reply to an Instagram
+    comment that named one of the owner's keywords), whose customer names
+    the comment it answers (`customer.comment_id`, optional). Rows of the
+    earlier kinds read unchanged.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("7")
+    schema_version: SchemaVersion = SchemaVersion("8")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind

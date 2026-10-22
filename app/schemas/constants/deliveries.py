@@ -2,11 +2,17 @@ from enum import StrEnum
 
 
 class InboundEventKind(StrEnum):
-    """What a webhook brought into the inbox, and so which job processes it."""
+    """
+    What a webhook brought into the inbox, and so which job processes it.
+    COMMENT_TRIGGER is an Instagram comment that named one of the owner's
+    keywords: it gets one private reply (written only once its release gate
+    opens, app/utilities/storage/release_gates.py).
+    """
 
     CUSTOMER_MESSAGE = "customer_message"
     PLATFORM_BOT_UPDATE = "platform_bot_update"
     VOICE_POST_CALL = "voice_post_call"
+    COMMENT_TRIGGER = "comment_trigger"
 
 
 class InboundEventStatus(StrEnum):
@@ -38,7 +44,9 @@ class OutboundMessageKind(StrEnum):
     links the phone assistant promised (CALL_LINKS) and the message to a
     caller who did not get through (TEXT_BACK), and a guest's written
     confirmation of a booking the assistant made or moved in a chat, with
-    its manage link (BOOKING_CONFIRMATION).
+    its manage link (BOOKING_CONFIRMATION), and the private reply to an
+    Instagram comment that named one of the owner's keywords
+    (COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).
     """
 
     CUSTOMER_REPLY = "customer_reply"
@@ -49,6 +57,7 @@ class OutboundMessageKind(StrEnum):
     CALL_LINKS = "call_links"
     TEXT_BACK = "text_back"
     BOOKING_CONFIRMATION = "booking_confirmation"
+    COMMENT_REPLY = "comment_reply"
 
 
 class OutboundMessageStatus(StrEnum):

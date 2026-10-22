@@ -56,6 +56,7 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
+from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.mfa.constrained_integers import StepUpMaxAgeSeconds
 from app.schemas.typings.mfa.strings import TotpIssuerName
 from app.schemas.typings.notifications.constrained_strings import (
@@ -113,9 +114,8 @@ class AppSettings(ImmutableDTO):
     # The owner cabinet's public address (provider consent pages return there).
     cabinet_base_url: CabinetBaseUrl | None = None
     database_url: DatabaseUrl | None = None
-    # The cabinet's live updates LISTEN on this direct (session) connection
-    # when DATABASE_URL goes through a transaction pooler; DATABASE_URL
-    # otherwise (LIVE_EVENTS_DATABASE_URL).
+    # The cabinet's live updates LISTEN on this direct (session) connection when
+    # DATABASE_URL goes through a pooler (LIVE_EVENTS_DATABASE_URL).
     live_events_database_url: DatabaseUrl | None = None
     # The key ring (ENCRYPTION_KEYS, newest first, then ENCRYPTION_KEY): the
     # current key encrypts and signs; the previous ones only decrypt and
@@ -178,8 +178,7 @@ class AppSettings(ImmutableDTO):
     dpa_document_version: DpaDocumentVersion
     platform_admin_emails: list[EmailAddress]
     platform_admin_phone_numbers: list[E164PhoneNumber]
-    # Login codes: one provider per delivery channel; a channel without a
-    # provider is not offered (see `.env.example`, "Login codes").
+    # Login codes: one provider per channel, else not offered (.env.example).
     twilio_account_sid: TwilioAccountSid | None = None
     twilio_auth_token: PlatformSecret | None = None
     twilio_sender: SmsSenderId | None = None
@@ -205,6 +204,7 @@ class AppSettings(ImmutableDTO):
     meta_app_id: PlatformIdentifier | None = None
     meta_app_secret: PlatformSecret | None = None
     meta_verify_token: PlatformSecret | None = None
+    meta_embedded_signup_config_id: MetaConfigurationId | None = None
     whatsapp_system_user_token: PlatformSecret | None = None
     whatsapp_notification_phone_number_id: MetaObjectId | None = None
     whatsapp_notification_template_name: WhatsAppTemplateName | None = None
