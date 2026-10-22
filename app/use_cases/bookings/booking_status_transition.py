@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 
@@ -108,7 +108,7 @@ class BookingStatusTransition:
         self,
         business_id: BusinessId,
         booking_id: BookingId,
-    ) -> Iterator[BookingDocument]:
+    ) -> Generator[BookingDocument]:
         """The booking as stored, read and changed under the booking lock."""
 
         with self._lock_registry.lock_for(business_id):

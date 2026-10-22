@@ -21,7 +21,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 LARGE_CLONE_LINES: int = 20
 # Below the recorded threshold by this much, the threshold should come down.
@@ -161,10 +161,10 @@ def describe(verdict: RatchetVerdict) -> str:
 
 
 def read_json(path: Path) -> dict[str, Any]:
-    document: Any = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(document, dict):
+    parsed: Any = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(parsed, dict):
         raise ValueError(f"{path} is not a JSON object")
-    return document
+    return cast(dict[str, Any], parsed)
 
 
 def main(arguments: list[str]) -> int:
