@@ -208,11 +208,12 @@ function AliasChip({
       data-alias-status={row.status}
       className={
         isSuggested
-          ? "flex min-w-0 max-w-full items-center gap-1 rounded-full border border-dashed border-accent bg-accent-soft/60 py-0.5 ps-2.5 pe-1 text-sm text-ink"
-          : "flex min-w-0 max-w-full items-center gap-1 rounded-full bg-surface-muted py-0.5 ps-2.5 pe-1 text-sm text-ink"
+          ? "flex min-w-0 max-w-full items-center gap-1 rounded-2xl border border-dashed border-accent bg-accent-soft/60 py-0.5 ps-2.5 pe-1 text-sm text-ink"
+          : "flex min-w-0 max-w-full items-center gap-1 rounded-2xl bg-surface-muted py-0.5 ps-2.5 pe-1 text-sm text-ink"
       }
     >
-      <span className="min-w-0 truncate" dir="auto" lang={row.language} data-user-content>
+      {/* Read in full before it is accepted: a long name wraps instead of being cut. */}
+      <span className="min-w-0 break-words" dir="auto" lang={row.language} data-user-content>
         {row.text}
       </span>
       {isSuggested ? (
