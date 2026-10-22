@@ -139,7 +139,8 @@ test("a platform admin sets up the app at the first sign-in and opens the admin 
   await passLoginCode(page, MFA_ADMIN_EMAIL);
 
   await expect(page.getByRole("heading", { name: en.mfa.enrollment.title })).toBeVisible();
-  await page.getByRole("button", { name: en.mfa.enrollment.start }).click();
+  // A browser with passkeys is offered one first; this admin takes the app.
+  await page.getByRole("button", { name: en.passkeys.enrollment.useApp }).click();
   const key = await readKey(page.locator("main"));
   const { code } = await freshTotpCode(key, null);
   await page.getByLabel(en.mfa.setup.code).fill(code);
