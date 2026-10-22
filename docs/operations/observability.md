@@ -133,12 +133,44 @@ The request id (`X-Request-ID`) and the trace id travel together:
    `trace_parent` on the job), and the worker binds them again when it runs
    the job, so its log lines and spans name the same ids.
 3. The model call's entry in the quality journal (Langfuse) carries both in
-   its metadata.
+   its metadata (`request_id` and `trace_id` under
+   `langfuse.trace.metadata.*` and `langfuse.observation.metadata.*`). The
+   entry is a trace of its own: Langfuse's trace id is not the request's
+   `trace_id`, so search the journal by the metadata.
 4. The reply's `deliver_outbound` job is queued by that job, so the send
    keeps them too.
 
 To follow one message: find its webhook in the logs (`request_id`), then
 search the logs for that id, or open the trace by `trace_id`.
+
+## Quality journal (Langfuse over OpenTelemetry)
+
+Every model call is buffered as one OpenTelemetry span and the
+`flush_llm_traces` job (and a background thread of the API) sends the
+buffer to Langfuse: OTLP/HTTP with a JSON `ExportTraceServiceRequest` to
+`POST {LANGFUSE_HOST}/api/public/otel/v1/traces`, basic auth with the
+project's public and secret key and the `x-langfuse-ingestion-version: 4`
+header (real-time ingestion). Langfuse retired the batch endpoint
+`/api/public/ingestion` the journal used before.
+
+- One call is one trace with one root span of observation type
+  `generation` (`langfuse.observation.type`), named `assistant_reply`
+  (`langfuse.trace.name`). The trace id is the call's UUID without dashes;
+  the span id is derived from it.
+- The span carries the model (`langfuse.observation.model.name`), the
+  tokens (`langfuse.observation.usage_details`: input, output, total), the
+  level (`DEFAULT`, or `ERROR` with the error's class name as
+  `langfuse.observation.status_message` and OTLP status code 2), and as
+  metadata the effort, offered and called tools, stop reason and duration.
+- Trace metadata (`langfuse.trace.metadata.*`) names the model, the
+  business, contact and conversation, the request id and trace id; the
+  conversation is the session (`langfuse.session.id`), which erasure finds
+  traces by.
+- Texts (`langfuse.observation.input`/`output`) go only with
+  `LANGFUSE_CAPTURE_CONTENT=true`, without phone numbers and e-mail
+  addresses unless `LANGFUSE_RAW_TEXT=true`. No user id is sent.
+- Delivery problems are logged and the batch is dropped; a reply never
+  waits for or fails because of the journal.
 
 ## Logs
 

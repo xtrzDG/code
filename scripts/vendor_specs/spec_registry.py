@@ -169,10 +169,15 @@ LANGFUSE_SPEC = VendorSpec(
     ),
     document_format=DocumentFormat.OPENAPI,
     roots=(
-        SchemaRoot("request:ingestion", "request:post /api/public/ingestion"),
-        SchemaRoot("response:ingestion", "response:post /api/public/ingestion 207"),
+        SchemaRoot("request:otel.traces", "request:post /api/public/otel/v1/traces"),
+        SchemaRoot(
+            "response:otel.traces", "response:post /api/public/otel/v1/traces 200"
+        ),
         SchemaRoot("request:traces.delete", "request:delete /api/public/traces"),
-        SchemaRoot("response:traces.list", "response:get /api/public/traces 200"),
+        SchemaRoot(
+            "response:observations.list",
+            "response:get /api/public/v2/observations 200",
+        ),
     ),
 )
 

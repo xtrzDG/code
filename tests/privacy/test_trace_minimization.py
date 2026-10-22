@@ -1,19 +1,19 @@
 """
 Traces of model calls at Langfuse: tagged with the business, contact and
-conversation they answered (metadata, and the conversation as sessionId),
+conversation they answered (metadata, and the conversation as the session),
 and without phone numbers or e-mail addresses unless LANGFUSE_RAW_TEXT.
+Nothing else about the person goes with them: no user id, no texts unless
+content tracing is on.
 """
 
-from typing import cast
+import json
 
 import pytest
 from typed_time_provider import Microseconds, MonotonicClock, Nanoseconds, WallClock
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
-from app.facilitators.observability.langfuse_trace_facilitator import (
-    build_generation_events,
-)
+from app.facilitators.observability.langfuse_otel_spans import build_generation_span
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -24,6 +24,7 @@ from app.utilities.config_helpers.app_settings.observability_settings_section im
 )
 from app.utilities.observability.log_context import bound_log_context
 from app.utilities.observability.trace_redaction import redact_contact_details
+from tests.platform.test_langfuse_otel_tracing import attributes_of
 from tests.platform.test_observability import (
     STARTED_AT_NANOSECONDS,
     RecordingTraceFacilitator,
@@ -59,28 +60,52 @@ def test_a_trace_names_the_business_contact_and_conversation_of_the_call() -> No
         contact_id,
         conversation_id,
     )
-    events = build_generation_events(trace)
-    trace_body = events[0]["body"]
-    assert isinstance(trace_body, dict)
-    assert trace_body["sessionId"] == str(conversation_id)
-    assert trace_body["metadata"] == {
+    attributes = attributes_of(build_generation_span(trace))
+    assert attributes["langfuse.session.id"] == str(conversation_id)
+    assert trace_metadata(attributes) == {
         "model": "gpt-5-mini",
         "business_id": str(business_id),
         "contact_id": str(contact_id),
         "conversation_id": str(conversation_id),
     }
-    generation_body = cast(dict[str, object], events[1]["body"])
-    generation_metadata = cast(dict[str, object], generation_body["metadata"])
-    assert generation_metadata["conversation_id"] == str(conversation_id)
+    observation_metadata = "langfuse.observation.metadata.conversation_id"
+    assert attributes[observation_metadata] == str(conversation_id)
 
 
 def test_a_call_outside_a_conversation_has_no_session() -> None:
-    events = build_generation_events(build_trace())
+    attributes = attributes_of(build_generation_span(build_trace()))
 
-    trace_body = events[0]["body"]
-    assert isinstance(trace_body, dict)
-    assert "sessionId" not in trace_body
-    assert trace_body["metadata"] == {"model": "gpt-5-mini"}
+    assert "langfuse.session.id" not in attributes
+    assert trace_metadata(attributes) == {"model": "gpt-5-mini"}
+
+
+def test_a_span_carries_no_user_and_no_texts_by_default() -> None:
+    inner = scripted("Booked for +995 555 12 34 56!")
+    facilitator = RecordingTraceFacilitator()
+    adapter = build_tracing_adapter(inner, facilitator, is_content_traced=False)
+    with bound_log_context(contact_id=ContactId()):
+        adapter.complete(build_request(inner))
+
+    span = build_generation_span(facilitator.traces[0])
+    attributes = attributes_of(span)
+
+    # Only Langfuse's own keys: no user.id, gen_ai.prompt or other strays.
+    assert all(key.startswith("langfuse.") for key in attributes)
+    assert not {
+        "langfuse.user.id",
+        "langfuse.observation.input",
+        "langfuse.observation.output",
+    } & set(attributes)
+    assert "+995" not in json.dumps(span)
+
+
+def trace_metadata(attributes: dict[str, str]) -> dict[str, str]:
+    prefix = "langfuse.trace.metadata."
+    return {
+        key.removeprefix(prefix): value
+        for key, value in attributes.items()
+        if key.startswith(prefix)
+    }
 
 
 def test_traced_texts_lose_phones_and_emails_unless_raw_text_is_allowed() -> None:

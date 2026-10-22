@@ -1,4 +1,8 @@
-"""The trace endpoints of the Langfuse public API, over a fake transport."""
+"""
+The trace endpoints of the Langfuse public API, over a fake transport: a
+session's traces are listed through the Observations API v2 (cursor pages)
+and deleted by id.
+"""
 
 import json
 
@@ -16,11 +20,19 @@ from app.schemas.typings.platform.strings import (
 )
 
 PAGES: dict[str, dict[str, object]] = {
-    "1": {
-        "data": [{"id": "trace-1"}, {"id": "trace-2"}, {"name": "no id"}],
-        "meta": {"page": 1, "limit": 100, "totalItems": 3, "totalPages": 2},
+    "": {
+        "data": [
+            {"id": "observation-1", "traceId": "trace-1"},
+            {"id": "observation-2", "traceId": "trace-2"},
+            {"id": "observation-3", "traceId": "trace-1"},
+            {"id": "observation-4"},
+        ],
+        "meta": {"cursor": "cursor-0000-0002"},
     },
-    "2": {"data": [{"id": "trace-3"}], "meta": {"page": 2, "totalPages": 2}},
+    "cursor-0000-0002": {
+        "data": [{"id": "observation-5", "traceId": "trace-3"}],
+        "meta": {},
+    },
 }
 
 
@@ -38,27 +50,32 @@ def test_every_page_of_a_session_is_read_with_ids_only() -> None:
 
     def answer(request: httpx.Request) -> httpx.Response:
         requests.append(request)
-        return httpx.Response(200, json=PAGES[request.url.params["page"]])
+        return httpx.Response(200, json=PAGES[request.url.params.get("cursor", "")])
 
     trace_ids = client(httpx.MockTransport(answer)).list_session_trace_ids(
         TraceSessionId("conversation_1")
     )
 
+    # Each trace once, though several of its observations are listed.
     assert trace_ids == ["trace-1", "trace-2", "trace-3"]
-    assert [request.url.path for request in requests] == ["/api/public/traces"] * 2
+    assert [request.url.path for request in requests] == [
+        "/api/public/v2/observations"
+    ] * 2
     params = requests[0].url.params
     assert (params["sessionId"], params["fields"], params["limit"]) == (
         "conversation_1",
         "core",
-        "100",
+        "1000",
     )
+    assert "cursor" not in params
+    assert requests[1].url.params["cursor"] == "cursor-0000-0002"
     assert requests[0].headers["authorization"].startswith("Basic ")
 
 
 def test_an_answer_without_paging_is_one_page() -> None:
     def answer(request: httpx.Request) -> httpx.Response:
         del request
-        return httpx.Response(200, json={"data": [{"id": "only"}]})
+        return httpx.Response(200, json={"data": [{"traceId": "only"}]})
 
     assert client(httpx.MockTransport(answer)).list_session_trace_ids(
         TraceSessionId("c")

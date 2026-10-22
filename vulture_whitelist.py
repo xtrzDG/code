@@ -19,7 +19,7 @@ _ = _Whitelist()
 _.from_turns  # app/adapters/llm/scripted_llm_adapter.py
 _.idle_connection_count  # app/clients/postgres/postgres_connection_pool_client.py
 _.open_connection_count  # app/clients/postgres/postgres_connection_pool_client.py
-_.buffered_event_count  # app/facilitators/observability/langfuse_trace_facilitator.py
+_.buffered_span_count  # app/facilitators/observability/langfuse_trace_facilitator.py
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
 _.run_queued_jobs  # app/gateways/worker/background_worker.py

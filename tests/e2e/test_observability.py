@@ -50,11 +50,15 @@ def test_owner_test_chat_is_traced_and_flushed_by_the_worker_job() -> None:
 
     assert report.failures == 0
     assert [request.url.path for request in workshop.langfuse.requests] == [
-        "/api/public/ingestion"
+        "/api/public/otel/v1/traces"
     ]
-    batch = json.loads(workshop.langfuse.requests[0].content)["batch"]
-    assert [event["type"] for event in batch] == ["trace-create", "generation-create"]
-    generation = batch[1]["body"]
-    assert generation["model"] == "scripted"
-    assert "input" not in generation  # message texts are not traced by default
-    assert workshop.langfuse.requests[0].headers["authorization"].startswith("Basic ")
+    export = json.loads(workshop.langfuse.requests[0].content)
+    [span] = export["resourceSpans"][0]["scopeSpans"][0]["spans"]
+    attributes = {pair["key"]: pair["value"] for pair in span["attributes"]}
+    assert attributes["langfuse.observation.type"] == {"stringValue": "generation"}
+    assert attributes["langfuse.observation.model.name"] == {"stringValue": "scripted"}
+    # Message texts are not traced by default.
+    assert "langfuse.observation.input" not in attributes
+    sent_headers = workshop.langfuse.requests[0].headers
+    assert sent_headers["authorization"].startswith("Basic ")
+    assert sent_headers["x-langfuse-ingestion-version"] == "4"

@@ -977,12 +977,17 @@ Messenger и Instagram шаблонов не принимают: вне 24 ча�
   и `LANGFUSE_RAW_TEXT` на Render задавайте в группе `workshop-backend`:
   журнал отправляет и воркер.
 - **Срок хранения в проекте Langfuse — 30 дней** (так обещает DPA): Settings →
-  Data retention → 30 days. Каждая трасса помечена `business_id`,
-  `contact_id` и `conversation_id` (metadata), а разговор — её `sessionId`.
+  Data retention → 30 days. Журнал отправляет трассы через OpenTelemetry
+  (OTLP/HTTP JSON на `/api/public/otel/v1/traces` с заголовком
+  `x-langfuse-ingestion-version: 4`; старый `/api/public/ingestion`
+  Langfuse убрал). Каждая трасса помечена `business_id`, `contact_id` и
+  `conversation_id` (metadata), а разговор — её `sessionId`
+  (`langfuse.session.id`).
 - Удаление у Langfuse: когда владелец удаляет данные клиента или ночная
   очистка (`purge_expired_personal_data`) удаляет записи обращений к модели,
   воркер ставит задачу `erase_processor_copies`: она находит трассы разговора
-  (`GET /api/public/traces?sessionId=…`) и удаляет их
+  (`GET /api/public/v2/observations?sessionId=…`, по `traceId` наблюдений)
+  и удаляет их
   (`DELETE /api/public/traces`). Ключи проекта должны позволять удаление
   (обычные ключи проекта это могут). Задача повторяется с паузами, пока
   Langfuse не ответит; результат пишется в журнал аудита бизнеса

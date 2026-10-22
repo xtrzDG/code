@@ -1,17 +1,10 @@
 import json
 
-import httpx
 import pytest
 from typed_time_provider import Microseconds, MonotonicClock, Nanoseconds, WallClock
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter, extract_user_text
-from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
-from app.facilitators.observability.langfuse_trace_facilitator import (
-    LangfuseTraceFacilitator,
-    build_generation_events,
-    format_timestamp,
-)
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     scrub_event,
 )
@@ -28,7 +21,6 @@ from app.schemas.typings.assistants.strings import (
     LlmToolInputSchemaJson,
     SystemPromptText,
 )
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import (
     LlmProviderPayload,
@@ -38,8 +30,6 @@ from app.schemas.typings.conversations.strings import (
 from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
 from app.schemas.typings.platform.strings import (
     CorrelationId,
-    PlatformIdentifier,
-    PlatformSecret,
 )
 
 STARTED_AT_NANOSECONDS: int = 1_790_000_000_000_000_000
@@ -164,59 +154,6 @@ def build_trace() -> LlmGenerationTrace:
         started_at=Microseconds(1_790_000_000_000_000),
         elapsed=ElapsedMilliseconds(250),
     )
-
-
-def test_langfuse_events_have_trace_and_generation() -> None:
-    events = build_generation_events(build_trace())
-
-    assert [event["type"] for event in events] == ["trace-create", "generation-create"]
-    generation_body = events[1]["body"]
-    assert isinstance(generation_body, dict)
-    assert generation_body["traceId"] == "trace-1"
-    assert generation_body["usage"] == {
-        "input": 120,
-        "output": 30,
-        "total": 150,
-        "unit": "TOKENS",
-    }
-    assert "input" not in generation_body
-    assert format_timestamp(1_790_000_000_000_000) == "2026-09-21T14:13:20.000Z"
-
-
-def test_langfuse_facilitator_batches_and_survives_failures() -> None:
-    received_batches: list[list[object]] = []
-
-    def handle(request: httpx.Request) -> httpx.Response:
-        assert request.url.path == "/api/public/ingestion"
-        assert request.headers["authorization"].startswith("Basic ")
-        body = json.loads(request.content)
-        received_batches.append(body["batch"])
-        return httpx.Response(207, json={"successes": [], "errors": []})
-
-    client = LangfuseIngestionClient(
-        host=PublicBaseUrl("https://cloud.langfuse.com"),
-        public_key=PlatformIdentifier("pk-lf-test"),
-        secret_key=PlatformSecret("sk-lf-test"),
-        transport=httpx.MockTransport(handle),
-    )
-    facilitator = LangfuseTraceFacilitator(client)
-    for _ in range(30):
-        facilitator.record_generation(build_trace())
-
-    facilitator.flush()
-
-    assert [len(batch) for batch in received_batches] == [50, 10]
-    assert facilitator.buffered_event_count == 0
-
-    failing_client = LangfuseIngestionClient(
-        host=PublicBaseUrl("https://cloud.langfuse.com"),
-        public_key=PlatformIdentifier("pk-lf-test"),
-        secret_key=PlatformSecret("sk-lf-test"),
-        transport=httpx.MockTransport(lambda request: httpx.Response(500)),
-    )
-    failing_facilitator = LangfuseTraceFacilitator(failing_client)
-    failing_facilitator.record_generation(build_trace())
-    failing_facilitator.flush()
 
 
 def test_sentry_scrubber_removes_personal_data() -> None:
