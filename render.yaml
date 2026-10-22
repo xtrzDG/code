@@ -190,6 +190,13 @@ services:
       # phone ranges that never get a login code (E.164 starts)
       - key: OTP_DENIED_PHONE_PREFIXES
         sync: false
+      # passkeys (WebAuthn): the domain they are bound to; empty: the
+      # cabinet's host
+      - key: WEBAUTHN_RP_ID
+        sync: false
+      # offline GeoLite2-Country .mmdb file: device countries (optional)
+      - key: GEOIP_COUNTRY_DATABASE_PATH
+        sync: false
       # voice
       - key: ELEVENLABS_API_KEY
         sync: false
@@ -472,6 +479,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: OTP_DENIED_PHONE_PREFIXES
+      - key: WEBAUTHN_RP_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEBAUTHN_RP_ID
+      - key: GEOIP_COUNTRY_DATABASE_PATH
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GEOIP_COUNTRY_DATABASE_PATH
       - key: ELEVENLABS_API_KEY
         fromService:
           type: web
@@ -852,6 +869,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: OTP_DENIED_PHONE_PREFIXES
+      - key: WEBAUTHN_RP_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEBAUTHN_RP_ID
+      - key: GEOIP_COUNTRY_DATABASE_PATH
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GEOIP_COUNTRY_DATABASE_PATH
       - key: ELEVENLABS_API_KEY
         fromService:
           type: web

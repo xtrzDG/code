@@ -135,6 +135,8 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       totp_factor: "אפליקציית אימות",
       recovery_codes: "קודי שחזור",
       mfa_challenge: "בדיקה דו-שלבית",
+      passkey: "מפתח גישה",
+      passkey_challenge: "בדיקה עם מפתח גישה",
       otp_challenge: "קוד כניסה",
       support_access: "גישת התמיכה של הפלטפורמה",
       support_write_access: "שינויים של התמיכה בפלטפורמה",

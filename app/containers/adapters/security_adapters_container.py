@@ -3,11 +3,11 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
-from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
-from app.adapters.security.totp_secret_cipher_adapter import TotpSecretCipherAdapter
 from app.adapters.security.maxmind_ip_country_lookup_adapter import (
     MaxMindIpCountryLookupAdapter,
 )
+from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
+from app.adapters.security.totp_secret_cipher_adapter import TotpSecretCipherAdapter
 from app.adapters.security.webauthn_passkey_ceremony_adapter import (
     WebAuthnPasskeyCeremonyAdapter,
 )

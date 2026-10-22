@@ -19,6 +19,7 @@ export const devicesKa: Translation<typeof devicesEn> = {
   signedIn: "შესვლა {date}",
   lastUsed: "ბოლოს {date}",
   from: "მისამართიდან {address}",
+  fromCountry: "მისამართიდან {address} ({country})",
   twoFactor: "ავთენტიფიკატორი აპლიკაციით",
   oneFactor: "შესვლის კოდით",
   ends: "თავისით დასრულდება {date}",

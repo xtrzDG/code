@@ -1,6 +1,10 @@
 "use client";
 
-/** One signed-in device: what it is, when and where it was used, and "Sign out". */
+/**
+ * One signed-in device: what it is, when and where it was used (the
+ * address with its approximate country, when the server knows it), and
+ * "Sign out".
+ */
 
 import type { UserSessionView } from "@/api/types";
 import { IconMonitor, IconPhone } from "@/components/icons";
@@ -8,6 +12,7 @@ import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
+import { countryName } from "@/lib/countries";
 
 const KIND_LABELS = {
   desktop: "devices.kind.desktop",
@@ -34,7 +39,7 @@ export function DeviceRow({
   session: UserSessionView;
   onEnd: (session: UserSessionView) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const viewer = useViewerFormat();
   const deviceName = useDeviceName();
   const name = deviceName(session);
@@ -43,7 +48,14 @@ export function DeviceRow({
   const Icon = isPhone ? IconPhone : IconMonitor;
   const lastUsed = [
     t("devices.lastUsed", { date: when(session.last_seen_at) }),
-    session.last_seen_ip ? t("devices.from", { address: session.last_seen_ip }) : null,
+    session.last_seen_ip
+      ? session.last_seen_country
+        ? t("devices.fromCountry", {
+            address: session.last_seen_ip,
+            country: countryName(session.last_seen_country, locale),
+          })
+        : t("devices.from", { address: session.last_seen_ip })
+      : null,
   ]
     .filter(Boolean)
     .join(" ");

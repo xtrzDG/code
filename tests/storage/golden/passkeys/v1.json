@@ -1,0 +1,19 @@
+{
+  "aaguid": "00000000-0000-0000-0000-000000000000",
+  "clone_suspected_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "credential_id": "cGFzc2tleS1jcmVkZW50aWFsLTAwMDA",
+  "id": "passkey_b35a45e1-3009-4e88-8a85-d0a1d2c6f5b1",
+  "is_backed_up": true,
+  "is_synced": true,
+  "last_used_at": 1790000000000000,
+  "name": "MacBook Touch ID",
+  "public_key": "pQECAyYgASFYIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "schema_version": "1",
+  "sign_count": 1,
+  "transports": [
+    "usb"
+  ],
+  "updated_at": 1790000000000000,
+  "user_id": "user_39be088f-5610-44da-b4ec-7bd2297ee7e6"
+}

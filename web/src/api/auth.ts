@@ -38,7 +38,7 @@ export function needsSecondStep(
   return "mfa_required" in answer && answer.mfa_required;
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<T> {
+export async function postJson<T>(path: string, body: unknown): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {

@@ -36,6 +36,7 @@ SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
 BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
 PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
+PROTECT_DATA_STEP_GATE: ReleaseGateName = ReleaseGateName("protect_data_step")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -98,6 +99,24 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("send_payment_link")],
+        is_open=False,
+    ),
+    # The setup guide's step "Protect your customers' data" (W20): an owner
+    # puts it away with the second-factor reminder (security_nudges), so
+    # it is never stored as a skipped step; the gate stays closed until a
+    # release lets owners skip it like the other steps after the launch.
+    ReleaseGate(
+        name=PROTECT_DATA_STEP_GATE,
+        collection_name=DocumentCollectionName("setup_states"),
+        path=StoredEnumPath("skipped_steps[]"),
+        values=[GatedEnumValue("protect_data")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=PROTECT_DATA_STEP_GATE,
+        collection_name=DocumentCollectionName("setup_states"),
+        path=StoredEnumPath("skipped_after_launch[]"),
+        values=[GatedEnumValue("protect_data")],
         is_open=False,
     ),
 )

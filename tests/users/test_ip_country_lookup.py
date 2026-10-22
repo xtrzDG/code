@@ -64,7 +64,9 @@ def test_addresses_get_the_country_the_database_places_them_in(
 def test_private_local_and_broken_addresses_have_no_country(
     tmp_path: Path, address: str
 ) -> None:
-    assert lookup(country_database(tmp_path)).country_of(ClientIpAddress(address)) is None
+    assert (
+        lookup(country_database(tmp_path)).country_of(ClientIpAddress(address)) is None
+    )
 
 
 def test_without_a_database_no_address_has_a_country() -> None:

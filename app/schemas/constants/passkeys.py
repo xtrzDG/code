@@ -47,20 +47,21 @@ class WebAuthnTransport(StrEnum):
 class WebAuthnResidentKey(StrEnum):
     """
     Whether the authenticator should keep the passkey discoverable (a
-    passkey the browser can list) or may keep a server-side credential.
+    passkey the browser can list). The cabinet asks for "preferred" only:
+    a discoverable passkey where the authenticator can keep one, a plain
+    credential otherwise (WebAuthn also knows "required" and
+    "discouraged").
     """
 
-    REQUIRED = "required"
     PREFERRED = "preferred"
-    DISCOURAGED = "discouraged"
 
 
 class WebAuthnUserVerification(StrEnum):
     """
     Whether the authenticator checks the person (fingerprint, face, PIN)
-    before it signs.
+    before it signs. The cabinet asks for "preferred" only: the passkey is
+    the second factor after the login code, so a security key without a
+    PIN still counts (WebAuthn also knows "required" and "discouraged").
     """
 
-    REQUIRED = "required"
     PREFERRED = "preferred"
-    DISCOURAGED = "discouraged"

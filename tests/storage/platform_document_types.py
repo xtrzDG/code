@@ -37,6 +37,7 @@ from app.schemas.domain.mfa import (
     TotpFactorDocument,
 )
 from app.schemas.domain.partners import PartnerDocument
+from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
@@ -85,6 +86,9 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         TotpFactorDocument,
         RecoveryCodeDocument,
         MfaChallengeDocument,
+        # Passkeys are a person's second factor too (1201).
+        PasskeyDocument,
+        PasskeyChallengeDocument,
         # The platform's own operations: alerts, backups, incidents (an
         # incident names the businesses it affected, it belongs to none).
         PlatformAlertStateDocument,

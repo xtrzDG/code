@@ -1,6 +1,7 @@
 """
 The catalog entries of users and sign-in (platform-wide collections): the
-login codes, sessions, two-factor sign-in (1082) and passkeys (1201).
+login codes, sessions, two-factor sign-in (1082), passkeys and the
+reminder to turn a second factor on (1201).
 Part of DOCUMENT_COLLECTIONS (document_collection_catalog.py).
 """
 
@@ -19,6 +20,9 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from app.utilities.storage.passkey_collections import PASSKEY_COLLECTIONS
+from app.utilities.storage.security_nudge_collections import (
+    SECURITY_NUDGE_COLLECTIONS,
+)
 
 SIGN_IN_DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(DocumentCollectionName("users"), UserDocument),
@@ -40,4 +44,6 @@ SIGN_IN_DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
         DocumentCollectionName("mfa_challenges"), MfaChallengeDocument
     ),
     *PASSKEY_COLLECTIONS,  # Passkeys and their ceremonies (1201).
+    # Owners' answers to the reminder to turn a second factor on (1201).
+    *SECURITY_NUDGE_COLLECTIONS,
 )

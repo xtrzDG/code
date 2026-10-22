@@ -15,6 +15,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.setup import SetupStateDocument
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.profiles.business_profile import BusinessProfileView
+from app.schemas.dto.security_nudges import SecurityNudgeSource, SecurityNudgeView
 from app.schemas.dto.setup.profile_patch import PatchProfileCommand
 from app.schemas.dto.setup.setup_guide import GuideProgressCheck
 from app.schemas.dto.setup.setup_progress import (
@@ -50,6 +51,9 @@ from app.use_cases.setup.prepare_test_chat_version_use_case import (
 )
 from app.use_cases.setup.record_activation_milestones_use_case import (
     RecordActivationMilestonesUseCase,
+)
+from app.use_cases.setup.security_nudge.describe_security_nudge_use_case import (
+    DescribeSecurityNudgeUseCase,
 )
 from app.use_cases.setup.skip_setup_step_use_case import SkipSetupStepUseCase
 
@@ -134,6 +138,15 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # The reminder to protect customers' data with a second factor (1201).
+    describe_security_nudge_use_case: Factory[
+        UseCaseContract[SecurityNudgeSource, SecurityNudgeView]
+    ] = Factory(
+        DescribeSecurityNudgeUseCase,
+        totp_factor_repo=repositories.totp_factor_repo,
+        passkey_repo=repositories.passkey_repo,
+        security_nudge_repo=repositories.security_nudge_repo,
+    )
     get_setup_progress_use_case: Factory[UseCaseContract[SetupQuery, SetupView]] = (
         Factory(
             GetSetupProgressUseCase,
@@ -141,6 +154,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
             record_activation_milestones=record_activation_milestones_use_case,
             notice_guide_progress=notice_guide_progress_use_case,
             describe_apply_changes=apply_use_cases.describe_apply_changes_use_case,
+            describe_security_nudge=describe_security_nudge_use_case,
             business_profile_repo=repositories.business_profile_repo,
             knowledge_item_repo=repositories.knowledge_item_repo,
             brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,

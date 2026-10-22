@@ -11,6 +11,43 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-22 — passkeys, the second-factor reminder, device countries
+
+Spec: `a3821cd153ca3abd`
+
+- **Added** passkeys (WebAuthn) in Account → Security: `GET
+  /v1/me/passkeys` (the person's passkeys, `is_available` when the server
+  has a relying party, `is_recommended` for a platform admin without one),
+  `POST /v1/me/passkeys/registration` (options for
+  `navigator.credentials.create()`, step-up required) and `POST
+  /v1/me/passkeys` (the authenticator's answer → the new passkey; the
+  first second factor answers recovery codes once), `PATCH`/`DELETE
+  /v1/me/passkeys/{passkey_id}` (rename; remove, step-up required, 204).
+- **Added** a passkey as the second step of a sign-in: `POST
+  /v1/auth/mfa/passkey/options` and `POST /v1/auth/mfa/passkey/verify`
+  (the session, as `POST /v1/auth/mfa/verify` answers it); a platform admin
+  without a second factor may enrol a passkey while signing in (`POST
+  /v1/auth/mfa/passkey/enroll`, `.../enroll/finish`). Step-up with a
+  passkey: `POST /v1/auth/step-up/passkey` and `.../verify`. A refused
+  passkey answer is 422 `passkey_rejected`; a passkey whose signature
+  counter went back is suspended (422 `passkey_clone_suspected`, its
+  `clone_suspected_at` set); without `WEBAUTHN_RP_ID` (or a cabinet host
+  name) the passkey operations answer 409 `passkeys_unavailable`.
+- **Changed** (additive) `MfaChallengeView` names the second factors the
+  person can answer with, preferred first (`methods`), and what a platform
+  admin may enrol (`enrollment_methods`); `AccountSecurityView.passkey_count`;
+  `StepUpChallengeView.passkey_available`.
+- **Added** the owner's reminder to protect customers' data with a second
+  factor: `GET /v1/businesses/{business_id}/security-nudge` (owners and
+  staff; shown to owners of a live business without one) and `PUT
+  .../security-nudge/dismissal` (owners; back once the team grows past one
+  person). The setup guide has the owner-only step `protect_data` (target
+  `account_security`), put away with the reminder rather than skipped.
+- **Changed** (additive) `UserSessionView.created_country` and
+  `last_seen_country`: the approximate country of each address from an
+  offline GeoLite2 database (`GEOIP_COUNTRY_DATABASE_PATH`), null when
+  unknown.
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

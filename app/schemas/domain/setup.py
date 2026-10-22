@@ -67,10 +67,12 @@ class SetupStateDocument(BaseDocument):
     - `reminders_off_at`: the owners asked for no activation nudges.
 
     Version 2: everything after `skipped_steps` (all optional, so version 1
-    rows read as they are).
+    rows read as they are). Version 3: the step code `protect_data` is
+    known (an owner's second factor; it is put away with the reminder in
+    `security_nudges`, not skipped here), so older rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: SetupStateId
     business_id: BusinessId
     skipped_steps: list[SetupStepCode] = Field(default_factory=list[SetupStepCode])

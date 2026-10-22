@@ -15,6 +15,7 @@ from app.repositories.passkey_repositories import (
     PasskeyRepository,
 )
 from app.repositories.platform_admin_repository import PlatformAdminRepository
+from app.repositories.security_nudge_repository import SecurityNudgeRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
 )
@@ -61,4 +62,8 @@ class SecurityRepositoriesContainer(containers.DeclarativeContainer):
     support_access_grant_repo: Singleton[SupportAccessGrantRepository] = Singleton(
         SupportAccessGrantRepository,
         collection=security_collections.support_access_grant_collection,
+    )
+    security_nudge_repo: Singleton[SecurityNudgeRepository] = Singleton(
+        SecurityNudgeRepository,
+        collection=security_collections.security_nudge_collection,
     )

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import type { SecondStepRequired } from "@/api/auth";
 import { AuthenticatorSetup } from "@/components/security/AuthenticatorSetup";
 import { OneTimeCodeField } from "@/components/security/OneTimeCodeField";
@@ -8,27 +10,19 @@ import { Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { RECOVERY_CODE_EXAMPLE } from "@/lib/security/secondFactor";
 
+import { usePasskeyStep } from "../_lib/usePasskeyStep";
 import { useSecondStep } from "../_lib/useSecondStep";
-
-function Heading({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <h1 className="text-xl font-display tracking-tight text-ink">{title}</h1>
-      <p className="text-sm text-ink-muted">{description}</p>
-    </div>
-  );
-}
+import {
+  PasskeyEnrollmentChoice,
+  PasskeySignInPanel,
+  StepHeading as Heading,
+} from "./PasskeyStepPanels";
 
 /**
- * Step three for people with an authenticator app (and every platform
- * admin): its code, or a recovery code; an admin without an app sets one
- * up here and saves the recovery codes.
+ * Step three for people with a second factor (and every platform admin):
+ * a passkey first when they have one, else the authenticator code or a
+ * recovery code; an admin without a second factor adds a passkey (or
+ * sets up the app) here and saves the recovery codes.
  */
 export function SecondStepForm({
   step,
@@ -43,6 +37,9 @@ export function SecondStepForm({
 }) {
   const { t } = useI18n();
   const flow = useSecondStep(step, next);
+  const passkey = usePasskeyStep(step, flow.accept);
+  const [useCode, setUseCode] = useState(false);
+  const [useApp, setUseApp] = useState(false);
 
   if (flow.newCodes) {
     return (
@@ -57,6 +54,22 @@ export function SecondStepForm({
           onDone={flow.finish}
         />
       </div>
+    );
+  }
+
+  if (flow.requiresEnrollment && passkey.canEnroll && !useApp && !flow.enrollment) {
+    return (
+      <PasskeyEnrollmentChoice
+        isWorking={passkey.isWorking}
+        isStartingApp={flow.isStartingSetup}
+        problem={passkey.problem ?? flow.problem}
+        onAddPasskey={passkey.enroll}
+        onUseApp={() => {
+          setUseApp(true);
+          void flow.startSetup();
+        }}
+        onStartOver={onStartOver}
+      />
     );
   }
 
@@ -94,6 +107,18 @@ export function SecondStepForm({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (passkey.canSignIn && !useCode) {
+    return (
+      <PasskeySignInPanel
+        isWorking={passkey.isWorking}
+        problem={passkey.problem}
+        onUsePasskey={passkey.signIn}
+        onUseCode={passkey.hasCodes ? () => setUseCode(true) : null}
+        onStartOver={onStartOver}
+      />
     );
   }
 
@@ -154,6 +179,11 @@ export function SecondStepForm({
         {t("mfa.secondStep.verify")}
       </Button>
       <div className="flex flex-col items-center gap-1 border-t border-line pt-4 text-sm">
+        {passkey.canSignIn ? (
+          <Button variant="ghost" size="sm" onClick={() => setUseCode(false)}>
+            {t("passkeys.signIn.usePasskey")}
+          </Button>
+        ) : null}
         <Button variant="ghost" size="sm" onClick={flow.toggleRecovery}>
           {flow.useRecovery
             ? t("mfa.secondStep.useApp")

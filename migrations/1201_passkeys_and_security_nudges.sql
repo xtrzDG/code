@@ -14,12 +14,12 @@
 -- passkey_challenges (platform collection, no business): the random
 --   challenge of one ceremony (five minutes, consumed by compare-and-swap,
 --   so a signed answer counts once). Read by id, purged by age:
---     (doc_created_at)       the hourly purge of stale rows
--- security_nudges (platform collection, no business): one document per
---   person and business, under an id derived from both: when the owner
---   put away the "turn on a second factor" banner, and how many people
---   the team had then (the banner comes back once the team grows past
---   one). Read by id only.
+--     (doc_created_at)       the daily purge of stale rows
+-- security_nudges (business collection: row-level security by business):
+--   one document per person and business, under an id derived from both:
+--   when the owner put away the "turn on a second factor" banner, and how
+--   many people the team had then (the banner comes back once the team
+--   grows past one). Read by id only.
 --
 -- The tables are new and empty, so their lookup columns (trigger-filled,
 -- as every lookup column from 1122 on) and indexes are added right here.

@@ -19,6 +19,7 @@ export const devicesRu: Translation<typeof devicesEn> = {
   signedIn: "Вход {date}",
   lastUsed: "Последний раз {date}",
   from: "с адреса {address}",
+  fromCountry: "с адреса {address} ({country})",
   twoFactor: "С приложением-аутентификатором",
   oneFactor: "По коду входа",
   ends: "Закончится сам {date}",

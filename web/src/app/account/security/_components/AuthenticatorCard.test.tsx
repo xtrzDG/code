@@ -19,6 +19,7 @@ const LAST_USED_AT = Date.UTC(2026, 9, 4, 21, 5) * 1000;
 const security: AccountSecurityView = {
   is_mfa_required: false,
   recovery_codes_left: 8,
+  passkey_count: 0,
   step_up_max_age_seconds: 300,
   totp_status: "active",
   totp_confirmed_at: CONFIRMED_AT,

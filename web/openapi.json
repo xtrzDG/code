@@ -3,7 +3,7 @@
     "schemas": {
       "AccountSecurityView": {
         "additionalProperties": false,
-        "description": "The signed-in person's two-factor sign-in: their authenticator (None:\nnone set up), how many recovery codes are left, and how the current\nsession is signed in. `is_mfa_required`: a platform admin, who must use\nan authenticator.",
+        "description": "The signed-in person's two-factor sign-in: their authenticator (None:\nnone set up), how many passkeys they have (GET /v1/me/passkeys lists\nthem), how many recovery codes are left, and how the current session\nis signed in. `is_mfa_required`: a platform admin, who must use a\nsecond factor.",
         "properties": {
           "auth_level": {
             "anyOf": [
@@ -30,6 +30,13 @@
             "default": false,
             "title": "Is Mfa Required",
             "type": "boolean"
+          },
+          "passkey_count": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Passkey Count",
+            "type": "integer"
           },
           "recovery_codes_left": {
             "default": 0,
@@ -20540,13 +20547,27 @@
       },
       "MfaChallengeView": {
         "additionalProperties": false,
-        "description": "The login code matched; the sign-in needs an authenticator code (or a\nrecovery code) too. `requires_enrollment`: a platform admin without an\nauthenticator sets one up first (`POST /v1/auth/mfa/enroll`).",
+        "description": "The login code matched; the sign-in needs a second factor too.\n`methods`: what the person can answer with, the preferred first (a\npasskey, the authenticator app, a recovery code). `requires_enrollment`:\na platform admin without a second factor sets one up first, with one of\n`enrollment_methods` (a passkey, `POST /v1/auth/mfa/passkey/enroll`,\nwhen the server offers them; the authenticator app,\n`POST /v1/auth/mfa/enroll`).",
         "properties": {
+          "enrollment_methods": {
+            "items": {
+              "$ref": "#/components/schemas/SecondFactorMethod"
+            },
+            "title": "Enrollment Methods",
+            "type": "array"
+          },
           "expires_in_seconds": {
             "maximum": 3600.0,
             "minimum": 30.0,
             "title": "Expires In Seconds",
             "type": "integer"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/SecondFactorMethod"
+            },
+            "title": "Methods",
+            "type": "array"
           },
           "mfa_challenge_id": {
             "title": "Mfa Challenge Id",
@@ -22458,6 +22479,340 @@
         ],
         "title": "PartnerStatus",
         "type": "string"
+      },
+      "PasskeyAddedView": {
+        "additionalProperties": false,
+        "description": "The new passkey; with the person's first second factor, a new set of\nrecovery codes too (shown once).",
+        "properties": {
+          "passkey": {
+            "$ref": "#/components/schemas/PasskeyView"
+          },
+          "recovery_codes": {
+            "items": {
+              "maxLength": 14,
+              "minLength": 14,
+              "pattern": "^[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}$",
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "passkey"
+        ],
+        "title": "PasskeyAddedView",
+        "type": "object"
+      },
+      "PasskeyAssertionOptionsView": {
+        "additionalProperties": false,
+        "description": "The options of `navigator.credentials.get()` for a sign-in step or a\nstep-up; the answer goes back with `passkey_challenge_id`.",
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/PasskeyRequestOptionsView"
+          },
+          "passkey_challenge_id": {
+            "title": "Passkey Challenge Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "passkey_challenge_id",
+          "options"
+        ],
+        "title": "PasskeyAssertionOptionsView",
+        "type": "object"
+      },
+      "PasskeyCreationOptionsView": {
+        "additionalProperties": false,
+        "description": "`PublicKeyCredentialCreationOptions` of a new passkey: no attestation\nis asked for, a discoverable passkey is preferred, and the person's\npasskeys are excluded so an authenticator is not added twice.",
+        "properties": {
+          "algorithms": {
+            "items": {
+              "maximum": 65535.0,
+              "minimum": -65536.0,
+              "type": "integer"
+            },
+            "title": "Algorithms",
+            "type": "array"
+          },
+          "challenge": {
+            "maxLength": 128,
+            "minLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge",
+            "type": "string"
+          },
+          "exclude_credentials": {
+            "items": {
+              "$ref": "#/components/schemas/PasskeyDescriptorView"
+            },
+            "title": "Exclude Credentials",
+            "type": "array"
+          },
+          "resident_key": {
+            "$ref": "#/components/schemas/WebAuthnResidentKey"
+          },
+          "rp": {
+            "$ref": "#/components/schemas/PasskeyRelyingPartyView"
+          },
+          "timeout_ms": {
+            "maximum": 600000.0,
+            "minimum": 30000.0,
+            "title": "Timeout Ms",
+            "type": "integer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/PasskeyUserView"
+          },
+          "user_verification": {
+            "$ref": "#/components/schemas/WebAuthnUserVerification"
+          }
+        },
+        "required": [
+          "rp",
+          "user",
+          "challenge",
+          "algorithms",
+          "timeout_ms",
+          "resident_key",
+          "user_verification"
+        ],
+        "title": "PasskeyCreationOptionsView",
+        "type": "object"
+      },
+      "PasskeyDescriptorView": {
+        "additionalProperties": false,
+        "description": "A passkey the browser should offer (or must not create again).",
+        "properties": {
+          "id": {
+            "maxLength": 1364,
+            "minLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "transports": {
+            "items": {
+              "$ref": "#/components/schemas/WebAuthnTransport"
+            },
+            "title": "Transports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "PasskeyDescriptorView",
+        "type": "object"
+      },
+      "PasskeyListView": {
+        "additionalProperties": false,
+        "description": "The person's passkeys, newest first. `is_available`: the server is\nset up for passkeys (WEBAUTHN_RP_ID); `is_recommended`: a platform\nadmin without one, who should add one.",
+        "properties": {
+          "is_available": {
+            "title": "Is Available",
+            "type": "boolean"
+          },
+          "is_recommended": {
+            "default": false,
+            "title": "Is Recommended",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PasskeyView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "is_available"
+        ],
+        "title": "PasskeyListView",
+        "type": "object"
+      },
+      "PasskeyRegistrationView": {
+        "additionalProperties": false,
+        "description": "The options of a new passkey for `navigator.credentials.create()`;\nthe answer goes back with `passkey_challenge_id` within five minutes.",
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/PasskeyCreationOptionsView"
+          },
+          "passkey_challenge_id": {
+            "title": "Passkey Challenge Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "passkey_challenge_id",
+          "options"
+        ],
+        "title": "PasskeyRegistrationView",
+        "type": "object"
+      },
+      "PasskeyRelyingPartyView": {
+        "additionalProperties": false,
+        "description": "The service passkeys are bound to: its domain and the name shown.",
+        "properties": {
+          "id": {
+            "maxLength": 253,
+            "minLength": 1,
+            "pattern": "^(?:localhost|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63})$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PasskeyRelyingPartyView",
+        "type": "object"
+      },
+      "PasskeyRequestOptionsView": {
+        "additionalProperties": false,
+        "description": "`PublicKeyCredentialRequestOptions` of a sign-in step or a step-up:\nonly the person's own passkeys are allowed.",
+        "properties": {
+          "allow_credentials": {
+            "items": {
+              "$ref": "#/components/schemas/PasskeyDescriptorView"
+            },
+            "title": "Allow Credentials",
+            "type": "array"
+          },
+          "challenge": {
+            "maxLength": 128,
+            "minLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge",
+            "type": "string"
+          },
+          "rp_id": {
+            "maxLength": 253,
+            "minLength": 1,
+            "pattern": "^(?:localhost|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63})$",
+            "title": "Rp Id",
+            "type": "string"
+          },
+          "timeout_ms": {
+            "maximum": 600000.0,
+            "minimum": 30000.0,
+            "title": "Timeout Ms",
+            "type": "integer"
+          },
+          "user_verification": {
+            "$ref": "#/components/schemas/WebAuthnUserVerification"
+          }
+        },
+        "required": [
+          "rp_id",
+          "challenge",
+          "timeout_ms",
+          "user_verification"
+        ],
+        "title": "PasskeyRequestOptionsView",
+        "type": "object"
+      },
+      "PasskeyUserView": {
+        "additionalProperties": false,
+        "description": "The account a new passkey belongs to: an opaque handle derived from\nthe user's id and the e-mail or phone number the authenticator shows.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 86,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "display_name"
+        ],
+        "title": "PasskeyUserView",
+        "type": "object"
+      },
+      "PasskeyView": {
+        "additionalProperties": false,
+        "description": "One passkey in the person's list: its name, when it was added and last\nused, whether a password manager or platform account keeps it in sync,\nand `clone_suspected_at` when a copy of its authenticator was used (it\nsigns nothing more; remove it and add a new one).",
+        "properties": {
+          "clone_suspected_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clone Suspected At"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_backed_up": {
+            "default": false,
+            "title": "Is Backed Up",
+            "type": "boolean"
+          },
+          "is_synced": {
+            "default": false,
+            "title": "Is Synced",
+            "type": "boolean"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+            "title": "Name",
+            "type": "string"
+          },
+          "transports": {
+            "items": {
+              "$ref": "#/components/schemas/WebAuthnTransport"
+            },
+            "title": "Transports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at"
+        ],
+        "title": "PasskeyView",
+        "type": "object"
       },
       "PauseOptionsView": {
         "additionalProperties": false,
@@ -26830,6 +27185,78 @@
         "title": "SeasonalNightlyRate",
         "type": "object"
       },
+      "SecondFactorMethod": {
+        "description": "A way to pass the second step of a sign-in: a passkey (phishing\nresistant, offered first), a code of the authenticator app, or one of\nthe recovery codes.",
+        "enum": [
+          "passkey",
+          "totp",
+          "recovery_code"
+        ],
+        "title": "SecondFactorMethod",
+        "type": "string"
+      },
+      "SecurityNudgeReason": {
+        "description": "Why an owner of a live business without a second factor is reminded to\nturn one on: their customers' data is in the cabinet\n(PROTECT_CUSTOMERS), or they put the reminder away while working alone\nand the team has grown since (TEAM_GREW): every new person is another\nway in.",
+        "enum": [
+          "protect_customers",
+          "team_grew"
+        ],
+        "title": "SecurityNudgeReason",
+        "type": "string"
+      },
+      "SecurityNudgeView": {
+        "additionalProperties": false,
+        "description": "Whether the person sees the banner \"Protect your customers' data: turn\non a second factor\" (`is_shown`) and why (`reason`). Shown to an owner\nof a live business who has neither a passkey nor an authenticator app\nand has not put it away; put away while working alone, it comes back\nonce the team grows past one person (`team_grew`). `is_owner` tells\nwhether the reminder concerns the person at all (the setup guide's\nstep is an owner's only).",
+        "properties": {
+          "dismissed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed At"
+          },
+          "has_second_factor": {
+            "title": "Has Second Factor",
+            "type": "boolean"
+          },
+          "is_owner": {
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "is_shown": {
+            "title": "Is Shown",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SecurityNudgeReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "team_size": {
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Team Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "is_shown",
+          "is_owner",
+          "has_second_factor",
+          "team_size"
+        ],
+        "title": "SecurityNudgeView",
+        "type": "object"
+      },
       "SegmentList": {
         "additionalProperties": false,
         "description": "The business's segments, the oldest first, and its tags to build one with.",
@@ -27073,7 +27500,7 @@
         "type": "string"
       },
       "SetupActionTarget": {
-        "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done; after the launch PHONE_TEST (the\nguide's QR code to write from a phone) and SHARE (the link and QR code\nfor customers).",
+        "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done; after the launch PHONE_TEST (the\nguide's QR code to write from a phone), SHARE (the link and QR code\nfor customers) and ACCOUNT_SECURITY (Account → Security, a passkey or\nan authenticator app).",
         "enum": [
           "profile",
           "staff_contacts",
@@ -27085,7 +27512,8 @@
           "apply_changes",
           "overview",
           "phone_test",
-          "share"
+          "share",
+          "account_security"
         ],
         "title": "SetupActionTarget",
         "type": "string"
@@ -27259,7 +27687,7 @@
         "type": "object"
       },
       "SetupStepCode": {
-        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live. After the\nlaunch the guide goes on to the first real customer: writing to the\nassistant from the owner's own phone (PHONE_TEST), a second channel\nwhere customers write (SECOND_CHANNEL), and the link or QR code where\ncustomers see it (SHARE).\n\nThe steps after the launch are new in this release: a skip of one is\nstored apart (`SetupStateDocument.skipped_after_launch`), which the\nrelease before ignores.",
+        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live. After the\nlaunch the guide goes on to the first real customer: writing to the\nassistant from the owner's own phone (PHONE_TEST), a second channel\nwhere customers write (SECOND_CHANNEL), and the link or QR code where\ncustomers see it (SHARE), and for an owner a second factor that\nprotects the customers' data (PROTECT_DATA). PROTECT_DATA is new in\nthis release and never stored (a closed release gate): the owner puts\nit away with the reminder banner (security_nudges), not as a skip.\n\nThe steps after the launch are new in this release: a skip of one is\nstored apart (`SetupStateDocument.skipped_after_launch`), which the\nrelease before ignores.",
         "enum": [
           "business",
           "offer",
@@ -27270,7 +27698,8 @@
           "launch",
           "phone_test",
           "second_channel",
-          "share"
+          "share",
+          "protect_data"
         ],
         "title": "SetupStepCode",
         "type": "string"
@@ -28601,7 +29030,7 @@
       },
       "StepUpChallengeView": {
         "additionalProperties": false,
-        "description": "How to confirm it is you: with an authenticator code (or a recovery\ncode), or with the login code just sent (`login_code`).",
+        "description": "How to confirm it is you: with an authenticator code (or a recovery\ncode), with a passkey (`POST /v1/auth/step-up/passkey`), or with the\nlogin code just sent (`login_code`). `passkey_available`: the person\nmay use a passkey instead of the authenticator app.",
         "properties": {
           "login_code": {
             "anyOf": [
@@ -28615,6 +29044,11 @@
           },
           "method": {
             "$ref": "#/components/schemas/StepUpMethod"
+          },
+          "passkey_available": {
+            "default": false,
+            "title": "Passkey Available",
+            "type": "boolean"
           }
         },
         "required": [
@@ -28624,9 +29058,10 @@
         "type": "object"
       },
       "StepUpMethod": {
-        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\notherwise a new login code sent to their phone or e-mail.",
+        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\nelse one of their passkeys, otherwise a new login code sent to their\nphone or e-mail. Answers only (never stored).",
         "enum": [
           "totp",
+          "passkey",
           "login_code"
         ],
         "title": "StepUpMethod",
@@ -30060,7 +30495,7 @@
       },
       "UserSessionView": {
         "additionalProperties": false,
-        "description": "One signed-in device of the person (Account → Security): what it is,\nwhere and when it signed in, when it was last used and from where,\nhow it was signed in, and when it ends by itself (unused until\n`idle_expires_at`, or at `expires_at` whatever happens). The request's\nown session is `is_current`.",
+        "description": "One signed-in device of the person (Account → Security): what it is,\nwhere and when it signed in, when it was last used and from where,\nhow it was signed in, and when it ends by itself (unused until\n`idle_expires_at`, or at `expires_at` whatever happens). The request's\nown session is `is_current`. `created_country` and `last_seen_country`\nare the approximate countries of the addresses (an offline GeoLite2\nlookup; None when unknown or not set up).",
         "properties": {
           "auth_level": {
             "$ref": "#/components/schemas/AuthLevel"
@@ -30068,6 +30503,20 @@
           "created_at": {
             "title": "Created At",
             "type": "integer"
+          },
+          "created_country": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Country"
           },
           "created_ip": {
             "anyOf": [
@@ -30110,6 +30559,20 @@
           "last_seen_at": {
             "title": "Last Seen At",
             "type": "integer"
+          },
+          "last_seen_country": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen Country"
           },
           "last_seen_ip": {
             "anyOf": [
@@ -31678,6 +32141,36 @@
         ],
         "title": "WaitlistStatusCount",
         "type": "object"
+      },
+      "WebAuthnResidentKey": {
+        "description": "Whether the authenticator should keep the passkey discoverable (a\npasskey the browser can list). The cabinet asks for \"preferred\" only:\na discoverable passkey where the authenticator can keep one, a plain\ncredential otherwise (WebAuthn also knows \"required\" and\n\"discouraged\").",
+        "enum": [
+          "preferred"
+        ],
+        "title": "WebAuthnResidentKey",
+        "type": "string"
+      },
+      "WebAuthnTransport": {
+        "description": "How a browser reaches the authenticator that keeps a passkey (WebAuthn\n`AuthenticatorTransport`), remembered so the browser offers the right\none next time.",
+        "enum": [
+          "usb",
+          "nfc",
+          "ble",
+          "smart-card",
+          "hybrid",
+          "internal",
+          "cable"
+        ],
+        "title": "WebAuthnTransport",
+        "type": "string"
+      },
+      "WebAuthnUserVerification": {
+        "description": "Whether the authenticator checks the person (fingerprint, face, PIN)\nbefore it signs. The cabinet asks for \"preferred\" only: the passkey is\nthe second factor after the login code, so a security key without a\nPIN still counts (WebAuthn also knows \"required\" and \"discouraged\").",
+        "enum": [
+          "preferred"
+        ],
+        "title": "WebAuthnUserVerification",
+        "type": "string"
       },
       "WebPushUrgency": {
         "description": "How soon a push service should wake the device (RFC 8030 Urgency).",
@@ -40475,6 +40968,629 @@
         ]
       }
     },
+    "/v1/auth/mfa/passkey/enroll": {
+      "post": {
+        "operationId": "auth_start_passkey_enrollment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The second step of a sign-in asks for passkey options.\n\nExample: {\"mfa_challenge_id\": \"mfa_challenge_...\"}.",
+                "properties": {
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id"
+                ],
+                "title": "PasskeySignInStepRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Passkey Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa/passkey/enroll/finish": {
+      "post": {
+        "operationId": "auth_finish_passkey_enrollment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A platform admin without a second factor adds a passkey while signing\nin: the created credential and an optional name.",
+                "properties": {
+                  "credential": {
+                    "additionalProperties": false,
+                    "description": "The `PublicKeyCredential` a browser created: `id` and `raw_id` are the\nsame credential id.\n\nExample: {\"id\": \"AbC...\", \"raw_id\": \"AbC...\", \"response\":\n{\"client_data_json\": \"eyJ0...\", \"attestation_object\": \"o2Nm...\",\n\"transports\": [\"internal\", \"hybrid\"]}}.",
+                    "properties": {
+                      "id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Id",
+                        "type": "string"
+                      },
+                      "raw_id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Raw Id",
+                        "type": "string"
+                      },
+                      "response": {
+                        "additionalProperties": false,
+                        "description": "`AuthenticatorAttestationResponse` of a new passkey.",
+                        "properties": {
+                          "attestation_object": {
+                            "maxLength": 32768,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Attestation Object",
+                            "type": "string"
+                          },
+                          "client_data_json": {
+                            "maxLength": 8192,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Client Data Json",
+                            "type": "string"
+                          },
+                          "transports": {
+                            "items": {
+                              "maxLength": 32,
+                              "minLength": 1,
+                              "pattern": "^[a-z][a-z-]*$",
+                              "type": "string"
+                            },
+                            "maxItems": 10,
+                            "title": "Transports",
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "client_data_json",
+                          "attestation_object"
+                        ],
+                        "title": "PasskeyAttestationResponse",
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "raw_id",
+                      "response"
+                    ],
+                    "title": "PasskeyRegistrationCredential",
+                    "type": "object"
+                  },
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 60,
+                        "minLength": 1,
+                        "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Name"
+                  },
+                  "passkey_challenge_id": {
+                    "pattern": "^passkey_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Passkey Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id",
+                  "passkey_challenge_id",
+                  "credential"
+                ],
+                "title": "FinishPasskeyEnrollmentRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginSessionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Finish Passkey Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa/passkey/options": {
+      "post": {
+        "operationId": "auth_start_passkey_sign_in",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The second step of a sign-in asks for passkey options.\n\nExample: {\"mfa_challenge_id\": \"mfa_challenge_...\"}.",
+                "properties": {
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id"
+                ],
+                "title": "PasskeySignInStepRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAssertionOptionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Passkey Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa/passkey/verify": {
+      "post": {
+        "operationId": "auth_verify_passkey_sign_in",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The passkey's answer to the second step of a sign-in.",
+                "properties": {
+                  "credential": {
+                    "additionalProperties": false,
+                    "description": "The `PublicKeyCredential` a browser answered a sign-in step or a\nstep-up with.\n\nExample: {\"id\": \"AbC...\", \"raw_id\": \"AbC...\", \"response\":\n{\"client_data_json\": \"eyJ0...\", \"authenticator_data\": \"SZYN...\",\n\"signature\": \"MEUC...\"}}.",
+                    "properties": {
+                      "id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Id",
+                        "type": "string"
+                      },
+                      "raw_id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Raw Id",
+                        "type": "string"
+                      },
+                      "response": {
+                        "additionalProperties": false,
+                        "description": "`AuthenticatorAssertionResponse`: what the passkey signed, and the signature.",
+                        "properties": {
+                          "authenticator_data": {
+                            "maxLength": 4096,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Authenticator Data",
+                            "type": "string"
+                          },
+                          "client_data_json": {
+                            "maxLength": 8192,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Client Data Json",
+                            "type": "string"
+                          },
+                          "signature": {
+                            "maxLength": 1024,
+                            "minLength": 40,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Signature",
+                            "type": "string"
+                          },
+                          "user_handle": {
+                            "anyOf": [
+                              {
+                                "maxLength": 86,
+                                "minLength": 2,
+                                "pattern": "^[A-Za-z0-9_-]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "User Handle"
+                          }
+                        },
+                        "required": [
+                          "client_data_json",
+                          "authenticator_data",
+                          "signature"
+                        ],
+                        "title": "PasskeyAssertionResponse",
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "raw_id",
+                      "response"
+                    ],
+                    "title": "PasskeyAssertionCredential",
+                    "type": "object"
+                  },
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  },
+                  "passkey_challenge_id": {
+                    "pattern": "^passkey_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Passkey Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id",
+                  "passkey_challenge_id",
+                  "credential"
+                ],
+                "title": "VerifyPasskeySignInRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginSessionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Verify Passkey Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v1/auth/mfa/verify": {
       "post": {
         "operationId": "auth_verify_mfa_login",
@@ -41119,6 +42235,38 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "How the person would rather confirm (optional body): `login_code` sends\na login code even to a person with a passkey (no authenticator app).\n\nExample: {\"method\": \"login_code\"}.",
+                "properties": {
+                  "method": {
+                    "anyOf": [
+                      {
+                        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\nelse one of their passkeys, otherwise a new login code sent to their\nphone or e-mail. Answers only (never stored).",
+                        "enum": [
+                          "totp",
+                          "passkey",
+                          "login_code"
+                        ],
+                        "title": "StepUpMethod",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "title": "StartStepUpRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
@@ -41202,6 +42350,323 @@
           }
         },
         "summary": "Start Step Up",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/step-up/passkey": {
+      "post": {
+        "operationId": "auth_start_passkey_step_up",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAssertionOptionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Passkey Step Up",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/step-up/passkey/verify": {
+      "post": {
+        "operationId": "auth_verify_passkey_step_up",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The passkey's answer to a step-up.",
+                "properties": {
+                  "credential": {
+                    "additionalProperties": false,
+                    "description": "The `PublicKeyCredential` a browser answered a sign-in step or a\nstep-up with.\n\nExample: {\"id\": \"AbC...\", \"raw_id\": \"AbC...\", \"response\":\n{\"client_data_json\": \"eyJ0...\", \"authenticator_data\": \"SZYN...\",\n\"signature\": \"MEUC...\"}}.",
+                    "properties": {
+                      "id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Id",
+                        "type": "string"
+                      },
+                      "raw_id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Raw Id",
+                        "type": "string"
+                      },
+                      "response": {
+                        "additionalProperties": false,
+                        "description": "`AuthenticatorAssertionResponse`: what the passkey signed, and the signature.",
+                        "properties": {
+                          "authenticator_data": {
+                            "maxLength": 4096,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Authenticator Data",
+                            "type": "string"
+                          },
+                          "client_data_json": {
+                            "maxLength": 8192,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Client Data Json",
+                            "type": "string"
+                          },
+                          "signature": {
+                            "maxLength": 1024,
+                            "minLength": 40,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Signature",
+                            "type": "string"
+                          },
+                          "user_handle": {
+                            "anyOf": [
+                              {
+                                "maxLength": 86,
+                                "minLength": 2,
+                                "pattern": "^[A-Za-z0-9_-]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "User Handle"
+                          }
+                        },
+                        "required": [
+                          "client_data_json",
+                          "authenticator_data",
+                          "signature"
+                        ],
+                        "title": "PasskeyAssertionResponse",
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "raw_id",
+                      "response"
+                    ],
+                    "title": "PasskeyAssertionCredential",
+                    "type": "object"
+                  },
+                  "passkey_challenge_id": {
+                    "pattern": "^passkey_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Passkey Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "passkey_challenge_id",
+                  "credential"
+                ],
+                "title": "VerifyPasskeyStepUpRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionAssuranceView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Verify Passkey Step Up",
         "tags": [
           "auth"
         ]
@@ -75782,6 +77247,242 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/security-nudge": {
+      "get": {
+        "operationId": "setup_get_security_nudge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityNudgeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Security Nudge",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/security-nudge/dismissal": {
+      "put": {
+        "operationId": "setup_dismiss_security_nudge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityNudgeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Dismiss Security Nudge",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/setup": {
       "get": {
         "operationId": "setup_get_setup",
@@ -84897,6 +86598,685 @@
           }
         },
         "summary": "Confirm Totp Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/passkeys": {
+      "get": {
+        "operationId": "auth_list_passkeys",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyListView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Passkeys",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "auth_finish_passkey_registration",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The credential the browser created, and the name the person gave it\n(none: named after the browser and system that added it).",
+                "properties": {
+                  "credential": {
+                    "additionalProperties": false,
+                    "description": "The `PublicKeyCredential` a browser created: `id` and `raw_id` are the\nsame credential id.\n\nExample: {\"id\": \"AbC...\", \"raw_id\": \"AbC...\", \"response\":\n{\"client_data_json\": \"eyJ0...\", \"attestation_object\": \"o2Nm...\",\n\"transports\": [\"internal\", \"hybrid\"]}}.",
+                    "properties": {
+                      "id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Id",
+                        "type": "string"
+                      },
+                      "raw_id": {
+                        "maxLength": 1364,
+                        "minLength": 22,
+                        "pattern": "^[A-Za-z0-9_-]+$",
+                        "title": "Raw Id",
+                        "type": "string"
+                      },
+                      "response": {
+                        "additionalProperties": false,
+                        "description": "`AuthenticatorAttestationResponse` of a new passkey.",
+                        "properties": {
+                          "attestation_object": {
+                            "maxLength": 32768,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Attestation Object",
+                            "type": "string"
+                          },
+                          "client_data_json": {
+                            "maxLength": 8192,
+                            "minLength": 50,
+                            "pattern": "^[A-Za-z0-9_-]+$",
+                            "title": "Client Data Json",
+                            "type": "string"
+                          },
+                          "transports": {
+                            "items": {
+                              "maxLength": 32,
+                              "minLength": 1,
+                              "pattern": "^[a-z][a-z-]*$",
+                              "type": "string"
+                            },
+                            "maxItems": 10,
+                            "title": "Transports",
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "client_data_json",
+                          "attestation_object"
+                        ],
+                        "title": "PasskeyAttestationResponse",
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "raw_id",
+                      "response"
+                    ],
+                    "title": "PasskeyRegistrationCredential",
+                    "type": "object"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 60,
+                        "minLength": 1,
+                        "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Name"
+                  },
+                  "passkey_challenge_id": {
+                    "pattern": "^passkey_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Passkey Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "passkey_challenge_id",
+                  "credential"
+                ],
+                "title": "FinishPasskeyRegistrationRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAddedView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Finish Passkey Registration",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/passkeys/registration": {
+      "post": {
+        "operationId": "auth_start_passkey_registration",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Passkey Registration",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/passkeys/{passkey_id}": {
+      "delete": {
+        "operationId": "auth_remove_passkey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "passkey_id",
+            "required": true,
+            "schema": {
+              "title": "Passkey Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Remove Passkey",
+        "tags": [
+          "auth"
+        ]
+      },
+      "patch": {
+        "operationId": "auth_rename_passkey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "passkey_id",
+            "required": true,
+            "schema": {
+              "title": "Passkey Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A new name for a passkey.\n\nExample: {\"name\": \"Work laptop\"}.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+                    "title": "Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "RenamePasskeyRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Rename Passkey",
         "tags": [
           "auth"
         ]

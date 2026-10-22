@@ -50,9 +50,10 @@ MISSED_CALL_ENTITY: AuditEntityName = AuditEntityName("missed_call")
 class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     Daily retention job: delete expired sessions, login codes, second
-    sign-in steps and passkey challenges older than a day, webhook receipts, inbox events and
-    outbox messages older than 30 days, and missed calls older than 90
-    days, so the auth, delivery and call tables stop growing forever.
+    sign-in steps and passkey challenges older than a day, webhook
+    receipts, inbox events and outbox messages older than 30 days, and
+    missed calls older than 90 days, so the auth, delivery and call
+    tables stop growing forever.
 
     Each delete is an indexed range query in small batches. A purge that
     removed rows is audited as RETENTION_PURGE without an actor or business

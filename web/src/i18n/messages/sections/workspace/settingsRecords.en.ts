@@ -136,6 +136,8 @@ export const settingsRecordsEn = {
       totp_factor: "Authenticator app",
       recovery_codes: "Recovery codes",
       mfa_challenge: "Two-step check",
+      passkey: "Passkey",
+      passkey_challenge: "Passkey check",
       otp_challenge: "Sign-in code",
       support_access: "Platform support access",
       support_write_access: "Platform support changes",

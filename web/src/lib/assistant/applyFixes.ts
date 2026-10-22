@@ -6,7 +6,7 @@
  */
 
 import type { Schema } from "@/api/types";
-import { businessPath, type BusinessPage } from "@/lib/navigation";
+import { ACCOUNT_SECURITY_PATH, businessPath, type BusinessPage } from "@/lib/navigation";
 
 type SetupActionTarget = Schema<"SetupActionTarget">;
 
@@ -25,6 +25,8 @@ const FIX_PAGES: Record<SetupActionTarget, BusinessPage | null> = {
   share: "assistant/channels",
   // "Apply changes" itself: the button is right there.
   apply_changes: null,
+  // The owner's second factor lives in Account → Security, outside the business.
+  account_security: null,
 };
 
 /** The checks of a version that did not pass (the version page opens on them). */
@@ -41,6 +43,9 @@ export function fixPath(
 ): string | null {
   if (action.target === "checks") {
     return failedChecksPath(businessId, versionId);
+  }
+  if (action.target === "account_security") {
+    return ACCOUNT_SECURITY_PATH;
   }
   const page = FIX_PAGES[action.target];
   return page ? businessPath(businessId, page) : null;

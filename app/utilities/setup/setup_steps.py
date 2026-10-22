@@ -30,6 +30,7 @@ STEP_MINUTES: dict[SetupStepCode, int] = {
     SetupStepCode.PHONE_TEST: 2,
     SetupStepCode.SECOND_CHANNEL: 5,
     SetupStepCode.SHARE: 3,
+    SetupStepCode.PROTECT_DATA: 2,
 }
 BUSINESS_ANSWER_STEPS: frozenset[ProfileWizardStep] = frozenset(
     {

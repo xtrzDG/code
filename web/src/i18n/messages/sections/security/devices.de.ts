@@ -19,6 +19,7 @@ export const devicesDe: Translation<typeof devicesEn> = {
   signedIn: "Angemeldet {date}",
   lastUsed: "Zuletzt genutzt {date}",
   from: "von {address}",
+  fromCountry: "von {address} ({country})",
   twoFactor: "Mit der Authenticator-App",
   oneFactor: "Mit einem Anmeldecode",
   ends: "Endet von selbst {date}",

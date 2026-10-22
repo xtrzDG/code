@@ -21,7 +21,6 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.constants.setup import (
     ActivationEventKind,
-    SetupActionTarget,
     SetupStepCode,
     SetupStepStatus,
 )
@@ -30,10 +29,10 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.setup import ActivationEventDocument, SetupStateDocument
 from app.schemas.dto.access import BusinessAccessRequest
+from app.schemas.dto.security_nudges import SecurityNudgeSource, SecurityNudgeView
 from app.schemas.dto.setup.apply_changes import (
     ApplyChangesSource,
     ApplyChangesView,
-    SetupActionView,
 )
 from app.schemas.dto.setup.setup_guide import GuideProgressCheck
 from app.schemas.dto.setup.setup_progress import (
@@ -57,13 +56,19 @@ from app.use_cases.shared.trial_subscriptions import (
     is_trial_due_at_go_live,
 )
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
-from app.utilities.setup.guide_steps import derive_after_launch_steps, derive_guide
+from app.utilities.setup.guide_steps import (
+    derive_after_launch_steps,
+    derive_guide,
+    protect_data_skips,
+    protect_data_steps,
+)
 from app.utilities.setup.guide_views import (
     after_hours_milestone,
     count_customer_channels,
     guide_facts,
     guide_view,
 )
+from app.utilities.setup.next_setup_action import next_setup_action
 from app.utilities.setup.setup_steps import (
     SetupFacts,
     StepState,
@@ -73,9 +78,7 @@ from app.utilities.setup.setup_steps import (
     compute_percent,
     derive_steps,
 )
-from app.utilities.setup.setup_texts import APPLY_CHANGES_AGAIN_LABEL
 from app.utilities.setup.setup_views import (
-    action_view,
     milestone_views,
     phone_test_links,
     step_views,
@@ -97,8 +100,10 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
     (noticed and stored first); "Apply changes" progress; and the guide
     that goes on after the launch (a message from the owner's phone, a
     second channel, the link where customers see it), whose progress is
-    noticed first too. Owners and staff may read it; texts are in the
-    owner's language by default.
+    noticed first too, and for an owner the reminder to protect customers'
+    data with a second factor (done with one, skipped once put away).
+    Owners and staff may read it; texts are in the owner's language by
+    default.
     """
 
     def __init__(
@@ -112,6 +117,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             GuideProgressCheck, SetupStateDocument | None
         ],
         describe_apply_changes: UseCaseContract[ApplyChangesSource, ApplyChangesView],
+        describe_security_nudge: UseCaseContract[
+            SecurityNudgeSource, SecurityNudgeView
+        ],
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
         brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
@@ -138,6 +146,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         self._describe_apply_changes: UseCaseContract[
             ApplyChangesSource, ApplyChangesView
         ] = describe_apply_changes
+        self._describe_security_nudge: UseCaseContract[
+            SecurityNudgeSource, SecurityNudgeView
+        ] = describe_security_nudge
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
@@ -200,10 +211,14 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         )
         steps: list[StepState] = derive_steps(facts)
         statuses: list[SetupStepStatus] = assign_statuses(steps, facts.skipped)
-        after_launch: list[StepState] = derive_after_launch_steps(
-            guide_facts(state, channels, events)
+        nudge: SecurityNudgeView = self._describe_security_nudge.run(
+            SecurityNudgeSource(business=business, user_id=input_data.user_id)
         )
-        skipped_after: frozenset[SetupStepCode] = frozenset(
+        after_launch: list[StepState] = [
+            *derive_after_launch_steps(guide_facts(state, channels, events)),
+            *protect_data_steps(nudge),
+        ]
+        skipped_after: frozenset[SetupStepCode] = protect_data_skips(nudge) | frozenset(
             () if state is None else state.skipped_after_launch
         )
         apply: ApplyChangesView = self._describe_apply_changes.run(
@@ -222,7 +237,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             language=language,
             steps=step_views(steps, statuses, language, self._resolver),
             next_step=None if next_step is None else next_step.code,
-            next_action=self._next_action(next_step, apply, is_live, language),
+            next_action=next_setup_action(
+                next_step, apply, is_live, language, self._resolver
+            ),
             percent=SetupPercent(compute_percent(statuses)),
             minutes_left=SetupMinutesLeft(compute_minutes_left(steps, statuses)),
             can_go_live=can_go_live(steps, facts),
@@ -252,30 +269,6 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
                 self._resolver,
             ),
         )
-
-    def _next_action(
-        self,
-        next_step: StepState | None,
-        apply: ApplyChangesView,
-        is_live: bool,
-        language: LanguageTag,
-    ) -> SetupActionView:
-        # Once live, changes customers do not get yet come before the
-        # optional steps still open.
-        if is_live and apply.has_unapplied_changes and not apply.is_in_progress:
-            return action_view(
-                SetupActionTarget.APPLY_CHANGES,
-                language,
-                self._resolver,
-                label=APPLY_CHANGES_AGAIN_LABEL,
-            )
-
-        if next_step is not None:
-            return action_view(
-                next_step.target, language, self._resolver, next_step.profile_step
-            )
-
-        return action_view(SetupActionTarget.OVERVIEW, language, self._resolver)
 
     def _is_agreement_accepted(self, business: BusinessDocument) -> bool:
         return is_dpa_version_accepted(

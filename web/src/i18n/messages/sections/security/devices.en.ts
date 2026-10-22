@@ -21,6 +21,7 @@ export const devicesEn = {
   signedIn: "Signed in {date}",
   lastUsed: "Last used {date}",
   from: "from {address}",
+  fromCountry: "from {address} ({country})",
   twoFactor: "With the authenticator app",
   oneFactor: "With a login code",
   ends: "Ends by itself {date}",

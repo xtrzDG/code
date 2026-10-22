@@ -50,7 +50,7 @@ class MaxMindIpCountryLookupAdapter(IpCountryLookupAdapterContract):
 
         try:
             record: object = reader.get(address)
-        except (ValueError, maxminddb.InvalidDatabaseError):
+        except ValueError, maxminddb.InvalidDatabaseError:
             return None
 
         return country_of_record(record)
@@ -72,7 +72,7 @@ def open_database(path: LocalFilePath | None) -> maxminddb.Reader | None:
 
     try:
         return maxminddb.open_database(str(path))
-    except (OSError, ValueError, maxminddb.InvalidDatabaseError):
+    except OSError, ValueError, maxminddb.InvalidDatabaseError:
         logger.error(
             "GEOIP_COUNTRY_DATABASE_PATH does not name a readable country "
             "database; the device list shows addresses without countries."

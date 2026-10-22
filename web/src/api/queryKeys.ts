@@ -286,4 +286,9 @@ export const queryKeys = {
     /** Platform support in a business now: open looks and the consent to changes. */
     status: (businessId: Id) => ["supportAccess", businessId] as const,
   },
+
+  securityNudge: {
+    /** The owner's reminder to turn on a second factor (after launch, or when the team grew). */
+    detail: (businessId: Id) => ["securityNudge", businessId] as const,
+  },
 } satisfies Record<string, Record<string, (...args: never[]) => QueryKey>>;
