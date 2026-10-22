@@ -4,6 +4,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.channels import WidgetPosition
+from app.schemas.constants.localization import RecordingConsentRule
 from app.schemas.constants.sharing import ShareLinkGap, ShareLinkKind
 from app.schemas.domain.business_privacy_settings import (
     DEFAULT_CONVERSATION_RETENTION_DAYS,
@@ -104,6 +105,18 @@ class HostedChatLookup(ImmutableDTO):
     requested_business_id: BusinessId | None = None
 
 
+class HostedChatPhoneCalls(ImmutableDTO):
+    """
+    How the business's AI phone assistant treats calls, for its privacy
+    notice: calls are recorded; where the law of the business's country
+    asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
+    the start of the call. A caller may decline anywhere: the audio is then
+    deleted and a transcript without contact or card numbers kept.
+    """
+
+    recording_consent_rule: RecordingConsentRule
+
+
 class HostedChatView(ImmutableDTO):
     """
     What the hosted chat page needs before the widget loads: the business,
@@ -120,6 +133,8 @@ class HostedChatView(ImmutableDTO):
     owner's own booking page, else the button starts a booking in the
     chat). `powered_by_url` is the platform's "Powered by" link with the
     business's referral code (None when a Plus owner switched it off).
+    `phone_calls` is set when the business's AI assistant answers its phone
+    (its live version has voice and its number is connected).
     """
 
     business_id: BusinessId
@@ -144,3 +159,4 @@ class HostedChatView(ImmutableDTO):
     takes_bookings: TakesBookings = False
     booking_url: WebLink | None = None
     powered_by_url: ReferralLink | None = None
+    phone_calls: HostedChatPhoneCalls | None = None

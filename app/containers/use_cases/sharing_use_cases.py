@@ -109,6 +109,8 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
             wall_clock=time_provider.microsecond_wall_clock,
             privacy_settings_repo=repositories.privacy_settings_repo,
             referral_links=facilitators.referral_links,
+            assistant_version_repo=repositories.assistant_version_repo,
+            country_registry=registries.country_registry,
         )
     )
     open_widget_handoff_use_case: Factory[
