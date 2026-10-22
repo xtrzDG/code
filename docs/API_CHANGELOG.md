@@ -11,6 +11,51 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-22 — Meta: connect with Facebook, page picker, comment replies
+
+Spec: `10fbeae1f6f73037`
+
+- **Added** `GET /v1/businesses/{business_id}/channels/meta/sign-in`: whether
+  this server offers "Continue with Facebook" (`whatsapp`: Embedded Signup is
+  set up; `pages`: the page picker), with the Meta app id and Graph API
+  version the cabinet loads the Facebook SDK with. Members may read it.
+- **Added** `POST /v1/businesses/{business_id}/channels/meta/sign-in` (201,
+  owner, `{"purpose": "whatsapp" | "pages"}`): starts one sign-in and returns
+  its one-time `state` (15 minutes; only its hash is stored), the app id,
+  the Embedded Signup `configuration_id` (WhatsApp) or the `permissions` to
+  ask for (pages). 422 `meta_not_configured` when the server has no Meta app.
+- **Added** `POST /v1/businesses/{business_id}/channels/whatsapp/embedded-signup`
+  (owner, recent sign-in): the `state` and Meta's `code` (and the
+  `whatsapp_business_account_id` / `phone_number_id` the signup window
+  reported, optional). The server exchanges the code, reads the granted
+  WhatsApp Business Account from the token's granular scopes, subscribes the
+  app, registers the number and connects WhatsApp with the business's own
+  token (stored encrypted). Answers the `ChannelView`. Refusals (reason
+  codes): `meta_link_expired`, `meta_permission_missing`,
+  `whatsapp_account_missing`, `whatsapp_number_missing` (422) and
+  `whatsapp_pin_mismatch` (409: the number has two-step verification with
+  another PIN); 409 when another business already serves the number.
+- **Added** `POST /v1/businesses/{business_id}/channels/meta/pages` (owner):
+  the `state` and Facebook Login's `code`; answers the pages the owner manages
+  (`pages[]`: id, name, username, the linked Instagram account) and until
+  when the choice is open. The short-lived user token is kept encrypted with
+  the state until a page is chosen.
+- **Added** `PUT /v1/businesses/{business_id}/channels/{channel}/page` (owner,
+  recent sign-in; `channel` is `messenger` or `instagram`): the `state` and the
+  chosen `page_id`; connects the page (Instagram: its linked professional
+  account) and answers the `ChannelView`. 422 `meta_page_not_found`,
+  `instagram_account_missing`; 404 for other channels.
+- **Added** `PUT /v1/businesses/{business_id}/channels/instagram/comment-replies`
+  (owner): `is_on`, up to 20 `keywords` and `reply_text`; when on, a comment
+  naming a keyword gets one private reply in Direct (at most one per person a
+  day and 60 per business an hour). 422 `comment_keywords_missing`,
+  `comment_reply_missing`; 404 without a connected Instagram.
+- **Changed** (additive) `ChannelView.comment_replies` (Instagram only, else
+  null). `InboundEventKind` may be `comment_trigger` and `OutboundMessageKind`
+  `comment_reply`, and an outbox customer may name the `comment_id` it
+  answers; this release stores neither kind yet (release gate
+  `instagram_comment_replies`).
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`
