@@ -170,7 +170,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_reply_speed_settings(environment_variables, llm_provider),
         **read_reply_safety_settings(environment_variables, llm_provider),
         **read_platform_alert_settings(environment_variables),
-        **read_session_settings(environment_variables),
+        **read_session_settings(environment_variables, is_development),
         **read_support_settings(environment_variables),
         **read_privacy_settings(environment_variables),
         **read_seller_settings(environment_variables),

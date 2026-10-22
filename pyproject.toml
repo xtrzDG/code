@@ -34,6 +34,8 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http>=1.30",
     "icalendar>=6.3",
     "recurring-ical-events>=3.8",
+    "webauthn>=3.0.1",
+    "maxminddb>=3.2.0",
 ]
 
 [dependency-groups]
@@ -45,6 +47,7 @@ dev = [
     "hypothesis>=6.140",
     "import-linter>=2.15",
     "jsonschema>=4.25",
+    "mmdb-writer>=0.2.7",
     "moto[s3]>=5.1",
     "mypy",
     "pyright",

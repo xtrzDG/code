@@ -1,7 +1,7 @@
 """
 The declared lookup fields of the platform's own collections: the worker's
 pulse and queue, incidents and maintenance runs, the status page, exchange
-rates, growth analytics and platform access. Part of DOCUMENT_LOOKUP_FIELDS
+rates, growth analytics, platform access and passkeys. Part of DOCUMENT_LOOKUP_FIELDS
 (`document_lookup_catalog`), which explains the columns and triggers.
 """
 
@@ -14,6 +14,7 @@ from app.utilities.storage.lookup_field_builders import (
     integer_field,
     text_field,
 )
+from app.utilities.storage.passkey_collections import PASSKEY_LOOKUP_FIELDS
 
 PLATFORM_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName, tuple[DocumentLookupField, ...]
@@ -100,4 +101,5 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("idempotency_keys"): (integer_field("expires_at"),),
     # Broken audit hash chains, counted for their alert (1193).
     DocumentCollectionName("audit_chain_statuses"): (text_field("status"),),
+    **PASSKEY_LOOKUP_FIELDS,  # Passkeys and their ceremonies (1201).
 }
