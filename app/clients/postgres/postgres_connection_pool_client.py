@@ -102,6 +102,17 @@ class PostgresConnectionPoolClient(ClientContract):
     def max_size(self) -> int:
         return self._max_size
 
+    @property
+    def pins(self) -> PinnedConnections:
+        """The pin registry this pool shares with the process's other pool."""
+
+        return self._pins
+
+    def serves_every_pool(self) -> bool:
+        """Whether this pool's pins serve the other pool too (the platform's)."""
+
+        return self._pins.serves_every_pool(self)
+
     def is_pinned(self) -> bool:
         """
         Whether this thread runs inside a `pinned_connection()` block of this

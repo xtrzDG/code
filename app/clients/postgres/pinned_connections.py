@@ -11,12 +11,21 @@ second connection that other lock holders keep busy.
 
 The tenant and the platform pool of a process share one registry
 (`PinnedConnections`). A pin belongs to the pool that lent its connection,
-and the other pool's users reach it only while a transaction is open on it
-(a unit of work): work inside a unit joins its transaction whichever pool
-it would use on its own, so the unit's writes commit together, on the
-unit's role. Outside such a transaction each pool keeps to its own
-connections: a read session or a session lock of one pool never carries
-the other pool's statements.
+and the other pool's users reach it in two cases only, so that a thread
+never waits for a connection of one pool while it holds one the other
+pool's waiters need (no deadlock between the pools):
+
+  * while a unit of work's transaction is open on it: work inside a unit
+    joins its transaction whichever pool it would use on its own, so the
+    unit's writes commit together, on the unit's role;
+  * when it is the platform pool's (the pool that serves every pool,
+    `serve_every_pool`): the tenant pool's users inside a platform read
+    session or session lock run on the pinned connection too, in their
+    business's scope (the platform role sees every business).
+
+Otherwise each pool keeps to its own connections: inside a business's read
+session or session lock (a tenant pin) platform work borrows a platform
+connection of its own for a moment, and waits for nothing else meanwhile.
 """
 
 import threading
@@ -79,9 +88,21 @@ class PinnedConnections:
             "postgres_connection_pins",
             default=(),
         )
+        self._serving_owner: object | None = None
+
+    def serve_every_pool(self, owner: object) -> None:
+        """Let the pins of `owner` (the platform pool) serve every pool."""
+
+        self._serving_owner = owner
+
+    def serves_every_pool(self, owner: object) -> bool:
+        return owner is self._serving_owner
 
     def current(self, owner: object) -> PostgresConnection | None:
-        """The connection this thread pinned for `owner`, or None outside a pin."""
+        """
+        The connection this thread pinned for `owner` (or for the pool that
+        serves every pool), or None outside a pin.
+        """
 
         pin: ConnectionPin | None = self._own_pin(owner)
         return None if pin is None else pin.connection
@@ -105,8 +126,9 @@ class PinnedConnections:
         """
         For a block of other code: the connection of the open transaction
         of this thread (unless `joins_open_transaction` is off), else the
-        connection this thread pinned for `owner` (its lender first ends
-        what it keeps open), else None.
+        connection this thread pinned for `owner` or for the pool that
+        serves every pool (its lender first ends what it keeps open), else
+        None.
         """
 
         if joins_open_transaction:
@@ -145,8 +167,10 @@ class PinnedConnections:
             self._pins.reset(token)
 
     def _own_pin(self, owner: object) -> ConnectionPin | None:
+        """The innermost pin of `owner`, or of the pool that serves every pool."""
+
         for pin in reversed(self._pins_of_thread()):
-            if pin.owner is owner:
+            if pin.owner is owner or pin.owner is self._serving_owner:
                 return pin
 
         return None

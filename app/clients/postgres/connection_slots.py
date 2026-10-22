@@ -52,10 +52,10 @@ class ConnectionOptions:
 class ConnectionSlots:
     """
     Thread-safe slots of one pool (`PostgresConnectionPoolClient`), which
-    opens connections with `open_connection`: at most `max_size` open; idle ones older than
-    `max_idle_seconds` close down to `min_size`; one idle for longer than
-    `idle_check_seconds` is pinged before reuse and replaced when the
-    server dropped it.
+    opens connections with `open_connection`: at most `max_size` open;
+    idle ones older than `max_idle_seconds` close down to `min_size`; one
+    idle for longer than `idle_check_seconds` is pinged before reuse and
+    replaced when the server dropped it.
     """
 
     def __init__(

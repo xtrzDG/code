@@ -80,8 +80,8 @@ class BackupDrillWorld:
         }
 
     def seed(self) -> None:
+        # As the tables' owner, a member of workshop_platform (migration 1200).
         with self.server.app_connection(self.database_name) as connection:
-            connection.execute("select set_config('app.bypass_rls', 'on', false)")
             for business_id, tables in ROWS.items():
                 for table, count in tables.items():
                     for index in range(count):

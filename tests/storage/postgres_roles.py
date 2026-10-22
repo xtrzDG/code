@@ -11,8 +11,7 @@ migration 1200; the login roles below then join them, once per server:
     workshop_platform_login  the platform pool's role: every business
 
 Both are neither superuser nor BYPASSRLS and own nothing, exactly like the
-roles `workshop db-roles` creates from DATABASE_URL_TENANT and
-DATABASE_URL_PLATFORM.
+login roles of DATABASE_URL_TENANT and DATABASE_URL_PLATFORM.
 """
 
 from dataclasses import dataclass

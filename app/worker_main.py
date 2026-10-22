@@ -21,7 +21,7 @@ from app.clients.postgres.postgres_connection_pools import PostgresConnectionPoo
 from app.containers.app import AppContainer
 from app.gateways.metrics.metrics_rendering import start_worker_metrics
 from app.gateways.metrics.worker_metrics_server import WorkerMetricsServer
-from app.gateways.startup_checks import check_processor_uses
+from app.gateways.startup_checks import check_database_roles, check_processor_uses
 from app.gateways.telemetry_lifecycle import (
     WORKER_SERVICE_NAME,
     finish_telemetry,
@@ -53,6 +53,7 @@ def main(
     install_stop_signal_handlers(stop)
     # The worker sends the nightly quality sample: it checks the providers too.
     check_processor_uses(container)
+    check_database_roles(container)
     warm_turn_caches()
     worker: BackgroundWorker = container.gateways.background_worker()
     metrics_server: WorkerMetricsServer | None = start_worker_metrics(container)

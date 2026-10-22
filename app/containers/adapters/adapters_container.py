@@ -141,7 +141,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         ProcessAdaptersContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,
     )  # fmt: skip
-    database_probe = processes.database_probe
+    database_probe, database_roles = processes.database_probe, processes.database_roles
     migration_source = processes.migration_source
     storage_unit_of_work = processes.storage_unit_of_work
     storage_read_session = processes.storage_read_session

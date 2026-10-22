@@ -59,9 +59,9 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     business (migration 1200). Inside a unit of work every operation joins
     the unit's transaction and role (`PostgresConnectionPools`).
 
-    The tenant role never connects as the tables' owner, a superuser or a
-    BYPASSRLS role: the pools refuse to start on such a role
-    (`app/gateways/database_roles_check.py`).
+    The tenant role is never the tables' owner, a superuser, a BYPASSRLS
+    role or a member of workshop_platform: production refuses to start on
+    such a role (`check_database_roles`).
 
     Documents are written as validated JSON stamped with the current
     `schema_version` and read back from the JSONB text tolerantly (unknown

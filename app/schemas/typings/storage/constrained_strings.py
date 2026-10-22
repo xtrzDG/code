@@ -18,6 +18,21 @@ class AdvisoryLockKey(BaseConstrainedTypedString):
     max_length = 400
 
 
+class DatabaseRoleName(BaseConstrainedTypedString):
+    """
+    A Postgres role the application logs in as, or one of its groups: an
+    unquoted identifier (lowercase letters, digits, underscores; at most
+    63 bytes), so statements that name it need no quoting tricks.
+
+    Example:
+        role = DatabaseRoleName("workshop_tenant_app")
+    """
+
+    min_length = 1
+    max_length = 63
+    pattern = r"^[a-z_][a-z0-9_]{0,62}\Z"
+
+
 class DocumentCollectionName(BaseConstrainedTypedString):
     """
     Name of one document collection, which is also its Postgres table name.

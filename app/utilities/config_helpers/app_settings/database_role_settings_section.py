@@ -56,8 +56,8 @@ def read_database_role_settings(
     if is_production and database_url is not None and tenant_url is None:
         raise ValidationFailedError(
             "Production connects with two roles: set DATABASE_URL_TENANT and "
-            "DATABASE_URL_PLATFORM (`workshop db-roles` creates them; "
-            'docs/operations/deploys.md, "Database roles").'
+            "DATABASE_URL_PLATFORM (docs/operations/deploys.md, "
+            '"Database roles").'
         )
 
     return DatabaseRoleSettingsSection(

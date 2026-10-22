@@ -132,13 +132,20 @@ _current_read_session: ContextVar[ReadSession | None] = ContextVar(
 def read_session_of(
     connection_pool: PostgresConnectionPoolClient,
 ) -> ReadSession | None:
-    """The session this thread entered on `connection_pool`, if any."""
+    """
+    The session this thread entered on `connection_pool`, or on the pool
+    that serves every pool (a platform session also carries the reads of
+    a business's scope inside it), if any.
+    """
 
     session: ReadSession | None = _current_read_session.get()
     if (
         session is None
-        or session.connection_pool is not connection_pool
         or session.thread_id != threading.get_ident()
+        or not (
+            session.connection_pool is connection_pool
+            or session.connection_pool.serves_every_pool()
+        )
     ):
         return None
 

@@ -24,10 +24,11 @@ class PostgresConnectionPools(ClientContract):
     app.business_id however a session changes its settings), the platform
     scope and code that entered no scope (sign-in, the user's own account:
     platform collections only, tenant ones refuse it) from `platform`
-    (DATABASE_URL_PLATFORM, a member of workshop_platform). Inside a unit of work every operation joins the
-    unit's transaction on the pool the unit started on
-    (`pinned_connections`), so a business's transaction never sees past its
-    business, even where code inside it asks for the platform scope.
+    (DATABASE_URL_PLATFORM, a member of workshop_platform). Inside a unit
+    of work every operation joins the unit's transaction on the pool the
+    unit started on (`pinned_connections`), so a business's transaction
+    never sees past its business, even where code inside it asks for the
+    platform scope.
 
     Both pools share one pin registry. Without the two role URLs (local
     development, tests of single components) both are the same pool on
@@ -36,6 +37,19 @@ class PostgresConnectionPools(ClientContract):
 
     tenant: PostgresConnectionPoolClient
     platform: PostgresConnectionPoolClient
+
+    def __post_init__(self) -> None:
+        if self.tenant is self.platform:
+            return
+
+        if self.tenant.pins is not self.platform.pins:
+            raise ValueError(
+                "The tenant and the platform pool must share one pin registry."
+            )
+
+        # Inside a platform pin, business work runs on its connection too:
+        # a platform holder never waits for a tenant connection.
+        self.platform.pins.serve_every_pool(self.platform)
 
     @classmethod
     def single(cls, pool: PostgresConnectionPoolClient) -> Self:

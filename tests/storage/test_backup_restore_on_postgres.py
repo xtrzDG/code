@@ -114,6 +114,35 @@ def test_a_table_without_row_level_security_fails_the_drill(
     )
 
 
+def test_the_drill_probes_as_the_tenant_role_with_the_bypass_switch_on(
+    world: BackupDrillWorld,
+) -> None:
+    # A policy that still honours the old switch leaks every business to the
+    # tenant role; a table without the tenant policy hides the business's
+    # own rows from it. Both fail the drill: its probe looks as a member of
+    # workshop_tenant that set app.bypass_rls, and counts the expected rows
+    # as the restoring role, which sees them all.
+    world.run_as_admin(
+        "create policy old_switch on workshop.channels to workshop_tenant"
+        " using (current_setting('app.bypass_rls', true) = 'on')"
+    )
+    world.run_as_admin("drop policy tenant_isolation on workshop.contacts")
+    assert world.backup().exit_code == 0
+
+    drilled = world.restore_check()
+
+    assert drilled.exit_code == 1
+    assert (
+        "FAILED  workshop.channels: 5 rows visible without a business scope."
+        in drilled.output
+    )
+    assert (
+        "FAILED  workshop.contacts: 0 of the business's 4 rows visible in its "
+        "scope." in drilled.output
+    )
+    assert world.drill_databases() == []
+
+
 def test_a_backup_of_an_unreachable_database_fails(world: BackupDrillWorld) -> None:
     world.environment["DATABASE_URL"] = "host=/nonexistent port=1 dbname=x user=y"
 

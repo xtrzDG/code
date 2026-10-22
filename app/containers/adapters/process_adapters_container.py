@@ -11,6 +11,9 @@ from app.adapters.jobs.job_wakeup_adapter_factory import build_job_wakeup_adapte
 from app.adapters.storage.data_task_batch_adapter_factory import (
     build_data_task_batch_adapter,
 )
+from app.adapters.storage.database_role_inspection_factory import (
+    build_database_role_inspection_adapter,
+)
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     BUILD_MIGRATIONS_DIRECTORY,
     SqlFileMigrationSourceAdapter,
@@ -24,6 +27,7 @@ from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.data_tasks import DataTaskBatchAdapterContract
+from app.contracts.database_roles import DatabaseRoleInspectionAdapterContract
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.jobs import JobWakeupContract
 from app.contracts.storage import StorageReadSessionContract, StorageUnitOfWorkContract
@@ -35,10 +39,15 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # --- Readiness (GET /readyz): the database probe over the shared pool and
+    # --- Readiness (GET /readyz): the database probe over the tenant pool and
     # the migration files of this build.
     database_probe: Singleton[DatabaseProbeAdapterContract] = Singleton(
         build_database_probe_adapter,
+        connection_pools=clients.postgres_pools,
+    )
+    # The login roles of the pools, checked at startup (none in memory).
+    database_roles: Singleton[DatabaseRoleInspectionAdapterContract] = Singleton(
+        build_database_role_inspection_adapter,
         connection_pools=clients.postgres_pools,
     )
     migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
