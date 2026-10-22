@@ -1,6 +1,7 @@
 """Stand-in while this server rents no numbers by itself."""
 
 from app.contracts.phone_numbers import PhoneNumberProvisionerAdapterContract
+from app.schemas.constants.phone_numbers import PhoneNumberType
 from app.schemas.dto.phone_numbers.provisioning import (
     PhoneNumberPurchase,
     PhoneNumberRelease,
@@ -11,6 +12,8 @@ from app.schemas.dto.phone_numbers.provisioning import (
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
 
@@ -32,6 +35,12 @@ class UnconfiguredPhoneNumberProvisionerAdapter(PhoneNumberProvisionerAdapterCon
 
     def search_numbers(self, query: PhoneNumberSearchQuery) -> PhoneNumberSearchResult:
         del query
+        raise self._not_configured()
+
+    def quote_monthly_cost(
+        self, country_code: CountryCode, number_type: PhoneNumberType
+    ) -> CostMicroUsd | None:
+        del country_code, number_type
         raise self._not_configured()
 
     def buy_number(self, purchase: PhoneNumberPurchase) -> ProvisionedPhoneNumber:

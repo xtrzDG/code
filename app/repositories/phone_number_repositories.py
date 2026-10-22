@@ -1,12 +1,10 @@
-from typed_time_provider import Microseconds
-
 from app.contracts.phone_numbers import (
     PhoneNumberChange,
     PhoneNumberRepoContract,
     PhoneNumberRequestRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
-from app.repositories.document_queries import field_equals, time_range
+from app.repositories.document_queries import field_equals
 from app.schemas.constants.phone_numbers import (
     PhoneNumberRequestStatus,
     PhoneNumberStatus,
@@ -15,10 +13,14 @@ from app.schemas.domain.phone_numbers import (
     PhoneNumberDocument,
     PhoneNumberRequestDocument,
 )
+from app.schemas.dto.storage_pages import DocumentPagePosition, DocumentPageQuery
+from app.schemas.dto.storage_queries import DocumentFilter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.integers import DocumentFieldInteger
+from app.schemas.typings.storage.strings import StoredDocumentKey
 from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
 from app.utilities.telephony.phone_number_keys import phone_number_request_id_of
 
@@ -68,23 +70,25 @@ class PhoneNumberRepository(
 
         return None
 
-    def list_in_status(
-        self, status: PhoneNumberStatus, limit: DocumentQueryLimit
+    def page_in_status(
+        self,
+        status: PhoneNumberStatus,
+        after: PhoneNumberDocument | None,
+        limit: DocumentQueryLimit,
     ) -> list[PhoneNumberDocument]:
-        return self._collection.list_by_fields(
-            [field_equals(STATUS_FIELD, status)], limit=limit
-        )
-
-    def list_rental_due(
-        self, now: Microseconds, limit: DocumentQueryLimit
-    ) -> list[PhoneNumberDocument]:
-        return self._collection.list_by_range(
-            time_range(
-                BILLED_UNTIL_FIELD,
-                ending_before=Microseconds(int(now) + 1),
-            ),
-            [field_equals(STATUS_FIELD, PhoneNumberStatus.ACTIVE)],
-            limit=limit,
+        return self._collection.page_by(
+            DocumentPageQuery(
+                where=DocumentFilter(matches=(field_equals(STATUS_FIELD, status),)),
+                sort_fields=(BILLED_UNTIL_FIELD,),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(DocumentFieldInteger(int(after.billed_until)),),
+                    document_key=StoredDocumentKey(str(after.id)),
+                ),
+                limit=limit,
+            )
         )
 
     def modify(

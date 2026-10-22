@@ -3,7 +3,11 @@
   "review_status": "reviewed",
   "draft_keys": [
     "notifications.deposit_refund.title",
-    "notifications.deposit_refund.detail"
+    "notifications.deposit_refund.detail",
+    "billing.texts.number_rental_line",
+    "billing.invoice_line.number_rental_item",
+    "billing.texts.notice_texts.number_rental_invoiced",
+    "billing.texts.notice_texts.phone_number_released"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "კლიენტს ადამიანი სჭირდება",
@@ -131,6 +135,7 @@
     "billing.texts.service_name": "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება",
     "billing.texts.setup_fee_line": "{service} — ჩართვა",
     "billing.texts.usage_overage_line": "{service} — პაკეტს ზემოთ {minutes} წუთი ზარი, {start} – {end}",
+    "billing.texts.number_rental_line": "{service} — სატელეფონო ხაზი {number}, {start} – {end}",
     "billing.texts.service_period_line": "{service} — {plan}, {billing_period}, {start} – {end}",
     "billing.texts.pause_period_name": "სეზონური პაუზა, მხოლოდ მოთხოვნები",
     "billing.texts.billing_period_names.monthly": "ყოველთვიური",
@@ -143,6 +148,8 @@
     "billing.texts.notice_texts.subscription_ended": "{business}: გამოწერა დასრულდა, ამიტომ ასისტენტი ახლა მხოლოდ მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს. სრული რეჟიმის აღსადგენად განაახლეთ გამოწერა განყოფილებაში „ბილინგი“.",
     "billing.texts.notice_texts.pause_started": "{business}: სეზონური პაუზა დაიწყო. {date}-მდე ასისტენტი მხოლოდ მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს; არხები ჩართული რჩება. პაუზის ერთი თვე ღირს {amount}; ანგარიში განყოფილებაშია „ბილინგი“.",
     "billing.texts.notice_texts.pause_ended": "{business}: სეზონური პაუზა დასრულდა. ასისტენტი კვლავ სრულ რეჟიმში მუშაობს: პასუხობს კლიენტებს და იღებს ჯავშნებს.",
+    "billing.texts.notice_texts.number_rental_invoiced": "{business}: ასისტენტის ტელეფონის ნომრის ამ თვის ანგარიშია {amount}; გთხოვთ, გადაიხადოთ განყოფილებაში „ბილინგი“.",
+    "billing.texts.notice_texts.phone_number_released": "{business}: ასისტენტის ტელეფონის ნომერი დაბრუნდა, რადგან ტარიფი გადახდილი არ არის. ტარიფის გადახდის შემდეგ ახალი ნომერი აიღეთ განყოფილებაში „არხები“.",
     "billing.texts.full_service_deadline": " ასისტენტი სრულ რეჟიმში იმუშავებს ამ თარიღამდე: {date}; შემდეგ კი მხოლოდ მოთხოვნებს მიიღებს.",
     "billing.texts.voice_minutes_warning": "{business}: ამ პერიოდში გამოყენებულია ტარიფის ზარის წუთების {percent}% ({used} / {included}). პაკეტს ზემოთ ყოველი წუთი ღირს {price}.",
     "billing.texts.dialogs_warning": "{business}: ამ პერიოდში გამოყენებულია ტარიფის დიალოგების {percent}% ({used} / {included}). თუ დიალოგები არ გეყოფათ, აირჩიეთ უფრო დიდი ტარიფი განყოფილებაში „ბილინგი“.",
@@ -189,6 +196,7 @@
     "billing.document.tax_notes.outside_scope": "არ იბეგრება გამყიდველის ქვეყნის ({country}) დღგ-ით: მომსახურების გაწევის ადგილი მის ფარგლებს გარეთაა.",
     "billing.invoice_line.service_period_item": "{service} — {plan}, {billing_period}",
     "billing.invoice_line.usage_overage_item": "{service} — პაკეტს ზემოთ {minutes} წუთი ზარი",
+    "billing.invoice_line.number_rental_item": "{service} — სატელეფონო ხაზი {number}",
     "billing.win_back.win_back_titles.day_14": "{business}: თქვენი ასისტენტი ისევ აქ არის",
     "billing.win_back.win_back_titles.day_30": "{business}: ერთი თვე სრული რეჟიმის გარეშე",
     "billing.win_back.conversations_line": "გაუქმების შემდეგ ის მხოლოდ მოთხოვნებს იღებს. ამ ხნის განმავლობაში მოგწერეს კლიენტებმა: {count}.",

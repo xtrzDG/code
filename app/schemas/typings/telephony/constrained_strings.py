@@ -20,12 +20,13 @@ class PhoneNumberCityQuery(BaseConstrainedTypedString):
 
 class PhoneNumberLabel(BaseConstrainedTypedString):
     """
-    The name a rented number carries on the voice platform's list, so the
-    platform team recognizes whose line it is ("Business 3f2a…: +1 512…").
+    The name a rented number carries at the carrier (Twilio's FriendlyName,
+    at most 64 characters) and on the voice platform's list, so the platform
+    team recognizes whose line it is: the business's name.
     """
 
     min_length = 1
-    max_length = 120
+    max_length = 64
 
 
 # Keep abc order for all non example types, if possible.

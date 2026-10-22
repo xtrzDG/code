@@ -15,6 +15,7 @@ from app.transformers.billing.billing_texts import (
 )
 from app.transformers.billing.invoice_wording_texts import (
     BILLING_PERIOD_NAMES,
+    NUMBER_RENTAL_LINE,
     PAUSE_PERIOD_NAME,
     SERVICE_NAME,
     SERVICE_PERIOD_LINE,
@@ -39,7 +40,8 @@ class InvoiceDescriptionTransformer(
     Oct 1, 2026 – Oct 31, 2026"; the setup fee reads "... — setup", a
     month of a seasonal pause names the pause instead of "monthly". The
     period shows the local calendar days it covers, the last one inclusive;
-    an overage line names the minutes above the package of its month.
+    an overage line names the minutes above the package of its month, a
+    rental line the rented phone number.
     """
 
     def __init__(self, localized_text_resolver: LocalizedTextResolverContract) -> None:
@@ -81,6 +83,23 @@ class InvoiceDescriptionTransformer(
             format=DATE_FORMAT,
             locale=babel_locale,
         )
+        if input_data.kind is InvoiceKind.NUMBER_RENTAL:
+            return InvoiceDescription(
+                fill_placeholders(
+                    str(
+                        self._localized_text_resolver.resolve(
+                            NUMBER_RENTAL_LINE, language
+                        )
+                    ),
+                    {
+                        "service": service,
+                        "number": str(input_data.rented_phone_number or ""),
+                        "start": start_text,
+                        "end": end_text,
+                    },
+                )
+            )
+
         if input_data.kind is InvoiceKind.USAGE_OVERAGE:
             return InvoiceDescription(
                 fill_placeholders(

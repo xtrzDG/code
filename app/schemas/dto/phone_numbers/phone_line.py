@@ -129,13 +129,15 @@ class PhoneNumberOfferList(ImmutableDTO):
 
 class RentPhoneNumberRequest(ImmutableDTO):
     """
-    The number the owner chose, its kind, and the monthly price the cabinet
-    showed (the purchase is refused when the price changed meanwhile).
+    The number the owner chose, its kind, the monthly price the cabinet
+    showed (the purchase is refused when the price changed meanwhile) and
+    the city the search named for it (kept for the card only).
     """
 
     phone_number: E164PhoneNumber
     number_type: PhoneNumberType
     monthly_price: Money
+    locality: PhoneNumberCityQuery | None = None
 
 
 class RentPhoneNumberCommand(ImmutableDTO):

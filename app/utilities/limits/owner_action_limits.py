@@ -1,7 +1,8 @@
 """
 Limits on the cabinet actions that make the platform pay a provider: a test
 chat message (a model turn) per person, a menu import (a model reading a
-menu) and an autotest run (hundreds of model turns) per business. Each is a
+menu), an autotest run (hundreds of model turns), a number search (the
+carrier's API) and a rented number (its first month) per business. Each is a
 sliding window over the shared request counters, so every API instance
 counts against the same limit; a refusal is a 429 with Retry-After.
 """
@@ -51,5 +52,23 @@ OWNER_ACTION_LIMITS: dict[OwnerAction, OwnerActionLimit] = {
         limit=20,
         window_seconds=DAY_SECONDS,
         refusal="Autotests can run 20 times a day; try again tomorrow.",
+    ),
+    # The number picker asks the carrier's API on every search; an owner
+    # tries a few cities and kinds. Each rented number costs the platform
+    # its first month at once, so taking and giving back numbers in a loop
+    # is held at three a day.
+    OwnerAction.PHONE_NUMBER_SEARCH: OwnerActionLimit(
+        key_prefix="owner-phone-number-search",
+        is_per_person=False,
+        limit=30,
+        window_seconds=HOUR_SECONDS,
+        refusal="Numbers can be searched 30 times an hour; try again later.",
+    ),
+    OwnerAction.PHONE_NUMBER_RENTAL: OwnerActionLimit(
+        key_prefix="owner-phone-number-rental",
+        is_per_person=False,
+        limit=3,
+        window_seconds=DAY_SECONDS,
+        refusal="A business can take 3 numbers a day; try again tomorrow.",
     ),
 }

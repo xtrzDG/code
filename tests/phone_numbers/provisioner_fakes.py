@@ -104,6 +104,11 @@ class FakePhoneNumberProvisioner(PhoneNumberProvisionerAdapterContract):
             numbers=numbers[: int(query.limit)], monthly_cost_micro_usd=cost
         )
 
+    def quote_monthly_cost(
+        self, country_code: CountryCode, number_type: PhoneNumberType
+    ) -> CostMicroUsd | None:
+        return self.costs.get((str(country_code), number_type))
+
     def buy_number(self, purchase: PhoneNumberPurchase) -> ProvisionedPhoneNumber:
         if str(purchase.phone_number) in self.taken_numbers:
             raise PhoneNumberUnavailableError("This number is no longer available.")

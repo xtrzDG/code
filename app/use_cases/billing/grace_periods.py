@@ -10,6 +10,11 @@ from app.schemas.dto.billing import PlanDefinition
 from app.use_cases.shared.billing_records import list_open_invoices
 from app.utilities.billing.billing_periods import add_local_days
 
+# Bills beside the service periods that restore nothing when left unpaid.
+USAGE_BILL_KINDS: frozenset[InvoiceKind] = frozenset(
+    {InvoiceKind.USAGE_OVERAGE, InvoiceKind.NUMBER_RENTAL}
+)
+
 
 def start_grace_period(
     plan_registry: PlanRegistryContract,
@@ -35,15 +40,16 @@ def start_overage_grace(
     invoices: list[InvoiceDocument],
 ) -> bool:
     """
-    An unpaid bill for minutes above the package makes the subscription
-    past due; grace runs from the day the bill was issued (the owners
-    were told the deadline then). False without such a bill.
+    An unpaid bill for minutes above the package, or for a month of a
+    rented phone number, makes the subscription past due; grace runs from
+    the day the bill was issued (the owners were told the deadline then).
+    False without such a bill.
     """
 
     unpaid_overage: list[InvoiceDocument] = [
         invoice
         for invoice in list_open_invoices(invoices)
-        if invoice.kind is InvoiceKind.USAGE_OVERAGE
+        if invoice.kind in USAGE_BILL_KINDS
     ]
     if unpaid_overage == []:
         return False

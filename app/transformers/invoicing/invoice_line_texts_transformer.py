@@ -26,6 +26,9 @@ SERVICE_PERIOD_ITEM: LocalizedText = reviewed_owner_text(
 USAGE_OVERAGE_ITEM: LocalizedText = reviewed_owner_text(
     "billing.invoice_line.usage_overage_item"
 )
+NUMBER_RENTAL_ITEM: LocalizedText = reviewed_owner_text(
+    "billing.invoice_line.number_rental_item"
+)
 
 
 class InvoiceLineTextsTransformer(
@@ -38,7 +41,8 @@ class InvoiceLineTextsTransformer(
     PDF and the cabinet print beside it: the service (concept tax rule: a
     "call and message handling service", never a licence), then the plan
     and its billing period (or, for a month of a seasonal pause, the
-    pause), "setup", or the call minutes above the package. Worded once,
+    pause), "setup", the call minutes above the package, or the rented
+    phone line. Worded once,
     when the invoice is issued, so a PDF in any of these languages never
     mixes in another one.
     """
@@ -60,6 +64,16 @@ class InvoiceLineTextsTransformer(
         service: str = self._say(SERVICE_NAME, language)
         if input_data.kind is InvoiceKind.SETUP_FEE:
             return self._fill(SETUP_FEE_LINE, language, {"service": service})
+
+        if input_data.kind is InvoiceKind.NUMBER_RENTAL:
+            return self._fill(
+                NUMBER_RENTAL_ITEM,
+                language,
+                {
+                    "service": service,
+                    "number": str(input_data.rented_phone_number or ""),
+                },
+            )
 
         if input_data.kind is InvoiceKind.USAGE_OVERAGE:
             minutes: str = format_decimal(

@@ -65,6 +65,7 @@ class BillingNoticeTransformer(TransformerContract[BillingNotice, MessageText]):
             BillingNoticeKind.TRIAL_ENDED_UNPAID,
             BillingNoticeKind.RENEWAL_MISSED,
             BillingNoticeKind.OVERAGE_INVOICED,
+            BillingNoticeKind.NUMBER_RENTAL_INVOICED,
         }:
             text += fill_placeholders(
                 self._resolve(FULL_SERVICE_DEADLINE, language), values

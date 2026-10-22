@@ -5,7 +5,7 @@ from app.contracts.telephony_clients import (
     ElevenLabsPhoneNumbersClientContract,
     TwilioPhoneNumbersClientContract,
 )
-from app.schemas.constants.phone_numbers import PhoneNumberProvider
+from app.schemas.constants.phone_numbers import PhoneNumberProvider, PhoneNumberType
 from app.schemas.dto.phone_numbers.provisioning import (
     AvailablePhoneNumber,
     PhoneNumberPurchase,
@@ -17,6 +17,7 @@ from app.schemas.dto.phone_numbers.provisioning import (
 )
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.platform.strings import PlatformSecret
@@ -69,6 +70,11 @@ class TwilioPhoneNumberProvisionerAdapter(PhoneNumberProvisionerAdapterContract)
             numbers=numbers[: int(query.limit)],
             monthly_cost_micro_usd=monthly_cost,
         )
+
+    def quote_monthly_cost(
+        self, country_code: CountryCode, number_type: PhoneNumberType
+    ) -> CostMicroUsd | None:
+        return self._twilio_client.get_monthly_price(country_code, number_type)
 
     def buy_number(self, purchase: PhoneNumberPurchase) -> ProvisionedPhoneNumber:
         provider_number_id: ProviderPhoneNumberId = self._twilio_client.buy_number(

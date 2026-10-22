@@ -4,8 +4,6 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Protocol
 
-from typed_time_provider import Microseconds
-
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.registry_contract import RegistryContract
 from app.contracts.repo_contract import RepoContract
@@ -27,6 +25,7 @@ from app.schemas.dto.phone_numbers.provisioning import (
     VoicePlatformImport,
 )
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -58,6 +57,15 @@ class PhoneNumberProvisionerAdapterContract(AdapterContract, Protocol):
         """
         Numbers on offer now and the carrier's monthly price of the kind.
         Raises ExternalServiceError.
+        """
+        raise NotImplementedError
+
+    def quote_monthly_cost(
+        self, country_code: CountryCode, number_type: PhoneNumberType
+    ) -> CostMicroUsd | None:
+        """
+        The carrier's monthly price of the kind in the country (None: it
+        sells none there). Raises ExternalServiceError.
         """
         raise NotImplementedError
 
@@ -117,18 +125,17 @@ class PhoneNumberRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
-    def list_in_status(
-        self, status: PhoneNumberStatus, limit: DocumentQueryLimit
-    ) -> list[PhoneNumberDocument]:
-        """Across businesses (platform-wide): numbers in this status, oldest first."""
-        raise NotImplementedError
-
-    def list_rental_due(
-        self, now: Microseconds, limit: DocumentQueryLimit
+    def page_in_status(
+        self,
+        status: PhoneNumberStatus,
+        after: PhoneNumberDocument | None,
+        limit: DocumentQueryLimit,
     ) -> list[PhoneNumberDocument]:
         """
-        Across businesses (platform-wide): ACTIVE numbers whose next rental
-        month began (`billed_until` at or before now), earliest first.
+        Across businesses (platform-wide): numbers in this status after
+        `after` (from the start without it), by when their next rental month
+        begins (`billed_until`), then their first write; a keyset page, so
+        a walk meets every number once however many share a month.
         """
         raise NotImplementedError
 

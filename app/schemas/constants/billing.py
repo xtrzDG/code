@@ -111,6 +111,9 @@ class BillingNoticeKind(StrEnum):
     OVERAGE_INVOICED = "overage_invoiced"
     PAUSE_STARTED = "pause_started"
     PAUSE_ENDED = "pause_ended"
+    # Rented phone numbers (W21): a month's bill, a number given back.
+    NUMBER_RENTAL_INVOICED = "number_rental_invoiced"
+    PHONE_NUMBER_RELEASED = "phone_number_released"
 
 
 class ExchangeRateSource(StrEnum):

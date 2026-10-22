@@ -13,4 +13,3 @@ def phone_number_request_id_of(business_id: BusinessId) -> PhoneNumberRequestId:
     """One request document per business."""
 
     return PhoneNumberRequestId(uuid5(PHONE_NUMBER_REQUEST_NAMESPACE, str(business_id)))
-

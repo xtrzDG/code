@@ -39,8 +39,8 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
     The credential is erased and the account released (another business may
     connect it later); messages that still arrive for it are dropped. A
     Telegram bot's webhook is removed when Telegram can be reached. Turning
-    the phone number off removes the voice agent; publishing again sets it
-    up anew.
+    the phone number off removes the voice agent (publishing again sets it
+    up anew) and gives back a number the platform rents for the business.
     """
 
     def __init__(
@@ -55,7 +55,11 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         remove_voice_agent: UseCaseContract[BusinessId, None],
+        give_back_phone_number: UseCaseContract[BusinessId, None] | None = None,
     ) -> None:
+        self._give_back_phone_number: UseCaseContract[BusinessId, None] | None = (
+            give_back_phone_number
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -89,6 +93,8 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
             self._remove_telegram_webhook(channel)
 
         if channel.kind is ChannelKind.PHONE:
+            if self._give_back_phone_number is not None:
+                self._give_back_phone_number.run(business.id)
             self._remove_voice_agent.run(business.id)
 
         now: Microseconds = self._wall_clock.now_unix()
