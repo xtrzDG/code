@@ -41,7 +41,7 @@ class PasskeyDocument(BaseDocument):
     password manager or a platform account) report 0 on every use.
     """
 
-    id: PasskeyId = Field(default_factory=PasskeyId)
+    id: PasskeyId
     user_id: UserId
     credential_id: WebAuthnCredentialId
     public_key: WebAuthnPublicKey
