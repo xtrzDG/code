@@ -140,7 +140,8 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert narrowed.json()["status"] == "running"
     assert workshop.model.judge_calls == 0  # nothing ran inside the request
     worker = workshop.container.gateways.background_worker()
-    assert worker.run_once().queued_runs == 1
+    # The narrowed run and the knowledge index queued by the assembly.
+    assert worker.run_once().queued_runs == 2
     narrowed_report: JsonObject = client.get(
         f"{base}/assistant-versions/{version_id}/autotest-run", headers=headers
     ).json()

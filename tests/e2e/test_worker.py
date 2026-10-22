@@ -100,6 +100,7 @@ from app.use_cases.knowledge.website_import.start_website_import_use_case import
     IMPORT_WEBSITE_JOB,
 )
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
+from app.use_cases.shared.knowledge_index_queue import INDEX_KNOWLEDGE_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
@@ -193,6 +194,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SEND_TEXT_BACK_JOB,
         BUILD_BUSINESS_EXPORT_JOB,
         IMPORT_WEBSITE_JOB,
+        INDEX_KNOWLEDGE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
         SUMMARIZE_CONVERSATION_JOB,
