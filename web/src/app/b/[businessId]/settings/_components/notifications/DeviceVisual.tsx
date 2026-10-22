@@ -11,10 +11,14 @@ import * as m from "motion/react-m";
 
 import { IconBell } from "@/components/icons";
 import { TiltCard, TiltLayer } from "@/components/motion";
+import { useHydrated } from "@/lib/csp/clientStyle";
 import { springTransition } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 export function DeviceVisual({ isOn, title }: { isOn: boolean; title: string }) {
+  // The server's HTML shows the picture at rest: motion would write its
+  // resting values as a style attribute, which the CSP refuses.
+  const hydrated = useHydrated();
   return (
     <TiltCard className="mx-auto h-32 w-44 shrink-0 rounded-[1.4rem]" glare={isOn}>
       <div
@@ -37,7 +41,7 @@ export function DeviceVisual({ isOn, title }: { isOn: boolean; title: string }) 
               key="on"
               aria-hidden
               initial={{ opacity: 0, y: -14, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1, transition: springTransition("bouncy") }}
+              animate={hydrated ? { opacity: 1, y: 0, scale: 1, transition: springTransition("bouncy") } : undefined}
               exit={{ opacity: 0, y: -10, transition: { duration: 0.12 } }}
               className="flex items-center gap-2 rounded-xl border border-line bg-surface px-2.5 py-2 shadow-[0_14px_30px_-14px_var(--accent-solid)]"
             >
@@ -56,7 +60,7 @@ export function DeviceVisual({ isOn, title }: { isOn: boolean; title: string }) 
               key="off"
               aria-hidden
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={hydrated ? { opacity: 1 } : undefined}
               exit={{ opacity: 0 }}
               className="flex justify-center pt-1"
             >

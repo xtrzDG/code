@@ -79,6 +79,17 @@ test.describe("Content Security Policy", () => {
     });
   });
 
+  test("a page that is not found does not break it", async ({ page, owner, consoleErrors }) => {
+    // Next.js answers notFound() with its error shell: the policy is installed there too.
+    consoleErrors.allow(/status of 404 \(Not Found\)/);
+    await watchPolicyViolations(page);
+
+    await openAndCheck(page, "/c/no-chat-e2e-0000");
+    await expect(page.getByRole("heading", { name: "There is no chat at this address. Check the link." })).toBeVisible();
+    await openAndCheck(page, `/b/${owner.businessId}/assistant/profile/no-such-section`);
+    await expect(page.getByText(en.errors.notFoundTitle)).toBeVisible();
+  });
+
   test("no page of a business breaks it", async ({ page, owner }) => {
     test.setTimeout(120_000);
     await watchPolicyViolations(page);

@@ -6,12 +6,12 @@
  * app up during the first sign-in and reaches the admin pages.
  */
 
-import type { Locator, Page } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
 import { ensureOnAdminTeam } from "./support/admin";
 import { MFA_ADMIN_EMAIL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { apiLogSize, waitForLoginCode } from "./support/login-codes";
+import { passLoginCode } from "./support/login-codes";
 import { en } from "./support/messages";
 import { freshTotpCode, totpCode } from "./support/totp";
 
@@ -34,15 +34,6 @@ async function saveRecoveryCodes(container: Locator, goOn: string): Promise<void
   await expect(button).toBeDisabled();
   await container.getByRole("checkbox", { name: en.mfa.recovery.saved }).check();
   await button.click();
-}
-
-/** Asks for a login code by e-mail on the sign-in page and types it in. */
-async function passLoginCode(page: Page, email: string): Promise<void> {
-  await page.getByRole("group", { name: en.auth.methodLabel }).getByText(en.auth.methodEmail, { exact: true }).click();
-  await page.getByRole("textbox", { name: en.auth.email, exact: true }).fill(email);
-  const since = apiLogSize();
-  await page.getByRole("button", { name: en.auth.sendCode }).click();
-  await page.getByLabel(en.auth.code, { exact: true }).fill(await waitForLoginCode({ since }));
 }
 
 /** The 401 the API answers when a sensitive action needs a fresh confirmation. */

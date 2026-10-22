@@ -1,8 +1,8 @@
 /**
  * The page's Trusted Types default policy (the policy requires them for
- * every script sink: `require-trusted-types-for 'script'`). The root layout
- * runs it as the first, nonce'd script of <head>, before any of Next.js's
- * own (TrustedTypesScript), so every sink a library reaches passes it:
+ * every script sink: `require-trusted-types-for 'script'`). It runs as a
+ * nonce'd script in <head> (TrustedTypesScript), before Next.js's runtime
+ * loads any chunk, so every sink a library reaches passes it:
  *
  *  - HTML: only text, which cannot make an element (no "<": a JSON-LD
  *    block, text React writes), and the `<script></script>` React parses
