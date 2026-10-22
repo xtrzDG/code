@@ -34,7 +34,8 @@ export const securityHe: Translation<typeof securityEn> = {
   },
   codes: {
     title: "קודי שחזור",
-    description: "לטלפון שאבד: כל קוד מחליף את הקוד של האפליקציה פעם אחת.",
+    description:
+      "לטלפון או למפתח אבטחה שאבדו: כל קוד מחליף את הגורם השני פעם אחת.",
     left: {
       one: "נשאר קוד אחד שלא נוצל",
       other: "נשארו {count} קודים שלא נוצלו",

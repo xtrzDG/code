@@ -36,7 +36,8 @@ export const securityDe: Translation<typeof securityEn> = {
   },
   codes: {
     title: "Wiederherstellungscodes",
-    description: "Für ein verlorenes Telefon: Jeder Code ersetzt einmal den Code der App.",
+    description:
+      "Für ein verlorenes Telefon oder einen Sicherheitsschlüssel: Jeder Code ersetzt einmal den zweiten Faktor.",
     left: {
       one: "{count} unbenutzter Code übrig",
       other: "{count} unbenutzte Codes übrig",

@@ -40,7 +40,8 @@ export const securityEn = {
   },
   codes: {
     title: "Recovery codes",
-    description: "For a lost phone: each code replaces the app's code once.",
+    description:
+      "For a lost phone or security key: each code stands in for your second factor once.",
     left: {
       one: "{count} unused code left",
       other: "{count} unused codes left",
