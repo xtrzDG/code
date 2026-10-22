@@ -1,7 +1,6 @@
 """resync_voice_agents: agents set up before the current revision get set up again."""
 
 import threading
-from collections.abc import Callable
 
 from typed_time_provider import Microseconds
 
@@ -9,9 +8,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.billing import PlanKey
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import (
     EnvironmentVariableName,
@@ -161,24 +158,11 @@ class LockProbe:
         other.join()
 
 
-def probing_upsert(
-    upsert: Callable[[VoiceAgentSpec], VoiceAgentId], probe: LockProbe
-) -> Callable[[VoiceAgentSpec], VoiceAgentId]:
-    def upsert_while_probing(spec: VoiceAgentSpec) -> VoiceAgentId:
-        probe.probe()
-        return upsert(spec)
-
-    return upsert_while_probing
-
-
 def test_the_agent_is_set_up_under_the_lock_publishing_holds() -> None:
     testbed = AssemblyTestbed()
     business_id, _ = published_before_revisions(testbed)
     probe = LockProbe(testbed, business_id)
-    provisioner = testbed.voice_provisioner
-    provisioner.upsert_agent = probing_upsert(  # type: ignore[method-assign]
-        provisioner.upsert_agent, probe
-    )
+    testbed.voice_provisioner.on_upsert = probe.probe
 
     resync_use_case(testbed).run(TICK)
 

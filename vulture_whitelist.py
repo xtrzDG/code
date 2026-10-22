@@ -550,13 +550,15 @@ _.call_outcome  # app/schemas/dto/customers/customer_timeline.py
 
 # What a guest's booking page (/r/{token}) and the hosted chat page read
 # from the API: the ways to write, what may still change, the stay's
-# availability and the owner's own booking page.
+# availability, the owner's own booking page and how calls are recorded
+# (the privacy notice's phone section).
 _.chat_links  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.can_cancel  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.can_reschedule  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.is_over  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.is_stay_available  # app/schemas/dto/booking_manage.py (ManagedBookingSlots)
 _.booking_url  # app/schemas/dto/sharing.py (HostedChatView)
+_.phone_calls  # app/schemas/dto/sharing.py (HostedChatView)
 
 # The spend guard (R12): the admin overview's spend tile reads how much of
 # the daily budget is used and the clients that passed a limit today.
