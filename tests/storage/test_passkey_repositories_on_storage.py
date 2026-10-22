@@ -54,7 +54,7 @@ def challenge(user_id: UserId, created_at: int) -> PasskeyChallengeDocument:
     return PasskeyChallengeDocument(
         user_id=user_id,
         purpose=PasskeyCeremonyPurpose.SIGN_IN,
-        challenge=WebAuthnChallenge("Y2hhbGxlbmdlLTAwMDAtMDAwMC0wMDAw"),
+        challenge=WebAuthnChallenge("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
         expires_at=Microseconds(created_at + 300_000_000),
         created_at=Microseconds(created_at),
         updated_at=Microseconds(created_at),

@@ -127,7 +127,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "WebLink": "https://example.com/menu",
     "PasskeyName": "MacBook Touch ID",
     "WebAuthnAaguid": "00000000-0000-0000-0000-000000000000",
-    "WebAuthnChallenge": "Y2hhbGxlbmdlLTAwMDAtMDAwMC0wMDAw",
+    "WebAuthnChallenge": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     "WebAuthnCredentialId": "cGFzc2tleS1jcmVkZW50aWFsLTAwMDA",
     "WebAuthnPublicKey": "pQECAyYgASFYIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     "WhatsAppTemplateLanguageCode": "en_US",

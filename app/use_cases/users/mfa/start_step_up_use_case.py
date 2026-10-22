@@ -60,7 +60,8 @@ class StartStepUpUseCase(UseCaseContract[StartStepUpCommand, StepUpChallengeView
 
         if has_passkey and input_data.method is not StepUpMethod.LOGIN_CODE:
             return StepUpChallengeView(
-                method=StepUpMethod.PASSKEY, passkey_available=True
+                method=StepUpMethod.PASSKEY,
+                passkey_available=True,
             )
 
         is_phone: bool = (
