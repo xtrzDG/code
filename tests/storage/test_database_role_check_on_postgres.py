@@ -2,8 +2,8 @@
 The startup check of the pools' database roles (migration 1200): the
 application's two login roles pass; a tenant pool on the tables' owner (a
 member of workshop_platform) or a platform pool on a tenant role stops
-production and is a warning elsewhere; a database that cannot be asked is
-left to the readiness probe.
+production and is a warning elsewhere; so does a database that cannot be
+asked (elsewhere the readiness probe reports it).
 """
 
 import logging
@@ -108,7 +108,7 @@ def test_the_tables_owner_as_the_tenant_role_stops_production(
     assert "Database roles" in str(refused.value)
 
 
-def test_development_warns_and_an_unreachable_database_is_left_to_readiness(
+def test_development_warns_and_production_refuses_an_unreachable_database(
     role_urls: RoleDatabase, caplog: pytest.LogCaptureFixture
 ) -> None:
     misconfigured = pools_on(role_urls.owner_url, role_urls.platform_url)
@@ -116,7 +116,9 @@ def test_development_warns_and_an_unreachable_database_is_left_to_readiness(
     try:
         with caplog.at_level(logging.WARNING, logger=LOGGER_NAME):
             warned = check_database_roles(container_with(misconfigured, {}))
-            skipped = check_database_roles(container_with(unreachable, PRODUCTION))
+            skipped = check_database_roles(container_with(unreachable, {}))
+        with pytest.raises(ValidationFailedError, match="could not be checked"):
+            check_database_roles(container_with(unreachable, PRODUCTION))
     finally:
         misconfigured.close()
         unreachable.close()

@@ -21,8 +21,8 @@ class PostgresConnectionPools(ClientContract):
     Storage picks the pool by the scope of each operation: a business
     scope borrows from `tenant` (DATABASE_URL_TENANT, a member of
     workshop_tenant, which sees only the rows of the business in
-    app.business_id however a session changes its settings), the platform
-    scope and code that entered no scope (sign-in, the user's own account:
+    app.business_id, with no setting that switches the check off), the
+    platform scope and code that entered no scope (sign-in, the user's own account:
     platform collections only, tenant ones refuse it) from `platform`
     (DATABASE_URL_PLATFORM, a member of workshop_platform). Inside a unit
     of work every operation joins the unit's transaction on the pool the

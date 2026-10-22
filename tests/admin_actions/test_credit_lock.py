@@ -17,6 +17,7 @@ from app.schemas.dto.billing_ledger import DueInvoicesRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
 from app.utilities.billing.billing_periods import add_billing_period
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.admin_actions.action_steps import credit
 from tests.admin_actions.action_world import ActionWorld
 
@@ -75,6 +76,7 @@ def test_two_invoices_at_once_spend_the_credit_once() -> None:
         credit_lock=testbed.credit_lock,
         brand_repo=testbed.brand_repo,
         business_repo=testbed.business_repo,
+        storage_scope=StorageScopeContext(),
     )
     subscription = testbed.subscription(world.business.id)
     business = world.client()

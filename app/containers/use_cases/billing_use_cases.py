@@ -97,6 +97,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         credit_lock=registries.billing_credit_lock_registry,
         brand_repo=repositories.brand_repo,
         business_repo=repositories.business_repo,
+        storage_scope=utilities.storage_scope,
     )
     assemble_billing_overview_use_case: Factory[
         UseCaseContract[BillingOverviewSource, BillingOverview]

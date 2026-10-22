@@ -1,11 +1,12 @@
 """
 What a pool's login role must not be (migration 1200,
 docs/operations/deploys.md "Database roles"). The tenant pool's role
-carries tenant isolation itself: it must see one business at a time
-whatever a session sets, so it is a plain member of workshop_tenant and
-nothing more. The platform pool's role is a member of workshop_platform
-and owns nothing. A shared pool (DATABASE_URL alone) is development's
-setup and has no rule here: production refuses it in the settings.
+carries tenant isolation itself: it must see only the business in
+`app.business_id`, with no way to switch that check off, so it is a plain
+member of workshop_tenant and nothing more. The platform pool's role is
+a member of workshop_platform and owns nothing. A shared pool
+(DATABASE_URL alone) is development's setup and has no rule here:
+production refuses it in the settings.
 """
 
 from app.schemas.constants.storage import DatabasePoolKind, DatabaseRoleGroup

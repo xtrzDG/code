@@ -86,7 +86,17 @@ session sees the rows of the business in `app.business_id` and nothing
 else, even after `set app.bypass_rls = 'on'` (no policy reads that
 setting any more). An SQL injection or a mistaken `platform_wide()` call
 therefore cannot switch tenant isolation off
-(`tests/storage/test_authorization_matrix_postgres.py` tries it).
+(`tests/storage/test_authorization_matrix_postgres.py` tries it). The
+tenant role still trusts the business id the session sets itself: an
+injection could `set app.business_id` to another business, an accepted
+risk with its follow-up in `docs/security/threat-model.md`.
+
+The platform role sees every row through a permissive `platform_access`
+policy on each table (`using (true) with check (true)`), not through the
+BYPASSRLS attribute: only a superuser may grant BYPASSRLS, which Render's
+database user is not, and members do not inherit it from a group. The
+effect is the same; the startup check refuses a tenant role that has
+BYPASSRLS.
 
 | Variable | Login role | Sees | Used by |
 | --- | --- | --- | --- |
@@ -103,7 +113,12 @@ tenant role that is a superuser, BYPASSRLS, a member of
 `workshop_platform` or of the tables' owner, or not a member of
 `workshop_tenant` (or a platform role that is a superuser, owns the
 tables or is outside `workshop_platform`) stops production and logs a
-warning elsewhere. Without the two addresses
+warning elsewhere. So does a pool whose role cannot be checked at all: an
+unreachable or wrong `DATABASE_URL_PLATFORM`, a revoked login, or a role
+whose name is not an unquoted lowercase identifier (letters a-z, digits,
+underscores; never a quoted name such as `"TenantApp"`). `/readyz` asks
+both pools, so an instance whose platform pool stops answering later is
+not ready either. Without the two addresses
 (local development, tests) one pool on `DATABASE_URL` serves both scopes,
 and only the queries' own business filters keep businesses apart.
 
@@ -135,7 +150,10 @@ Then set `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on
 port and database of `DATABASE_URL` (Connect → Internal) with the login
 role and its password, for example
 `postgresql://workshop_tenant_app:<password>@<internal host>:5432/<database>`.
-The workers copy both from the API (`fromService`); staging does the same
+The workers and the nightly `workshop-backup` cron copy both from the API
+(`fromService`): production settings refuse any process without them, the
+backup's too, although `pg_dump` itself connects as the migration role
+(`DATABASE_URL`) so that the dump holds every business. Staging does the same
 with its own roles and passwords. Only then deploy the release with 1200:
 it refuses to start in production without the addresses, while the
 release before it ignores them. When `workshop migrate` stops with

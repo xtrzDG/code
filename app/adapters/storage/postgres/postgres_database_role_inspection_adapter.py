@@ -7,6 +7,7 @@ superuser, a member of workshop_platform) is caught before any request.
 from typing import LiteralString
 
 import psycopg
+from base_typed_string import BaseTypedStringConstraintViolationError
 from psycopg.rows import TupleRow
 
 from app.clients.postgres.postgres_connection_pool_client import (
@@ -95,10 +96,28 @@ def inspect_pool(
 
     return PoolRole(
         pool=pool,
-        role_name=DatabaseRoleName(str(row[0])),
+        role_name=read_role_name(row[0], pool),
         is_superuser=bool(row[1]),
         bypasses_row_security=bool(row[2]),
         is_tenant_member=bool(row[3]),
         is_platform_member=bool(row[4]),
         owns_tables=bool(row[5]),
     )
+
+
+def read_role_name(value: object, pool: DatabasePoolKind) -> DatabaseRoleName:
+    """
+    The login role's name, which must be an unquoted lowercase identifier:
+    Postgres also allows quoted names ("TenantApp", "tenant-app"), which
+    the deployment guide rules out, so such a name is reported, not raised
+    as a crash at startup.
+    """
+
+    try:
+        return DatabaseRoleName(str(value))
+    except BaseTypedStringConstraintViolationError as error:
+        raise ExternalServiceError(
+            f"The {pool.value} pool's database role has a name that is not an "
+            "unquoted lowercase identifier (a-z, digits, underscores); use such "
+            'a role (docs/operations/deploys.md, "Database roles").'
+        ) from error

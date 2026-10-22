@@ -9,6 +9,7 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.contracts.repositories.client_care_repositories import (
     BillingCreditRepoContract,
 )
+from app.contracts.storage import StorageScopeContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (
@@ -94,11 +95,12 @@ class IssueDueInvoicesUseCase(
         credit_lock: BillingCreditLockRegistryContract,
         brand_repo: BrandRepoContract,
         business_repo: BusinessRepoContract,
+        storage_scope: StorageScopeContract,
     ) -> None:
         self._brand_repo: BrandRepoContract = brand_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._adjustments: InvoiceIssuingAdjustments = InvoiceIssuingAdjustments(
-            invoice_repo, billing_credit_repo, credit_lock
+            invoice_repo, billing_credit_repo, credit_lock, storage_scope
         )
         self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._invoice_repo: InvoiceRepoContract = invoice_repo

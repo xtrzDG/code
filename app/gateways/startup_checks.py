@@ -68,17 +68,26 @@ def check_database_roles(app_container: AppContainer) -> list[DatabaseRoleProble
     A pool whose login role breaks tenant isolation (DATABASE_URL_TENANT
     naming the migration role, a superuser or a member of
     workshop_platform; a platform role outside its group) stops the process
-    in production and is logged as a warning elsewhere. A database that
-    cannot be asked now is left to the readiness probe. Returns the
-    problems found.
+    in production and is logged as a warning elsewhere. So does a pool
+    whose role cannot be asked at all (an unreachable or wrong
+    DATABASE_URL_PLATFORM, a revoked login, a role name the guide rules
+    out): production never serves with a pool it could not check, and
+    elsewhere the readiness probe, which asks both pools, reports it.
+    Returns the problems found.
     """
 
     settings: AppSettings = app_container.config.app_settings()
+    is_production: bool = settings.environment is DeploymentEnvironment.PRODUCTION
     try:
         pool_roles: list[PoolRole] = (
             app_container.adapters.database_roles().inspect_pool_roles()
         )
     except ExternalServiceError as error:
+        if is_production:
+            raise ValidationFailedError(
+                f"The database roles could not be checked: {error}"
+            ) from error
+
         LOGGER.warning("The database roles could not be checked: %s", error)
         return []
 
@@ -91,7 +100,7 @@ def check_database_roles(app_container: AppContainer) -> list[DatabaseRoleProble
         + "; ".join(str(problem) for problem in problems)
         + '. See docs/operations/deploys.md, "Database roles".'
     )
-    if settings.environment is DeploymentEnvironment.PRODUCTION:
+    if is_production:
         raise ValidationFailedError(message)
 
     LOGGER.warning(message)

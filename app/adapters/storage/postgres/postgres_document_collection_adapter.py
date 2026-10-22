@@ -53,8 +53,8 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     scope: inside `scoped_to_business(...)` the operation borrows from the
     tenant pool, whose role sees only that business's rows (the query also
     filters by it, so the index is used), and writing or overwriting
-    another business's row fails with AccessDeniedError, whatever settings
-    the session changes. PLATFORM collections, and tenant collections
+    another business's row fails with AccessDeniedError (no bypass setting
+    switches the check off). PLATFORM collections, and tenant collections
     inside `platform_wide()`, use the platform pool, whose role sees every
     business (migration 1200). Inside a unit of work every operation joins
     the unit's transaction and role (`PostgresConnectionPools`).
