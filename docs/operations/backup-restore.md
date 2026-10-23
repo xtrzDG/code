@@ -88,9 +88,12 @@ Exit codes: 0 done, 1 failed, 2 not configured.
 (AWS `eu-central-1`, Hetzner, Scaleway, Cloudflare R2 with the EU
 jurisdiction). Versioning on, with a lifecycle rule that expires noncurrent
 versions after 14 days (a leaked writer key cannot erase the history at
-once) and aborts incomplete multipart uploads after 2 days. Two keys:
+once) and aborts incomplete multipart uploads after 2 days. Three keys:
 the cron's (put, list, delete under the prefix; set on `workshop-backup`
-only, never on the API or the worker) and the drill's (get and list only).
+only, never on the API or a worker), the drill's (get and list only), and
+the deletion ledger's (put, get and list under
+`<BACKUP_S3_PREFIX>deletion-ledger/` only, no delete; set on
+`workshop-batch-worker`, which deletes businesses on its default lane).
 
 ## Keys and custody
 
@@ -297,8 +300,9 @@ that a Postgres 16 server refuses (`unrecognized configuration parameter
 **Deleted businesses after either path.** A backup older than a
 business's deletion brings that business back. The worker's daily
 `reapply_deletion_ledger` deletes it again within a day of the restore
-(the ledger's copy in the bucket names every deletion since; the bucket
-settings must be the worker's too); a restore through
+(the ledger's copy in the bucket names every deletion since;
+`workshop-batch-worker` holds the bucket settings and the ledger's key);
+a restore through
 `restore-check --keep-database` has already applied the ledger.
 
 **Checks after either path.** `GET /readyz` answers 200 (database reached,

@@ -103,8 +103,9 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
     }
 )
 
-# Read only by the backup cron job (workshop-backup), which Render asks for
-# them; the API and the worker never get the bucket's credentials.
+# Read by the backup cron job (workshop-backup), which Render asks for them,
+# and by the batch worker for the deletion ledger's copy in the bucket; the
+# API and the customer worker never get the bucket's credentials.
 BACKUP_JOB_VARIABLES: frozenset[str] = frozenset(
     {
         "BACKUP_S3_ENDPOINT_URL",

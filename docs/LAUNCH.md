@@ -1371,12 +1371,17 @@ API, и воркер. Чаще всего могут понадобиться:
   первой удалённой строки пишет объект `<BACKUP_S3_PREFIX>deletion-ledger/<id
   бизнеса>.json` в бакет резервных копий, а ежедневная
   `reapply_deletion_ledger` и `workshop restore-check` читают его, чтобы
-  восстановленная из бэкапа база не вернула удалённый бизнес. Для этого
-  задайте сервису `workshop-worker` те же `BACKUP_S3_ENDPOINT_URL`,
-  `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`,
-  `BACKUP_S3_SECRET_ACCESS_KEY` и `BACKUP_AGE_PUBLIC_KEY`, что у
-  `workshop-backup` (ключ с правом put и list под префиксом). Без них worker в продакшене пишет предупреждение, и копия
-  журнала живёт только в базе и в памяти процесса. Отключение у
+  восстановленная из бэкапа база не вернула удалённый бизнес. Обе задачи
+  идут на полосе `default`, то есть на `workshop-batch-worker`: `render.yaml`
+  уже объявляет ему `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`,
+  `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`,
+  `BACKUP_S3_SECRET_ACCESS_KEY` и `BACKUP_AGE_PUBLIC_KEY` (`sync: false`):
+  при создании Blueprint введите адрес, регион, бакет и публичные ключи
+  `workshop-backup`, а ключ доступа — отдельный, с правом put, get и list
+  только под `<BACKUP_S3_PREFIX>deletion-ledger/` (без delete,
+  docs/operations/backup-restore.md). Без них batch-воркер в
+  продакшене пишет предупреждение, и копия журнала живёт только в базе и в
+  памяти процесса. Отключение у
   провайдеров при удалении (агенты ElevenLabs, вебхуки Telegram, подписки
   Meta, токены Google, номера Twilio, списания Stripe/Flitt) проверено на
   фейках: после первого настоящего удаления сверьте справку об удалении
