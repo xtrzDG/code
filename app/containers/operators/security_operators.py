@@ -1,12 +1,35 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
+from app.containers.passkeys.passkey_operator_factories import (
+    PasskeyOperatorFactories,
+)
+from app.containers.passkeys.passkey_root import PasskeyRoot
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.provider_chains import (
     pipeline_operator,
     platform_pipeline_operator,
 )
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.operator_contract import OperatorContract
+from app.schemas.dto.mfa import SessionAssuranceView
+from app.schemas.dto.passkeys import (
+    FinishPasskeyEnrollmentCommand,
+    FinishPasskeyRegistrationCommand,
+    PasskeyAddedView,
+    PasskeyAssertionOptionsView,
+    PasskeyCommand,
+    PasskeyListView,
+    PasskeyRegistrationView,
+    PasskeySignInStepCommand,
+    PasskeyView,
+    RemovePasskeyCommand,
+    RenamePasskeyCommand,
+    VerifyPasskeySignInCommand,
+    VerifyPasskeyStepUpCommand,
+)
+from app.schemas.dto.users import LoginSessionView
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class SecurityOperatorsContainer(containers.DeclarativeContainer):
@@ -106,37 +129,41 @@ class SecurityOperatorsContainer(containers.DeclarativeContainer):
         security_pipelines.end_support_access_pipeline, storage_scope
     )
 
-    # --- Passkeys (platform collections, unscoped; 1201).
-    list_passkeys_operator = pipeline_operator(
-        security_pipelines.list_passkeys_pipeline, storage_scope
+    # --- Passkeys (platform collections, unscoped; 1201): built by the
+    # context's typed root (app/containers/passkeys/, ADR 0010).
+    passkey_root: Dependency[PasskeyRoot] = Dependency(instance_of=PasskeyRoot)
+    passkeys = passkey_root.provided.operators
+
+    list_passkeys_operator: Factory[OperatorContract[UserId, PasskeyListView]] = (
+        Factory(PasskeyOperatorFactories.list_passkeys, passkeys)
     )
-    start_passkey_registration_operator = pipeline_operator(
-        security_pipelines.start_passkey_registration_pipeline, storage_scope
+    start_passkey_registration_operator: Factory[
+        OperatorContract[PasskeyCommand, PasskeyRegistrationView]
+    ] = Factory(PasskeyOperatorFactories.start_passkey_registration, passkeys)
+    finish_passkey_registration_operator: Factory[
+        OperatorContract[FinishPasskeyRegistrationCommand, PasskeyAddedView]
+    ] = Factory(PasskeyOperatorFactories.finish_passkey_registration, passkeys)
+    rename_passkey_operator: Factory[
+        OperatorContract[RenamePasskeyCommand, PasskeyView]
+    ] = Factory(PasskeyOperatorFactories.rename_passkey, passkeys)
+    remove_passkey_operator: Factory[OperatorContract[RemovePasskeyCommand, None]] = (
+        Factory(PasskeyOperatorFactories.remove_passkey, passkeys)
     )
-    finish_passkey_registration_operator = pipeline_operator(
-        security_pipelines.finish_passkey_registration_pipeline, storage_scope
-    )
-    rename_passkey_operator = pipeline_operator(
-        security_pipelines.rename_passkey_pipeline, storage_scope
-    )
-    remove_passkey_operator = pipeline_operator(
-        security_pipelines.remove_passkey_pipeline, storage_scope
-    )
-    start_passkey_sign_in_operator = pipeline_operator(
-        security_pipelines.start_passkey_sign_in_pipeline, storage_scope
-    )
-    verify_passkey_sign_in_operator = pipeline_operator(
-        security_pipelines.verify_passkey_sign_in_pipeline, storage_scope
-    )
-    start_passkey_enrollment_operator = pipeline_operator(
-        security_pipelines.start_passkey_enrollment_pipeline, storage_scope
-    )
-    finish_passkey_enrollment_operator = pipeline_operator(
-        security_pipelines.finish_passkey_enrollment_pipeline, storage_scope
-    )
-    start_passkey_step_up_operator = pipeline_operator(
-        security_pipelines.start_passkey_step_up_pipeline, storage_scope
-    )
-    verify_passkey_step_up_operator = pipeline_operator(
-        security_pipelines.verify_passkey_step_up_pipeline, storage_scope
-    )
+    start_passkey_sign_in_operator: Factory[
+        OperatorContract[PasskeySignInStepCommand, PasskeyAssertionOptionsView]
+    ] = Factory(PasskeyOperatorFactories.start_passkey_sign_in, passkeys)
+    verify_passkey_sign_in_operator: Factory[
+        OperatorContract[VerifyPasskeySignInCommand, LoginSessionView]
+    ] = Factory(PasskeyOperatorFactories.verify_passkey_sign_in, passkeys)
+    start_passkey_enrollment_operator: Factory[
+        OperatorContract[PasskeySignInStepCommand, PasskeyRegistrationView]
+    ] = Factory(PasskeyOperatorFactories.start_passkey_enrollment, passkeys)
+    finish_passkey_enrollment_operator: Factory[
+        OperatorContract[FinishPasskeyEnrollmentCommand, LoginSessionView]
+    ] = Factory(PasskeyOperatorFactories.finish_passkey_enrollment, passkeys)
+    start_passkey_step_up_operator: Factory[
+        OperatorContract[PasskeyCommand, PasskeyAssertionOptionsView]
+    ] = Factory(PasskeyOperatorFactories.start_passkey_step_up, passkeys)
+    verify_passkey_step_up_operator: Factory[
+        OperatorContract[VerifyPasskeyStepUpCommand, SessionAssuranceView]
+    ] = Factory(PasskeyOperatorFactories.verify_passkey_step_up, passkeys)

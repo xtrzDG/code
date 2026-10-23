@@ -1,5 +1,10 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Object, Singleton
+from dependency_injector.providers import (
+    DependenciesContainer,
+    Dependency,
+    Object,
+    Singleton,
+)
 
 from app.adapters.channels.circuit_breaking_channel_adapter import (
     CircuitBreakingChannelAdapter,
@@ -11,12 +16,12 @@ from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdap
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
-from app.containers.adapters.provider_resilience_container import (
-    ProviderResilienceContainer,
-)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.utilities import UtilitiesContainer
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
+)
 from app.schemas.constants.resilience import OutboundProvider
 from app.utilities.resilience.provider_circuits import provider_circuit
 
@@ -36,7 +41,10 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    resilience: ProviderResilienceContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The process's one circuit breaker (AdaptersContainer.resilience).
+    circuit_breaker: Dependency[CircuitBreakerFacilitator] = Dependency(
+        instance_of=CircuitBreakerFacilitator
+    )
 
     telegram_bots: Singleton[TelegramChannelAdapter] = Singleton(
         TelegramChannelAdapter,
@@ -70,13 +78,13 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
     telegram_channel_adapter: Singleton[CircuitBreakingChannelAdapter] = Singleton(
         CircuitBreakingChannelAdapter,
         inner_adapter=telegram_bots,
-        circuit_breaker=resilience.circuit_breaker,
+        circuit_breaker=circuit_breaker,
         circuit=Object(provider_circuit(OutboundProvider.TELEGRAM)),
     )
     whatsapp_channel_adapter: Singleton[CircuitBreakingChannelAdapter] = Singleton(
         CircuitBreakingChannelAdapter,
         inner_adapter=whatsapp_cloud,
-        circuit_breaker=resilience.circuit_breaker,
+        circuit_breaker=circuit_breaker,
         circuit=meta_circuit,
     )
     # WhatsApp templates (customers outside the 24-hour window, staff).
@@ -84,19 +92,19 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
         Singleton(
             CircuitBreakingWhatsAppTemplateAdapter,
             inner_adapter=whatsapp_cloud,
-            circuit_breaker=resilience.circuit_breaker,
+            circuit_breaker=circuit_breaker,
             circuit=meta_circuit,
         )
     )
     messenger_channel_adapter: Singleton[CircuitBreakingChannelAdapter] = Singleton(
         CircuitBreakingChannelAdapter,
         inner_adapter=messenger_pages,
-        circuit_breaker=resilience.circuit_breaker,
+        circuit_breaker=circuit_breaker,
         circuit=meta_circuit,
     )
     instagram_channel_adapter: Singleton[CircuitBreakingChannelAdapter] = Singleton(
         CircuitBreakingChannelAdapter,
         inner_adapter=instagram_accounts,
-        circuit_breaker=resilience.circuit_breaker,
+        circuit_breaker=circuit_breaker,
         circuit=meta_circuit,
     )

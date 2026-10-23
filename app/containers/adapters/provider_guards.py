@@ -1,7 +1,7 @@
 """
-The guarded senders of the provider resilience container: a provider's
-client behind its circuit breaker, or None while the provider is not
-configured (as the client itself).
+The guarded senders of the provider resilience: a provider's client behind
+its circuit breaker, or None while the provider is not configured (as the
+client itself).
 """
 
 from app.adapters.notifications.circuit_breaking_email_sender_adapter import (

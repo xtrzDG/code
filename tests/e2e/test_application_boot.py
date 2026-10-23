@@ -32,8 +32,6 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "clients.object_storage_client",
         "clients.web_push_client",
         # The same e-mail and SMS clients behind their circuit breakers.
-        "adapters.resilience.email_sender",
-        "adapters.resilience.sms_sender",
         "adapters.guarded_email_sender",
         "adapters.guarded_sms_sender",
         # In memory there is no transaction to group writes in.

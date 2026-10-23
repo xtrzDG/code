@@ -63,9 +63,8 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.process_adapters_container import (
     ProcessAdaptersContainer,
 )
-from app.containers.adapters.provider_resilience_container import (
-    ProviderResilienceContainer,
-)
+from app.containers.adapters.provider_resilience import ProviderResilience
+from app.containers.adapters.provider_resilience_seam import provider_resilience
 from app.containers.adapters.security_adapters_container import (
     SecurityAdaptersContainer,
 )
@@ -142,15 +141,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
     storage_unit_of_work = processes.storage_unit_of_work
     storage_read_session = processes.storage_read_session
     job_wakeup, data_task_batches = processes.job_wakeup, processes.data_task_batches
-    # Locks every process respects (Postgres advisory locks over the shared
-    # pool; in-process locks without a database).
+    # Locks every process respects (Postgres advisory locks; in-process without one).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
         build_advisory_lock_adapter,
         connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
     )
-    # Request counters of the rate limits (Postgres: shared by every
-    # instance; in memory without a database).
+    # Rate limit counters (Postgres: shared by every instance; else in memory).
     rate_limit_buckets: Singleton[RateLimitBucketAdapterContract] = Singleton(
         build_rate_limit_bucket_adapter,
         connection_pool=clients.postgres_platform_pool,
@@ -196,22 +193,20 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # The ElevenLabs client whose calls and failures voice_health counts.
     counted_elevenlabs_client = calls.elevenlabs_client
 
-    # --- Circuit breakers and the outbound lane's bulkheads (W20).
-    resilience: ProviderResilienceContainer = Container(  # type: ignore[assignment]
-        ProviderResilienceContainer, clients=clients, config=config,
-        time_provider=time_provider, utilities=utilities,
-    )  # fmt: skip
-    circuit_breaker = resilience.circuit_breaker
-    outbound_bulkhead = resilience.outbound_bulkhead
-    platform_bot_client = resilience.platform_bot_client
-    payment_gateway = resilience.payment_gateway
-    guarded_email_sender = resilience.email_sender
-    guarded_sms_sender = resilience.sms_sender
+    # --- Circuit breakers and the outbound lane's bulkheads (W20), typed.
+    resilience: Singleton[ProviderResilience] = provider_resilience(
+        clients=clients, config=config, time_provider=time_provider, utilities=utilities
+    )
+    guarded = resilience.provided
+    circuit_breaker, payment_gateway = guarded.circuit_breaker, guarded.payment_gateway
+    outbound_bulkhead = guarded.outbound_bulkhead
+    platform_bot_client = guarded.platform_bot_client
+    guarded_email_sender, guarded_sms_sender = guarded.email_sender, guarded.sms_sender
 
     # --- Messaging channels, each behind its provider's circuit.
     channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]
         ChannelAdaptersContainer, clients=clients, config=config,
-        utilities=utilities, resilience=resilience,
+        utilities=utilities, circuit_breaker=circuit_breaker,
     )  # fmt: skip
     telegram_channel_adapter = channels.telegram_channel_adapter
     whatsapp_channel_adapter = channels.whatsapp_channel_adapter
@@ -238,13 +233,12 @@ class AdaptersContainer(containers.DeclarativeContainer):
         RoutingLlmAdapter,
         openai_adapter=openai_llm_adapter,
         anthropic_adapter=anthropic_llm_adapter,
-        circuit_breaker=resilience.circuit_breaker,
+        circuit_breaker=circuit_breaker,
         scripted_adapter=offline_llm_adapter,
         fallback_model_id=config.app_settings.provided.reply_speed.llm_fallback_model_id,
     )
-    # The quality journal (Langfuse, or nothing without keys). It lives here,
-    # not in FacilitatorsContainer, because the LLM adapter below decorates
-    # every model call with it and facilitators already depend on adapters.
+    # The quality journal (Langfuse, or nothing without keys): here, not in
+    # FacilitatorsContainer, as the LLM adapter below decorates every call.
     llm_trace_facilitator: Singleton[LlmTraceFacilitatorContract] = Singleton(
         build_llm_trace_facilitator,
         langfuse_client=clients.langfuse_ingestion_client,

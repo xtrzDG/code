@@ -17,6 +17,7 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.voice_activity_repository import VoiceActivityRepository
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.platform_health import ActivityWindow
@@ -83,7 +84,7 @@ def test_post_call_reports_are_counted_by_the_arrival_index(
         PostgresDocumentCollectionAdapter[InboundEventDocument](
             document_type=InboundEventDocument,
             collection_name=DocumentCollectionName("inbound_events"),
-            connection_pool=recording,
+            connection_pools=PostgresConnectionPools.single(recording),
             storage_scope=scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(InboundEventDocument),

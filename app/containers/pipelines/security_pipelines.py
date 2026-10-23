@@ -94,38 +94,3 @@ class SecurityPipelinesContainer(containers.DeclarativeContainer):
     end_support_access_pipeline = orchestrator_pipeline(
         security_orchestrators.end_support_access_orchestrator
     )
-
-    # --- Passkeys: Account → Security, sign-in and step-up (1201).
-    list_passkeys_pipeline = orchestrator_pipeline(
-        security_orchestrators.list_passkeys_orchestrator
-    )
-    start_passkey_registration_pipeline = orchestrator_pipeline(
-        security_orchestrators.start_passkey_registration_orchestrator
-    )
-    finish_passkey_registration_pipeline = orchestrator_pipeline(
-        security_orchestrators.finish_passkey_registration_orchestrator
-    )
-    rename_passkey_pipeline = orchestrator_pipeline(
-        security_orchestrators.rename_passkey_orchestrator
-    )
-    remove_passkey_pipeline = orchestrator_pipeline(
-        security_orchestrators.remove_passkey_orchestrator
-    )
-    start_passkey_sign_in_pipeline = orchestrator_pipeline(
-        security_orchestrators.start_passkey_sign_in_orchestrator
-    )
-    verify_passkey_sign_in_pipeline = orchestrator_pipeline(
-        security_orchestrators.verify_passkey_sign_in_orchestrator
-    )
-    start_passkey_enrollment_pipeline = orchestrator_pipeline(
-        security_orchestrators.start_passkey_enrollment_orchestrator
-    )
-    finish_passkey_enrollment_pipeline = orchestrator_pipeline(
-        security_orchestrators.finish_passkey_enrollment_orchestrator
-    )
-    start_passkey_step_up_pipeline = orchestrator_pipeline(
-        security_orchestrators.start_passkey_step_up_orchestrator
-    )
-    verify_passkey_step_up_pipeline = orchestrator_pipeline(
-        security_orchestrators.verify_passkey_step_up_orchestrator
-    )

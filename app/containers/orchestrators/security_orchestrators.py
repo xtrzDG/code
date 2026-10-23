@@ -3,7 +3,6 @@ from dependency_injector.providers import DependenciesContainer
 
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
-from app.containers.use_cases.passkey_use_cases import PasskeyUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 
 
@@ -12,7 +11,6 @@ class SecurityOrchestratorsContainer(containers.DeclarativeContainer):
 
     security_use_cases: SecurityUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     mfa_use_cases: MfaUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
-    passkey_use_cases: PasskeyUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     get_encryption_keys_orchestrator = use_case_orchestrator(
         security_use_cases.get_encryption_keys_use_case
@@ -95,39 +93,4 @@ class SecurityOrchestratorsContainer(containers.DeclarativeContainer):
     )
     end_support_access_orchestrator = use_case_orchestrator(
         security_use_cases.end_support_access_use_case
-    )
-
-    # --- Passkeys: Account → Security, sign-in and step-up (1201).
-    list_passkeys_orchestrator = use_case_orchestrator(
-        passkey_use_cases.list_passkeys_use_case
-    )
-    start_passkey_registration_orchestrator = use_case_orchestrator(
-        passkey_use_cases.start_passkey_registration_use_case
-    )
-    finish_passkey_registration_orchestrator = use_case_orchestrator(
-        passkey_use_cases.finish_passkey_registration_use_case
-    )
-    rename_passkey_orchestrator = use_case_orchestrator(
-        passkey_use_cases.rename_passkey_use_case
-    )
-    remove_passkey_orchestrator = use_case_orchestrator(
-        passkey_use_cases.remove_passkey_use_case
-    )
-    start_passkey_sign_in_orchestrator = use_case_orchestrator(
-        passkey_use_cases.start_passkey_sign_in_use_case
-    )
-    verify_passkey_sign_in_orchestrator = use_case_orchestrator(
-        passkey_use_cases.verify_passkey_sign_in_use_case
-    )
-    start_passkey_enrollment_orchestrator = use_case_orchestrator(
-        passkey_use_cases.start_passkey_enrollment_use_case
-    )
-    finish_passkey_enrollment_orchestrator = use_case_orchestrator(
-        passkey_use_cases.finish_passkey_enrollment_use_case
-    )
-    start_passkey_step_up_orchestrator = use_case_orchestrator(
-        passkey_use_cases.start_passkey_step_up_use_case
-    )
-    verify_passkey_step_up_orchestrator = use_case_orchestrator(
-        passkey_use_cases.verify_passkey_step_up_use_case
     )

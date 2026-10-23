@@ -21,6 +21,8 @@ CONTAINER_TYPE_IGNORES: int = 1090
 # Typed composition roots: plain Python, no provider graph, nothing silenced.
 TYPED_ROOTS: tuple[Path, ...] = (
     CONTAINERS / "feedback",
+    CONTAINERS / "passkeys",
+    CONTAINERS / "adapters" / "provider_resilience.py",
     CONTAINERS / "role_chain_factories.py",
 )
 ALLOWED_IGNORE: str = "# type: ignore[assignment]"

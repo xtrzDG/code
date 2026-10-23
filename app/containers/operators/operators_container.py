@@ -70,6 +70,7 @@ from app.containers.operators.webhook_operators import WebhookOperatorsContainer
 from app.containers.operators.widget_visitor_operators import (
     WidgetVisitorOperatorsContainer,
 )
+from app.containers.passkeys.passkey_root import PasskeyRoot
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -87,6 +88,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     # The feedback context's typed root builds its own chain (ADR 0010).
     feedback_root: Dependency[FeedbackRoot] = Dependency(instance_of=FeedbackRoot)
+    passkey_root: Dependency[PasskeyRoot] = Dependency(instance_of=PasskeyRoot)
 
     accounts: AccountOperatorsContainer = Container(  # type: ignore[assignment]
         AccountOperatorsContainer,
@@ -222,6 +224,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
         SecurityOperatorsContainer,
         security_pipelines=pipelines.security,
         utilities=utilities,
+        passkey_root=passkey_root,
     )
     sharing: SharingOperatorsContainer = Container(  # type: ignore[assignment]
         SharingOperatorsContainer,

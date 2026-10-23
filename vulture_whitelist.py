@@ -17,14 +17,11 @@ _ = _Whitelist()
 # Test and operations seams: called by tests or by an operator in a shell,
 # not by the running service.
 _.from_turns  # app/adapters/llm/scripted_llm_adapter.py
-_.idle_connection_count  # app/clients/postgres/postgres_connection_pool_client.py
-_.open_connection_count  # app/clients/postgres/postgres_connection_pool_client.py
 _.buffered_span_count  # app/facilitators/observability/langfuse_trace_facilitator.py
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
 _.run_queued_jobs  # app/gateways/worker/background_worker.py
 _.worker_id  # app/gateways/worker/heartbeat_recorder.py
-_.wait_until_listening  # app/adapters/events/postgres_live_event_listener.py
 _.open_stream_count  # app/facilitators/events/live_event_stream_facilitator.py
 _.has_listeners  # app/utilities/jobs/job_wakeup_signal.py
 _.pending_wakeup_count  # app/utilities/jobs/job_wakeup_signal.py
@@ -64,9 +61,7 @@ _.ExampleConstrainedString  # app/schemas/typings/constrained_strings.py
 
 # Settings reserved for planned work: ZADARMA_* for the telephony
 # integration (R5) and META_APP_ID for Meta app review (R15).
-_.meta_app_id  # app/schemas/configurations/app_settings.py
 _.zadarma_api_key  # app/schemas/configurations/app_settings.py
-_.zadarma_api_secret  # app/schemas/configurations/app_settings.py
 
 # Enum members that are valid on the wire (requests, stored documents,
 # the cabinet) although no Python branch names them.
@@ -75,16 +70,9 @@ _.LEFT  # app/schemas/constants/channels.py
 _.RIGHT  # app/schemas/constants/channels.py
 _.LIGHT  # app/schemas/constants/channels.py (WidgetTheme, /widget/demo?theme=)
 _.DARK  # app/schemas/constants/channels.py (WidgetTheme, /widget/demo?theme=)
-_.BILLING  # app/schemas/constants/client_health.py
-_.BOOKINGS  # app/schemas/constants/client_health.py
-_.CONVERSATIONS  # app/schemas/constants/client_health.py
 _.DASHBOARD  # app/schemas/constants/client_health.py
 _.HANDOFFS  # app/schemas/constants/client_health.py
-_.KNOWLEDGE  # app/schemas/constants/client_health.py
-_.LEADS  # app/schemas/constants/client_health.py
 _.SETTINGS  # app/schemas/constants/client_health.py
-_.TEST  # app/schemas/constants/environment.py
-_.UNSUPPORTED  # app/schemas/constants/localization.py
 _.US  # app/schemas/constants/localization.py
 _.PRINTED_QR  # app/schemas/constants/setup.py
 _.DOWNLOADED_QR  # app/schemas/constants/setup.py
@@ -106,20 +94,14 @@ _.RENDER  # app/schemas/constants/observability.py
 
 # Stored document fields: written for people and exports, never read back
 # by code.
-_.rated_at  # app/registries/demo/demo_conversation_recorder.py
 _.connected_by  # app/schemas/domain/calendar.py
 _.linked_chat_id  # app/schemas/domain/manager_links.py
-_.last_payment_reference  # app/schemas/domain/payments.py
-_.processed_at  # app/schemas/domain/inbound_events.py
-_.delivered_at  # app/schemas/domain/outbound_messages.py
-_.source_message_id  # app/schemas/domain/outbound_messages.py
 _.changed_by  # app/schemas/domain/bookings.py (BookingStatusChange)
 _.resolved_by  # app/schemas/domain/handoffs.py
 _.identity_digest  # app/schemas/domain/suppression.py (the id is derived from it)
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.
-_.latency_ms  # app/schemas/dto/health.py (GET /readyz)
 _.heartbeat_age_seconds  # app/schemas/dto/health.py (GET /readyz)
 _.limit_seconds  # app/schemas/dto/pipeline_health.py (GET /healthz/pipeline)
 _.monitoring_delayed  # app/schemas/dto/platform_status.py (GET /v1/platform/status)
@@ -133,18 +115,13 @@ _.audit_log_entry_id  # app/schemas/dto/admin.py
 _.client_count  # app/schemas/dto/admin.py
 _.critical_count  # app/schemas/dto/admin.py
 _.failed_autotests  # app/schemas/dto/admin.py
-_.generated_at  # app/schemas/dto/admin.py
 _.has_auto_debit  # app/schemas/dto/admin.py
 _.healthy_count  # app/schemas/dto/admin.py
 _.last_test_score  # app/schemas/dto/admin.py
 _.losing_money_count  # app/schemas/dto/admin.py
-_.matching_count  # app/schemas/dto/admin.py
-_.niches  # app/schemas/dto/admin.py
-_.opened_at  # app/schemas/dto/admin.py
 _.payments  # app/schemas/dto/admin.py
 _.subscription_status  # app/schemas/dto/admin.py
 _.version_status  # app/schemas/dto/assistants/assistant_views.py
-_.guard  # app/schemas/dto/conversation_feed/conversation_views.py
 _.item_kind  # app/schemas/dto/setup/pending_changes.py
 _.live_version_number  # app/schemas/dto/setup/pending_changes.py
 _.dialog_usage_percent  # app/schemas/dto/billing_cabinet.py
@@ -163,14 +140,9 @@ _.currency_display_name  # app/schemas/dto/catalog/countries.py
 _.annual_price  # app/schemas/dto/catalog/plan_quotes.py
 _.local_annual_price  # app/schemas/dto/catalog/plan_quotes.py
 _.local_overage_price_per_minute  # app/schemas/dto/catalog/plan_quotes.py
-_.rate_date  # app/schemas/dto/catalog/plan_quotes.py
 _.has_credential  # app/schemas/dto/channels/channel_settings.py
 _.staff_reply_template  # app/schemas/dto/channels/channel_settings.py
-_.answered  # app/schemas/dto/channels/channel_webhooks.py
-_.failed  # app/schemas/dto/channels/channel_webhooks.py
-_.received  # app/schemas/dto/channels/channel_webhooks.py
 _.silenced  # app/schemas/dto/channels/channel_webhooks.py
-_.display_phone_number  # app/schemas/dto/channels/provider_profiles.py
 _.deep_link  # app/schemas/dto/channels/staff_links.py
 _.actor_ids  # app/schemas/dto/compliance.py
 _.anonymized_bookings  # app/schemas/dto/compliance.py
@@ -180,10 +152,8 @@ _.anonymized_handoffs  # app/schemas/dto/compliance.py
 _.anonymized_leads  # app/schemas/dto/compliance.py
 _.current_document_version  # app/schemas/dto/compliance.py
 _.deleted_messages  # app/schemas/dto/compliance.py
-_.deleted_notes  # app/schemas/dto/compliance.py
 _.document_url  # app/schemas/dto/compliance.py
 _.entities  # app/schemas/dto/compliance.py
-_.erased_calls  # app/schemas/dto/compliance.py
 _.erased_missed_calls  # app/schemas/dto/compliance.py
 _.exported_at  # app/schemas/dto/compliance.py
 _.is_current_version_accepted  # app/schemas/dto/compliance.py
@@ -192,42 +162,29 @@ _.opt_out  # app/schemas/dto/compliance.py
 _.redacted_inbound_events  # app/schemas/dto/compliance.py
 _.redacted_outbound_messages  # app/schemas/dto/compliance.py
 _.scanned_businesses  # app/schemas/dto/compliance.py
-_.conversation_count  # app/schemas/dto/contacts.py
 _.first_seen_at  # app/schemas/dto/contacts.py
-_.customer_message_count  # app/schemas/dto/conversation_feed/conversation_views.py
 _.earlier_messages_cursor  # app/schemas/dto/conversation_feed/conversation_views.py
 _.last_message_author  # app/schemas/dto/conversation_feed/conversation_views.py
 _.last_message_text  # app/schemas/dto/conversation_feed/conversation_views.py
-_.message_count  # app/schemas/dto/conversation_feed/conversation_views.py
 _.window_closes_at  # app/schemas/dto/conversation_feed/conversation_views.py
 _.assistant_version_number  # app/schemas/dto/conversations.py
 _.completed_count  # app/schemas/dto/go_live.py
-_.is_ready  # app/schemas/dto/go_live.py
-_.scheduled_at  # app/schemas/dto/jobs.py
 _.is_mobile  # app/schemas/dto/localization.py
 _.local_number_provisioning  # app/schemas/dto/localization.py
 _.national_format  # app/schemas/dto/localization.py
-_.recording_consent_rule  # app/schemas/dto/localization.py
 _.is_email_login_available  # app/schemas/dto/login_options.py
 _.is_phone_login_available  # app/schemas/dto/login_options.py
 _.activated_items  # app/schemas/dto/menu_import.py
 _.discarded_item_ids  # app/schemas/dto/menu_import.py
 _.printed_currency_code  # app/schemas/dto/menu_import.py
 _.was_connected  # app/schemas/dto/operations/calendar_connection.py
-_.after_hours_conversation_count  # app/schemas/dto/operations/dashboard.py
 _.after_hours_share_percent  # app/schemas/dto/operations/dashboard.py
 _.bookings_by_status  # app/schemas/dto/operations/dashboard.py
-_.daily  # app/schemas/dto/operations/dashboard.py
-_.handoff_count  # app/schemas/dto/operations/dashboard.py
 _.handoffs_by_reason  # app/schemas/dto/operations/dashboard.py
 _.handoffs_by_urgency  # app/schemas/dto/operations/dashboard.py
 _.open_unanswered_question_count  # app/schemas/dto/operations/dashboard.py
-_.package  # app/schemas/dto/operations/dashboard.py
-_.booked_value  # app/schemas/dto/operations/dashboard.py
 _.after_hours_booked_value  # app/schemas/dto/operations/dashboard.py
 _.valued_booking_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
-_.open_count  # app/schemas/dto/operations/handoffs.py
-_.resolved_count  # app/schemas/dto/operations/handoffs.py
 _.channel_errors  # app/schemas/dto/inbox/inbox_attention.py
 _.channel_error_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
 _.new_lead_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
@@ -242,15 +199,11 @@ _.display_name_folded  # app/schemas/domain/contacts.py
 # Dated exchange rates: the stored day number is a lookup column (the newest
 # rate of a pair, migration 1071); staleness is shown by the cabinet.
 _.rate_day  # app/schemas/domain/exchange_rates.py
-_.is_stale  # app/schemas/dto/catalog/plan_quotes.py
-_.status_counts  # app/schemas/dto/operations/leads.py
-_.knowledge_item_id  # app/schemas/dto/operations/unanswered_questions.py
 _.requires_reassembly  # app/schemas/dto/operations/unanswered_questions.py
 _.is_ready_for_assembly  # app/schemas/dto/profiles/profile_gaps.py
 _.unanswered_question  # app/schemas/dto/profiles/profile_gaps.py
 _.unanswered_question_id  # app/schemas/dto/profiles/profile_gaps.py
 _.saved_knowledge_items  # app/schemas/dto/profiles/profile_steps.py
-_.is_complete  # app/schemas/dto/profiles/profile_wizard.py
 _.expires_in_seconds  # app/schemas/dto/users.py
 _.international_phone_number  # app/schemas/dto/users.py
 
@@ -265,8 +218,6 @@ _.does_trial_start_at_go_live  # app/schemas/dto/billing_cabinet.py
 _.checks_done  # app/schemas/dto/setup/apply_changes.py
 _.checks_total  # app/schemas/dto/setup/apply_changes.py
 _.starter_answers  # app/schemas/dto/setup/assistant_creation.py
-_.is_answering  # app/schemas/dto/setup/setup_progress.py
-_.milestones  # app/schemas/dto/setup/setup_progress.py
 _.minutes_left  # app/schemas/dto/setup/setup_progress.py
 _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
@@ -275,7 +226,6 @@ _.is_phone_check_listening  # app/schemas/dto/setup/setup_guide.py
 _.phone_check_until  # app/schemas/dto/setup/setup_guide.py
 _.onboarding_requested_at  # app/schemas/dto/billing_cabinet.py
 _.onboarding_request  # app/schemas/dto/admin.py
-_.setup_options  # app/schemas/dto/catalog/plan_quotes.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
 
@@ -293,7 +243,6 @@ _.asked_count  # app/schemas/dto/feedback/review_stats.py
 _.answered_count  # app/schemas/dto/feedback/review_stats.py
 _.review_opened_count  # app/schemas/dto/feedback/review_stats.py
 _.skipped_count  # app/schemas/dto/feedback/review_stats.py
-_.failed_count  # app/schemas/dto/feedback/review_stats.py
 
 # The team inbox's views: fields the cabinet reads (R6 inbox UI).
 _.is_assigned_automatically  # app/schemas/dto/inbox/assignment.py, inbox_views.py
@@ -306,7 +255,6 @@ _.missing_variables  # app/schemas/dto/inbox/quick_replies.py
 # The platform admin's key ring view (GET /v1/admin/security/encryption-keys):
 # response fields read by the admin and the runbook, never by Python code.
 _.latest_rotation  # app/schemas/dto/key_rotation.py
-_.requested_at  # app/schemas/dto/key_rotation.py
 
 # Read by the website chat widget (widget.js) and the hosted chat page
 # (web/src/app/c), never by Python code.
@@ -332,7 +280,6 @@ _.log_message  # BaseHTTPRequestHandler
 # The value of a business, its digests and reports: totals and settings the
 # cabinet shows (dashboard hero, Reports page, digest choices).
 _.assistant_reply_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
-_.call_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
 _.typical_check_minor  # app/schemas/dto/value/value_model.py, value_views.py
 _.is_email_ready  # app/schemas/dto/value/value_views.py
 _.device_count  # app/schemas/dto/value/value_views.py
@@ -342,20 +289,15 @@ _.upcoming_booking_count  # app/schemas/dto/value/value_views.py
 # values the cabinet sends (tunnel screens, device classes), the facts kept
 # on product events and sign-up attribution for the founder's own queries,
 # and the response fields the admin Metrics page reads.
-_.PLACE  # app/schemas/constants/analytics.py (TunnelStepKey)
 _.PEOPLE  # app/schemas/constants/analytics.py (TunnelStepKey)
-_.TABLET  # app/schemas/constants/analytics.py (DeviceClass)
-_.DESKTOP  # app/schemas/constants/analytics.py (DeviceClass)
 _.attention_codes  # app/schemas/domain/product_events.py
 _.utm_medium  # app/schemas/domain/signup_attribution.py
 _.utm_campaign  # app/schemas/domain/signup_attribution.py
 _.utm_term  # app/schemas/domain/signup_attribution.py
 _.utm_content  # app/schemas/domain/signup_attribution.py
-_.growth  # app/schemas/dto/analytics/admin_metrics_view.py
 _.web_vitals  # app/schemas/dto/analytics/admin_metrics_view.py, telemetry.py
 _.share_of_sign_ups  # app/schemas/dto/analytics/growth_views.py
 _.share_of_previous  # app/schemas/dto/analytics/growth_views.py
-_.stopped_here  # app/schemas/dto/analytics/growth_views.py
 _.funnel  # app/schemas/dto/analytics/growth_views.py
 _.median_time_to_live_seconds  # app/schemas/dto/analytics/growth_views.py
 _.trials  # app/schemas/dto/analytics/growth_views.py
@@ -399,15 +341,8 @@ _.p50_ms  # app/schemas/dto/reply_speed.py (ClientReplySpeed, ChannelReplySpeed)
 # docs/operations): response fields the admin pages read, the incident
 # kinds an admin picks, and when an alert was last checked (stored for the
 # postmortem); no Python code reads them.
-_.OUTAGE  # app/schemas/constants/incidents.py
 _.DEGRADATION  # app/schemas/constants/incidents.py
-_.checked_at  # app/schemas/domain/platform_alerts.py, app/schemas/dto/admin_system.py
 _.failing_jobs  # app/schemas/dto/admin_system.py (WorkerPulseView)
-_.scheduled  # app/schemas/dto/admin_system.py (LaneView)
-_.dead  # app/schemas/dto/admin_system.py (LaneView)
-_.oldest_wait_seconds  # app/schemas/dto/admin_system.py (LaneView)
-_.row_estimate  # app/schemas/dto/admin_system.py (TableSizeView)
-_.dead_jobs  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.channels_in_error  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.channels_in_error_count  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.expiring_credentials  # app/schemas/dto/admin_system.py (AdminSystemView)
@@ -440,7 +375,6 @@ _.platform_admin_role  # app/schemas/dto/users.py (CurrentUserView)
 _.platform_admin_permissions  # app/schemas/dto/users.py (CurrentUserView)
 _.granted_by  # app/schemas/domain/support_access_grants.py
 _.opened_from_ip  # app/schemas/domain/support_access_grants.py
-_.end_reason  # app/schemas/domain/support_access_grants.py
 
 # Guided channels (R9-CONNECT): response fields the cabinet reads (the
 # Channels page's per-language staff templates and the checked bot's photo).
@@ -505,12 +439,10 @@ _.last_purge  # app/schemas/dto/retention.py (PrivacySettingsView)
 # rest are response fields the public pages and the sign-in page read.
 _.COOKIES  # app/schemas/constants/legal.py (LegalDocumentKind)
 _.terms_accepted_at  # app/schemas/domain/users.py
-_.client_modules  # app/schemas/dto/legal.py (SubprocessorEntry)
 _.notice_from  # app/schemas/dto/legal.py (SubprocessorChangeView)
 _.as_of  # app/schemas/dto/legal.py (SubprocessorListView)
 _.subprocessors  # app/schemas/dto/legal.py (SubprocessorListView)
 _.upcoming_changes  # app/schemas/dto/legal.py (SubprocessorListView)
-_.has_placeholders  # app/schemas/dto/legal.py (LegalDocumentView)
 _.upcoming_version  # app/schemas/dto/legal.py (LegalDocumentView)
 _.terms_version  # app/schemas/dto/login_options.py (LoginOptionsView)
 _.privacy_version  # app/schemas/dto/login_options.py (LoginOptionsView)
@@ -541,7 +473,6 @@ _.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)
 # Customers (R11): who added a tag and when, and who blocked a customer, are
 # kept for the audit trail; the masked phone, the segment's member count and
 # the timeline's statuses are response fields the Customers pages read.
-_.added_at  # app/schemas/domain/contacts.py (ContactTagMark)
 _.blocked_by  # app/schemas/domain/contacts.py (ContactBlock)
 _.masked_phone_number  # app/schemas/dto/contacts.py (ContactSummaryView)
 _.is_phone_masked  # app/schemas/dto/contacts.py (ContactSummaryView)
@@ -636,7 +567,6 @@ _.plan_price  # app/schemas/dto/subscription_lifecycle.py (RetentionOfferView)
 _.LOOKUP_COLUMNS_WITHOUT_BACKFILL  # app/registries/maintenance/lookup_backfills.py
 _.is_indexing  # app/schemas/dto/contacts.py, knowledge_admin.py (list pages)
 _.settles_at  # app/schemas/dto/data_tasks.py (RolloutView)
-_.is_gate_open  # app/utilities/storage/release_gates.py (writers of a gated enum value)
 
 # The service levels (W15-METRICS): the hourly row's measured replies are
 # stored for the reviews (docs/operations/slo.md); the error budget card of
@@ -686,8 +616,6 @@ _.broken_chains  # app/schemas/dto/audit_chain_views.py
 _.is_locked  # app/schemas/dto/brands/brand_dashboard.py (BrandLocationDashboard)
 _.brand_name  # app/schemas/dto/users.py (UserMembershipView)
 _.own_item_id  # app/schemas/dto/brands/brand_knowledge.py (LocationSharedItemView)
-_.additional_location_price  # app/schemas/dto/catalog/plan_quotes.py (PlanQuote)
-_.local_additional_location_price  # app/schemas/dto/catalog/plan_quotes.py
 # Deposits (W19-DEPOSITS, 1190): response fields the cabinet reads (the
 # deposit settings card, the booking's deposit line, Reports → Deposits);
 # no Python code reads them.
@@ -707,8 +635,23 @@ _.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
-# Passkeys (1201): WebAuthn fields the browser and cabinet read; transports by value.
-_.rp, _.algorithms, _.timeout_ms, _.exclude_credentials, _.allow_credentials
-_.resident_key, _.user_verification, _.passkey_count, _.passkey_available
-_.USB, _.NFC, _.BLE, _.SMART_CARD, _.HYBRID, _.CABLE, _.is_recommended
-_.created_country, _.last_seen_country
+# Passkeys (1201): the WebAuthn options the browser reads, the cabinet's
+# passkey fields, and the transports, read by value.
+_.rp  # app/schemas/dto/passkey_ceremonies.py (PasskeyRegistrationOptionsView)
+_.algorithms  # app/schemas/dto/passkey_ceremonies.py (PasskeyRegistrationOptionsView)
+_.timeout_ms  # app/schemas/dto/passkey_ceremonies.py (passkey options views)
+_.exclude_credentials  # app/schemas/dto/passkey_ceremonies.py (PasskeyRegistrationOptionsView)
+_.allow_credentials  # app/schemas/dto/passkey_ceremonies.py (PasskeyAuthenticationOptionsView)
+_.resident_key  # app/schemas/dto/passkey_ceremonies.py (PasskeyRegistrationOptionsView)
+_.user_verification  # app/schemas/dto/passkey_ceremonies.py (passkey options views)
+_.passkey_count  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.passkey_available  # app/schemas/dto/mfa.py (StepUpChallengeView)
+_.is_recommended  # app/schemas/dto/passkeys.py (PasskeyListView)
+_.created_country  # app/schemas/dto/sessions.py (UserSessionView)
+_.last_seen_country  # app/schemas/dto/sessions.py (UserSessionView)
+_.USB  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+_.NFC  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+_.BLE  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+_.SMART_CARD  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+_.HYBRID  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+_.CABLE  # app/schemas/constants/passkeys.py (WebAuthnTransport)

@@ -1,5 +1,6 @@
-from dependency_injector.providers import Container, Factory
+from dependency_injector.providers import Container, Factory, Singleton
 
+from app.containers.passkeys.passkey_root import PasskeyRoot
 from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
 from app.containers.use_cases.audit_trail_use_cases import (
@@ -19,7 +20,7 @@ from app.containers.use_cases.feedback_use_cases import (
 from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
-from app.containers.use_cases.passkey_use_cases import PasskeyUseCasesContainer
+from app.containers.use_cases.passkey_root_provider import passkey_root_provider
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -210,9 +211,9 @@ class UseCasesContainer(BusinessUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
     )
-    # Passkeys: Account → Security, sign-in and step-up (1201).
-    passkeys: PasskeyUseCasesContainer = Container(  # type: ignore[assignment]
-        PasskeyUseCasesContainer,
+    # Passkeys: Account → Security, sign-in and step-up (1201), a typed root
+    # (ADR 0010) whose operators SecurityOperatorsContainer exposes.
+    passkey_root: Singleton[PasskeyRoot] = passkey_root_provider(
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
