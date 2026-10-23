@@ -39,6 +39,7 @@ from app.use_cases.admin.system.system_views import (
     run_view,
     worker_view,
 )
+from app.utilities.jobs.live_lanes import live_lanes
 
 logger: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -153,7 +154,9 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
             )
 
         lanes: list[LaneView] = []
-        for lane in JobLane:
+        # A lane behind a closed release gate holds no job, and the cabinet
+        # of the release before cannot name it.
+        for lane in live_lanes():
             due: int = int(self._health.count_due_jobs(lane, now))
             oldest = self._health.find_oldest_due_job(lane, now) if due else None
             lanes.append(

@@ -564,7 +564,7 @@ customers:
 
 | Service | Instances, plan | Lanes | Shared periodic jobs | Sizing |
 | --- | --- | --- | --- | --- |
-| `workshop-worker` | 2 x `starter` | `inbound`, `outbound`, `ops` | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 13 lane threads (`inbound=8,outbound=4,ops=1`, the defaults), `DB_POOL_SIZE` 16, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
+| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` (`ops` joins with the release that opens the gate `ops_lane`) | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults; 13 with `ops=1`), `DB_POOL_SIZE` 16, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
 | `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 10, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
 
 - A periodic job belongs to a lane (`PeriodicJobSpec.lane`, `default`
@@ -605,10 +605,14 @@ notifications and the platform alerts would wait behind them.
   [provider-circuits](runbooks/provider-circuits.md)). A brownout costs
   five timeouts per worker, not one per message.
 - **The ops lane.** `send_platform_alert` jobs get their own lane with one
-  thread per worker (`ops=1`), served by the customer workers. It is
-  behind the release gate `ops_lane` (the release before cannot read the
-  lane): until the next release opens it, alerts use `outbound`, where
-  the bulkheads leave them two threads.
+  thread per worker (`ops=1`, the default), to be served by the customer
+  workers. It is behind the release gate `ops_lane` (the release before
+  cannot read the lane): until the next release opens it, alerts use
+  `outbound`, where the bulkheads leave them two threads, and no
+  Blueprint names `ops` in `WORKER_LANES` or `WORKER_LANE_CONCURRENCY`
+  (the release before refuses the value at startup, and a rollback keeps
+  the environment). The release that opens the gate adds `ops` to
+  `workshop-worker`'s `WORKER_LANES`.
 - Measured in `tests/resilience/test_send_bulkheads.py`: with Meta hanging
   10 s and the production lanes, a Telegram reply and a platform alert go
   out within 2 s, and no outbox row is lost or sent twice.

@@ -25,7 +25,13 @@ the others'. Login codes do not go through the circuits.
 - **5 failures within 60 s open a circuit.** A failure is a timeout, a
   connection error or a 5xx. A refusal (4xx), a rate limit, a revoked token
   or a business's own missing setting is an answer, not an outage: it never
-  opens a circuit.
+  opens a circuit. The same holds for Flitt: an HTTP 4xx or an answer with
+  the status "failure" (`PaymentProviderRefusedError`) and payments not set
+  up (`PaymentsNotConfiguredError`) leave `provider:flitt` closed.
+- **Typing signals are best effort.** They run only while the circuit is
+  closed and never report a success (they often make no call at all), so
+  they cannot take the half-open trial or close a circuit; a typing call
+  that times out still counts as a failure.
 - **Open:** a send fails at once without a network call. The outbox keeps
   the message and tries again when the circuit lets a trial through
   (`Retry-After` = the circuit's remaining wait, at least the usual

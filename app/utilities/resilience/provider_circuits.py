@@ -17,6 +17,10 @@ from app.schemas.exceptions.application_errors import (
     WhatsAppTemplateRejectedError,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.exceptions.payment_errors import (
+    PaymentProviderRefusedError,
+    PaymentsNotConfiguredError,
+)
 from app.schemas.typings.platform.constrained_integers import WorkerLaneConcurrency
 from app.schemas.typings.resilience.constrained_integers import ProviderSlotCount
 from app.schemas.typings.resilience.constrained_strings import CircuitName
@@ -49,6 +53,8 @@ STAFF_CHANNEL_PROVIDERS: dict[ManagerContactChannel, OutboundProvider] = {
 ANSWERED_FAILURES: tuple[type[ExternalServiceError], ...] = (
     ChannelCredentialRejectedError,
     DeliveryNotConfiguredError,
+    PaymentProviderRefusedError,
+    PaymentsNotConfiguredError,
     ProviderCircuitOpenError,
     ProviderRateLimitedError,
     ProviderRejectedMessageError,

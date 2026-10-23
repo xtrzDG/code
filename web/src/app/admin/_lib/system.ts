@@ -164,6 +164,25 @@ export function drillState(system: Pick<AdminSystem, "last_restore_drill" | "che
   return system.checked_at - run.finished_at > DRILL_OVERDUE_DAYS * MICROSECONDS_PER_DAY ? "overdue" : "ok";
 }
 
+/** The page as an API without circuit breakers (the release before) sends it: `circuits` absent. */
+export type AdminSystemReply = Omit<AdminSystem, "circuits" | "workers"> & {
+  circuits?: AdminSystem["circuits"];
+  workers: (Omit<WorkerPulse, "circuits"> & { circuits?: WorkerPulse["circuits"] })[];
+};
+
+/**
+ * The page with `circuits` read as none where the API leaves them out: the
+ * API of the release before (a rollback, the deploy overlap) has no
+ * circuit breakers.
+ */
+export function withCircuits(system: AdminSystemReply): AdminSystem {
+  return {
+    ...system,
+    circuits: system.circuits ?? [],
+    workers: system.workers.map((worker) => ({ ...worker, circuits: worker.circuits ?? [] })),
+  };
+}
+
 /** Workers that stopped beating first, then by host. */
 export function sortWorkers(workers: readonly WorkerPulse[]): WorkerPulse[] {
   return [...workers].sort((a, b) => Number(b.is_stale) - Number(a.is_stale) || a.host_name.localeCompare(b.host_name));

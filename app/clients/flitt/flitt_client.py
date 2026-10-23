@@ -19,8 +19,10 @@ from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ExternalServiceError,
+    ProviderRateLimitedError,
     ValidationFailedError,
 )
+from app.schemas.exceptions.payment_errors import PaymentProviderRefusedError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 
@@ -34,6 +36,9 @@ READ_TIMEOUT_SECONDS: float = 15.0
 SUCCESS_RESPONSE_STATUS: str = "success"
 STOP_SUBSCRIPTION_ACTION: str = "stop"
 MAX_REPORTED_ERROR_LENGTH: int = 200
+HTTP_REQUEST_TIMEOUT: int = 408
+HTTP_TOO_MANY_REQUESTS: int = 429
+HTTP_CLIENT_ERRORS: range = range(400, 500)
 
 
 class FlittClient(ClientContract):
@@ -152,8 +157,7 @@ class FlittClient(ClientContract):
                 f"Flitt request failed: {type(error).__name__}."
             ) from error
 
-        if response.status_code >= 400:
-            raise ExternalServiceError(f"Flitt returned HTTP {response.status_code}.")
+        raise_for_http_status(response.status_code)
 
         return self._read_response(response)
 
@@ -185,7 +189,7 @@ class FlittClient(ClientContract):
             ) from error
 
         if not is_accepted(result, is_signed_envelope=is_signed_envelope):
-            raise ExternalServiceError(describe_flitt_error(result))
+            raise PaymentProviderRefusedError(describe_flitt_error(result))
 
         return result
 
@@ -193,6 +197,27 @@ class FlittClient(ClientContract):
         return (
             int(self._merchant_id) if self._merchant_id.isdigit() else self._merchant_id
         )
+
+
+def raise_for_http_status(status_code: int) -> None:
+    """
+    Raises:
+        ProviderRateLimitedError: HTTP 429, Flitt asked to slow down.
+        PaymentProviderRefusedError: another 4xx (but 408): Flitt answered
+            and refused the call; it is up.
+        ExternalServiceError: a 5xx or 408, Flitt in trouble.
+    """
+
+    if status_code == HTTP_TOO_MANY_REQUESTS:
+        raise ProviderRateLimitedError("Flitt asked to slow down (HTTP 429).")
+
+    if status_code in HTTP_CLIENT_ERRORS and status_code != HTTP_REQUEST_TIMEOUT:
+        raise PaymentProviderRefusedError(
+            f"Flitt refused the call: HTTP {status_code}."
+        )
+
+    if status_code >= HTTP_CLIENT_ERRORS.start:
+        raise ExternalServiceError(f"Flitt returned HTTP {status_code}.")
 
 
 def is_accepted(result: Mapping[str, object], *, is_signed_envelope: bool) -> bool:

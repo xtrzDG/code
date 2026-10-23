@@ -26,7 +26,9 @@ Spec: `68667cd1d325dff4`
   (`WorkerCircuitView`), the worker's own circuits at its last pulse.
 - **Added** `JobLane` may be `ops`, the platform alerts' lane (in the job
   lists of `GET /v1/admin/jobs` and the lanes of `GET /v1/admin/system`).
-  Jobs use it once the release gate `ops_lane` opens in the next release.
+  Jobs use it once the release gate `ops_lane` opens in the next release;
+  until then no job is in it and `GET /v1/admin/system` lists no `ops`
+  lane, so a cabinet of the release before never meets the value.
 
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 

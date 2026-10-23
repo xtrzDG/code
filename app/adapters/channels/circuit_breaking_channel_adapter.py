@@ -10,7 +10,10 @@ from app.schemas.dto.channels.channel_webhooks import (
 from app.schemas.typings.channels.strings import ChannelSecret, ProviderMessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.resilience.constrained_strings import CircuitName
-from app.utilities.resilience.circuit_calls import call_through_circuit
+from app.utilities.resilience.circuit_calls import (
+    call_best_effort_through_circuit,
+    call_through_circuit,
+)
 
 
 class CircuitBreakingChannelAdapter(ChannelAdapterContract):
@@ -21,7 +24,8 @@ class CircuitBreakingChannelAdapter(ChannelAdapterContract):
     Sends and typing signals go through the circuit: while it is open they
     fail at once with ProviderCircuitOpenError and make no network call
     (the outbox tries the message again after the circuit's pause);
-    timeouts, connection errors and 5xx count against it. Reading webhooks
+    timeouts, connection errors and 5xx count against it. A typing signal
+    runs only while the circuit is closed and never reports a success. Reading webhooks
     (signatures, payloads) and the best-effort tap acknowledgements need
     no circuit and go straight to the channel.
     """
@@ -78,7 +82,9 @@ class CircuitBreakingChannelAdapter(ChannelAdapterContract):
         target: ChannelDeliveryTarget,
         replying_to: ProviderMessageId | None,
     ) -> None:
-        call_through_circuit(
+        # Best effort, and often no call at all (no credential, nothing to
+        # reply to): it never takes a trial call nor closes the circuit.
+        call_best_effort_through_circuit(
             self._circuit_breaker,
             self._circuit,
             lambda: self._inner_adapter.signal_typing(target, replying_to),

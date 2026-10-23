@@ -98,12 +98,13 @@ def test_only_the_admin_sees_the_system_page(workshop: Workshop) -> None:
 
     assert page.status_code == 200, page.text
     view: JsonObject = page.json()
+    # The ops lane joins once the release gate ops_lane opens: the cabinet
+    # of the release before cannot name it.
     assert [lane["lane"] for lane in view["lanes"]] == [
         "inbound",
         "outbound",
         "default",
         "autotests",
-        "ops",
     ]
     assert all(lane["dead"] == 0 for lane in view["lanes"])
     [worker] = view["workers"]

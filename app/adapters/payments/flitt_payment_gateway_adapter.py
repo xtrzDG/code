@@ -14,6 +14,7 @@ from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ValidationFailedError,
 )
+from app.schemas.exceptions.payment_errors import PaymentsNotConfiguredError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.billing.constrained_strings import PaymentCheckoutUrl
 from app.schemas.typings.billing.strings import (
@@ -73,7 +74,7 @@ class FlittPaymentGatewayAdapter(PaymentGatewayAdapterContract):
     and subscribes the card to automatic monthly or annual charges.
 
     Without Flitt credentials (`flitt_client` is None) or a public base URL
-    for callbacks, checkouts fail with ExternalServiceError and
+    for callbacks, checkouts fail with PaymentsNotConfiguredError and
     notifications are refused, so nothing is ever marked paid unverified.
     """
 
@@ -91,7 +92,7 @@ class FlittPaymentGatewayAdapter(PaymentGatewayAdapterContract):
     ) -> PaymentCheckoutSession:
         flitt_client: FlittClient = self._require_client()
         if self._app_base_url is None:
-            raise ExternalServiceError(
+            raise PaymentsNotConfiguredError(
                 "Online payments need APP_BASE_URL for payment notifications."
             )
 
@@ -177,7 +178,7 @@ class FlittPaymentGatewayAdapter(PaymentGatewayAdapterContract):
 
     def _require_client(self) -> FlittClient:
         if self._flitt_client is None:
-            raise ExternalServiceError(
+            raise PaymentsNotConfiguredError(
                 "Online payments are not configured (FLITT_MERCHANT_ID, "
                 "FLITT_SECRET_KEY)."
             )

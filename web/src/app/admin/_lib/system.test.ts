@@ -11,6 +11,7 @@ import {
   largestTables,
   sortWorkers,
   tableName,
+  withCircuits,
   type AdminSystem,
   type AlertState,
   type MaintenanceRun,
@@ -212,5 +213,27 @@ describe("workers and attention", () => {
 
     expect(attentionCount(system())).toBe(0);
     expect(attentionCount(busy)).toBe(1 + 1 + 2 + 3 + 4);
+  });
+});
+
+describe("an API without circuit breakers", () => {
+  it("reads absent circuits as none, so the page and its count still work", () => {
+    const { circuits: _unused, workers, ...rest } = system({ workers: [worker({})] });
+    const old = {
+      ...rest,
+      workers: workers.map(({ circuits: _none, ...pulse }) => pulse),
+    };
+
+    const read = withCircuits(old);
+
+    expect(read.circuits).toEqual([]);
+    expect(read.workers.map((pulse) => pulse.circuits)).toEqual([[]]);
+    expect(attentionCount(read)).toBe(0);
+  });
+
+  it("keeps the circuits an API sends", () => {
+    const sent = system({ circuits: [circuit({ state: "open" })] });
+
+    expect(withCircuits(sent).circuits).toEqual(sent.circuits);
   });
 });
