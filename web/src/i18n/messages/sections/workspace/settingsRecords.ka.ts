@@ -88,6 +88,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       brand_location: "ქსელის ფილიალი",
       brand_member: "ქსელის გუნდის წევრი",
       business_member: "გუნდის წევრი",
+      business_closure: "ბიზნესის დახურვა",
       user: "მომხმარებელი (კაბინეტი)",
       lead: "მოთხოვნა",
       handoff: "ადამიანის დახმარება",

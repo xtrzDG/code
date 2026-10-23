@@ -40,6 +40,21 @@ def judge_restore(
     ]
 
 
+def check_ledger(restored: RestoredDatabase) -> list[RestoreCheckProblem]:
+    """No row of a business the deletion ledger names is left after applying it."""
+
+    ledger = restored.ledger
+    if ledger is None or int(ledger.remaining_rows) == 0:
+        return []
+
+    return [
+        problem(
+            f"{int(ledger.remaining_rows)} rows of deleted businesses are still in "
+            "the restored database after the deletion ledger was applied."
+        )
+    ]
+
+
 def check_freshness(
     created_at: Microseconds,
     now: Microseconds,

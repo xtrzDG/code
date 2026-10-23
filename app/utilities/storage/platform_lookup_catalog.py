@@ -1,14 +1,19 @@
 """
 The declared lookup fields of the platform's own collections: the worker's
 pulse and queue, incidents and maintenance runs, the status page, exchange
-rates, growth analytics, platform access and passkeys. Part of DOCUMENT_LOOKUP_FIELDS
-(`document_lookup_catalog`), which explains the columns and triggers.
+rates, growth analytics, platform access, passkeys, and the closures and
+deletion ledger that decide when a business's data leaves (1220). Part of
+DOCUMENT_LOOKUP_FIELDS (`document_lookup_catalog`), which explains the
+columns and triggers.
 """
 
 from collections.abc import Mapping
 
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.business_closure_collections import (
+    BUSINESS_CLOSURE_LOOKUP_FIELDS,
+)
 from app.utilities.storage.lookup_field_builders import (
     filter_field,
     integer_field,
@@ -102,4 +107,5 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
     # Broken audit hash chains, counted for their alert (1193).
     DocumentCollectionName("audit_chain_statuses"): (text_field("status"),),
     **PASSKEY_LOOKUP_FIELDS,  # Passkeys and their ceremonies (1201).
+    **BUSINESS_CLOSURE_LOOKUP_FIELDS,  # Closures and the deletion ledger (1220).
 }

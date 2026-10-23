@@ -23,6 +23,7 @@
   "card-media.spec.ts": 5.8,
   "card-recordings.spec.ts": 7.1,
   "card-whatsapp.spec.ts": 7.1,
+  "closure.spec.ts": 15.4,
   "command-palette.spec.ts": 6,
   "connect-guided.spec.ts": 6.5,
   "customer-memory.spec.ts": 4.7,

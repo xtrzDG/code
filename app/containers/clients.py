@@ -1,6 +1,9 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
+from app.adapters.storage.in_memory_collection_registry import (
+    InMemoryCollectionRegistry,
+)
 from app.adapters.storage.postgres.connection_pools_factory import (
     build_owner_pool,
     build_postgres_connection_pools,
@@ -88,6 +91,11 @@ class ClientsContainer(containers.DeclarativeContainer):
     # rate limits, wake-ups, database sizes).
     postgres_platform_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
         platform_pool_of, connection_pools=postgres_pools
+    )
+    # The process's in-memory collections by name (no DATABASE_URL): what a
+    # business's deletion walks where Postgres walks its tables.
+    in_memory_collections: Singleton[InMemoryCollectionRegistry] = Singleton(
+        InMemoryCollectionRegistry
     )
     # One connection as the tables' owner, for the maintenance commands
     # only the owner may run (the audit purge); the API and the worker

@@ -1,12 +1,14 @@
 from dependency_injector import containers
 from dependency_injector.providers import (
     DependenciesContainer,
+    Dependency,
     Dict,
     Factory,
     List,
     Singleton,
 )
 
+from app.containers.account_deletion.account_deletion_root import AccountDeletionRoot
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.container_edges import composed_container_edge
@@ -37,12 +39,17 @@ class GatewaysContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # Closing and deleting businesses: a typed root's own operators (ADR 0010).
+    account_deletion_root: Dependency[AccountDeletionRoot] = Dependency(
+        instance_of=AccountDeletionRoot
+    )
+    account_deletions = account_deletion_root.provided.operators
 
     # Periodic jobs in the order they run within a tick
     # (`periodic_jobs.py`) and the handlers of queued jobs by job name
     # (`queued_jobs.py`), each built from operators.
-    periodic_jobs: List = periodic_job_specs(operators)
-    queued_job_operators: Dict = queued_job_operator_map(operators)
+    periodic_jobs: List = periodic_job_specs(operators, account_deletions)
+    queued_job_operators: Dict = queued_job_operator_map(operators, account_deletions)
     # The pulse of this worker process (GET /readyz reports its age).
     worker_heartbeat_recorder: Factory[WorkerHeartbeatRecorder] = Factory(
         WorkerHeartbeatRecorder,

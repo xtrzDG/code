@@ -24,6 +24,8 @@ from app.schemas.dto.storage_pages import (
     DocumentPagePosition,
     DocumentPageQuery,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.storage.constrained_strings import (
     DocumentCollectionName,
     DocumentFieldPath,
@@ -37,6 +39,7 @@ from app.utilities.storage.document_query_rules import (
     require_valid_latest,
     require_valid_page,
 )
+from app.utilities.storage.document_tenancy import read_document_business_id
 from app.utilities.storage.storage_scoping import require_tenant_scope
 
 
@@ -82,6 +85,28 @@ class InMemoryDocumentTable[StoredDocument: PersistentDocument]:
     def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
         require_valid_aggregation(self._lookup_fields, aggregation, self._label())
         return aggregate(self._entries(), aggregation, self._lookup_fields)
+
+    def count_business_documents(self, business_id: BusinessId) -> DocumentCount:
+        """How many documents name the business (its storage column on Postgres)."""
+
+        return DocumentCount(len(self._business_keys(business_id)))
+
+    def remove_business_documents(self, business_id: BusinessId) -> DocumentCount:
+        """Delete every document naming the business (a business's deletion)."""
+
+        keys: list[str] = self._business_keys(business_id)
+        with self._lock:
+            removed: int = sum(
+                1 for key in keys if self._serialized_documents.pop(key, None)
+            )
+        return DocumentCount(removed)
+
+    def _business_keys(self, business_id: BusinessId) -> list[str]:
+        return [
+            key
+            for key, serialized in self._entries()
+            if read_document_business_id(self._codec.decode(serialized)) == business_id
+        ]
 
     def _entries(self) -> list[tuple[str, str]]:
         """(key, serialized document) in first-write order, after the scope check."""

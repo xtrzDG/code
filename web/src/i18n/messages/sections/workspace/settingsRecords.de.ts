@@ -85,6 +85,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       brand_location: "Standort der Kette",
       brand_member: "Mitglied des Kettenteams",
       business_member: "Teammitglied",
+      business_closure: "Schließung des Unternehmens",
       user: "Benutzer",
       lead: "Anfrage",
       handoff: "Braucht einen Menschen",

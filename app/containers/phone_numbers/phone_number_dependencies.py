@@ -24,6 +24,9 @@ from app.contracts.repositories.billing_repositories import (
     SubscriptionRepoContract,
     UsageEventRepoContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
@@ -64,6 +67,7 @@ class PhoneNumberDependencies:
     phone_number_repo: PhoneNumberRepoContract
     phone_number_request_repo: PhoneNumberRequestRepoContract
     channel_repo: ChannelRepoContract
+    closure_repo: BusinessClosureRepoContract
     assistant_version_repo: AssistantVersionRepoContract
     audit_log_repo: AuditLogRepoContract
     business_repo: BusinessRepoContract

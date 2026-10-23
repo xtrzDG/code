@@ -103,6 +103,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       brand_location: "Точка сети",
       brand_member: "Участник команды сети",
       business_member: "Участник команды",
+      business_closure: "Закрытие бизнеса",
       user: "Пользователь",
       lead: "Заявка",
       handoff: "Нужен человек",

@@ -80,6 +80,10 @@ class NotificationPreferencesRepoContract(RepoContract, Protocol):
     def save(self, preferences: UserNotificationPreferencesDocument) -> None:
         raise NotImplementedError
 
+    def delete(self, business_id: BusinessId, user_id: UserId) -> None:
+        """Forget one person's preferences in the business (their account went)."""
+        raise NotImplementedError
+
 
 class StaffDeliveryStateRepoContract(RepoContract, Protocol):
     def list_by_business(

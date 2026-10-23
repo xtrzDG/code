@@ -6,6 +6,9 @@ from app.contracts.assistant_assembly import AssistantToolCatalogContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -38,6 +41,7 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.use_cases.shared.voice_agent_setup import VoiceAgentSetup
 from app.utilities.assembly.go_live_refusals import (
     build_check_reason,
@@ -89,9 +93,10 @@ class ActivateAssistantVersionUseCase(
     this one is published. Activating a version without voice
     removes the agent of earlier versions. In development and test, a voice
     version goes live without an agent while ElevenLabs is not configured
-    (a warning is logged). The first go-live starts the free trial when it
-    is still due (the business takes its plan with full service in the same
-    write) and is recorded as the WENT_LIVE milestone.
+    (a warning is logged). A business that is closing (a closure not
+    cancelled) never goes live: ConflictError. The first go-live starts the
+    free trial when it is still due (the business takes its plan with full
+    service in the same write) and is recorded as the WENT_LIVE milestone.
     """
 
     def __init__(
@@ -111,7 +116,9 @@ class ActivateAssistantVersionUseCase(
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         voice_agent_locks: VoiceAgentLockRegistryContract,
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._check_go_live_readiness: UseCaseContract[
             GoLiveReadinessRequest, GoLiveReadiness
         ] = check_go_live_readiness
@@ -141,6 +148,8 @@ class ActivateAssistantVersionUseCase(
     def run(self, input_data: AssistantVersionActivation) -> AssistantVersionDocument:
         business: BusinessDocument = input_data.business
         version: AssistantVersionDocument = input_data.version
+        # Publishing and rollback alike: a closing business stays paused.
+        refuse_while_closing(self._closure_repo, business.id, "publish again")
         readiness: GoLiveReadiness = self._check_go_live_readiness.run(
             GoLiveReadinessRequest(business=business, version=version)
         )

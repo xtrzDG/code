@@ -42,3 +42,6 @@ class SecurityNudgeRepository(
         )
         self._store(str(nudge_id), nudge)
         return nudge
+
+    def forget(self, business_id: BusinessId, user_id: UserId) -> None:
+        self._remove(business_id, str(security_nudge_id_for(business_id, user_id)))

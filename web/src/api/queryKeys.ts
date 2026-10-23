@@ -10,6 +10,7 @@
  */
 
 import { brandQueryKeys } from "./brandQueryKeys";
+import { closureQueryKeys } from "./closureQueryKeys";
 import { customerQueryKeys } from "./customerQueryKeys";
 import { depositQueryKeys } from "./depositQueryKeys";
 import { integrationQueryKeys } from "./integrationQueryKeys";
@@ -279,10 +280,9 @@ export const queryKeys = {
   ...platformQueryKeys,
 
   ...integrationQueryKeys,
-
+  ...closureQueryKeys,
   ...brandQueryKeys,
   ...depositQueryKeys,
-
   assistantSettings: {
     /** Settings → General: whether the assistant remembers returning customers. */
     detail: (businessId: Id) => ["assistantSettings", businessId] as const,

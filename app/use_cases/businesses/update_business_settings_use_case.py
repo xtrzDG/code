@@ -6,6 +6,9 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.brand_repositories import BrandRepoContract
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -39,6 +42,7 @@ from app.use_cases.businesses.manager_contact_rules import (
     limit_manager_contacts,
     validate_manager_contact,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.businesses.business_revisions import (
     build_precondition_failed_error,
     build_stale_revision_error,
@@ -101,7 +105,9 @@ class UpdateBusinessSettingsUseCase(
         wall_clock: WallClock[Microseconds],
         remove_voice_agent: UseCaseContract[BusinessId, None],
         resume_assistant: UseCaseContract[BusinessDocument, None],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -147,6 +153,11 @@ class UpdateBusinessSettingsUseCase(
             business,
             changes.status,
         )
+        if status_switch is BusinessStatus.LIVE:
+            refuse_while_closing(
+                self._closure_repo, business.id, "resume the assistant"
+            )
+
         self._apply_profile_changes(business, changes)
         self._apply_language_changes(business, changes)
 

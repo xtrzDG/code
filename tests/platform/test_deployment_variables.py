@@ -59,10 +59,17 @@ def test_render_sets_what_a_deployment_needs() -> None:
     # The workers run the same code with the same settings, each with the
     # lanes of its role (and the batch worker its own lane threads).
     assert services["workshop-worker"] == api - {"PORT"} | {"WORKER_LANES"}
-    assert services["workshop-batch-worker"] == api - {"PORT"} | {
-        "WORKER_LANES",
-        "WORKER_LANE_CONCURRENCY",
-    }
+    # The batch worker deletes businesses (the default lane) and keeps the
+    # deletion ledger's copy in the backup bucket.
+    assert (
+        services["workshop-batch-worker"]
+        == api - {"PORT"}
+        | {
+            "WORKER_LANES",
+            "WORKER_LANE_CONCURRENCY",
+        }
+        | BACKUP_JOB_VARIABLES
+    )
     assert services["workshop-cabinet"] >= REQUIRED_CABINET_VARIABLES | {
         "TRUSTED_PROXY_HOPS"
     }

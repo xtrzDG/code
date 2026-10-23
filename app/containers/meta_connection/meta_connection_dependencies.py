@@ -14,6 +14,9 @@ from app.contracts.meta_connection import (
 )
 from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
@@ -39,7 +42,8 @@ class MetaConnectionDependencies:
     Everything Meta's self-serve connection (R15, migration 1212) takes from
     the rest of the application, as contracts: the owner's access and the
     step-up, the Facebook sign-ins' repository, Meta's clients, the channel
-    it connects and its sealed tokens, the inbox and outbox the comment
+    it connects and its sealed tokens, the business's closure (a closing
+    business connects nothing), the inbox and outbox the comment
     replies go through, and the inbox's claim, finish and release of the
     worker's job. The only place the dependency graph meets the typed root
     (the provider in app/containers/use_cases/meta_connection_root_provider.py
@@ -55,6 +59,7 @@ class MetaConnectionDependencies:
     meta_client: MetaGraphApiClientContract
     instagram_adapter: ChannelAdapterContract
     channel_repo: ChannelRepoContract
+    closure_repo: BusinessClosureRepoContract
     contact_repo: ContactRepoContract
     inbound_event_repo: InboundEventRepoContract
     outbound_message_repo: OutboundMessageRepoContract

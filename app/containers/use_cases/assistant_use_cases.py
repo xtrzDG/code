@@ -165,6 +165,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         voice_agent_locks=registries.voice_agent_lock_registry,
+        closure_repo=repositories.business_closure_repo,
     )
     resume_assistant_use_case: Factory[UseCaseContract[BusinessDocument, None]] = (
         Factory(
@@ -189,6 +190,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
         resume_assistant=resume_assistant_use_case,
+        closure_repo=repositories.business_closure_repo,
     )
     publish_assistant_version_use_case: Factory[
         UseCaseContract[PublishAssistantVersionCommand, AssistantVersionDetails]
@@ -202,6 +204,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        closure_repo=repositories.business_closure_repo,
     )
     rollback_assistant_version_use_case: Factory[
         UseCaseContract[RollbackAssistantVersionCommand, AssistantVersionDetails]

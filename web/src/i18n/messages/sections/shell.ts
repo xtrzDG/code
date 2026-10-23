@@ -2,8 +2,8 @@
  * Texts of the cabinet's frame: the five sections and the navigation,
  * the user menu and installing the app, "Create an AI assistant" before
  * the assistant exists, the offline page, the live cabinet and the
- * phone's compact page chrome, and the notice of a new data processing
- * agreement.
+ * phone's compact page chrome, the notice of a new data processing
+ * agreement, and closing a business or deleting an account.
  *
  * Top-level keys are namespaces. They are spread into the dictionaries of
  * every locale, so they must not clash with the namespaces of the other
@@ -23,6 +23,11 @@ import { appRu } from "./shell/app.ru";
 import { chromeEn } from "./shell/chrome.en";
 import { chromeKa } from "./shell/chrome.ka";
 import { chromeRu } from "./shell/chrome.ru";
+import { closureDe } from "./shell/closure.de";
+import { closureEn } from "./shell/closure.en";
+import { closureHe } from "./shell/closure.he";
+import { closureKa } from "./shell/closure.ka";
+import { closureRu } from "./shell/closure.ru";
 import { dpaNoticeEn } from "./shell/dpaNotice.en";
 import { dpaNoticeKa } from "./shell/dpaNotice.ka";
 import { dpaNoticeRu } from "./shell/dpaNotice.ru";
@@ -58,6 +63,7 @@ export const shellEn = {
   live: liveEn,
   chrome: chromeEn,
   dpaNotice: dpaNoticeEn,
+  closure: closureEn,
 } as const;
 
 export const shellRu: Translation<typeof shellEn> = {
@@ -68,6 +74,7 @@ export const shellRu: Translation<typeof shellEn> = {
   live: liveRu,
   chrome: chromeRu,
   dpaNotice: dpaNoticeRu,
+  closure: closureRu,
 };
 
 export const shellKa: Translation<typeof shellEn> = {
@@ -78,6 +85,7 @@ export const shellKa: Translation<typeof shellEn> = {
   live: liveKa,
   chrome: chromeKa,
   dpaNotice: dpaNoticeKa,
+  closure: closureKa,
 };
 
 export const shellHe: Translation<typeof shellEn> = {
@@ -88,6 +96,7 @@ export const shellHe: Translation<typeof shellEn> = {
   live: liveHe,
   chrome: chromeHe,
   dpaNotice: dpaNoticeHe,
+  closure: closureHe,
 };
 
 export const shellDe: Translation<typeof shellEn> = {
@@ -98,4 +107,5 @@ export const shellDe: Translation<typeof shellEn> = {
   live: liveDe,
   chrome: chromeDe,
   dpaNotice: dpaNoticeDe,
+  closure: closureDe,
 };

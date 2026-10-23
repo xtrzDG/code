@@ -73,6 +73,7 @@ class MetaConnectionUseCaseFactories:
             step_up=deps.step_up,
             app_settings=deps.app_settings,
             wall_clock=deps.wall_clock,
+            closure_repo=deps.closure_repo,
         )
 
     def complete_whatsapp_signup(
@@ -91,6 +92,7 @@ class MetaConnectionUseCaseFactories:
             storage_scope=deps.storage_scope,
             app_settings=deps.app_settings,
             wall_clock=deps.wall_clock,
+            closure_repo=deps.closure_repo,
         )
 
     def list_meta_pages(self) -> UseCaseContract[ListMetaPagesCommand, MetaPageList]:
@@ -121,6 +123,7 @@ class MetaConnectionUseCaseFactories:
             step_up=deps.step_up,
             app_settings=deps.app_settings,
             wall_clock=deps.wall_clock,
+            closure_repo=deps.closure_repo,
         )
 
     def set_comment_replies(

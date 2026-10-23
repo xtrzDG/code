@@ -135,6 +135,7 @@ class AppContainer(AppEdgesContainer):
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
         GatewaysContainer,
+        account_deletion_root=use_cases.account_deletion_root,
         adapters=AppEdgesContainer.adapters,
         config=AppEdgesContainer.config,
         facilitators=facilitators,

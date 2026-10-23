@@ -5,6 +5,7 @@ from app.contracts.backups import (
     BackupCipherAdapterContract,
     ScratchDatabaseAdapterContract,
 )
+from app.contracts.business_erasure import DeletionLedgerMirrorAdapterContract
 from app.contracts.storage import SchemaMigrationSourceAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.backups import (
@@ -29,6 +30,7 @@ from app.utilities.backups.archive_files import (
 from app.utilities.backups.backup_keys import recognize_archives
 from app.utilities.backups.restore_verdict import (
     check_freshness,
+    check_ledger,
     judge_restore,
     pending_migrations,
 )
@@ -46,8 +48,11 @@ class CheckBackupRestoreUseCase(
     database. The drill then compares every table's row count with the
     manifest, the applied migrations with this checkout's files, and probes
     row-level security as a bound role; the newest backup must also be
-    recent. Every failed check is reported (the CLI then exits non-zero and
-    Sentry Crons records the failure); a damaged archive raises
+    recent. Last, the deletion ledger is applied (its copy in the bucket and
+    the restored database's own entries): no row of a deleted business may
+    be left, so a restored backup never brings one back. Every failed check
+    is reported (the CLI then exits non-zero and Sentry Crons records the
+    failure); a damaged archive raises
     BackupArchiveCorruptError at once.
     """
 
@@ -60,6 +65,7 @@ class CheckBackupRestoreUseCase(
         wall_clock: WallClock[Microseconds],
         prefix: BackupObjectPrefix,
         max_age: BackupFreshnessHours,
+        ledger_mirror: DeletionLedgerMirrorAdapterContract | None = None,
     ) -> None:
         self._backup_bucket: BackupBucketClientContract = backup_bucket
         self._backup_cipher: BackupCipherAdapterContract = backup_cipher
@@ -68,6 +74,7 @@ class CheckBackupRestoreUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._prefix: BackupObjectPrefix = prefix
         self._max_age: BackupFreshnessHours = max_age
+        self._ledger_mirror: DeletionLedgerMirrorAdapterContract | None = ledger_mirror
 
     def run(self, input_data: CheckBackupRestoreCommand) -> RestoreCheckReport:
         archives: list[BackupArchive] = recognize_archives(
@@ -78,7 +85,16 @@ class CheckBackupRestoreUseCase(
         dump_file: LocalFilePath = self._fetch_dump(archive, manifest, input_data)
         try:
             restored: RestoredDatabase = self._scratch_database.restore_and_inspect(
-                dump_file, input_data.is_scratch_database_kept
+                dump_file,
+                input_data.is_scratch_database_kept,
+                [
+                    record.business_id
+                    for record in (
+                        []
+                        if self._ledger_mirror is None
+                        else self._ledger_mirror.read_all()
+                    )
+                ],
             )
         finally:
             remove_file(dump_file)
@@ -98,6 +114,7 @@ class CheckBackupRestoreUseCase(
                     newest.created_at, self._wall_clock.now_unix(), self._max_age
                 ),
                 *judge_restore(manifest, restored, repository),
+                *check_ledger(restored),
             ],
         )
 

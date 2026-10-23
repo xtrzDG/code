@@ -3,9 +3,13 @@ The worker's periodic jobs, in the order they run within a tick, each with
 its period and its operator: `GatewaysContainer.periodic_jobs`.
 """
 
-from dependency_injector.providers import Factory, List
+from dependency_injector.providers import Factory, List, Provider
 
+from app.containers.account_deletion.account_deletion_operator_factories import (
+    AccountDeletionOperatorFactories,
+)
 from app.containers.billing_jobs import billing_job_specs
+from app.containers.closure_periodic_jobs import closure_periodic_job_specs
 from app.containers.operators.operators_container import OperatorsContainer
 from app.containers.voice_periodic_jobs import voice_periodic_job_specs
 from app.gateways.worker.background_worker import PeriodicJobSpec
@@ -93,7 +97,10 @@ FLUSH_LLM_TRACES_JOB: JobName = JobName("flush_llm_traces")
 PURGE_FINISHED_JOBS_JOB: JobName = JobName("purge_finished_jobs")
 
 
-def periodic_job_specs(operators: OperatorsContainer) -> List:
+def periodic_job_specs(
+    operators: OperatorsContainer,
+    account_deletions: Provider[AccountDeletionOperatorFactories],
+) -> List:
     """The periodic jobs, each run by its operator."""
 
     # Periodic jobs in the order they run within a tick, each once per
@@ -268,4 +275,5 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             operator=operators.webhooks.purge_webhook_deliveries_operator,
         ),
         *voice_periodic_job_specs(operators),
+        *closure_periodic_job_specs(account_deletions),
     )

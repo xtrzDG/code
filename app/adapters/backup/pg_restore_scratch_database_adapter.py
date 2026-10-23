@@ -1,5 +1,5 @@
 import secrets
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from typing import LiteralString
 
@@ -18,16 +18,23 @@ from app.adapters.backup.database_facts_reader import (
     read_database_facts,
     uses_role_policies,
 )
+from app.adapters.backup.deletion_ledger_application import apply_deletion_ledger
 from app.adapters.backup.postgres_programs import (
     locate_program,
     program_connection,
 )
 from app.adapters.backup.restore_script import restore_through_script
 from app.contracts.backups import ScratchDatabaseAdapterContract
-from app.schemas.dto.backups import DatabaseFacts, IsolationProbe, RestoredDatabase
+from app.schemas.dto.backups import (
+    DatabaseFacts,
+    DeletionLedgerApplication,
+    IsolationProbe,
+    RestoredDatabase,
+)
 from app.schemas.exceptions.backup_errors import BackupToolError
 from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
 from app.schemas.typings.backups.constrained_strings import ScratchDatabaseName
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     LocalDirectoryPath,
@@ -60,8 +67,10 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
     workshop_tenant with the old bypass switch on under the 1200 policies;
     before them the restoring role itself, or a throwaway role when the
     restoring role is a superuser or has BYPASSRLS (which row-level
-    security never binds). The scratch database and the probe role are
-    dropped afterwards unless the database is kept.
+    security never binds). Then the deletion ledger is applied (the
+    restoring role sees every row): the businesses it names lose their rows
+    again (`deletion_ledger_application`). The scratch database and the
+    probe role are dropped afterwards unless the database is kept.
     """
 
     def __init__(
@@ -76,6 +85,7 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         self,
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
+        deleted_business_ids: Sequence[BusinessId] = (),
     ) -> RestoredDatabase:
         pg_restore: str = locate_program("pg_restore", self._bin_directory)
         psql: str = locate_program("psql", self._bin_directory)
@@ -90,6 +100,9 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
                 server_version,
             )
             facts, probes = self._inspect(name)
+            ledger: DeletionLedgerApplication = self._apply_ledger(
+                name, deleted_business_ids
+            )
         finally:
             if not is_kept:
                 self._run_on_server(
@@ -99,7 +112,10 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
                 )
 
         return RestoredDatabase(
-            scratch_database=name, facts=facts, isolation_probes=probes
+            scratch_database=name,
+            facts=facts,
+            isolation_probes=probes,
+            ledger=ledger,
         )
 
     def _inspect(
@@ -118,6 +134,15 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
                     )
 
         return facts, probes
+
+    def _apply_ledger(
+        self, name: ScratchDatabaseName, deleted_business_ids: Sequence[BusinessId]
+    ) -> DeletionLedgerApplication:
+        """After the counts: the deleted businesses lose their rows again."""
+
+        with self._connect(str(name)) as connection:
+            bypass_row_security(connection, True)
+            return apply_deletion_ledger(connection, deleted_business_ids)
 
     def _create_database(self, name: ScratchDatabaseName) -> int:
         """Create the scratch database; the server's `server_version_num`."""

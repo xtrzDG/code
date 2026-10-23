@@ -9,6 +9,9 @@ from app.contracts.channel_clients import (
 )
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.phone_numbers import PhoneNumberRepoContract
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -49,6 +52,7 @@ from app.use_cases.channels.connection.telegram_connection import connect_telegr
 from app.use_cases.channels.connection.web_chat_appearance import (
     merge_web_chat_appearance,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.analytics.product_event_drafts import (
     channel_connected_events,
 )
@@ -86,8 +90,10 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
     - Web chat: switched on, nothing to check; the widget's colour and
       launcher corner are saved (fields left out keep their values).
 
-    Tokens are stored only encrypted. An account already connected to
-    another business is refused. Every change is written to the audit log.
+    A closing business (a closure not cancelled) connects nothing:
+    ConflictError. Tokens are stored only encrypted. An account already
+    connected to another business is refused. Every change is written to
+    the audit log.
     """
 
     def __init__(
@@ -108,7 +114,9 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         product_events: RecordProductEventFacilitatorContract,
         step_up: StepUpGuardContract,
         phone_number_repo: PhoneNumberRepoContract | None = None,
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._step_up: StepUpGuardContract = step_up
         self._phone_number_repo: PhoneNumberRepoContract | None = phone_number_repo
         self._authorize_business_access: UseCaseContract[
@@ -138,6 +146,10 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
             raise ValidationFailedError(
                 f"The {input_data.channel.value} channel cannot be connected yet."
             )
+
+        refuse_while_closing(
+            self._closure_repo, business.id, "connect its channels again"
+        )
 
         if input_data.channel is not ChannelKind.WEB_CHAT:
             # Credentials of an outside account: only a recently proved person.

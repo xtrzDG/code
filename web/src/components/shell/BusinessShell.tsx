@@ -44,6 +44,7 @@ import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
 import { SetupHero } from "./setup/SetupHero";
 import { ShellFrame } from "./ShellFrame";
+import { ClosureBanner } from "./ClosureBanner";
 import { DpaBanner } from "./DpaBanner";
 import { SecurityNudgeBanner } from "./SecurityNudgeBanner";
 import { SupportBanner } from "./SupportBanner";
@@ -142,6 +143,8 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           {isConversationPath(pathname) ? null : <PendingChangesBanner />}
           {/* Platform support looking in: always shown, the owner must see it. */}
           <SupportBanner />
+          {/* A closing business counts down to its deletion (the whole team sees it). */}
+          {isConversationPath(pathname) ? null : <ClosureBanner />}
           {/* A new data processing agreement to accept (owners). */}
           {isConversationPath(pathname) ? null : <DpaBanner />}
           {/* After go-live: the owner's reminder to turn on a second factor. Not over the inbox, a work

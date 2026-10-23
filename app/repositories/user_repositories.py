@@ -53,6 +53,9 @@ class UserRepository(UserRepoContract):
     def get(self, user_id: UserId) -> UserDocument | None:
         return self._collection.get(str(user_id))
 
+    def delete(self, user_id: UserId) -> None:
+        self._collection.delete(str(user_id))
+
     def find_by_phone_number(
         self,
         phone_number: E164PhoneNumber,

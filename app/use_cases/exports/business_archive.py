@@ -59,7 +59,6 @@ from app.use_cases.exports.archive_pages import (
     DocumentPages,
     conversation_pages,
     customer_pages,
-    pages_in_write_order,
     single_page,
 )
 from app.use_cases.exports.archive_tables import ArchiveTables
@@ -67,6 +66,7 @@ from app.use_cases.exports.archive_writers import write_csv_table, write_json_ar
 from app.use_cases.exports.business_rows import BookingRows, LeadRows
 from app.use_cases.exports.growth_archive import growth_pages
 from app.use_cases.exports.people_rows import AuditRows, ContactRows, ConversationRows
+from app.use_cases.shared.document_pages import pages_in_write_order
 from app.utilities.privacy.csv_cells import moment_cell
 from app.utilities.privacy.csv_columns import CSV_COLUMNS
 from app.utilities.scheduling.zoned_time import load_time_zone

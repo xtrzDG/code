@@ -4,7 +4,7 @@ of 1,000 documents at a time in the order they were first written, so the
 worker holds one page of a collection, never the collection.
 """
 
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 
 from base_pydantic_schemas import BaseDocument
 
@@ -14,38 +14,13 @@ from app.contracts.repositories.business_document_pages import (
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.paging import KeysetPosition, KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
-from app.schemas.typings.platform.strings import ListItemKey
 from app.use_cases.exports.business_rows import is_erased
 from app.use_cases.exports.people_rows import is_test_only
-
-EXPORT_PAGE_SIZE: KeysetReadLimit = KeysetReadLimit(1000)
+from app.use_cases.shared.document_pages import pages_in_write_order
 
 type DocumentPages = Iterable[Sequence[BaseDocument]]
-
-
-def pages_in_write_order[Document: BaseDocument](
-    source: BusinessDocumentPagesContract[Document],
-    business_id: BusinessId,
-    key_of: Callable[[Document], str],
-) -> Iterator[list[Document]]:
-    """Every document of the business, a page of 1,000 at a time."""
-
-    after: KeysetPosition | None = None
-    while True:
-        page: list[Document] = source.page_in_write_order(
-            business_id, KeysetSlice(after=after, limit=EXPORT_PAGE_SIZE)
-        )
-        if page:
-            yield page
-
-        if len(page) < int(EXPORT_PAGE_SIZE):
-            return
-
-        after = KeysetPosition(sort_values=(), item_key=ListItemKey(key_of(page[-1])))
 
 
 def customer_pages(
