@@ -75,11 +75,13 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
             ) : null}
             <span className="block text-sm text-ink-subtle">
               {result.channel === "phone" ? (
-                <span title={t("assistant.autotests.phoneCallHint")} className="inline-flex items-center gap-1 align-middle text-ink-muted">
-                  <IconPhone className="size-3.5 shrink-0" aria-hidden />
-                  {t("assistant.autotests.phoneCall")}
+                <>
+                  <span title={t("assistant.autotests.phoneCallHint")} className="inline-flex items-center gap-1 align-middle text-ink-muted">
+                    <IconPhone className="size-3.5 shrink-0" aria-hidden />
+                    {t("assistant.autotests.phoneCall")}
+                  </span>
                   {" · "}
-                </span>
+                </>
               ) : null}
               {languageName(result.language, locale)}
               {average !== null ? ` · ${t("assistant.autotests.scoreValue", { score: formatScore(average, locale) })}` : ""}

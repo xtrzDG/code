@@ -34,6 +34,9 @@ describe("ScenarioResult: a voice check says it was a phone call", () => {
 
     const label = screen.getByText(t("assistant.autotests.phoneCall"), { exact: false });
     expect(label.getAttribute("title")).toBe(t("assistant.autotests.phoneCallHint"));
+    // The separator stands outside the flex label, so its spaces are kept.
+    expect(label.textContent).toBe(t("assistant.autotests.phoneCall"));
+    expect(label.parentElement?.textContent).toContain(`${t("assistant.autotests.phoneCall")} · `);
   });
 
   it("leaves a test chat as it was", () => {
