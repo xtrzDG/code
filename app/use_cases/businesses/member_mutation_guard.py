@@ -16,7 +16,11 @@ from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.businesses import BusinessView, BusinessViewSource
-from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
+    ConflictError,
+    NotFoundError,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -54,7 +58,9 @@ class MemberMutationGuard:
     recently may make it, the member must belong to the business, and the
     business keeps at least one owner afterwards. The change is made on the
     business as stored now, so a change saved meanwhile (settings, another
-    member) is kept, and a real change is audited.
+    member) is kept, and a real change is audited. An owner whose own
+    ownership was the access is checked again on the stored business: one
+    removed or demoted meanwhile changes nothing.
     """
 
     def __init__(
@@ -103,12 +109,17 @@ class MemberMutationGuard:
             )
         )
         self._step_up.require_recent_authentication()
+        # A brand owner is not on the team; their access is the brand's.
+        owner_by_membership: bool = is_direct_owner(business, command.user_id)
         now: Microseconds = self._wall_clock.now_unix()
         # Set by every application, so it tells what the stored one did.
         changed: bool = False
 
         def apply_change(current: BusinessDocument) -> None:
             nonlocal changed
+            if owner_by_membership and not is_direct_owner(current, command.user_id):
+                raise AccessDeniedError("You are no longer an owner of this business.")
+
             changed = change(current, member_of(current, command.member_user_id))
             if not changed:
                 return
@@ -146,6 +157,13 @@ def member_of(business: BusinessDocument, member_user_id: UserId) -> BusinessMem
         raise NotFoundError(f"User {member_user_id} is not a member of the business.")
 
     return member
+
+
+def is_direct_owner(business: BusinessDocument, user_id: UserId) -> bool:
+    return any(
+        member.user_id == user_id and member.role is BusinessMemberRole.OWNER
+        for member in business.members
+    )
 
 
 def keep_an_owner(business: BusinessDocument) -> None:

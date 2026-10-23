@@ -17,7 +17,7 @@ from app.schemas.dto.businesses import (
     MemberRoleChange,
     RemoveMemberCommand,
 )
-from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import RawEmailAddressInput
@@ -121,7 +121,8 @@ def test_two_owners_demoting_each_other_at_once_leave_one_owner() -> None:
     results = outcomes(demote(owner_id, co_owner_id), demote(co_owner_id, owner_id))
 
     assert sum(isinstance(result, BusinessView) for result in results) == 1
-    assert sum(isinstance(result, ConflictError) for result in results) == 1
+    # The loser is no longer an owner when its change reaches the store.
+    assert sum(isinstance(result, AccessDeniedError) for result in results) == 1
     assert len(owners_of(testbed, business)) == 1
     entries = testbed.audit_log_repo.list_by_business(business.id)
     assert [entry.action for entry in entries[entries_before:]] == [AuditAction.UPDATE]
@@ -143,7 +144,8 @@ def test_two_owners_removing_each_other_at_once_leave_one_owner() -> None:
     results = outcomes(remove(owner_id, co_owner_id), remove(co_owner_id, owner_id))
 
     assert sum(isinstance(result, BusinessView) for result in results) == 1
-    assert sum(isinstance(result, ConflictError) for result in results) == 1
+    # The loser is no longer an owner when its change reaches the store.
+    assert sum(isinstance(result, AccessDeniedError) for result in results) == 1
     assert len(owners_of(testbed, business)) == 1
 
 
