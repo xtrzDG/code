@@ -2,7 +2,9 @@ name: Schedule watch
 
 # The scheduled workflows that guard what CI cannot (restore-drill.yml: a
 # backup restores; perf.yml: latency budgets; evals-nightly.yml: answer
-# quality against real models) fail silently when GitHub stops scheduling
+# quality against real models; zap.yml: the dynamic scan of the running
+# stack; repo-settings.yml: branch protection and private vulnerability
+# reporting stay on) fail silently when GitHub stops scheduling
 # them (60 days without a push), a secret expires or every run is red.
 # Every morning this checks that each had a successful run in the last
 # 8 days and otherwise opens one issue per workflow (once: an open issue
@@ -29,7 +31,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          WATCHED: "restore-drill.yml perf.yml evals-nightly.yml"
+          WATCHED: "restore-drill.yml perf.yml evals-nightly.yml zap.yml repo-settings.yml"
           MAX_AGE_DAYS: "8"
         run: |
           set -euo pipefail

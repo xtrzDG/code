@@ -1,6 +1,7 @@
 """
 The scheduled guards CI cannot replace (the restore drill, the perf
-budgets, the nightly evals) are themselves watched: every day a workflow
+budgets, the nightly evals, the DAST baseline, the repository settings)
+are themselves watched: every day a workflow
 opens an issue for each one without a successful run in 8 days.
 """
 
@@ -13,7 +14,13 @@ import yaml
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 WORKFLOWS: Path = PROJECT_ROOT / ".github" / "workflows"
-WATCHED: list[str] = ["restore-drill.yml", "perf.yml", "evals-nightly.yml"]
+WATCHED: list[str] = [
+    "restore-drill.yml",
+    "perf.yml",
+    "evals-nightly.yml",
+    "zap.yml",
+    "repo-settings.yml",
+]
 
 
 def load(path: Path) -> dict[Any, Any]:

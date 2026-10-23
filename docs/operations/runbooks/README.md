@@ -38,7 +38,8 @@ runbook (`uv run pytest tests/chaos`).
 The scripted game days run with the backend tests on every pull request,
 against a real Postgres and two processes (the API and a worker). The
 guards CI cannot replace run on a schedule instead: the restore drill
-(`restore-drill.yml`), the latency budgets (`perf.yml`) and the nightly
-evals (`evals-nightly.yml`). A silent schedule is a failure too: every
+(`restore-drill.yml`), the latency budgets (`perf.yml`), the nightly
+evals (`evals-nightly.yml`), the dynamic scan of the running stack
+(`zap.yml`) and the repository settings check (`repo-settings.yml`). A silent schedule is a failure too: every
 morning `schedule-watch.yml` opens an issue for each of them without a
 successful run in the last 8 days (once per workflow while it is open).
