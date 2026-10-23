@@ -45,6 +45,9 @@ ENV NODE_ENV=production \
 
 COPY --from=build --chown=node:node /web/package.json /web/package-lock.json ./
 COPY --from=build --chown=node:node /web/next.config.ts /web/tsconfig.json ./
+# `next start` loads next.config.ts again, and with it the modules it imports
+# from src/lib (redirects, sign-in pages, monitoring options).
+COPY --from=build --chown=node:node /web/src/lib ./src/lib
 COPY --from=build --chown=node:node /web/public ./public
 COPY --from=build --chown=node:node /web/node_modules ./node_modules
 COPY --from=build --chown=node:node /web/.next ./.next
