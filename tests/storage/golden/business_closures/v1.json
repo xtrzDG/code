@@ -1,0 +1,16 @@
+{
+  "business_id": "business_169669bf-5b6f-4d38-a509-3a891d162fbc",
+  "created_at": 1790000000000000,
+  "delete_after": 1790000000000000,
+  "deletion_queued_at": 1790000000000000,
+  "disconnected_channel_ids": [
+    "channel_bcfdcfa9-62ac-4e08-976f-15925a2ce241"
+  ],
+  "id": "business_closure_60436f9c-3640-4214-8d70-3da643891e58",
+  "reason": "owner_request",
+  "requested_at": 1790000000000000,
+  "requested_by": "user_061740dd-91f6-4657-9b17-b8cabacd712b",
+  "schema_version": "1",
+  "status_before": "onboarding",
+  "updated_at": 1790000000000000
+}

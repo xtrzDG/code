@@ -123,6 +123,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "ManualPaymentReference": "TBC 2026-10-04 #88213",
     "ClientNoteText": "Owner prefers WhatsApp; call after 18:00",
     "SuppressionDigest": "0123456789abcdef" * 4,
+    "DeletionCertificateDigest": "9f" * 32,
     "ExportDownloadTokenHash": "ab" * 32,
     "TimezoneName": "Asia/Tbilisi",
     "UtmCampaign": "autumn-launch",

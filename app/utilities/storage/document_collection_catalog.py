@@ -63,6 +63,9 @@ from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.audit_chain_collections import AUDIT_CHAIN_COLLECTIONS
 from app.utilities.storage.brand_collections import BRAND_COLLECTIONS
+from app.utilities.storage.business_closure_collections import (
+    BUSINESS_CLOSURE_COLLECTIONS,
+)
 from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
@@ -278,6 +281,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
     *DEPOSIT_COLLECTIONS,  # Deposits and prepayment links (1190).
     *META_CONNECTION_COLLECTIONS,  # Facebook sign-ins of the Channels page (1212).
+    *BUSINESS_CLOSURE_COLLECTIONS,  # Closures and the deletion ledger (1220).
 )
 
 

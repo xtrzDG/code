@@ -1,0 +1,89 @@
+{
+  "collection": "business_closures",
+  "document_type": "BusinessClosureDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "delete_after": {
+        "type": "integer"
+      },
+      "deletion_queued_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "disconnected_channel_ids": {
+        "items": {
+          "pattern": "^channel_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^business_closure_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "reason": {
+        "enum": [
+          "owner_request",
+          "unpaid_subscription"
+        ],
+        "type": "string"
+      },
+      "requested_at": {
+        "type": "integer"
+      },
+      "requested_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status_before": {
+        "enum": [
+          "onboarding",
+          "testing",
+          "live",
+          "paused"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "reason",
+      "requested_at",
+      "delete_after",
+      "status_before"
+    ],
+    "type": "object"
+  }
+}
