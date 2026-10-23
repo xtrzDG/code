@@ -86,6 +86,7 @@ class PostCallWebhookOrchestrator(
             call_id=recorded.call_id,
             outcome=recorded.outcome,
             is_confirmation_sent=is_confirmation_sent,
+            is_recording_declined=recorded.is_recording_declined,
         )
 
     def _register_missed_caller(

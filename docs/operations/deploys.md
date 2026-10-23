@@ -424,6 +424,31 @@ from that one starts. GET /v1/admin/system lists the `ops` lane only
 once the gate is open, so the previous cabinet never meets it, and the
 new cabinet reads an absent `circuits` as none.
 
+The release with recording consent and call memory (W20-CALL-CONSENT, no
+migration; `CallDocument` version 4, `MessageDocument` version 9,
+`AssistantVersionDocument` version 10, `PlatformAlertStateDocument`
+version 7 for the `voice_health` code) follows the enum rule below: the
+model tool `decline_recording` sits behind the closed release gate
+`decline_recording_tool`, so the voice agent is offered it but no version
+lists it and no stored tool call names it (the decline itself is read from
+the voice platform's post-call report). The next release opens the gate.
+The new fields (a call's `recording_declined`, a version's
+`voice_agent_revision`) are unknown to the old release, which ignores
+them: during the overlap a post-call report an old worker processes keeps
+its recording and full transcript, and its raw report stays in the inbox,
+even when the caller declined (the business's `recording_retention_days`
+removes the call's, the inbox purge after 30 days the report); a version an old instance publishes drops its revision, so the new
+`resync_voice_agents` job sets its agent up once more (harmless; it only
+touches businesses that answer calls now: live, a plan with voice, the
+phone line connected). The new
+queued job `discard_call_recording` is queued only by new workers; one an
+old worker claims during the overlap goes DEAD with `no_handler`: retry it
+from the dead letters on the system page once the deploy is done. The periodic job runs on new
+workers only. The alert code `voice_health` is written only by the
+`platform_alerts` job and read by key. After a rollback nothing needs
+cleaning: declined calls keep no recording (the discard already ran) and
+their redacted transcripts, which the old release shows as they are.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

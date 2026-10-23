@@ -38,6 +38,7 @@ BOOKING_DEPOSITS_GATE: ReleaseGateName = ReleaseGateName("booking_deposits")
 PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_tool")
 OPS_LANE_GATE: ReleaseGateName = ReleaseGateName("ops_lane")
 PROTECT_DATA_STEP_GATE: ReleaseGateName = ReleaseGateName("protect_data_step")
+DECLINE_RECORDING_GATE: ReleaseGateName = ReleaseGateName("decline_recording_tool")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -129,6 +130,24 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("setup_states"),
         path=StoredEnumPath("skipped_after_launch[]"),
         values=[GatedEnumValue("protect_data")],
+        is_open=False,
+    ),
+    # The phone tool decline_recording (W20): offered by every call's
+    # conversation, never written as a version's tool or a stored tool call
+    # until the next release opens these gates (the post-call report names
+    # the call that declined its recording).
+    ReleaseGate(
+        name=DECLINE_RECORDING_GATE,
+        collection_name=DocumentCollectionName("assistant_versions"),
+        path=StoredEnumPath("tools[]"),
+        values=[GatedEnumValue("decline_recording")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=DECLINE_RECORDING_GATE,
+        collection_name=DocumentCollectionName("messages"),
+        path=StoredEnumPath("tool_calls[].tool_name"),
+        values=[GatedEnumValue("decline_recording")],
         is_open=False,
     ),
 )

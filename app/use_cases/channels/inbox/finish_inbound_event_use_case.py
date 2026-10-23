@@ -53,6 +53,9 @@ class FinishInboundEventUseCase(
     for it. The event becomes ANSWERED, or HANDED_OFF when the assistant
     stayed silent because staff own the conversation.
 
+    An answer that discards the payload clears it in the same write (a
+    declined call's report: the call keeps only its redacted transcript).
+
     Queuing the reply again is harmless (the outbox keeps one message per
     reply), so an event whose worker died at any step can be processed
     again. A widget answer is the website chat's outgoing message: the
@@ -112,6 +115,8 @@ class FinishInboundEventUseCase(
             current.outbound_message_id = outbound_message_id
             current.processed_at = now
             current.updated_at = now
+            if input_data.is_payload_discarded:
+                current.payload = None
             return current
 
         finished: InboundEventDocument | None = self._inbound_event_repo.update(

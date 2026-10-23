@@ -177,6 +177,17 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             CHECK_INTERVAL_MINUTES,
             "worker-down.md",
         ),
+        _rule(
+            PlatformAlertCode.VOICE_HEALTH,
+            IncidentSeverity.SEV2,
+            "The phone assistant's voice platform fails its API calls, or its "
+            "finished calls stopped while the week before expects them.",
+            2,
+            AlertUnit.COUNT,
+            SIGNAL_WINDOW_MINUTES,
+            "voice-outage.md",
+            volume_floor=3,
+        ),
         *BURN_RATE_RULES,  # The SLOs' multi-window burn rates (1163).
         *AUDIT_ALERT_RULES,  # The audit log's anomalies and chains (1193).
     )

@@ -8,6 +8,8 @@ from app.schemas.typings.platform.constrained_strings import JobName
 from app.utilities.channels.voice_recordings import RECORDING_MEDIA_TYPES_BY_EXTENSION
 
 ARCHIVE_CALL_RECORDING_JOB: JobName = JobName("archive_call_recording")
+# The audio of a call whose caller declined the recording, deleted.
+DISCARD_CALL_RECORDING_JOB: JobName = JobName("discard_call_recording")
 DEFAULT_EXTENSION: str = ".mp3"
 
 

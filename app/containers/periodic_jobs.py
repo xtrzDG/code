@@ -6,6 +6,7 @@ its period and its operator: `GatewaysContainer.periodic_jobs`.
 from dependency_injector.providers import Factory, List
 
 from app.containers.operators.operators_container import OperatorsContainer
+from app.containers.voice_periodic_jobs import voice_periodic_job_specs
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.activation_follow_up import (
     notice_milestones_job,
@@ -273,8 +274,7 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             send_subprocessor_notices_job,
             operator=operators.legal.send_subprocessor_notices_operator,
         ),
-        # The waitlist's lapsed holds offered on; the rebooking campaigns.
-        Factory(
+        Factory(  # Lapsed waitlist holds offered on; the rebooking campaigns.
             expire_waitlist_offers_job,
             operator=operators.growth.expire_waitlist_offers_operator,
         ),
@@ -296,4 +296,5 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             purge_webhook_deliveries_job,
             operator=operators.webhooks.purge_webhook_deliveries_operator,
         ),
+        *voice_periodic_job_specs(operators),
     )

@@ -71,7 +71,8 @@ class ArchiveCallRecordingUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             str(input_data.payload)
         )
         call: CallDocument | None = self._call_repo.get(business_id, payload.call_id)
-        if call is None or call.recording_path is None:
+        if call is None or call.recording_path is None or call.recording_declined:
+            # A declined recording is deleted, never archived.
             return archived(0)
 
         if read_voice_platform_call_id(call.recording_path) is None:

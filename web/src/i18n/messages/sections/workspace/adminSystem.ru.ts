@@ -62,6 +62,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       otp_cap_trips: "Достигнут лимит кодов входа",
       quality_drop: "Качество разговоров снизилось",
       spend_spike: "Всплеск расходов",
+      voice_health: "Сбои телефонного помощника",
       spend_budget: "Дневной бюджет почти исчерпан",
       backfill_stalled: "Задача с данными зависла",
       answer_budget_fast_burn: "Бюджет ответов быстро тает",

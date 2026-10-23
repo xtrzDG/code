@@ -25,6 +25,7 @@ from app.schemas.typings.channels.strings import (
     WebhookSignatureHeader,
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.booleans import IsCallRecordingDeclined
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
 )
@@ -172,12 +173,19 @@ class RecordedCall(ImmutableDTO):
     outcome: CallOutcome | None = None
     booking_ids: list[BookingId] = Field(default_factory=list[BookingId])
     language: LanguageTag | None = None
+    # The caller declined the recording (`CallDocument.recording_declined`).
+    is_recording_declined: IsCallRecordingDeclined = False
 
 
 class PostCallWebhookOutcome(ImmutableDTO):
-    """Result of one post-call webhook."""
+    """
+    Result of one post-call webhook. `is_recording_declined`: the caller
+    declined the recording, so the report as delivered (its unredacted
+    transcript) must not be kept once it is processed.
+    """
 
     status: PostCallEventStatus
     call_id: CallId | None = None
     outcome: CallOutcome | None = None
     is_confirmation_sent: IsCallConfirmationSent = False
+    is_recording_declined: IsCallRecordingDeclined = False

@@ -11,6 +11,8 @@ CarriesCustomerMemory = bool
 IncludeSandboxConversations = bool
 IsAfterHours = bool
 IsAnswerCorrected = bool
+# The caller declined the call's recording (all-party consent countries).
+IsCallRecordingDeclined = bool
 IsConversationHandedOff = bool
 IsFallbackModel = bool
 IsFirstAssistantReply = bool

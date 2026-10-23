@@ -54,6 +54,10 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "conversations.post_call_webhook_operator": "voice webhook: agent first",
     "conversations.process_post_call_operator": "after-call job: agent first",
     "conversations.start_voice_call_operator": "voice webhook: agent first",
+    "conversations.resync_voice_agents_operator": (
+        "periodic job: live voice agents of every business, each re-read and "
+        "set up under its business's agent lock"
+    ),
     "data_tasks.run_data_tasks_operator": "post-deploy data tasks over every table",
     "data_tasks.get_data_tasks_operator": "platform admin's data task card",
     "data_tasks.retry_data_task_operator": "platform admin: walk a failed task again",

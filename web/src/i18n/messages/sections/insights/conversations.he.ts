@@ -132,6 +132,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     cancel_booking: "ביטל הזמנה",
     reschedule_booking: "העביר הזמנה",
     list_my_bookings: "בדק את ההזמנות של הלקוח",
+    decline_recording: "סימן שהמתקשר סירב להקלטה",
     join_waitlist: "הוסיף לרשימת ההמתנה",
     create_lead: "יצר פנייה",
     handoff_to_human: "העביר לאדם",

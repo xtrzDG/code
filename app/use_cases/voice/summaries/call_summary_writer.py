@@ -8,6 +8,7 @@ from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_summaries import CallSummary
+from app.schemas.dto.calls.call_summaries import CallSummaryDraft, CallSummaryOptions
 from app.schemas.dto.conversations import LlmCallLimits, LlmRequest, LlmResponse
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine
 from app.schemas.exceptions.base_exception import ApplicationError
@@ -23,6 +24,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.calls.call_summary_prompt import (
     CALL_SUMMARY_SYSTEM_PROMPT,
     build_call_summary_request_text,
+    read_call_memory,
     read_call_summaries,
 )
 
@@ -31,6 +33,7 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 # summary in more languages costs more and helps nobody.
 MAX_SUMMARY_LANGUAGES: int = 4
 SUMMARY_OUTPUT_TOKENS: LlmMaxOutputTokens = LlmMaxOutputTokens(2000)
+NOTHING_WRITTEN: CallSummaryDraft = CallSummaryDraft()
 SUMMARY_CALL_LIMITS: LlmCallLimits = LlmCallLimits(
     timeout_seconds=LlmCallTimeoutSeconds(30),
     retry_limit=LlmCallRetryLimit(1),
@@ -40,9 +43,11 @@ SUMMARY_CALL_LIMITS: LlmCallLimits = LlmCallLimits(
 class CallSummaryWriter:
     """
     Writes the summaries of a call with a cheap model (LLM_SUMMARY_MODEL_ID,
-    else the chat model) at low effort. A call where the caller never spoke
-    has nothing to summarize; a provider error or an unreadable answer
-    leaves the call without a summary (staff still get the call's facts).
+    else the chat model) at low effort, and in the same request, when asked,
+    the caller's memory (English, at most 300 characters). A call where the
+    caller never spoke has nothing to summarize; a provider error or an
+    unreadable answer leaves the call without a summary or memory (staff
+    still get the call's facts).
     """
 
     def __init__(
@@ -59,11 +64,12 @@ class CallSummaryWriter:
         outcome: CallOutcome | None,
         transcript: list[FinishedCallTranscriptLine],
         languages: list[LanguageTag],
-    ) -> list[CallSummary]:
-        if not languages or not any(
+        options: CallSummaryOptions,
+    ) -> CallSummaryDraft:
+        if (not languages and not options.wants_memory) or not any(
             line.author is MessageAuthor.CUSTOMER for line in transcript
         ):
-            return []
+            return NOTHING_WRITTEN
 
         request = LlmRequest(
             model_id=self._model_id(),
@@ -73,7 +79,7 @@ class CallSummaryWriter:
                 self._llm_adapter.build_user_text_turn(
                     MessageText(
                         build_call_summary_request_text(
-                            str(business.name), outcome, languages, transcript
+                            str(business.name), outcome, languages, transcript, options
                         )
                     )
                 )
@@ -86,18 +92,20 @@ class CallSummaryWriter:
             response: LlmResponse = self._llm_adapter.complete(request)
         except ApplicationError as error:
             LOGGER.warning("The summary of a call of %s failed: %s", business.id, error)
-            return []
+            return NOTHING_WRITTEN
 
-        summaries = read_call_summaries(
-            None if response.text is None else str(response.text), languages
-        )
-        if not summaries:
+        answer: str | None = None if response.text is None else str(response.text)
+        summaries = read_call_summaries(answer, languages)
+        if languages and not summaries:
             LOGGER.warning("The model wrote no readable call summary.")
 
-        return [
-            CallSummary(language=language, text=text)
-            for language, text in summaries.items()
-        ]
+        return CallSummaryDraft(
+            summaries=[
+                CallSummary(language=language, text=text)
+                for language, text in summaries.items()
+            ],
+            memory=read_call_memory(answer) if options.wants_memory else None,
+        )
 
     def _model_id(self) -> LlmModelId:
         return (

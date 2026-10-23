@@ -1,5 +1,8 @@
 """Go-live readiness, publish, rollback, apply changes and the assemble pipelines."""
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.orchestrators.assistants.apply_changes_orchestrator import (
     ApplyChangesOrchestrator,
 )
@@ -7,6 +10,7 @@ from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.assistants.assemble_assistant_version_pipeline import (
     AssembleAssistantVersionPipeline,
 )
+from app.registries.locks.voice_agent_lock_registry import VoiceAgentLockRegistry
 from app.use_cases.assistants.activate_assistant_version_use_case import (
     ActivateAssistantVersionUseCase,
 )
@@ -90,6 +94,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             self.wall_clock,
             product_events=self.product_events,
         )
+        self.voice_agent_locks = VoiceAgentLockRegistry(InMemoryAdvisoryLockAdapter())
         activate = self.activate_use_case = ActivateAssistantVersionUseCase(
             check_go_live_readiness=check_readiness,
             remove_voice_agent=RemoveVoiceAgentUseCase(
@@ -113,6 +118,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             record_activation_event=self.record_event_use_case,
             app_settings=self.settings,
             wall_clock=self.wall_clock,
+            voice_agent_locks=self.voice_agent_locks,
         )
         self.publish_use_case = PublishAssistantVersionUseCase(
             authorize,

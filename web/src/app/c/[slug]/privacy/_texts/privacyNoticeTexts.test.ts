@@ -68,4 +68,29 @@ describe("privacyNoticeFor", () => {
     expect(swahili.needsReview).toBe(false);
     expect(swahili.text("title")).toBe(en.privacyNotice.title);
   });
+
+  it("names how long call recordings are kept where the page knows the period", () => {
+    expect(privacyNoticeFor("ru").text("callsKept", { recordings: "3 месяца" })).toContain("3 месяца");
+    expect(privacyNoticeFor("de").text("callsKept", { recordings: "3 Monate" })).toContain("3 Monate");
+    // A draft in a language the cabinet does not speak names no period, so it needs none.
+    expect(privacyNoticeFor("fr").text("callsKept")).not.toContain("{recordings}");
+  });
+
+  it("tells callers apart from the notice where the law asks their consent", () => {
+    for (const language of ["en", "ru", "ka", "he", "de", "fr", "ja"]) {
+      const notice = privacyNoticeFor(language);
+      expect([language, notice.text("callsConsent") === notice.text("callsNotice")]).toEqual([language, false]);
+    }
+  });
+
+  it("describes the consent call as the greeting makes it: told, and free to refuse", () => {
+    // The greeting says the call is recorded and that the caller may refuse;
+    // it asks no yes-or-no question, so the notice must not claim one.
+    const consent = privacyNoticeFor("en").text("callsConsent");
+    expect(consent).toContain("is recorded");
+    expect(consent).toContain("refuse");
+    expect(consent).not.toMatch(/asks whether/);
+    expect(privacyNoticeFor("ru").text("callsConsent")).not.toContain("спрашивает");
+    expect(privacyNoticeFor("de").text("callsConsent")).not.toContain("fragt");
+  });
 });

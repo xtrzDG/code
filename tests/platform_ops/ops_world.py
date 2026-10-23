@@ -37,6 +37,7 @@ from app.repositories.quality_repositories import QualityTotalsRepository
 from app.repositories.service_level_repositories import ServiceLevelSlotRepository
 from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.system_health_repository import SystemHealthRepository
+from app.repositories.voice_activity_repository import VoiceActivityRepository
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.domain.billing import UsageEventDocument
@@ -45,6 +46,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversation_quality import ConversationQualityScoreDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
@@ -69,6 +71,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from app.use_cases.admin.alerts.data_task_alert_checks import DataTaskAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
+from app.use_cases.admin.alerts.voice_alert_checks import VoiceHealthAlertCheck
 from tests.compliance.audit_trail_store import AuditTrailStore
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
@@ -175,6 +178,10 @@ class OpsWorld:
         )
         self.slot_repo = ServiceLevelSlotRepository(self.slots)
         self.audit = AuditTrailStore()
+        # The voice platform's finished-call reports as the inbox keeps them.
+        self.inbound_events = InMemoryDocumentCollectionAdapter[InboundEventDocument](
+            InboundEventDocument
+        )
 
     def checks(self) -> PlatformAlertChecks:
         return PlatformAlertChecks(
@@ -193,6 +200,9 @@ class OpsWorld:
                 self.heartbeat_repo,
                 self.audit.activity,
                 self.audit.chains,
+                VoiceHealthAlertCheck(
+                    self.signals, VoiceActivityRepository(self.inbound_events)
+                ),
             ),
         )
 

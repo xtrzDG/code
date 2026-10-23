@@ -42,6 +42,7 @@ from app.registries.locks.platform_alert_lock_registry import (
     PlatformAlertLockRegistry,
 )
 from app.registries.locks.reply_lock_registry import ReplyLockRegistry
+from app.registries.locks.voice_agent_lock_registry import VoiceAgentLockRegistry
 from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
@@ -193,6 +194,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     # The post-deploy data tasks of this release and the lock of their run.
     data_task_registry: Singleton[DataTaskRegistry] = Singleton(DataTaskRegistry)
+    # One voice agent setup at a time per business (publishing, re-sync).
+    voice_agent_lock_registry: Singleton[VoiceAgentLockRegistry] = Singleton(
+        VoiceAgentLockRegistry, advisory_locks=adapters.advisory_locks
+    )
     data_task_lock_registry: Singleton[DataTaskLockRegistry] = Singleton(
         DataTaskLockRegistry, advisory_locks=adapters.advisory_locks
     )

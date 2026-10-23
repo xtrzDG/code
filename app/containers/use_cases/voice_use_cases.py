@@ -17,7 +17,7 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
 from app.schemas.dto.conversations import VoiceToolCallRequest
-from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
     CallInitiationData,
     CallInitiationWebhookRequest,
@@ -27,6 +27,9 @@ from app.schemas.dto.voice_webhooks import (
     VoiceToolWebhookRequest,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.voice.agents.resync_voice_agents_use_case import (
+    ResyncVoiceAgentsUseCase,
+)
 from app.use_cases.voice.audit_call_replies_use_case import (
     AuditCallRepliesUseCase,
 )
@@ -42,6 +45,9 @@ from app.use_cases.voice.finished_call.record_finished_call_use_case import (
 )
 from app.use_cases.voice.recordings.archive_call_recording_use_case import (
     ArchiveCallRecordingUseCase,
+)
+from app.use_cases.voice.recordings.discard_call_recording_use_case import (
+    DiscardCallRecordingUseCase,
 )
 from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
     ScheduleRecordingArchiveUseCase,
@@ -192,6 +198,33 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[QueuedJobInput, JobReport]
     ] = Factory(
         ArchiveCallRecordingUseCase,
+        call_repo=repositories.call_repo,
+        recording_storage=adapters.recording_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Live voice agents set up before the current revision, set up again.
+    resync_voice_agents_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            ResyncVoiceAgentsUseCase,
+            business_repo=repositories.business_repo,
+            assistant_version_repo=repositories.assistant_version_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            channel_repo=repositories.channel_repo,
+            plan_registry=registries.plan_registry,
+            voice_agent_provisioner=adapters.voice_agent_provisioner,
+            build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
+            assistant_tool_catalog=registries.assistant_tool_registry,
+            voice_agent_locks=registries.voice_agent_lock_registry,
+            app_settings=config.app_settings,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    # The audio of a call whose caller declined the recording, deleted.
+    discard_call_recording_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        DiscardCallRecordingUseCase,
         call_repo=repositories.call_repo,
         recording_storage=adapters.recording_storage,
         audit_log_repo=repositories.audit_log_repo,

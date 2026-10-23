@@ -94,6 +94,7 @@ from tests.brain.fake_contact_tools import (
     FakeRecordUnansweredQuestion,
 )
 from tests.brain.fake_knowledge_tools import FakeGetPrice, FakeSearchKnowledge
+from tests.brain.fake_registries import build_call_greeting
 from tests.brain.manual_clock import ManualClock
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.support_access_builders import build_authorize_business_access
@@ -291,10 +292,7 @@ def build_world(
             build_customer_turn_slots(assemble_app_settings({})),
         ),
         voice_orchestrator=orchestrators.voice_orchestrator,
-        greeting=BuildCallGreetingUseCase(
-            business_repo=repos.business_repo,
-            localized_text_resolver=texts,
-        ),
+        greeting=build_call_greeting(repos.business_repo, texts),
         texts=texts,
         live_events=orchestrators.live_events,
     )

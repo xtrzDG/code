@@ -110,8 +110,13 @@ class TestCallSummary:
 
         [call] = stored_calls(setup)
         assert call.summarized_at is None
-        assert setup.testbed.summary_requests == []
+        assert call.summaries == []
         assert staff_texts(setup) == []
+        # Customer memory is on: the model is asked for the caller's memory only.
+        [request] = setup.testbed.summary_requests
+        asked: str = str(request.transcript)
+        assert "Languages: none" in asked
+        assert "Memory: yes" in asked
 
     def test_a_model_failure_still_sends_the_facts(self) -> None:
         setup = build_voice_setup()

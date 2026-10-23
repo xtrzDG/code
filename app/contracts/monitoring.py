@@ -113,6 +113,14 @@ class PlatformActivityRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
+class VoiceActivityRepoContract(RepoContract, Protocol):
+    """The voice platform's reports, counted across every business."""
+
+    def count_post_call_reports(self, window: ActivityWindow) -> DocumentCount:
+        """Finished-call reports the inbox accepted in the window (indexed)."""
+        raise NotImplementedError
+
+
 class PlatformAlertStateRepoContract(RepoContract, Protocol):
     def get_many(
         self, codes: Sequence[PlatformAlertCode]

@@ -9,6 +9,7 @@ from app.schemas.dto.assistant_tools import AssistantToolContext, AssistantToolO
 from app.schemas.dto.conversation_engine import VoiceToolCallRecord
 from app.schemas.dto.conversations import VoiceToolCallResult
 from app.schemas.typings.conversations.strings import MessageText
+from app.utilities.conversations.stored_tool_calls import storable_tool_calls
 
 
 class RecordVoiceToolCallUseCase(
@@ -16,8 +17,10 @@ class RecordVoiceToolCallUseCase(
 ):
     """
     Keep a voice-agent tool call in the conversation feed (a system message
-    with the tool call record) and return its result to the agent. The call
-    transcript itself arrives after the call from the voice platform.
+    with the tool call record; a tool behind a closed release gate, such as
+    decline_recording, is kept by the message's text only) and return its
+    result to the agent. The call transcript itself arrives after the call
+    from the voice platform.
     """
 
     def __init__(
@@ -40,14 +43,16 @@ class RecordVoiceToolCallUseCase(
                 author=MessageAuthor.SYSTEM,
                 text=MessageText(f"Voice agent called {outcome.tool_name}."),
                 language=context.language,
-                tool_calls=[
-                    ToolCallRecord(
-                        tool_name=outcome.tool_name,
-                        input_json=input_data.call.input_json,
-                        result_json=outcome.result.result_json,
-                        is_error=outcome.result.is_error,
-                    )
-                ],
+                tool_calls=storable_tool_calls(
+                    [
+                        ToolCallRecord(
+                            tool_name=outcome.tool_name,
+                            input_json=input_data.call.input_json,
+                            result_json=outcome.result.result_json,
+                            is_error=outcome.result.is_error,
+                        )
+                    ]
+                ),
                 created_at=now,
                 updated_at=now,
             )

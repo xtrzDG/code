@@ -58,6 +58,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       otp_cap_trips: "შესვლის კოდების ლიმიტი ამოიწურა",
       quality_drop: "საუბრების ხარისხი დაეცა",
       spend_spike: "ხარჯების მკვეთრი ზრდა",
+      voice_health: "ტელეფონის ასისტენტის გაუმართაობა",
       spend_budget: "დღიური ბიუჯეტი თითქმის ამოიწურა",
       backfill_stalled: "მონაცემთა დავალება გაჭედილია",
       answer_budget_fast_burn: "პასუხების ბიუჯეტი სწრაფად იხარჯება",

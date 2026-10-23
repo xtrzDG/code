@@ -1,8 +1,29 @@
 # Voice outage: ElevenLabs or Zadarma
 
-**Signals:** owners report unanswered calls; Sentry errors from the
+**Alert:** `voice_health` (SEV2): more than 2 ElevenLabs API calls failed
+in the last 15-30 minutes, or no finished-call report arrived in the last
+3 hours while each of the 7 days before had at least 3 in the same hours.
+
+**Other signals:** owners report unanswered calls; Sentry errors from the
 ElevenLabs client or the voice webhooks; no `process_post_call` jobs;
 missed-call text-backs (`send_text_back`) suddenly frequent.
+
+## Which half fired
+
+The alert's detail line names both figures:
+
+- **API calls fail** (`N of M voice platform API calls failed`): agent
+  setup on publish and the hourly `resync_voice_agents`, recording
+  playback, `archive_call_recording`, `discard_call_recording` (a caller
+  who declined the recording) and processor erasures call ElevenLabs. A
+  401 is a revoked `ELEVENLABS_API_KEY`; 5xx and timeouts are theirs.
+  Those jobs retry with backoff: check the dead letters, and the
+  `discard_call_recording` ones first (a declined recording must go).
+- **Reports stopped** (`0 finished-call reports arrived in the last 3
+  hours`): calls happen but their reports do not reach us (the post-call
+  webhook's URL or `ELEVENLABS_WEBHOOK_SECRET` changed: 401s in the API
+  logs on `/v1/voice/webhooks/post-call`), or calls no longer reach the
+  agents (Zadarma forwarding, a disabled agent).
 
 ## How it shows
 

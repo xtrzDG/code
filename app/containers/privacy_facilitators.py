@@ -1,7 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Dependency, Singleton
 
-from app.containers.clients import ClientsContainer
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.privacy_factories import (
     build_processor_erasure,
@@ -24,7 +24,7 @@ class PrivacyFacilitatorsContainer(containers.DeclarativeContainer):
     them flat (`facilitators.suppression_list`).
     """
 
-    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     job_queue: Dependency[JobQueueFacilitator] = Dependency(
@@ -38,10 +38,11 @@ class PrivacyFacilitatorsContainer(containers.DeclarativeContainer):
         suppression_entry_repo=repositories.suppression_entry_repo,
     )
     # Copies at Langfuse and ElevenLabs deleted with the platform's own, by
-    # queued jobs with retries (erasure and retention, 1123).
+    # queued jobs with retries (erasure and retention, 1123); the ElevenLabs
+    # calls are counted for voice_health like every other.
     processor_erasure: Singleton[ProcessorErasureFacilitator] = Singleton(
         build_processor_erasure,
         settings=config.app_settings,
-        elevenlabs_client=clients.elevenlabs_client,
+        elevenlabs_client=adapters.counted_elevenlabs_client,
         job_queue=job_queue,
     )

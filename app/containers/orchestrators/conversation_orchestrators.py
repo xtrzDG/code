@@ -164,6 +164,12 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     archive_call_recording_orchestrator = use_case_orchestrator(
         voice_use_cases.archive_call_recording_use_case
     )
+    discard_call_recording_orchestrator = use_case_orchestrator(
+        voice_use_cases.discard_call_recording_use_case
+    )
+    resync_voice_agents_orchestrator = use_case_orchestrator(
+        voice_use_cases.resync_voice_agents_use_case
+    )
     process_post_call_orchestrator: Factory[
         OrchestratorContract[QueuedJobInput, JobReport]
     ] = Factory(

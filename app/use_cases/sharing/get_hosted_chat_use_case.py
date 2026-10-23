@@ -1,7 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.referrals import ReferralLinksFacilitatorContract
-from app.contracts.registries import LanguageRegistryContract
+from app.contracts.registries import (
+    CountryRegistryContract,
+    LanguageRegistryContract,
+)
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -31,6 +37,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetScriptUrl,
 )
 from app.use_cases.shared.widget_languages import build_widget_languages
+from app.use_cases.sharing.hosted_chat_calls import describe_phone_calls
 from app.utilities.bookings.booking_manage_links import choose_maps_url
 from app.utilities.channels.channel_endpoints import (
     WIDGET_SCRIPT_PATH,
@@ -49,7 +56,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
     periods the business chose in Settings → Privacy. For a "link in bio"
     page it adds the business's hours, address with a map link and whether
     it takes bookings (and its own booking page, if any), and the "Powered
-    by" link with the business's referral code. The widget loads
+    by" link with the business's referral code, and for a business whose AI
+    assistant answers its phone, how calls are recorded (the notice states
+    the policy: consent where the country asks it). The widget loads
     the rest itself, with its usual limits. Nothing personal or secret is
     returned; an unknown business is not found.
 
@@ -69,7 +78,11 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         wall_clock: WallClock[Microseconds],
         privacy_settings_repo: BusinessPrivacySettingsRepoContract,
         referral_links: ReferralLinksFacilitatorContract,
+        assistant_version_repo: AssistantVersionRepoContract,
+        country_registry: CountryRegistryContract,
     ) -> None:
+        self._version_repo: AssistantVersionRepoContract = assistant_version_repo
+        self._country_registry: CountryRegistryContract = country_registry
         self._referral_links: ReferralLinksFacilitatorContract = referral_links
         self._privacy_settings_repo: BusinessPrivacySettingsRepoContract = (
             privacy_settings_repo
@@ -87,12 +100,11 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         if business is None:
             raise NotFoundError("This chat is not available.")
 
+        channels: list[ChannelDocument] = self._channel_repo.list_by_business(
+            business.id
+        )
         web_chat: ChannelDocument | None = next(
-            (
-                channel
-                for channel in self._channel_repo.list_by_business(business.id)
-                if channel.kind is ChannelKind.WEB_CHAT
-            ),
+            (channel for channel in channels if channel.kind is ChannelKind.WEB_CHAT),
             None,
         )
         appearance: WebChatAppearance | None = (
@@ -151,6 +163,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
             ),
             powered_by_url=self._referral_links.powered_by_link(
                 business, POWERED_BY_SOURCE_TAG
+            ),
+            phone_calls=describe_phone_calls(
+                business, channels, self._version_repo, self._country_registry
             ),
         )
 

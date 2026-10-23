@@ -131,10 +131,6 @@ class AdaptersContainer(containers.DeclarativeContainer):
         CalendarSyncCollectionsContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,
     )  # fmt: skip
-    calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
-        CallAdaptersContainer, clients=clients, config=config,
-        time_provider=time_provider, utilities=utilities,
-    )  # fmt: skip
 
     # Readiness, storage transactions and the job queue's wake-ups.
     processes: ProcessAdaptersContainer = Container(  # type: ignore[assignment]
@@ -159,6 +155,11 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_rate_limit_bucket_adapter,
         connection_pool=clients.postgres_platform_pool,
     )
+    calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
+        CallAdaptersContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+        rate_limit_buckets=rate_limit_buckets,
+    )  # fmt: skip
 
     # --- The cabinet's live updates between processes (Postgres NOTIFY/LISTEN).
     live_event_bus: Singleton[LiveEventBusAdapterContract] = Singleton(
@@ -182,6 +183,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         clients=clients,
         config=config,
         time_provider=time_provider,
+        elevenlabs_client=calls.elevenlabs_client,
     )
     own_recording_storage = files.own_recording_storage
     platform_recording_storage = files.platform_recording_storage
@@ -191,6 +193,8 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # --- Voice platform (ElevenLabs Agents), built with the call adapters.
     voice_webhook_adapter = calls.voice_webhook_adapter
     voice_agent_provisioner = calls.voice_agent_provisioner
+    # The ElevenLabs client whose calls and failures voice_health counts.
+    counted_elevenlabs_client = calls.elevenlabs_client
 
     # --- Circuit breakers and the outbound lane's bulkheads (W20).
     resilience: ProviderResilienceContainer = Container(  # type: ignore[assignment]

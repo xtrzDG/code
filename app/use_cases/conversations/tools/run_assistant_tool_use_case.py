@@ -57,6 +57,7 @@ from app.use_cases.conversations.tools.booking_tool_handlers import (
     run_list_my_bookings,
     run_reschedule_booking,
 )
+from app.use_cases.conversations.tools.call_tool_handlers import run_decline_recording
 from app.use_cases.conversations.tools.choice_tool_handlers import run_offer_choices
 from app.use_cases.conversations.tools.knowledge_tool_handlers import (
     run_get_price,
@@ -230,6 +231,7 @@ class RunAssistantToolUseCase(
             ),
             AssistantToolName.SEND_PAYMENT_LINK: self._revenue.run_send_payment_link,
             AssistantToolName.OFFER_CHOICES: run_offer_choices,
+            AssistantToolName.DECLINE_RECORDING: run_decline_recording,
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(
                 self._create_lead, self._phone_number_parser, call, context
             ),

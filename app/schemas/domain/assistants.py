@@ -28,6 +28,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     AutotestSampleCount,
     AutotestScenarioCount,
     JudgeScore,
+    VoiceAgentRevision,
 )
 from app.schemas.typings.assistants.constrained_strings import (
     AutotestScenarioKey,
@@ -108,7 +109,10 @@ class AssistantVersionDocument(BaseDocument):
     #    is open (a new value, no upcaster).
     # 9: the tool send_payment_link may appear in `tools` once its release
     #    gate is open (a new value, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("9")
+    # 10: `voice_agent_revision` (optional: an agent set up before it is
+    #    re-synced by `resync_voice_agents`), and the tool decline_recording
+    #    once its release gate is open (a new value, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("10")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber
@@ -126,6 +130,9 @@ class AssistantVersionDocument(BaseDocument):
     facts: list[BusinessFact]
     profile_revision: Microseconds
     voice_agent_id: VoiceAgentId | None = None
+    # How the voice agent was built (VOICE_AGENT_REVISION when it was set
+    # up); None for an agent set up before revisions were kept.
+    voice_agent_revision: VoiceAgentRevision | None = None
     test_score: AverageJudgeScore | None = None
     autotest_run_id: AutotestRunId | None = None
     autotest_verdict: AutotestVerdict | None = None

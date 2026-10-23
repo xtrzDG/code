@@ -37,7 +37,9 @@ class PlatformAlertStateDocument(BaseDocument):
     # 5: `code` may be `worker_down` (the API's pipeline watchdog, 1173).
     # 6: `code` may be `bulk_personal_data`, `tenant_hopping`,
     # `failed_sign_in_checks` or `audit_chain_broken` (the audit log, 1193).
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: `code` may be `voice_health` (voice API errors or post-call reports
+    # gone quiet, W20).
+    schema_version: SchemaVersion = SchemaVersion("7")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

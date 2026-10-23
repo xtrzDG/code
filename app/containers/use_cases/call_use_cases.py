@@ -116,6 +116,10 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        # The caller's customer memory: the call conversation's summary.
+        conversation_repo=repositories.conversation_repo,
+        conversation_memory_repo=repositories.conversation_repo,
+        assistant_settings_repo=repositories.assistant_settings_repo,
     )
 
     # --- Callers who did not get through and their text-backs.

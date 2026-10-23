@@ -16,12 +16,16 @@ from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.orchestrators.channels.post_call_follow_ups import PostCallFollowUps
 from app.orchestrators.voice.missed_call_orchestrator import MissedCallOrchestrator
 from app.registries.localization.country_registry import CountryRegistry
+from app.repositories.assistant_settings_repository import (
+    AssistantSettingsRepository,
+)
 from app.repositories.call_follow_up_repositories import (
     CallSettingsRepository,
     MissedCallRepository,
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import DataRegion
+from app.schemas.domain.assistant_settings import AssistantSettingsDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.conversations import LlmRequest
@@ -60,6 +64,9 @@ from app.use_cases.voice.missed_calls.send_text_back_use_case import (
 )
 from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
 from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
+from app.use_cases.voice.recordings.discard_call_recording_use_case import (
+    DiscardCallRecordingUseCase,
+)
 from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
     ScheduleRecordingArchiveUseCase,
 )
@@ -67,6 +74,7 @@ from app.use_cases.voice.summaries.summarize_call_use_case import (
     SummarizeCallUseCase,
 )
 from tests.channels.channels_inbox import ChannelsInbox
+from tests.channels.recording_storage_fakes import InMemoryRecordingStorage
 from tests.notifications.staff_alert_fakes import build_staff_alerts
 from tests.privacy.suppression_doubles import build_suppression_list
 
@@ -122,6 +130,9 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.live_events,
             self.wall_clock,
         )
+        self.assistant_settings_repo = AssistantSettingsRepository(
+            InMemoryDocumentCollectionAdapter(AssistantSettingsDocument)
+        )
         self.summarize_call = SummarizeCallUseCase(
             self.business_repo,
             self.call_repo,
@@ -136,6 +147,9 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.settings,
             self.live_events,
             self.wall_clock,
+            self.conversation_repo,
+            self.conversation_repo,
+            self.assistant_settings_repo,
         )
         self.register_missed_call = RegisterMissedCallUseCase(
             self.business_repo,
@@ -180,6 +194,11 @@ class ChannelsCallFollowUps(ChannelsInbox):
             TextBackSms(self.sms_client, self.text_resolver),
             self.live_events,
             self.wall_clock,
+        )
+        # Declined recordings: the voice platform's audio, deleted.
+        self.recording_storage = InMemoryRecordingStorage()
+        self.discard_call_recording = DiscardCallRecordingUseCase(
+            self.call_repo, self.recording_storage, self.audit_log_repo, self.wall_clock
         )
         self.read_failed_call_start = ReadFailedCallStartUseCase(
             self.voice_webhook_adapter, self.wall_clock

@@ -95,9 +95,14 @@ class FakeConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
 
 
 class FakeVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
-    """Records every spec; returns the existing agent id or a new one."""
+    """
+    Records every spec; returns the existing agent id or a new one.
+    `on_upsert` runs while the platform is being called (a test looks at
+    what holds then).
+    """
 
     def __init__(self) -> None:
+        self.on_upsert: Callable[[], None] | None = None
         self.specs: list[VoiceAgentSpec] = []
         self.removed_agent_ids: list[VoiceAgentId] = []
         self.error: ExternalServiceError | None = None
@@ -111,6 +116,8 @@ class FakeVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
         self.removed_agent_ids.append(agent_id)
 
     def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
+        if self.on_upsert is not None:
+            self.on_upsert()
         self.specs.append(spec)
         if self.error is not None:
             raise self.error

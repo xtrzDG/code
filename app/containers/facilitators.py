@@ -236,7 +236,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Data-subject rights: the suppression list, the sub-processors' copies.
     privacy: PrivacyFacilitatorsContainer = Container(  # type: ignore[assignment]
-        PrivacyFacilitatorsContainer, clients=clients, config=config,
+        PrivacyFacilitatorsContainer, adapters=adapters, config=config,
         repositories=repositories, job_queue=job_queue_facilitator,
     )  # fmt: skip
     suppression_list = privacy.suppression_list

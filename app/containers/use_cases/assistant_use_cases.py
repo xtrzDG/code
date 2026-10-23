@@ -158,6 +158,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         record_activation_event=launch_use_cases.record_activation_event_use_case,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        voice_agent_locks=registries.voice_agent_lock_registry,
     )
     resume_assistant_use_case: Factory[UseCaseContract[BusinessDocument, None]] = (
         Factory(

@@ -42,6 +42,13 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     archive_call_recording_operator = pipeline_operator(
         conversation_pipelines.archive_call_recording_pipeline, storage_scope
     )
+    discard_call_recording_operator = pipeline_operator(
+        conversation_pipelines.discard_call_recording_pipeline, storage_scope
+    )
+    # The agents' re-sync walks every business: it runs platform-wide.
+    resync_voice_agents_operator = platform_pipeline_operator(
+        conversation_pipelines.resync_voice_agents_pipeline, storage_scope
+    )
 
     # --- Conversation feed.
     list_conversations_operator = pipeline_operator(

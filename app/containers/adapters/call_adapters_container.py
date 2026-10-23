@@ -1,11 +1,17 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import DependenciesContainer, Dependency, Singleton
 
+from app.adapters.monitoring.bucket_signal_counter_adapter import (
+    BucketSignalCounterAdapter,
+)
 from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
     ElevenLabsVoiceAgentProvisioner,
 )
 from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
     ElevenLabsVoiceWebhookAdapter,
+)
+from app.adapters.voice.signal_counting_elevenlabs_client import (
+    SignalCountingElevenLabsClient,
 )
 from app.adapters.voice.zadarma_pbx_webhook_adapter import ZadarmaPbxWebhookAdapter
 from app.containers.adapters.document_collection_provider import document_collection
@@ -32,6 +38,19 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The RateLimitBucketAdapterContract of the platform's signal counters.
+    rate_limit_buckets: Dependency[object] = Dependency()
+
+    # Every ElevenLabs API call counted, and its failures (voice_health).
+    elevenlabs_client: Singleton[SignalCountingElevenLabsClient] = Singleton(
+        SignalCountingElevenLabsClient,
+        inner_client=clients.elevenlabs_client,
+        signal_counter=Singleton(
+            BucketSignalCounterAdapter,
+            buckets=rate_limit_buckets,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+    )
 
     missed_call_collection = document_collection(
         MissedCallDocument,
@@ -58,6 +77,6 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     )
     voice_agent_provisioner: Singleton[ElevenLabsVoiceAgentProvisioner] = Singleton(
         ElevenLabsVoiceAgentProvisioner,
-        elevenlabs_client=clients.elevenlabs_client,
+        elevenlabs_client=elevenlabs_client,
         app_settings=config.app_settings,
     )

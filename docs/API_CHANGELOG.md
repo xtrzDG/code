@@ -76,6 +76,30 @@ Spec: `11fff31cc2af3e44`
   offline GeoLite2 database (`GEOIP_COUNTRY_DATABASE_PATH`), null when
   unknown.
 
+## 2026-10-22 — calls: recording consent, call memory and voice health
+
+Spec: `6f983e65391ed36f`
+
+- **Added** `phone_calls` on the hosted chat's view (`GET
+  /v1/public/chat/{address}`, `HostedChatPhoneCalls`): set while the
+  business's AI assistant answers its phone, with the
+  `recording_consent_rule` of its country (`notice`, or
+  `all_party_consent`: callers are told at the start of the call that it
+  is recorded and that they may refuse) and
+  the `recording_retention_days` its recordings and transcripts are kept.
+  The privacy notice states the policy from it.
+- **Added** `recording_declined` on a conversation's calls (`CallDocument`
+  version 4): the caller declined the recording, so the call has no
+  recording (`GET …/calls/{call_id}/recording` answers 404) and its
+  transcript keeps no e-mail, account, card or phone numbers.
+- **Added** the value `decline_recording` of `AssistantToolName` (a phone
+  call's tool; versions and stored tool calls do not name it before its
+  release gate opens) and the value `voice_health` of `PlatformAlertCode`
+  (Admin → System).
+- **Added** `is_recording_declined` on the voice platform's post-call
+  webhook answer (`PostCallWebhookOutcome`, default false): the caller
+  declined the recording, so the stored report is cleared once processed.
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

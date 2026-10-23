@@ -1,7 +1,7 @@
 {
   "collection": "calls",
   "document_type": "CallDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -90,6 +90,10 @@
       "provider_call_id": {
         "type": "string"
       },
+      "recording_declined": {
+        "default": false,
+        "type": "boolean"
+      },
       "recording_path": {
         "anyOf": [
           {
@@ -102,7 +106,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "started_at": {
