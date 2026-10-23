@@ -7,8 +7,8 @@ once. A new tool or kind fails here until a scenario covers it.
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
 from app.schemas.constants.evaluations import EvalFlowKind
-from scripts.eval_harness.dataset_models import EvalDataset, ScenarioKind
 from app.utilities.conversations.tool_selection import with_decline_recording
+from scripts.eval_harness.dataset_models import EvalDataset, ScenarioKind
 from tests.evals.test_dataset_files import load_all
 
 # The scenarios are chats (the owner's test chat, WhatsApp). A tool only a
@@ -39,7 +39,7 @@ def test_every_tool_is_expected_by_a_scenario() -> None:
 
 def test_the_call_only_tools_are_the_ones_chats_never_offer() -> None:
     # Only what the chat scenarios cannot be offered leaves the check above.
-    assert CALL_ONLY_TOOLS == {AssistantToolName.DECLINE_RECORDING}
+    assert {AssistantToolName.DECLINE_RECORDING} == CALL_ONLY_TOOLS
     assert not CALL_ONLY_TOOLS & expected_tools(load_all())
 
 
