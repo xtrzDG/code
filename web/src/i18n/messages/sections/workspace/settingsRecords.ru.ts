@@ -152,6 +152,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       user_session: "Устройство со входом",
       totp_factor: "Приложение-аутентификатор",
       recovery_codes: "Резервные коды",
+      meta_connection_state: "Вход через Facebook",
       mfa_challenge: "Двухэтапная проверка",
       otp_challenge: "Код для входа",
       support_access: "Доступ поддержки платформы",

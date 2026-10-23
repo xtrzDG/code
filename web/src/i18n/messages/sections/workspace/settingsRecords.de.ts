@@ -134,6 +134,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       user_session: "Angemeldetes Gerät",
       totp_factor: "Authenticator-App",
       recovery_codes: "Wiederherstellungscodes",
+      meta_connection_state: "Facebook-Anmeldung",
       mfa_challenge: "Zwei-Schritt-Prüfung",
       otp_challenge: "Anmeldecode",
       support_access: "Zugriff des Plattform-Supports",

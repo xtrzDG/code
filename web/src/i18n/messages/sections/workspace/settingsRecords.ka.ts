@@ -137,6 +137,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       user_session: "მოწყობილობა, საიდანაც შესულია",
       totp_factor: "ავთენტიფიკატორი აპლიკაცია",
       recovery_codes: "აღდგენის კოდები",
+      meta_connection_state: "Facebook-ით შესვლა",
       mfa_challenge: "ორეტაპიანი შემოწმება",
       otp_challenge: "შესვლის კოდი",
       support_access: "პლატფორმის მხარდაჭერის წვდომა",
