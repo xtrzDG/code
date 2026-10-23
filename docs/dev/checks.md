@@ -1,7 +1,8 @@
 # Checks, tests and CI
 
 `just check` runs every check CI runs on the code of the backend and the
-cabinet; [`code-health.md`](code-health.md) describes the ratchets that keep
+cabinet, the duplication ratchet (`just duplication`) included;
+[`code-health.md`](code-health.md) describes the ratchets that keep
 duplication, dead code and untyped wiring from growing.
 
 ## Locally

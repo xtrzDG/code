@@ -209,3 +209,13 @@ def test_ci_and_the_justfile_run_the_same_jscpd() -> None:
     assert JSCPD_VERSION_PATTERN.findall(justfile) == ci_versions
     assert "--config .jscpd.json" in workflow
     assert "python -m scripts.check_duplication" in workflow
+
+
+def test_just_check_runs_the_duplication_ratchet() -> None:
+    # `just check` is documented as every check CI runs; CI runs jscpd.
+    justfile = (PROJECT_ROOT / "justfile").read_text(encoding="utf-8")
+    check_line = next(
+        line for line in justfile.splitlines() if line.startswith("check:")
+    )
+
+    assert "duplication" in check_line.removeprefix("check:").split()

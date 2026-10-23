@@ -28,7 +28,7 @@ dev:
     wait
 
 # Every check CI runs on the code (backend and cabinet), fastest first.
-check: check-backend check-web
+check: check-backend duplication check-web
 
 # Lint, format, types, then tests with the 95 % coverage floor.
 check-backend:
