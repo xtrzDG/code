@@ -2,7 +2,6 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.assistant_assembly import AssistantToolCatalogContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -10,7 +9,6 @@ from app.contracts.repositories.business_closure_repositories import (
     BusinessClosureRepoContract,
 )
 from app.contracts.repositories.business_repositories import (
-    BusinessProfileRepoContract,
     BusinessRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
@@ -26,7 +24,6 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
 from app.schemas.dto.billing_go_live import GoLiveTrial, GoLiveTrialRequest
-from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.go_live import (
     GoLiveCheck,
     GoLiveReadiness,
@@ -43,6 +40,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.use_cases.shared.voice_agent_setup import VoiceAgentSetup
+from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
 from app.utilities.assembly.go_live_refusals import (
     build_check_reason,
     describe_go_live_refusal,
@@ -105,12 +103,10 @@ class ActivateAssistantVersionUseCase(
             GoLiveReadinessRequest, GoLiveReadiness
         ],
         remove_voice_agent: UseCaseContract[BusinessId, None],
-        business_profile_repo: BusinessProfileRepoContract,
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
-        build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
-        assistant_tool_catalog: AssistantToolCatalogContract,
+        voice_agent_sources: VoiceAgentSources,
         start_trial_at_go_live: UseCaseContract[GoLiveTrialRequest, GoLiveTrial],
         record_activation_event: UseCaseContract[ActivationEventRecord, None],
         app_settings: AppSettings,
@@ -123,17 +119,12 @@ class ActivateAssistantVersionUseCase(
             GoLiveReadinessRequest, GoLiveReadiness
         ] = check_go_live_readiness
         self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
-        self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
         )
         self._voice_agent_setup: VoiceAgentSetup = VoiceAgentSetup(
-            business_profile_repo,
-            voice_agent_provisioner,
-            build_call_greeting,
-            assistant_tool_catalog,
-            app_settings,
+            voice_agent_sources, voice_agent_provisioner
         )
         self._voice_agent_locks: VoiceAgentLockRegistryContract = voice_agent_locks
         self._start_trial_at_go_live: UseCaseContract[

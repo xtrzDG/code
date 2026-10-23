@@ -29,6 +29,10 @@ E2E_ENVIRONMENT: dict[str, str] = {
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "xi-e2e-key",
     "ELEVENLABS_WEBHOOK_SECRET": "elevenlabs-webhook-secret-e2e",  # gitleaks:allow
+    # The workshop's ElevenLabs answers agents and tools only; the voice
+    # checks of autotests (simulated calls) have suites of their own
+    # (tests/assembly/test_voice_checks.py, tests/e2e/test_voice_checks_e2e.py).
+    "VOICE_CHECKS_ENABLED": "false",
 }
 
 type JsonObject = dict[str, Any]

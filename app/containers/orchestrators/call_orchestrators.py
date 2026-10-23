@@ -8,9 +8,19 @@ from app.containers.phone_numbers.phone_number_use_case_factories import (
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.call_use_cases import CallUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.voice.call_fallback_orchestrator import (
+    CallFallbackOrchestrator,
+)
+from app.orchestrators.voice.fallback_dial_orchestrator import (
+    FallbackDialOrchestrator,
+)
 from app.orchestrators.voice.missed_call_orchestrator import MissedCallOrchestrator
 from app.orchestrators.voice.pbx_call_webhook_orchestrator import (
     PbxCallWebhookOrchestrator,
+)
+from app.schemas.dto.calls.call_fallback import (
+    CallFallbackReply,
+    CallFallbackWebhookRequest,
 )
 from app.schemas.dto.calls.missed_calls import (
     MissedCallReport,
@@ -23,7 +33,8 @@ from app.schemas.dto.calls.missed_calls import (
 class CallOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of what follows a phone call: a caller who did not get
-    through (the telephony line's webhook, a failed start), the text-back
+    through (the telephony line's webhook, a failed start), the call
+    fallback of rented numbers (put through to staff), the text-back
     job and Settings → Calls; and the phone line's number the platform
     rents (1213): the cabinet's phone line and the numbers' two jobs.
     """
@@ -47,6 +58,21 @@ class CallOrchestratorsContainer(containers.DeclarativeContainer):
     ] = Factory(
         PbxCallWebhookOrchestrator,
         read_pbx_missed_call=call_use_cases.read_pbx_missed_call_use_case,
+        handle_missed_call=missed_call_orchestrator,
+    )
+    call_fallback_orchestrator: Factory[
+        OrchestratorContract[CallFallbackWebhookRequest, CallFallbackReply]
+    ] = Factory(
+        CallFallbackOrchestrator,
+        route_call_fallback=call_use_cases.route_call_fallback_use_case,
+        notify_call_fallback=call_use_cases.notify_call_fallback_use_case,
+        handle_missed_call=missed_call_orchestrator,
+    )
+    fallback_dial_orchestrator: Factory[
+        OrchestratorContract[CallFallbackWebhookRequest, CallFallbackReply]
+    ] = Factory(
+        FallbackDialOrchestrator,
+        read_fallback_dial=call_use_cases.read_fallback_dial_use_case,
         handle_missed_call=missed_call_orchestrator,
     )
     send_text_back_orchestrator = use_case_orchestrator(

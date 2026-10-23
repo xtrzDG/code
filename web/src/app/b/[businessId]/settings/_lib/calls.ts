@@ -144,6 +144,7 @@ export const MISSED_CALL_REASON_LABELS: Record<MissedCallReason, MessageKey> = {
   not_started: "callSettings.history.reasons.not_started",
   no_speech: "callSettings.history.reasons.no_speech",
   transfer_unanswered: "callSettings.history.reasons.transfer_unanswered",
+  callback_requested: "callSettings.history.reasons.callback_requested",
 };
 
 export const SKIP_REASON_LABELS: Record<TextBackSkipReason, MessageKey> = {

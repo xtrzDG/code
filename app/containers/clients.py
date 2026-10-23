@@ -65,9 +65,9 @@ from app.containers.notification_factories import build_web_push_client
 from app.containers.payment_factories import build_stripe_client
 from app.containers.telemetry_factories import build_pool_instruments
 from app.containers.utilities import UtilitiesContainer
-from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.integrations import WebhookPosterContract
 from app.contracts.object_storage import ObjectStorageClientContract
+from app.contracts.voice_check_clients import ElevenLabsPlatformClientContract
 from app.contracts.web_fetching import SafeHttpFetcherContract
 
 
@@ -138,7 +138,7 @@ class ClientsContainer(containers.DeclarativeContainer):
         base_url=config.app_settings.provided.openai_base_url,
         project_id=config.app_settings.provided.openai_project_id,
     )
-    elevenlabs_client: Singleton[ElevenLabsApiClientContract] = Singleton(
+    elevenlabs_client: Singleton[ElevenLabsPlatformClientContract] = Singleton(
         build_elevenlabs_client,
         settings=config.app_settings,
     )

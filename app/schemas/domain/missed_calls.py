@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.calls import (
@@ -24,7 +24,7 @@ class MissedCallDocument(BaseDocument):
     A call whose caller did not get through (no answer, busy, hung up
     before the assistant, a failed start, a transfer nobody picked up) and
     the message that tells them the business will continue in writing
-    (the text-back).
+    (the text-back). Version 2 adds the reason CALLBACK_REQUESTED.
 
     The id derives from the business, the source and the provider's call
     id, so a repeated report is the same missed call and is texted once.
@@ -49,3 +49,4 @@ class MissedCallDocument(BaseDocument):
     conversation_id: ConversationId | None = None
     sent_at: Microseconds | None = None
     last_error: DeliveryErrorText | None = None
+    schema_version: SchemaVersion = SchemaVersion("2")

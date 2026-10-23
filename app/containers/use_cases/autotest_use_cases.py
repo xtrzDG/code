@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
@@ -13,6 +13,7 @@ from app.containers.use_cases.spend_guard_use_cases import (
 )
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.domain.assistants import AutotestScenarioResult
 from app.schemas.dto.assistants.assistant_commands import (
     AssistantVersionQuery,
     RunAutotestsCommand,
@@ -41,6 +42,7 @@ from app.schemas.dto.assistants.autotest_runs import (
 from app.schemas.dto.jobs import (
     QueuedJobInput,
 )
+from app.schemas.dto.voice_checks import VoiceCheckRun
 from app.use_cases.autotests.abandon_autotest_run_use_case import (
     AbandonAutotestRunUseCase,
 )
@@ -79,6 +81,9 @@ from app.use_cases.autotests.resume_autotest_run_use_case import (
     ResumeAutotestRunUseCase,
 )
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
+from app.use_cases.autotests.voice_checks.run_voice_checks_use_case import (
+    RunVoiceChecksUseCase,
+)
 
 
 class AutotestUseCasesContainer(containers.DeclarativeContainer):
@@ -96,6 +101,10 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The voice checks' VoiceCheckAdapterContract, and the VoiceAgentSources
+    # every voice agent is built from (the voice use cases).
+    voice_check_adapter: Dependency[object] = Dependency()
+    voice_agent_sources: Dependency[object] = Dependency()
 
     plan_autotest_scenarios_use_case: Factory[
         UseCaseContract[AutotestPlanningRequest, AutotestScenarioPlanning]
@@ -109,6 +118,17 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         niche_template_registry=registries.niche_template_registry,
         language_registry=registries.language_registry,
         critical_samples=config.app_settings.provided.quality.autotest_critical_samples,
+        voice_check_adapter=voice_check_adapter,
+        app_settings=config.app_settings,
+    )
+    # Simulated calls in each language of a version with voice.
+    run_voice_checks_use_case: Factory[
+        UseCaseContract[VoiceCheckRun, list[AutotestScenarioResult]]
+    ] = Factory(
+        RunVoiceChecksUseCase,
+        voice_agent_sources=voice_agent_sources,
+        voice_check_adapter=voice_check_adapter,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     start_autotest_run_use_case: Factory[
         UseCaseContract[RunAutotestsCommand, AutotestRunPlan]

@@ -71,6 +71,7 @@ export const callSettingsHe: Translation<typeof callSettingsEn> = {
       not_started: "העוזר לא יכול היה לקבל את השיחה",
       no_speech: "ניתק בלי לדבר",
       transfer_unanswered: "ההעברה לא נענתה",
+      callback_requested: "ביקש שיחזרו אליו",
     },
     skipReasons: {
       turned_off: "ההודעות החוזרות היו כבויות",

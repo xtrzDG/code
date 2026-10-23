@@ -39,9 +39,13 @@ from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberOfferToken,
     RentedLineNumber,
+    VoiceFallbackUrl,
 )
 from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
-from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
+from app.schemas.typings.telephony.strings import (
+    ProviderPhoneNumberId,
+    VoicePlatformPhoneNumberId,
+)
 
 type PhoneNumberChange = Callable[[PhoneNumberDocument], PhoneNumberDocument | None]
 
@@ -49,8 +53,8 @@ type PhoneNumberChange = Callable[[PhoneNumberDocument], PhoneNumberDocument | N
 class PhoneNumberProvisionerAdapterContract(AdapterContract, Protocol):
     """
     A carrier that rents numbers (search by country, kind and city; buy;
-    give back), together with the voice platform the numbers answer on
-    (import, assign to the business's agent, remove).
+    the call fallback; give back), together with the voice platform the
+    numbers answer on (import, assign to the business's agent, remove).
     """
 
     def list_missing_settings(self) -> list[EnvironmentVariableName]:
@@ -106,6 +110,24 @@ class PhoneNumberProvisionerAdapterContract(AdapterContract, Protocol):
         Remove the number from the voice platform, then return it to the
         carrier; a number either has already forgotten is not an error.
         Raises ExternalServiceError.
+        """
+        raise NotImplementedError
+
+    def voice_fallback_url_of(self, business_id: BusinessId) -> VoiceFallbackUrl | None:
+        """
+        The platform's address the carrier sends a call to a business's
+        number to when the voice platform could not take it (the call
+        fallback); None when this carrier has none or APP_BASE_URL is not
+        set.
+        """
+        raise NotImplementedError
+
+    def route_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        """
+        Set the call fallback of a rented number to `url`. Raises
+        ExternalServiceError.
         """
         raise NotImplementedError
 

@@ -14,6 +14,7 @@ from tests.channels.voice_agent_specs import (
     TOOL_SECRET,
     build_spec,
     provisioner,
+    voice_of,
 )
 
 
@@ -77,15 +78,19 @@ class TestAgentCreation:
         assert config["language_presets"] == {
             "ru": {
                 "overrides": {
-                    "agent": {"first_message": "Greeting ru", "language": "ru"}
+                    "agent": {"first_message": "Greeting ru", "language": "ru"},
+                    "tts": voice_of("ru"),
                 }
             },
             "en": {
                 "overrides": {
-                    "agent": {"first_message": "Greeting en", "language": "en"}
+                    "agent": {"first_message": "Greeting en", "language": "en"},
+                    "tts": voice_of("en"),
                 }
             },
         }
+        # The default language's voice is the agent's own.
+        assert config["tts"] == voice_of("ka")
         platform = agent["platform_settings"]
         assert platform["overrides"][
             "enable_conversation_initiation_client_data_from_webhook"

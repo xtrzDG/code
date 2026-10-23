@@ -77,6 +77,9 @@ MISSED_REASON_LABELS: Mapping[str, LocalizedText] = {
     MissedCallReason.TRANSFER_UNANSWERED: owner_text(
         "notifications.call_report.missed_reason_labels.transfer_unanswered"
     ),
+    MissedCallReason.CALLBACK_REQUESTED: owner_text(
+        "notifications.call_report.missed_reason_labels.callback_requested"
+    ),
 }
 SKIP_REASON_LABELS: Mapping[str, LocalizedText] = {
     TextBackSkipReason.TURNED_OFF: owner_text(

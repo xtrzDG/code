@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.phone_number_errors import PhoneNumberUnavailableError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -28,6 +29,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.telephony.constrained_strings import VoiceFallbackUrl
 from app.schemas.typings.telephony.strings import (
     PhoneNumberLocality,
     PhoneNumberRegion,
@@ -84,6 +86,12 @@ class FakePhoneNumberProvisioner(PhoneNumberProvisionerAdapterContract):
     is_import_failing: bool = False
     is_assign_failing: bool = False
     is_release_failing: bool = False
+    # The call fallback: none until a test gives the platform an address.
+    voice_fallback_base: str | None = None
+    fallbacks: dict[str, VoiceFallbackUrl] = field(
+        default_factory=dict[str, VoiceFallbackUrl]
+    )
+    is_fallback_failing: bool = False
 
     def list_missing_settings(self) -> list[EnvironmentVariableName]:
         return list(self.missing_settings)
@@ -145,6 +153,25 @@ class FakePhoneNumberProvisioner(PhoneNumberProvisionerAdapterContract):
 
         self.assignments[str(voice_platform_number_id)] = agent_id
 
+    def voice_fallback_url_of(self, business_id: BusinessId) -> VoiceFallbackUrl | None:
+        if self.voice_fallback_base is None:
+            return None
+
+        return VoiceFallbackUrl(
+            f"{self.voice_fallback_base}/v1/telephony/twilio/voice-fallback/"
+            f"{business_id}"
+        )
+
+    def route_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        if self.is_fallback_failing:
+            raise ExternalServiceError(
+                "Twilio phone numbers request returned HTTP 503."
+            )
+
+        self.fallbacks[str(provider_number_id)] = url
+
     def release_number(self, release: PhoneNumberRelease) -> None:
         if self.is_release_failing:
             raise ExternalServiceError(
@@ -178,6 +205,11 @@ class FakeTwilioNumbersClient(TwilioPhoneNumbersClientContract):
 
     def release_number(self, provider_number_id: ProviderPhoneNumberId) -> None:
         self.calls.append(f"release {provider_number_id}")
+
+    def set_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        self.calls.append(f"fallback {provider_number_id} {url}")
 
 
 @dataclass

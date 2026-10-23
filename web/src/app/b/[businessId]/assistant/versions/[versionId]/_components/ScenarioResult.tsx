@@ -1,6 +1,6 @@
 "use client";
 
-import { IconAlert, IconCheckCircle, IconChevronDown, IconXCircle } from "@/components/icons";
+import { IconAlert, IconCheckCircle, IconChevronDown, IconPhone, IconXCircle } from "@/components/icons";
 import { Badge, UserSentence, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
@@ -39,7 +39,8 @@ const OUTCOMES: Record<AutotestOutcome, { tone: BadgeTone; label: MessageKey; ic
 /**
  * One scenario of a run, folded: outcome and score; open, the judge's
  * scores, notes and the transcript. The owner's own check is named by its
- * question, with what the answer had to do under it.
+ * question, with what the answer had to do under it; a voice check (a
+ * simulated phone call) says so before its language.
  */
 export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
   const translator = useI18n();
@@ -73,6 +74,15 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
               </span>
             ) : null}
             <span className="block text-sm text-ink-subtle">
+              {result.channel === "phone" ? (
+                <>
+                  <span title={t("assistant.autotests.phoneCallHint")} className="inline-flex items-center gap-1 align-middle text-ink-muted">
+                    <IconPhone className="size-3.5 shrink-0" aria-hidden />
+                    {t("assistant.autotests.phoneCall")}
+                  </span>
+                  {" · "}
+                </>
+              ) : null}
               {languageName(result.language, locale)}
               {average !== null ? ` · ${t("assistant.autotests.scoreValue", { score: formatScore(average, locale) })}` : ""}
               {plays ? (

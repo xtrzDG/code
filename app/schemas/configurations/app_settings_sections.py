@@ -24,6 +24,7 @@ from app.schemas.configurations.session_settings import SessionSettings
 from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
 from app.schemas.configurations.support_settings import SupportSettings
 from app.schemas.configurations.telemetry_settings import TelemetrySettings
+from app.schemas.configurations.voice_agent_settings import VoiceAgentSettings
 
 
 class AppSettingsSections(ImmutableDTO):
@@ -39,6 +40,9 @@ class AppSettingsSections(ImmutableDTO):
     reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)
     # pass^k of autotests and the nightly judging of real conversations.
     quality: QualitySettings = Field(default_factory=QualitySettings)
+    # The voice agents' model, temperature, turn timeout and the voice
+    # checks of autotests (ELEVENLABS_AGENT_*, ELEVENLABS_TURN_*, VOICE_CHECKS_*).
+    voice_agents: VoiceAgentSettings = Field(default_factory=VoiceAgentSettings)
     # The reply guard's claim check and injection brake (LLM_VERIFIER_*, INJECTION_*).
     reply_safety: ReplySafetySettings = Field(default_factory=ReplySafetySettings)
     # Where the platform alerts go (PLATFORM_ALERT_*, docs/operations/slo.md).

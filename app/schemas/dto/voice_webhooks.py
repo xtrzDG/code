@@ -6,6 +6,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.calls import CallTransferOutcome
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
+from app.schemas.domain.call_analysis import CallAnalysis
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.bookings.prefixed_id import BookingId
@@ -155,6 +156,9 @@ class FinishedCallReport(ImmutableDTO):
     # and whether a person picked up.
     transfer_offset_seconds: CallOffsetSeconds | None = None
     transfer_outcome: CallTransferOutcome = CallTransferOutcome.NOT_TRANSFERRED
+    # The voice platform's evaluation of the call (booking, disclosure and
+    # what it read from the conversation); None when it sent none.
+    analysis: CallAnalysis | None = None
 
 
 class RecordedCall(ImmutableDTO):

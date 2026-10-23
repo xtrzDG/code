@@ -7,7 +7,12 @@
     "billing.texts.number_rental_line",
     "billing.invoice_line.number_rental_item",
     "billing.texts.notice_texts.number_rental_invoiced",
-    "billing.texts.notice_texts.phone_number_released"
+    "billing.texts.notice_texts.phone_number_released",
+    "notifications.voice_fallback.title",
+    "notifications.voice_fallback.transferred_detail",
+    "notifications.voice_fallback.no_staff_detail",
+    "notifications.call_report.missed_reason_labels.callback_requested",
+    "notifications.voice_fallback.loop_detail"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "კლიენტს ადამიანი სჭირდება",
@@ -100,6 +105,7 @@
     "notifications.call_report.missed_reason_labels.not_started": "ასისტენტმა ზარი ვერ მიიღო",
     "notifications.call_report.missed_reason_labels.no_speech": "ისე გათიშა, რომ არაფერი უთქვამს",
     "notifications.call_report.missed_reason_labels.transfer_unanswered": "თანამშრომელთან დაკავშირება ითხოვა, მაგრამ არავინ უპასუხა",
+    "notifications.call_report.missed_reason_labels.callback_requested": "ითხოვა, რომ გადაურეკონ",
     "notifications.call_report.skip_reason_labels.turned_off": "გამოტოვებული ზარების შემდეგ შეტყობინებები გამორთულია",
     "notifications.call_report.skip_reason_labels.opted_out": "კლიენტმა შეტყობინებებზე უარი თქვა",
     "notifications.call_report.skip_reason_labels.already_texted": "დღეს მას უკვე მივწერეთ",
@@ -663,6 +669,10 @@
     "notifications.webhook_disabled.title": "ვებჰუკი გამოირთო · {business}",
     "notifications.webhook_disabled.failures_detail": "მისამართი {endpoint} მოვლენებს აღარ იღებს: ზედიზედ წარუმატებელი მცდელობები — {failures}. შეამოწმეთ, რომ ის მუშაობს, და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
     "notifications.webhook_disabled.gone_detail": "მისამართმა {endpoint} გვიპასუხა, რომ აღარ არსებობს (410), და მოვლენებს აღარ იღებს. თუ მისამართი შეიცვალა, შეცვალეთ და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
+    "notifications.voice_fallback.title": "სატელეფონო ასისტენტმა ზარი ვერ მიიღო · {business}",
+    "notifications.voice_fallback.transferred_detail": "ხმოვანმა პლატფორმამ ზარს არ უპასუხა, ამიტომ ის გადამისამართდა ნომერზე {phone}. თუ ეს მეორდება, შეამოწმეთ სატელეფონო ხაზი განყოფილებაში „არხები“.",
+    "notifications.voice_fallback.no_staff_detail": "ხმოვანმა პლატფორმამ ზარს არ უპასუხა და გადასამისამართებელი ტელეფონი არ იყო, ამიტომ ის გამოტოვებულ ზარად ჩაიწერა. ბიზნესის პროფილში დაამატეთ ტელეფონი ზარებისთვის, სადაც ადამიანია საჭირო.",
+    "notifications.voice_fallback.loop_detail": "ხმოვანმა პლატფორმამ ზარს არ უპასუხა. ტელეფონზე ზარებისთვის, სადაც ადამიანია საჭირო ({phone}), არ დაგვირეკავს, რადგან ზარი ამ ნომრიდან მოვიდა, მისგან გადამისამართდა ან ეს თავად ხაზია, ამიტომ ის გამოტოვებულ ზარად ჩაიწერა. შეამოწმეთ ეს ტელეფონი ბიზნესის პროფილში.",
     "calendar_sync.booking_system.guest_without_name": "სტუმარი",
     "notifications.deposit_refund.title": "დეპოზიტი დასაბრუნებელია · {business}",
     "notifications.deposit_refund.detail": "{amount}, გადახდის კოდი {reference}: ჯავშანი {date}, {time}-ზე დროულად გაუქმდა თქვენი დეპოზიტის წესების მიხედვით. დააბრუნეთ დეპოზიტი თქვენს გადახდის კაბინეტში.",

@@ -48,6 +48,8 @@ export const assistantChecksEn = {
     notes: "Notes",
     transcript: "Conversation",
     noTranscript: "The conversation did not start.",
+    phoneCall: "Phone call",
+    phoneCallHint: "A simulated call to the phone assistant in this language, played by the voice platform.",
     outcomes: {
       passed: "Passed",
       failed: "Failed",

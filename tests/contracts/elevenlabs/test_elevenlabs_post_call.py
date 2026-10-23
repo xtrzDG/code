@@ -80,6 +80,16 @@ def test_finished_call_is_read() -> None:
         "has_recording": True,
         "transfer_offset_seconds": None,
         "transfer_outcome": "not_transferred",
+        # The platform's evaluation the agent asks for (booking_correct,
+        # disclosure_said and the data collection fields).
+        "analysis": {
+            "booking_correct": "success",
+            "disclosure_said": "success",
+            "booking_date": "2026-10-03",
+            "booking_time": "19:00",
+            "party_size": 4,
+            "callback_requested": False,
+        },
     }
     # The tool turn has no words; the others keep their offsets.
     assert [

@@ -13,9 +13,14 @@ from app.schemas.dto.phone_numbers.provisioning import (
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
-from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
+from app.schemas.typings.telephony.constrained_strings import VoiceFallbackUrl
+from app.schemas.typings.telephony.strings import (
+    ProviderPhoneNumberId,
+    VoicePlatformPhoneNumberId,
+)
 
 
 class UnconfiguredPhoneNumberProvisionerAdapter(PhoneNumberProvisionerAdapterContract):
@@ -24,7 +29,8 @@ class UnconfiguredPhoneNumberProvisionerAdapter(PhoneNumberProvisionerAdapterCon
     set. The cabinet then offers the platform team's help instead of a
     search (`list_missing_settings` names what is missing); anything that
     would reach a carrier fails with ExternalServiceError, so a number
-    rented before the settings were removed waits to be given back.
+    rented before the settings were removed waits to be given back. There
+    is no call fallback to set up.
     """
 
     def __init__(self, missing_settings: list[EnvironmentVariableName]) -> None:
@@ -57,6 +63,16 @@ class UnconfiguredPhoneNumberProvisionerAdapter(PhoneNumberProvisionerAdapterCon
         agent_id: VoiceAgentId | None,
     ) -> None:
         del voice_platform_number_id, agent_id
+        raise self._not_configured()
+
+    def voice_fallback_url_of(self, business_id: BusinessId) -> VoiceFallbackUrl | None:
+        del business_id
+        return None
+
+    def route_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        del provider_number_id, url
         raise self._not_configured()
 
     def release_number(self, release: PhoneNumberRelease) -> None:

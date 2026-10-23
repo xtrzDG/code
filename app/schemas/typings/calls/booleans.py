@@ -6,6 +6,9 @@ Example:
 
 # The call's summary reached the caller's customer memory.
 IsCallRemembered = bool
+# The voice platform's evaluation of a call read that the caller asked to
+# be called back by a person.
+IsCallbackRequested = bool
 IsCallSummaryEnabled = bool
 IsCallSummaryGenerated = bool
 IsNewMissedCall = bool

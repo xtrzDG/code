@@ -51,6 +51,8 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
     notes: "შენიშვნები",
     transcript: "საუბარი",
     noTranscript: "საუბარი არ დაწყებულა.",
+    phoneCall: "ზარი",
+    phoneCallHint: "სატელეფონო ასისტენტთან ამ ენაზე იმიტირებული ზარი, რომელსაც ხმოვანი პლატფორმა ატარებს.",
     outcomes: {
       passed: "გაიარა",
       failed: "ვერ გაიარა",

@@ -28,6 +28,7 @@ export const providerCircuitsRu: Translation<typeof providerCircuitsEn> = {
     smtp: "Почта (SMTP)",
     flitt: "Платежи (Flitt)",
     stripe: "Платежи (Stripe)",
+    elevenlabs: "Голос (ElevenLabs)",
     web_push: "Веб-уведомления",
   },
 };

@@ -11,6 +11,63 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — wave 22 together: closing a business and deleting an account, voice tuning and the call fallback
+
+Spec: `ddd24979e0eaea8b`
+
+The API description with the two wave-22 entries further down merged
+together, on top of wave 21 (closing a business, deleting it for good and
+deleting an account, with the deletion certificates; voice agent tuning,
+voice checks and the call fallback of rented numbers). Each of those
+entries names the description of its own change alone; nothing else
+changed for clients.
+
+## 2026-10-23 — voice agent tuning, voice checks and the call fallback
+
+Spec: `147ffdf07e1b1a6e`
+
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}`, the
+  call fallback of the business's rented numbers (each number's Twilio
+  VoiceFallbackUrl, set by the platform): Twilio asks it what to do with a
+  call the voice platform refused or did not answer in time. The form is
+  Twilio's (`CallSid`, `From`, `To`, `ForwardedFrom`, ...), signed in
+  `X-Twilio-Signature` (HMAC-SHA1 of the address and the fields with the
+  platform's `TWILIO_AUTH_TOKEN`; 401 otherwise). It answers TwiML
+  (`text/xml`): a `<Dial>` to the staff mobile on duty (the profile's
+  handoff phone, else the first manager reachable by phone), or
+  `<Hangup/>` when nobody can take the call (then a missed call with its
+  text-back). The owner hears of it at most once an hour.
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}/dial-status`,
+  the `<Dial>`'s action: a staff mobile that was busy, rang out or failed
+  leaves a missed call with its text-back; it answers `<Hangup/>`.
+- **Changed** `CallDocument` (the calls of a contact's data export,
+  `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`) gains
+  `analysis` (`CallAnalysis`, optional): what the voice platform's own
+  evaluation of the call found (`booking_correct`, `disclosure_said`:
+  `success`, `failure` or `unknown`) and read from it (`booking_date`,
+  `booking_time`, `party_size`, `callback_requested`).
+  Calls stored before have none; erasing a contact's data clears it.
+- **Changed** `AutotestScenarioResultView` (the results of
+  `GET /v1/businesses/{business_id}/assistant-versions/{version_id}/autotest-run`
+  and of `POST .../autotests`) gains `channel` (`ChannelKind`, optional): `phone` for
+  a voice check, a simulated call to the version's voice agent in one of its
+  languages, played by the voice platform; `null` for a test chat. A version
+  with voice is checked by such calls (one per tested language, kind
+  `booking`, or `unknown_question` for a version that takes no bookings)
+  while `VOICE_CHECKS_ENABLED` is on and the voice platform is configured; a
+  voice check of either kind that failed or erred keeps the version from
+  going live (`autotests` reason of the go-live checklist).
+- **Changed** `AutotestOutcomeChangeView` and `AutotestScoreChangeView` (the
+  `comparison` of an autotest run) gain `channel` (`ChannelKind`, optional):
+  `phone` when the change is a voice check's, so it is not mistaken for the
+  chat scenario of the same kind and language.
+- **Changed** `MissedCallReason` (the recent missed calls of
+  `GET /v1/businesses/{business_id}/call-settings`) gains `callback_requested`: the caller asked to be called back
+  and the call left staff nothing to act on. Clients must read it now; the
+  platform writes it only from the next release (until then such a call
+  says `transfer_unanswered`). A caller put through to staff is no longer a
+  missed call even when they asked for a callback.
+
 ## 2026-10-23 — closing a business, deleting it for good, deleting an account
 
 Spec: `c2911998130fe426`

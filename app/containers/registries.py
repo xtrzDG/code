@@ -27,6 +27,7 @@ from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
 )
 from app.registries.localization.language_registry import LanguageRegistry
+from app.registries.localization.voice_profile_registry import VoiceProfileRegistry
 from app.registries.locks.billing_credit_lock_registry import (
     BillingCreditLockRegistry,
 )
@@ -71,6 +72,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
 
     language_registry: Singleton[LanguageRegistry] = Singleton(LanguageRegistry)
+    # The voice of the phone assistant in each language (R16-VOICE-TUNING).
+    voice_profile_registry: Singleton[VoiceProfileRegistry] = Singleton(
+        VoiceProfileRegistry
+    )
     # Platform admin roles from the admin team, read at every check; the
     # PLATFORM_ADMIN_* lists only bootstrap the first SUPER admin (1103).
     platform_admin_registry: Singleton[PlatformAdminRegistry] = Singleton(

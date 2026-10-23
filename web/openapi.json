@@ -2988,7 +2988,7 @@
       },
       "AutotestOutcomeChangeView": {
         "additionalProperties": false,
-        "description": "A scenario played by both runs whose outcome changed: a new failure\n(passed on the live version, not now) or a fix (the other way round).",
+        "description": "A scenario played by both runs whose outcome changed: a new failure\n(passed on the live version, not now) or a fix (the other way round).\n`channel` is PHONE for a voice check (a simulated call), None for chat.",
         "properties": {
           "autotest_case_id": {
             "anyOf": [
@@ -3003,6 +3003,16 @@
           },
           "baseline_outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "check_codes": {
             "items": {
@@ -3301,6 +3311,16 @@
             ],
             "title": "Autotest Case Id"
           },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "check_codes": {
             "items": {
               "$ref": "#/components/schemas/AutotestCheckCode"
@@ -3425,7 +3445,7 @@
       },
       "AutotestScoreChangeView": {
         "additionalProperties": false,
-        "description": "A scenario whose average judge score moved by half a point or more.",
+        "description": "A scenario whose average judge score moved by half a point or more\n(`channel` PHONE for a voice check).",
         "properties": {
           "average_score": {
             "maximum": 5.0,
@@ -3444,6 +3464,16 @@
             "minimum": -4.0,
             "title": "Change",
             "type": "number"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "kind": {
             "$ref": "#/components/schemas/AutotestScenarioKind"
@@ -7051,10 +7081,100 @@
         "title": "CalendarSyncProblem",
         "type": "string"
       },
+      "CallAnalysis": {
+        "additionalProperties": false,
+        "description": "What the voice platform's evaluation of a finished call found, as the\nagent asks it to (R16-VOICE-TUNING): whether a booking matches what the\ncaller asked (`booking_correct`) and whether the AI disclosure was said\n(`disclosure_said`), and what it read from the conversation: the date,\ntime and party size of a booking asked for, and a request to be called\nback. Every field is None when the platform did not report it. No\nrationale text is kept: it would repeat what the caller said.",
+        "properties": {
+          "booking_correct": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallEvaluationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "booking_date": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Date"
+          },
+          "booking_time": {
+            "anyOf": [
+              {
+                "maxLength": 5,
+                "minLength": 5,
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Time"
+          },
+          "callback_requested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Callback Requested"
+          },
+          "disclosure_said": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallEvaluationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "party_size": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Size"
+          }
+        },
+        "title": "CallAnalysis",
+        "type": "object"
+      },
       "CallDocument": {
         "additionalProperties": false,
         "description": "Phone call handled by the voice agent (concept table `calls`).",
         "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -7146,7 +7266,7 @@
             "title": "Recording Path"
           },
           "schema_version": {
-            "default": "4",
+            "default": "5",
             "title": "Schema Version",
             "type": "string"
           },
@@ -7217,6 +7337,16 @@
         ],
         "title": "CallDocument",
         "type": "object"
+      },
+      "CallEvaluationResult": {
+        "description": "What the voice platform's own evaluation of a finished call says about\none criterion (the booking matches what the caller asked, the AI\ndisclosure was said): SUCCESS, FAILURE, or UNKNOWN when the call gave\nnothing to judge (no booking was asked for).",
+        "enum": [
+          "success",
+          "failure",
+          "unknown"
+        ],
+        "title": "CallEvaluationResult",
+        "type": "string"
       },
       "CallForwardingCode": {
         "additionalProperties": false,
@@ -10873,7 +11003,7 @@
       },
       "ConversationDocument": {
         "additionalProperties": false,
-        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the team's or the customer's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).\nVersion 3: `acquisition_source`, where the customer came from when the\nconversation started (a shared link's tag, an ad, the number dialled;\n`app/utilities/sharing/acquisition_sources.py`). Set once, never\nchanged; optional, so version 2 rows read as they are.\nVersion 4: why a bad rating was given (`rating_reason`), the answer it\nis about (`rated_message_id`), when someone acted on it (corrected the\nanswer or saved a check from it: `improved_at`) and, derived on every\nreview write, whether it still waits for that (`awaits_improvement`,\nthe Overview's \"Answers worth improving\"). The review fields change\nonly through `ConversationReviewRepoContract.set_review`; a plain save\nkeeps them as stored. All optional, so version 3 rows read as they are.\nVersion 5: what the conversation was about (`summary`, at most 300\ncharacters, written by a cheap model once it was quiet for two hours)\nand when (`summarized_at`), the assistant's memory of a returning\ncustomer. Optional, so version 4 rows read as they are.\nVersion 6: who rated it (`rating_by`: the team, or the customer under the\nwebsite chat's answers, whose `rated_by` is None). Rated version 5 rows\nwere the team's (the upcaster says so).",
+        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the team's or the customer's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (optional: version 1 rows read as is).\nVersion 3: `acquisition_source`, where the customer came from when the\nconversation started (a shared link's tag, an ad, the number dialled;\n`app/utilities/sharing/acquisition_sources.py`). Set once, never\nchanged; optional, so version 2 rows read as they are.\nVersion 4: why a bad rating was given (`rating_reason`), the answer it\nis about (`rated_message_id`), when someone acted on it (corrected the\nanswer or saved a check from it: `improved_at`) and, derived on every\nreview write, whether it still waits for that (`awaits_improvement`,\nthe Overview's \"Answers worth improving\"). The review fields change\nonly through `ConversationReviewRepoContract.set_review`; a plain save\nkeeps them as stored. All optional, so version 3 rows read as they are.\nVersion 5: what the conversation was about (`summary`, at most 300\ncharacters, by a cheap model once it was quiet for two hours) and when\n(`summarized_at`), the assistant's memory of a returning customer.\nOptional, so version 4 rows read as they are.\nVersion 6: who rated it (`rating_by`: the team, or the customer under the\nwebsite chat's answers, whose `rated_by` is None). Rated version 5 rows\nwere the team's (the upcaster says so).",
         "properties": {
           "acquisition_source": {
             "anyOf": [
@@ -20486,7 +20616,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).\nVersion 9 (W20): decline_recording likewise (version 8 rows read as is).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional (version 2 rows read as is).\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional (version 3 as is).\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).\nVersion 9 (W20): decline_recording likewise (version 8 rows read as is).",
         "properties": {
           "attachments": {
             "items": {
@@ -21246,7 +21376,7 @@
       },
       "MissedCallDocument": {
         "additionalProperties": false,
-        "description": "A call whose caller did not get through (no answer, busy, hung up\nbefore the assistant, a failed start, a transfer nobody picked up) and\nthe message that tells them the business will continue in writing\n(the text-back).\n\nThe id derives from the business, the source and the provider's call\nid, so a repeated report is the same missed call and is texted once.\n`language` is the caller's (detected on the call) or their country's\nwhen the business speaks it. A WhatsApp text-back opens the\nconversation (`conversation_id`) the caller's reply continues in.\nRows are purged after 90 days.",
+        "description": "A call whose caller did not get through (no answer, busy, hung up\nbefore the assistant, a failed start, a transfer nobody picked up) and\nthe message that tells them the business will continue in writing\n(the text-back). Version 2 adds the reason CALLBACK_REQUESTED.\n\nThe id derives from the business, the source and the provider's call\nid, so a repeated report is the same missed call and is texted once.\n`language` is the caller's (detected on the call) or their country's\nwhen the business speaks it. A WhatsApp text-back opens the\nconversation (`conversation_id`) the caller's reply continues in.\nRows are purged after 90 days.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -21337,8 +21467,7 @@
             "$ref": "#/components/schemas/MissedCallReason"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -21389,7 +21518,7 @@
         "type": "object"
       },
       "MissedCallReason": {
-        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).",
+        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)\nand CALLBACK_REQUESTED (the caller asked to be called back and the call\nleft staff nothing to act on; written once its release gate opens).",
         "enum": [
           "no_answer",
           "busy",
@@ -21397,7 +21526,8 @@
           "line_failed",
           "not_started",
           "no_speech",
-          "transfer_unanswered"
+          "transfer_unanswered",
+          "callback_requested"
         ],
         "title": "MissedCallReason",
         "type": "string"
@@ -96150,6 +96280,242 @@
         "summary": "Record Telemetry",
         "tags": [
           "analytics"
+        ]
+      }
+    },
+    "/v1/telephony/twilio/voice-fallback/{business_id}": {
+      "post": {
+        "operationId": "telephony_receive_call_fallback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Twilio-Signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Twilio-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Receive Call Fallback",
+        "tags": [
+          "telephony"
+        ]
+      }
+    },
+    "/v1/telephony/twilio/voice-fallback/{business_id}/dial-status": {
+      "post": {
+        "operationId": "telephony_receive_fallback_dial_status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Twilio-Signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Twilio-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Receive Fallback Dial Status",
+        "tags": [
+          "telephony"
         ]
       }
     },

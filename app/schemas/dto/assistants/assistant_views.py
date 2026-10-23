@@ -14,6 +14,7 @@ from app.schemas.constants.assistants import (
     AutotestScenarioKind,
     JudgeCriterion,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.assistants.autotest_comparison_views import (
@@ -153,6 +154,9 @@ class AutotestScenarioResultView(ImmutableDTO):
     owner_check: OwnerCheckAskedView | None = None
     conversation_id: ConversationId | None = None
     answer_message_id: MessageId | None = None
+    # `phone`: a voice check, a simulated call to the version's voice agent
+    # (its transcript is the call's); None: a test chat.
+    channel: ChannelKind | None = None
 
 
 class AutotestRunView(ImmutableDTO):

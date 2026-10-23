@@ -81,6 +81,7 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
         start_autotest_run=autotest_use_cases.start_autotest_run_use_case,
         run_autotest_scenario=run_autotest_scenario_use_case,
         finish_autotest_run=autotest_use_cases.finish_autotest_run_use_case,
+        run_voice_checks=autotest_use_cases.run_voice_checks_use_case,
     )
     # The HTTP routes start a run and leave playing it to the worker.
     queue_autotest_run_orchestrator: Factory[
@@ -100,6 +101,7 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
         abandon_autotest_run=autotest_use_cases.abandon_autotest_run_use_case,
         record_autotest_progress=autotest_use_cases.record_autotest_progress_use_case,
         publish_applied_version=apply_use_cases.publish_applied_version_use_case,
+        run_voice_checks=autotest_use_cases.run_voice_checks_use_case,
     )
     # "Apply changes": build, check in the background, publish when it passes.
     apply_changes_orchestrator: Factory[

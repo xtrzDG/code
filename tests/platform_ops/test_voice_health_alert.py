@@ -5,8 +5,9 @@ import json
 import pytest
 from typed_time_provider import Microseconds
 
-from app.adapters.voice.signal_counting_elevenlabs_client import (
-    SignalCountingElevenLabsClient,
+from app.adapters.voice.guarded_elevenlabs_client import GuardedElevenLabsClient
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import InboundEventKind
@@ -15,6 +16,7 @@ from app.schemas.constants.monitoring import (
     PlatformAlertStatus,
     PlatformSignal,
 )
+from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.dto.platform_alerts import AlertObservation
@@ -28,9 +30,11 @@ from app.schemas.typings.conversations.strings import ProviderCallId
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.admin.alerts.alert_rules import PLATFORM_ALERT_RULES
 from app.utilities.deliveries.delivery_keys import derive_inbound_event_id
+from app.utilities.resilience.provider_circuits import provider_circuit
 from tests.platform_ops.elevenlabs_fakes import ScriptedElevenLabsClient
 from tests.platform_ops.ops_documents import DAY, HOUR, MINUTE, NOW
 from tests.platform_ops.ops_world import OpsWorld, put
+from tests.resilience.test_circuit_breaker import Ticks
 
 SHOP: BusinessId = BusinessId()
 CODE: PlatformAlertCode = PlatformAlertCode.VOICE_HEALTH
@@ -151,7 +155,12 @@ class TestCountingClient:
         inner = ScriptedElevenLabsClient(
             [None, ExternalServiceError("503"), NotFoundError("gone")]
         )
-        client = SignalCountingElevenLabsClient(inner, world.signals)
+        client = GuardedElevenLabsClient(
+            inner,
+            world.signals,
+            CircuitBreakerFacilitator(Ticks().clock()),
+            provider_circuit(OutboundProvider.ELEVENLABS),
+        )
 
         client.delete_conversation(ProviderCallId("conv_1"))
         with pytest.raises(ExternalServiceError):

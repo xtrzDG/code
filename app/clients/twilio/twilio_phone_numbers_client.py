@@ -21,6 +21,7 @@ from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.telephony.constrained_strings import VoiceFallbackUrl
 from app.schemas.typings.telephony.strings import ProviderPhoneNumberId
 from app.utilities.channels.json_values import (
     JsonObject,
@@ -47,6 +48,8 @@ class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
       the monthly price of each kind;
     - POST /2010-04-01/Accounts/{sid}/IncomingPhoneNumbers.json to rent one
       (PhoneNumber, FriendlyName);
+    - POST /2010-04-01/Accounts/{sid}/IncomingPhoneNumbers/{PN sid}.json
+      with VoiceFallbackUrl and VoiceFallbackMethod, the call fallback;
     - DELETE /2010-04-01/Accounts/{sid}/IncomingPhoneNumbers/{PN sid}.json
       to return it.
 
@@ -128,11 +131,22 @@ class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
 
         return ProviderPhoneNumberId(sid)
 
+    def set_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        response: httpx.Response = self._perform(
+            "POST",
+            self._number_path(provider_number_id),
+            data={"VoiceFallbackUrl": str(url), "VoiceFallbackMethod": "POST"},
+        )
+        if response.status_code >= 400:
+            raise describe_failure(
+                response.status_code, parse_json_object(response.content) or {}
+            )
+
     def release_number(self, provider_number_id: ProviderPhoneNumberId) -> None:
         response: httpx.Response = self._perform(
-            "DELETE",
-            f"{self._account_path}/IncomingPhoneNumbers/"
-            f"{quote(str(provider_number_id), safe='')}.json",
+            "DELETE", self._number_path(provider_number_id)
         )
         if response.status_code >= 400 and response.status_code != (
             NOT_FOUND_STATUS_CODE
@@ -140,6 +154,12 @@ class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
             raise describe_failure(
                 response.status_code, parse_json_object(response.content) or {}
             )
+
+    def _number_path(self, provider_number_id: ProviderPhoneNumberId) -> str:
+        return (
+            f"{self._account_path}/IncomingPhoneNumbers/"
+            f"{quote(str(provider_number_id), safe='')}.json"
+        )
 
     def _read(
         self, method: str, url: str, params: dict[str, str] | None = None

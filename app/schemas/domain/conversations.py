@@ -25,6 +25,7 @@ from app.schemas.constants.reply_safety import (
     InjectionSignal,
     ReplyGuardReason,
 )
+from app.schemas.domain.call_analysis import CallAnalysis
 from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.reply_choices import ReplyChoices
@@ -96,8 +97,7 @@ class ConversationDocument(BaseDocument):
     every write: the conversation needs a person (HANDOFF) or has an open
     request. `assigned_by` is None for an automatic assignment.
 
-    Version 2: the team inbox fields (all optional, so version 1 rows read
-    as they are).
+    Version 2: the team inbox fields (optional: version 1 rows read as is).
     Version 3: `acquisition_source`, where the customer came from when the
     conversation started (a shared link's tag, an ad, the number dialled;
     `app/utilities/sharing/acquisition_sources.py`). Set once, never
@@ -110,9 +110,9 @@ class ConversationDocument(BaseDocument):
     only through `ConversationReviewRepoContract.set_review`; a plain save
     keeps them as stored. All optional, so version 3 rows read as they are.
     Version 5: what the conversation was about (`summary`, at most 300
-    characters, written by a cheap model once it was quiet for two hours)
-    and when (`summarized_at`), the assistant's memory of a returning
-    customer. Optional, so version 4 rows read as they are.
+    characters, by a cheap model once it was quiet for two hours) and when
+    (`summarized_at`), the assistant's memory of a returning customer.
+    Optional, so version 4 rows read as they are.
     Version 6: who rated it (`rating_by`: the team, or the customer under the
     website chat's answers, whose `rated_by` is None). Rated version 5 rows
     were the team's (the upcaster says so).
@@ -184,8 +184,7 @@ class MessageDocument(BaseDocument):
     customer's first unanswered message to the reply being stored; None
     when not measured, e.g. test chats and older rows), `llm_round_count`
     and `is_fallback_model` (a model of the other provider answered because
-    the version's own failed). All optional, so version 2 rows read as they
-    are.
+    the version's own failed). All optional (version 2 rows read as is).
 
     Version 4: what the reply guard did (R10). On an assistant reply:
     `guard_verdict` (clean, rewritten once, handed to staff; None on other
@@ -193,8 +192,7 @@ class MessageDocument(BaseDocument):
     `unverified_values` (values the evidence did not back, as written) and
     `claim_findings` (each policy or availability claim the verifier
     checked). On a customer message: `injection_flag`, the kind of prompt
-    injection it looked like (None: none). All optional, so version 3 rows
-    read as they are.
+    injection it looked like (None: none). All optional (version 3 as is).
 
     Version 5: `tool_calls` may name the tool list_my_bookings (a new
     value; version 4 rows read as they are). Version 6: they may name the
@@ -271,8 +269,8 @@ class CallDocument(BaseDocument):
 
     # 2: `guard_verdict` and `unverified_values` (both optional, so version 1
     # needs no upcaster). 3: `summaries` and `summarized_at` (optional too).
-    # 4: `recording_declined` (False by default: no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 4: `recording_declined` (False by default). 5: `analysis` (optional).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: CallId = Field(default_factory=CallId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None
@@ -298,3 +296,5 @@ class CallDocument(BaseDocument):
     # The caller declined the recording: the audio is deleted after the call
     # and `transcript` is kept without phone, e-mail, card or account numbers.
     recording_declined: IsCallRecordingDeclined = False
+    # The voice platform's evaluation of the call; None for older calls.
+    analysis: CallAnalysis | None = None

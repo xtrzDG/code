@@ -5,9 +5,10 @@ import json
 from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
     ElevenLabsVoiceAgentProvisioner,
 )
+from app.registries.localization.voice_profile_registry import VoiceProfileRegistry
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import LlmToolDefinition
-from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
+from app.schemas.dto.voice import LanguageVoiceProfile, VoiceAgentSpec, VoiceGreeting
 from app.schemas.typings.assistants.strings import (
     LlmToolDescription,
     LlmToolInputSchemaJson,
@@ -20,11 +21,15 @@ from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.voice.constrained_floats import VoiceAgentTemperature
+from app.schemas.typings.voice.constrained_integers import VoiceTurnTimeoutSeconds
+from app.schemas.typings.voice.constrained_strings import AsrKeyword, VoiceAgentLlmId
 from app.utilities.channels.webhook_signatures import derive_voice_tool_secret
 from tests.channels.channels_settings import ELEVENLABS_WEBHOOK_SECRET
 from tests.channels.testbed import ChannelsTestbed
 
 BUSINESS_ID = BusinessId()
+VOICES = VoiceProfileRegistry()
 TOOL_SECRET: str = str(
     derive_voice_tool_secret(PlatformSecret(ELEVENLABS_WEBHOOK_SECRET), BUSINESS_ID)
 )
@@ -77,8 +82,29 @@ def build_spec(
             tool(AssistantToolName.SEARCH_KNOWLEDGE, '{"type": "object"}'),
         ],
         tool_webhook_base_url=PublicBaseUrl("https://api.workshop.test/"),
+        voice_profiles=[
+            LanguageVoiceProfile(
+                language=LanguageTag(tag), profile=VOICES.get(LanguageTag(tag))
+            )
+            for tag in languages
+        ],
+        llm_model=VoiceAgentLlmId("gemini-2.5-flash"),
+        temperature=VoiceAgentTemperature(0.2),
+        asr_keywords=[AsrKeyword("Funicular VR"), AsrKeyword("VR arena 2")],
+        turn_timeout_seconds=VoiceTurnTimeoutSeconds(8),
     )
 
 
 def provisioner(testbed: ChannelsTestbed) -> ElevenLabsVoiceAgentProvisioner:
     return ElevenLabsVoiceAgentProvisioner(testbed.elevenlabs_client, testbed.settings)
+
+
+def voice_of(tag: str) -> dict[str, object]:
+    """The `tts` part the agent carries for a language of `build_spec`."""
+
+    profile = VOICES.get(LanguageTag(tag))
+    return {
+        "voice_id": str(profile.voice_id),
+        "model_id": str(profile.tts_model),
+        "stability": float(profile.stability),
+    }

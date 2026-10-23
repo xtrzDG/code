@@ -13,6 +13,7 @@ from app.schemas.constants.assistants import (
     AutotestScenarioKind,
     JudgeCriterion,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.assistants.constrained_floats import (
     AverageJudgeScore,
     AverageJudgeScoreChange,
@@ -34,11 +35,13 @@ class AutotestOutcomeChangeView(ImmutableDTO):
     """
     A scenario played by both runs whose outcome changed: a new failure
     (passed on the live version, not now) or a fix (the other way round).
+    `channel` is PHONE for a voice check (a simulated call), None for chat.
     """
 
     scenario_key: AutotestScenarioKey
     kind: AutotestScenarioKind
     language: LanguageTag
+    channel: ChannelKind | None = None
     outcome: AutotestOutcome
     baseline_outcome: AutotestOutcome
     # The deterministic checks this run's play failed (empty for a fix).
@@ -49,11 +52,15 @@ class AutotestOutcomeChangeView(ImmutableDTO):
 
 
 class AutotestScoreChangeView(ImmutableDTO):
-    """A scenario whose average judge score moved by half a point or more."""
+    """
+    A scenario whose average judge score moved by half a point or more
+    (`channel` PHONE for a voice check).
+    """
 
     scenario_key: AutotestScenarioKey
     kind: AutotestScenarioKind
     language: LanguageTag
+    channel: ChannelKind | None = None
     average_score: AverageJudgeScore
     baseline_average_score: AverageJudgeScore
     change: AverageJudgeScoreChange

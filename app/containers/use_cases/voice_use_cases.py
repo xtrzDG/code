@@ -27,6 +27,7 @@ from app.schemas.dto.voice_webhooks import (
     VoiceToolWebhookRequest,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
 from app.use_cases.voice.agents.resync_voice_agents_use_case import (
     ResyncVoiceAgentsUseCase,
 )
@@ -203,20 +204,30 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # What every voice agent is built from besides its version (publishing,
+    # the re-sync and the voice checks of autotests).
+    voice_agent_sources: Factory[VoiceAgentSources] = Factory(
+        VoiceAgentSources,
+        business_profile_repo=repositories.business_profile_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
+        build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
+        assistant_tool_catalog=registries.assistant_tool_registry,
+        voice_profile_registry=registries.voice_profile_registry,
+        app_settings=config.app_settings,
+    )
     # Live voice agents set up before the current revision, set up again.
     resync_voice_agents_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
             ResyncVoiceAgentsUseCase,
             business_repo=repositories.business_repo,
             assistant_version_repo=repositories.assistant_version_repo,
-            business_profile_repo=repositories.business_profile_repo,
             channel_repo=repositories.channel_repo,
             plan_registry=registries.plan_registry,
             voice_agent_provisioner=adapters.voice_agent_provisioner,
-            build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
-            assistant_tool_catalog=registries.assistant_tool_registry,
+            voice_agent_sources=voice_agent_sources,
             voice_agent_locks=registries.voice_agent_lock_registry,
-            app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )

@@ -17,6 +17,7 @@ models in [llm-outage](llm-outage.md)):
 | `provider:smtp` | e-mail: staff notifications, invoices, platform alerts by e-mail |
 | `provider:flitt` | Flitt (Georgia, Armenia): creating a checkout or a card page, stopping automatic charges, retrying a declined charge |
 | `provider:stripe` | Stripe (the EU, the US, Israel): the same calls, apart from Flitt's circuit |
+| `provider:elevenlabs` | ElevenLabs, the voice platform: setting up voice agents and their tools, the voice checks of autotests, call recordings, deleting conversations, importing and assigning rented numbers. A call the voice platform cannot take still reaches staff: rented numbers fall back to the staff mobile through Twilio (docs/LAUNCH.md, section 4.6) |
 
 Web push has none: it reaches many push services, and one being down is not
 the others'. Login codes do not go through the circuits.
@@ -30,7 +31,9 @@ the others'. Login codes do not go through the circuits.
   a declined card or a Flitt answer with the status "failure"
   (`PaymentProviderRefusedError`), a 429 and payments not set up
   (`PaymentsNotConfiguredError`) leave `provider:flitt` and
-  `provider:stripe` closed.
+  `provider:stripe` closed. ElevenLabs likewise: a 4xx (a voice, model or
+  agent setting it does not accept, a bad key) and a 429 leave
+  `provider:elevenlabs` closed; a 408 or a 5xx counts.
 - **Typing signals are best effort.** They run only while the circuit is
   closed and never report a success (they often make no call at all), so
   they cannot take the half-open trial or close a circuit; a typing call

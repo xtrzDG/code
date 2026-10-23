@@ -56,14 +56,11 @@ def resync_use_case(
     return ResyncVoiceAgentsUseCase(
         business_repo=testbed.business_repo,
         assistant_version_repo=testbed.version_repo,
-        business_profile_repo=testbed.profile_repo,
         channel_repo=lines,
         plan_registry=testbed.plan_registry,
         voice_agent_provisioner=testbed.voice_provisioner,
-        build_call_greeting=testbed.call_greeting,
-        assistant_tool_catalog=testbed.tool_catalog,
+        voice_agent_sources=testbed.voice_agent_sources,
         voice_agent_locks=testbed.voice_agent_locks,
-        app_settings=testbed.settings,
         wall_clock=testbed.wall_clock,
     )
 

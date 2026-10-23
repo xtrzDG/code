@@ -18,6 +18,7 @@ export const assistantComparisonHe: Translation<typeof assistantComparisonEn> = 
     scoreRises: "ציונים שעלו",
     criteria: "לפי קריטריון",
     scenario: "{name} · {language}",
+    phoneScenario: "{name} · {channel} · {language}",
     scoreMove: "{from} ← {to}",
     outcomeMove: "{from} לפני, {to} עכשיו",
     noChanges: "שום דבר לא השתנה לעומת העדכון שבאוויר: אין בעיות חדשות, ואף ציון לא זז בחצי נקודה או יותר.",

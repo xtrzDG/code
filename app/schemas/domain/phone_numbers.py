@@ -1,6 +1,6 @@
 """Numbers the platform rents for businesses (W21, migration 1213)."""
 
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -22,6 +22,7 @@ from app.schemas.typings.telephony.constrained_integers import PhoneNumberRental
 from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberCityQuery,
     RentedLineNumber,
+    VoiceFallbackUrl,
 )
 from app.schemas.typings.telephony.prefixed_id import (
     PhoneNumberId,
@@ -51,7 +52,9 @@ class PhoneNumberDocument(BaseDocument):
 
     `voice_platform_number_id` is set once the voice platform imported the
     number and `attached_agent_id` names the agent it answers with (None
-    until the business has one); the maintenance job keeps both in step.
+    until the business has one); `voice_fallback_url` is the call fallback
+    the carrier has for it (version 2); the maintenance job keeps all three
+    in step.
     Giving a number up makes it RELEASING (`release_reason`, `release_requested_at`);
     the maintenance job returns it to the voice platform and the carrier,
     then it is RELEASED (`released_at`) and stays as the record.
@@ -77,6 +80,8 @@ class PhoneNumberDocument(BaseDocument):
     release_reason: PhoneNumberReleaseReason | None = None
     release_requested_at: Microseconds | None = None
     released_at: Microseconds | None = None
+    voice_fallback_url: VoiceFallbackUrl | None = None
+    schema_version: SchemaVersion = SchemaVersion("2")
 
 
 class PhoneNumberRequestDocument(BaseDocument):

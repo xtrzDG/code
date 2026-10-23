@@ -43,8 +43,13 @@ const CRITERION_LABELS: Record<JudgeCriterion, MessageKey> = {
 export function RunComparison({ comparison }: { comparison: AutotestRunComparison }) {
   const { t, locale } = useI18n();
   const score = (value: number) => formatScore(value, locale);
-  const scenarioName = (change: Pick<AutotestOutcomeChange, "kind" | "language">) =>
-    t("assistant.comparison.scenario", { name: t(SCENARIO_KIND_LABELS[change.kind]), language: languageName(change.language, locale) });
+  // A voice check (a simulated call) says so, so it never reads like the chat scenario of the same kind.
+  const scenarioName = (change: Pick<AutotestOutcomeChange, "kind" | "language" | "channel">) => {
+    const values = { name: t(SCENARIO_KIND_LABELS[change.kind]), language: languageName(change.language, locale) };
+    return change.channel === "phone"
+      ? t("assistant.comparison.phoneScenario", { ...values, channel: t("assistant.autotests.phoneCall") })
+      : t("assistant.comparison.scenario", values);
+  };
   const drops = scoreDrops(comparison);
   const rises = scoreRises(comparison);
   const averageChange = comparison.average_score_change;

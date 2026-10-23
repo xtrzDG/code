@@ -9,6 +9,7 @@ from app.schemas.constants.assistants import (
     AutotestRunStatus,
     AutotestScenarioKind,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
@@ -17,7 +18,10 @@ from app.schemas.domain.assistants import (
 )
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
-from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.schemas.typings.assistants.constrained_strings import (
+    AutotestScenarioKey,
+    LlmModelId,
+)
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.businesses.booleans import IsVoiceEnabled
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -109,3 +113,35 @@ def test_errored_scenarios_count_as_new_failures_and_unshared_ones_are_skipped()
         if change.criterion == "handoff"
     ]
     assert [float(change.change) for change in handoff] == [-1.0]
+
+
+def test_a_voice_check_change_names_its_channel() -> None:
+    def phone(outcome: AutotestOutcome, handoff: int) -> AutotestScenarioResult:
+        return result(
+            AutotestScenarioKind.BOOKING, outcome, scores(handoff=handoff)
+        ).model_copy(
+            update={
+                "scenario_key": AutotestScenarioKey("phone__booking__en"),
+                "channel": ChannelKind.PHONE,
+            }
+        )
+
+    chat_failed = result(AutotestScenarioKind.BOOKING, AutotestOutcome.FAILED)
+    now = run_of([chat_failed, phone(AutotestOutcome.FAILED, 1)], average=None)
+    before = run_of(
+        [
+            result(AutotestScenarioKind.BOOKING, AutotestOutcome.PASSED),
+            phone(AutotestOutcome.PASSED, 5),
+        ],
+        average=None,
+    )
+
+    comparison = compare_runs(now, before, live_version())
+
+    assert [change.channel for change in comparison.new_failures] == [
+        None,
+        ChannelKind.PHONE,
+    ]
+    assert [change.channel for change in comparison.score_changes] == [
+        ChannelKind.PHONE
+    ]

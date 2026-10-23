@@ -86,6 +86,7 @@ def outcome_change(
         scenario_key=result.scenario_key,
         kind=result.kind,
         language=result.language,
+        channel=result.channel,
         outcome=result.outcome,
         baseline_outcome=baseline.outcome,
         check_codes=list(result.check_codes),
@@ -109,6 +110,7 @@ def collect_score_changes(
                     scenario_key=result.scenario_key,
                     kind=result.kind,
                     language=result.language,
+                    channel=result.channel,
                     average_score=AverageJudgeScore(round(now, CHANGE_DECIMALS)),
                     baseline_average_score=AverageJudgeScore(
                         round(before, CHANGE_DECIMALS)
