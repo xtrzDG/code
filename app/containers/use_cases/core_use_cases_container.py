@@ -26,6 +26,7 @@ from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContain
 from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
+from app.containers.use_cases.knowledge_search_use_cases import knowledge_search_edges
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.legal_use_cases import LegalUseCasesContainer
 from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
@@ -140,10 +141,12 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         account_use_cases=accounts,
     )
     knowledge: KnowledgeUseCasesContainer = Container(  # type: ignore[assignment]
-        KnowledgeUseCasesContainer, adapters=adapters, clients=clients,
-        config=config, facilitators=facilitators, registries=registries,
+        KnowledgeUseCasesContainer, registries=registries,
         repositories=repositories, time_provider=time_provider,
-        utilities=utilities,
+        utilities=utilities, **knowledge_search_edges(
+            adapters, clients, config, facilitators, registries,
+            repositories, time_provider, utilities,
+        ),
     )  # fmt: skip
     menu_import: MenuImportUseCasesContainer = Container(  # type: ignore[assignment]
         MenuImportUseCasesContainer,

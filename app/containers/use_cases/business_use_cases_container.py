@@ -105,7 +105,7 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         AssistantUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
+        job_queue=CoreUseCasesContainer.facilitators.job_queue_facilitator,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,

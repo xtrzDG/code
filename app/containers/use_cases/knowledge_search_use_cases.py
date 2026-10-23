@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypedDict
 
 from dependency_injector.providers import Factory, Singleton
 
@@ -23,6 +24,7 @@ from app.clients.openai.openai_embeddings_client import (
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -36,6 +38,7 @@ from app.contracts.knowledge_embeddings import (
     TextEmbedderContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
@@ -60,8 +63,10 @@ class KnowledgeSearchProviders:
     Knowledge across languages (R17-CROSS-LANG-SEARCH): the embeddings
     endpoint and store, the alias model, the search tool (hybrid with
     EMBEDDINGS_API_KEY, lexical without), aliases on request and the
-    `index_knowledge` job. `KnowledgeUseCasesContainer` holds them as its
-    own providers, over its own edges.
+    `index_knowledge` job. `CoreUseCasesContainer` builds them over its
+    edges and hands the use cases to `KnowledgeUseCasesContainer` as typed
+    dependencies (`knowledge_search_edges`), so the knowledge context draws
+    no new container edge (ADR 0010).
     """
 
     text_embedder: Singleton[TextEmbedderContract]
@@ -176,4 +181,40 @@ def build_knowledge_search_providers(
             embedding_store=embedding_store,
             wall_clock=time_provider.microsecond_wall_clock,
         ),
+    )
+
+
+class KnowledgeSearchEdges(TypedDict):
+    """What `KnowledgeUseCasesContainer` takes as typed dependencies."""
+
+    job_queue: Singleton[JobQueueFacilitator]
+    search_knowledge_use_case: Factory[
+        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
+    ]
+    suggest_knowledge_aliases_use_case: Factory[
+        UseCaseContract[SuggestKnowledgeAliasesCommand, KnowledgeItemDetails]
+    ]
+    index_knowledge_use_case: Factory[UseCaseContract[QueuedJobInput, JobReport]]
+
+
+def knowledge_search_edges(
+    adapters: AdaptersContainer,
+    clients: ClientsContainer,
+    config: ConfigContainer,
+    facilitators: FacilitatorsContainer,
+    registries: RegistriesContainer,
+    repositories: RepositoriesContainer,
+    time_provider: TimeProviderContainer,
+    utilities: UtilitiesContainer,
+) -> KnowledgeSearchEdges:
+    """The typed dependencies of `KnowledgeUseCasesContainer` beyond its edges."""
+
+    search: KnowledgeSearchProviders = build_knowledge_search_providers(
+        adapters, clients, config, registries, repositories, time_provider, utilities
+    )
+    return KnowledgeSearchEdges(
+        job_queue=facilitators.job_queue_facilitator,
+        search_knowledge_use_case=search.search_knowledge_use_case,
+        suggest_knowledge_aliases_use_case=search.suggest_knowledge_aliases_use_case,
+        index_knowledge_use_case=search.index_knowledge_use_case,
     )
