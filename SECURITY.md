@@ -107,8 +107,9 @@ reviewed, and on any finding of a rule marked `FAIL` there (the security
 headers the cabinet and the API promise). A reviewed exception names its
 rule (or one variant of it), the addresses it covers and the reason, which
 the job summary repeats next to the finding. The scan never attacks
-(no active scan); the https-only rules are checked in production by the
-smoke test and the header tests instead.
+(no active scan). It runs over plain http, so the https-only rules (HSTS,
+the `Secure` cookie flag) are left to the header tests
+(`tests/security/test_api_security_headers.py`, `web/e2e/security.spec.ts`).
 
 ### Repository settings
 

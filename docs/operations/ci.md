@@ -23,7 +23,7 @@ Everything starts at once except `coverage` (after every backend part),
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/9 … 9/9) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
-| `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | ~1:30 |
+| `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
@@ -61,7 +61,7 @@ the floor of its part.
   there is no signing key to keep or leak. Deploy smoke runs the same
   `scripts/verify_images.sh` for every deployed commit
   (`docs/operations/deploys.md`, "Signed images").
-- `zap.yml` (OWASP ZAP baseline, about 15 minutes) starts the docker
+- `zap.yml` (OWASP ZAP baseline, at most 45 minutes) starts the docker
   compose stack with a scripted model, seeds one business and scans the
   cabinet, the hosted chat page, the widget and every read-only `/v1`
   operation with the owner's token. It runs on every push to `main`, every

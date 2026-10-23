@@ -15,8 +15,8 @@
 # Change this file only with a reason a reviewer can check against the code,
 # and name the review in the commit. The scans run over plain http with
 # COOKIE_SECURE=false (docker compose), so the https-only rules (HSTS, the
-# Secure cookie flag) are judged in production by scripts/smoke.sh and the
-# headers tests, not here.
+# Secure cookie flag) are left to the header tests
+# (tests/security/test_api_security_headers.py, web/e2e/security.spec.ts).
 
 # The headers every answer of the cabinet (web/next.config.ts, web/src/proxy.ts)
 # and of the API (app/gateways/http/middleware/security_headers_middleware.py)
