@@ -56,7 +56,9 @@ vulture runs in pytest (`tests/architecture_policy/test_dead_code.py`) over
 `app/` and `scripts/`. Delete code nothing uses; only a name used from
 outside Python (a serialized field, an enum value on the wire, a test or
 operator seam) goes into `vulture_whitelist.py`, one name per line in the
-section that explains why. The test holds the whitelist at
+section that explains why. The test counts the names from the syntax tree
+and refuses any statement other than a single `_.name` (so `_.a, _.b` or
+`_.a(_.b)` cannot hide a second name), and holds the whitelist at
 `WHITELISTED_NAMES` names: a new entry replaces one that is gone, and the
 number comes down when an entry leaves. knip does the same for the cabinet
 with no allowance at all (`npm run knip` in the `web-checks` job).
