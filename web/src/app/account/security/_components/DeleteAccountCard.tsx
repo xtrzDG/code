@@ -68,7 +68,7 @@ export function DeleteAccountCard({ me, account }: { me: CurrentUserView; accoun
     }
   };
 
-  const isPlatformTeam = me.user.is_platform_admin;
+  const isPlatformTeam = me.user.is_platform_admin || me.platform_admin_role != null;
   return (
     <Card title={t("closure.account.title")} className="border-danger/40" data-testid="delete-account">
       <div className="space-y-3 text-sm">

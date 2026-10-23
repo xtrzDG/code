@@ -62,9 +62,15 @@ describe("DeleteAccountCard: Account → Security, the danger zone", () => {
 
   it("sends the platform team to leave the team first, without a delete button", () => {
     const { t } = textsIn("en");
-    renderInLocale(<DeleteAccountCard me={{ ...me, user: { ...me.user, is_platform_admin: true } }} account={ACCOUNT} />);
+    const { unmount } = renderInLocale(
+      <DeleteAccountCard me={{ ...me, user: { ...me.user, is_platform_admin: true } }} account={ACCOUNT} />,
+    );
 
     expect(screen.getByText(t("closure.account.platformNote"))).toBeTruthy();
+    expect(screen.queryByRole("button", { name: t("closure.account.action") })).toBeNull();
+    unmount();
+    // A role on the team (read-only support, say) counts as much as the admin flag.
+    renderInLocale(<DeleteAccountCard me={{ ...me, platform_admin_role: "support_readonly" }} account={ACCOUNT} />);
     expect(screen.queryByRole("button", { name: t("closure.account.action") })).toBeNull();
   });
 });
