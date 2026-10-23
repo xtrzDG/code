@@ -2,7 +2,8 @@
 The rental billing tests that bill play the release after this one, where
 the release gate `phone_number_rental` is open (this release reads the kind
 `number_rental` but neither stores nor bills it: docs/operations/deploys.md;
-test_number_rental_gate.py covers this release).
+test_before_the_rental_gate_opens_no_month_is_billed_or_recorded covers this
+release).
 """
 
 import pytest

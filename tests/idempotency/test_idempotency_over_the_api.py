@@ -22,6 +22,8 @@ IDEMPOTENT_OPERATIONS: set[str] = {
     "POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages",
     "POST /v1/businesses/{business_id}/billing/checkout",
     "POST /v1/businesses/{business_id}/billing/subscribe",
+    "POST /v1/businesses/{business_id}/phone-line/number",
+    "POST /v1/businesses/{business_id}/phone-line/request",
     "POST /v1/public-api/bookings",
     "POST /v1/public-api/leads",
     "POST /v1/public-api/webhooks",
