@@ -1372,9 +1372,10 @@ API, и воркер. Чаще всего могут понадобиться:
   бизнеса>.json` в бакет резервных копий, а ежедневная
   `reapply_deletion_ledger` и `workshop restore-check` читают его, чтобы
   восстановленная из бэкапа база не вернула удалённый бизнес. Для этого
-  задайте сервису `workshop-worker` те же `BACKUP_S3_*` и
-  `BACKUP_AGE_PUBLIC_KEY`, что у `workshop-backup` (ключ с правом put и list
-  под префиксом). Без них worker в продакшене пишет предупреждение, и копия
+  задайте сервису `workshop-worker` те же `BACKUP_S3_ENDPOINT_URL`,
+  `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`,
+  `BACKUP_S3_SECRET_ACCESS_KEY` и `BACKUP_AGE_PUBLIC_KEY`, что у
+  `workshop-backup` (ключ с правом put и list под префиксом). Без них worker в продакшене пишет предупреждение, и копия
   журнала живёт только в базе и в памяти процесса. Отключение у
   провайдеров при удалении (агенты ElevenLabs, вебхуки Telegram, подписки
   Meta, токены Google, номера Twilio, списания Stripe/Flitt) проверено на
