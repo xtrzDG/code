@@ -116,9 +116,15 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
+          # The one-time setup of docs/operations/deploys.md ("Database
+          # roles"): the migration role may not create roles, so the two
+          # groups of migration 1200 come first.
           psql --host localhost --username postgres --set ON_ERROR_STOP=1 <<'SQL'
+          create role workshop_tenant nologin;
+          create role workshop_platform nologin;
           create role workshop login password 'workshop'
             nosuperuser nobypassrls nocreatedb nocreaterole;
+          grant workshop_platform to workshop;
           create database workshop owner workshop;
           SQL
 
