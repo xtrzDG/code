@@ -1,6 +1,7 @@
 """
 The sub-processors the platform runs on: hosting, storage, monitoring, the
-bot check, payments and the calendar a Client may connect.
+bot check, payments (Flitt, and Stripe in the EU, the US and Israel) and the
+calendar a Client may connect.
 """
 
 from app.registries.legal.subprocessor_texts import (
@@ -10,6 +11,15 @@ from app.registries.legal.subprocessor_texts import (
     texts,
 )
 from app.schemas.dto.legal import SubprocessorEntry
+from app.schemas.typings.legal.constrained_strings import SubprocessorChangeDate
+
+# Stripe charging owners in the EU, the US and Israel is a new
+# sub-processor: announced to owners on this day (the
+# send_subprocessor_notices job), in force 30 days later. Until then the
+# `stripe_payments` release gate stays closed and those owners pay through
+# Flitt (docs/LAUNCH.md 4.7.2).
+STRIPE_ANNOUNCED_ON: SubprocessorChangeDate = SubprocessorChangeDate("2026-10-23")
+STRIPE_FROM: SubprocessorChangeDate = SubprocessorChangeDate("2026-11-22")
 
 PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
     SubprocessorEntry(
@@ -32,6 +42,28 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         client_modules=modules("flitt"),
         added_on=ORIGINAL_LIST_DATE,
+    ),
+    SubprocessorEntry(
+        key=key("stripe"),
+        name=texts("Stripe", "Stripe", "Stripe"),
+        purpose=texts(
+            "Payment of the Client's subscription in the EU, the US and Israel",
+            "Оплата подписки Клиента в ЕС, США и Израиле",
+            "კლიენტის გამოწერის გადახდა ევროკავშირში, აშშ-სა და ისრაელში",
+        ),
+        personal_data=texts(
+            "Billing data of the Client (not of its customers)",
+            "Платёжные данные Клиента (не его клиентов)",
+            "კლიენტის (და არა მისი მომხმარებლების) გადახდის მონაცემები",
+        ),
+        location=texts(
+            "[Stripe Payments Europe, Ireland; to be confirmed]",
+            "[Stripe Payments Europe, Ирландия; уточнить]",
+            "[Stripe Payments Europe, ირლანდია; დასაზუსტებელია]",
+        ),
+        client_modules=modules("stripe"),
+        added_on=STRIPE_FROM,
+        addition_announced_on=STRIPE_ANNOUNCED_ON,
     ),
     SubprocessorEntry(
         key=key("sentry"),

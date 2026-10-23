@@ -20,6 +20,7 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
     {
         "clients.postgres_pool",
         "clients.flitt_client",
+        "clients.stripe_client",
         "clients.langfuse_ingestion_client",
         "clients.twilio_messaging_client",
         "clients.telegram_gateway_client",
