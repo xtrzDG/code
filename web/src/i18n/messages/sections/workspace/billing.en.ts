@@ -61,7 +61,7 @@ export const billingEn = {
     trial: "Pay before {date} to keep the assistant working after the trial.",
     usageTitle: "{percent} of the package used",
     usageExceededTitle: "The package is used up",
-    usageVoice: "Voice minutes are running out. Each minute above the package costs {price}.",
+    usageVoice: "Voice minutes are running out. Minutes above the package are charged at {price} each.",
     usageVoiceExceeded: "Minutes above the package are charged at {price} each. Consider a bigger plan.",
     usageDialogs: "Dialogs in the package are running out.",
     usageDialogsExceeded: "The dialogs in the package are used up. Consider a bigger plan.",

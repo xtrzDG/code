@@ -125,3 +125,15 @@ describe("the Russian glossary", () => {
     expect(wrong.map((leaf) => `${leaf.path}: ${leaf.text}`)).toEqual([]);
   });
 });
+
+describe("every text the cabinet's pages carry", () => {
+  // A cabinet page holds its dictionary, and the DAST scan's rule 10099
+  // (.github/workflows/zap.yml) reads "the package costs {price}" as an
+  // ActionScript 3.0 declaration, `package <name> {`: a Medium finding.
+  const ACTIONSCRIPT_PACKAGE = /\bpackage\s+[a-z0-9.]+\s*\{/i;
+
+  it("never reads as source code to the scan", () => {
+    const wrong = [en, ru, ka, he, de].flatMap((tree) => leaves(tree).filter((leaf) => ACTIONSCRIPT_PACKAGE.test(leaf.text)));
+    expect(wrong.map((leaf) => `${leaf.path}: ${leaf.text}`)).toEqual([]);
+  });
+});
