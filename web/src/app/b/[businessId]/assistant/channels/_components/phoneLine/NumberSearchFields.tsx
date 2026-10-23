@@ -11,7 +11,7 @@ import type { FormEvent } from "react";
 import type { CountryListItem } from "@/api/types";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { countryFlag } from "@/lib/countries";
+import { countryFlag, countryName } from "@/lib/countries";
 
 import { PHONE_NUMBER_TYPES, groupCountries, type PhoneNumberType } from "../../_lib/phoneLine";
 
@@ -36,7 +36,7 @@ export function NumberSearchFields({
   isSearching: boolean;
   onSearch: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const groups = groupCountries(countries, selfServeCountries);
   const label = (country: CountryListItem) => `${countryFlag(country.country_code)} ${country.display_name}`;
   const knownCountry = countries.some((country) => country.country_code === form.countryCode);
@@ -51,7 +51,10 @@ export function NumberSearchFields({
       <Field label={t("phoneNumbers.dialog.country")}>
         {(control) => (
           <Select {...control} value={form.countryCode} onChange={(event) => onChange({ countryCode: event.target.value })}>
-            {knownCountry ? null : <option value={form.countryCode}>{form.countryCode}</option>}
+            {knownCountry ? null : (
+              // Until the catalog loads (or for a country it lacks): the name, never a bare code.
+              <option value={form.countryCode}>{`${countryFlag(form.countryCode)} ${countryName(form.countryCode, locale)}`}</option>
+            )}
             {groups.now.length > 0 ? (
               <optgroup label={t("phoneNumbers.dialog.countriesNow")}>
                 {groups.now.map((country) => (

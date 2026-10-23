@@ -183,6 +183,20 @@ describe("the phone card's number from us", () => {
     expect(vi.mocked(api.DELETE).mock.calls[0]?.[0]).toBe("/v1/businesses/{business_id}/phone-line/request");
   });
 
+  it("names the business's country while the country list is still loading", async () => {
+    answerGet((path) => (path === LINE_PATH ? ok({ ...EMPTY_LINE, default_country_code: "GE" }) : pending()));
+    renderPanel();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
+    const dialog = await screen.findByRole("dialog");
+    const country = within(dialog).getByLabelText(t("phoneNumbers.dialog.country"), { exact: false });
+
+    expect((country as HTMLSelectElement).value).toBe("GE");
+    expect(within(country).getByRole("option", { name: /Georgia/ })).toBeTruthy();
+    expect(within(country).queryByRole("option", { name: "GE" })).toBeNull();
+  });
+
   it("tells staff only an owner takes a number", async () => {
     answer(EMPTY_LINE);
     renderPanel(false);
