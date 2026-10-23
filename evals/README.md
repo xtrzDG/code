@@ -7,7 +7,7 @@ pull request (offline, from recorded model answers) and every night
 | Check | What it guards | Runs |
 | --- | --- | --- |
 | `tests/evals/test_replay_cassettes.py` | every scenario of every niche replays from `evals/cassettes` with no stale recording and the result matches `evals/baselines/scripted.json` | every CI run (`uv run pytest`), no network, no keys |
-| `tests/evals/test_eval_coverage.py`, `test_dataset_depth.py` | every assistant tool is expected by a scenario, every scenario kind is played, every niche plays the customer flows and attacks below | every CI run |
+| `tests/evals/test_eval_coverage.py`, `test_dataset_depth.py` | every tool a chat offers is expected by a scenario (`decline_recording`, offered only on calls, is covered by `tests/calls/test_declined_recordings.py`), every scenario kind is played, every niche plays the customer flows and attacks below | every CI run |
 | `scripts/run_evals.py --record --model <model>` | real models play the scenarios: pass^k, per-criterion rates, judge scores, cost and latency, compared with `evals/baselines/<model>.json` | nightly and on demand (`.github/workflows/evals-nightly.yml`) |
 
 ## What is played
