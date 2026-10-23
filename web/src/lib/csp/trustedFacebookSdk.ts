@@ -20,7 +20,7 @@ const POLICY_NAME = "facebook-sdk";
 const SDK_ADDRESS = /^https:\/\/connect\.facebook\.net\/[a-z]{2}_[A-Z]{2}\/sdk\.js$/;
 
 /** Whether an address is the SDK's (and nothing else of Facebook's). */
-export function isFacebookSdkAddress(value: string): boolean {
+function isFacebookSdkAddress(value: string): boolean {
   return SDK_ADDRESS.test(value);
 }
 

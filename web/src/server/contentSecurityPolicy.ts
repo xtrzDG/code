@@ -55,6 +55,8 @@ interface PolicyOptions {
   isDevelopment: boolean;
   /** Served over HTTPS: every request of the page goes over HTTPS too. */
   isHttps: boolean;
+  /** A page where the owner signs in with Facebook (lib/metaSignInPages.ts). */
+  allowsFacebookSignIn?: boolean;
 }
 
 function scriptSource(options: PolicyOptions, extra: readonly string[]): string {
