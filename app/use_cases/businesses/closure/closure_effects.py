@@ -1,5 +1,7 @@
 """What closing a business switches off, and what cancelling the closure brings back."""
 
+import logging
+
 from typed_time_provider import Microseconds
 
 from app.contracts.billing import (
@@ -19,10 +21,13 @@ from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.shared.recurring_charges import stop_recurring_charges
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ClosureEffects:
@@ -32,7 +37,9 @@ class ClosureEffects:
     credentials and its account, so nobody else takes the account while the
     business may still come back. An owner's closure also stops the
     automatic charges and cancels the subscription (no charge during the
-    30 days; the period already paid keeps running). Cancelling the
+    30 days; the period already paid keeps running); a provider that cannot
+    be reached leaves the subscription as it is, and the deletion stops the
+    charges for certain (it retries until the provider answers). Cancelling the
     closure turns the same channels on again and resumes an assistant that
     was live (activating its published version anew); billing stays
     stopped until the owner chooses a plan again.
@@ -99,9 +106,19 @@ class ClosureEffects:
         if subscription is None or subscription.status is SubscriptionStatus.CANCELLED:
             return
 
-        stop_recurring_charges(
-            self._payment_gateway, self._payment_order_repo, subscription
-        )
+        try:
+            stop_recurring_charges(
+                self._payment_gateway, self._payment_order_repo, subscription
+            )
+        except ExternalServiceError as error:
+            logger.warning(
+                "The automatic charges of business %s were not stopped at its "
+                "closure: %s",
+                business_id,
+                error,
+            )
+            return
+
         subscription.status = SubscriptionStatus.CANCELLED
         subscription.grace_until = None
         subscription.pause_starts_at = None

@@ -701,6 +701,7 @@
     "closure.certificate.retained_billing": "Ausgestellte Rechnungen und Partnerprovisionen ({count}): so lange aufbewahrt, wie das Steuerrecht es verlangt.",
     "closure.certificate.backups": "Verschlüsselte Sicherungen laufen von selbst ab: tägliche Kopien nach 30 Tagen, monatliche nach 12 Monaten. Eine wiederhergestellte Sicherung bringt dieses Unternehmen nie zurück: Die Löschung wird aus dem Löschprotokoll erneut angewendet.",
     "closure.certificate.digest": "Fingerabdruck (SHA-256)",
-    "closure.certificate.footer": "Ausgestellt von Assistant Workshop. Bewahren Sie diese Bestätigung als Nachweis der Löschung auf."
+    "closure.certificate.footer": "Ausgestellt von Assistant Workshop. Bewahren Sie diese Bestätigung als Nachweis der Löschung auf.",
+    "closure.notices.reopened_paid": "{business} ist wieder geöffnet: Das Abonnement ist bezahlt, nichts wird gelöscht, und die Kanäle, die aktiv waren, sind wieder aktiv."
   }
 }

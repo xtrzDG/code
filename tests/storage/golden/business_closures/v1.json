@@ -1,5 +1,6 @@
 {
   "business_id": "business_169669bf-5b6f-4d38-a509-3a891d162fbc",
+  "cancelled_at": 1790000000000000,
   "created_at": 1790000000000000,
   "delete_after": 1790000000000000,
   "deletion_queued_at": 1790000000000000,

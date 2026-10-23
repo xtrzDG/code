@@ -701,6 +701,7 @@
     "closure.certificate.retained_billing": "חשבוניות שהונפקו ועמלות שותפים ({count}): נשמרות כל עוד דיני המס מחייבים.",
     "closure.certificate.backups": "גיבויים מוצפנים פגים מעצמם: עותקים יומיים אחרי 30 יום, עותקים חודשיים אחרי 12 חודשים. גיבוי משוחזר לעולם לא יחזיר את העסק הזה: המחיקה מוחלת מחדש מיומן המחיקות.",
     "closure.certificate.digest": "טביעת אצבע (SHA-256)",
-    "closure.certificate.footer": "הונפק על ידי Assistant Workshop. שמרו אישור זה כהוכחה למחיקה."
+    "closure.certificate.footer": "הונפק על ידי Assistant Workshop. שמרו אישור זה כהוכחה למחיקה.",
+    "closure.notices.reopened_paid": "{business} פתוח שוב: המינוי שולם, שום דבר לא יימחק, והערוצים שהיו פעילים פועלים שוב."
   }
 }

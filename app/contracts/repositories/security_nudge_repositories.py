@@ -24,3 +24,7 @@ class SecurityNudgeRepoContract(RepoContract, Protocol):
     ) -> SecurityNudgeDocument:
         """Remember that the person put the reminder away now, with this team."""
         raise NotImplementedError
+
+    def forget(self, business_id: BusinessId, user_id: UserId) -> None:
+        """Forget the person's answer in the business (their account went)."""
+        raise NotImplementedError

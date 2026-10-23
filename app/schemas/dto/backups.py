@@ -17,6 +17,11 @@ from app.schemas.typings.backups.constrained_strings import (
     ScratchDatabaseName,
 )
 from app.schemas.typings.backups.strings import RestoreCheckProblem
+from app.schemas.typings.business_closures.constrained_integers import (
+    DeletedRowCount,
+    LedgerBusinessCount,
+    ResurrectedRowCount,
+)
 from app.schemas.typings.platform.strings import LocalDirectoryPath
 from app.schemas.typings.storage.constrained_strings import (
     SchemaMigrationChecksum,
@@ -96,12 +101,28 @@ class IsolationProbe(ImmutableDTO):
     foreign_rows: TableRowCount
 
 
+class DeletionLedgerApplication(ImmutableDTO):
+    """
+    The deletion ledger applied to the restored database: how many deleted
+    businesses it names, how many of their rows the restore brought back
+    and the ledger deleted again, and how many are left (must be none).
+    """
+
+    deleted_businesses: LedgerBusinessCount
+    erased_rows: DeletedRowCount
+    remaining_rows: ResurrectedRowCount
+
+
 class RestoredDatabase(ImmutableDTO):
-    """What the drill found in the restored scratch database."""
+    """
+    What the drill found in the restored scratch database, and what applying
+    the deletion ledger to it did (None: an adapter that does not apply it).
+    """
 
     scratch_database: ScratchDatabaseName
     facts: DatabaseFacts
     isolation_probes: list[IsolationProbe] = Field(default_factory=list[IsolationProbe])
+    ledger: DeletionLedgerApplication | None = None
 
 
 class CreateDatabaseBackupCommand(ImmutableDTO):

@@ -12,4 +12,5 @@ CLOSURE_NOTICE_TEXTS: dict[ClosureNoticeKind, LocalizedText] = {
     ClosureNoticeKind.OPENED_BY_OWNER: owner_text("closure.notices.opened_by_owner"),
     ClosureNoticeKind.OPENED_UNPAID: owner_text("closure.notices.opened_unpaid"),
     ClosureNoticeKind.CANCELLED: owner_text("closure.notices.cancelled"),
+    ClosureNoticeKind.REOPENED_PAID: owner_text("closure.notices.reopened_paid"),
 }

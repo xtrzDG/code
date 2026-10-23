@@ -695,6 +695,7 @@
     "closure.certificate.retained_billing": "Issued invoices and partner commissions ({count}): kept as long as tax law requires.",
     "closure.certificate.backups": "Encrypted backups expire on their own: daily copies after 30 days, monthly copies after 12 months. A restored backup never brings this business back: the deletion is applied again from the deletion ledger.",
     "closure.certificate.digest": "Fingerprint (SHA-256)",
-    "closure.certificate.footer": "Issued by Assistant Workshop. Keep this certificate as proof of the deletion."
+    "closure.certificate.footer": "Issued by Assistant Workshop. Keep this certificate as proof of the deletion.",
+    "closure.notices.reopened_paid": "{business} is open again: the subscription is paid, nothing will be deleted, and the channels that were on are on again."
   }
 }

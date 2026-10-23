@@ -40,7 +40,9 @@ class BusinessClosureDocument(BaseDocument):
     keep their credentials, so a cancelled closure turns them on again with
     the assistant's former `status_before`). At `delete_after` the hourly
     sweep queues the deletion (`deletion_queued_at`), which nothing stops
-    any more.
+    any more. A cancel first marks the closure `cancelled_at` (in one step
+    that refuses a queued one, as the sweep refuses a cancelled one), then
+    removes it, so the two never both win.
     """
 
     id: BusinessClosureId
@@ -52,6 +54,7 @@ class BusinessClosureDocument(BaseDocument):
     status_before: BusinessStatus
     disconnected_channel_ids: list[ChannelId] = Field(default_factory=list[ChannelId])
     deletion_queued_at: Microseconds | None = None
+    cancelled_at: Microseconds | None = None
 
 
 class DeprovisionRecord(PersistentDocument):

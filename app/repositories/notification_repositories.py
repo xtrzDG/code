@@ -84,6 +84,9 @@ class NotificationPreferencesRepository(
     def save(self, preferences: UserNotificationPreferencesDocument) -> None:
         self._store(str(preferences.id), preferences)
 
+    def delete(self, business_id: BusinessId, user_id: UserId) -> None:
+        self._remove(business_id, str(preferences_id_of(business_id, user_id)))
+
 
 class StaffDeliveryStateRepository(
     BusinessScopedRepository[StaffDeliveryStateDocument],

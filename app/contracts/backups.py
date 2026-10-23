@@ -3,6 +3,7 @@ Off-site database backups: the bucket, the archive cipher, the dump and
 the scratch database of the restore drill (docs/operations/backup-restore.md).
 """
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from app.contracts.adapter_contract import AdapterContract
@@ -17,6 +18,7 @@ from app.schemas.typings.backups.constrained_strings import (
     BackupObjectKey,
     BackupObjectPrefix,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import LocalFilePath
 
 
@@ -72,10 +74,13 @@ class ScratchDatabaseAdapterContract(AdapterContract, Protocol):
         self,
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
+        deleted_business_ids: Sequence[BusinessId] = (),
     ) -> RestoredDatabase:
         """
         Restore the dump into a new scratch database, count it and probe
-        its row-level security; drop it again unless it is kept.
+        its row-level security, then apply the deletion ledger (these
+        businesses and the restored database's own ledger lose their rows
+        again); drop it again unless it is kept.
 
         Raises:
             BackupToolError: the scratch database or pg_restore failed.

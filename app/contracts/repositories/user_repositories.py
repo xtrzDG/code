@@ -33,6 +33,10 @@ class UserRepoContract(RepoContract, Protocol):
     def get(self, user_id: UserId) -> UserDocument | None:
         raise NotImplementedError
 
+    def delete(self, user_id: UserId) -> None:
+        """Forget the person (their account is deleted); a missing one is fine."""
+        raise NotImplementedError
+
     def find_by_phone_number(
         self,
         phone_number: E164PhoneNumber,

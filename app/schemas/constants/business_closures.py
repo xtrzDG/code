@@ -63,9 +63,11 @@ class DeprovisionOutcome(StrEnum):
 class ClosureNoticeKind(StrEnum):
     """
     What the owners are told: an owner closed the business, it closed for
-    non-payment, or the closure was cancelled.
+    non-payment, an owner cancelled the closure, or paying again reopened
+    a business closed for non-payment.
     """
 
     OPENED_BY_OWNER = "opened_by_owner"
     OPENED_UNPAID = "opened_unpaid"
     CANCELLED = "cancelled"
+    REOPENED_PAID = "reopened_paid"

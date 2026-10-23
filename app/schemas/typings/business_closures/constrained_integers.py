@@ -21,6 +21,12 @@ class DeprovisionedItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class LedgerBusinessCount(BaseConstrainedTypedInt):
+    """How many deleted businesses the deletion ledger names."""
+
+    ge = 0
+
+
 class OffboardAfterDays(BaseConstrainedTypedInt):
     """
     OFFBOARD_AFTER_DAYS: how many days after a subscription ended unpaid the
@@ -30,6 +36,15 @@ class OffboardAfterDays(BaseConstrainedTypedInt):
 
     ge = 7
     le = 3650
+
+
+class ResurrectedRowCount(BaseConstrainedTypedInt):
+    """
+    Rows of deleted businesses still found in a restored database after the
+    deletion ledger was applied to it (anything but 0 fails the drill).
+    """
+
+    ge = 0
 
 
 # Keep abc order for all non example types, if possible.
