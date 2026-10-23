@@ -7,6 +7,8 @@ page, and the Graph API calls that turn one into a connected channel
 from collections.abc import Callable
 from typing import Protocol
 
+from typed_time_provider import Microseconds
+
 from app.contracts.client_contract import ClientContract
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.meta_connections import MetaConnectionStateDocument
@@ -32,6 +34,7 @@ from app.schemas.typings.meta_connection.strings import (
     MetaAccessToken,
     MetaPageAccessToken,
 )
+from app.schemas.typings.storage.constrained_integers import DocumentCount
 
 type MetaConnectionStateChange = Callable[
     [MetaConnectionStateDocument], MetaConnectionStateDocument | None
@@ -74,6 +77,13 @@ class MetaConnectionStateRepoContract(RepoContract, Protocol):
     def delete(
         self, business_id: BusinessId, state_hash: MetaConnectionStateHash
     ) -> None:
+        raise NotImplementedError
+
+    def delete_ended_before(self, moment: Microseconds) -> DocumentCount:
+        """
+        Across businesses: delete the sign-ins that ended before `moment`
+        (an abandoned page picker's kept token with them); how many.
+        """
         raise NotImplementedError
 
 

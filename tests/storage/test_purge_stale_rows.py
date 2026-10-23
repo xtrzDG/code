@@ -17,6 +17,9 @@ from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
 )
+from app.repositories.meta_connection_state_repository import (
+    MetaConnectionStateRepository,
+)
 from app.repositories.mfa_repositories import MfaChallengeRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
@@ -32,17 +35,22 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.meta_connection import MetaConnectionPurpose
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.meta_connections import MetaConnectionStateDocument
 from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.channels.strings import (
+    EncryptedChannelSecret,
+    ProviderMessageId,
+)
 from app.schemas.typings.conversations.strings import MessageText, ProviderCallId
 from app.schemas.typings.deliveries.constrained_strings import (
     OutboundIdempotencyKey,
@@ -51,6 +59,9 @@ from app.schemas.typings.deliveries.constrained_strings import (
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
+)
+from app.schemas.typings.meta_connection.constrained_strings import (
+    MetaConnectionStateHash,
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
@@ -101,6 +112,22 @@ def second_step(created_at: int) -> MfaChallengeDocument:
         expires_at=Microseconds(created_at + 300_000_000),
         created_at=Microseconds(created_at),
         updated_at=Microseconds(created_at),
+    )
+
+
+def facebook_sign_in(expires_at: int) -> MetaConnectionStateDocument:
+    """An abandoned page-picker sign-in that kept the owner's token."""
+
+    return MetaConnectionStateDocument(
+        business_id=BusinessId(),
+        user_id=UserId(),
+        purpose=MetaConnectionPurpose.PAGES,
+        state_hash=MetaConnectionStateHash(f"{expires_at:064x}"),
+        expires_at=Microseconds(expires_at),
+        is_consumed=True,
+        encrypted_user_token=EncryptedChannelSecret("sealed-test-token-0000"),
+        created_at=Microseconds(expires_at - 900_000_000),
+        updated_at=Microseconds(expires_at - 900_000_000),
     )
 
 
@@ -199,6 +226,12 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     old_step, fresh_step = second_step(NOW - DAY - 1), second_step(NOW - HOUR)
     second_steps.save(old_step)
     second_steps.save(fresh_step)
+    sign_in_collection = collections(
+        MetaConnectionStateDocument, "meta_connection_states"
+    )
+    ended_sign_in, open_sign_in = facebook_sign_in(NOW - 1), facebook_sign_in(NOW + 1)
+    for sign_in in (ended_sign_in, open_sign_in):
+        sign_in_collection.upsert(str(sign_in.state_hash), sign_in)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
@@ -209,12 +242,13 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         audit_log_repo=audit,
         wall_clock=build_fixed_wall_clock(),
         mfa_challenge_repo=second_steps,
+        meta_connection_state_repo=MetaConnectionStateRepository(sign_in_collection),
     )
 
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 8
+    assert report.processed_count == 9
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
@@ -226,10 +260,14 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     assert [m.id for m in missed_collection.list_all()] == [fresh_missed.id]
     assert second_steps.get(old_step.id) is None
     assert second_steps.get(fresh_step.id) == fresh_step
+    assert [r.state_hash for r in sign_in_collection.list_all()] == [
+        open_sign_in.state_hash
+    ]
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
         "inbound_event",
+        "meta_connection_state",
         "mfa_challenge",
         "missed_call",
         "otp_challenge",

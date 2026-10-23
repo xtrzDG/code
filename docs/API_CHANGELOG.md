@@ -27,7 +27,9 @@ Spec: `3127740f5d6b11a5`
   the Embedded Signup `configuration_id` (WhatsApp) or the `permissions` to
   ask for (pages). 422 `meta_not_configured` when the server has no Meta app.
 - **Added** `POST /v1/businesses/{business_id}/channels/whatsapp/embedded-signup`
-  (owner, recent sign-in): the `state` and Meta's `code` (and the
+  (owner; no second step-up: the `state` was issued only after one and is
+  bound to the same owner, so Meta's single-use code never waits on a
+  re-confirmation): the `state` and Meta's `code` (and the
   `whatsapp_business_account_id` / `phone_number_id` the signup window
   reported, optional). The server exchanges the code, reads the granted
   WhatsApp Business Account from the token's granular scopes, subscribes the
@@ -36,12 +38,15 @@ Spec: `3127740f5d6b11a5`
   codes): `meta_link_expired`, `meta_permission_missing`,
   `whatsapp_account_missing`, `whatsapp_number_missing` (422) and
   `whatsapp_pin_mismatch` (409: the number has two-step verification with
-  another PIN); 409 when another business already serves the number.
+  another PIN; the PIN the platform chose is kept per number, also while
+  the channel is off, so reconnecting a number reuses it); 409 when another
+  business already serves the number.
 - **Added** `POST /v1/businesses/{business_id}/channels/meta/pages` (owner):
   the `state` and Facebook Login's `code`; answers the pages the owner manages
   (`pages[]`: id, name, username, the linked Instagram account) and until
   when the choice is open. The short-lived user token is kept encrypted with
-  the state until a page is chosen.
+  the state until a page is chosen; an abandoned sign-in is deleted with it
+  by the daily purge once it ends.
 - **Added** `PUT /v1/businesses/{business_id}/channels/{channel}/page` (owner,
   recent sign-in; `channel` is `messenger` or `instagram`): the `state` and the
   chosen `page_id`; connects the page (Instagram: its linked professional
@@ -50,7 +55,8 @@ Spec: `3127740f5d6b11a5`
 - **Added** `PUT /v1/businesses/{business_id}/channels/instagram/comment-replies`
   (owner): `is_on`, up to 20 `keywords` and `reply_text`; when on, a comment
   naming a keyword gets one private reply in Direct (at most one per person a
-  day and 60 per business an hour). 422 `comment_keywords_missing`,
+  day and 60 per business an hour; never to a customer the owner blocked or
+  who said STOP). 422 `comment_keywords_missing`,
   `comment_reply_missing`; 404 without a connected Instagram.
 - **Changed** (additive) `ChannelView.comment_replies` (Instagram only, else
   null; `is_available` says whether this release answers comments yet: the

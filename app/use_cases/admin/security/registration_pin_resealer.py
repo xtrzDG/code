@@ -8,7 +8,7 @@ already).
 from collections.abc import Callable
 
 from app.contracts.repositories.business_repositories import ChannelRepoContract
-from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.channels import ChannelDocument, WhatsAppNumberPin
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 
@@ -23,24 +23,25 @@ def reseal_registration_pins(
     """Every kept registration PIN of the business under the current key."""
 
     for channel in channel_repo.list_by_business(business_id):
-        previous: EncryptedChannelSecret | None = channel.encrypted_registration_pin
-        if previous is None:
-            continue
+        for kept in channel.whatsapp_registration_pins:
+            sealed: EncryptedChannelSecret | None = reseal(kept.encrypted_pin)
+            if sealed is None or sealed == kept.encrypted_pin:
+                continue
 
-        sealed: EncryptedChannelSecret | None = reseal(previous)
-        if sealed is None or sealed == previous:
-            continue
-
-        channel_repo.modify(business_id, channel.id, replacing_pin(previous, sealed))
+            channel_repo.modify(business_id, channel.id, replacing_pin(kept, sealed))
 
 
 def replacing_pin(
-    previous: EncryptedChannelSecret, sealed: EncryptedChannelSecret
+    previous: WhatsAppNumberPin, sealed: EncryptedChannelSecret
 ) -> Callable[[ChannelDocument], ChannelDocument | None]:
     def replace(stored: ChannelDocument) -> ChannelDocument | None:
-        if stored.encrypted_registration_pin != previous:
+        if previous not in stored.whatsapp_registration_pins:
             return None  # Registered again meanwhile: the current key.
 
-        return stored.model_copy(update={"encrypted_registration_pin": sealed})
+        pins: list[WhatsAppNumberPin] = [
+            pin.model_copy(update={"encrypted_pin": sealed}) if pin == previous else pin
+            for pin in stored.whatsapp_registration_pins
+        ]
+        return stored.model_copy(update={"whatsapp_registration_pins": pins})
 
     return replace

@@ -41,9 +41,12 @@ class ListMetaPagesUseCase(UseCaseContract[ListMetaPagesCommand, MetaPageList]):
     short-lived token, which lists the pages they manage, pages with a
     linked Instagram professional account first, then by name.
 
-    The token is kept encrypted with the sign-in until it ends (fifteen
-    minutes) or a page is connected, which reads the chosen page's token
-    with it; nothing about the pages is stored.
+    The token is kept encrypted with the sign-in, usable until the sign-in
+    ends (fifteen minutes) or a page is connected, which reads the chosen
+    page's token with it and deletes the sign-in. An abandoned sign-in is
+    deleted when the business's owner starts the next one, or else by the
+    daily purge of stale rows (`PurgeStaleRowsUseCase`), its token with it:
+    at most a day after it ended. Nothing about the pages is stored.
     """
 
     def __init__(

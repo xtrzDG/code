@@ -81,6 +81,18 @@ class InstagramCommentReplies(PersistentDocument):
     reply_text: CommentReplyText | None = None
 
 
+class WhatsAppNumberPin(PersistentDocument):
+    """
+    The two-step PIN the platform registered one WhatsApp number with
+    (Embedded Signup), encrypted. Kept per number, whatever the channel's
+    status, so registering the number again (after the channel was turned
+    off, or another number was connected meanwhile) sends the same PIN.
+    """
+
+    phone_number_id: ChannelExternalId
+    encrypted_pin: EncryptedChannelSecret = Field(repr=False)
+
+
 class ChannelDocument(BaseDocument):
     """
     A connected customer channel (concept table `channels`).
@@ -117,8 +129,9 @@ class ChannelDocument(BaseDocument):
     channel connected through Embedded Signup keeps its business account
     (`whatsapp_business_account_id`), its own token as `encrypted_secret`
     (a number connected by hand has none and is sent with the platform's
-    system user token) and the two-step PIN its number was registered with
-    (`encrypted_registration_pin`, so registering again keeps it). An
+    system user token) and the two-step PINs its numbers were registered
+    with (`whatsapp_registration_pins`, one per number and kept while the
+    channel is off, so registering a number again keeps its PIN). An
     Instagram channel keeps its comment-to-DM settings (`comment_replies`).
     Version 4 rows read as they are.
     """
@@ -144,7 +157,7 @@ class ChannelDocument(BaseDocument):
     last_inbound_at: Microseconds | None = None
     last_outbound_at: Microseconds | None = None
     whatsapp_business_account_id: WhatsAppBusinessAccountId | None = None
-    encrypted_registration_pin: EncryptedChannelSecret | None = Field(
-        default=None, repr=False
+    whatsapp_registration_pins: list[WhatsAppNumberPin] = Field(
+        default_factory=list[WhatsAppNumberPin], repr=False
     )
     comment_replies: InstagramCommentReplies | None = None

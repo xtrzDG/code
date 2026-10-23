@@ -85,7 +85,6 @@ class MetaWorld(CabinetSetup):
             "audit_log_repo": testbed.audit_log_repo,
             "product_events": testbed.product_events,
             "storage_scope": StorageScopeContext(),
-            "step_up": step_up,
             "app_settings": testbed.settings,
             "wall_clock": testbed.wall_clock,
         }
@@ -102,6 +101,7 @@ class MetaWorld(CabinetSetup):
             oauth,
             pages,
             testbed.meta_client,
+            step_up=step_up,
             **writes,
         )
         application = FastAPI()

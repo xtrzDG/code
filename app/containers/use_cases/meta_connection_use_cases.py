@@ -100,7 +100,6 @@ class MetaConnectionUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         product_events=facilitators.product_events,
         storage_scope=utilities.storage_scope,
-        step_up=utilities.step_up_guard,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -159,6 +158,8 @@ class MetaConnectionUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ReplyToCommentTriggerUseCase,
         channel_repo=repositories.channel_repo,
+        contact_repo=repositories.contact_repo,
+        suppression_list=facilitators.suppression_list,
         outbound_message_repo=repositories.outbound_message_repo,
         job_queue=facilitators.job_queue_facilitator,
         rate_limit_registry=registries.request_rate_limit_registry,

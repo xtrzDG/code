@@ -75,17 +75,6 @@
         ],
         "default": null
       },
-      "encrypted_registration_pin": {
-        "anyOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null
-      },
       "encrypted_secret": {
         "anyOf": [
           {
@@ -322,6 +311,25 @@
           }
         ],
         "default": null
+      },
+      "whatsapp_registration_pins": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "encrypted_pin": {
+              "type": "string"
+            },
+            "phone_number_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "phone_number_id",
+            "encrypted_pin"
+          ],
+          "type": "object"
+        },
+        "type": "array"
       },
       "whatsapp_staff_template": {
         "anyOf": [

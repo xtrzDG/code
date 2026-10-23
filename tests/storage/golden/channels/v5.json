@@ -10,7 +10,6 @@
   "created_at": 1790000000000000,
   "credential_checked_at": 1790000000000000,
   "credential_expires_at": 1790000000000000,
-  "encrypted_registration_pin": "Sample EncryptedChannelSecret",
   "encrypted_secret": "Sample EncryptedChannelSecret",
   "external_id": "Sample ChannelExternalId",
   "id": "channel_943d2763-8669-403c-b51f-6cb6a2ffb8cc",
@@ -33,6 +32,12 @@
     "position": "left"
   },
   "whatsapp_business_account_id": "102290129340398",
+  "whatsapp_registration_pins": [
+    {
+      "encrypted_pin": "Sample EncryptedChannelSecret",
+      "phone_number_id": "Sample ChannelExternalId"
+    }
+  ],
   "whatsapp_staff_template": {
     "language_code": "en_US",
     "name": "booking_reminder"

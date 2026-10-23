@@ -1,29 +1,21 @@
 """
 Choosing what WhatsApp Embedded Signup connected: the business account the
-token was granted for, the number in it, and the number's two-step PIN.
+token was granted for and the number in it (the number's two-step PIN is
+chosen in `whatsapp_registration_pins.py`).
 """
 
-import secrets
-
-from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.meta_connection import MetaConnectionRefusal
-from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels.meta_provider import MetaTokenGrants
 from app.schemas.dto.channels.provider_profiles import WhatsAppPhoneNumberProfile
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.constrained_strings import MetaObjectId
-from app.schemas.typings.channels.strings import ChannelExternalId, ChannelSecret
 from app.schemas.typings.meta_connection.constrained_strings import (
     WhatsAppBusinessAccountId,
-    WhatsAppRegistrationPin,
 )
 from app.use_cases.channels.meta_connection.meta_states import meta_refusal
 from app.utilities.channels.meta_sign_in import (
     WHATSAPP_MANAGEMENT,
     WHATSAPP_MESSAGING,
 )
-
-PIN_DIGITS: int = 6
 
 
 def choose_business_account(
@@ -74,32 +66,4 @@ def choose_phone_number(
         MetaConnectionRefusal.NO_WHATSAPP_NUMBER,
         "No single WhatsApp number came with this account. Add the number "
         "in Meta's window and start again.",
-    )
-
-
-def registration_pin(
-    existing: ChannelDocument | None,
-    phone_number_id: MetaObjectId,
-    secret_cipher: SecretCipherAdapterContract,
-) -> WhatsAppRegistrationPin:
-    """
-    The PIN the number was registered with when the business connected it
-    before (registering again keeps it), else a new random one.
-    """
-
-    if (
-        existing is not None
-        and existing.external_id == ChannelExternalId(str(phone_number_id))
-        and existing.encrypted_registration_pin is not None
-    ):
-        try:
-            kept: ChannelSecret = secret_cipher.decrypt(
-                existing.encrypted_registration_pin
-            )
-            return WhatsAppRegistrationPin(str(kept))
-        except ValidationFailedError, ValueError:
-            pass  # Unreadable (an old key): a new PIN is set.
-
-    return WhatsAppRegistrationPin(
-        "".join(secrets.choice("0123456789") for _ in range(PIN_DIGITS))
     )

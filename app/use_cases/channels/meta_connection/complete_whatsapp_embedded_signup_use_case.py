@@ -9,7 +9,6 @@ from app.contracts.meta_connection import (
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
-from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -49,10 +48,13 @@ from app.use_cases.channels.meta_connection.meta_states import (
     meta_refusal,
     take_state,
 )
+from app.use_cases.channels.meta_connection.whatsapp_registration_pins import (
+    keeping_pin,
+    registration_pin,
+)
 from app.use_cases.channels.meta_connection.whatsapp_signup_steps import (
     choose_business_account,
     choose_phone_number,
-    registration_pin,
 )
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.meta_sign_in import meta_app_of
@@ -72,14 +74,19 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
        Account (the one Meta's window reported, when it is among them),
        and the account's numbers the number (likewise).
     4. The platform's app is subscribed to the account's webhooks and the
-       number registered for the Cloud API with a two-step PIN (kept from
-       an earlier connection of the same number, else a new random one).
+       number registered for the Cloud API with a two-step PIN (the one
+       this channel registered the number with before, even while it was
+       off, else a new random one).
     5. The channel stores the account, the token and the PIN encrypted, and
        the number as customers see it, so share links and the hosted page
        get their WhatsApp button; the audit log and the product events note
        the connection.
 
-    The owner must have confirmed their identity recently. A number already
+    No second step-up: the state was made only after the owner confirmed
+    their identity (`StartMetaConnectionUseCase`) and is bound to them,
+    this business and WhatsApp, so it carries that proof. Asking again here
+    would let Meta's short-lived, single-use code run out while the owner
+    types a code, and the retry would find the state used. A number already
     connected to another business is refused; a number registered with
     another PIN is refused as `whatsapp_pin_mismatch` (its owner turns
     two-step verification off in WhatsApp Manager, then starts again).
@@ -98,7 +105,6 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
         audit_log_repo: AuditLogRepoContract,
         product_events: RecordProductEventFacilitatorContract,
         storage_scope: StorageScopeContract,
-        step_up: StepUpGuardContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -115,7 +121,6 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
             product_events=product_events,
             storage_scope=storage_scope,
         )
-        self._step_up: StepUpGuardContract = step_up
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -127,7 +132,6 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        self._step_up.require_recent_authentication()
         app: MetaAppCredentials = self._require_app()
         request: CompleteWhatsAppSignupRequest = input_data.request
         now: Microseconds = self._wall_clock.now_unix()
@@ -156,15 +160,17 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
             self._stores.channel_repo, business.id, ChannelKind.WHATSAPP
         )
         pin: WhatsAppRegistrationPin = registration_pin(
-            existing, number.phone_number_id, self._stores.secret_cipher
+            existing, external_id, self._stores.secret_cipher
         )
         self._onboarding_client.subscribe_app(token, account_id, app)
         self._register(token, number, pin, app)
 
         def keep_signup(channel: ChannelDocument) -> None:
             channel.whatsapp_business_account_id = account_id
-            channel.encrypted_registration_pin = self._stores.secret_cipher.encrypt(
-                ChannelSecret(str(pin))
+            channel.whatsapp_registration_pins = keeping_pin(
+                channel.whatsapp_registration_pins,
+                external_id,
+                self._stores.secret_cipher.encrypt(ChannelSecret(str(pin))),
             )
 
         channel: ChannelDocument = save_connected_channel(

@@ -54,8 +54,9 @@ class TestEmbeddedSignup:
         cipher = world.testbed.secret_cipher
         assert channel.encrypted_secret is not None
         assert cipher.decrypt(channel.encrypted_secret) == BUSINESS_TOKEN
-        assert channel.encrypted_registration_pin is not None
-        pin = str(cipher.decrypt(channel.encrypted_registration_pin))
+        [kept] = channel.whatsapp_registration_pins
+        assert str(kept.phone_number_id) == SIGNUP_NUMBER_ID
+        pin = str(cipher.decrypt(kept.encrypted_pin))
         assert len(pin) == 6 and pin.isdigit()
 
         exchange = world.graph.requests_to("/oauth/access_token")[0]

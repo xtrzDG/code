@@ -622,7 +622,9 @@ Messenger бизнесов, а также для кодов входа и уве
   `Cross-Origin-Opener-Policy: same-origin-allow-popups` в
   `web/next.config.ts`). Начало входа через Facebook просит владельца
   подтвердить, что это он (как и другие действия с каналами), — до окна Meta,
-  чтобы короткоживущий код окна не ждал.
+  чтобы короткоживущий код окна не ждал; завершение Embedded Signup второй раз
+  этого не спрашивает: одноразовый state выдан только после подтверждения и
+  привязан к тому же владельцу.
 - Проверка приложения (App Review) и статус Tech Provider — самая долгая часть,
   начинайте её заранее: расширенный доступ к `whatsapp_business_management`,
   `whatsapp_business_messaging`, `pages_messaging`, `pages_show_list`,

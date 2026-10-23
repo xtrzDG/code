@@ -113,6 +113,8 @@ class CommentWorld:
         )
         self.reply = ReplyToCommentTriggerUseCase(
             testbed.channel_repo,
+            testbed.contact_repo,
+            testbed.suppression_list,
             testbed.outbound_message_repo,
             testbed.job_queue,
             self.rate_limits,

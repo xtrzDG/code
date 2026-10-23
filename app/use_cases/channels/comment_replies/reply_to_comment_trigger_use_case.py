@@ -3,15 +3,19 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.repositories.delivery_repositories import (
     OutboundMessageRepoContract,
 )
 from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
 from app.schemas.domain.channels import ChannelDocument, InstagramCommentReplies
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.inbound_events import (
     InboundCustomerMessage,
     InboundEventDocument,
@@ -26,6 +30,7 @@ from app.schemas.exceptions.application_errors import (
     RateLimitedError,
     ValidationFailedError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.deliveries.constrained_strings import OutboundIdempotencyKey
@@ -42,6 +47,8 @@ from app.utilities.deliveries.delivery_keys import (
     customer_recipient_key,
     derive_outbound_message_id,
 )
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
+from app.utilities.privacy.suppressed_identities import channel_identity
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -62,7 +69,11 @@ class ReplyToCommentTriggerUseCase(UseCaseContract[InboundEventClaim, InboundAns
     retries by `deliver_outbound` through Instagram's private replies).
 
     The owner's settings are read again: a reply turned off or a keyword
-    removed meanwhile ends the event without a message. At most 60 replies
+    removed meanwhile ends the event without a message, and so does an
+    author the owner blocked (Customers: a blocked customer hears nothing)
+    or who said STOP (on their contact or on the business's suppression
+    list, which outlives an erasure): the reply is unasked-for, the person
+    only commented. At most 60 replies
     an hour per business and one per author a day are sent; a comment over
     either limit is refused (the event FAILED, nothing sent).
     """
@@ -70,6 +81,8 @@ class ReplyToCommentTriggerUseCase(UseCaseContract[InboundEventClaim, InboundAns
     def __init__(
         self,
         channel_repo: ChannelRepoContract,
+        contact_repo: ContactRepoContract,
+        suppression_list: SuppressionListContract,
         outbound_message_repo: OutboundMessageRepoContract,
         job_queue: JobQueueFacilitatorContract,
         rate_limit_registry: RequestRateLimitRegistryContract,
@@ -77,6 +90,8 @@ class ReplyToCommentTriggerUseCase(UseCaseContract[InboundEventClaim, InboundAns
         unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._channel_repo: ChannelRepoContract = channel_repo
+        self._contact_repo: ContactRepoContract = contact_repo
+        self._suppression_list: SuppressionListContract = suppression_list
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._rate_limits: RequestRateLimitRegistryContract = rate_limit_registry
@@ -110,6 +125,10 @@ class ReplyToCommentTriggerUseCase(UseCaseContract[InboundEventClaim, InboundAns
             logger.info("Comment %s needs no reply any more.", event.id)
             return InboundAnswer(event=event)
 
+        if self._is_author_silenced(event.business_id, event.channel, comment):
+            logger.info("Comment %s: its author gets no private reply.", event.id)
+            return InboundAnswer(event=event)
+
         comment_id = MetaCommentId(str(event.provider_message_id))
         idempotency_key = OutboundIdempotencyKey(f"comment_reply:{comment_id}")
         if (
@@ -136,6 +155,24 @@ class ReplyToCommentTriggerUseCase(UseCaseContract[InboundEventClaim, InboundAns
         # Counted once queued: an attempt that failed before can run again.
         self._rate_limits.try_acquire_all([author], DAY, now)
         return InboundAnswer(event=event)
+
+    def _is_author_silenced(
+        self,
+        business_id: BusinessId,
+        channel: ChannelKind,
+        comment: InboundCustomerMessage,
+    ) -> bool:
+        """Blocked by the owner, or opted out of messages they did not ask for."""
+
+        contact: ContactDocument | None = self._contact_repo.find_by_channel_identity(
+            business_id, channel, comment.channel_user_id
+        )
+        return is_messaging_suppressed(
+            self._suppression_list,
+            business_id,
+            contact,
+            [channel_identity(channel, comment.channel_user_id)],
+        )
 
     def _take_business_slot(
         self,
