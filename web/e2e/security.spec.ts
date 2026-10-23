@@ -129,15 +129,19 @@ test.describe("Content Security Policy", () => {
 
 test.describe("the policy in the browser", () => {
   test("refuses a style attribute and markup a script makes up, and reports both", async ({ page, consoleErrors }) => {
-    consoleErrors.allow(/Refused to apply inline style|requires 'TrustedHTML' assignment/);
+    // Older Chrome says "Refused to apply inline style", newer Chrome
+    // "Applying inline style violates"; both mean the attribute was refused.
+    consoleErrors.allow(/Refused to apply inline style|Applying inline style violates|requires 'TrustedHTML' assignment/);
     await watchPolicyViolations(page);
     await openAndCheck(page, "/login");
 
     const outcome = await page.evaluate(() => {
       const probe = document.createElement("p");
       document.body.append(probe);
-      probe.setAttribute("style", "outline: 3px solid red");
-      const styled = getComputedStyle(probe).outlineWidth;
+      // A property whose computed value never depends on another one (newer
+      // Chrome computes outline-width as 3px even with no outline style).
+      probe.setAttribute("style", "margin-left: 37px");
+      const styled = getComputedStyle(probe).marginLeft;
       let markup = "set";
       try {
         probe.innerHTML = '<img src="x" alt="">';
