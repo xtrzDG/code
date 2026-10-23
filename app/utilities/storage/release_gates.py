@@ -42,6 +42,7 @@ DECLINE_RECORDING_GATE: ReleaseGateName = ReleaseGateName("decline_recording_too
 STRIPE_PAYMENTS_GATE: ReleaseGateName = ReleaseGateName("stripe_payments")
 PHONE_NUMBER_RENTAL_GATE: ReleaseGateName = ReleaseGateName("phone_number_rental")
 COMMENT_REPLIES_GATE: ReleaseGateName = ReleaseGateName("instagram_comment_replies")
+CALLBACK_REQUESTED_GATE: ReleaseGateName = ReleaseGateName("missed_call_callback")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -205,6 +206,15 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("outbound_messages"),
         path=StoredEnumPath("kind"),
         values=[GatedEnumValue("comment_reply")],
+        is_open=False,
+    ),
+    # A call that asked for a callback and left staff nothing (R16): its
+    # missed call says TRANSFER_UNANSWERED until the next release opens this.
+    ReleaseGate(
+        name=CALLBACK_REQUESTED_GATE,
+        collection_name=DocumentCollectionName("missed_calls"),
+        path=StoredEnumPath("reason"),
+        values=[GatedEnumValue("callback_requested")],
         is_open=False,
     ),
 )

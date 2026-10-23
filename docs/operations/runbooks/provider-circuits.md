@@ -31,7 +31,9 @@ the others'. Login codes do not go through the circuits.
   a declined card or a Flitt answer with the status "failure"
   (`PaymentProviderRefusedError`), a 429 and payments not set up
   (`PaymentsNotConfiguredError`) leave `provider:flitt` and
-  `provider:stripe` closed.
+  `provider:stripe` closed. ElevenLabs likewise: a 4xx (a voice, model or
+  agent setting it does not accept, a bad key) and a 429 leave
+  `provider:elevenlabs` closed; a 408 or a 5xx counts.
 - **Typing signals are best effort.** They run only while the circuit is
   closed and never report a success (they often make no call at all), so
   they cannot take the half-open trial or close a circuit; a typing call

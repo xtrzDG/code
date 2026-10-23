@@ -17,6 +17,7 @@ from app.schemas.constants.assistants import (
     AutotestRunStatus,
     AutotestScenarioKind,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import (
     AutotestRunDocument,
     AutotestScenarioResult,
@@ -161,7 +162,8 @@ def summarize_run(results: Sequence[AutotestScenarioResult]) -> AutotestRunSumma
     """
     Pass rate, average judge score over every scored criterion, and the
     launch decision. Errored scenarios have no scores and count as not
-    passed; a run without any score never passes.
+    passed; a run without any score never passes; a launch-critical
+    scenario (`is_launch_critical`) that did not pass stops the launch.
     """
 
     scenario_count: int = len(results)
@@ -179,7 +181,7 @@ def summarize_run(results: Sequence[AutotestScenarioResult]) -> AutotestRunSumma
     are_critical_scenarios_passed: bool = all(
         result.outcome is AutotestOutcome.PASSED
         for result in results
-        if result.kind in LAUNCH_CRITICAL_SCENARIO_KINDS
+        if is_launch_critical(result)
     )
     is_average_high_enough: bool = bool(score_values) and (
         sum(score_values) * LAUNCH_AVERAGE_SCORE_DENOMINATOR
@@ -197,6 +199,19 @@ def summarize_run(results: Sequence[AutotestScenarioResult]) -> AutotestRunSumma
             and are_critical_scenarios_passed
             and is_average_high_enough
         ),
+    )
+
+
+def is_launch_critical(result: AutotestScenarioResult) -> bool:
+    """
+    A result that must pass for the version to go live: a launch-critical
+    kind, or any voice check (a simulated phone call, whatever its kind:
+    a failed or errored call keeps a voice version from customers).
+    """
+
+    return (
+        result.kind in LAUNCH_CRITICAL_SCENARIO_KINDS
+        or result.channel is ChannelKind.PHONE
     )
 
 

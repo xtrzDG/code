@@ -18,6 +18,7 @@ export const assistantComparisonDe: Translation<typeof assistantComparisonEn> = 
     scoreRises: "Gestiegene Bewertungen",
     criteria: "Nach Kriterium",
     scenario: "{name} · {language}",
+    phoneScenario: "{name} · {channel} · {language}",
     scoreMove: "{from} → {to}",
     outcomeMove: "vorher {from}, jetzt {to}",
     noChanges: "Gegenüber dem Live-Update hat sich nichts geändert: keine neuen Probleme, und keine Bewertung hat sich um einen halben Punkt oder mehr bewegt.",

@@ -1,7 +1,7 @@
 {
   "collection": "missed_calls",
   "document_type": "MissedCallDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -100,12 +100,13 @@
           "line_failed",
           "not_started",
           "no_speech",
-          "transfer_unanswered"
+          "transfer_unanswered",
+          "callback_requested"
         ],
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "sent_at": {

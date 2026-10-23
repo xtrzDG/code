@@ -36,9 +36,10 @@ class RouteCallFallbackUseCase(
     first manager reachable by phone).
 
     With nobody to put the call through to (no such phone, or the call
-    comes from that very phone or was forwarded from it, which would ring
-    in a loop) the call ends and is a missed call of the line (NOT_STARTED)
-    with its text-back. A business that is gone: the call ends.
+    comes from that very phone, was forwarded from it or that phone is the
+    line itself, which would ring in a loop) the call ends and is a missed
+    call of the line (NOT_STARTED) with its text-back. A business that is
+    gone: the call ends.
     """
 
     def __init__(
@@ -78,7 +79,10 @@ class RouteCallFallbackUseCase(
         transfer: E164PhoneNumber | None = find_transfer_phone_number(
             business, self._business_profile_repo.get_by_business(business.id)
         )
-        if transfer is not None and not self._loops_back(business, report, transfer):
+        is_loop: bool = transfer is not None and self._loops_back(
+            business, report, transfer
+        )
+        if transfer is not None and not is_loop:
             return CallFallbackPlan(
                 reply=self._call_fallback_adapter.transfer(business.id, transfer),
                 called_at=now,
@@ -90,6 +94,7 @@ class RouteCallFallbackUseCase(
             reply=self._call_fallback_adapter.end_call(),
             called_at=now,
             business_id=business.id,
+            looping_phone_number=transfer if is_loop else None,
             missed_call=MissedCallReport(
                 source=MissedCallSource.PBX,
                 provider_call_id=report.provider_call_id,
@@ -107,9 +112,17 @@ class RouteCallFallbackUseCase(
         report: CallFallbackReport,
         transfer: E164PhoneNumber,
     ) -> bool:
-        """Whether the call comes from the staff mobile or was forwarded by it."""
+        """
+        Whether the call comes from the staff mobile, was forwarded by it, or
+        the staff mobile is the line that was called (dialing it would fail
+        into this fallback again).
+        """
 
-        for raw_number in (report.caller_number, report.forwarded_from):
+        for raw_number in (
+            report.caller_number,
+            report.forwarded_from,
+            report.assistant_number,
+        ):
             number: E164PhoneNumber | None = (
                 None
                 if raw_number is None

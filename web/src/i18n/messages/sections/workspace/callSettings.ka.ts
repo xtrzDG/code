@@ -73,6 +73,7 @@ export const callSettingsKa: Translation<typeof callSettingsEn> = {
       not_started: "ასისტენტმა ზარი ვერ მიიღო",
       no_speech: "ხმის ამოუღებლად გათიშა",
       transfer_unanswered: "გადამისამართებას არავინ უპასუხა",
+      callback_requested: "გადარეკვა ითხოვა",
     },
     skipReasons: {
       turned_off: "მიწერა გამორთული იყო",

@@ -2,7 +2,8 @@
 What the owner hears when the phone assistant could not take a call and
 the line's fallback took over: the call was put through to the staff
 mobile on duty (which number), or nobody could take it and it is a missed
-call (add a handoff phone). Nothing about the caller: it may show on a
+call (add a handoff phone, or check the one that would have rung in a
+loop). Nothing about the caller: it may show on a
 locked screen.
 """
 
@@ -27,6 +28,7 @@ TRANSFERRED_DETAIL: LocalizedText = owner_text(
 NO_STAFF_DETAIL: LocalizedText = owner_text(
     "notifications.voice_fallback.no_staff_detail"
 )
+LOOP_DETAIL: LocalizedText = owner_text("notifications.voice_fallback.loop_detail")
 
 
 class VoiceFallbackTexts(StaffAlertTextsContract):
@@ -37,10 +39,12 @@ class VoiceFallbackTexts(StaffAlertTextsContract):
         resolver: LocalizedTextResolverContract,
         business_name: BusinessName,
         transfer_phone: FormattedPhoneNumber | None,
+        looping_phone: FormattedPhoneNumber | None = None,
     ) -> None:
         self._resolver: LocalizedTextResolverContract = resolver
         self._business_name: BusinessName = business_name
         self._transfer_phone: FormattedPhoneNumber | None = transfer_phone
+        self._looping_phone: FormattedPhoneNumber | None = looping_phone
 
     def detailed(self, language: LanguageTag) -> MessageText:
         lines: StaffAlertBrief = self.brief(language)
@@ -48,17 +52,20 @@ class VoiceFallbackTexts(StaffAlertTextsContract):
 
     def brief(self, language: LanguageTag) -> StaffAlertBrief:
         title: str = str(self._resolver.resolve(VOICE_FALLBACK_TITLE, language))
-        detail: str = str(
-            self._resolver.resolve(
-                NO_STAFF_DETAIL if self._transfer_phone is None else TRANSFERRED_DETAIL,
-                language,
-            )
-        )
+        phone: FormattedPhoneNumber | None = self._transfer_phone or self._looping_phone
+        detail: str = str(self._resolver.resolve(self._detail(), language))
         return StaffAlertBrief(
             title=StaffAlertTitle(
                 title.replace("{business}", str(self._business_name))
             ),
-            detail=StaffAlertDetail(
-                detail.replace("{phone}", str(self._transfer_phone or ""))
-            ),
+            detail=StaffAlertDetail(detail.replace("{phone}", str(phone or ""))),
         )
+
+    def _detail(self) -> LocalizedText:
+        if self._transfer_phone is not None:
+            return TRANSFERRED_DETAIL
+
+        if self._looping_phone is not None:
+            return LOOP_DETAIL
+
+        return NO_STAFF_DETAIL

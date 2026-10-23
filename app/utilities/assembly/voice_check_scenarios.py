@@ -28,7 +28,9 @@ from app.utilities.assembly.fact_formatting import format_international_phone_nu
 
 VOICE_KEY_PREFIX: str = "phone"
 # What each tool answers in a simulated call: the time asked for is free,
-# a booking or request is made, the knowledge has nothing on the question.
+# a booking or request is made, the knowledge has nothing on the question,
+# an unanswered question is recorded. Every tool has one: the platform
+# fails a call that reaches a tool without a mock (`raise_error`).
 TOOL_MOCKS: dict[AssistantToolName, str] = {
     AssistantToolName.CHECK_AVAILABILITY: (
         '{"is_open_on_date": true, "note": "The time the caller asked for is free."}'
@@ -39,6 +41,20 @@ TOOL_MOCKS: dict[AssistantToolName, str] = {
     AssistantToolName.CREATE_LEAD: '{"status": "created"}',
     AssistantToolName.SEARCH_KNOWLEDGE: '{"items": []}',
     AssistantToolName.HANDOFF_TO_HUMAN: '{"status": "handed_off"}',
+    AssistantToolName.RECORD_UNANSWERED_QUESTION: '{"status": "recorded"}',
+    AssistantToolName.GET_PRICE: '{"items": [], "note": "No price is on file."}',
+    AssistantToolName.LIST_MY_BOOKINGS: '{"bookings": []}',
+    AssistantToolName.CANCEL_BOOKING: (
+        '{"status": "not_found", "note": "The caller has no booking."}'
+    ),
+    AssistantToolName.RESCHEDULE_BOOKING: (
+        '{"status": "not_found", "note": "The caller has no booking."}'
+    ),
+    AssistantToolName.JOIN_WAITLIST: '{"status": "waitlisted"}',
+    AssistantToolName.SEND_LINK: '{"status": "sent"}',
+    AssistantToolName.SEND_PAYMENT_LINK: '{"status": "sent"}',
+    AssistantToolName.OFFER_CHOICES: '{"status": "shown"}',
+    AssistantToolName.DECLINE_RECORDING: '{"status": "recording_off"}',
 }
 DISCLOSURE_CONDITION: str = (
     "The agent said near the start of the call that it is an AI (virtual) "

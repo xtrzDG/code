@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-24 — voice agent tuning, voice checks and the call fallback
 
-Spec: `2f89b819202bc64f`
+Spec: `147ffdf07e1b1a6e`
 
 - **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}`, the
   call fallback of the business's rented numbers (each number's Twilio
@@ -44,8 +44,18 @@ Spec: `2f89b819202bc64f`
   with voice is checked by such calls (one per tested language, kind
   `booking`, or `unknown_question` for a version that takes no bookings)
   while `VOICE_CHECKS_ENABLED` is on and the voice platform is configured; a
-  failed voice booking keeps the version from going live like a failed chat
-  booking (`autotests` reason of the go-live checklist).
+  voice check of either kind that failed or erred keeps the version from
+  going live (`autotests` reason of the go-live checklist).
+- **Changed** `AutotestOutcomeChangeView` and `AutotestScoreChangeView` (the
+  `comparison` of an autotest run) gain `channel` (`ChannelKind`, optional):
+  `phone` when the change is a voice check's, so it is not mistaken for the
+  chat scenario of the same kind and language.
+- **Changed** `MissedCallReason` (the recent missed calls of
+  `GET /v1/businesses/{business_id}/call-settings`) gains `callback_requested`: the caller asked to be called back
+  and the call left staff nothing to act on. Clients must read it now; the
+  platform writes it only from the next release (until then such a call
+  says `transfer_unanswered`). A caller put through to staff is no longer a
+  missed call even when they asked for a callback.
 
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 

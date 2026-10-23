@@ -73,6 +73,7 @@ export const callSettingsRu: Translation<typeof callSettingsEn> = {
       not_started: "Помощник не смог принять звонок",
       no_speech: "Положил трубку, ничего не сказав",
       transfer_unanswered: "Перевод не приняли",
+      callback_requested: "Просил перезвонить",
     },
     skipReasons: {
       turned_off: "сообщения были выключены",

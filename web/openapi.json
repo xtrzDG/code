@@ -2988,7 +2988,7 @@
       },
       "AutotestOutcomeChangeView": {
         "additionalProperties": false,
-        "description": "A scenario played by both runs whose outcome changed: a new failure\n(passed on the live version, not now) or a fix (the other way round).",
+        "description": "A scenario played by both runs whose outcome changed: a new failure\n(passed on the live version, not now) or a fix (the other way round).\n`channel` is PHONE for a voice check (a simulated call), None for chat.",
         "properties": {
           "autotest_case_id": {
             "anyOf": [
@@ -3003,6 +3003,16 @@
           },
           "baseline_outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "check_codes": {
             "items": {
@@ -3435,7 +3445,7 @@
       },
       "AutotestScoreChangeView": {
         "additionalProperties": false,
-        "description": "A scenario whose average judge score moved by half a point or more.",
+        "description": "A scenario whose average judge score moved by half a point or more\n(`channel` PHONE for a voice check).",
         "properties": {
           "average_score": {
             "maximum": 5.0,
@@ -3454,6 +3464,16 @@
             "minimum": -4.0,
             "title": "Change",
             "type": "number"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "kind": {
             "$ref": "#/components/schemas/AutotestScenarioKind"
@@ -21198,7 +21218,7 @@
       },
       "MissedCallDocument": {
         "additionalProperties": false,
-        "description": "A call whose caller did not get through (no answer, busy, hung up\nbefore the assistant, a failed start, a transfer nobody picked up) and\nthe message that tells them the business will continue in writing\n(the text-back).\n\nThe id derives from the business, the source and the provider's call\nid, so a repeated report is the same missed call and is texted once.\n`language` is the caller's (detected on the call) or their country's\nwhen the business speaks it. A WhatsApp text-back opens the\nconversation (`conversation_id`) the caller's reply continues in.\nRows are purged after 90 days.",
+        "description": "A call whose caller did not get through (no answer, busy, hung up\nbefore the assistant, a failed start, a transfer nobody picked up) and\nthe message that tells them the business will continue in writing\n(the text-back). Version 2 adds the reason CALLBACK_REQUESTED.\n\nThe id derives from the business, the source and the provider's call\nid, so a repeated report is the same missed call and is texted once.\n`language` is the caller's (detected on the call) or their country's\nwhen the business speaks it. A WhatsApp text-back opens the\nconversation (`conversation_id`) the caller's reply continues in.\nRows are purged after 90 days.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -21289,8 +21309,7 @@
             "$ref": "#/components/schemas/MissedCallReason"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -21341,7 +21360,7 @@
         "type": "object"
       },
       "MissedCallReason": {
-        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).",
+        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)\nand CALLBACK_REQUESTED (the caller asked to be called back and the call\nleft staff nothing to act on; written once its release gate opens).",
         "enum": [
           "no_answer",
           "busy",
@@ -21349,7 +21368,8 @@
           "line_failed",
           "not_started",
           "no_speech",
-          "transfer_unanswered"
+          "transfer_unanswered",
+          "callback_requested"
         ],
         "title": "MissedCallReason",
         "type": "string"

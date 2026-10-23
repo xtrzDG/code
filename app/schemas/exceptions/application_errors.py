@@ -102,10 +102,11 @@ class ProviderCircuitOpenError(ExternalServiceError):
 
 class ProviderRejectedMessageError(ExternalServiceError):
     """
-    A messaging platform refused this message for good (a 4xx other than a
-    rate limit: the customer blocked the bot, the recipient does not exist,
-    the 24-hour window is closed). Sending the same message again cannot
-    help.
+    A provider (a messaging or voice platform) refused this request for
+    good (a 4xx other than a rate limit: the customer blocked the bot, the
+    recipient does not exist, the 24-hour window is closed, the voice
+    platform does not accept an agent setting). Sending the same request
+    again cannot help.
     """
 
 

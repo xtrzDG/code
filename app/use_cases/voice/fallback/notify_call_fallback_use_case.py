@@ -71,5 +71,8 @@ class NotifyCallFallbackUseCase(
                 display_phone(
                     self._phone_number_parser, input_data.transfer_phone_number
                 ),
+                display_phone(
+                    self._phone_number_parser, input_data.looping_phone_number
+                ),
             ),
         )

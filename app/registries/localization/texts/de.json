@@ -9,7 +9,9 @@
     "setup.actions.account_security",
     "notifications.voice_fallback.title",
     "notifications.voice_fallback.transferred_detail",
-    "notifications.voice_fallback.no_staff_detail"
+    "notifications.voice_fallback.no_staff_detail",
+    "notifications.call_report.missed_reason_labels.callback_requested",
+    "notifications.voice_fallback.loop_detail"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "Ein Kunde braucht einen Menschen",
@@ -102,6 +104,7 @@
     "notifications.call_report.missed_reason_labels.not_started": "der Assistent konnte den Anruf nicht annehmen",
     "notifications.call_report.missed_reason_labels.no_speech": "hat aufgelegt, ohne etwas zu sagen",
     "notifications.call_report.missed_reason_labels.transfer_unanswered": "wollte einen Menschen sprechen, und niemand hat abgenommen",
+    "notifications.call_report.missed_reason_labels.callback_requested": "hat um Rückruf gebeten",
     "notifications.call_report.skip_reason_labels.turned_off": "Nachrichten nach verpassten Anrufen sind ausgeschaltet",
     "notifications.call_report.skip_reason_labels.opted_out": "der Anrufer möchte keine Nachrichten bekommen",
     "notifications.call_report.skip_reason_labels.already_texted": "der Anrufer hat heute schon eine Nachricht bekommen",
@@ -668,6 +671,7 @@
     "notifications.voice_fallback.title": "Der Telefonassistent konnte einen Anruf nicht annehmen · {business}",
     "notifications.voice_fallback.transferred_detail": "Die Sprachplattform hat den Anruf nicht angenommen, deshalb wurde er an {phone} durchgestellt. Wenn das öfter passiert, prüfen Sie die Telefonleitung unter „Kanäle“.",
     "notifications.voice_fallback.no_staff_detail": "Die Sprachplattform hat den Anruf nicht angenommen, und es gab kein Telefon, an das er durchgestellt werden konnte, deshalb wurde er als verpasster Anruf erfasst. Hinterlegen Sie im Unternehmensprofil ein Telefon für Anrufe, die einen Menschen brauchen.",
+    "notifications.voice_fallback.loop_detail": "Die Sprachplattform hat den Anruf nicht angenommen. Das Telefon für Anrufe, die einen Menschen brauchen ({phone}), wurde nicht angerufen, weil der Anruf von dort kam, von dort weitergeleitet wurde oder es die Leitung selbst ist; deshalb wurde er als verpasster Anruf erfasst. Prüfen Sie dieses Telefon im Unternehmensprofil.",
     "calendar_sync.booking_system.guest_without_name": "Gast",
     "notifications.deposit_refund.title": "Eine Anzahlung ist zu erstatten · {business}",
     "notifications.deposit_refund.detail": "{amount}, Referenz {reference}: Die Buchung am {date} um {time} wurde gemäß Ihren Anzahlungsregeln rechtzeitig storniert. Erstatten Sie die Anzahlung in Ihrem Zahlungskonto.",

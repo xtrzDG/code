@@ -7049,11 +7049,13 @@ export interface components {
          * AutotestOutcomeChangeView
          * @description A scenario played by both runs whose outcome changed: a new failure
          *     (passed on the live version, not now) or a fix (the other way round).
+         *     `channel` is PHONE for a voice check (a simulated call), None for chat.
          */
         AutotestOutcomeChangeView: {
             /** Autotest Case Id */
             autotest_case_id?: string | null;
             baseline_outcome: components["schemas"]["AutotestOutcome"];
+            channel?: components["schemas"]["ChannelKind"] | null;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             kind: components["schemas"]["AutotestScenarioKind"];
@@ -7190,7 +7192,8 @@ export interface components {
         };
         /**
          * AutotestScoreChangeView
-         * @description A scenario whose average judge score moved by half a point or more.
+         * @description A scenario whose average judge score moved by half a point or more
+         *     (`channel` PHONE for a voice check).
          */
         AutotestScoreChangeView: {
             /** Average Score */
@@ -7199,6 +7202,7 @@ export interface components {
             baseline_average_score: number;
             /** Change */
             change: number;
+            channel?: components["schemas"]["ChannelKind"] | null;
             kind: components["schemas"]["AutotestScenarioKind"];
             /** Language */
             language: string;
@@ -14196,7 +14200,7 @@ export interface components {
          * @description A call whose caller did not get through (no answer, busy, hung up
          *     before the assistant, a failed start, a transfer nobody picked up) and
          *     the message that tells them the business will continue in writing
-         *     (the text-back).
+         *     (the text-back). Version 2 adds the reason CALLBACK_REQUESTED.
          *
          *     The id derives from the business, the source and the provider's call
          *     id, so a repeated report is the same missed call and is texted once.
@@ -14233,8 +14237,7 @@ export interface components {
             reason: components["schemas"]["MissedCallReason"];
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             /** Sent At */
@@ -14257,10 +14260,12 @@ export interface components {
          *     line could not put the call through). From the voice platform:
          *     NOT_STARTED (the assistant could not start the call), NO_SPEECH (the
          *     assistant answered, the caller hung up without a word) and
-         *     TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).
+         *     TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)
+         *     and CALLBACK_REQUESTED (the caller asked to be called back and the call
+         *     left staff nothing to act on; written once its release gate opens).
          * @enum {string}
          */
-        MissedCallReason: "no_answer" | "busy" | "abandoned" | "line_failed" | "not_started" | "no_speech" | "transfer_unanswered";
+        MissedCallReason: "no_answer" | "busy" | "abandoned" | "line_failed" | "not_started" | "no_speech" | "transfer_unanswered" | "callback_requested";
         /**
          * MissedCallSource
          * @description Who reported the missed call: the telephony line or the voice platform.

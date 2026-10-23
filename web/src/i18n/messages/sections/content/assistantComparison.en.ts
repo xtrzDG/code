@@ -18,6 +18,7 @@ export const assistantComparisonEn = {
     scoreRises: "Scores that rose",
     criteria: "By criterion",
     scenario: "{name} · {language}",
+    phoneScenario: "{name} · {channel} · {language}",
     scoreMove: "{from} → {to}",
     outcomeMove: "{from} before, {to} now",
     noChanges: "Nothing changed against the live update: no new problems, and no score moved by half a point or more.",

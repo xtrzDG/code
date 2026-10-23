@@ -50,13 +50,16 @@ class CallFallbackPlan(ImmutableDTO):
     """
     What a call the voice platform could not take gets: put through to
     `transfer_phone_number`, or a missed call (`missed_call`) when nobody
-    can take it.
+    can take it. `looping_phone_number` is the staff phone on duty that was
+    not rung because the call came from it, was forwarded from it or is
+    that very line (ringing it would loop).
     """
 
     reply: CallFallbackReply
     called_at: Microseconds
     business_id: BusinessId
     transfer_phone_number: E164PhoneNumber | None = None
+    looping_phone_number: E164PhoneNumber | None = None
     missed_call: MissedCallReport | None = None
 
 

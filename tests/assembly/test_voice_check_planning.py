@@ -27,6 +27,7 @@ from app.utilities.assembly.voice_check_scenarios import (
     build_tool_mocks,
     plan_voice_scenarios,
 )
+from app.utilities.conversations.tool_selection import select_voice_agent_tools
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 
@@ -142,3 +143,22 @@ def test_a_narrowed_run_without_bookings_plays_no_call() -> None:
     assert [str(item.key) for item in voice_scenarios(booked.scenarios)] == [
         "phone__booking__ru"
     ]
+
+
+def test_every_tool_the_voice_agent_has_answers_its_mock() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = testbed.version(business.id, testbed.assemble(business.id).id)
+    without_bookings = version.model_copy(
+        update={"tools": [AssistantToolName.SEARCH_KNOWLEDGE]}
+    )
+    everything = version.model_copy(update={"tools": list(AssistantToolName)})
+
+    for checked in (version, without_bookings, everything):
+        agent_tools = select_voice_agent_tools(checked)
+        mocked = {mock.tool_name for mock in build_tool_mocks(agent_tools)}
+        assert mocked == set(agent_tools)
+
+    # The tool the phone instruction names for a question the facts do not
+    # answer, which is exactly what the unknown-question voice check asks.
+    assert AssistantToolName.RECORD_UNANSWERED_QUESTION in version.tools
