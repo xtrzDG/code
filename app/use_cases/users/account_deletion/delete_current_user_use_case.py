@@ -34,12 +34,15 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.dto.business_closures.account_deletion import (
     DeleteCurrentUserCommand,
 )
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.schemas.typings.platform.constrained_strings import ErrorReasonCode
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.users.account_deletion.account_departure_checks import (
     require_no_orphans,
@@ -47,6 +50,11 @@ from app.use_cases.users.account_deletion.account_departure_checks import (
 
 USER_ENTITY: AuditEntityName = AuditEntityName("user")
 MEMBER_ENTITY: AuditEntityName = AuditEntityName("business_member")
+PLATFORM_TEAM: ErrorReasonCode = ErrorReasonCode("platform_team")
+PLATFORM_TEAM_MESSAGE: str = (
+    "A member of the platform team leaves the team (Admin → Team) "
+    "before deleting the account."
+)
 
 
 class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
@@ -111,8 +119,13 @@ class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
 
         if user.is_platform_admin or self._platform_admins.role_of(user) is not None:
             raise ConflictError(
-                "A member of the platform team leaves the team (Admin → Team) "
-                "before deleting the account."
+                PLATFORM_TEAM_MESSAGE,
+                reasons=[
+                    ErrorReason(
+                        code=PLATFORM_TEAM,
+                        message=ErrorReasonMessage(PLATFORM_TEAM_MESSAGE),
+                    )
+                ],
             )
 
         now: Microseconds = self._wall_clock.now_unix()

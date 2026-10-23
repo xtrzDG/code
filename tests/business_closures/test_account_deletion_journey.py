@@ -47,6 +47,13 @@ def test_the_last_owner_of_an_open_business_is_refused() -> None:
 
         assert refused.status_code == 409
         assert "Salobie" in refused.json()["message"]
+        assert refused.json()["reasons"] == [
+            {
+                "code": "last_business_owner",
+                "message": refused.json()["message"],
+                "details": [world.business_a],
+            }
+        ]
         assert (
             world.workshop.client.get("/v1/me", headers=world.owner_a).status_code
             == 200
@@ -84,3 +91,6 @@ def test_a_member_of_the_platform_team_is_refused() -> None:
 
         assert refused.status_code == 409
         assert "platform team" in refused.json()["message"]
+        assert [reason["code"] for reason in refused.json()["reasons"]] == [
+            "platform_team"
+        ]

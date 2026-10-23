@@ -33,8 +33,10 @@ Spec: `c2911998130fe426`
 - **Added** `DELETE /v1/me` (`204`, a recent sign-in): deletes the signed-in
   account — its sessions, second factors, passkeys, push subscriptions and
   notification preferences, and its memberships. Refused with `409` while
-  the person is the last owner of a business that is not closing, or the
-  only owner of a brand, and for members of the platform team.
+  the person is the last owner of a business that is not closing (reason
+  `last_business_owner`, its `details` the businesses' ids) or the only
+  owner of a brand (`last_brand_owner`, the brands' ids), and for members
+  of the platform team (`platform_team`).
 - **Added** `GET /v1/me/business-deletions` (`BusinessDeletionList`): the
   businesses this person owned that are deleted or being deleted, and
   `GET /v1/me/business-deletions/{deletion_id}/certificate?language=` the

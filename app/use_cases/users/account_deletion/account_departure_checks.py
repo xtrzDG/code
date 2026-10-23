@@ -8,8 +8,18 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.brands import BrandDocument
 from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.typings.platform.constrained_strings import (
+    ErrorReasonCode,
+    ErrorReasonDetail,
+)
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
+
+# The refusal's reason codes; their details are the ids the cabinet names.
+LAST_BUSINESS_OWNER: ErrorReasonCode = ErrorReasonCode("last_business_owner")
+LAST_BRAND_OWNER: ErrorReasonCode = ErrorReasonCode("last_brand_owner")
 
 
 def is_sole_owner(business: BusinessDocument, user_id: UserId) -> bool:
@@ -43,13 +53,13 @@ def require_no_orphans(
         ConflictError: naming those businesses and brands.
     """
 
-    orphans: list[str] = [
-        str(business.name)
+    businesses_left: list[BusinessDocument] = [
+        business
         for business in businesses
         if is_sole_owner(business, user_id) and not is_closing(closure_repo, business)
     ]
-    orphans += [
-        str(brand.name)
+    brands_left: list[BrandDocument] = [
+        brand
         for brand in brands
         if [
             member.user_id
@@ -58,10 +68,35 @@ def require_no_orphans(
         ]
         == [user_id]
     ]
-    if orphans:
-        raise ConflictError(
-            "You are the last owner of "
-            + ", ".join(orphans)
-            + ": close the business in Settings → Business, or make another "
-            "person an owner, before deleting your account."
+    if not businesses_left and not brands_left:
+        return
+
+    names: list[str] = [str(business.name) for business in businesses_left] + [
+        str(brand.name) for brand in brands_left
+    ]
+    message: str = (
+        "You are the last owner of "
+        + ", ".join(names)
+        + ": close the business in Settings → Business, or make another "
+        "person an owner, before deleting your account."
+    )
+    reasons: list[ErrorReason] = []
+    if businesses_left:
+        reasons.append(
+            ErrorReason(
+                code=LAST_BUSINESS_OWNER,
+                message=ErrorReasonMessage(message),
+                details=[
+                    ErrorReasonDetail(str(business.id)) for business in businesses_left
+                ],
+            )
         )
+    if brands_left:
+        reasons.append(
+            ErrorReason(
+                code=LAST_BRAND_OWNER,
+                message=ErrorReasonMessage(message),
+                details=[ErrorReasonDetail(str(brand.id)) for brand in brands_left],
+            )
+        )
+    raise ConflictError(message, reasons=reasons)
