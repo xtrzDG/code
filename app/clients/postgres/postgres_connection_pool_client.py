@@ -1,25 +1,16 @@
-import threading
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
 
-import psycopg
-
-from app.clients.postgres.idle_connections import (
-    IdleConnection,
-    IdleConnections,
-    is_usable,
-)
+from app.clients.postgres.connection_slots import ConnectionOptions, ConnectionSlots
 from app.clients.postgres.pinned_connections import (
     ConnectionLender,
     PinnedConnections,
     PostgresConnection,
     build_session_options,
-    reset_for_reuse,
 )
 from app.clients.postgres.pool_instruments import NO_POOL_INSTRUMENTS, PoolInstruments
 from app.contracts.client_contract import ClientContract
-from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.strings import DatabaseUrl
 
 __all__ = ["PostgresConnection", "PostgresConnectionPoolClient"]
@@ -58,8 +49,11 @@ class PostgresConnectionPoolClient(ClientContract):
     `pinned_connection()` keeps one connection for a block of a thread
     (a session advisory lock, a unit of work, a read session): inside it,
     `connection()` and `transaction()` of that thread use the pinned
-    connection (a nested `transaction()` is a savepoint). `instruments`
-    measure waits and connections in use, and trace statements.
+    connection (a nested `transaction()` is a savepoint). Pools that share
+    `pins` (a process's tenant and platform pools, `PostgresConnectionPools`)
+    also join each other's open unit-of-work transaction
+    (`pinned_connections`). `instruments` measure waits and connections in
+    use, and trace statements.
     """
 
     def __init__(
@@ -76,68 +70,89 @@ class PostgresConnectionPoolClient(ClientContract):
         min_size: int = DEFAULT_MIN_POOL_SIZE,
         max_idle_seconds: float | None = None,
         instruments: PoolInstruments = NO_POOL_INSTRUMENTS,
+        pins: PinnedConnections | None = None,
     ) -> None:
         if max_size < 1:
             raise ValueError("A pool needs room for at least one connection.")
 
-        # A floor above the ceiling would only keep every connection.
-        self._min_size: int = max(0, min(min_size, max_size))
-
-        self._database_url: DatabaseUrl = database_url
         self._max_size: int = max_size
         self._acquire_timeout_seconds: float = acquire_timeout_seconds
-        self._connect_timeout_seconds: int = connect_timeout_seconds
-        self._idle_check_seconds: float = idle_check_seconds
-        self._application_name: str = application_name
-        self._prepare_threshold: int | None = (
-            5 if is_statement_preparation_enabled else None
+        self._connection_options: ConnectionOptions = ConnectionOptions(
+            database_url=database_url,
+            connect_timeout_seconds=connect_timeout_seconds,
+            application_name=application_name,
+            prepare_threshold=5 if is_statement_preparation_enabled else None,
+            session_options=build_session_options(
+                statement_timeout_seconds, idle_in_transaction_timeout_seconds
+            ),
+            cursor_class=instruments.cursor_class,
         )
-        self._session_options: str = build_session_options(
-            statement_timeout_seconds, idle_in_transaction_timeout_seconds
+        self._slots: ConnectionSlots = ConnectionSlots(
+            self._open_new_connection,
+            max_size=max_size,
+            # A floor above the ceiling would only keep every connection.
+            min_size=max(0, min(min_size, max_size)),
+            idle_check_seconds=idle_check_seconds,
+            max_idle_seconds=max_idle_seconds,
         )
-        self._condition: threading.Condition = threading.Condition()
-        self._idle_connections: IdleConnections = IdleConnections(max_idle_seconds)
-        self._open_connection_count: int = 0
-        self._is_closed: bool = False
-        self._pins: PinnedConnections = PinnedConnections()
+        self._pins: PinnedConnections = PinnedConnections() if pins is None else pins
         self._instruments: PoolInstruments = instruments
 
     @property
     def max_size(self) -> int:
         return self._max_size
 
-    def is_pinned(self) -> bool:
-        """Whether this thread runs inside a `pinned_connection()` block."""
+    @property
+    def pins(self) -> PinnedConnections:
+        """The pin registry this pool shares with the process's other pool."""
 
-        return self._pins.current() is not None
+        return self._pins
+
+    def serves_every_pool(self) -> bool:
+        """Whether this pool's pins serve the other pool too (the platform's)."""
+
+        return self._pins.serves_every_pool(self)
+
+    def is_pinned(self) -> bool:
+        """
+        Whether this thread runs inside a `pinned_connection()` block of this
+        pool, or inside an open unit of work it would join.
+        """
+
+        return (
+            self._pins.current(self) is not None
+            or self._pins.open_transaction() is not None
+        )
 
     def open_connection_count(self) -> int:
         """Connections currently open: idle in the pool plus handed out."""
 
-        with self._condition:
-            return self._open_connection_count
+        return self._slots.open_count()
 
     def idle_connection_count(self) -> int:
-        with self._condition:
-            return len(self._idle_connections)
+        return self._slots.idle_count()
 
     @contextmanager
     def connection(
-        self, acquire_timeout_seconds: float | None = None
+        self,
+        acquire_timeout_seconds: float | None = None,
+        joins_open_transaction: bool = True,
     ) -> Generator[PostgresConnection]:
         """
         Borrow one connection (autocommit) for the block, waiting at most
         `acquire_timeout_seconds` (default: the pool's) for a free one.
-        Inside a pin of this thread, the pinned connection.
+        Inside an open unit of work of this thread, its connection (unless
+        `joins_open_transaction` is off); inside a pin of this pool, the
+        pinned connection.
         """
 
-        with self._pins.lent() as pinned_connection:
+        with self._pins.lent(self, joins_open_transaction) as pinned_connection:
             if pinned_connection is not None:
                 yield pinned_connection
                 return
 
         started: float = time.monotonic()
-        connection: PostgresConnection = self._acquire(
+        connection: PostgresConnection = self._slots.acquire(
             self._acquire_timeout_seconds
             if acquire_timeout_seconds is None
             else acquire_timeout_seconds
@@ -146,7 +161,7 @@ class PostgresConnectionPoolClient(ClientContract):
         try:
             yield connection
         finally:
-            self._release(connection)
+            self._slots.release(connection)
             self._instruments.connection_returned()
 
     @contextmanager
@@ -166,135 +181,35 @@ class PostgresConnectionPoolClient(ClientContract):
     ) -> Generator[PostgresConnection]:
         """
         Keep one connection for this thread for the whole block (see the
-        class doc) until the outermost pin ends; a nested pin reuses it.
-        The `lender` of the outermost pin hands it to the thread's other
-        users of the pool (`ConnectionLender`).
+        class doc) until the outermost pin ends; a nested pin reuses it, and
+        a pin inside an open unit of work of the thread is that unit's
+        connection. The `lender` of the outermost pin hands it to the
+        thread's other users of the pool (`ConnectionLender`).
         """
 
-        with self._pins.lent() as pinned_connection:
+        with self._pins.lent(self) as pinned_connection:
             if pinned_connection is not None:
                 yield pinned_connection
                 return
 
-        with self.connection() as connection, self._pins.pinned(connection, lender):
+        with (
+            self.connection() as connection,
+            self._pins.pinned(connection, self, lender),
+        ):
             yield connection
 
     def close(self) -> None:
         """Close idle connections now and the borrowed ones when they return."""
 
-        with self._condition:
-            self._is_closed = True
-            idle_connections: list[IdleConnection] = self._idle_connections.take_all()
-            self._open_connection_count -= len(idle_connections)
-            self._condition.notify_all()
+        self._slots.close()
 
-        for idle_connection in idle_connections:
-            idle_connection.connection.close()
+    def _open_new_connection(self) -> PostgresConnection:
+        """A new connection of this pool (libpq parameters of the pool)."""
+
+        return self._connection_options.connect()
 
     def __del__(self) -> None:  # pools dropped without close(): no sockets left
         try:
             self.close()
         except Exception:  # noqa: BLE001 - never raise from a finalizer
             return
-
-    def _acquire(self, timeout_seconds: float) -> PostgresConnection:
-        self._close_expired()
-        deadline: float = time.monotonic() + timeout_seconds
-        while True:
-            idle_connection: IdleConnection | None = self._reserve(
-                deadline, timeout_seconds
-            )
-            if idle_connection is None:
-                return self._open_new_connection()
-
-            if is_usable(idle_connection, self._idle_check_seconds):
-                return idle_connection.connection
-
-            self._discard(idle_connection.connection)
-
-    def _reserve(
-        self, deadline: float, timeout_seconds: float
-    ) -> IdleConnection | None:
-        """Take an idle connection, or reserve a slot for a new one (None)."""
-
-        with self._condition:
-            while True:
-                if self._is_closed:
-                    raise ExternalServiceError(
-                        "The database connection pool is closed."
-                    )
-
-                idle_connection: IdleConnection | None = (
-                    self._idle_connections.pop_freshest()
-                )
-                if idle_connection is not None:
-                    return idle_connection
-
-                if self._open_connection_count < self._max_size:
-                    self._open_connection_count += 1
-                    return None
-
-                remaining_seconds: float = deadline - time.monotonic()
-                if remaining_seconds <= 0:
-                    raise ExternalServiceError(
-                        "No free database connection within "
-                        f"{timeout_seconds:g} s "
-                        f"(all {self._max_size} are in use)."
-                    )
-
-                self._condition.wait(remaining_seconds)
-
-    def _open_new_connection(self) -> PostgresConnection:
-        try:
-            return psycopg.connect(
-                str(self._database_url),
-                autocommit=True,
-                prepare_threshold=self._prepare_threshold,
-                connect_timeout=self._connect_timeout_seconds,
-                application_name=self._application_name,
-                # None leaves the server's defaults (psycopg drops it).
-                options=self._session_options or None,
-                cursor_factory=self._instruments.cursor_class,
-            )
-        except psycopg.Error as error:
-            self._forget_slot()
-            raise ExternalServiceError(
-                f"Could not connect to the database ({type(error).__name__})."
-            ) from error
-        except BaseException:
-            self._forget_slot()
-            raise
-
-    def _release(self, connection: PostgresConnection) -> None:
-        is_reusable: bool = reset_for_reuse(connection)
-        with self._condition:
-            if is_reusable and not self._is_closed:
-                self._idle_connections.push(connection, time.monotonic())
-                self._condition.notify()
-                return
-
-            self._open_connection_count -= 1
-            self._condition.notify()
-
-        connection.close()
-
-    def _close_expired(self) -> None:
-        """Close the connections idle past `max_idle_seconds` (down to min_size)."""
-
-        with self._condition:
-            expired: list[PostgresConnection] = self._idle_connections.take_expired(
-                time.monotonic(), self._open_connection_count, self._min_size
-            )
-            self._open_connection_count -= len(expired)
-
-        for connection in expired:
-            connection.close()
-
-    def _discard(self, connection: PostgresConnection) -> None:
-        self._forget_slot()
-        connection.close()
-
-    def _forget_slot(self) -> None:
-        with self._condition:
-            self._open_connection_count -= 1
-            self._condition.notify()

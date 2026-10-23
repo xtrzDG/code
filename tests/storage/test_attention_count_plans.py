@@ -17,6 +17,7 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.attention_count_repository import AttentionCountRepository
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -111,7 +112,7 @@ def attention_repository(
         return PostgresDocumentCollectionAdapter[Document](
             document_type=document_type,
             collection_name=DocumentCollectionName(name),
-            connection_pool=pool,
+            connection_pools=PostgresConnectionPools.single(pool),
             storage_scope=scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(document_type),

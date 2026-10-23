@@ -54,5 +54,5 @@ class MonitoringAdaptersContainer(containers.DeclarativeContainer):
     )
     database_size: Singleton[DatabaseSizeAdapterContract] = Singleton(
         build_database_size_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )

@@ -10,9 +10,13 @@ from psycopg.rows import TupleRow
 
 from app.adapters.backup.database_facts_reader import (
     APPLICATION_SCHEMA,
+    PLATFORM_GROUP,
+    TENANT_GROUP,
     bypass_row_security,
+    count_own_rows,
     probe_isolation,
     read_database_facts,
+    uses_role_policies,
 )
 from app.adapters.backup.postgres_programs import (
     locate_program,
@@ -34,6 +38,7 @@ APPLICATION_NAME: str = "assistant-workshop-restore-drill"
 PRIVILEGED_ROLE_SQL: LiteralString = (
     "select rolsuper or rolbypassrls from pg_roles where rolname = current_user"
 )
+ROLE_EXISTS_SQL: LiteralString = "select 1 from pg_roles where rolname = %s"
 
 type Connection = psycopg.Connection[TupleRow]
 
@@ -48,11 +53,15 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
     grants: the drill's roles differ from production's) runs through
     `psql` in one transaction that stops at the first error, so a newer
     pg_restore also loads into an older server (restore_script). The
-    restored database is counted with the RLS bypass, then probed as a
-    role bound by row-level security: the restoring role itself, or a
-    throwaway NOLOGIN role when the restoring role is a superuser or has
-    BYPASSRLS (which row-level security never binds). The scratch database
-    and the probe role are dropped afterwards unless the database is kept.
+    server gets the group roles of migration 1200 first (the restored
+    policies name them; creating them needs CREATEROLE once). The restored
+    database is counted as the restoring role, then probed as the tenant
+    pool's role would see it: a throwaway NOLOGIN member of
+    workshop_tenant with the old bypass switch on under the 1200 policies;
+    before them the restoring role itself, or a throwaway role when the
+    restoring role is a superuser or has BYPASSRLS (which row-level
+    security never binds). The scratch database and the probe role are
+    dropped afterwards unless the database is kept.
     """
 
     def __init__(
@@ -101,8 +110,12 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
             facts: DatabaseFacts = read_database_facts(connection)
             probes: list[IsolationProbe] = []
             if facts.secured_tables:
-                with bound_role(connection):
-                    probes = probe_isolation(connection, facts.secured_tables)
+                has_role_policies: bool = uses_role_policies(connection)
+                business_id, expected = count_own_rows(connection, facts.secured_tables)
+                with bound_role(connection, has_role_policies):
+                    probes = probe_isolation(
+                        connection, business_id, expected, has_role_policies
+                    )
 
         return facts, probes
 
@@ -110,6 +123,7 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         """Create the scratch database; the server's `server_version_num`."""
 
         with self._connect(None) as connection:
+            ensure_role_groups(connection)
             connection.execute(
                 sql.SQL("create database {} template template0").format(
                     sql.Identifier(str(name))
@@ -148,16 +162,29 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
             ) from error
 
 
+def ensure_role_groups(connection: Connection) -> None:
+    """The group roles of migration 1200 on the drill's server (once)."""
+
+    for group in (TENANT_GROUP, PLATFORM_GROUP):
+        if connection.execute(ROLE_EXISTS_SQL, [group]).fetchone() is None:
+            connection.execute(
+                sql.SQL("create role {} nologin nosuperuser nobypassrls").format(
+                    sql.Identifier(group)
+                )
+            )
+
+
 @contextmanager
-def bound_role(connection: Connection) -> Generator[None]:
+def bound_role(connection: Connection, has_role_policies: bool) -> Generator[None]:
     """
-    Make the session a role row-level security binds: the current one, or
-    a throwaway NOLOGIN role with read access when the current one skips
-    every policy (superuser or BYPASSRLS).
+    Make the session the tenant pool's kind of role. Under the 1200
+    policies: a throwaway NOLOGIN member of workshop_tenant. Before them:
+    the current role, or a throwaway NOLOGIN role when the current one
+    skips every policy (superuser or BYPASSRLS).
     """
 
     row = connection.execute(PRIVILEGED_ROLE_SQL).fetchone()
-    if row is None or not row[0]:
+    if not has_role_policies and (row is None or not row[0]):
         yield
         return
 
@@ -167,6 +194,10 @@ def bound_role(connection: Connection) -> Generator[None]:
         sql.SQL("create role {} nologin nosuperuser nobypassrls").format(role)
     )
     try:
+        if has_role_policies:
+            connection.execute(
+                sql.SQL("grant {} to {}").format(sql.Identifier(TENANT_GROUP), role)
+            )
         connection.execute(
             sql.SQL("grant usage on schema {} to {}").format(schema, role)
         )

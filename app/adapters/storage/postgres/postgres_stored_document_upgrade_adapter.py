@@ -79,7 +79,8 @@ class PostgresStoredDocumentUpgradeAdapter(StoredDocumentUpgradeAdapterContract)
     """
     Rewrites outdated stored documents of `workshop.<collection>` tables.
 
-    Each batch is one platform-wide transaction (`app.bypass_rls = on`):
+    Each batch is one platform-wide transaction of the migration role (a
+    member of workshop_platform since migration 1200, so it sees every row):
     select up to `batch_size` rows whose `schema_version` is not the current
     one (keyset on the `(created_at, row_sequence)` index), upgrade each
     through the collection's `PersistedDocumentCodec` (upcasters, then the

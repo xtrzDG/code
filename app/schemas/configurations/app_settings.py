@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
+from app.schemas.configurations.database_role_settings import DatabaseRoleSettings
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
@@ -113,9 +114,9 @@ class AppSettings(ImmutableDTO):
     # The owner cabinet's public address (provider consent pages return there).
     cabinet_base_url: CabinetBaseUrl | None = None
     database_url: DatabaseUrl | None = None
-    # The cabinet's live updates LISTEN on this direct (session) connection
-    # when DATABASE_URL goes through a transaction pooler; DATABASE_URL
-    # otherwise (LIVE_EVENTS_DATABASE_URL).
+    database_roles: DatabaseRoleSettings = Field(default_factory=DatabaseRoleSettings)
+    # Live updates LISTEN here when DATABASE_URL goes through a transaction
+    # pooler (LIVE_EVENTS_DATABASE_URL, a direct session connection).
     live_events_database_url: DatabaseUrl | None = None
     # The key ring (ENCRYPTION_KEYS, newest first, then ENCRYPTION_KEY): the
     # current key encrypts and signs; the previous ones only decrypt and
@@ -228,8 +229,7 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     is_llm_raw_text_traced: IsLlmRawTextTraced = False
     cors_allowed_origins: list[PublicBaseUrl]
-    # Request threads (THREADPOOL_SIZE) and Postgres connections of one
-    # process (DB_POOL_SIZE; a thread waiting for the model holds none).
+    # Request threads; tenant-pool connections (DB_POOL_SIZE) of a process.
     threadpool_size: ThreadPoolSize = ThreadPoolSize(64)
     db_pool_size: DatabasePoolSize = DatabasePoolSize(32)
     # Idle connections close after DB_POOL_MAX_IDLE_SECONDS down to

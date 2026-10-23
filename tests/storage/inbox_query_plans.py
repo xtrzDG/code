@@ -12,6 +12,7 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.conversation_repositories import ConversationRepository
 from app.repositories.inbox_repositories import ConversationNoteRepository
 from app.repositories.inbox_work_repository import InboxWorkRepository
@@ -91,7 +92,7 @@ class InboxRepositories:
         return PostgresDocumentCollectionAdapter[StoredDocument](
             document_type=document_type,
             collection_name=DocumentCollectionName(name),
-            connection_pool=self._pool,
+            connection_pools=PostgresConnectionPools.single(self._pool),
             storage_scope=self._scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(document_type),

@@ -27,9 +27,11 @@ def platform_transaction(
     collection_name: str,
 ) -> Generator[PostgresConnection]:
     """
-    A transaction that sees every business (`app.bypass_rls = on`, as for
-    platform collections). Database failures become application errors the
-    same way as in the document collections.
+    A transaction in the platform scope on `connection_pool` (the platform
+    pool, whose role sees every business), as for platform collections.
+    Inside a unit of work it is a savepoint of the unit's transaction, in
+    the unit's business when the unit is a business's. Database failures
+    become application errors the same way as in the document collections.
     """
 
     with (
@@ -45,19 +47,20 @@ def platform_statement(
     collection_name: str,
 ) -> Generator[PostgresConnection]:
     """
-    A connection for one statement that sets its own platform scope (a
-    database function that turns `app.bypass_rls` on for its statements),
-    without a transaction block: on the pool's autocommit connections the
-    statement is a transaction of its own that commits as it ends, so its
-    row locks last only while it runs. Inside a pinned connection's open
-    transaction (a unit of work) it is a savepoint of that transaction, so
-    its error rolls back only itself, as with `platform_transaction`.
-    Errors translate as in `platform_transaction`.
+    A connection of `connection_pool` (the platform pool) for one statement
+    of platform rows (the request rate limits), without a transaction
+    block: on the pool's autocommit connections the statement is a
+    transaction of its own that commits as it ends, so its row locks last
+    only while it runs. It never joins a unit of work of the other pool (a
+    business's unit could not write platform rows); inside an open
+    transaction of a connection this pool pinned it is a savepoint of that
+    transaction, so its error rolls back only itself, as with
+    `platform_transaction`. Errors translate as in `platform_transaction`.
     """
 
     with (
         storage_errors_translated(collection_name),
-        connection_pool.connection() as connection,
+        connection_pool.connection(joins_open_transaction=False) as connection,
     ):
         if connection.info.transaction_status is pq.TransactionStatus.IDLE:
             yield connection

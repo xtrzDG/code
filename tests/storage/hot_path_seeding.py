@@ -141,11 +141,15 @@ class RecordingConnectionPool(PostgresConnectionPoolClient):
 
     @contextmanager
     def connection(
-        self, acquire_timeout_seconds: float | None = None
+        self,
+        acquire_timeout_seconds: float | None = None,
+        joins_open_transaction: bool = True,
     ) -> Generator[PostgresConnection]:
         statements: list[tuple[str, Sequence[object]]] = []
         self.transactions.append(statements)
-        with super().connection(acquire_timeout_seconds) as connection:
+        with super().connection(
+            acquire_timeout_seconds, joins_open_transaction
+        ) as connection:
             yield cast(PostgresConnection, RecordingConnection(connection, statements))
 
 

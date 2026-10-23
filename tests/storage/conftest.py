@@ -3,7 +3,11 @@ Fixtures of the storage tests.
 
 Postgres tests use a throwaway Postgres 16 server (see postgres_server.py)
 and are skipped when its binaries are missing. Each test gets its own
-database, cloned from a template that already ran the migrations.
+database, cloned from a template that already ran the migrations. Storage
+runs on the application's two roles, as in production: `connection_pools`
+holds the tenant and the platform pool (postgres_roles.py), while
+`connection_pool` connects as the migration role (the tables' owner) for
+the tests' own raw reads and writes.
 """
 
 from collections.abc import Generator
@@ -28,6 +32,7 @@ from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.schemas.dto.storage import ApplyDatabaseMigrationsCommand
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -37,6 +42,11 @@ from app.use_cases.maintenance.apply_database_migrations_use_case import (
 )
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.storage.postgres_roles import (
+    RoleDatabase,
+    ensure_login_roles,
+    role_database,
+)
 from tests.storage.postgres_server import (
     ThrowawayPostgresServer,
     is_postgres_available,
@@ -72,11 +82,11 @@ class InMemoryCollectionFactory:
 class PostgresCollectionFactory:
     def __init__(
         self,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
         storage_scope: StorageScopeContext,
         wall_clock: WallClock[Microseconds],
     ) -> None:
-        self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._connection_pools: PostgresConnectionPools = connection_pools
         self._storage_scope: StorageScopeContext = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -88,7 +98,7 @@ class PostgresCollectionFactory:
         return PostgresDocumentCollectionAdapter[StoredDocument](
             document_type=document_type,
             collection_name=DocumentCollectionName(collection_name),
-            connection_pool=self._connection_pool,
+            connection_pools=self._connection_pools,
             storage_scope=self._storage_scope,
             wall_clock=self._wall_clock,
             isolation=infer_collection_isolation(document_type),
@@ -115,7 +125,10 @@ def migrated_template_database(postgres_server: ThrowawayPostgresServer) -> str:
 
 
 def create_migrated_database(postgres_server: ThrowawayPostgresServer) -> str:
-    """A new database that ran every migration (a template for the tests)."""
+    """
+    A new database that ran every migration (a template for the tests), with
+    the application's login roles in the groups the migrations created.
+    """
 
     database_name: str = postgres_server.create_database()
     connection_pool = PostgresConnectionPoolClient(
@@ -132,6 +145,7 @@ def create_migrated_database(postgres_server: ThrowawayPostgresServer) -> str:
     finally:
         connection_pool.close()
 
+    ensure_login_roles(postgres_server)
     return database_name
 
 
@@ -180,6 +194,27 @@ def connection_pool(
 
 
 @pytest.fixture
+def role_urls(
+    postgres_server: ThrowawayPostgresServer,
+    database_name: str,
+) -> RoleDatabase:
+    """The test database's addresses: the owner's and the two roles'."""
+
+    return role_database(postgres_server, database_name)
+
+
+@pytest.fixture
+def connection_pools(role_urls: RoleDatabase) -> Generator[PostgresConnectionPools]:
+    """The tenant and the platform pool of the test's database."""
+
+    connection_pools = role_urls.pools()
+    try:
+        yield connection_pools
+    finally:
+        connection_pools.close()
+
+
+@pytest.fixture
 def storage_scope() -> StorageScopeContext:
     """The tests' shared scope: unscoped, as in production, until entered."""
 
@@ -202,11 +237,11 @@ def platform_scope(
 
 @pytest.fixture
 def postgres_collections(
-    connection_pool: PostgresConnectionPoolClient,
+    connection_pools: PostgresConnectionPools,
     storage_scope: StorageScopeContext,
 ) -> PostgresCollectionFactory:
     return PostgresCollectionFactory(
-        connection_pool=connection_pool,
+        connection_pools=connection_pools,
         storage_scope=storage_scope,
         wall_clock=build_fixed_wall_clock(),
     )

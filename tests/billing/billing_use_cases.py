@@ -46,6 +46,7 @@ from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.admin_cabinet_parts import build_open_client_cabinet
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
@@ -103,6 +104,7 @@ class BillingUseCases(BillingInfrastructure):
             credit_lock=self.credit_lock,
             brand_repo=self.brand_repo,
             business_repo=self.business_repo,
+            storage_scope=StorageScopeContext(),
         )
         self.get_overview = GetBillingOverviewUseCase(
             authorize_business_access=authorize,

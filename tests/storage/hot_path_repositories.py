@@ -8,6 +8,7 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.business_repositories import (
     BusinessRepository,
@@ -100,7 +101,7 @@ class HotPathRepositories:
         return PostgresDocumentCollectionAdapter[StoredDocument](
             document_type=document_type,
             collection_name=DocumentCollectionName(collection_name),
-            connection_pool=self._connection_pool,
+            connection_pools=PostgresConnectionPools.single(self._connection_pool),
             storage_scope=self._storage_scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(document_type),

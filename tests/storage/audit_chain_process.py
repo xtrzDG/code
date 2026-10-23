@@ -1,17 +1,13 @@
 """
-What one API process has for the audit log on Postgres: its own pool,
-storage scope, advisory locks, collections and repositories. Two of them
-over one database are two processes' sessions.
+What one API process has for the audit log on Postgres: its own pools
+(the tenant and the platform role's), storage scope, advisory locks,
+collections and repositories. Two of them over one database are two
+processes' sessions. Purges run as the migration role, as
+`workshop purge-audit-log` does.
 """
 
 from app.adapters.compliance.postgres_audit_chain_purge_adapter import (
     PostgresAuditChainPurgeAdapter,
-)
-from app.adapters.locks.postgres_advisory_lock_adapter import (
-    PostgresAdvisoryLockAdapter,
-)
-from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
-    PostgresUnitOfWorkAdapter,
 )
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
@@ -27,9 +23,9 @@ from app.schemas.domain.audit_chain import (
     AuditViewCountDocument,
 )
 from app.schemas.domain.compliance import AuditLogEntryDocument
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.conftest import PostgresCollectionFactory
+from tests.storage.postgres_roles import RoleDatabase, advisory_locks_on
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 
@@ -38,13 +34,14 @@ class AuditProcess:
 
     def __init__(
         self,
-        database_url: DatabaseUrl,
+        database: RoleDatabase,
         entries: DocumentCollectionAdapterContract[AuditLogEntryDocument] | None = None,
     ) -> None:
-        self.pool = PostgresConnectionPoolClient(database_url, max_size=4)
+        self.pools = database.pools(max_size=4)
+        self.owner_pool = PostgresConnectionPoolClient(database.owner_url, max_size=1)
         self.scope = StorageScopeContext()
         collections = PostgresCollectionFactory(
-            connection_pool=self.pool,
+            connection_pools=self.pools,
             storage_scope=self.scope,
             wall_clock=build_fixed_wall_clock(),
         )
@@ -64,9 +61,7 @@ class AuditProcess:
             view_counts=collections(AuditViewCountDocument, "audit_view_counts"),
             checkpoints=checkpoints,
             heads=self.heads,
-            advisory_locks=PostgresAdvisoryLockAdapter(
-                self.pool, PostgresUnitOfWorkAdapter(self.pool, self.scope)
-            ),
+            advisory_locks=advisory_locks_on(self.pools, self.scope),
         )
         self.chains = AuditChainRepository(
             self.entries,
@@ -74,7 +69,8 @@ class AuditProcess:
             statuses=collections(AuditChainStatusDocument, "audit_chain_statuses"),
         )
         self.activity = AuditActivityRepository(self.entries)
-        self.purges = PostgresAuditChainPurgeAdapter(self.pool)
+        self.purges = PostgresAuditChainPurgeAdapter(self.owner_pool)
 
     def close(self) -> None:
-        self.pool.close()
+        self.pools.close()
+        self.owner_pool.close()

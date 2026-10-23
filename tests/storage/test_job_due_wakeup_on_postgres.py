@@ -22,6 +22,7 @@ from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.schemas.constants.jobs import JobLane
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -80,7 +81,9 @@ def build_api_queue(
     """The queue of an API process, on real time (jobs really become due)."""
 
     stores = build_postgres_job_stores(connection_pool, postgres_collections)
-    unit_of_work = PostgresUnitOfWorkAdapter(connection_pool, storage_scope)
+    unit_of_work = PostgresUnitOfWorkAdapter(
+        PostgresConnectionPools.single(connection_pool), storage_scope
+    )
     queue = JobQueueFacilitator(
         job_repo=stores.job_repo,
         wall_clock=WallClock(preferred_time_unit_type=Microseconds),

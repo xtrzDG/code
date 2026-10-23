@@ -8,6 +8,7 @@ from collections.abc import Callable
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.business_repositories import BusinessRepository
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
@@ -43,7 +44,7 @@ def test_blind_atomic_and_conditional_saves_never_share_a_revision(
     )
     business_repo = BusinessRepository(
         PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_ticking_wall_clock(),
         )(BusinessDocument, "businesses")
@@ -118,7 +119,7 @@ def test_concurrent_atomic_changes_are_never_lost(database_url: DatabaseUrl) -> 
     )
     business_repo = BusinessRepository(
         PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_ticking_wall_clock(),
         )(BusinessDocument, "businesses")

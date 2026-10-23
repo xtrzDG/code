@@ -20,17 +20,19 @@ import re
 import tempfile
 import threading
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
 from psycopg import pq
 
+from app.clients.postgres.pinned_connections import PinnedConnections
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.typings.platform.strings import DatabaseUrl
 
 # "B	5	ReadyForQuery	 I" in the trace (regress mode, no timestamps).
@@ -53,8 +55,13 @@ class TracedConnectionPool(PostgresConnectionPoolClient):
     of a temporary directory and counts them when the block ends.
     """
 
-    def __init__(self, database_url: DatabaseUrl, max_size: int) -> None:
-        super().__init__(database_url, max_size=max_size)
+    def __init__(
+        self,
+        database_url: DatabaseUrl,
+        max_size: int,
+        pins: PinnedConnections | None = None,
+    ) -> None:
+        super().__init__(database_url, max_size=max_size, pins=pins)
         self._trace_lock: threading.Lock = threading.Lock()
         self._traced: list[PostgresConnection] = []
         self._trace_directory: Path | None = None
@@ -92,6 +99,37 @@ class TracedConnectionPool(PostgresConnectionPoolClient):
                 for trace_file in files:
                     trace_file.close()
                     add_counts(count, Path(trace_file.name).read_text())
+
+
+def traced_pools(
+    tenant_url: DatabaseUrl, platform_url: DatabaseUrl, max_size: int
+) -> PostgresConnectionPools:
+    """A process's two pools (one pin registry), both traceable."""
+
+    pins = PinnedConnections()
+    return PostgresConnectionPools(
+        tenant=TracedConnectionPool(tenant_url, max_size, pins),
+        platform=TracedConnectionPool(platform_url, max_size, pins),
+    )
+
+
+@contextmanager
+def traced_together(pools: PostgresConnectionPools) -> Generator[TraceCount]:
+    """What a block sent over both pools, counted together."""
+
+    total = TraceCount()
+    counts: list[TraceCount] = []
+    traced: list[PostgresConnectionPoolClient] = (
+        [pools.tenant] if pools.is_single else [pools.tenant, pools.platform]
+    )
+    with ExitStack() as stack:
+        for pool in traced:
+            assert isinstance(pool, TracedConnectionPool)
+            counts.append(stack.enter_context(pool.traced()))
+        yield total
+    for count in counts:
+        total.round_trips += count.round_trips
+        total.transactions += count.transactions
 
 
 def start_trace(connection: PostgresConnection, directory: Path) -> IO[str]:

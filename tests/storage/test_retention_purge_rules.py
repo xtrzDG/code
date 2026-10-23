@@ -16,6 +16,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.retention_record_repositories import ExpiredMessageRepository
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
@@ -139,10 +140,14 @@ class CountingConnectionPool(PostgresConnectionPoolClient):
 
     @contextmanager
     def connection(
-        self, acquire_timeout_seconds: float | None = None
+        self,
+        acquire_timeout_seconds: float | None = None,
+        joins_open_transaction: bool = True,
     ) -> Generator[PostgresConnection]:
         self.transactions += 1
-        with super().connection(acquire_timeout_seconds) as connection:
+        with super().connection(
+            acquire_timeout_seconds, joins_open_transaction
+        ) as connection:
             yield connection
 
 
@@ -153,7 +158,9 @@ def test_old_messages_are_deleted_in_transactions_of_a_thousand_rows_on_postgres
     pool = CountingConnectionPool(database_url, max_size=2)
     try:
         collection = PostgresCollectionFactory(
-            pool, platform_scope, build_fixed_wall_clock()
+            PostgresConnectionPools.single(pool),
+            platform_scope,
+            build_fixed_wall_clock(),
         )(MessageDocument, "messages")
         business_id, conversation_id = BusinessId(), ConversationId()
         old = Microseconds(START_MICROSECONDS - 1_000)

@@ -34,6 +34,9 @@ from app.adapters.payments.flitt_payment_gateway_adapter import (
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
 )
+from app.adapters.storage.postgres.connection_pools_factory import (
+    application_database_url,
+)
 from app.containers.adapters.calendar_sync_collections_container import (
     CalendarSyncCollectionsContainer,
 )
@@ -141,7 +144,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         ProcessAdaptersContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,
     )  # fmt: skip
-    database_probe = processes.database_probe
+    database_probe, database_roles = processes.database_probe, processes.database_roles
     migration_source = processes.migration_source
     storage_unit_of_work = processes.storage_unit_of_work
     storage_read_session = processes.storage_read_session
@@ -150,22 +153,21 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # pool; in-process locks without a database).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
         build_advisory_lock_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
     )
     # Request counters of the rate limits (Postgres: shared by every
     # instance; in memory without a database).
     rate_limit_buckets: Singleton[RateLimitBucketAdapterContract] = Singleton(
         build_rate_limit_bucket_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_platform_pool,
     )
 
-    # --- The cabinet's live updates between processes: Postgres
-    # NOTIFY/LISTEN with DATABASE_URL, else in this process.
+    # --- The cabinet's live updates between processes (Postgres NOTIFY/LISTEN).
     live_event_bus: Singleton[LiveEventBusAdapterContract] = Singleton(
         build_live_event_bus_adapter,
-        connection_pool=clients.postgres_pool,
-        database_url=config.app_settings.provided.database_url,
+        connection_pool=clients.postgres_platform_pool,
+        database_url=Callable(application_database_url, settings=config.app_settings),
         listen_database_url=config.app_settings.provided.live_events_database_url,
     )
 

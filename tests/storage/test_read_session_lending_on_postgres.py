@@ -15,25 +15,23 @@ from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.typings.platform.strings import DatabaseUrl
-from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.read_session_world import (
-    CountingPool,
     ReadSessionWorld,
+    role_world,
     transaction_status,
 )
 
 
 @pytest.fixture
-def world(database_url: DatabaseUrl) -> Iterator[ReadSessionWorld]:
-    # One connection only, taken within a second: a session that wanted a
-    # second connection would fail here instead of waiting.
-    pool = CountingPool(database_url, max_size=1, acquire_timeout_seconds=1.0)
-    try:
-        yield ReadSessionWorld(pool, StorageScopeContext())
-    finally:
-        pool.close()
+def world(role_urls: RoleDatabase) -> Iterator[ReadSessionWorld]:
+    # One connection per pool only, taken within a second: a session that
+    # wanted a second connection would fail here instead of waiting.
+    with role_world(
+        role_urls, max_size=1, acquire_timeout_seconds=1.0
+    ) as session_world:
+        yield session_world
 
 
 def stored_channel_ids(
@@ -87,7 +85,7 @@ def test_a_unit_of_work_in_a_session_runs_in_its_own_transaction(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
 ) -> None:
-    unit = PostgresUnitOfWorkAdapter(world.pool, world.scope)
+    unit = PostgresUnitOfWorkAdapter(world.pools, world.scope)
     kept = ChannelDocument(business_id=world.business_id, kind=ChannelKind.PHONE)
     dropped = ChannelDocument(business_id=world.business_id, kind=ChannelKind.PHONE)
     with (

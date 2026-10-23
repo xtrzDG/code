@@ -1,6 +1,11 @@
-"""Row-level security per session: deny by default, no leaks between threads."""
+"""
+Row-level security per session (migration 1200): a tenant session sees the
+rows of the business it names and nothing else, whatever it sets; nothing
+leaks between pool users or threads.
+"""
 
 import threading
+from typing import LiteralString
 
 import psycopg
 import pytest
@@ -12,15 +17,15 @@ from app.adapters.storage.postgres.postgres_session_settings import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.storage import StorageScope
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import COUNTRY_SAMPLES, build_contact
 from tests.storage.conftest import PostgresCollectionFactory
-from tests.storage.postgres_server import ThrowawayPostgresServer
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.rls_contacts import save_two_businesses_contacts
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -29,56 +34,77 @@ from tests.storage.storage_testing import build_fixed_wall_clock
 pytestmark = pytest.mark.usefixtures("platform_scope")
 
 
-def count_contacts(rows: list[TupleRow]) -> int:
-    count: object = rows[0][0]
+SCOPE: LiteralString = "select set_config('app.business_id', %s, true)"
+BYPASS: LiteralString = "select set_config('app.bypass_rls', 'on', false)"
+
+
+def count_rows(connection: psycopg.Connection[TupleRow]) -> int:
+    row = connection.execute("select count(*) from workshop.contacts").fetchone()
+    assert row is not None
+    count: object = row[0]
     assert isinstance(count, int)
     return count
 
 
-def test_raw_sessions_default_to_deny(
-    postgres_server: ThrowawayPostgresServer,
+def test_a_tenant_session_sees_one_business_whatever_it_sets(
+    role_urls: RoleDatabase,
     postgres_collections: PostgresCollectionFactory,
-    database_name: str,
 ) -> None:
     first_business_id, _, _, _ = save_two_businesses_contacts(postgres_collections)
 
-    with postgres_server.app_connection(database_name) as connection:
-        no_settings = connection.execute(
-            "select count(*) from workshop.contacts"
-        ).fetchall()
+    with psycopg.connect(role_urls.tenant_url, autocommit=True) as connection:
+        no_settings = count_rows(connection)
         with connection.transaction():
-            connection.execute(
-                "select set_config('app.business_id', %s, true)",
-                (str(first_business_id),),
-            )
-            scoped = connection.execute(
-                "select count(*) from workshop.contacts"
-            ).fetchall()
+            connection.execute(SCOPE, (str(first_business_id),))
+            scoped = count_rows(connection)
+        # The switch every policy honoured before migration 1200, set by
+        # the session itself as an injected statement would.
+        connection.execute(BYPASS)
+        bypassed = count_rows(connection)
         with connection.transaction():
-            connection.execute("select set_config('app.bypass_rls', 'on', true)")
-            bypassed = connection.execute(
-                "select count(*) from workshop.contacts"
-            ).fetchall()
-        after_transactions = connection.execute(
-            "select count(*) from workshop.contacts"
-        ).fetchall()
+            connection.execute(SCOPE, (str(first_business_id),))
+            scoped_and_bypassed = count_rows(connection)
+        after_transactions = count_rows(connection)
 
-    assert count_contacts(no_settings) == 0
-    assert count_contacts(scoped) == 1
-    assert count_contacts(bypassed) == 2
-    assert count_contacts(after_transactions) == 0
+    assert no_settings == 0
+    assert scoped == 1
+    assert bypassed == 0
+    assert scoped_and_bypassed == 1
+    assert after_transactions == 0
+
+
+def test_a_tenant_session_cannot_become_the_platform_role(
+    role_urls: RoleDatabase,
+) -> None:
+    with psycopg.connect(role_urls.tenant_url, autocommit=True) as connection:
+        for statement in (
+            "set role workshop_platform",
+            "set session authorization workshop_platform_login",
+        ):
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                connection.execute(statement)
+
+
+def test_a_platform_session_sees_every_business_without_settings(
+    role_urls: RoleDatabase,
+    postgres_collections: PostgresCollectionFactory,
+) -> None:
+    save_two_businesses_contacts(postgres_collections)
+
+    with psycopg.connect(role_urls.platform_url, autocommit=True) as connection:
+        assert count_rows(connection) == 2
 
 
 def test_scope_settings_do_not_leak_to_the_next_pool_user(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
     storage_scope: StorageScopeContext,
 ) -> None:
     single_connection_pool = PostgresConnectionPoolClient(
-        database_url=database_url, max_size=1
+        database_url=role_urls.tenant_url, max_size=1
     )
     try:
         contacts = PostgresCollectionFactory(
-            connection_pool=single_connection_pool,
+            connection_pools=PostgresConnectionPools.single(single_connection_pool),
             storage_scope=storage_scope,
             wall_clock=build_fixed_wall_clock(),
         )(ContactDocument, "contacts")
@@ -87,13 +113,12 @@ def test_scope_settings_do_not_leak_to_the_next_pool_user(
 
         with single_connection_pool.connection() as connection:
             row = connection.execute(
-                "select coalesce(current_setting('app.business_id', true), ''), "
-                "coalesce(current_setting('app.bypass_rls', true), '')"
+                "select coalesce(current_setting('app.business_id', true), '')"
             ).fetchone()
     finally:
         single_connection_pool.close()
 
-    assert row == ("", "")
+    assert row == ("",)
 
 
 def test_concurrent_threads_keep_their_own_scope(
@@ -137,24 +162,20 @@ def test_concurrent_threads_keep_their_own_scope(
     }
 
 
-def test_an_unscoped_session_sees_and_writes_no_tenant_row(
-    postgres_server: ThrowawayPostgresServer,
+def test_an_unscoped_tenant_session_sees_and_writes_no_tenant_row(
+    role_urls: RoleDatabase,
     postgres_collections: PostgresCollectionFactory,
-    database_name: str,
 ) -> None:
     first_business_id, _, _, _ = save_two_businesses_contacts(postgres_collections)
     foreign_contact = build_contact(COUNTRY_SAMPLES[0], first_business_id)
 
-    with postgres_server.app_connection(database_name) as connection:
+    with psycopg.connect(role_urls.tenant_url, autocommit=True) as connection:
         with connection.transaction():
             apply_storage_scope(connection, StorageScope.unscoped())
             settings = connection.execute(
-                "select current_setting('app.business_id', true), "
-                "current_setting('app.bypass_rls', true)"
+                "select current_setting('app.business_id', true)"
             ).fetchone()
-            unscoped = connection.execute(
-                "select count(*) from workshop.contacts"
-            ).fetchall()
+            unscoped = count_rows(connection)
         with (
             pytest.raises(psycopg.errors.InsufficientPrivilege),
             connection.transaction(),
@@ -167,5 +188,5 @@ def test_an_unscoped_session_sees_and_writes_no_tenant_row(
                 (str(foreign_contact.id), str(first_business_id)),
             )
 
-    assert settings == ("", "off")
-    assert count_contacts(unscoped) == 0
+    assert settings == ("",)
+    assert unscoped == 0

@@ -1,5 +1,6 @@
 """Row-level security: a business scope sees and writes only its own rows."""
 
+import psycopg
 import pytest
 
 from app.repositories.conversation_repositories import ContactRepository
@@ -18,7 +19,8 @@ from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIO
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import build_contact, build_owner
 from tests.storage.conftest import PostgresCollectionFactory
-from tests.storage.postgres_server import ThrowawayPostgresServer
+from tests.storage.postgres_roles import PLATFORM_LOGIN_ROLE, TENANT_LOGIN_ROLE
+from tests.storage.postgres_server import APP_ROLE_NAME, ThrowawayPostgresServer
 from tests.storage.rls_contacts import (
     EMIRATES,
     GEORGIA,
@@ -32,7 +34,7 @@ from tests.storage.rls_contacts import (
 pytestmark = pytest.mark.usefixtures("platform_scope")
 
 
-def test_every_collection_table_has_forced_rls_and_the_policy(
+def test_every_collection_table_has_forced_rls_and_the_role_policies(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
 ) -> None:
@@ -44,26 +46,49 @@ def test_every_collection_table_has_forced_rls_and_the_policy(
             "and c.relname <> 'schema_migrations'"
         ).fetchall()
         policies = connection.execute(
-            "select tablename, cmd, qual, with_check from pg_policies "
-            "where schemaname = 'workshop'"
+            "select tablename, policyname, roles::text[], cmd, qual, with_check "
+            "from pg_policies where schemaname = 'workshop'"
         ).fetchall()
 
     table_names = {str(row[0]) for row in tables}
     assert {str(definition.name) for definition in DOCUMENT_COLLECTIONS} <= table_names
     assert all(row[1] is True and row[2] is True for row in tables)
-    assert {str(row[0]) for row in policies} == table_names
-    for _, command, using_expression, check_expression in policies:
-        assert command == "ALL"
-        assert "app.business_id" in str(using_expression)
-        assert "app.bypass_rls" in str(using_expression)
-        assert using_expression == check_expression
+    by_table: dict[str, dict[str, tuple[object, ...]]] = {}
+    for table, name, roles, command, using_expression, check_expression in policies:
+        by_table.setdefault(str(table), {})[str(name)] = (
+            roles,
+            command,
+            using_expression,
+            check_expression,
+        )
+    assert set(by_table) == table_names
+    for table, table_policies in by_table.items():
+        # No policy is left that a session's own setting could widen.
+        assert set(table_policies) == {"tenant_isolation", "platform_access"}, table
+        tenant = table_policies["tenant_isolation"]
+        assert tenant[:2] == (["workshop_tenant"], "ALL"), table
+        assert "app.business_id" in str(tenant[2]), table
+        assert "bypass" not in str(tenant[2]) + str(tenant[3]), table
+        assert tenant[2] == tenant[3], table
+        assert table_policies["platform_access"] == (
+            ["workshop_platform"],
+            "ALL",
+            "true",
+            "true",
+        ), table
 
 
-def test_application_role_cannot_skip_policies(
+@pytest.mark.parametrize(
+    "role", [APP_ROLE_NAME, TENANT_LOGIN_ROLE, PLATFORM_LOGIN_ROLE]
+)
+def test_no_application_role_skips_the_policies(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
+    role: str,
 ) -> None:
-    with postgres_server.app_connection(database_name) as connection:
+    with psycopg.connect(
+        postgres_server.conninfo(database_name, role), autocommit=True
+    ) as connection:
         row = connection.execute(
             "select rolsuper, rolbypassrls from pg_roles where rolname = current_user"
         ).fetchone()

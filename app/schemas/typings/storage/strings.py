@@ -3,6 +3,14 @@
 from base_typed_string import BaseTypedString
 
 
+class DatabaseRoleProblem(BaseTypedString):
+    """
+    One way a pool's database role breaks tenant isolation (a tenant role
+    that sees every business, a platform role outside its group), in
+    English, for the startup log.
+    """
+
+
 class DocumentFieldText(BaseTypedString):
     """
     A stored document field's value as text, as Postgres `document ->> field`

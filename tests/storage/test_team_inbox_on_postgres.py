@@ -11,6 +11,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.conversation_repositories import ConversationRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
@@ -46,7 +47,7 @@ def build_repository(
 ) -> ConversationRepository:
     return ConversationRepository(
         PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=storage_scope,
             wall_clock=build_ticking_wall_clock(),
         )(ConversationDocument, "conversations")

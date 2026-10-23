@@ -21,6 +21,7 @@ from tests.platform.connection_budget import (
     BlueprintService,
     blueprint_services,
     connection_budget,
+    platform_pool_size,
     pool_size,
     process_connections,
 )
@@ -44,25 +45,27 @@ def test_production_counts_every_api_and_worker_instance_and_the_backup() -> Non
     budget = connection_budget("render.yaml")
 
     # Two API instances, two customer workers and one batch worker, each
-    # with the pool of its role: 150 of the 200 of pro-8gb.
+    # with the tenant and the platform pool of its role: 170 of the 200 of
+    # pro-8gb.
     assert budget.parts == {
         "reserved": RESERVED_CONNECTIONS,
         "workshop-api (migrate)": MIGRATE_CONNECTIONS,
-        "workshop-api": DEPLOY_OVERLAP * 2 * (12 + LISTEN_CONNECTIONS),
-        "workshop-worker": DEPLOY_OVERLAP * 2 * (16 + LISTEN_CONNECTIONS),
-        "workshop-batch-worker": DEPLOY_OVERLAP * (10 + LISTEN_CONNECTIONS),
+        "workshop-api": DEPLOY_OVERLAP * 2 * (10 + 4 + LISTEN_CONNECTIONS),
+        "workshop-worker": DEPLOY_OVERLAP * 2 * (14 + 4 + LISTEN_CONNECTIONS),
+        "workshop-batch-worker": DEPLOY_OVERLAP * (8 + 4 + LISTEN_CONNECTIONS),
         "workshop-backup": BACKUP_CONNECTIONS,
     }
-    assert (budget.plan, budget.limit, budget.worst_case) == ("pro-8gb", 200, 150)
+    assert (budget.plan, budget.limit, budget.worst_case) == ("pro-8gb", 200, 170)
 
 
 @pytest.mark.parametrize("blueprint_path", BLUEPRINTS)
 def test_every_worker_sets_the_pool_of_its_role(blueprint_path: str) -> None:
-    """The default pool (half of 64 threads) is no role's size."""
+    """The default pools (half of 64 threads, a quarter of that) are no role's."""
 
     for service in blueprint_services(blueprint_path):
         if service.command == WORKER_COMMAND:
             assert "DB_POOL_SIZE" in service.values, service.name
+            assert "DB_PLATFORM_POOL_SIZE" in service.values, service.name
 
 
 @pytest.mark.parametrize("blueprint_path", BLUEPRINTS)
@@ -101,6 +104,8 @@ def test_an_unset_pool_follows_the_request_threads() -> None:
         reads_database=True,
     )
 
-    # Half the threads: 20 connections, a LISTEN, twice during a deploy.
+    # Half the threads: 20 tenant connections, a quarter of those platform
+    # connections, a LISTEN, twice during a deploy.
     assert pool_size(service) == 20
-    assert process_connections(service) == 2 * 3 * 21
+    assert platform_pool_size(service) == 5
+    assert process_connections(service) == 2 * 3 * (20 + 5 + 1)

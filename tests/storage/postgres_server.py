@@ -9,8 +9,11 @@ under root the server processes run as the `postgres` (or `nobody`) system
 user.
 
 Roles: `workshop_admin` (superuser, creates databases) and `workshop_app`
-(LOGIN, neither superuser nor BYPASSRLS: the application role, which owns the
-test databases and runs the migrations, so forced RLS binds it).
+(LOGIN and CREATEROLE, neither superuser nor BYPASSRLS: the migration role,
+which owns the test databases and runs the migrations, so forced RLS binds
+it; migration 1200 creates the groups workshop_tenant and workshop_platform
+with it, as on managed Postgres). The application's login roles join those
+groups (tests/storage/postgres_roles.py).
 """
 
 import os
@@ -103,9 +106,9 @@ class ThrowawayPostgresServer:
         self._start_server()
         with self.admin_connection() as connection:
             connection.execute(
-                sql.SQL("create role {} login nosuperuser nobypassrls").format(
-                    sql.Identifier(APP_ROLE_NAME)
-                )
+                sql.SQL(
+                    "create role {} login createrole nosuperuser nobypassrls"
+                ).format(sql.Identifier(APP_ROLE_NAME))
             )
 
     def stop(self) -> None:

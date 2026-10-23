@@ -20,9 +20,10 @@ from app.schemas.typings.platform.strings import (
 )
 
 APPLICATION_NAME: str = "assistant-workshop-backup"
-# pg_dump reads the tables as the application role, which the forced
-# row-level security binds too: the application's own bypass switch lets
-# it (and only this session) see every business's rows.
+# pg_dump reads the tables as their owner (DATABASE_URL), which the forced
+# row-level security binds too. Since migration 1200 the owner is a member
+# of workshop_platform and sees every row; a database still before 1200
+# honours only the old switch, which this session (and only it) sets.
 DUMP_SESSION_SETTINGS: dict[str, str] = {"app.bypass_rls": "on"}
 
 

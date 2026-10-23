@@ -103,9 +103,12 @@ def main(
         print(f"Purge failed: {error}", file=error_stream)
         return EXIT_FAILED
     finally:
-        connection_pool = container.clients.postgres_pool()
-        if connection_pool is not None:
-            connection_pool.close()
+        connection_pools = container.clients.postgres_pools()
+        if connection_pools is not None:
+            connection_pools.close()
+        owner_pool = container.clients.postgres_owner_pool()
+        if owner_pool is not None:
+            owner_pool.close()
 
     print(
         f"{int(report.entries_removed)} audit entries removed from "

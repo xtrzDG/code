@@ -2,13 +2,14 @@
 Choose the document storage for the container wiring.
 
 With `DATABASE_URL` set every collection is a Postgres table; without it
-collections live in memory (tests, demos). Use one shared connection pool and
-one shared storage scope for all collections of a process:
+collections live in memory (tests, demos). Use the process's shared pools
+(`build_postgres_connection_pools`) and one shared storage scope for all
+collections of a process:
 
-    pool = build_postgres_connection_pool(settings)
+    pools = build_postgres_connection_pools(settings)
     scope = StorageScopeContext()
     users = build_document_collection(
-        UserDocument, "users", settings, connection_pool=pool, storage_scope=scope
+        UserDocument, "users", settings, connection_pools=pools, storage_scope=scope
     )
 """
 
@@ -22,10 +23,10 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
 )
-from app.clients.postgres.pool_instruments import NO_POOL_INSTRUMENTS, PoolInstruments
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -36,43 +37,12 @@ from app.utilities.storage.document_lookup_fields import declared_lookup_fields
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
-# A request or job statement that runs longer is cancelled by the server;
-# a transaction left open longer (a stuck thread) is ended by it.
-STATEMENT_TIMEOUT_SECONDS: int = 10
-IDLE_IN_TRANSACTION_TIMEOUT_SECONDS: int = 30
-
-
-def build_postgres_connection_pool(
-    settings: AppSettings,
-    instruments: PoolInstruments = NO_POOL_INSTRUMENTS,
-) -> PostgresConnectionPoolClient | None:
-    """
-    The process-wide pool when `DATABASE_URL` is set, otherwise None: up to
-    DB_POOL_SIZE connections, each with the statement and idle-transaction
-    timeouts above (the migration commands use their own, longer ones);
-    connections idle for DB_POOL_MAX_IDLE_SECONDS close down to
-    DB_POOL_MIN_SIZE. `instruments` measure it and trace its statements.
-    """
-
-    if settings.database_url is None:
-        return None
-
-    return PostgresConnectionPoolClient(
-        database_url=settings.database_url,
-        max_size=int(settings.db_pool_size),
-        statement_timeout_seconds=STATEMENT_TIMEOUT_SECONDS,
-        idle_in_transaction_timeout_seconds=IDLE_IN_TRANSACTION_TIMEOUT_SECONDS,
-        min_size=int(settings.db_pool_min_size),
-        max_idle_seconds=float(int(settings.db_pool_max_idle_seconds)),
-        instruments=instruments,
-    )
-
 
 def build_document_collection[StoredDocument: PersistentDocument](
     document_type: type[StoredDocument],
     collection_name: str,
     settings: AppSettings,
-    connection_pool: PostgresConnectionPoolClient | None = None,
+    connection_pools: PostgresConnectionPools | None = None,
     storage_scope: StorageScopeContract | None = None,
     wall_clock: WallClock[Microseconds] | None = None,
     isolation: CollectionIsolation | None = None,
@@ -85,9 +55,10 @@ def build_document_collection[StoredDocument: PersistentDocument](
     both (fail-closed); pass the process's shared `StorageScopeContext`.
     Without one, the in-memory collection is not guarded and the Postgres
     one gets a scope of its own that nothing enters (it refuses every call).
-    Postgres-only arguments fall back to: a pool of its own (pass the shared
-    one instead), the system clock, and the isolation inferred from the
-    document type (`infer_collection_isolation`).
+    Postgres-only arguments fall back to: one pool of its own on
+    DATABASE_URL (pass the process's shared pools instead), the system
+    clock, and the isolation inferred from the document type
+    (`infer_collection_isolation`).
     """
 
     validated_collection_name: DocumentCollectionName = validate_collection_name(
@@ -112,10 +83,12 @@ def build_document_collection[StoredDocument: PersistentDocument](
     return PostgresDocumentCollectionAdapter[StoredDocument](
         document_type=document_type,
         collection_name=validated_collection_name,
-        connection_pool=(
-            connection_pool
-            if connection_pool is not None
-            else PostgresConnectionPoolClient(database_url=settings.database_url)
+        connection_pools=(
+            connection_pools
+            if connection_pools is not None
+            else PostgresConnectionPools.single(
+                PostgresConnectionPoolClient(database_url=settings.database_url)
+            )
         ),
         storage_scope=(
             storage_scope if storage_scope is not None else StorageScopeContext()

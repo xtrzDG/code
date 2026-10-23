@@ -15,6 +15,29 @@ class CollectionIsolation(StrEnum):
     PLATFORM = "platform"
 
 
+class DatabaseRoleGroup(StrEnum):
+    """
+    The group roles of the application (migration 1200): a login role of
+    the tenant pool joins TENANT and sees the rows of one business at a
+    time; one of the platform pool joins PLATFORM and sees every row.
+    """
+
+    TENANT = "workshop_tenant"
+    PLATFORM = "workshop_platform"
+
+
+class DatabasePoolKind(StrEnum):
+    """
+    A pool of a process: the tenant pool (business scopes), the platform
+    pool (everything else), or one pool serving both scopes on one role
+    (DATABASE_URL alone: development and tests only).
+    """
+
+    TENANT = "tenant"
+    PLATFORM = "platform"
+    SHARED = "shared"
+
+
 class LookupFieldKind(StrEnum):
     """
     How a document field is indexed for lookups.

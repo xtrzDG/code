@@ -12,6 +12,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.user_repositories import OtpChallengeRepository
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.users import LoginMethod
@@ -144,7 +145,7 @@ def test_parallel_failed_attempts_on_postgres_through_a_small_pool(
     try:
         repo = OtpChallengeRepository(
             PostgresCollectionFactory(
-                connection_pool=connection_pool,
+                connection_pools=PostgresConnectionPools.single(connection_pool),
                 storage_scope=StorageScopeContext(),
                 wall_clock=build_ticking_wall_clock(),
             )(OtpChallengeDocument, "otp_challenges")

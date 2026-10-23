@@ -20,11 +20,12 @@ from app.adapters.storage.postgres.postgres_session_settings import (
     translate_storage_error,
 )
 from app.adapters.storage.postgres.read_sessions import read_session_connection
-from app.adapters.storage.postgres.scoped_transactions import scoped_transaction
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnection,
-    PostgresConnectionPoolClient,
+from app.adapters.storage.postgres.scoped_transactions import (
+    scoped_read,
+    scoped_transaction,
 )
+from app.clients.postgres.postgres_connection_pool_client import PostgresConnection
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.storage import CollectionIsolation, LookupFieldKind
 from app.schemas.dto.storage import StorageScope
@@ -43,7 +44,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
     """
     Base of the Postgres document collection: the table's statements and
     lookup fields, one transaction per operation with the row-level
-    security scope applied, and the decoding of rows into fresh documents
+    security scope applied (on the pool of that scope: the tenant pool for
+    a business, the platform pool otherwise), and the decoding of rows
+    into fresh documents
     (`PersistedDocumentCodec`: written strictly with the current schema
     version, read back tolerantly and upcast).
     """
@@ -52,14 +55,14 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         self,
         document_type: type[StoredDocument],
         collection_name: DocumentCollectionName,
-        connection_pool: PostgresConnectionPoolClient,
+        connection_pools: PostgresConnectionPools,
         storage_scope: StorageScopeContract,
         wall_clock: WallClock[Microseconds],
         isolation: CollectionIsolation,
         lookup_fields: Mapping[DocumentFieldPath, LookupFieldKind] | None = None,
     ) -> None:
         self._collection_name: DocumentCollectionName = collection_name
-        self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._connection_pools: PostgresConnectionPools = connection_pools
         self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._isolation: CollectionIsolation = isolation
@@ -103,20 +106,26 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         """
         Like `_transaction`, for a read: inside a read session of this
         pool (`PostgresReadSessionAdapter`) the read is one statement of
-        the session's transaction, in this read's scope.
+        the session's transaction, in this read's scope; a platform-wide
+        read outside any transaction needs none (`scoped_read`).
         """
 
         scope: StorageScope = self._effective_scope()
         with (
             self._translated_errors(),
-            read_session_connection(self._connection_pool, scope) as connection,
+            read_session_connection(
+                self._connection_pools.for_scope(scope), scope
+            ) as connection,
         ):
             if connection is not None:
                 yield connection, business_id_of(scope)
                 return
 
-        with self._transaction_in(scope) as opened:
-            yield opened
+        with (
+            self._translated_errors(),
+            scoped_read(self._connection_pools.for_scope(scope), scope) as connection,
+        ):
+            yield connection, business_id_of(scope)
 
     @contextmanager
     def _transaction_in(
@@ -124,7 +133,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
     ) -> Generator[tuple[PostgresConnection, str | None]]:
         with (
             self._translated_errors(),
-            scoped_transaction(self._connection_pool, scope) as connection,
+            scoped_transaction(
+                self._connection_pools.for_scope(scope), scope
+            ) as connection,
         ):
             yield connection, business_id_of(scope)
 

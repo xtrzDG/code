@@ -32,7 +32,7 @@ def document_collection[StoredDocument: PersistentDocument](
         document_type=document_type,
         collection_name=collection_name,
         settings=config.app_settings,
-        connection_pool=clients.postgres_pool,
+        connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
     )

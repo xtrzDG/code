@@ -71,7 +71,7 @@ class AuditChainCollectionsContainer(containers.DeclarativeContainer):
     )
     audit_chain_purges: Singleton[AuditChainPurgeAdapterContract] = Singleton(
         build_audit_chain_purge_adapter,
-        connection_pool=clients.postgres_pool,
+        connection_pool=clients.postgres_owner_pool,
         entries=audit_entry_collections.audit_log_entry_collection,
         checkpoints=audit_chain_checkpoint_collection,
         wall_clock=time_provider.microsecond_wall_clock,

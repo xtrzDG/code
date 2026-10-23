@@ -9,6 +9,7 @@ from psycopg import sql
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.business_repositories import BusinessRepository
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
@@ -51,7 +52,7 @@ def test_concurrent_upserts_through_a_small_pool(database_url: DatabaseUrl) -> N
     )
     storage_scope = StorageScopeContext()
     knowledge_items = PostgresCollectionFactory(
-        connection_pool=connection_pool,
+        connection_pools=PostgresConnectionPools.single(connection_pool),
         storage_scope=storage_scope,
         wall_clock=build_ticking_wall_clock(),
     )(KnowledgeItemDocument, "knowledge_items")
@@ -131,7 +132,7 @@ def test_concurrent_conditional_saves_let_exactly_one_win(
     )
     business_repo = BusinessRepository(
         PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_ticking_wall_clock(),
         )(BusinessDocument, "businesses")

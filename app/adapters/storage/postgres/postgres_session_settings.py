@@ -1,18 +1,21 @@
 """
 Row-level security settings of one transaction, and storage error translation.
 
-Every collection table has the policy (see migrations/0001):
+Every table has, besides the owner's, two policies (migration 1200):
 
-    business_id = current_setting('app.business_id', true)
-    or current_setting('app.bypass_rls', true) = 'on'
+    tenant_isolation  to workshop_tenant:
+        business_id = current_setting('app.business_id', true)
+    platform_access   to workshop_platform: every row
 
-The adapter sets both values with `set_config(..., is_local => true)` (the
-parameterized form of SET LOCAL) at the start of each transaction, in the
-same round trip as its `begin` (or its savepoint inside a unit of work),
-so they end with it and never leak to the next user of a pooled
-connection. With no
-settings at all, and in the UNSCOPED scope, a session sees and writes no
-tenant row (default deny); only the PLATFORM scope turns the bypass on.
+The adapter sets `app.business_id` with `set_config(..., is_local => true)`
+(the parameterized form of SET LOCAL) at the start of each transaction, in
+the same round trip as its `begin` (or its savepoint inside a unit of
+work), so it ends with it and never leaks to the next user of a pooled
+connection. On a tenant connection a business scope sees that business's
+rows; the platform and unscoped scopes name no business and see nothing
+(default deny), whatever else a session sets: there is no setting that
+widens what the tenant role sees. Platform-wide work borrows from the
+platform pool, whose role sees every row (`PostgresConnectionPools`).
 """
 
 import psycopg
@@ -20,7 +23,6 @@ from psycopg import errors as database_errors
 from psycopg import sql
 
 from app.clients.postgres.postgres_connection_pool_client import PostgresConnection
-from app.schemas.constants.storage import StorageScopeKind
 from app.schemas.dto.storage import StorageScope
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
@@ -36,24 +38,20 @@ ROW_LEVEL_SECURITY_MARKER: str = "row-level security"
 
 def apply_storage_scope(connection: PostgresConnection, scope: StorageScope) -> None:
     """
-    Set the RLS settings of the current transaction for `scope`: a business
-    sees its rows, the platform every row, an unscoped session none.
+    Set the RLS setting of the current transaction for `scope`: the
+    business of a business scope, no business otherwise.
     """
 
     connection.execute(
-        "select set_config('app.business_id', %s, true), "
-        "set_config('app.bypass_rls', %s, true)",
-        (
-            "" if scope.business_id is None else str(scope.business_id),
-            "on" if scope.kind is StorageScopeKind.PLATFORM else "off",
-        ),
+        "select set_config('app.business_id', %s, true)",
+        (business_setting(scope),),
     )
 
 
 def begin_in_scope(connection: PostgresConnection, scope: StorageScope) -> None:
     """
-    Begin a transaction and set its RLS settings for `scope` in one round
-    trip: the settings travel as literals (quoted by libpq, and a business
+    Begin a transaction and set its RLS setting for `scope` in one round
+    trip: the setting travels as a literal (quoted by libpq, and a business
     id is a validated typed id), so `begin` and the `set_config` select go
     as one simple-protocol message, ahead of every statement of the
     transaction. The caller ends the transaction.
@@ -66,9 +64,9 @@ def savepoint_in_scope(
     connection: PostgresConnection, scope: StorageScope, savepoint: sql.Identifier
 ) -> None:
     """
-    Inside an open transaction: set a savepoint and the RLS settings for
+    Inside an open transaction: set a savepoint and the RLS setting for
     `scope` in one round trip, as `begin_in_scope` does for a transaction.
-    Rolled back to, the savepoint restores the settings before it.
+    Rolled back to, the savepoint restores the setting before it.
     """
 
     connection.execute(
@@ -77,15 +75,17 @@ def savepoint_in_scope(
 
 
 def scope_settings(scope: StorageScope) -> sql.Composed:
-    """The `set_config` select of `scope`, its values as quoted literals."""
+    """The `set_config` select of `scope`, its value as a quoted literal."""
 
-    return sql.SQL(
-        "select set_config('app.business_id', {}, true), "
-        "set_config('app.bypass_rls', {}, true)"
-    ).format(
-        sql.Literal("" if scope.business_id is None else str(scope.business_id)),
-        sql.Literal("on" if scope.kind is StorageScopeKind.PLATFORM else "off"),
+    return sql.SQL("select set_config('app.business_id', {}, true)").format(
+        sql.Literal(business_setting(scope))
     )
+
+
+def business_setting(scope: StorageScope) -> str:
+    """`app.business_id` of `scope`: its business, or none (empty)."""
+
+    return "" if scope.business_id is None else str(scope.business_id)
 
 
 def translate_storage_error(

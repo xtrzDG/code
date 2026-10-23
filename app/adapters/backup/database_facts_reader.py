@@ -2,10 +2,14 @@
 Count what a database holds, for the backup manifest and the restore drill.
 
 Every query runs on a connection the caller prepared: inside the dump's
-exported snapshot, or on the restored scratch database. Row-level security
-is bypassed for the counts with the application's own switch
-(`app.bypass_rls`), so a role bound by the policies counts every row; the
-isolation probes then switch it off again and look as a bound role would.
+exported snapshot, or on the restored scratch database. The counts see
+every row: since migration 1200 the tables' owner is a member of
+workshop_platform, whose policies show every row, and a database (or a
+backup) from before 1200 still honours the old switch `app.bypass_rls`,
+which is set for it. The isolation probes then look as a role of the
+tenant pool would: under the 1200 policies a member of workshop_tenant
+with that switch still on (it must change nothing), before them a role
+bound by the policies with the switch off.
 """
 
 from typing import LiteralString
@@ -36,12 +40,21 @@ TABLES_SQL: LiteralString = (
     " where n.nspname = %s and c.relkind in ('r', 'p') order by c.relname"
 )
 POLICIES_SQL: LiteralString = "select count(*) from pg_policies where schemaname = %s"
+TENANT_GROUP: str = "workshop_tenant"
+PLATFORM_GROUP: str = "workshop_platform"
+ROLE_POLICIES_SQL: LiteralString = (
+    "select exists (select from pg_policies"
+    " where schemaname = %s and %s::name = any(roles))"
+)
 
 type Connection = psycopg.Connection[TupleRow]
 
 
 def bypass_row_security(connection: Connection, is_on: bool) -> None:
-    """Turn the application's RLS bypass on or off for this session."""
+    """
+    Turn the pre-1200 RLS bypass switch on or off for this session (no
+    policy of migration 1200 or later reads it).
+    """
 
     connection.execute(
         "select set_config('app.bypass_rls', %s, false)", ["on" if is_on else "off"]
@@ -87,26 +100,48 @@ def read_migrations(
     ]
 
 
-def probe_isolation(
-    connection: Connection,
-    secured_tables: list[DatabaseTableName],
-) -> list[IsolationProbe]:
+def uses_role_policies(connection: Connection) -> bool:
+    """Whether the policies name the roles of migration 1200."""
+
+    row = connection.execute(
+        ROLE_POLICIES_SQL, [APPLICATION_SCHEMA, TENANT_GROUP]
+    ).fetchone()
+    return row is not None and bool(row[0])
+
+
+def count_own_rows(
+    connection: Connection, secured_tables: list[DatabaseTableName]
+) -> tuple[str, dict[DatabaseTableName, int]]:
     """
-    Look at every secured table as a role bound by row-level security
-    would (the caller made the session such a role): nothing without a
-    scope; in the scope of one business, its rows and only its rows.
+    The business the probes look as, and its rows in every secured table,
+    counted by a session that sees every row (before the probe role).
     """
 
-    bypass_row_security(connection, True)
     business_id: str = pick_business_id(connection)
-    expected: dict[DatabaseTableName, int] = {
+    return business_id, {
         table: count_rows(connection, table_part(table), business_id)
         for table in secured_tables
     }
-    bypass_row_security(connection, False)
+
+
+def probe_isolation(
+    connection: Connection,
+    business_id: str,
+    expected: dict[DatabaseTableName, int],
+    is_bypass_requested: bool,
+) -> list[IsolationProbe]:
+    """
+    Look at every secured table as the tenant pool's role would (the
+    caller made the session such a role): nothing without a scope; in the
+    scope of `business_id`, its `expected` rows and only those.
+    `is_bypass_requested` keeps the old bypass switch on while looking, as
+    a statement smuggled into a request would.
+    """
+
+    bypass_row_security(connection, is_bypass_requested)
     set_business_scope(connection, "")
     unscoped: dict[DatabaseTableName, int] = {
-        table: count_rows(connection, table_part(table)) for table in secured_tables
+        table: count_rows(connection, table_part(table)) for table in expected
     }
     set_business_scope(connection, business_id)
     probes: list[IsolationProbe] = [
@@ -116,12 +151,12 @@ def probe_isolation(
             own_rows=TableRowCount(
                 count_rows(connection, table_part(table), business_id)
             ),
-            expected_own_rows=TableRowCount(expected[table]),
+            expected_own_rows=TableRowCount(expected_rows),
             foreign_rows=TableRowCount(
                 count_rows(connection, table_part(table), business_id, foreign=True)
             ),
         )
-        for table in secured_tables
+        for table, expected_rows in expected.items()
     ]
     set_business_scope(connection, "")
     return probes

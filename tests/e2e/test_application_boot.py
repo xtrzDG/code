@@ -18,7 +18,10 @@ from tests.e2e.workshop_container import replace_provider
 
 OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
     {
-        "clients.postgres_pool",
+        # No DATABASE_URL: no Postgres pool of either role, no owner pool.
+        "clients.postgres_pools",
+        "clients.postgres_platform_pool",
+        "clients.postgres_owner_pool",
         "clients.flitt_client",
         "clients.langfuse_ingestion_client",
         "clients.twilio_messaging_client",

@@ -11,10 +11,16 @@ same way (`savepoint_in_scope`): released when the block ends, rolled
 back to (which also restores the scope before it) when it raises. Either
 way no statement of the block runs before its scope is set, exactly as
 with a `set_config` round trip of its own, one round trip earlier.
+
+A platform-wide read outside a transaction (`scoped_read`) needs neither:
+the platform role sees every row whatever `app.business_id` says
+(migration 1200), so its statements run on their own, one round trip
+each instead of three.
 """
 
 from collections.abc import Generator
 from contextlib import contextmanager, suppress
+from contextvars import ContextVar, Token
 from typing import LiteralString
 
 import psycopg
@@ -29,6 +35,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
 )
+from app.schemas.constants.storage import StorageScopeKind
 from app.schemas.dto.storage import StorageScope
 
 # One name for every scoped savepoint: they nest strictly, and Postgres
@@ -41,6 +48,12 @@ ROLLBACK_TO: sql.Composed = sql.SQL(
     "rollback to savepoint {0}; release savepoint {0}"
 ).format(SCOPED_SAVEPOINT)
 
+# The scope each open transaction of this context began in, by connection.
+_opening_scopes: ContextVar[tuple[tuple[int, StorageScope], ...]] = ContextVar(
+    "postgres_transaction_opening_scopes",
+    default=(),
+)
+
 
 @contextmanager
 def scoped_transaction(
@@ -51,13 +64,70 @@ def scoped_transaction(
     with connection_pool.connection() as connection:
         if is_idle(connection):
             begin_in_scope(connection, scope)
-            with finished(connection, COMMIT, ROLLBACK):
+            with opened_in(connection, scope), finished(connection, COMMIT, ROLLBACK):
                 yield connection
             return
 
-        savepoint_in_scope(connection, scope, SCOPED_SAVEPOINT)
+        savepoint_in_scope(
+            connection, joined_scope(connection, scope), SCOPED_SAVEPOINT
+        )
         with finished(connection, RELEASE, ROLLBACK_TO):
             yield connection
+
+
+@contextmanager
+def scoped_read(
+    connection_pool: PostgresConnectionPoolClient, scope: StorageScope
+) -> Generator[PostgresConnection]:
+    """
+    One read in `scope`: platform-wide on an idle connection, its
+    statements in autocommit (read committed gives each statement its own
+    snapshot in a transaction too); otherwise as `scoped_transaction`.
+    """
+
+    if scope.kind is StorageScopeKind.PLATFORM:
+        with connection_pool.connection() as connection:
+            if is_idle(connection):
+                yield connection
+                return
+
+    # A business's read, or one inside a unit of work's open transaction.
+    with scoped_transaction(connection_pool, scope) as connection:
+        yield connection
+
+
+def joined_scope(connection: PostgresConnection, scope: StorageScope) -> StorageScope:
+    """
+    The scope of a savepoint in `scope` inside the open transaction of
+    `connection`: a business scope as it is; another one in the business
+    the transaction began for, if it began for one.
+    """
+
+    if scope.kind is StorageScopeKind.BUSINESS:
+        return scope
+
+    for connection_id, opening_scope in reversed(_opening_scopes.get()):
+        if connection_id == id(connection):
+            return (
+                opening_scope
+                if opening_scope.kind is StorageScopeKind.BUSINESS
+                else scope
+            )
+
+    return scope
+
+
+@contextmanager
+def opened_in(connection: PostgresConnection, scope: StorageScope) -> Generator[None]:
+    """Remember the scope the transaction of `connection` began in."""
+
+    token: Token[tuple[tuple[int, StorageScope], ...]] = _opening_scopes.set(
+        (*_opening_scopes.get(), (id(connection), scope))
+    )
+    try:
+        yield
+    finally:
+        _opening_scopes.reset(token)
 
 
 @contextmanager

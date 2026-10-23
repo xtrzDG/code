@@ -9,7 +9,6 @@ request; and a location's two-factor rule for its team holds for joining a
 brand and for every brand owner's operation.
 """
 
-from app.schemas.typings.platform.strings import DatabaseUrl
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.platform.authorization_checks import check_refusals, expect_error
 from tests.platform.brand_access_checks import (
@@ -26,17 +25,20 @@ from tests.platform.brand_two_factor_checks import (
     check_brand_owner_actions_need_two_factors,
     check_joining_a_brand_needs_two_factors,
 )
+from tests.storage.postgres_roles import RoleDatabase
 
 
-def environment_of(database_url: DatabaseUrl) -> dict[str, str]:
-    return {**E2E_ENVIRONMENT, "DATABASE_URL": str(database_url)}
+def environment_of(role_urls: RoleDatabase) -> dict[str, str]:
+    """The application on its tenant and platform pools (migration 1200)."""
+
+    return {**E2E_ENVIRONMENT, **role_urls.environment()}
 
 
 def test_brand_operations_refuse_outsiders_on_postgres(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
     not_found = expect_error(404, "not_found")
-    with open_brand_world(environment_of(database_url)) as brand:
+    with open_brand_world(environment_of(role_urls)) as brand:
         world = brand.world
         failures = (
             check_brand_refusals(brand, world.owner_a, not_found)
@@ -59,27 +61,27 @@ def test_brand_operations_refuse_outsiders_on_postgres(
 
 
 def test_brand_roles_keep_the_business_rules_on_postgres(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
-    with open_brand_world(environment_of(database_url)) as brand:
+    with open_brand_world(environment_of(role_urls)) as brand:
         failures = check_brand_roles_on_business_operations(brand)
 
     assert failures == []
 
 
 def test_leaving_the_brand_ends_access_at_the_next_request_on_postgres(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
-    with open_brand_world(environment_of(database_url)) as brand:
+    with open_brand_world(environment_of(role_urls)) as brand:
         failures = check_revocation_at_next_request(brand)
 
     assert failures == []
 
 
 def test_locations_two_factor_rule_holds_for_the_brand_on_postgres(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
-    with open_brand_world(environment_of(database_url)) as brand:
+    with open_brand_world(environment_of(role_urls)) as brand:
         failures = check_joining_a_brand_needs_two_factors(
             brand
         ) + check_brand_owner_actions_need_two_factors(brand)

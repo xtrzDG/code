@@ -22,7 +22,6 @@ from app.schemas.typings.compliance.constrained_integers import (
     AuditChainPosition,
     AuditPurgeBatchSize,
 )
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.compliance.audit_chain.audit_chain_verification import (
     AuditChainVerification,
@@ -36,12 +35,12 @@ from tests.compliance.audit_chain.audit_entries import (
 )
 from tests.compliance.audit_chain.purge_mid_check import PurgeBeforeEntryRead
 from tests.storage.audit_chain_process import AuditProcess
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 pytestmark = pytest.mark.postgres
 BUSINESS: BusinessId = BusinessId()
-PLATFORM_WIDE: LiteralString = "select set_config('app.bypass_rls', 'on', false)"
 PURGE: LiteralString = "select workshop.purge_audit_chain(%s, %s, %s)"
 PURGE_SETTING_ON: LiteralString = (
     "select set_config('workshop.audit_chain_purge', 'on', false)"
@@ -51,8 +50,8 @@ EVERYTHING: int = 9_000_000_000_000_000_000
 
 
 @pytest.fixture
-def process(database_url: DatabaseUrl) -> Generator[AuditProcess]:
-    opened = AuditProcess(database_url)
+def process(role_urls: RoleDatabase) -> Generator[AuditProcess]:
+    opened = AuditProcess(role_urls)
     try:
         yield opened
     finally:
@@ -82,7 +81,6 @@ def test_the_application_role_cannot_purge_entries_of_the_last_year(
         postgres_server.app_connection(database_name) as app,
         pytest.raises(errors.InvalidParameterValue, match="at least 365 days"),
     ):
-        app.execute(PLATFORM_WIDE)
         app.execute(PURGE, (str(chain), EVERYTHING, 1_000))
 
     assert stored_count(process) == 5
@@ -103,9 +101,10 @@ def test_a_role_with_delete_and_the_purge_setting_still_cannot_delete(
     role = f"audit_tenant_{uuid.uuid4().hex[:8]}"
     with postgres_server.admin_connection(database_name) as admin:
         admin.execute(
-            sql.SQL("create role {} login nosuperuser nobypassrls").format(
-                sql.Identifier(role)
-            )
+            # A platform member sees every entry (migration 1200).
+            sql.SQL(
+                "create role {} login nosuperuser nobypassrls in role workshop_platform"
+            ).format(sql.Identifier(role))
         )
         admin.execute(
             sql.SQL("grant usage on schema workshop to {}").format(sql.Identifier(role))
@@ -122,7 +121,6 @@ def test_a_role_with_delete_and_the_purge_setting_still_cannot_delete(
         ) as tenant,
         pytest.raises(errors.InsufficientPrivilege, match="purge_audit_chain"),
     ):
-        tenant.execute(PLATFORM_WIDE)
         tenant.execute(PURGE_SETTING_ON)
         tenant.execute("delete from workshop.audit_log_entries")
 

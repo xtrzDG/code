@@ -1,8 +1,9 @@
 """
-The real application over a small load dataset on Postgres, its pool
+The real application over a small load dataset on Postgres, its two pools
 traced (`statement_trace`): what one request of each hot kind costs the
-database. The requests are the perf suite's (tests/perf), the dataset a
-small `workshop seed-load`.
+database, over the tenant and the platform role together. The requests
+are the perf suite's (tests/perf), the dataset a small `workshop
+seed-load`.
 """
 
 from collections.abc import Callable
@@ -13,17 +14,18 @@ from typing import Any
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.schemas.dto.load_data import (
     LoadBusinessSeed,
     LoadSeedManifest,
     SeedLoadCommand,
 )
-from app.schemas.typings.platform.strings import DatabaseUrl
 from tests.e2e.harness import start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT, START
 from tests.e2e.workshop_container import replace_provider
-from tests.storage.statement_trace import TraceCount, TracedConnectionPool
+from tests.storage.postgres_roles import RoleDatabase
+from tests.storage.statement_trace import TraceCount, traced_pools, traced_together
 
 SMALL_DATASET: SeedLoadCommand = SeedLoadCommand.model_validate(
     {
@@ -38,10 +40,10 @@ TELEGRAM_CHAT_ID: int = 700000001
 
 @dataclass
 class RequestCostWorld:
-    """The application, its traced pool and the stored dataset."""
+    """The application, its traced pools and the stored dataset."""
 
     client: TestClient
-    pool: TracedConnectionPool
+    pools: PostgresConnectionPools
     manifest: LoadSeedManifest
     update_ids: list[int]
 
@@ -63,20 +65,20 @@ class RequestCostWorld:
 
         first: Response = send(self)
         assert first.status_code == 200, first.text
-        with self.pool.traced() as count:
+        with traced_together(self.pools) as count:
             second: Response = send(self)
         assert second.status_code == 200, second.text
         return count
 
 
-def open_request_cost_world(database_url: DatabaseUrl) -> RequestCostWorld:
-    pool = TracedConnectionPool(database_url, max_size=8)
+def open_request_cost_world(role_urls: RoleDatabase) -> RequestCostWorld:
+    pools = traced_pools(role_urls.tenant_url, role_urls.platform_url, max_size=8)
 
-    def use_traced_pool(container: AppContainer) -> None:
-        replace_provider(container.clients.postgres_pool, pool)
+    def use_traced_pools(container: AppContainer) -> None:
+        replace_provider(container.clients.postgres_pools, pools)
 
     workshop = start_workshop(
-        {**E2E_ENVIRONMENT, "DATABASE_URL": database_url}, prepare=use_traced_pool
+        {**E2E_ENVIRONMENT, **role_urls.environment()}, prepare=use_traced_pools
     )
     manifest: LoadSeedManifest = (
         workshop.container.operators.demo.seed_load_operator().operate(SMALL_DATASET)
@@ -84,7 +86,7 @@ def open_request_cost_world(database_url: DatabaseUrl) -> RequestCostWorld:
     # No lifespan: no background thread adds statements to the counts.
     return RequestCostWorld(
         client=TestClient(workshop.application),
-        pool=pool,
+        pools=pools,
         manifest=manifest,
         update_ids=[],
     )

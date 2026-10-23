@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import MessageAuthor
@@ -160,7 +161,7 @@ def test_upsert_overwrites_and_keeps_first_write_time(
     platform_scope: StorageScopeContext,
 ) -> None:
     knowledge_items = PostgresCollectionFactory(
-        connection_pool=connection_pool,
+        connection_pools=PostgresConnectionPools.single(connection_pool),
         storage_scope=platform_scope,
         wall_clock=build_ticking_wall_clock(step_microseconds=10),
     )(KnowledgeItemDocument, "knowledge_items")
@@ -201,7 +202,9 @@ def test_business_row_is_its_own_tenant_and_platform_rows_have_none(
 
     businesses.upsert(str(business.id), business)
     users.upsert(str(owner.id), owner)
-    audit_log.upsert(str(platform_entry.id), platform_entry)
+    # Audit entries are only ever inserted: the application's roles may not
+    # update them (migrations 1193 and 1200).
+    assert audit_log.insert_if_absent(str(platform_entry.id), platform_entry)
 
     assert read_row_metadata(connection_pool, "businesses", str(business.id))[0] == (
         str(business.id)

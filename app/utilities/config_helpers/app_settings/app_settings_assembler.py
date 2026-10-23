@@ -20,6 +20,10 @@ from app.utilities.config_helpers.app_settings.capacity_settings_section import 
 from app.utilities.config_helpers.app_settings.compliance_settings_section import (
     read_compliance_settings,
 )
+from app.utilities.config_helpers.app_settings.database_role_settings_section import (
+    default_platform_pool_size,
+    read_database_role_settings,
+)
 from app.utilities.config_helpers.app_settings.encryption_key_settings_section import (
     read_encryption_key_settings,
 )
@@ -134,6 +138,11 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         environment_variables, "DATABASE_URL", DatabaseUrl
     )
     key_ring = read_encryption_key_settings(environment_variables)
+    runtime = read_runtime_settings(
+        environment_variables,
+        environment=environment,
+        has_database=database_url is not None,
+    )
 
     return AppSettings(
         environment=environment,
@@ -155,10 +164,14 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_observability_settings(
             environment_variables, is_production=not is_development
         ),
-        **read_runtime_settings(
+        **runtime,
+        **read_database_role_settings(
             environment_variables,
-            environment=environment,
-            has_database=database_url is not None,
+            database_url=database_url,
+            is_production=not is_development,
+            default_platform_pool_size=default_platform_pool_size(
+                int(runtime["db_pool_size"])
+            ),
         ),
         **read_capacity_settings(environment_variables),
         **read_recording_storage_settings(

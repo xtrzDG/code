@@ -8,6 +8,7 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.exceptions.application_errors import (
@@ -46,7 +47,7 @@ def test_missing_table_names_the_migration_command(
     connection_pool: PostgresConnectionPoolClient,
 ) -> None:
     unknown_collection = PostgresCollectionFactory(
-        connection_pool=connection_pool,
+        connection_pools=PostgresConnectionPools.single(connection_pool),
         storage_scope=StorageScopeContext(),
         wall_clock=build_ticking_wall_clock(),
     )(UserDocument, "not_migrated_yet")
@@ -67,7 +68,7 @@ def test_database_without_migrations_names_the_migration_command(
     )
     try:
         users = PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_ticking_wall_clock(),
         )(UserDocument, "users")
@@ -90,7 +91,7 @@ def test_role_without_grants_gets_a_deployment_hint(
     )
     try:
         users = PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_ticking_wall_clock(),
         )(UserDocument, "users")

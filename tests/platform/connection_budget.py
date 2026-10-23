@@ -5,8 +5,9 @@ budget").
 
 The worst moment is a deploy: Render starts the new instances of the API
 and the worker before it stops the old ones, so both run at once, each with
-a full pool and its LISTEN connection, while the nightly backup and the
-pre-deploy migration may run too.
+its two full pools (the tenant pool, DB_POOL_SIZE, and the platform pool,
+DB_PLATFORM_POOL_SIZE: migration 1200) and its LISTEN connection, while
+the nightly backup and the pre-deploy migration may run too.
 """
 
 import re
@@ -44,8 +45,12 @@ MIGRATE_CONNECTIONS: int = 1
 # an operator's psql session or Render's own checks need a couple more.
 RESERVED_CONNECTIONS: int = 5
 
-# The settings that size a process's pool.
-POOL_VARIABLES: tuple[str, ...] = ("THREADPOOL_SIZE", "DB_POOL_SIZE")
+# The settings that size a process's pools.
+POOL_VARIABLES: tuple[str, ...] = (
+    "THREADPOOL_SIZE",
+    "DB_POOL_SIZE",
+    "DB_PLATFORM_POOL_SIZE",
+)
 API_COMMAND: str = "workshop api"
 WORKER_COMMAND: str = "workshop worker"
 BACKUP_COMMAND: str = "workshop backup"
@@ -125,23 +130,36 @@ def database_plan(blueprint_path: str) -> str:
     return plan
 
 
-def pool_size(service: BlueprintService) -> int:
-    """DB_POOL_SIZE as the process would read it (its default included)."""
+def pool_settings(service: BlueprintService) -> AppSettings:
+    """The settings that size the pools, as the process would read them."""
 
-    settings: AppSettings = assemble_app_settings(
+    return assemble_app_settings(
         {
             name: service.values[name]
             for name in POOL_VARIABLES
             if name in service.values
         }
     )
-    return int(settings.db_pool_size)
+
+
+def pool_size(service: BlueprintService) -> int:
+    """DB_POOL_SIZE, the tenant pool (its default included)."""
+
+    return int(pool_settings(service).db_pool_size)
+
+
+def platform_pool_size(service: BlueprintService) -> int:
+    """DB_PLATFORM_POOL_SIZE, the platform pool (its default included)."""
+
+    return int(pool_settings(service).database_roles.platform_pool_size)
 
 
 def process_connections(service: BlueprintService) -> int:
-    """A process's whole pool and its LISTEN connection, during a deploy."""
+    """A process's two whole pools and its LISTEN connection, in a deploy."""
 
-    per_instance: int = pool_size(service) + LISTEN_CONNECTIONS
+    per_instance: int = (
+        pool_size(service) + platform_pool_size(service) + LISTEN_CONNECTIONS
+    )
     return DEPLOY_OVERLAP * service.instances * per_instance
 
 

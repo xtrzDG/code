@@ -18,7 +18,6 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldOrder
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import AuditChainPosition
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.use_cases.compliance.audit_chain.audit_chain_verification import (
@@ -28,6 +27,7 @@ from app.utilities.compliance.audit_chain_hashing import chain_key_of
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from tests.compliance.audit_chain.audit_entries import START, entry
 from tests.storage.audit_chain_process import AuditProcess
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 BUSINESS: BusinessId = BusinessId()
@@ -45,7 +45,7 @@ class GatedEntries(PostgresDocumentCollectionAdapter[AuditLogEntryDocument]):
         super().__init__(
             document_type=AuditLogEntryDocument,
             collection_name=DocumentCollectionName("audit_log_entries"),
-            connection_pool=process.pool,
+            connection_pools=process.pools,
             storage_scope=process.scope,
             wall_clock=build_fixed_wall_clock(),
             isolation=infer_collection_isolation(AuditLogEntryDocument),
@@ -68,9 +68,9 @@ class GatedEntries(PostgresDocumentCollectionAdapter[AuditLogEntryDocument]):
 
 @pytest.fixture
 def processes(
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> Generator[tuple[AuditProcess, AuditProcess]]:
-    first, second = AuditProcess(database_url), AuditProcess(database_url)
+    first, second = AuditProcess(role_urls), AuditProcess(role_urls)
     try:
         yield first, second
     finally:
@@ -86,11 +86,11 @@ def stored_chain(process: AuditProcess) -> list[AuditLogEntryDocument]:
 
 def test_a_writer_waits_while_another_holds_the_chain(
     processes: tuple[AuditProcess, AuditProcess],
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
     first, second = processes
     gated = GatedEntries(first)
-    holder = AuditProcess(database_url, entries=gated)
+    holder = AuditProcess(role_urls, entries=gated)
     first_entry, second_entry = entry(BUSINESS, 0), entry(BUSINESS, 1)
     second_done = threading.Event()
 

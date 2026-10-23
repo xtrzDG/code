@@ -10,6 +10,7 @@ from psycopg import pq
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.schemas.domain.users import UserDocument
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -191,7 +192,7 @@ def test_lost_connection_surfaces_as_external_service_error_once(
     )
     try:
         users = PostgresCollectionFactory(
-            connection_pool=connection_pool,
+            connection_pools=PostgresConnectionPools.single(connection_pool),
             storage_scope=StorageScopeContext(),
             wall_clock=build_fixed_wall_clock(),
         )(UserDocument, "users")

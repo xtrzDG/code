@@ -13,9 +13,7 @@ import anyio.to_thread
 from fastapi import FastAPI
 from starlette.types import Lifespan
 
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
@@ -36,7 +34,7 @@ from app.gateways.http.spend_guard_router_assembly import (
     anonymous_request_admission_of,
 )
 from app.gateways.metrics.metrics_rendering import metrics_renderer
-from app.gateways.startup_checks import check_processor_uses
+from app.gateways.startup_checks import check_database_roles, check_processor_uses
 from app.gateways.telemetry_lifecycle import (
     API_SERVICE_NAME,
     finish_telemetry,
@@ -109,13 +107,13 @@ def build_application(app_container: AppContainer) -> FastAPI:
 def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: size the request threads (THREADPOOL_SIZE), warm the country
-    catalog, check the DPA text and the sub-processor list, report the login
-    code channels, seed the demo businesses (SEED_DEMO_DATA, once), point
-    the platform bot at this API, start the trace flush, the pipeline
-    watchdog and (EMBEDDED_WORKER) the worker; live streams end as soon as
-    the process is asked to stop. Shutdown: stop the worker (running jobs
-    may finish) and the watchdog, flush traces and spans, close the live
-    event bus and the Postgres pool.
+    catalog, check the DPA text, the sub-processor list and the database
+    roles, report the login code channels, seed the demo businesses
+    (SEED_DEMO_DATA, once), point the platform bot at this API, start the
+    trace flush, the pipeline watchdog and (EMBEDDED_WORKER) the worker;
+    live streams end as soon as the process is asked to stop. Shutdown:
+    stop the worker (running jobs may finish) and the watchdog, flush
+    traces and spans, close the live event bus and the Postgres pools.
     """
 
     @asynccontextmanager
@@ -125,6 +123,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         app_container.registries.country_registry().list_all()
         check_dpa_document(app_container)
         check_processor_uses(app_container)
+        check_database_roles(app_container)
         report_login_code_channels(app_container)
         seed_demo_data(app_container)
         configure_platform_bot(app_container)
@@ -293,8 +292,8 @@ def configure_platform_bot(app_container: AppContainer) -> None:
 
 
 def close_postgres_pool(app_container: AppContainer) -> None:
-    connection_pool: PostgresConnectionPoolClient | None = (
-        app_container.clients.postgres_pool()
+    connection_pools: PostgresConnectionPools | None = (
+        app_container.clients.postgres_pools()
     )
-    if connection_pool is not None:
-        connection_pool.close()
+    if connection_pools is not None:
+        connection_pools.close()

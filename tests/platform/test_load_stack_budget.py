@@ -31,6 +31,7 @@ SUPERUSER_RESERVED: int = 3
 PRODUCTION_SETTINGS: tuple[str, ...] = (
     "THREADPOOL_SIZE",
     "DB_POOL_SIZE",
+    "DB_PLATFORM_POOL_SIZE",
     "LLM_MAX_CONCURRENCY",
 )
 
@@ -77,13 +78,15 @@ def production_values(command: str) -> dict[str, str]:
 
 
 def pool_of(environment: dict[str, str]) -> int:
-    """DB_POOL_SIZE as the process reads it (its default included)."""
+    """
+    A process's two pools as it reads them (defaults included): the tenant
+    pool (DB_POOL_SIZE) and the platform pool (DB_PLATFORM_POOL_SIZE).
+    """
 
-    return int(
-        assemble_app_settings(
-            {name: environment[name] for name in POOL_VARIABLES if name in environment}
-        ).db_pool_size
+    settings = assemble_app_settings(
+        {name: environment[name] for name in POOL_VARIABLES if name in environment}
     )
+    return int(settings.db_pool_size) + int(settings.database_roles.platform_pool_size)
 
 
 def test_the_load_stack_runs_productions_pools_and_threads() -> None:
@@ -91,7 +94,7 @@ def test_the_load_stack_runs_productions_pools_and_threads() -> None:
     api = environment_of(services["api"])
     worker = environment_of(services["worker"])
 
-    for name in ("THREADPOOL_SIZE", "DB_POOL_SIZE"):
+    for name in ("THREADPOOL_SIZE", "DB_POOL_SIZE", "DB_PLATFORM_POOL_SIZE"):
         assert api[name] == production_values(API_COMMAND)[name], name
     for name in PRODUCTION_SETTINGS:
         assert worker[name] == production_values(WORKER_COMMAND)[name], name

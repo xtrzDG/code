@@ -1,16 +1,17 @@
-"""The whole application on Postgres: DATABASE_URL switches every collection."""
+"""
+The whole application on Postgres: DATABASE_URL switches every collection,
+and the two role URLs give it the tenant and the platform pool.
+"""
 
 from psycopg import sql
 
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
-from app.schemas.typings.platform.strings import DatabaseUrl
+from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 from tests.e2e.harness import start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.journeys import BOOKING_REQUEST_RU, WIDGET_SESSION, open_restaurant
 from tests.e2e.widget_turns import ask_widget
+from tests.storage.postgres_roles import RoleDatabase
 from tests.storage.postgres_server import ThrowawayPostgresServer
 
 
@@ -33,11 +34,12 @@ def count_rows(
 def test_published_assistant_books_a_table_with_everything_in_postgres(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
-    database_url: DatabaseUrl,
+    role_urls: RoleDatabase,
 ) -> None:
-    workshop = start_workshop({**E2E_ENVIRONMENT, "DATABASE_URL": str(database_url)})
-    connection_pool = workshop.container.clients.postgres_pool()
-    assert isinstance(connection_pool, PostgresConnectionPoolClient)
+    workshop = start_workshop({**E2E_ENVIRONMENT, **role_urls.environment()})
+    connection_pools = workshop.container.clients.postgres_pools()
+    assert isinstance(connection_pools, PostgresConnectionPools)
+    assert not connection_pools.is_single
 
     with workshop.client as client:
         restaurant = open_restaurant(workshop)
@@ -65,7 +67,9 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
     assert [booking["time"] for booking in bookings] == ["19:00"]
     # The trace flush; the rest already ran this period (autotests tick).
     assert (tick.periodic_runs, tick.failures) == (1, 0)
-    assert connection_pool.open_connection_count() == 0  # closed at shutdown
+    # Both pools closed at shutdown.
+    assert connection_pools.tenant.open_connection_count() == 0
+    assert connection_pools.platform.open_connection_count() == 0
     stored: dict[str, int] = {
         str(definition.name): count_rows(
             postgres_server, database_name, str(definition.name)
