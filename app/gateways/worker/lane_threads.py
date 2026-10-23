@@ -21,6 +21,9 @@ ONE_JOB: JobClaimLimit = JobClaimLimit(1)
 # After failed claims (the database is down) a thread waits longer and
 # longer, up to this many seconds.
 MAX_CLAIM_BACKOFF_SECONDS: int = 5 * 60
+# On shutdown, a thread still waiting this long after the stop's wake-up
+# missed it, and its lane is woken again.
+STOP_RECHECK_SECONDS: float = 0.5
 
 
 class LaneThreads:
@@ -40,7 +43,10 @@ class LaneThreads:
 
     Threads are daemons: on shutdown `join` waits a grace period for
     running jobs, then the process may exit; a job cut off this way is
-    taken over by any worker once its lease ends.
+    taken over by any worker once its lease ends. A lane's threads share
+    one wake-up, which the first of them to wake clears: a thread that was
+    still claiming when the stop's wake-up came waits on, so `join` wakes
+    the lane of a thread still waiting again.
     """
 
     def __init__(
@@ -63,6 +69,8 @@ class LaneThreads:
         )
         self._failure_reporter: JobFailureReporter = failure_reporter
         self._threads: list[threading.Thread] = []
+        self._waiting: dict[str, JobLane] = {}
+        self._waiting_lock: threading.Lock = threading.Lock()
 
     def start(self, stop_event: threading.Event) -> None:
         for lane in self._lanes:
@@ -95,8 +103,14 @@ class LaneThreads:
         """Wait for the threads up to `timeout_seconds`; True when all ended."""
 
         deadline: float = time.monotonic() + timeout_seconds
-        for thread in self._threads:
-            thread.join(timeout=max(0.0, deadline - time.monotonic()))
+        while alive := [thread for thread in self._threads if thread.is_alive()]:
+            remaining: float = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+
+            alive[0].join(timeout=min(remaining, STOP_RECHECK_SECONDS))
+            for lane in self._waiting_lanes():
+                self._job_wakeup.notify(lane)
 
         running: list[str] = [
             thread.name for thread in self._threads if thread.is_alive()
@@ -120,7 +134,7 @@ class LaneThreads:
         # restart); the others first wait their share of the poll interval
         # unless a job wakes them, so the lane's polls stay spread out.
         if first_poll_delay_seconds > 0:
-            self._job_wakeup.wait(lane, first_poll_delay_seconds)
+            self._wait_for_work(lane, first_poll_delay_seconds)
 
         poll_seconds: float = self._poll_of(lane)
         consecutive_failures: int = 0
@@ -140,7 +154,21 @@ class LaneThreads:
                 self._run_all(jobs, lease_token)
                 continue
 
-            self._job_wakeup.wait(lane, poll_seconds)
+            self._wait_for_work(lane, poll_seconds)
+
+    def _wait_for_work(self, lane: JobLane, timeout_seconds: float) -> None:
+        name: str = threading.current_thread().name
+        with self._waiting_lock:
+            self._waiting[name] = lane
+        try:
+            self._job_wakeup.wait(lane, timeout_seconds)
+        finally:
+            with self._waiting_lock:
+                del self._waiting[name]
+
+    def _waiting_lanes(self) -> set[JobLane]:
+        with self._waiting_lock:
+            return set(self._waiting.values())
 
     def _run_all(
         self, jobs: list[QueuedJobDocument], lease_token: JobLeaseToken

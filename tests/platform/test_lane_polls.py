@@ -6,6 +6,7 @@ the worker listens for other processes' wake-ups while its lanes run.
 """
 
 import threading
+import time
 from collections.abc import Generator
 from contextlib import contextmanager
 
@@ -64,7 +65,40 @@ class RecordingWakeup(JobWakeupSignal):
         return firsts
 
 
-def build_listening_worker(wakeup: RecordingWakeup) -> BackgroundWorker:
+class StopMissingWakeup(JobWakeupSignal):
+    """
+    The in-process signal whose stop wake-ups never arrive: a sibling
+    thread of the lane took and cleared each of them.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.lost: set[JobLane] = set()
+        self._waiting: dict[str, JobLane] = {}
+        self._lock: threading.Lock = threading.Lock()
+
+    def notify(self, lane: JobLane) -> None:
+        if lane in self.lost:
+            self.lost.discard(lane)
+            return
+
+        super().notify(lane)
+
+    def wait(self, lane: JobLane, timeout_seconds: float) -> bool:
+        with self._lock:
+            self._waiting[threading.current_thread().name] = lane
+        try:
+            return super().wait(lane, timeout_seconds)
+        finally:
+            with self._lock:
+                del self._waiting[threading.current_thread().name]
+
+    def every_lane_waits(self) -> bool:
+        with self._lock:
+            return set(self._waiting.values()) == set(JobLane)
+
+
+def build_listening_worker(wakeup: JobWakeupSignal) -> BackgroundWorker:
     stores = build_job_stores()
     return BackgroundWorker(
         periodic_jobs=[],
@@ -138,3 +172,22 @@ def test_an_in_process_signal_has_nothing_to_listen_to() -> None:
     wakeup.notify_all()
     assert all(wakeup.wait(lane, 0.0) for lane in JobLane)
     assert not wakeup.wait(JobLane.INBOUND, 0.0)
+
+
+def test_threads_that_missed_the_stops_wake_up_still_stop_at_once() -> None:
+    wakeup = StopMissingWakeup()
+    worker = build_listening_worker(wakeup)
+    stop_event = threading.Event()
+    thread = threading.Thread(target=worker.run_forever, args=(stop_event,))
+    thread.start()
+    assert wait_until(wakeup.every_lane_waits)
+
+    wakeup.lost = set(JobLane)
+    stop_event.set()
+    stopping_at: float = time.monotonic()
+    thread.join(timeout=10.0)
+
+    # Woken again by the shutdown, not by their polls 12 seconds away.
+    assert not thread.is_alive()
+    assert time.monotonic() - stopping_at < 5.0
+    assert wakeup.lost == set()
