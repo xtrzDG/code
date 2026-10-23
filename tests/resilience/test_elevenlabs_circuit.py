@@ -67,7 +67,10 @@ def outage(guarded: Guarded, times: int) -> None:
 
 
 def test_an_outage_opens_the_circuit_and_refusals_make_no_call() -> None:
-    guarded = Guarded([ExternalServiceError("ElevenLabs timed out.")] * 5 + [None])
+    timeouts: list[ApplicationError | None] = [
+        ExternalServiceError("ElevenLabs timed out.")
+    ] * 5
+    guarded = Guarded([*timeouts, None])
 
     outage(guarded, 5)
 
@@ -82,7 +85,10 @@ def test_an_outage_opens_the_circuit_and_refusals_make_no_call() -> None:
 
 
 def test_a_trial_after_the_wait_closes_it() -> None:
-    guarded = Guarded([ExternalServiceError("ElevenLabs said 503.")] * 5 + [None])
+    outages: list[ApplicationError | None] = [
+        ExternalServiceError("ElevenLabs said 503.")
+    ] * 5
+    guarded = Guarded([*outages, None])
     outage(guarded, 5)
 
     guarded.ticks.advance(31)

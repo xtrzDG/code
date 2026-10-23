@@ -11,7 +11,6 @@ scale (5 met, 2 or 1 not), so the run's average and its launch rules treat
 voice checks like test chats.
 """
 
-import json
 from collections.abc import Sequence
 
 from app.schemas.constants.assistants import (
@@ -39,6 +38,12 @@ from app.schemas.typings.assistants.strings import AutotestCheckNote, JudgeNote
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.assembly.autotest_evaluation import check_failure, decide_outcome
 from app.utilities.assembly.script_detection import is_written_in_script
+from app.utilities.channels.json_values import (
+    JsonObject,
+    parse_json_object,
+    read_integer,
+    read_object,
+)
 
 MET: JudgeScore = JudgeScore(5)
 PARTLY_MISSED: JudgeScore = JudgeScore(2)
@@ -196,17 +201,11 @@ def task_criterion(scenario: AutotestScenario) -> JudgeCriterion:
 def read_party_size(call: VoiceCheckToolCall) -> int | None:
     """`party_size` of a tool call, at the top or under "arguments"."""
 
-    try:
-        parsed: object = json.loads(str(call.input_json))
-    except ValueError:
+    parsed: JsonObject | None = parse_json_object(str(call.input_json))
+    if parsed is None:
         return None
 
-    if not isinstance(parsed, dict):
-        return None
-
-    arguments: object = parsed.get("arguments", parsed)
-    value: object = arguments.get("party_size") if isinstance(arguments, dict) else None
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
+    return read_integer(read_object(parsed, "arguments") or parsed, "party_size")
 
 
 def opens_with(first_line: str, greeting: MessageText | None) -> bool:
