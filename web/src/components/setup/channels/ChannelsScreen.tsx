@@ -3,19 +3,20 @@
 /**
  * Step 6, "Where do your customers write?": the website chat with the
  * business's own chat page (on by default), a Telegram bot in three
- * steps, and WhatsApp, Instagram and Messenger after launch (they need the
- * owner's Meta business account, which is no first-day task).
+ * steps, and WhatsApp, Instagram and Messenger: with "Continue with
+ * Facebook" where the server offers it, else after launch (MetaChannelsCard).
  */
 
 import { displayUrl } from "@/app/b/[businessId]/assistant/channels/_lib/share";
 import { Switch } from "@/components/content/Switch";
-import { IconChat, IconWhatsApp } from "@/components/icons";
-import { Badge, ErrorState, LoadingBlock } from "@/components/ui";
+import { IconChat } from "@/components/icons";
+import { ErrorState, LoadingBlock } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { StepScreen } from "../StepScreen";
 import type { StepContext } from "../flow/stepContext";
+import { MetaChannelsCard } from "./MetaChannelsCard";
 import { TelegramBotCard } from "./TelegramBotCard";
 import { TunnelPhoneCard } from "./TunnelPhoneCard";
 import { useChannelsStep } from "./useChannelsStep";
@@ -83,20 +84,7 @@ export function ChannelsScreen({ ctx }: { ctx: StepContext }) {
             onConnect={() => void step.telegram.connect()}
           />
 
-          <section aria-labelledby="tunnel-later" className={cn(CARD, "border-dashed border-line-strong")}>
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-ink-muted" aria-hidden>
-                <IconWhatsApp className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 id="tunnel-later" className="text-base font-semibold text-ink">
-                  {t("tunnelTeam.channels.later.title")}
-                </h2>
-                <p className="mt-1 text-sm text-ink-muted">{t("tunnelTeam.channels.later.text")}</p>
-              </div>
-              <Badge tone="neutral">{t("tunnelTeam.channels.later.badge")}</Badge>
-            </div>
-          </section>
+          <MetaChannelsCard businessId={ctx.businessId} />
         </div>
       )}
     </StepScreen>

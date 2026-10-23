@@ -5,7 +5,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
 )
-from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.channels.strings import ChannelSecret, ProviderMessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.utilities.resilience.circuit_calls import call_through_circuit
@@ -37,6 +37,7 @@ class CircuitBreakingWhatsAppTemplateAdapter(WhatsAppTemplateAdapterContract):
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[MessageText],
+        credential: ChannelSecret | None = None,
     ) -> ProviderMessageId | None:
         return call_through_circuit(
             self._circuit_breaker,
@@ -47,5 +48,6 @@ class CircuitBreakingWhatsAppTemplateAdapter(WhatsAppTemplateAdapterContract):
                 template_name,
                 language_code,
                 body_parameters,
+                credential,
             ),
         )

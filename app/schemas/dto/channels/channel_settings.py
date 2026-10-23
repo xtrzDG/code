@@ -11,6 +11,7 @@ from app.schemas.constants.channels import (
     WidgetPosition,
 )
 from app.schemas.constants.deliveries import DeliveryFailureReason
+from app.schemas.dto.channels.comment_replies import InstagramCommentRepliesView
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.booleans import HasChannelCredential
@@ -106,7 +107,8 @@ class ChannelView(ImmutableDTO):
     the first; the single template of earlier clients). `link_state` says
     whether a connected messenger or phone can be shared as a link (the
     same rule the share links follow); None for a channel that is not
-    connected or has no link (the website chat).
+    connected or has no link (the website chat). Instagram reports its
+    comment-to-DM (`comment_replies`; None for the other channels).
     """
 
     id: ChannelId
@@ -128,3 +130,4 @@ class ChannelView(ImmutableDTO):
         default_factory=list[WhatsAppStaffTemplateView]
     )
     link_state: ChannelLinkState | None = None
+    comment_replies: InstagramCommentRepliesView | None = None

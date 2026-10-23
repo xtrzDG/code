@@ -3,6 +3,7 @@ from dependency_injector.providers import Container, DependenciesContainer, Depe
 
 from app.containers.container_edges import composed_container_edge
 from app.containers.feedback.feedback_root import FeedbackRoot
+from app.containers.meta_connection.meta_connection_root import MetaConnectionRoot
 from app.containers.operators.account_operators import AccountOperatorsContainer
 from app.containers.operators.admin_action_operators import (
     AdminActionOperatorsContainer,
@@ -89,6 +90,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
     # The feedback context's typed root builds its own chain (ADR 0010).
     feedback_root: Dependency[FeedbackRoot] = Dependency(instance_of=FeedbackRoot)
     passkey_root: Dependency[PasskeyRoot] = Dependency(instance_of=PasskeyRoot)
+    meta_root: Dependency[MetaConnectionRoot] = Dependency(MetaConnectionRoot)
 
     accounts: AccountOperatorsContainer = Container(  # type: ignore[assignment]
         AccountOperatorsContainer,
@@ -159,6 +161,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
         ChannelOperatorsContainer,
         channel_pipelines=pipelines.channels,
         utilities=utilities,
+        meta_connection_root=meta_root,
     )
     billing: BillingOperatorsContainer = Container(  # type: ignore[assignment]
         BillingOperatorsContainer,

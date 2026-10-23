@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 import { legacyRedirects } from "./src/lib/legacyRoutes";
+import { META_SIGN_IN_PAGE_SOURCES } from "./src/lib/metaSignInPages";
 import { sourceMapUploadOptions } from "./src/lib/monitoring/sourceMaps";
 
 /**
@@ -56,6 +57,14 @@ const nextConfig: NextConfig = {
         has: [{ type: "query", key: "preview", value: "1" }],
         headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
       },
+      // Facebook's sign-in window (WhatsApp Embedded Signup, the page
+      // picker) reports back to the page that opened it, so these pages keep
+      // their handle on the windows they open (src/lib/metaSignInPages.ts).
+      // Windows that open the cabinet are still cut off from it.
+      ...META_SIGN_IN_PAGE_SOURCES.map((source) => ({
+        source,
+        headers: [{ key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" }],
+      })),
     ];
   },
 };

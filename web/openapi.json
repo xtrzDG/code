@@ -8151,7 +8151,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time; a\nconnected channel keeps the reason of a message the platform refused\nfor good the same way. `last_error_reason` says what it means in the\ncabinet's terms (`credential_rejected`: reconnect; `template_rejected`:\ncheck the WhatsApp templates; `recipient_refused`: one customer could\nnot be reached; None when unknown). `last_inbound_at` and\n`last_outbound_at` are when the channel last brought a customer message\nand last carried one of ours (to the minute; None: not yet). The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the templates staff replies use\nonce the 24-hour window has closed, one per language\n(`staff_reply_templates`, empty: such replies are refused), and in\n`staff_reply_template` the one of the business's default language (else\nthe first; the single template of earlier clients). `link_state` says\nwhether a connected messenger or phone can be shared as a link (the\nsame rule the share links follow); None for a channel that is not\nconnected or has no link (the website chat).",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time; a\nconnected channel keeps the reason of a message the platform refused\nfor good the same way. `last_error_reason` says what it means in the\ncabinet's terms (`credential_rejected`: reconnect; `template_rejected`:\ncheck the WhatsApp templates; `recipient_refused`: one customer could\nnot be reached; None when unknown). `last_inbound_at` and\n`last_outbound_at` are when the channel last brought a customer message\nand last carried one of ours (to the minute; None: not yet). The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the templates staff replies use\nonce the 24-hour window has closed, one per language\n(`staff_reply_templates`, empty: such replies are refused), and in\n`staff_reply_template` the one of the business's default language (else\nthe first; the single template of earlier clients). `link_state` says\nwhether a connected messenger or phone can be shared as a link (the\nsame rule the share links follow); None for a channel that is not\nconnected or has no link (the website chat). Instagram reports its\ncomment-to-DM (`comment_replies`; None for the other channels).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -8170,6 +8170,16 @@
           },
           "channel": {
             "$ref": "#/components/schemas/ChannelKind"
+          },
+          "comment_replies": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InstagramCommentRepliesView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "has_credential": {
             "title": "Has Credential",
@@ -12079,7 +12089,7 @@
       },
       "CustomerRecipient": {
         "additionalProperties": false,
-        "description": "A customer in the business's channel. The credential is read from the\nchannel at send time (never stored here), so a reconnected bot is used.",
+        "description": "A customer in the business's channel. The credential is read from the\nchannel at send time (never stored here), so a reconnected bot is used.\n`comment_id` names the Instagram comment a private reply answers (the\nplatform delivers it to the comment's author; None for every other\nmessage).",
         "properties": {
           "channel": {
             "$ref": "#/components/schemas/ChannelKind"
@@ -12091,6 +12101,20 @@
           "channel_user_id": {
             "title": "Channel User Id",
             "type": "string"
+          },
+          "comment_id": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "pattern": "^[0-9]{1,40}(?:_[0-9]{1,38})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment Id"
           }
         },
         "required": [
@@ -16339,7 +16363,7 @@
       },
       "InboundEventDocument": {
         "additionalProperties": false,
-        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.\n\nVersion 7: the customer message's `context_note` (optional) and\n`queue_to_claim_ms`, how long the message waited from being queued to a\nworker taking it to answer (optional, kept from the first take).",
+        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.\n\nVersion 7: the customer message's `context_note` (optional) and\n`queue_to_claim_ms`, how long the message waited from being queued to a\nworker taking it to answer (optional, kept from the first take).\n\nVersion 8: the kind `comment_trigger`, an Instagram comment that named\none of the owner's keywords (its customer message is the comment and\nits author, its platform id the comment's). Written only once the\ncomment-replies release gate opens; rows of the earlier kinds read\nunchanged.",
         "properties": {
           "attempts": {
             "default": 0,
@@ -16519,7 +16543,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "7",
+            "default": "8",
             "title": "Schema Version",
             "type": "string"
           },
@@ -16543,11 +16567,12 @@
         "type": "object"
       },
       "InboundEventKind": {
-        "description": "What a webhook brought into the inbox, and so which job processes it.",
+        "description": "What a webhook brought into the inbox, and so which job processes it.\nCOMMENT_TRIGGER is an Instagram comment that named one of the owner's\nkeywords: it gets one private reply (written only once its release gate\nopens, app/utilities/storage/release_gates.py).",
         "enum": [
           "customer_message",
           "platform_bot_update",
-          "voice_post_call"
+          "voice_post_call",
+          "comment_trigger"
         ],
         "title": "InboundEventKind",
         "type": "string"
@@ -17328,6 +17353,50 @@
         ],
         "title": "InjectionSignal",
         "type": "string"
+      },
+      "InstagramCommentRepliesView": {
+        "additionalProperties": false,
+        "description": "The Instagram account's comment-to-DM as the cabinet shows it.\n`is_available` says whether this release answers comments yet (its\nrelease gate is open); the settings are kept either way.",
+        "properties": {
+          "is_available": {
+            "title": "Is Available",
+            "type": "boolean"
+          },
+          "is_on": {
+            "title": "Is On",
+            "type": "boolean"
+          },
+          "keywords": {
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+              "type": "string"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "reply_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Text"
+          }
+        },
+        "required": [
+          "is_on",
+          "is_available"
+        ],
+        "title": "InstagramCommentRepliesView",
+        "type": "object"
       },
       "IntegrationKind": {
         "description": "The integrations Settings → Integrations lists.",
@@ -20696,6 +20765,222 @@
         "title": "MessageView",
         "type": "object"
       },
+      "MetaConnectionPurpose": {
+        "description": "What a Facebook sign-in started in the cabinet is for: WhatsApp\nEmbedded Signup (a business number), or Facebook Login listing the\nowner's pages for Messenger and Instagram.",
+        "enum": [
+          "whatsapp",
+          "pages"
+        ],
+        "title": "MetaConnectionPurpose",
+        "type": "string"
+      },
+      "MetaConnectionStartView": {
+        "additionalProperties": false,
+        "description": "What the cabinet's Facebook SDK needs to open Meta's window: the\none-time `state` to bring back (the cabinet keeps it in memory only),\nthe app and Graph API version, and either the Embedded Signup\n`configuration_id` (WhatsApp) or the `permissions` to ask for (pages).\nThe sign-in must be finished before `expires_at`.",
+        "properties": {
+          "app_id": {
+            "title": "App Id",
+            "type": "string"
+          },
+          "configuration_id": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[0-9]{1,32}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Configuration Id"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "graph_api_version": {
+            "maxLength": 8,
+            "minLength": 4,
+            "pattern": "^v[0-9]{1,3}\\.[0-9]{1,2}$",
+            "title": "Graph Api Version",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z_]{1,63}$",
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/MetaConnectionPurpose"
+          },
+          "state": {
+            "maxLength": 43,
+            "minLength": 43,
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purpose",
+          "state",
+          "app_id",
+          "graph_api_version",
+          "expires_at"
+        ],
+        "title": "MetaConnectionStartView",
+        "type": "object"
+      },
+      "MetaPageList": {
+        "additionalProperties": false,
+        "description": "The pages the owner manages (pages linked to an Instagram professional\naccount first), to pick one before `expires_at` with the same `state`.",
+        "properties": {
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/MetaPageView"
+            },
+            "title": "Pages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "expires_at"
+        ],
+        "title": "MetaPageList",
+        "type": "object"
+      },
+      "MetaPageView": {
+        "additionalProperties": false,
+        "description": "One page of the picker: its name and username, and the Instagram\nprofessional account linked to it (`has_instagram`; only such pages\ncan connect Instagram).",
+        "properties": {
+          "has_instagram": {
+            "title": "Has Instagram",
+            "type": "boolean"
+          },
+          "instagram_account_id": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[0-9]{1,32}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instagram Account Id"
+          },
+          "instagram_username": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9._]{1,30}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instagram Username"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "page_id": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9]{1,32}$",
+            "title": "Page Id",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9.]{3,50}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "page_id",
+          "has_instagram"
+        ],
+        "title": "MetaPageView",
+        "type": "object"
+      },
+      "MetaSignInOptionsView": {
+        "additionalProperties": false,
+        "description": "Whether the cabinet offers \"Continue with Facebook\": WhatsApp Embedded\nSignup needs the platform's Meta app and its signup configuration\n(META_APP_ID, META_APP_SECRET, META_EMBEDDED_SIGNUP_CONFIG_ID), the page\npicker the app alone. `app_id` and `graph_api_version` are what the\nFacebook SDK starts with (None when nothing is offered).",
+        "properties": {
+          "app_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Id"
+          },
+          "graph_api_version": {
+            "anyOf": [
+              {
+                "maxLength": 8,
+                "minLength": 4,
+                "pattern": "^v[0-9]{1,3}\\.[0-9]{1,2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Api Version"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "boolean"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "whatsapp",
+          "pages"
+        ],
+        "title": "MetaSignInOptionsView",
+        "type": "object"
+      },
       "MetricsFilterChoices": {
         "additionalProperties": false,
         "description": "The countries, niches and sources present, for the filter controls.",
@@ -21741,7 +22026,7 @@
       },
       "OutboundMessageDocument": {
         "additionalProperties": false,
-        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).\n\nVersion 6: the kind `booking_confirmation` (a guest's written\nconfirmation of a booking the assistant made or moved, with its manage\nlink). Rows of the earlier kinds read unchanged.\n\nVersion 7: a reply to a customer may carry the options it offers\n(`choices`, optional): the channel shows them as buttons, a list,\nquick replies or an inline keyboard under the reply's last part. A\nrelease that does not know them sends the text alone, which already\nends with their prompt.",
+        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).\n\nVersion 6: the kind `booking_confirmation` (a guest's written\nconfirmation of a booking the assistant made or moved, with its manage\nlink). Rows of the earlier kinds read unchanged.\n\nVersion 7: a reply to a customer may carry the options it offers\n(`choices`, optional): the channel shows them as buttons, a list,\nquick replies or an inline keyboard under the reply's last part. A\nrelease that does not know them sends the text alone, which already\nends with their prompt.\n\nVersion 8: the kind `comment_reply` (the private reply to an Instagram\ncomment that named one of the owner's keywords), whose customer names\nthe comment it answers (`customer.comment_id`, optional). Rows of the\nearlier kinds read unchanged.",
         "properties": {
           "attempts": {
             "default": 0,
@@ -21946,7 +22231,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "7",
+            "default": "8",
             "title": "Schema Version",
             "type": "string"
           },
@@ -22018,7 +22303,7 @@
         "type": "object"
       },
       "OutboundMessageKind": {
-        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK), and a guest's written\nconfirmation of a booking the assistant made or moved in a chat, with\nits manage link (BOOKING_CONFIRMATION).",
+        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK), and a guest's written\nconfirmation of a booking the assistant made or moved in a chat, with\nits manage link (BOOKING_CONFIRMATION), and the private reply to an\nInstagram comment that named one of the owner's keywords\n(COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).",
         "enum": [
           "customer_reply",
           "staff_notification",
@@ -22027,7 +22312,8 @@
           "call_confirmation",
           "call_links",
           "text_back",
-          "booking_confirmation"
+          "booking_confirmation",
+          "comment_reply"
         ],
         "title": "OutboundMessageKind",
         "type": "string"
@@ -56895,6 +57181,583 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/channels/instagram/comment-replies": {
+      "put": {
+        "operationId": "channels_set_instagram_comment_replies",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of the Instagram card's comment-to-DM: on or off, the\nkeywords a comment must hold (up to 20; letter case does not matter)\nand the private reply it gets. Turning it on needs a keyword and a\ntext; turning it off keeps them for later.",
+                "properties": {
+                  "is_on": {
+                    "title": "Is On",
+                    "type": "boolean"
+                  },
+                  "keywords": {
+                    "items": {
+                      "maxLength": 50,
+                      "minLength": 1,
+                      "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "title": "Keywords",
+                    "type": "array"
+                  },
+                  "reply_text": {
+                    "anyOf": [
+                      {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Reply Text"
+                  }
+                },
+                "required": [
+                  "is_on"
+                ],
+                "title": "InstagramCommentRepliesRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Instagram Comment Replies",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/meta/pages": {
+      "post": {
+        "operationId": "channels_list_meta_pages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body with the page picker's sign-in: its `state` and Meta's `code`.",
+                "properties": {
+                  "code": {
+                    "maxLength": 4096,
+                    "minLength": 16,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "title": "Code",
+                    "type": "string"
+                  },
+                  "state": {
+                    "maxLength": 43,
+                    "minLength": 43,
+                    "pattern": "^[A-Za-z0-9_-]{43}$",
+                    "title": "State",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state",
+                  "code"
+                ],
+                "title": "ListMetaPagesRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaPageList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Meta Pages",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/meta/sign-in": {
+      "get": {
+        "operationId": "channels_get_meta_sign_in_options",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaSignInOptionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Meta Sign In Options",
+        "tags": [
+          "channels"
+        ]
+      },
+      "post": {
+        "operationId": "channels_start_meta_sign_in",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body that starts a Facebook sign-in for one purpose.",
+                "properties": {
+                  "purpose": {
+                    "description": "What a Facebook sign-in started in the cabinet is for: WhatsApp\nEmbedded Signup (a business number), or Facebook Login listing the\nowner's pages for Messenger and Instagram.",
+                    "enum": [
+                      "whatsapp",
+                      "pages"
+                    ],
+                    "title": "MetaConnectionPurpose",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "purpose"
+                ],
+                "title": "StartMetaConnectionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaConnectionStartView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Meta Sign In",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/channels/telegram/validate-token": {
       "post": {
         "operationId": "channels_validate_telegram_token",
@@ -57407,6 +58270,185 @@
           }
         },
         "summary": "Get Widget Snippet",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/whatsapp/embedded-signup": {
+      "post": {
+        "operationId": "channels_complete_whatsapp_embedded_signup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body that finishes WhatsApp Embedded Signup: the sign-in's `state`,\nMeta's `code` (valid for seconds), and the business account and number\nMeta's window named when it finished (optional: without them they are\nread from the token's permissions and the account's numbers).",
+                "properties": {
+                  "code": {
+                    "maxLength": 4096,
+                    "minLength": 16,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "title": "Code",
+                    "type": "string"
+                  },
+                  "phone_number_id": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "minLength": 1,
+                        "pattern": "^[0-9]{1,32}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Phone Number Id"
+                  },
+                  "state": {
+                    "maxLength": 43,
+                    "minLength": 43,
+                    "pattern": "^[A-Za-z0-9_-]{43}$",
+                    "title": "State",
+                    "type": "string"
+                  },
+                  "whatsapp_business_account_id": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "minLength": 1,
+                        "pattern": "^[0-9]{1,32}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Whatsapp Business Account Id"
+                  }
+                },
+                "required": [
+                  "state",
+                  "code"
+                ],
+                "title": "CompleteWhatsAppSignupRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Complete Whatsapp Embedded Signup",
         "tags": [
           "channels"
         ]
@@ -58111,6 +59153,166 @@
           }
         },
         "summary": "Connect Channel",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/{channel}/page": {
+      "put": {
+        "operationId": "channels_connect_meta_page",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body that connects the page the owner picked.",
+                "properties": {
+                  "page_id": {
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[0-9]{1,32}$",
+                    "title": "Page Id",
+                    "type": "string"
+                  },
+                  "state": {
+                    "maxLength": 43,
+                    "minLength": 43,
+                    "pattern": "^[A-Za-z0-9_-]{43}$",
+                    "title": "State",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state",
+                  "page_id"
+                ],
+                "title": "ConnectMetaPageRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Connect Meta Page",
         "tags": [
           "channels"
         ]

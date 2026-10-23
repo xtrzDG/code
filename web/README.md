@@ -1847,6 +1847,19 @@ Its motion and 3D hero: see [Motion](#motion).
   without query or booking key, the directive and the blocked origin and
   path (`src/server/cspReports.ts`) and forwards them to Sentry's security
   endpoint of `SENTRY_DSN`; without it they are dropped.
+- "Continue with Facebook" (Meta's channels): only the Channels page and the
+  setup tunnel (`src/lib/metaSignInPages.ts`) admit Facebook's SDK
+  (`connect.facebook.net`; its address passes the named Trusted Types
+  policy `facebook-sdk`, `src/lib/csp/trustedFacebookSdk.ts`, which vouches
+  for nothing else) and its sign-in frames in their policy, and send
+  `Cross-Origin-Opener-Policy: same-origin-allow-popups` so Facebook's window
+  can report back; every other page keeps the strict policy. Headers belong
+  to the document, so a Channels page reached by in-app navigation from
+  another page loads itself again on the first click (`?facebook=<channel>`
+  reopens the dialog). The SDK loads only when a Meta channel's connect
+  dialog opens, and WhatsApp's signup messages are read only from
+  `https://www.facebook.com` and `https://web.facebook.com`
+  (`assistant/channels/_lib/metaSignIn.ts`); `e2e/meta-connect.spec.ts`.
 - Every answer sends `nosniff`, `X-Frame-Options: DENY`,
   `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy:
   same-origin`, and production builds HSTS (`next.config.ts`).

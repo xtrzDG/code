@@ -279,6 +279,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # The hourly purge of expired one-time export download links (1134).
     DocumentCollectionName("export_download_links"): (integer_field("expires_at"),),
+    # The daily purge of ended Facebook sign-ins of the Channels page (1212).
+    DocumentCollectionName("meta_connection_states"): (integer_field("expires_at"),),
     # The judge's scores of real conversations (1120).
     **QUALITY_LOOKUP_FIELDS,
     # The spend guard's marks of a day (1142).

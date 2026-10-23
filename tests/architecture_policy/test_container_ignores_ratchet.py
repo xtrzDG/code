@@ -21,6 +21,7 @@ CONTAINER_TYPE_IGNORES: int = 1090
 # Typed composition roots: plain Python, no provider graph, nothing silenced.
 TYPED_ROOTS: tuple[Path, ...] = (
     CONTAINERS / "feedback",
+    CONTAINERS / "meta_connection",
     CONTAINERS / "passkeys",
     CONTAINERS / "payments",
     CONTAINERS / "phone_numbers",

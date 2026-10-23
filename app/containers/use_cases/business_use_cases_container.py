@@ -1,5 +1,6 @@
 from dependency_injector.providers import Container, Factory, Singleton
 
+from app.containers.meta_connection.meta_connection_root import MetaConnectionRoot
 from app.containers.phone_numbers.phone_number_root import PhoneNumberRoot
 from app.containers.phone_numbers.phone_number_use_case_factories import (
     PhoneNumberUseCaseFactories,
@@ -20,6 +21,9 @@ from app.containers.use_cases.core_use_cases_container import CoreUseCasesContai
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.guide_use_cases import GuideUseCasesContainer
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
+from app.containers.use_cases.meta_connection_root_provider import (
+    meta_connection_root_provider,
+)
 from app.containers.use_cases.notification_use_cases import (
     NotificationUseCasesContainer,
 )
@@ -204,6 +208,20 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
+    )
+    # Meta's self-serve connection and Instagram comment-to-DM (1212), a
+    # typed root (ADR 0010) whose operators ChannelOperatorsContainer exposes.
+    meta_connection_root: Singleton[MetaConnectionRoot] = meta_connection_root_provider(
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        delivery_use_cases=deliveries,
     )
     notifications: NotificationUseCasesContainer = Container(  # type: ignore[assignment]
         NotificationUseCasesContainer,

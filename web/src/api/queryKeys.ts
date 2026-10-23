@@ -214,6 +214,8 @@ export const queryKeys = {
     phoneLine: (businessId: Id, locale: Locale) => ["channels", businessId, "phoneLine", locale] as const,
     callForwarding: (businessId: Id, locale: Locale) => ["channels", businessId, "callForwarding", locale] as const,
     calendar: (businessId: Id) => ["channels", businessId, "calendar"] as const,
+    /** Which Facebook sign-ins this server offers (Meta's channels). */
+    metaSignIn: (businessId: Id) => ["channels", businessId, "metaSignIn"] as const,
     /** Share links of every tag (`share(id, "")` is the untagged set). */
     shareAll: (businessId: Id) => ["channels", businessId, "share"] as const,
     share: (businessId: Id, source: string) => ["channels", businessId, "share", source] as const,

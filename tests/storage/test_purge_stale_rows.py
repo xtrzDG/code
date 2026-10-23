@@ -17,55 +17,40 @@ from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
 )
+from app.repositories.meta_connection_state_repository import (
+    MetaConnectionStateRepository,
+)
 from app.repositories.mfa_repositories import MfaChallengeRepository
 from app.repositories.passkey_repositories import PasskeyChallengeRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserSessionRepository,
 )
-from app.schemas.constants.calls import (
-    MissedCallReason,
-    MissedCallSource,
-    TextBackSkipReason,
-    TextBackStatus,
-)
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
-from app.schemas.constants.localization import OtpDeliveryChannel
-from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
-from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.meta_connections import MetaConnectionStateDocument
 from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.passkeys import PasskeyChallengeDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
 from app.schemas.dto.jobs import JobTick
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ProviderMessageId
-from app.schemas.typings.conversations.strings import MessageText, ProviderCallId
-from app.schemas.typings.deliveries.constrained_strings import (
-    OutboundIdempotencyKey,
-    OutboundRecipientKey,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    E164PhoneNumber,
-    LanguageTag,
-)
-from app.schemas.typings.passkeys.constrained_strings import WebAuthnChallenge
-from app.schemas.typings.users.prefixed_id import UserId
-from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
-from app.utilities.calls.call_follow_up_keys import missed_call_id_of
-from app.utilities.deliveries.delivery_keys import (
-    derive_inbound_event_id,
-    derive_outbound_message_id,
-)
 from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.conftest import CollectionFactory
+from tests.storage.stale_row_samples import (
+    ceremony,
+    challenge,
+    facebook_sign_in,
+    inbound_event,
+    missed_call,
+    outbound_message,
+    receipt,
+    second_step,
+    session,
+)
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
 
 # Seeding and checking rows of several businesses runs platform-wide; the
@@ -76,103 +61,6 @@ NOW: int = FIXED_NANOSECONDS // 1_000
 HOUR: int = 3_600_000_000
 DAY: int = 24 * HOUR
 TICK = JobTick(job_name=PURGE_STALE_ROWS_JOB, scheduled_at=Microseconds(NOW))
-
-
-def session(expires_at: int) -> UserSessionDocument:
-    return UserSessionDocument(
-        user_id=UserId(),
-        token_hash=AccessTokenHash(f"{expires_at:064d}"),
-        expires_at=Microseconds(expires_at),
-    )
-
-
-def challenge(created_at: int) -> OtpChallengeDocument:
-    return OtpChallengeDocument(
-        login_method=LoginMethod.PHONE,
-        phone_number=E164PhoneNumber("+995555123456"),
-        delivery_channel=OtpDeliveryChannel.SMS,
-        locale=LanguageTag("ka"),
-        code_hash=OtpCodeHash("hash"),
-        expires_at=Microseconds(created_at + 600_000_000),
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def second_step(created_at: int) -> MfaChallengeDocument:
-    return MfaChallengeDocument(
-        user_id=UserId(),
-        expires_at=Microseconds(created_at + 300_000_000),
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def ceremony(created_at: int) -> PasskeyChallengeDocument:
-    return PasskeyChallengeDocument(
-        user_id=UserId(),
-        purpose=PasskeyCeremonyPurpose.SIGN_IN,
-        challenge=WebAuthnChallenge("test-challenge-0000000000"),
-        expires_at=Microseconds(created_at + 300_000_000),
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def receipt(created_at: int, message_id: str) -> ChannelMessageReceiptDocument:
-    return ChannelMessageReceiptDocument(
-        business_id=BusinessId(),
-        channel=ChannelKind.WHATSAPP,
-        provider_message_id=ProviderMessageId(message_id),
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def inbound_event(created_at: int) -> InboundEventDocument:
-    message_id = ProviderMessageId(f"wamid.{created_at}")
-    return InboundEventDocument(
-        id=derive_inbound_event_id(None, ChannelKind.TELEGRAM, message_id),
-        kind=InboundEventKind.PLATFORM_BOT_UPDATE,
-        channel=ChannelKind.TELEGRAM,
-        provider_message_id=message_id,
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def outbound_message(created_at: int) -> OutboundMessageDocument:
-    business_id = BusinessId()
-    key = OutboundIdempotencyKey(f"staff:{created_at}")
-    return OutboundMessageDocument(
-        id=derive_outbound_message_id(business_id, key),
-        business_id=business_id,
-        kind=OutboundMessageKind.STAFF_NOTIFICATION,
-        idempotency_key=key,
-        recipient_key=OutboundRecipientKey("staff:email:levan@example.ge"),
-        text=MessageText("A new booking."),
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
-
-
-def missed_call(created_at: int) -> MissedCallDocument:
-    business_id = BusinessId()
-    call_id = ProviderCallId(f"pbx-{created_at}")
-    return MissedCallDocument(
-        id=missed_call_id_of(business_id, MissedCallSource.PBX, call_id),
-        business_id=business_id,
-        source=MissedCallSource.PBX,
-        provider_call_id=call_id,
-        reason=MissedCallReason.BUSY,
-        caller_phone_number=E164PhoneNumber("+995555123456"),
-        called_at=Microseconds(created_at),
-        language=LanguageTag("ka"),
-        status=TextBackStatus.SKIPPED,
-        skip_reason=TextBackSkipReason.TURNED_OFF,
-        created_at=Microseconds(created_at),
-        updated_at=Microseconds(created_at),
-    )
 
 
 def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
@@ -220,6 +108,12 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     old_ceremony, fresh_ceremony = ceremony(NOW - DAY - 1), ceremony(NOW - HOUR)
     ceremonies.save(old_ceremony)
     ceremonies.save(fresh_ceremony)
+    sign_in_collection = collections(
+        MetaConnectionStateDocument, "meta_connection_states"
+    )
+    ended_sign_in, open_sign_in = facebook_sign_in(NOW - 1), facebook_sign_in(NOW + 1)
+    for sign_in in (ended_sign_in, open_sign_in):
+        sign_in_collection.upsert(str(sign_in.state_hash), sign_in)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
@@ -231,12 +125,13 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         wall_clock=build_fixed_wall_clock(),
         mfa_challenge_repo=second_steps,
         passkey_challenge_repo=ceremonies,
+        meta_connection_state_repo=MetaConnectionStateRepository(sign_in_collection),
     )
 
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 9
+    assert report.processed_count == 10
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
@@ -250,10 +145,14 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     assert second_steps.get(fresh_step.id) == fresh_step
     assert ceremonies.get(old_ceremony.id) is None
     assert ceremonies.get(fresh_ceremony.id) == fresh_ceremony
+    assert [r.state_hash for r in sign_in_collection.list_all()] == [
+        open_sign_in.state_hash
+    ]
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
         "inbound_event",
+        "meta_connection_state",
         "mfa_challenge",
         "missed_call",
         "otp_challenge",

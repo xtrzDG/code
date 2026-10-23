@@ -60,7 +60,7 @@ _.ExampleConstrainedInt  # app/schemas/typings/constrained_integers.py
 _.ExampleConstrainedString  # app/schemas/typings/constrained_strings.py
 
 # Settings reserved for planned work: ZADARMA_* for the telephony
-# integration (R5) and META_APP_ID for Meta app review (R15).
+# integration (R5).
 _.zadarma_api_key  # app/schemas/configurations/app_settings.py
 
 # Enum members that are valid on the wire (requests, stored documents,
@@ -673,3 +673,8 @@ _.CABLE  # app/schemas/constants/passkeys.py (WebAuthnTransport)
 _.last_outcome  # app/schemas/dto/payment_methods.py
 # ...and what saving the card in a done-for-you trial charges now.
 _.setup_fee_due  # app/schemas/dto/payment_methods.py
+
+# Meta's self-serve connection (1212): what the cabinet's Facebook SDK opens
+# Meta's window with; filled by keyword, read only by the cabinet.
+_.graph_api_version  # app/schemas/dto/channels/meta_connection.py
+_.permissions  # app/schemas/dto/channels/meta_connection.py

@@ -134,6 +134,7 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       user_session: "מכשיר מחובר",
       totp_factor: "אפליקציית אימות",
       recovery_codes: "קודי שחזור",
+      meta_connection_state: "כניסה עם Facebook",
       mfa_challenge: "בדיקה דו-שלבית",
       passkey: "מפתח גישה",
       passkey_challenge: "בדיקה עם מפתח גישה",

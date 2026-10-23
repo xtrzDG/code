@@ -7,7 +7,9 @@
  *  - a signed-in user without a language cookie gets the account language;
  *  - every page gets a Content Security Policy with a fresh nonce, which
  *    Next.js puts on its own scripts, and the endpoint its violations are
- *    reported to (server/contentSecurityPolicy.ts);
+ *    reported to (server/contentSecurityPolicy.ts); the pages where an
+ *    owner signs in with Facebook also let its SDK in
+ *    (lib/metaSignInPages.ts);
  *  - a session under the cookie's old name moves to `__Host-aw_session`;
  *  - the public hosted chat page (/c/{address}) gets its business and a
  *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
@@ -23,6 +25,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { LOCALE_COOKIE, matchLocale, negotiateLocale, resolveLocale, DEFAULT_LOCALE } from "@/i18n/config";
+import { isMetaSignInPage } from "@/lib/metaSignInPages";
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
 import { PATH_LOCALE_HEADER, localizedRedirectPath, pathLocale } from "@/lib/publicSite/paths";
 import { isBookingPagePath } from "@/lib/bookingPage/paths";
@@ -113,6 +116,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
     nonce,
     isDevelopment: process.env.NODE_ENV === "development",
     isHttps: isCookieSecure(),
+    allowsFacebookSignIn: isMetaSignInPage(pathname),
   });
   requestHeaders.set(CSP_HEADER, policy);
   requestHeaders.set(NONCE_HEADER, nonce);

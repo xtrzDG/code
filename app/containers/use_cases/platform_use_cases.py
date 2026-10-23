@@ -166,6 +166,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         mfa_challenge_repo=repositories.mfa_challenge_repo,
         passkey_challenge_repo=repositories.passkey_challenge_repo,
+        meta_connection_state_repo=repositories.meta_connection_state_repo,
     )
     sweep_rate_limit_buckets_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

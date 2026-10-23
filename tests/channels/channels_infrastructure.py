@@ -17,6 +17,7 @@ from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
 )
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
+from app.clients.meta.meta_private_reply_client import MetaPrivateReplyClient
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
@@ -216,6 +217,10 @@ class ChannelsInfrastructure:
             self.meta_client, self.settings
         )
         self.instagram_adapter = InstagramChannelAdapter(
-            self.meta_client, self.settings
+            self.meta_client,
+            self.settings,
+            private_reply_client=MetaPrivateReplyClient(
+                transport=self.meta_transport.build()
+            ),
         )
         self.voice_webhook_adapter = ElevenLabsVoiceWebhookAdapter(self.settings)

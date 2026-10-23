@@ -1,0 +1,13 @@
+{
+  "business_id": "business_8ad08d33-7dc9-4746-a92e-09455b946cbe",
+  "created_at": 1790000000000000,
+  "encrypted_user_token": "Sample EncryptedChannelSecret",
+  "expires_at": 1790000000000000,
+  "id": "meta_connection_state_00c02ea4-5189-4702-844a-dad7f91a742d",
+  "is_consumed": true,
+  "purpose": "whatsapp",
+  "schema_version": "1",
+  "state_hash": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f",
+  "updated_at": 1790000000000000,
+  "user_id": "user_0d122bd4-2fe6-4ebb-b2a0-a2fc8d1fc602"
+}

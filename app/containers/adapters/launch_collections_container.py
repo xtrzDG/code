@@ -8,6 +8,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.autotest_cases import AutotestCaseDocument
 from app.schemas.domain.billing import OnboardingRequestDocument
+from app.schemas.domain.meta_connections import MetaConnectionStateDocument
 from app.schemas.domain.public_slugs import PublicSlugClaimDocument
 from app.schemas.domain.setup import (
     ActivationEventDocument,
@@ -26,10 +27,10 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     addresses businesses took; and its current knowledge import from its
     website (migration 1054), which the wizard offers too; and of the
     activation follow-up (1080): the nudges sent and the done-for-you setup
-    requests; and of teaching the assistant (1112): the owner's own checks.
-    A sibling of
-    DocumentCollectionsContainer with the same storage factory (Postgres
-    with DATABASE_URL, else in memory).
+    requests; of teaching the assistant (1112): the owner's own checks; and
+    of connecting Meta's channels (1212): the owners' Facebook sign-ins. A
+    sibling of DocumentCollectionsContainer with the same storage factory
+    (Postgres with DATABASE_URL, else in memory).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -87,6 +88,16 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     autotest_case_collection = document_collection(
         AutotestCaseDocument,
         "autotest_cases",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The Facebook sign-ins owners start on the Channels page and in the
+    # setup tunnel to connect Meta's channels (1212).
+    meta_connection_state_collection = document_collection(
+        MetaConnectionStateDocument,
+        "meta_connection_states",
         config,
         clients,
         utilities,

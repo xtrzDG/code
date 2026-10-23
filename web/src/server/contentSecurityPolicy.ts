@@ -16,10 +16,20 @@
  *
  * `next dev` keeps inline styles and skips Trusted Types: its error overlay
  * injects both. A production build (and the e2e suite on it) enforces them.
+ *
+ * The pages where an owner signs in with Facebook (lib/metaSignInPages.ts)
+ * also let Facebook's JavaScript SDK run (loaded by the connect dialog
+ * through the Trusted Types policy `facebook-sdk`, so 'strict-dynamic'
+ * admits it; the host is the fallback of older browsers), call Facebook,
+ * show its images and frame its sign-in pages.
  */
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 const FLITT_CHECKOUT_ORIGIN = "https://pay.flitt.com";
+const FACEBOOK_SDK_ORIGIN = "https://connect.facebook.net";
+/** Facebook's pages: its sign-in dialogs and the frames its SDK talks through. */
+const FACEBOOK_PAGE_ORIGINS = ["https://www.facebook.com", "https://web.facebook.com", "https://staticxx.facebook.com"];
+const FACEBOOK_API_ORIGINS = ["https://www.facebook.com", "https://graph.facebook.com"];
 /** Request header with the page's nonce, for Server Components that need it. */
 export const NONCE_HEADER = "x-nonce";
 const NONCE_BYTES = 16;
@@ -73,15 +83,16 @@ function closingDirectives(options: PolicyOptions): string[] {
 }
 
 export function buildContentSecurityPolicy(options: PolicyOptions): string {
+  const facebook = options.allowsFacebookSignIn === true;
   const directives = [
     "default-src 'self'",
-    scriptSource(options, [TURNSTILE_ORIGIN]),
+    scriptSource(options, [TURNSTILE_ORIGIN, ...(facebook ? [FACEBOOK_SDK_ORIGIN] : [])]),
     styleSource(options),
-    "img-src 'self' data: blob:",
+    ["img-src 'self' data: blob:", ...(facebook ? ["https://www.facebook.com"] : [])].join(" "),
     "font-src 'self' data:",
     "media-src 'self' blob:",
-    `connect-src 'self' ${TURNSTILE_ORIGIN}`,
-    `frame-src 'self' ${TURNSTILE_ORIGIN}`,
+    [`connect-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_API_ORIGINS : [])].join(" "),
+    [`frame-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_PAGE_ORIGINS : [])].join(" "),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",

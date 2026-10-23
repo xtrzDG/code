@@ -16,11 +16,15 @@ from app.clients.http.webhook_poster import WebhookPoster
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
+from app.clients.meta.meta_oauth_client import MetaOAuthClient
+from app.clients.meta.meta_pages_client import MetaPagesClient
+from app.clients.meta.meta_private_reply_client import MetaPrivateReplyClient
 from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
 from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
+from app.clients.meta.whatsapp_onboarding_client import WhatsAppOnboardingClient
 from app.clients.nbg.nbg_rates_client import NbgRatesClient
 from app.clients.object_storage.object_storage_client_factory import (
     build_object_storage_client,
@@ -107,6 +111,16 @@ class ClientsContainer(containers.DeclarativeContainer):
     # Meta channel tokens' expiry, asked with the platform's app.
     meta_token_debug_client: Singleton[MetaTokenDebugClient] = Singleton(
         MetaTokenDebugClient
+    )
+    # Meta's self-serve connection (1212): sign-in codes, pages, Embedded
+    # Signup's numbers, Instagram's private replies to comments.
+    meta_oauth_client: Singleton[MetaOAuthClient] = Singleton(MetaOAuthClient)
+    meta_pages_client: Singleton[MetaPagesClient] = Singleton(MetaPagesClient)
+    whatsapp_onboarding_client: Singleton[WhatsAppOnboardingClient] = Singleton(
+        WhatsAppOnboardingClient
+    )
+    meta_private_reply_client: Singleton[MetaPrivateReplyClient] = Singleton(
+        MetaPrivateReplyClient
     )
     # Files customers send: platform downloads, speech-to-text (EU project).
     meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)

@@ -25,6 +25,7 @@ from tests.platform.authorization_customers import CUSTOMER_BODIES, CUSTOMER_QUE
 from tests.platform.authorization_deposits import DEPOSIT_BODIES
 from tests.platform.authorization_inbox import INBOX_BODIES
 from tests.platform.authorization_integrations import INTEGRATION_BODIES
+from tests.platform.authorization_meta import META_BODIES
 from tests.platform.authorization_notifications import NOTIFICATION_BODIES
 from tests.platform.authorization_teaching import TEACHING_BODIES
 
@@ -95,6 +96,7 @@ REQUEST_BODIES.update(CALENDAR_BODIES)
 REQUEST_BODIES.update(INTEGRATION_BODIES)
 REQUEST_BODIES.update(BRAND_BODIES)
 REQUEST_BODIES.update(DEPOSIT_BODIES)
+REQUEST_BODIES.update(META_BODIES)
 REQUEST_BODIES[f"PUT {B}/campaign-settings"] = {"rule_kind": "rebook", "delay_days": 30}
 REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},

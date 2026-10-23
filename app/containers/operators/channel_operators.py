@@ -1,12 +1,30 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
+from app.containers.meta_connection.meta_connection_operator_factories import (
+    MetaConnectionOperatorFactories,
+)
+from app.containers.meta_connection.meta_connection_root import MetaConnectionRoot
 from app.containers.pipelines.channel_pipelines import ChannelPipelinesContainer
 from app.containers.provider_chains import (
     pipeline_operator,
     platform_pipeline_operator,
 )
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.operator_contract import OperatorContract
+from app.schemas.dto.channels.channel_settings import ChannelView
+from app.schemas.dto.channels.comment_replies import SetInstagramCommentRepliesCommand
+from app.schemas.dto.channels.meta_connection import (
+    CompleteWhatsAppSignupCommand,
+    ConnectMetaPageCommand,
+    ListMetaPagesCommand,
+    MetaConnectionStartView,
+    MetaPageList,
+    MetaSignInOptionsQuery,
+    MetaSignInOptionsView,
+    StartMetaConnectionCommand,
+)
+from app.schemas.dto.jobs import JobReport, QueuedJobInput
 
 
 class ChannelOperatorsContainer(containers.DeclarativeContainer):
@@ -86,4 +104,37 @@ class ChannelOperatorsContainer(containers.DeclarativeContainer):
     )
     configure_platform_bot_webhook_operator = pipeline_operator(
         channel_pipelines.configure_platform_bot_webhook_pipeline, storage_scope
+    )
+
+    # --- Meta's self-serve connection and Instagram comment-to-DM (1212):
+    # the operators of its typed root (app/containers/meta_connection/).
+    meta_connection_root: Dependency[MetaConnectionRoot] = Dependency(
+        instance_of=MetaConnectionRoot
+    )
+    meta_connection = meta_connection_root.provided.operators
+    sign_in_options_operator: Factory[
+        OperatorContract[MetaSignInOptionsQuery, MetaSignInOptionsView]
+    ] = Factory(MetaConnectionOperatorFactories.sign_in_options, meta_connection)
+    start_meta_connection_operator: Factory[
+        OperatorContract[StartMetaConnectionCommand, MetaConnectionStartView]
+    ] = Factory(MetaConnectionOperatorFactories.start_meta_connection, meta_connection)
+    complete_whatsapp_signup_operator: Factory[
+        OperatorContract[CompleteWhatsAppSignupCommand, ChannelView]
+    ] = Factory(
+        MetaConnectionOperatorFactories.complete_whatsapp_signup, meta_connection
+    )
+    list_meta_pages_operator: Factory[
+        OperatorContract[ListMetaPagesCommand, MetaPageList]
+    ] = Factory(MetaConnectionOperatorFactories.list_meta_pages, meta_connection)
+    connect_meta_page_operator: Factory[
+        OperatorContract[ConnectMetaPageCommand, ChannelView]
+    ] = Factory(MetaConnectionOperatorFactories.connect_meta_page, meta_connection)
+    set_comment_replies_operator: Factory[
+        OperatorContract[SetInstagramCommentRepliesCommand, ChannelView]
+    ] = Factory(MetaConnectionOperatorFactories.set_comment_replies, meta_connection)
+    # The `process_comment_trigger` job, in its event's business.
+    process_comment_trigger_operator: Factory[
+        OperatorContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        MetaConnectionOperatorFactories.process_comment_trigger, meta_connection
     )

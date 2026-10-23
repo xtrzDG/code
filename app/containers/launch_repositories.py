@@ -13,6 +13,9 @@ from app.repositories.activation_repositories import (
     OnboardingRequestRepository,
 )
 from app.repositories.autotest_case_repository import AutotestCaseRepository
+from app.repositories.meta_connection_state_repository import (
+    MetaConnectionStateRepository,
+)
 from app.repositories.setup_probe_repository import SetupProbeRepository
 from app.repositories.setup_repositories import (
     ActivationEventRepository,
@@ -27,9 +30,9 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories over `LaunchCollectionsContainer`: the guided launch
     (1044), the hosted chat addresses (1052) and the current website import
-    (1054), the activation follow-up (1080) and the owner's own checks
-    (1112). `RepositoriesContainer`
-    extends it, so they are read as
+    (1054), the activation follow-up (1080), the owner's own checks (1112)
+    and the Facebook sign-ins that connect Meta's channels (1212).
+    `RepositoriesContainer` extends it, so they are read as
     `repositories.setup_state_repo` like every other repository.
     """
 
@@ -78,6 +81,11 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
     autotest_case_repo: Singleton[AutotestCaseRepository] = Singleton(
         AutotestCaseRepository,
         collection=launch_collections.autotest_case_collection,
+    )
+    # The Facebook sign-ins of the Channels page and the setup tunnel (1212).
+    meta_connection_state_repo: Singleton[MetaConnectionStateRepository] = Singleton(
+        MetaConnectionStateRepository,
+        collection=launch_collections.meta_connection_state_collection,
     )
     # Whether the business reached its activation milestones (1080).
     activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(

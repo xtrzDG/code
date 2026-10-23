@@ -1,25 +1,7 @@
-from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
-from app.schemas.configurations.backup_settings import BackupSettings
+from app.schemas.configurations.app_settings_sections import AppSettingsSections
 from app.schemas.configurations.database_role_settings import DatabaseRoleSettings
-from app.schemas.configurations.embedding_settings import EmbeddingSettings
-from app.schemas.configurations.growth_settings import GrowthSettings
-from app.schemas.configurations.media_settings import MediaSettings
-from app.schemas.configurations.payment_settings import PaymentSettings
-from app.schemas.configurations.phone_number_settings import PhoneNumberSettings
-from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
-from app.schemas.configurations.privacy_settings import PrivacySettings
-from app.schemas.configurations.public_api_settings import PublicApiSettings
-from app.schemas.configurations.public_site_settings import PublicSiteSettings
-from app.schemas.configurations.quality_settings import QualitySettings
-from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
-from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
-from app.schemas.configurations.seller_settings import SellerSettings
-from app.schemas.configurations.session_settings import SessionSettings
-from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
-from app.schemas.configurations.support_settings import SupportSettings
-from app.schemas.configurations.telemetry_settings import TelemetrySettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -60,6 +42,7 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
+from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.mfa.constrained_integers import StepUpMaxAgeSeconds
 from app.schemas.typings.mfa.strings import TotpIssuerName
 from app.schemas.typings.notifications.constrained_strings import (
@@ -104,9 +87,10 @@ from app.schemas.typings.users.constrained_integers import (
 from app.schemas.typings.users.constrained_strings import EmailAddress, TurnstileSiteKey
 
 
-class AppSettings(ImmutableDTO):
+class AppSettings(AppSettingsSections):
     """
-    Validated runtime settings assembled from environment variables.
+    Validated runtime settings assembled from environment variables; the
+    grouped sections (backups, media, payments, ...) are its base's fields.
 
     Variable names follow the concept (section 14) where it names them; see
     `.env.example`.
@@ -181,8 +165,7 @@ class AppSettings(ImmutableDTO):
     dpa_document_version: DpaDocumentVersion
     platform_admin_emails: list[EmailAddress]
     platform_admin_phone_numbers: list[E164PhoneNumber]
-    # Login codes: one provider per delivery channel; a channel without a
-    # provider is not offered (see `.env.example`, "Login codes").
+    # Login codes: one provider per channel, else not offered (.env.example).
     twilio_account_sid: TwilioAccountSid | None = None
     twilio_auth_token: PlatformSecret | None = None
     twilio_sender: SmsSenderId | None = None
@@ -208,6 +191,7 @@ class AppSettings(ImmutableDTO):
     meta_app_id: PlatformIdentifier | None = None
     meta_app_secret: PlatformSecret | None = None
     meta_verify_token: PlatformSecret | None = None
+    meta_embedded_signup_config_id: MetaConfigurationId | None = None
     whatsapp_system_user_token: PlatformSecret | None = None
     whatsapp_notification_phone_number_id: MetaObjectId | None = None
     whatsapp_notification_template_name: WhatsAppTemplateName | None = None
@@ -266,37 +250,3 @@ class AppSettings(ImmutableDTO):
     # (RECORDINGS_S3_*), encrypted per business, in production.
     recording_storage_kind: RecordingStorageKind = RecordingStorageKind.LOCAL
     recordings_object_storage: ObjectStorageConnection | None = None
-    # Off-site backups and the restore drill (BACKUP_*; `workshop backup`,
-    # `workshop restore-check`, docs/operations/backup-restore.md).
-    backup: BackupSettings = Field(default_factory=BackupSettings)
-    # Voice notes and photos of customers (LLM_TRANSCRIBE_MODEL, MEDIA_MAX_*).
-    media: MediaSettings = Field(default_factory=MediaSettings)
-    embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
-    # Bursts, turn deadline, failover (MESSAGE_COALESCE_*, CHAT_TURN_*, LLM_FALLBACK_*).
-    reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)
-    # pass^k of autotests and the nightly judging of real conversations.
-    quality: QualitySettings = Field(default_factory=QualitySettings)
-    # The reply guard's claim check and injection brake (LLM_VERIFIER_*, INJECTION_*).
-    reply_safety: ReplySafetySettings = Field(default_factory=ReplySafetySettings)
-    # Where the platform alerts go (PLATFORM_ALERT_*, docs/operations/slo.md).
-    platform_alerts: PlatformAlertSettings = Field(
-        default_factory=PlatformAlertSettings
-    )
-    # When sessions end (SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_*).
-    sessions: SessionSettings = Field(default_factory=SessionSettings)
-    # The cabinet's "Help and support" contacts (SUPPORT_*).
-    support: SupportSettings = Field(default_factory=SupportSettings)
-    # The suppression list's key and the full exports' one-time links
-    # (SUPPRESSION_LIST_KEY, EXPORT_DOWNLOAD_LINK_MINUTES).
-    privacy: PrivacySettings = Field(default_factory=PrivacySettings)
-    # The seller on invoices and its VAT (SELLER_*, PLATFORM_VAT_REGISTERED).
-    seller: SellerSettings = Field(default_factory=SellerSettings)
-    # Landing-page sandbox demos, legal pages (PUBLIC_DEMO_*, LEGAL_TEXTS_FINAL).
-    public_site: PublicSiteSettings = Field(default_factory=PublicSiteSettings)
-    # Spend limits, call caps, API limits (SPEND_*, CALL_*, API_*, PLATFORM_*).
-    spend_guard: SpendGuardSettings = Field(default_factory=SpendGuardSettings)
-    growth: GrowthSettings = Field(default_factory=GrowthSettings)
-    telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
-    public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)
-    payments: PaymentSettings = Field(default_factory=PaymentSettings)  # STRIPE_*
-    phone_numbers: PhoneNumberSettings = Field(default_factory=PhoneNumberSettings)

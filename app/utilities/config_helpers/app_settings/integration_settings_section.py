@@ -7,6 +7,7 @@ from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateName,
 )
+from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
@@ -19,6 +20,7 @@ class IntegrationSettingsSection(TypedDict):
     meta_app_id: PlatformIdentifier | None
     meta_app_secret: PlatformSecret | None
     meta_verify_token: PlatformSecret | None
+    meta_embedded_signup_config_id: MetaConfigurationId | None
     whatsapp_system_user_token: PlatformSecret | None
     whatsapp_notification_phone_number_id: MetaObjectId | None
     whatsapp_notification_template_name: WhatsAppTemplateName | None
@@ -45,6 +47,11 @@ def read_integration_settings(
         meta_app_id=identifier("META_APP_ID"),
         meta_app_secret=secret("META_APP_SECRET"),
         meta_verify_token=secret("META_VERIFY_TOKEN"),
+        meta_embedded_signup_config_id=optional_text(
+            environment_variables,
+            "META_EMBEDDED_SIGNUP_CONFIG_ID",
+            MetaConfigurationId,
+        ),
         whatsapp_system_user_token=secret("WHATSAPP_SYSTEM_USER_TOKEN"),
         whatsapp_notification_phone_number_id=optional_text(
             environment_variables,

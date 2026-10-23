@@ -3,16 +3,20 @@
 import { useState, type FormEvent } from "react";
 
 import { useCountries } from "@/api/catalog";
+import { api } from "@/api/client";
 import type { ErrorMessageOverrides } from "@/api/errors";
+import { queryCache } from "@/api/queryCache";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChevronDown } from "@/components/icons";
-import { Button, Field, Input, Modal, Select } from "@/components/ui";
+import { Button, Field, Input, Modal, Select, useToast } from "@/components/ui";
 import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { countryFlag } from "@/lib/countries";
 
-import type { ConnectableChannel } from "../_lib/channels";
+import { upsertChannel, type ChannelView, type ConnectableChannel } from "../_lib/channels";
 import {
   buildConnectBody,
   CHANNEL_FIELDS,
@@ -22,7 +26,9 @@ import {
   type ConnectFieldError,
   type ConnectForm,
 } from "../_lib/connectForm";
+import { isMetaChannel, offersFacebook } from "../_lib/metaSignIn";
 import { CHANNEL_NAMES, CHANNEL_STEPS, FIELD_ERRORS, FIELD_LABELS, META_INTROS } from "./channelMeta";
+import { FacebookSignIn } from "./FacebookSignIn";
 import { TelegramGuide } from "./TelegramGuide";
 
 const SECRET_FIELDS: ReadonlySet<ConnectField> = new Set(["botToken", "pageAccessToken"]);
@@ -32,7 +38,8 @@ const OPTIONAL_FIELDS: ReadonlySet<ConnectField> = new Set(["businessAccountId",
 /**
  * The connect (or update) form of one channel. Telegram is a guided walk
  * through @BotFather with the key checked as it is pasted; Meta's channels
- * (WhatsApp, Instagram, Messenger) say in plain words what they need and
+ * (WhatsApp, Instagram, Messenger) offer "Continue with Facebook" where the
+ * server is set up for it (else they say in plain words what they need) and
  * keep their technical fields behind "Enter details manually"; the phone
  * asks for its number.
  */
@@ -98,12 +105,24 @@ function ConnectChannelForm({
   onSubmit: (kind: ConnectableChannel, body: ConnectChannelBody) => Promise<boolean>;
 }) {
   const { t } = useI18n();
+  const toast = useToast();
   const { business } = useBusiness();
   const fields = CHANNEL_FIELDS[kind];
   const steps = CHANNEL_STEPS[kind] ?? [];
   const [form, setForm] = useState<ConnectForm>({ ...EMPTY_CONNECT_FORM, countryHint: business.country_code });
   const [errors, setErrors] = useState<Partial<Record<ConnectField, ConnectFieldError>>>({});
   const intro = META_INTROS[kind];
+  const signInOptions = useQuery(
+    queryKeys.channels.metaSignIn(business.id),
+    () => api.GET("/v1/businesses/{business_id}/channels/meta/sign-in", { params: { path: { business_id: business.id } } }),
+    { enabled: isMetaChannel(kind) },
+  );
+  const facebookKind = isMetaChannel(kind) && offersFacebook(signInOptions.data, kind) ? kind : null;
+  const onFacebookConnected = (channel: ChannelView) => {
+    queryCache.update<ChannelView[]>(queryKeys.channels.list(business.id), (list) => upsertChannel(list, channel));
+    toast.success(t("channels.connectedToast", { channel: t(CHANNEL_NAMES[kind]) }));
+    onClose();
+  };
   // Meta's ids and tokens are for those who know them: behind a click, open when updating.
   const [showManual, setShowManual] = useState(intro === undefined || isReconnect);
 
@@ -132,7 +151,11 @@ function ConnectChannelForm({
     <form onSubmit={submit} noValidate className="space-y-5">
       {intro ? (
         <div className="space-y-3">
-          <p className="text-sm text-ink-muted">{t(intro)}</p>
+          {facebookKind ? (
+            <FacebookSignIn kind={facebookKind} onConnected={onFacebookConnected} />
+          ) : (
+            <p className="text-sm text-ink-muted">{t(intro)}</p>
+          )}
           <button
             type="button"
             aria-expanded={showManual}

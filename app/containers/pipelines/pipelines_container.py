@@ -156,6 +156,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
         delivery_use_cases=use_cases.deliveries,
         reply_speed_use_cases=use_cases.reply_speed,
         conversation_pipelines=conversations,
+        meta_connection_root=use_cases.meta_connection_root,
     )
     billing: BillingPipelinesContainer = Container(  # type: ignore[assignment]
         BillingPipelinesContainer,

@@ -28,6 +28,7 @@ from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
 )
 from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
+from app.utilities.deliveries.comment_trigger_jobs import PROCESS_COMMENT_TRIGGER_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -54,6 +55,10 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
                 operators.channels.process_platform_bot_update_operator
             ),
             PROCESS_POST_CALL_JOB: operators.conversations.process_post_call_operator,
+            # An Instagram comment that named the owner's keyword (1212).
+            PROCESS_COMMENT_TRIGGER_JOB: (
+                operators.channels.process_comment_trigger_operator
+            ),
             # A finished call's recording moved into the EU object storage.
             ARCHIVE_CALL_RECORDING_JOB: (
                 operators.conversations.archive_call_recording_operator

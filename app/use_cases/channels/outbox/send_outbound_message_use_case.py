@@ -147,6 +147,7 @@ class SendOutboundMessageUseCase(
                 message.template,
                 self._channel_repo,
                 self._whatsapp_templates,
+                self._secret_cipher,
             )
 
         if message.customer is not None:

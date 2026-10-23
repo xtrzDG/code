@@ -84,9 +84,15 @@ class InboundEventDocument(BaseDocument):
     Version 7: the customer message's `context_note` (optional) and
     `queue_to_claim_ms`, how long the message waited from being queued to a
     worker taking it to answer (optional, kept from the first take).
+
+    Version 8: the kind `comment_trigger`, an Instagram comment that named
+    one of the owner's keywords (its customer message is the comment and
+    its author, its platform id the comment's). Written only once the
+    comment-replies release gate opens; rows of the earlier kinds read
+    unchanged.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("7")
+    schema_version: SchemaVersion = SchemaVersion("8")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind

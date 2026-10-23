@@ -2100,6 +2100,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/channels/instagram/comment-replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Instagram Comment Replies */
+        put: operations["channels_set_instagram_comment_replies"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/meta/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** List Meta Pages */
+        post: operations["channels_list_meta_pages"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/meta/sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Meta Sign In Options */
+        get: operations["channels_get_meta_sign_in_options"];
+        put?: never;
+        /** Start Meta Sign In */
+        post: operations["channels_start_meta_sign_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/channels/telegram/validate-token": {
         parameters: {
             query?: never;
@@ -2146,6 +2198,23 @@ export interface paths {
         get: operations["channels_get_widget_snippet"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/whatsapp/embedded-signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Whatsapp Embedded Signup */
+        post: operations["channels_complete_whatsapp_embedded_signup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2199,6 +2268,23 @@ export interface paths {
         post?: never;
         /** Disable Channel */
         delete: operations["channels_disable_channel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/{channel}/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Connect Meta Page */
+        put: operations["channels_connect_meta_page"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8855,7 +8941,8 @@ export interface components {
          *     the first; the single template of earlier clients). `link_state` says
          *     whether a connected messenger or phone can be shared as a link (the
          *     same rule the share links follow); None for a channel that is not
-         *     connected or has no link (the website chat).
+         *     connected or has no link (the website chat). Instagram reports its
+         *     comment-to-DM (`comment_replies`; None for the other channels).
          */
         ChannelView: {
             /** Account Id */
@@ -8863,6 +8950,7 @@ export interface components {
             /** Business Id */
             business_id: string;
             channel: components["schemas"]["ChannelKind"];
+            comment_replies?: components["schemas"]["InstagramCommentRepliesView"] | null;
             /** Has Credential */
             has_credential: boolean;
             /** Id */
@@ -10482,6 +10570,9 @@ export interface components {
          * CustomerRecipient
          * @description A customer in the business's channel. The credential is read from the
          *     channel at send time (never stored here), so a reconnected bot is used.
+         *     `comment_id` names the Instagram comment a private reply answers (the
+         *     platform delivers it to the comment's author; None for every other
+         *     message).
          */
         CustomerRecipient: {
             channel: components["schemas"]["ChannelKind"];
@@ -10489,6 +10580,8 @@ export interface components {
             channel_id: string;
             /** Channel User Id */
             channel_user_id: string;
+            /** Comment Id */
+            comment_id?: string | null;
         };
         /**
          * CustomerSettingsView
@@ -12166,6 +12259,12 @@ export interface components {
          *     Version 7: the customer message's `context_note` (optional) and
          *     `queue_to_claim_ms`, how long the message waited from being queued to a
          *     worker taking it to answer (optional, kept from the first take).
+         *
+         *     Version 8: the kind `comment_trigger`, an Instagram comment that named
+         *     one of the owner's keywords (its customer message is the comment and
+         *     its author, its platform id the comment's). Written only once the
+         *     comment-replies release gate opens; rows of the earlier kinds read
+         *     unchanged.
          */
         InboundEventDocument: {
             /**
@@ -12215,7 +12314,7 @@ export interface components {
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 7
+             * @default 8
              */
             schema_version: string;
             /** @default received */
@@ -12229,9 +12328,12 @@ export interface components {
         /**
          * InboundEventKind
          * @description What a webhook brought into the inbox, and so which job processes it.
+         *     COMMENT_TRIGGER is an Instagram comment that named one of the owner's
+         *     keywords: it gets one private reply (written only once its release gate
+         *     opens, app/utilities/storage/release_gates.py).
          * @enum {string}
          */
-        InboundEventKind: "customer_message" | "platform_bot_update" | "voice_post_call";
+        InboundEventKind: "customer_message" | "platform_bot_update" | "voice_post_call" | "comment_trigger";
         /**
          * InboundEventStatus
          * @description Where one inbox event stands.
@@ -12588,6 +12690,22 @@ export interface components {
          * @enum {string}
          */
         InjectionSignal: "instruction_override" | "role_change" | "prompt_extraction" | "data_exfiltration" | "fake_platform_text";
+        /**
+         * InstagramCommentRepliesView
+         * @description The Instagram account's comment-to-DM as the cabinet shows it.
+         *     `is_available` says whether this release answers comments yet (its
+         *     release gate is open); the settings are kept either way.
+         */
+        InstagramCommentRepliesView: {
+            /** Is Available */
+            is_available: boolean;
+            /** Is On */
+            is_on: boolean;
+            /** Keywords */
+            keywords?: string[];
+            /** Reply Text */
+            reply_text?: string | null;
+        };
         /**
          * IntegrationKind
          * @description The integrations Settings → Integrations lists.
@@ -13877,6 +13995,86 @@ export interface components {
             tool_calls?: components["schemas"]["ToolCallView"][];
         };
         /**
+         * MetaConnectionPurpose
+         * @description What a Facebook sign-in started in the cabinet is for: WhatsApp
+         *     Embedded Signup (a business number), or Facebook Login listing the
+         *     owner's pages for Messenger and Instagram.
+         * @enum {string}
+         */
+        MetaConnectionPurpose: "whatsapp" | "pages";
+        /**
+         * MetaConnectionStartView
+         * @description What the cabinet's Facebook SDK needs to open Meta's window: the
+         *     one-time `state` to bring back (the cabinet keeps it in memory only),
+         *     the app and Graph API version, and either the Embedded Signup
+         *     `configuration_id` (WhatsApp) or the `permissions` to ask for (pages).
+         *     The sign-in must be finished before `expires_at`.
+         */
+        MetaConnectionStartView: {
+            /** App Id */
+            app_id: string;
+            /** Configuration Id */
+            configuration_id?: string | null;
+            /** Expires At */
+            expires_at: number;
+            /** Graph Api Version */
+            graph_api_version: string;
+            /** Permissions */
+            permissions?: string[];
+            purpose: components["schemas"]["MetaConnectionPurpose"];
+            /** State */
+            state: string;
+        };
+        /**
+         * MetaPageList
+         * @description The pages the owner manages (pages linked to an Instagram professional
+         *     account first), to pick one before `expires_at` with the same `state`.
+         */
+        MetaPageList: {
+            /** Expires At */
+            expires_at: number;
+            /** Pages */
+            pages?: components["schemas"]["MetaPageView"][];
+        };
+        /**
+         * MetaPageView
+         * @description One page of the picker: its name and username, and the Instagram
+         *     professional account linked to it (`has_instagram`; only such pages
+         *     can connect Instagram).
+         */
+        MetaPageView: {
+            /** Has Instagram */
+            has_instagram: boolean;
+            /** Instagram Account Id */
+            instagram_account_id?: string | null;
+            /** Instagram Username */
+            instagram_username?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Page Id */
+            page_id: string;
+            /** Username */
+            username?: string | null;
+        };
+        /**
+         * MetaSignInOptionsView
+         * @description Whether the cabinet offers "Continue with Facebook": WhatsApp Embedded
+         *     Signup needs the platform's Meta app and its signup configuration
+         *     (META_APP_ID, META_APP_SECRET, META_EMBEDDED_SIGNUP_CONFIG_ID), the page
+         *     picker the app alone. `app_id` and `graph_api_version` are what the
+         *     Facebook SDK starts with (None when nothing is offered).
+         */
+        MetaSignInOptionsView: {
+            /** App Id */
+            app_id?: string | null;
+            /** Graph Api Version */
+            graph_api_version?: string | null;
+            /** Pages */
+            pages: boolean;
+            /** Whatsapp */
+            whatsapp: boolean;
+        };
+        /**
          * MetricsFilterChoices
          * @description The countries, niches and sources present, for the filter controls.
          */
@@ -14348,6 +14546,11 @@ export interface components {
          *     quick replies or an inline keyboard under the reply's last part. A
          *     release that does not know them sends the text alone, which already
          *     ends with their prompt.
+         *
+         *     Version 8: the kind `comment_reply` (the private reply to an Instagram
+         *     comment that named one of the owner's keywords), whose customer names
+         *     the comment it answers (`customer.comment_id`, optional). Rows of the
+         *     earlier kinds read unchanged.
          */
         OutboundMessageDocument: {
             /**
@@ -14401,7 +14604,7 @@ export interface components {
             recipient_key: string;
             /**
              * Schema Version
-             * @default 7
+             * @default 8
              */
             schema_version: string;
             /** Send Before */
@@ -14430,10 +14633,12 @@ export interface components {
          *     links the phone assistant promised (CALL_LINKS) and the message to a
          *     caller who did not get through (TEXT_BACK), and a guest's written
          *     confirmation of a booking the assistant made or moved in a chat, with
-         *     its manage link (BOOKING_CONFIRMATION).
+         *     its manage link (BOOKING_CONFIRMATION), and the private reply to an
+         *     Instagram comment that named one of the owner's keywords
+         *     (COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).
          * @enum {string}
          */
-        OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back" | "booking_confirmation";
+        OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back" | "booking_confirmation" | "comment_reply";
         /**
          * OutboundMessageStatus
          * @description Delivery state of an outbox message: PENDING waits for its next attempt,
@@ -33102,6 +33307,387 @@ export interface operations {
             };
         };
     };
+    channels_set_instagram_comment_replies: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is On */
+                    is_on: boolean;
+                    /** Keywords */
+                    keywords?: string[];
+                    /** Reply Text */
+                    reply_text?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_list_meta_pages: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Code */
+                    code: string;
+                    /** State */
+                    state: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaPageList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_get_meta_sign_in_options: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaSignInOptionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_start_meta_sign_in: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * MetaConnectionPurpose
+                     * @description What a Facebook sign-in started in the cabinet is for: WhatsApp
+                     *     Embedded Signup (a business number), or Facebook Login listing the
+                     *     owner's pages for Messenger and Instagram.
+                     * @enum {string}
+                     */
+                    purpose: "whatsapp" | "pages";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaConnectionStartView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     channels_validate_telegram_token: {
         parameters: {
             query?: never;
@@ -33397,6 +33983,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetSnippetView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_complete_whatsapp_embedded_signup: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Code */
+                    code: string;
+                    /** Phone Number Id */
+                    phone_number_id?: string | null;
+                    /** State */
+                    state: string;
+                    /** Whatsapp Business Account Id */
+                    whatsapp_business_account_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -33789,6 +34475,103 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    channels_connect_meta_page: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                channel: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Page Id */
+                    page_id: string;
+                    /** State */
+                    state: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelView"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

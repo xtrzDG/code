@@ -3,6 +3,7 @@ import logging
 from app.contracts.channel_clients import (
     MetaGraphApiClientContract,
     MetaTypingClientContract,
+    ProviderToken,
 )
 from app.contracts.channels import (
     ChannelAdapterContract,
@@ -182,7 +183,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         self, target: ChannelDeliveryTarget, part: str
     ) -> ProviderMessageId | None:
         return self._meta_client.send_whatsapp_text(
-            self._require_token(),
+            self._token(target.credential),
             require_phone_number_id(target.account_id),
             target.channel_user_id,
             OutboundMessagePart(part),
@@ -193,7 +194,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
     ) -> ProviderMessageId | None:
         def send_buttons(body: str) -> ProviderMessageId | None:
             return self._meta_client.send_whatsapp_interactive(
-                self._require_token(),
+                self._token(target.credential),
                 require_phone_number_id(target.account_id),
                 target.channel_user_id,
                 whatsapp_interactive(body, choices, self._list_button(choices)),
@@ -226,7 +227,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
             return
 
         self._typing_client.show_whatsapp_typing(
-            self._require_token(),
+            self._token(target.credential),
             require_phone_number_id(target.account_id),
             replying_to,
         )
@@ -238,9 +239,10 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[MessageText],
+        credential: ChannelSecret | None = None,
     ) -> ProviderMessageId | None:
         return self._meta_client.send_whatsapp_template(
-            self._require_token(),
+            self._token(credential),
             phone_number_id,
             recipient,
             template_name,
@@ -253,7 +255,15 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
             ],
         )
 
-    def _require_token(self) -> PlatformSecret:
+    def _token(self, credential: ChannelSecret | None) -> ProviderToken:
+        """
+        The number's own token (Embedded Signup), else the platform's system
+        user token (a number shared with the platform's portfolio).
+        """
+
+        if credential is not None:
+            return credential
+
         access_token: PlatformSecret | None = (
             self._app_settings.whatsapp_system_user_token
         )

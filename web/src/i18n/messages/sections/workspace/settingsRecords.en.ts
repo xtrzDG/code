@@ -135,6 +135,7 @@ export const settingsRecordsEn = {
       user_session: "Signed-in device",
       totp_factor: "Authenticator app",
       recovery_codes: "Recovery codes",
+      meta_connection_state: "Facebook sign-in",
       mfa_challenge: "Two-step check",
       passkey: "Passkey",
       passkey_challenge: "Passkey check",

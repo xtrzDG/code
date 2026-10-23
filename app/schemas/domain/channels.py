@@ -16,6 +16,12 @@ from app.schemas.typings.channels.strings import (
     ChannelExternalId,
     EncryptedChannelSecret,
 )
+from app.schemas.typings.meta_connection.booleans import IsCommentReplyOn
+from app.schemas.typings.meta_connection.constrained_strings import (
+    CommentReplyText,
+    CommentTriggerKeyword,
+    WhatsAppBusinessAccountId,
+)
 from app.schemas.typings.sharing.constrained_strings import (
     InstagramUsername,
     MetaPageUsername,
@@ -59,6 +65,34 @@ class ChannelPublicProfile(PersistentDocument):
     instagram_username: InstagramUsername | None = None
 
 
+class InstagramCommentReplies(PersistentDocument):
+    """
+    Comment-to-DM of an Instagram account: when it is on, a comment under
+    the account's posts that holds one of `keywords` (any letter case) gets
+    `reply_text` once, as a private reply (the person can then write to the
+    assistant). Off until the owner turns it on; a reply needs both a
+    keyword and a text.
+    """
+
+    is_on: IsCommentReplyOn = False
+    keywords: list[CommentTriggerKeyword] = Field(
+        default_factory=list[CommentTriggerKeyword]
+    )
+    reply_text: CommentReplyText | None = None
+
+
+class WhatsAppNumberPin(PersistentDocument):
+    """
+    The two-step PIN the platform registered one WhatsApp number with
+    (Embedded Signup), encrypted. Kept per number, whatever the channel's
+    status, so registering the number again (after the channel was turned
+    off, or another number was connected meanwhile) sends the same PIN.
+    """
+
+    phone_number_id: ChannelExternalId
+    encrypted_pin: EncryptedChannelSecret = Field(repr=False)
+
+
 class ChannelDocument(BaseDocument):
     """
     A connected customer channel (concept table `channels`).
@@ -90,9 +124,19 @@ class ChannelDocument(BaseDocument):
     `app/utilities/channels/channel_activity.py`); `last_error_reason`
     classifies `last_error` in the cabinet's terms (None for a reason
     written before version 4).
+
+    Version 5 (Meta's self-serve connection), all optional: a WhatsApp
+    channel connected through Embedded Signup keeps its business account
+    (`whatsapp_business_account_id`), its own token as `encrypted_secret`
+    (a number connected by hand has none and is sent with the platform's
+    system user token) and the two-step PINs its numbers were registered
+    with (`whatsapp_registration_pins`, one per number and kept while the
+    channel is off, so registering a number again keeps its PIN). An
+    Instagram channel keeps its comment-to-DM settings (`comment_replies`).
+    Version 4 rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: ChannelId = Field(default_factory=ChannelId)
     business_id: BusinessId
     kind: ChannelKind
@@ -112,3 +156,8 @@ class ChannelDocument(BaseDocument):
     credential_checked_at: Microseconds | None = None
     last_inbound_at: Microseconds | None = None
     last_outbound_at: Microseconds | None = None
+    whatsapp_business_account_id: WhatsAppBusinessAccountId | None = None
+    whatsapp_registration_pins: list[WhatsAppNumberPin] = Field(
+        default_factory=list[WhatsAppNumberPin], repr=False
+    )
+    comment_replies: InstagramCommentReplies | None = None

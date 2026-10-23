@@ -72,6 +72,29 @@ describe("buildContentSecurityPolicy", () => {
     expect(development.get("style-src")).toBe("'self' 'unsafe-inline'");
     expect(development.has("require-trusted-types-for")).toBe(false);
   });
+
+  it("lets Facebook's SDK in only where the owner signs in with Facebook", () => {
+    const signIn = directives(
+      buildContentSecurityPolicy({ nonce: "abc", isDevelopment: false, isHttps: true, allowsFacebookSignIn: true }),
+    );
+
+    expect(signIn.get("script-src")).toBe(
+      "'self' 'nonce-abc' 'strict-dynamic' https://challenges.cloudflare.com https://connect.facebook.net",
+    );
+    expect(signIn.get("frame-src")).toBe(
+      "'self' https://challenges.cloudflare.com https://www.facebook.com https://web.facebook.com https://staticxx.facebook.com",
+    );
+    expect(signIn.get("connect-src")).toBe(
+      "'self' https://challenges.cloudflare.com https://www.facebook.com https://graph.facebook.com",
+    );
+    expect(signIn.get("img-src")).toBe("'self' data: blob: https://www.facebook.com");
+    // Never framed, and forms still post only to the cabinet and the checkout.
+    expect(signIn.get("frame-ancestors")).toBe("'none'");
+    expect(signIn.get("form-action")).toBe("'self' https://pay.flitt.com");
+
+    const elsewhere = buildContentSecurityPolicy({ nonce: "abc", isDevelopment: false, isHttps: true, allowsFacebookSignIn: false });
+    expect(elsewhere).not.toContain("facebook");
+  });
 });
 
 describe("buildHostedChatPolicy", () => {

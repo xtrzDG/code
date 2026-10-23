@@ -117,6 +117,7 @@ from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
 )
 from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
+from app.utilities.deliveries.comment_trigger_jobs import PROCESS_COMMENT_TRIGGER_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -202,6 +203,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         PROCESS_INBOUND_MESSAGE_JOB,
         PROCESS_PLATFORM_BOT_UPDATE_JOB,
         PROCESS_POST_CALL_JOB,
+        PROCESS_COMMENT_TRIGGER_JOB,
         ARCHIVE_CALL_RECORDING_JOB,
         DISCARD_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,

@@ -95,6 +95,9 @@ import { workspaceCommonRu } from "./workspace/common.ru";
 import { loginOptionsEn } from "./workspace/loginOptions.en";
 import { loginOptionsKa } from "./workspace/loginOptions.ka";
 import { loginOptionsRu } from "./workspace/loginOptions.ru";
+import { metaConnectEn } from "./workspace/metaConnect.en";
+import { metaConnectKa } from "./workspace/metaConnect.ka";
+import { metaConnectRu } from "./workspace/metaConnect.ru";
 import { notificationsEn } from "./workspace/notifications.en";
 import { notificationsKa } from "./workspace/notifications.ka";
 import { notificationsRu } from "./workspace/notifications.ru";
@@ -134,6 +137,7 @@ export const workspaceEn = {
   channels: channelsEn,
   channelPages: channelPagesEn,
   channelSetup: channelSetupEn,
+  metaConnect: metaConnectEn,
   loginOptions: loginOptionsEn,
   billing: billingEn,
   billingLifecycle: billingLifecycleEn,
@@ -175,6 +179,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   channels: channelsRu,
   channelPages: channelPagesRu,
   channelSetup: channelSetupRu,
+  metaConnect: metaConnectRu,
   loginOptions: loginOptionsRu,
   billing: billingRu,
   billingLifecycle: billingLifecycleRu,
@@ -216,6 +221,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   channels: channelsKa,
   channelPages: channelPagesKa,
   channelSetup: channelSetupKa,
+  metaConnect: metaConnectKa,
   loginOptions: loginOptionsKa,
   billing: billingKa,
   billingLifecycle: billingLifecycleKa,

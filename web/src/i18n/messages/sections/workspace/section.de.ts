@@ -33,6 +33,7 @@ import { dataTasksDe } from "./dataTasks.de";
 import { providerCircuitsDe } from "./providerCircuits.de";
 import { formFieldsDe } from "./formFields.de";
 import { loginOptionsDe } from "./loginOptions.de";
+import { metaConnectDe } from "./metaConnect.de";
 import { notificationsDe } from "./notifications.de";
 import { phoneNumbersDe } from "./phoneNumbers.de";
 import { privacyNoticeDe } from "./privacyNotice.de";
@@ -50,6 +51,7 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   channels: channelsDe,
   channelPages: channelPagesDe,
   channelSetup: channelSetupDe,
+  metaConnect: metaConnectDe,
   loginOptions: loginOptionsDe,
   billing: billingDe,
   billingLifecycle: billingLifecycleDe,

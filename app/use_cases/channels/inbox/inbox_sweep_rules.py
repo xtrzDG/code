@@ -12,6 +12,7 @@ from app.schemas.typings.deliveries.prefixed_id import InboundEventId
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.utilities.deliveries.comment_trigger_jobs import PROCESS_COMMENT_TRIGGER_JOB
 from app.utilities.deliveries.delivery_jobs import (
     PROCESS_INBOUND_MESSAGE_JOB,
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
@@ -35,6 +36,7 @@ EVENT_JOBS: dict[InboundEventKind, JobName] = {
     InboundEventKind.CUSTOMER_MESSAGE: PROCESS_INBOUND_MESSAGE_JOB,
     InboundEventKind.PLATFORM_BOT_UPDATE: PROCESS_PLATFORM_BOT_UPDATE_JOB,
     InboundEventKind.VOICE_POST_CALL: PROCESS_POST_CALL_JOB,
+    InboundEventKind.COMMENT_TRIGGER: PROCESS_COMMENT_TRIGGER_JOB,
 }
 
 

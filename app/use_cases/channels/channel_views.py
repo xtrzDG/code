@@ -4,13 +4,16 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.deliveries import DeliveryFailureReason
 from app.schemas.domain.channels import (
     ChannelDocument,
+    InstagramCommentReplies,
     WebChatAppearance,
     WhatsAppStaffTemplate,
 )
 from app.schemas.dto.channels.channel_settings import ChannelView
+from app.schemas.dto.channels.comment_replies import InstagramCommentRepliesView
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 from app.utilities.channels.staff_templates import channel_staff_templates
 from app.utilities.sharing.share_links import find_link_state
+from app.utilities.storage.release_gates import COMMENT_REPLIES_GATE, is_gate_open
 
 # Order of channels in the cabinet: free messengers first (concept: cheap
 # channels are shown to customers first), then WhatsApp, web and phone.
@@ -59,6 +62,29 @@ def build_channel_view(channel: ChannelDocument) -> ChannelView:
             for template in channel_staff_templates(channel)
         ],
         link_state=find_link_state(channel),
+        comment_replies=comment_replies_view(channel),
+    )
+
+
+def comment_replies_view(
+    channel: ChannelDocument,
+) -> InstagramCommentRepliesView | None:
+    """
+    An Instagram account's comment-to-DM (off until the owner sets it), and
+    whether this release answers comments yet.
+    """
+
+    if channel.kind is not ChannelKind.INSTAGRAM:
+        return None
+
+    replies: InstagramCommentReplies = (
+        channel.comment_replies or InstagramCommentReplies()
+    )
+    return InstagramCommentRepliesView(
+        is_on=replies.is_on,
+        is_available=is_gate_open(COMMENT_REPLIES_GATE),
+        keywords=list(replies.keywords),
+        reply_text=replies.reply_text,
     )
 
 

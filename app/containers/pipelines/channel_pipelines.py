@@ -1,6 +1,10 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
+from app.containers.meta_connection.meta_connection_root import MetaConnectionRoot
+from app.containers.meta_connection.meta_connection_use_case_factories import (
+    MetaConnectionUseCaseFactories,
+)
 from app.containers.orchestrators.channel_orchestrators import (
     ChannelOrchestratorsContainer,
 )
@@ -22,6 +26,9 @@ from app.orchestrators.channels.inbox.inbound_burst_answers import (
 )
 from app.orchestrators.channels.inbox.process_inbound_message_orchestrator import (
     ProcessInboundMessageOrchestrator,
+)
+from app.orchestrators.channels.meta_webhook_orchestrator import (
+    MetaWebhookOrchestrator,
 )
 from app.orchestrators.channels.widget_message_orchestrator import (
     WidgetMessageOrchestrator,
@@ -47,6 +54,11 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     reply_speed_use_cases: ReplySpeedUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_pipelines: ConversationPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # Meta's self-serve connection: its typed root (ADR 0010) reads the
+    # comments of Meta's webhook (Instagram comment-to-DM, 1212).
+    meta_connection_root: Dependency[MetaConnectionRoot] = Dependency(
+        instance_of=MetaConnectionRoot
+    )
 
     # --- Messaging webhooks and the website widget: webhooks store their
     # messages in the inbox; the worker answers them through the pipeline.
@@ -58,12 +70,17 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
         acknowledge_webhook=channel_use_cases.acknowledge_telegram_taps_use_case,
     )
+    # Meta's messages, then Instagram comments that ask for a private reply.
     meta_webhook_orchestrator: Factory[
         OrchestratorContract[MetaWebhookRequest, ChannelWebhookOutcome]
     ] = Factory(
-        ChannelWebhookOrchestrator[MetaWebhookRequest],
+        MetaWebhookOrchestrator,
         receive_webhook=channel_use_cases.receive_meta_webhook_use_case,
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
+        accept_comments=Factory(
+            MetaConnectionUseCaseFactories.accept_instagram_comments,
+            meta_connection_root.provided.use_cases,
+        ),
     )
     widget_message_orchestrator: Factory[
         OrchestratorContract[WidgetMessageCommand, WidgetMessageAcceptedView]

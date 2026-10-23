@@ -108,6 +108,7 @@ def route_customer_reply(
         account_id=channel.external_id,
         channel_user_id=recipient.channel_user_id,
         credential=credential,
+        reply_to_comment_id=recipient.comment_id,
     )
     choices: ReplyChoices | None = message.choices
     return OutboundRoute(

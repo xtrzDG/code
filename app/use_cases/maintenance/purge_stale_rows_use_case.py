@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.channels import ChannelMessageReceiptRepoContract
+from app.contracts.meta_connection import MetaConnectionStateRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
@@ -45,15 +46,18 @@ CHANNEL_RECEIPT_ENTITY: AuditEntityName = AuditEntityName("channel_message_recei
 INBOUND_EVENT_ENTITY: AuditEntityName = AuditEntityName("inbound_event")
 OUTBOUND_MESSAGE_ENTITY: AuditEntityName = AuditEntityName("outbound_message")
 MISSED_CALL_ENTITY: AuditEntityName = AuditEntityName("missed_call")
+META_CONNECTION_STATE_ENTITY: AuditEntityName = AuditEntityName("meta_connection_state")
 
 
 class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     Daily retention job: delete expired sessions, login codes, second
     sign-in steps and passkey challenges older than a day, webhook
-    receipts, inbox events and outbox messages older than 30 days, and
-    missed calls older than 90 days, so the auth, delivery and call
-    tables stop growing forever.
+    receipts, inbox events and outbox messages older than 30 days, missed
+    calls older than 90 days, and Facebook sign-ins of the Channels page
+    that ended (an abandoned page picker keeps the owner's Facebook token
+    until then), so the auth, delivery and call tables stop growing
+    forever.
 
     Each delete is an indexed range query in small batches. A purge that
     removed rows is audited as RETENTION_PURGE without an actor or business
@@ -73,10 +77,14 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
         wall_clock: WallClock[Microseconds],
         mfa_challenge_repo: MfaChallengeRepoContract,
         passkey_challenge_repo: PasskeyChallengeRepoContract,
+        meta_connection_state_repo: MetaConnectionStateRepoContract,
     ) -> None:
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._passkey_challenge_repo: PasskeyChallengeRepoContract = (
             passkey_challenge_repo
+        )
+        self._meta_connection_state_repo: MetaConnectionStateRepoContract = (
+            meta_connection_state_repo
         )
         self._user_session_repo: UserSessionRepoContract = user_session_repo
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
@@ -141,6 +149,10 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
                         Seconds(-DELIVERY_RETENTION_SECONDS)
                     )
                 ),
+            ),
+            (
+                META_CONNECTION_STATE_ENTITY,
+                self._meta_connection_state_repo.delete_ended_before(now),
             ),
             (
                 MISSED_CALL_ENTITY,

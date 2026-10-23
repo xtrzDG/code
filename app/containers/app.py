@@ -131,6 +131,7 @@ class AppContainer(AppEdgesContainer):
         utilities=AppEdgesContainer.utilities,
         feedback_root=use_cases.feedback.root,
         passkey_root=use_cases.passkey_root,
+        meta_root=use_cases.meta_connection_root,
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
         GatewaysContainer,
