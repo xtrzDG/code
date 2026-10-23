@@ -83,14 +83,15 @@ def build_account_deletion_router(
         user_id: Annotated[UserId, Depends(current_user)],
         language: str | None = None,
     ) -> Response:
-        certificate: DeletionCertificateFile = get_deletion_certificate_operator.operate(
-            DeletionCertificateQuery(
-                user_id=user_id,
-                deletion_id=parse_path_identifier(
-                    deletion_id, BusinessDeletionId, "Deletion"
-                ),
-                language=parse_language_parameter(language),
-            )
+        query = DeletionCertificateQuery(
+            user_id=user_id,
+            deletion_id=parse_path_identifier(
+                deletion_id, BusinessDeletionId, "Deletion"
+            ),
+            language=parse_language_parameter(language),
+        )
+        certificate: DeletionCertificateFile = (
+            get_deletion_certificate_operator.operate(query)
         )
         return Response(
             content=certificate.content,
