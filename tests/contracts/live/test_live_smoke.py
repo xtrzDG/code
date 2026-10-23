@@ -20,7 +20,7 @@ from app.adapters.payments.flitt_payment_gateway_adapter import (
 )
 from app.clients.flitt.flitt_client import FlittClient
 from app.clients.google.google_calendar_client import GoogleCalendarClient
-from app.clients.meta.meta_graph_client import DEFAULT_GRAPH_API_VERSION
+from app.clients.meta.graph_api_client import DEFAULT_GRAPH_API_VERSION
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
 from app.schemas.typings.bookings.constrained_strings import CalendarRedirectUrl

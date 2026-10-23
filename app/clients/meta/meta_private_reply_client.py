@@ -1,11 +1,5 @@
-import httpx
-
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.graph_requests import graph_request
-from app.clients.meta.meta_graph_client import (
-    DEFAULT_GRAPH_API_VERSION,
-    META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT,
-)
 from app.contracts.meta_connection import MetaPrivateReplyClientContract
 from app.schemas.typings.channels.strings import ChannelSecret, ProviderMessageId
 from app.schemas.typings.conversations.strings import MessageText
@@ -13,7 +7,7 @@ from app.schemas.typings.meta_connection.constrained_strings import MetaCommentI
 from app.utilities.channels.json_values import JsonObject, read_identifier
 
 
-class MetaPrivateReplyClient(MetaPrivateReplyClientContract):
+class MetaPrivateReplyClient(GraphApiClient, MetaPrivateReplyClientContract):
     """
     Instagram's private replies: `POST /me/messages` with the page token
     and the comment as the recipient (`{"comment_id": ...}`). Meta delivers
@@ -22,18 +16,6 @@ class MetaPrivateReplyClient(MetaPrivateReplyClientContract):
     token travels in the Authorization header, never in the URL; errors map
     as a page message's (`meta_graph_errors.py`).
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def send_private_reply(
         self,

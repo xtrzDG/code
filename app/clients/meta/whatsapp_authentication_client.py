@@ -1,6 +1,6 @@
 import httpx
 
-from app.clients.meta.meta_graph_client import (
+from app.clients.meta.graph_api_client import (
     DEFAULT_GRAPH_API_VERSION,
     META_GRAPH_BASE_URL,
 )

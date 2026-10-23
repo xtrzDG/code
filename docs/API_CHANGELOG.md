@@ -11,47 +11,20 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
-## 2026-10-22 — phone numbers: take one in the cabinet, or ask the team
+## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 
-Spec: `55171d36a50eb147`
+Spec: `a9b957c2ee6887dd`
 
-- **Added** `GET /v1/businesses/{business_id}/phone-line?language=` (any
-  member): the number the business rents from the platform (its place,
-  monthly price, status, whether it answers with the voice agent yet and
-  `has_answering_agent`: false while the business has no live voice agent
-  at all, so the number answers only after the next publish),
-  an open request to the platform team, whether this server rents numbers
-  by itself (`are_numbers_self_serve`), the countries where a number is
-  taken at once (`self_serve_countries`) and the business's own country.
-- **Added** `GET /v1/businesses/{business_id}/phone-line/offers?country=&number_type=&city=&language=`
-  (owners; 30 an hour, 429 with Retry-After past it): numbers on offer and
-  the owner's monthly price of any of them; each offer carries an
-  `offer_token` (the platform's signature on the business, the number and
-  its kind, good for an hour). `availability` is `self_serve`,
-  `requires_documents` (the country's regulator wants the business's
-  documents) or `on_request` (this server rents none of that kind); the
-  last two carry no offers.
-- **Added** `POST /v1/businesses/{business_id}/phone-line/number` (owners;
-  step-up; Idempotency-Key) → 201: takes one offer (its `offer_token`
-  required; a number not offered to this business as that kind, or an offer
-  older than an hour, is 409 `number_taken`) at the monthly price the
-  owner saw and connects the phone channel with it. Three numbers bought a
-  day per business (purchases the carrier refuses do not count). 409 with
-  the reason `number_taken` (someone took it since the search) or `price_changed`
-  (search again for the new price); 409 when the business already rents a
-  number or its phone channel carries another number.
-- **Added** `POST /v1/businesses/{business_id}/phone-line/request` (owners;
-  Idempotency-Key) → 201 and `DELETE …/phone-line/request` (owners) → 204:
-  ask the platform team for a number it arranges by hand, and cancel it. A
-  business opens (or reopens) at most three requests a day (429 with
-  Retry-After); asking while one is open counts nothing.
-- **Changed** (behaviour) `DELETE /v1/businesses/{business_id}/channels/phone`
-  gives a rented number back (it stops being billed and returns to the
-  carrier within minutes); `PUT …/channels/phone` refuses another number
-  while one is rented (409).
-- **Changed** (additive) `InvoiceKind` and `UsageKind` may be
-  `number_rental`: a rented number's month, invoiced on its own once the
-  release gate `phone_number_rental` opens.
+The API description with the six wave-21 entries further down merged
+together, on top of wave 20 (knowledge aliases across languages and the
+hybrid search, with their bounded lists; payments by region with Stripe,
+the card on file and its retries, with the setup fee and the card update
+in dunning; phone numbers taken in the cabinet or asked of the team;
+connecting Meta's channels with Facebook, the page picker and Instagram
+comment replies). Each of those entries names the description of its own
+change alone; nothing else changed for clients. The widget poll's leased
+counters and one-statement read (migrations 1215 and 1216) change no
+route: a poll answers and refuses (429, 403) as before.
 
 ## 2026-10-23 — the card on file: setup fee, card update in dunning
 
@@ -68,28 +41,6 @@ Spec: `c4a6610f7c8651f5`
   whose charges run); the retries charge the new card. The page names the
   charges in the page's language.
 
-## 2026-10-22 — payments by region: Stripe, the card on file and retries
-
-Spec: `b43d331afb64159b`
-
-- **Added** `GET /v1/businesses/{business_id}/billing/payment-method`
-  (owners): the card on file (`PaymentMethodView`: who charges it —
-  `provider` `flitt` or `stripe` —, the card's brand, last four digits and
-  expiry, whether automatic charges run, whether a card can be saved now,
-  the trial's "Save card" prompt from day 10 and where the retries of a
-  declined charge stand: last attempt and outcome, next retry, end of
-  grace).
-- **Added** `POST /v1/businesses/{business_id}/billing/payment-method`
-  (owners, 201, `Idempotency-Key`): the provider's page that saves or
-  replaces the card without charging it now (`CardSetupSessionView`);
-  optional body `{"return_url"}` and `?language=`. 409 when no card can be
-  saved (an unpaid bill is paid instead; a paused or cancelled
-  subscription), 404 without a subscription.
-- **Added** `POST /v1/payments/stripe/webhook` (no token): Stripe events,
-  verified by their `Stripe-Signature` (403 when missing, wrong, stale or
-  Stripe is not configured), applied once each; answers like the Flitt
-  webhook (`PaymentWebhookReceipt`).
-
 ## 2026-10-23 — knowledge aliases: bounded lists, trimmed texts
 
 Spec: `621b169c1d61b2da`
@@ -105,28 +56,6 @@ Spec: `621b169c1d61b2da`
   queues its business's `index_knowledge` job; a suggestion the owner
   removed, or a language the model left out, is not asked for again until
   the title changes (the owner's "Suggest" still asks).
-
-## 2026-10-22 — knowledge across languages: aliases and the hybrid search
-
-Spec: `75c270454bc5d4e7`
-
-- **Added** `aliases` on knowledge items (`KnowledgeItemDetails`, and in the
-  bodies of `POST /v1/businesses/{business_id}/knowledge` and `PATCH
-  .../knowledge/{item_id}`): the item's title in the business's other
-  languages, `{language, text, status}` with `status` `approved` (the
-  owner's) or `suggested` (the model's, waiting for review). A PATCH with
-  `aliases` replaces the whole list (at most three per language, only the
-  business's languages: `422` otherwise); without it a new title keeps the
-  approved aliases and drops the suggestions.
-- **Added** `POST /v1/businesses/{business_id}/knowledge/{item_id}/aliases/suggest`
-  (owners and staff): the model names the item in the business's languages
-  it has no alias in yet and answers the item with those suggestions;
-  limited to 60 calls an hour per business (`429` with `Retry-After`).
-- **Changed** (behaviour) `POST .../knowledge/search` and the assistant's
-  search find items by their aliases too and, with `EMBEDDINGS_API_KEY`, by
-  meaning across languages. Starter questions of the website chat and the
-  hosted page use the owner's approved aliases in the visitor's language.
-- **Added** schema `KnowledgeAlias` and enum `KnowledgeAliasStatus`.
 
 ## 2026-10-23 — wave 20 together: provider circuits, passkeys, call consent
 
@@ -227,6 +156,92 @@ Spec: `6f983e65391ed36f`
 - **Added** `is_recording_declined` on the voice platform's post-call
   webhook answer (`PostCallWebhookOutcome`, default false): the caller
   declined the recording, so the stored report is cleared once processed.
+
+## 2026-10-22 — phone numbers: take one in the cabinet, or ask the team
+
+Spec: `55171d36a50eb147`
+
+- **Added** `GET /v1/businesses/{business_id}/phone-line?language=` (any
+  member): the number the business rents from the platform (its place,
+  monthly price, status, whether it answers with the voice agent yet and
+  `has_answering_agent`: false while the business has no live voice agent
+  at all, so the number answers only after the next publish),
+  an open request to the platform team, whether this server rents numbers
+  by itself (`are_numbers_self_serve`), the countries where a number is
+  taken at once (`self_serve_countries`) and the business's own country.
+- **Added** `GET /v1/businesses/{business_id}/phone-line/offers?country=&number_type=&city=&language=`
+  (owners; 30 an hour, 429 with Retry-After past it): numbers on offer and
+  the owner's monthly price of any of them; each offer carries an
+  `offer_token` (the platform's signature on the business, the number and
+  its kind, good for an hour). `availability` is `self_serve`,
+  `requires_documents` (the country's regulator wants the business's
+  documents) or `on_request` (this server rents none of that kind); the
+  last two carry no offers.
+- **Added** `POST /v1/businesses/{business_id}/phone-line/number` (owners;
+  step-up; Idempotency-Key) → 201: takes one offer (its `offer_token`
+  required; a number not offered to this business as that kind, or an offer
+  older than an hour, is 409 `number_taken`) at the monthly price the
+  owner saw and connects the phone channel with it. Three numbers bought a
+  day per business (purchases the carrier refuses do not count). 409 with
+  the reason `number_taken` (someone took it since the search) or `price_changed`
+  (search again for the new price); 409 when the business already rents a
+  number or its phone channel carries another number.
+- **Added** `POST /v1/businesses/{business_id}/phone-line/request` (owners;
+  Idempotency-Key) → 201 and `DELETE …/phone-line/request` (owners) → 204:
+  ask the platform team for a number it arranges by hand, and cancel it. A
+  business opens (or reopens) at most three requests a day (429 with
+  Retry-After); asking while one is open counts nothing.
+- **Changed** (behaviour) `DELETE /v1/businesses/{business_id}/channels/phone`
+  gives a rented number back (it stops being billed and returns to the
+  carrier within minutes); `PUT …/channels/phone` refuses another number
+  while one is rented (409).
+- **Changed** (additive) `InvoiceKind` and `UsageKind` may be
+  `number_rental`: a rented number's month, invoiced on its own once the
+  release gate `phone_number_rental` opens.
+
+## 2026-10-22 — payments by region: Stripe, the card on file and retries
+
+Spec: `b43d331afb64159b`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/payment-method`
+  (owners): the card on file (`PaymentMethodView`: who charges it —
+  `provider` `flitt` or `stripe` —, the card's brand, last four digits and
+  expiry, whether automatic charges run, whether a card can be saved now,
+  the trial's "Save card" prompt from day 10 and where the retries of a
+  declined charge stand: last attempt and outcome, next retry, end of
+  grace).
+- **Added** `POST /v1/businesses/{business_id}/billing/payment-method`
+  (owners, 201, `Idempotency-Key`): the provider's page that saves or
+  replaces the card without charging it now (`CardSetupSessionView`);
+  optional body `{"return_url"}` and `?language=`. 409 when no card can be
+  saved (an unpaid bill is paid instead; a paused or cancelled
+  subscription), 404 without a subscription.
+- **Added** `POST /v1/payments/stripe/webhook` (no token): Stripe events,
+  verified by their `Stripe-Signature` (403 when missing, wrong, stale or
+  Stripe is not configured), applied once each; answers like the Flitt
+  webhook (`PaymentWebhookReceipt`).
+
+## 2026-10-22 — knowledge across languages: aliases and the hybrid search
+
+Spec: `75c270454bc5d4e7`
+
+- **Added** `aliases` on knowledge items (`KnowledgeItemDetails`, and in the
+  bodies of `POST /v1/businesses/{business_id}/knowledge` and `PATCH
+  .../knowledge/{item_id}`): the item's title in the business's other
+  languages, `{language, text, status}` with `status` `approved` (the
+  owner's) or `suggested` (the model's, waiting for review). A PATCH with
+  `aliases` replaces the whole list (at most three per language, only the
+  business's languages: `422` otherwise); without it a new title keeps the
+  approved aliases and drops the suggestions.
+- **Added** `POST /v1/businesses/{business_id}/knowledge/{item_id}/aliases/suggest`
+  (owners and staff): the model names the item in the business's languages
+  it has no alias in yet and answers the item with those suggestions;
+  limited to 60 calls an hour per business (`429` with `Retry-After`).
+- **Changed** (behaviour) `POST .../knowledge/search` and the assistant's
+  search find items by their aliases too and, with `EMBEDDINGS_API_KEY`, by
+  meaning across languages. Starter questions of the website chat and the
+  hosted page use the owner's approved aliases in the visitor's language.
+- **Added** schema `KnowledgeAlias` and enum `KnowledgeAliasStatus`.
 
 ## 2026-10-22 — Meta: connect with Facebook, page picker, comment replies
 

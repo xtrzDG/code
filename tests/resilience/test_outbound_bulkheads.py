@@ -16,7 +16,7 @@ from app.clients.email import smtp_connections
 from app.clients.email.smtp_connections import open_smtp_connection
 from app.clients.flitt import flitt_client
 from app.clients.http.provider_timeouts import provider_timeout
-from app.clients.meta import meta_graph_client
+from app.clients.meta import graph_api_client
 from app.facilitators.resilience.outbound_bulkhead_facilitator import (
     OutboundBulkheadFacilitator,
 )
@@ -107,8 +107,8 @@ def test_provider_clients_connect_within_3_s_and_read_within_10_s() -> None:
 
     assert (timeout.connect, timeout.read) == (3.0, 10.0)
     assert (
-        meta_graph_client.REQUEST_TIMEOUT.connect,
-        meta_graph_client.REQUEST_TIMEOUT.read,
+        graph_api_client.REQUEST_TIMEOUT.connect,
+        graph_api_client.REQUEST_TIMEOUT.read,
     ) == (3.0, 10.0)
     # A payment page may take longer to create; it still connects fast.
     flitt = provider_timeout(flitt_client.READ_TIMEOUT_SECONDS)

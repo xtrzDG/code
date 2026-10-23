@@ -1,12 +1,8 @@
 import httpx
 
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.graph_requests import graph_request
 from app.clients.meta.meta_app_proof import appsecret_proof
-from app.clients.meta.meta_graph_client import (
-    DEFAULT_GRAPH_API_VERSION,
-    META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT,
-)
 from app.clients.meta.meta_graph_errors import build_graph_error
 from app.clients.meta.meta_graph_readers import read_object_id
 from app.contracts.meta_connection import WhatsAppOnboardingClientContract
@@ -35,7 +31,7 @@ PHONE_NUMBER_FIELDS: str = "id,display_phone_number,verified_name"
 PIN_MISMATCH_ERROR_CODE: int = 133005
 
 
-class WhatsAppOnboardingClient(WhatsAppOnboardingClientContract):
+class WhatsAppOnboardingClient(GraphApiClient, WhatsAppOnboardingClientContract):
     """
     The Cloud API steps after WhatsApp Embedded Signup, made with the
     business's own token (Authorization header, with the app's
@@ -49,18 +45,6 @@ class WhatsAppOnboardingClient(WhatsAppOnboardingClientContract):
       Cloud API with a two-step verification PIN (Meta's 133005, a number
       registered before with another PIN, raises WhatsAppPinMismatchError).
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def list_phone_numbers(
         self,

@@ -1,11 +1,7 @@
 import httpx
 
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.meta_grant_readers import read_access_token, read_token_grants
-from app.clients.meta.meta_graph_client import (
-    DEFAULT_GRAPH_API_VERSION,
-    META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT,
-)
 from app.clients.meta.meta_graph_errors import build_graph_error
 from app.contracts.meta_connection import MetaOAuthClientContract
 from app.schemas.dto.channels.meta_provider import MetaAppCredentials, MetaTokenGrants
@@ -20,7 +16,7 @@ from app.utilities.channels.json_values import JsonObject, parse_json_object
 OAUTH_TOKEN_PATH: str = "/oauth/access_token"
 
 
-class MetaOAuthClient(MetaOAuthClientContract):
+class MetaOAuthClient(GraphApiClient, MetaOAuthClientContract):
     """
     Facebook Login's server side for the platform's Meta app.
 
@@ -41,18 +37,6 @@ class MetaOAuthClient(MetaOAuthClientContract):
     written nowhere. Refused codes and tokens raise ValidationFailedError,
     an unreachable Meta ExternalServiceError.
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def exchange_code(
         self,

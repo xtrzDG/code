@@ -1,16 +1,10 @@
-import httpx
-
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.graph_requests import graph_request
 from app.clients.meta.meta_app_proof import appsecret_proof
 from app.clients.meta.meta_grant_readers import (
     read_next_cursor,
     read_page_access_token,
     read_page_choice,
-)
-from app.clients.meta.meta_graph_client import (
-    DEFAULT_GRAPH_API_VERSION,
-    META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT,
 )
 from app.contracts.meta_connection import MetaPagesClientContract
 from app.schemas.dto.channels.meta_provider import MetaAppCredentials, MetaPageChoice
@@ -29,7 +23,7 @@ PAGES_PER_REQUEST: int = 100
 MAX_PAGE_REQUESTS: int = 10
 
 
-class MetaPagesClient(MetaPagesClientContract):
+class MetaPagesClient(GraphApiClient, MetaPagesClientContract):
     """
     The pages a signed-in person manages (`GET /me/accounts`, page by page)
     and the token of one of them (`GET /{page-id}?fields=access_token`),
@@ -37,18 +31,6 @@ class MetaPagesClient(MetaPagesClientContract):
     `appsecret_proof`. A page token read with a long-lived person's token
     does not expire.
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def list_pages(
         self, user_token: MetaAccessToken, app: MetaAppCredentials

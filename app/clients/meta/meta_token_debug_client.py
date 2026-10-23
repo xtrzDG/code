@@ -1,11 +1,7 @@
 import httpx
 from typed_time_provider import Microseconds
 
-from app.clients.meta.meta_graph_client import (
-    DEFAULT_GRAPH_API_VERSION,
-    META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT,
-)
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.meta_graph_errors import build_graph_error
 from app.contracts.channel_clients import ProviderToken
 from app.contracts.channel_credentials import MetaTokenDebugClientContract
@@ -23,7 +19,7 @@ from app.utilities.channels.json_values import (
 MICROSECONDS_PER_SECOND: int = 1_000_000
 
 
-class MetaTokenDebugClient(MetaTokenDebugClientContract):
+class MetaTokenDebugClient(GraphApiClient, MetaTokenDebugClientContract):
     """
     Graph API `GET /debug_token`: whether a page or system user token still
     works and when it, or its data access, runs out. The app's own token
@@ -31,18 +27,6 @@ class MetaTokenDebugClient(MetaTokenDebugClientContract):
     inspected token is the `input_token` parameter Meta requires (httpx's
     request log is muted, and errors never carry the URL).
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def inspect_token(
         self,

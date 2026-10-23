@@ -1,6 +1,4 @@
-import httpx
-
-from app.clients.http.provider_timeouts import provider_timeout
+from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.graph_requests import graph_request
 from app.clients.meta.meta_graph_readers import (
     read_instagram_username,
@@ -32,37 +30,19 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 
-META_GRAPH_BASE_URL: str = "https://graph.facebook.com"
-# Graph API version the payloads were written against; Meta keeps a version
-# working for at least two years after the next one is released.
-DEFAULT_GRAPH_API_VERSION: str = "v23.0"
-# Connect within 3 s, answer within 10 s (`provider_timeout`).
-REQUEST_TIMEOUT: httpx.Timeout = provider_timeout()
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
 # The page and its Instagram account with the public usernames chat links
 # (m.me, ig.me) open.
 PAGE_PROFILE_FIELDS: str = "id,name,username,instagram_business_account{id,username}"
 
 
-class MetaGraphClient(MetaGraphApiClientContract):
+class MetaGraphClient(GraphApiClient, MetaGraphApiClientContract):
     """
     Minimal Meta Graph API client for the WhatsApp Cloud API and the
     Messenger / Instagram Send API.
 
     Tokens travel in the Authorization header, never in URLs.
     """
-
-    def __init__(
-        self,
-        transport: httpx.BaseTransport | None = None,
-        api_version: str = DEFAULT_GRAPH_API_VERSION,
-        base_url: str = META_GRAPH_BASE_URL,
-    ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
-            base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT,
-            transport=transport,
-        )
 
     def get_whatsapp_phone_number(
         self,
