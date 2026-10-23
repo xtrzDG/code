@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { NonceProvider } from "@/components/csp/NonceProvider";
 import { TrustedTypesScript } from "@/components/csp/TrustedTypesScript";
 
+import { CabinetMotion } from "@/components/motion/CabinetMotion";
 import { MotionPreferenceProvider } from "@/components/motion/MotionPreference";
-import { MotionProvider } from "@/components/motion/MotionProvider";
 import { StepUpDialog } from "@/components/security/StepUpDialog";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -57,10 +57,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const clientTexts = await getClientTexts(messages);
   // The cabinet's pages use the brand typeface and preload its files (styles/typeface.css); the
   // public site keeps the system's fonts and loads none, so its first paint waits for no font.
-  const brandTypeface = clientTexts.scope === "full";
-  if (brandTypeface) {
+  // It moves in CSS alone too, so its pages load no motion library (CabinetMotion).
+  const isCabinetPage = clientTexts.scope === "full";
+  if (isCabinetPage) {
     preloadBrandFonts(locale);
   }
+  const page = (
+    <ToastProvider>
+      {children}
+      <StepUpDialog />
+    </ToastProvider>
+  );
   return (
     // data-theme, data-motion and dir are rendered on the server, so the first
     // paint already has the right colours, stays still for a person who asked
@@ -71,7 +78,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       dir={direction}
       data-theme={theme}
       data-motion={motionAttribute(motion)}
-      className={cn("h-full", brandTypeface && BRAND_TYPEFACE_CLASS)}
+      className={cn("h-full", isCabinetPage && BRAND_TYPEFACE_CLASS)}
     >
       <head>
         <TrustedTypesScript nonce={nonce} />
@@ -83,12 +90,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <ThemeProvider initialTheme={theme}>
               <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
                 <MotionPreferenceProvider initialPreference={motion}>
-                  <MotionProvider animates={clientTexts.scope === "full"}>
-                    <ToastProvider>
-                      {children}
-                      <StepUpDialog />
-                    </ToastProvider>
-                  </MotionProvider>
+                  {isCabinetPage ? <CabinetMotion>{page}</CabinetMotion> : page}
                 </MotionPreferenceProvider>
               </ViewerTimeZoneProvider>
             </ThemeProvider>

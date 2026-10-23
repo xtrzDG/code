@@ -9,15 +9,14 @@ import { fromSrc, importsOf, publicClientModules, SRC } from "@/test/publicModul
  * What a public page (/en, /ru/for/hotel, /ka/terms…) loads before anything
  * else: no 3D engine and no animation library. The landing hero's 3D scene
  * comes later, behind an `import()` (HeroVisual.tsx), only on capable wide
- * screens; the toasts' animated list comes with the first toast. The page
+ * screens; the toasts' animated list comes with the first toast, and the
+ * cabinet's motion provider (CabinetMotion) is never rendered there. The page
  * itself moves in CSS (src/components/siteMotion).
  */
 
 const MOTION = /^(motion|framer-motion)(\/|$)/;
 const THREE = /^(three|@react-three\/)/;
 const SCENE_FOLDER = path.join("app", "_landing", "scene");
-/** LazyMotion and MotionConfig only (no animation code): the root layout's provider for the cabinet. */
-const MOTION_ALLOWED = new Set([path.join("components", "motion", "MotionProvider.tsx")]);
 
 function packagesOf(file: string): string[] {
   return importsOf(file).static.filter((specifier) => !specifier.startsWith(".") && !specifier.startsWith("@/"));
@@ -46,17 +45,28 @@ describe("the public pages' first load", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("does not get the cabinet's motion provider from the root layout", () => {
+    // The layout imports CabinetMotion everywhere (a chunk of its own) and renders it on cabinet pages alone.
+    const layout = readFileSync(path.join(SRC, "app", "layout.tsx"), "utf8");
+    expect(layout).toContain("{isCabinetPage ? <CabinetMotion>{page}</CabinetMotion> : page}");
+    expect(layout).not.toMatch(/from "@\/components\/motion\/MotionProvider"/);
+  });
+
   it("carries no animation library", () => {
     const offenders = [...firstLoad]
-      .filter((file) => !MOTION_ALLOWED.has(fromSrc(file)) && packagesOf(file).some((name) => MOTION.test(name)))
+      .filter((file) => packagesOf(file).some((name) => MOTION.test(name)))
       .map(fromSrc);
     expect(offenders).toEqual([]);
   });
 
-  it("leaves the 3D scene and the animated toast list for later", () => {
+  it("leaves the 3D scene, the animated toast list and the cabinet's motion provider for later", () => {
     const later = [...everything].filter((file) => !firstLoad.has(file)).map(fromSrc);
     expect(later).toEqual(
-      expect.arrayContaining([path.join(SCENE_FOLDER, "HeroScene.tsx"), path.join("components", "ui", "ToastList.tsx")]),
+      expect.arrayContaining([
+        path.join(SCENE_FOLDER, "HeroScene.tsx"),
+        path.join("components", "ui", "ToastList.tsx"),
+        path.join("components", "motion", "MotionProvider.tsx"),
+      ]),
     );
   });
 });

@@ -15,7 +15,7 @@ describe("MotionProvider", () => {
   it("hands the page's nonce to motion, whose popLayout writes a <style> element", () => {
     const { container } = render(
       <NonceProvider nonce="test-nonce-0000">
-        <MotionProvider animates={false}>
+        <MotionProvider>
           <NonceOfMotion />
         </MotionProvider>
       </NonceProvider>,

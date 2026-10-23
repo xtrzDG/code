@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Motion for the whole site, mounted once by the root layout (inside
- * MotionPreferenceProvider).
+ * Motion for the cabinet, mounted once by the root layout on its pages
+ * (inside MotionPreferenceProvider), through CabinetMotion: a chunk of its
+ * own, which public pages never load.
  *
  * - LazyMotion: the `m.*` elements ship without their animation code, which
  *   loads right after the page (`motionFeatures.ts`, domMax: gestures,
@@ -15,8 +16,9 @@
  *   which the Content Security Policy refuses without it.
  *
  * The public site moves in CSS alone (src/components/siteMotion; a policy
- * test keeps `motion/react` out of its pages), so there `animates` is false
- * and the animation code is not even fetched. The toast list brings its own.
+ * test keeps `motion/react` out of its pages): the root layout renders no
+ * CabinetMotion there, so not even this provider's part of the library
+ * loads. The toast list brings its own.
  */
 
 import { LazyMotion, MotionConfig } from "motion/react";
@@ -28,19 +30,14 @@ import { useMotionPreference } from "./MotionPreference";
 
 const loadFeatures = () => import("./motionFeatures").then((module) => module.default);
 
-export function MotionProvider({ animates = true, children }: { animates?: boolean; children: ReactNode }) {
+export function MotionProvider({ children }: { children: ReactNode }) {
   const { preference } = useMotionPreference();
   const nonce = useNonce();
-  const config = (
-    <MotionConfig reducedMotion={preference === "reduce" ? "always" : "user"} nonce={nonce}>
-      {children}
-    </MotionConfig>
-  );
-  return animates ? (
+  return (
     <LazyMotion features={loadFeatures} strict>
-      {config}
+      <MotionConfig reducedMotion={preference === "reduce" ? "always" : "user"} nonce={nonce}>
+        {children}
+      </MotionConfig>
     </LazyMotion>
-  ) : (
-    config
   );
 }
