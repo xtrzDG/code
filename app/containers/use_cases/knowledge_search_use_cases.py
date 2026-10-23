@@ -2,14 +2,24 @@ from dataclasses import dataclass
 
 from dependency_injector.providers import Factory, Singleton
 
+from app.adapters.embeddings.circuit_text_embedder_adapter import (
+    QUERY_EMBEDDINGS_CIRCUIT_POLICY,
+)
 from app.adapters.embeddings.knowledge_embedding_store_factory import (
     build_knowledge_embedding_store,
 )
-from app.adapters.embeddings.text_embedder_factory import build_text_embedder
+from app.adapters.embeddings.text_embedder_factory import (
+    build_query_text_embedder,
+    build_text_embedder,
+)
 from app.adapters.llm.alias_suggestion.alias_suggestion_adapter import (
     KnowledgeAliasSuggestionAdapter,
 )
-from app.clients.openai.openai_embeddings_client import OpenAiEmbeddingsClient
+from app.clients.openai.openai_embeddings_client import (
+    QUERY_MAX_RETRIES,
+    QUERY_TIMEOUT_SECONDS,
+    OpenAiEmbeddingsClient,
+)
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
@@ -26,6 +36,9 @@ from app.contracts.knowledge_embeddings import (
     TextEmbedderContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
+)
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.knowledge import KnowledgeSearchRequest, KnowledgeSearchResult
 from app.schemas.dto.knowledge_admin import KnowledgeItemDetails
@@ -84,6 +97,26 @@ def build_knowledge_search_providers(
             project_id=config.app_settings.provided.openai_project_id,
         ),
     )
+    # Searches embed their query on a short budget behind a breaker; the
+    # indexing job above keeps the patient client.
+    query_text_embedder: Singleton[TextEmbedderContract] = Singleton(
+        build_query_text_embedder,
+        settings=config.app_settings,
+        client=Singleton(
+            OpenAiEmbeddingsClient,
+            api_key=config.app_settings.provided.embeddings.api_key,
+            base_url=config.app_settings.provided.openai_base_url,
+            project_id=config.app_settings.provided.openai_project_id,
+            timeout_seconds=QUERY_TIMEOUT_SECONDS,
+            max_retries=QUERY_MAX_RETRIES,
+        ),
+        circuit_breaker=Singleton(
+            CircuitBreakerFacilitator,
+            monotonic_clock=time_provider.monotonic_clock,
+            policy=QUERY_EMBEDDINGS_CIRCUIT_POLICY,
+            metrics=utilities.service_metrics,
+        ),
+    )
     embedding_store: Singleton[KnowledgeEmbeddingStoreContract] = Singleton(
         build_knowledge_embedding_store,
         connection_pool=clients.postgres_pool,
@@ -112,7 +145,7 @@ def build_knowledge_search_providers(
                 EmbeddingSearchKnowledgeUseCase,
                 **knowledge,
                 brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
-                text_embedder=text_embedder,
+                text_embedder=query_text_embedder,
                 embedding_store=embedding_store,
             ),
             lexical_search=Factory(

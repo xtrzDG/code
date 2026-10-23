@@ -1,8 +1,10 @@
 """
 Asking for a business's knowledge to be indexed again: its aliases in the
 business's other languages and, with an embeddings key, the vectors of its
-hybrid search. A version's assembly and a confirmed import ask for it; the
-worker's `IndexKnowledgeUseCase` does the work.
+hybrid search. A version's assembly, a confirmed import and an owner's
+create, edit or delete of an item ask for it; the worker's
+`IndexKnowledgeUseCase` does the work (a run that finds nothing new costs
+no model call and no embedding).
 """
 
 from app.contracts.jobs import JobQueueFacilitatorContract

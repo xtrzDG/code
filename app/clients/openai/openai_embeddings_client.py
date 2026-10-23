@@ -11,10 +11,14 @@ from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSec
 
 type OpenAiSdkFactory = Callable[[], openai.OpenAI]
 
-# A search waits for its query's embedding: a slow endpoint must not hold
-# the customer's reply (the search then stays lexical). One retry.
-REQUEST_TIMEOUT_SECONDS: float = 4.0
-MAX_RETRIES: int = 1
+# Two budgets. A search waits for its query's embedding while a customer
+# (or a caller, whose tool answer has 8 s in all) waits for the reply: one
+# try of at most QUERY_TIMEOUT_SECONDS, then the search stays lexical. The
+# `index_knowledge` job waits for nobody and may retry a slow endpoint.
+QUERY_TIMEOUT_SECONDS: float = 1.2
+QUERY_MAX_RETRIES: int = 0
+INDEX_TIMEOUT_SECONDS: float = 20.0
+INDEX_MAX_RETRIES: int = 2
 
 
 class OpenAiEmbeddingsClient(OpenAiEmbeddingsClientContract):
@@ -22,7 +26,8 @@ class OpenAiEmbeddingsClient(OpenAiEmbeddingsClientContract):
     The OpenAI Embeddings API at the configured base URL (the EU
     data-residency endpoint by default) with its own key
     (EMBEDDINGS_API_KEY) in the configured project. The SDK client is
-    created on first use.
+    created on first use, with this client's time budget (the query or the
+    indexing one above).
     """
 
     def __init__(
@@ -31,7 +36,11 @@ class OpenAiEmbeddingsClient(OpenAiEmbeddingsClientContract):
         base_url: PublicBaseUrl,
         project_id: PlatformIdentifier | None,
         sdk_factory: OpenAiSdkFactory | None = None,
+        timeout_seconds: float = INDEX_TIMEOUT_SECONDS,
+        max_retries: int = INDEX_MAX_RETRIES,
     ) -> None:
+        self._timeout_seconds: float = timeout_seconds
+        self._max_retries: int = max_retries
         self._api_key: PlatformSecret | None = api_key
         self._base_url: PublicBaseUrl = base_url
         self._project_id: PlatformIdentifier | None = project_id
@@ -93,6 +102,6 @@ class OpenAiEmbeddingsClient(OpenAiEmbeddingsClientContract):
             api_key=str(self._api_key),
             base_url=str(self._base_url),
             project=None if self._project_id is None else str(self._project_id),
-            timeout=REQUEST_TIMEOUT_SECONDS,
-            max_retries=MAX_RETRIES,
+            timeout=self._timeout_seconds,
+            max_retries=self._max_retries,
         )

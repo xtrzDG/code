@@ -3,7 +3,8 @@ Rules for the aliases of a knowledge item: the title in the business's
 other languages (and synonyms customers use), searched like the title.
 
 - an alias is in one of the business's languages, at most
-  `MAX_ALIASES_PER_LANGUAGE` per language, stripped of surrounding spaces;
+  `MAX_ALIASES_PER_LANGUAGE` per language, as written (the primitive
+  already refuses surrounding spaces);
 - the same text twice in a language (ignoring case, accents and spacing)
   is kept once, approved over suggested;
 - a new title keeps the owner's approved aliases but drops the model's
@@ -12,15 +13,15 @@ other languages (and synonyms customers use), searched like the title.
 
 from collections.abc import Sequence
 
-from app.schemas.constants.knowledge import KnowledgeAliasStatus
+from app.schemas.constants.knowledge import (
+    MAX_ALIASES_PER_LANGUAGE,
+    KnowledgeAliasStatus,
+)
 from app.schemas.domain.knowledge import KnowledgeAlias, KnowledgeItemDocument
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.schemas.typings.knowledge.constrained_strings import KnowledgeAliasText
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.knowledge.search_text import fold_words
-
-MAX_ALIASES_PER_LANGUAGE: int = 3
 
 
 def check_aliases(
@@ -30,52 +31,41 @@ def check_aliases(
     """
     The aliases to store, in the given order (see the module docstring).
 
+    One pass: each alias is looked up by its language and folded text, and
+    a language is refused as soon as it holds one alias too many, so a long
+    list costs no more than reading it once.
+
     Raises:
         ValidationFailedError: an alias in a language the business does not
             use, or too many aliases in one language.
     """
 
     allowed: set[str] = {str(language) for language in business_languages}
-    kept: list[KnowledgeAlias] = []
+    kept: dict[tuple[str, str], KnowledgeAlias] = {}
+    per_language: dict[str, int] = {}
     for alias in aliases:
-        if str(alias.language) not in allowed:
+        language: str = str(alias.language)
+        if language not in allowed:
             raise ValidationFailedError(
                 f"Alias language {alias.language} is not a language of the business."
             )
 
-        stripped = KnowledgeAlias(
-            language=alias.language,
-            text=KnowledgeAliasText(alias.text.strip()),
-            status=alias.status,
-        )
-        duplicate: int | None = find_same_alias(kept, stripped)
-        if duplicate is None:
-            kept.append(stripped)
-        elif stripped.status is KnowledgeAliasStatus.APPROVED:
-            kept[duplicate] = stripped
+        key: tuple[str, str] = (language, fold_words(alias.text))
+        if key in kept:
+            if alias.status is KnowledgeAliasStatus.APPROVED:
+                kept[key] = alias
+            continue
 
-    for language in allowed:
-        count: int = sum(1 for alias in kept if str(alias.language) == language)
-        if count > MAX_ALIASES_PER_LANGUAGE:
+        per_language[language] = per_language.get(language, 0) + 1
+        if per_language[language] > MAX_ALIASES_PER_LANGUAGE:
             raise ValidationFailedError(
                 f"At most {MAX_ALIASES_PER_LANGUAGE} aliases per language "
-                f"({language} has {count})."
+                f"({language} has more)."
             )
 
-    return kept
+        kept[key] = alias
 
-
-def find_same_alias(
-    aliases: Sequence[KnowledgeAlias], candidate: KnowledgeAlias
-) -> int | None:
-    """Position of an alias with the same language and folded text."""
-
-    folded: str = fold_words(candidate.text)
-    for position, alias in enumerate(aliases):
-        if alias.language == candidate.language and fold_words(alias.text) == folded:
-            return position
-
-    return None
+    return list(kept.values())
 
 
 def carry_aliases(

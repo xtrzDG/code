@@ -46,3 +46,13 @@ class AnswerCorrectionScope(StrEnum):
     PRICE = "price"
     HOURS = "hours"
     RULE = "rule"
+
+
+MAX_ALIASES_PER_LANGUAGE: int = 3
+"""The most aliases a knowledge item has in one language of the business."""
+
+MAX_ALIASES_PER_ITEM: int = 30
+"""
+The most aliases one request may send for an item: three in each of a
+business's at most ten languages. A longer list is refused before it is read.
+"""

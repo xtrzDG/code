@@ -73,9 +73,9 @@ class InMemoryKnowledgeEmbeddingStoreAdapter(KnowledgeEmbeddingStoreContract):
         limit: EmbeddingNeighbourLimit,
     ) -> list[KnowledgeNeighbour]:
         with self._lock:
-            candidates: list[tuple[KnowledgeItemId, EmbeddingVector]] = [
-                (item_id, vector)
-                for item_id, (stored_model, _, vector) in self._rows.get(
+            candidates: list[StoredEmbedding] = [
+                (item_id, fingerprint, vector)
+                for item_id, (stored_model, fingerprint, vector) in self._rows.get(
                     business_id, {}
                 ).items()
                 if stored_model == model_id and len(vector) == len(query)
@@ -85,8 +85,9 @@ class InMemoryKnowledgeEmbeddingStoreAdapter(KnowledgeEmbeddingStoreContract):
             KnowledgeNeighbour(
                 item_id=item_id,
                 similarity=to_similarity(cosine_similarity(query, vector)),
+                fingerprint=fingerprint,
             )
-            for item_id, vector in candidates
+            for item_id, fingerprint, vector in candidates
         ]
         neighbours.sort(
             key=lambda neighbour: (-float(neighbour.similarity), str(neighbour.item_id))

@@ -30,9 +30,12 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
 from app.utilities.knowledge.aliases.alias_targets import (
     add_suggested_aliases,
+    asked_alias_languages,
     item_languages,
     missing_alias_languages,
+    record_alias_request,
 )
+from app.utilities.knowledge.search_text import fold_words
 
 # One call names this many items: about 4,000 output tokens for three
 # languages, well inside the call's limit.
@@ -51,11 +54,14 @@ def plan_alias_items(
     items: Sequence[KnowledgeItemDocument],
     business: BusinessDocument,
     language_detector: LanguageDetectorContract,
+    asks_again: bool = False,
 ) -> list[AliasSuggestionItem]:
     """
     The active, confirmed items that lack an alias in one of the business's
     languages, questions first (they become starter questions), then in
-    the given order.
+    the given order. A language the model was already asked for under the
+    item's title is left out (it named nothing there, or the owner removed
+    its suggestion) unless `asks_again`: the owner pressed "Suggest".
     """
 
     planned: list[AliasSuggestionItem] = []
@@ -66,9 +72,12 @@ def plan_alias_items(
         own: list[LanguageTag] = item_languages(
             item, business.languages, business.default_language, language_detector
         )
-        missing: list[LanguageTag] = missing_alias_languages(
-            item, business.languages, own
-        )
+        asked: list[LanguageTag] = [] if asks_again else asked_alias_languages(item)
+        missing: list[LanguageTag] = [
+            language
+            for language in missing_alias_languages(item, business.languages, own)
+            if language not in asked
+        ]
         if missing:
             planned.append(
                 AliasSuggestionItem(
@@ -97,8 +106,10 @@ def run_alias_round(
     One model call for up to `MAX_ITEMS_PER_CALL` items, its cost recorded,
     and each item's suggestions stored in one atomic step with the item as
     it is stored then (an edit made during the call is kept; suggestions
-    for a title that changed meanwhile are dropped). Adding suggestions
-    changes nothing the assistant's version holds, so `updated_at` stays.
+    for a title that changed meanwhile are dropped), together with the
+    languages asked (`alias_request`), so the next run does not ask again.
+    Adding suggestions changes nothing the assistant's version holds, so
+    `updated_at` stays.
     """
 
     asked: list[AliasSuggestionItem] = list(items[:MAX_ITEMS_PER_CALL])
@@ -116,9 +127,7 @@ def run_alias_round(
             for alias in result.aliases
             if alias.item_id == item.item_id
         ]
-        if suggestions and store_suggestions(
-            knowledge_item_repo, business, item, suggestions
-        ):
+        if store_suggestions(knowledge_item_repo, business, item, suggestions):
             updated += 1
 
     return AliasRoundOutcome(asked_count=len(asked), updated_count=updated)
@@ -130,13 +139,31 @@ def store_suggestions(
     item: AliasSuggestionItem,
     suggestions: Sequence[tuple[LanguageTag, KnowledgeAliasText]],
 ) -> bool:
-    """Whether the item got any of the suggestions (see `add_suggested_aliases`)."""
+    """
+    Whether the item got any of the suggestions (see `add_suggested_aliases`);
+    the asked languages are remembered either way while the title is the
+    one the model was asked about.
+    """
+
+    added: list[bool] = [False]
 
     def change(stored: KnowledgeItemDocument) -> KnowledgeItemDocument | None:
-        return add_suggested_aliases(stored, suggestions, item.title)
+        added[0] = False
+        if fold_words(stored.title) != fold_words(item.title):
+            return None
+
+        with_suggestions: KnowledgeItemDocument | None = add_suggested_aliases(
+            stored, suggestions, item.title
+        )
+        added[0] = with_suggestions is not None
+        remembered: KnowledgeItemDocument = record_alias_request(
+            with_suggestions or stored, item.title, item.target_languages
+        )
+        return None if remembered == stored else remembered
 
     item_id: KnowledgeItemId = item.item_id
-    return knowledge_item_repo.update(business.id, item_id, change) is not None
+    knowledge_item_repo.update(business.id, item_id, change)
+    return added[0]
 
 
 def record_alias_usage(

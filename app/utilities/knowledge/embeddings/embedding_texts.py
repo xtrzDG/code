@@ -4,8 +4,10 @@ that says whether a stored vector is still current.
 """
 
 import hashlib
+from collections.abc import Sequence
 
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.dto.knowledge_embeddings import KnowledgeNeighbour
 from app.schemas.typings.knowledge.constrained_strings import (
     EmbeddingModelId,
     KnowledgeEmbeddingFingerprint,
@@ -42,3 +44,28 @@ def embedding_fingerprint(
 
     digest: str = hashlib.sha256(f"{model_id}\n{text}".encode()).hexdigest()
     return KnowledgeEmbeddingFingerprint(digest)
+
+
+def current_neighbours(
+    neighbours: Sequence[KnowledgeNeighbour],
+    items: Sequence[KnowledgeItemDocument],
+    model_id: EmbeddingModelId,
+) -> list[KnowledgeNeighbour]:
+    """
+    The neighbours whose stored vector still matches the item's current
+    text: an item edited since its last indexing is left to its words, not
+    found by the meaning it no longer has.
+    """
+
+    items_by_id: dict[str, KnowledgeItemDocument] = {
+        str(item.id): item for item in items
+    }
+    current: list[KnowledgeNeighbour] = []
+    for neighbour in neighbours:
+        item: KnowledgeItemDocument | None = items_by_id.get(str(neighbour.item_id))
+        if item is not None and neighbour.fingerprint == embedding_fingerprint(
+            model_id, embedding_text(item)
+        ):
+            current.append(neighbour)
+
+    return current

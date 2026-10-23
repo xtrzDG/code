@@ -19,7 +19,8 @@ class KnowledgeAliasText(BaseConstrainedTypedString):
     A knowledge item's title in another language of the business (or a
     synonym customers use): "Is there parking?" for "Есть ли парковка?".
     Searched like the title; an approved one is a starter question in its
-    language.
+    language. One line without surrounding spaces: callers strip the raw
+    text before they build it.
 
     Example:
         alias = KnowledgeAliasText("Is there parking?")
@@ -27,7 +28,7 @@ class KnowledgeAliasText(BaseConstrainedTypedString):
 
     min_length = 1
     max_length = 200
-    pattern = r"\S"
+    pattern = r"^\S(?:[^\x00-\x1f\x7f]*\S)?\Z"
 
 
 class KnowledgeAttributeKey(BaseConstrainedTypedString):

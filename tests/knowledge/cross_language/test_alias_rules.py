@@ -24,10 +24,10 @@ def alias(language: str, text: str, status: KnowledgeAliasStatus) -> KnowledgeAl
     )
 
 
-def test_aliases_are_stripped_and_kept_once_per_language_approved_first() -> None:
+def test_aliases_are_kept_once_per_language_approved_first() -> None:
     checked = check_aliases(
         [
-            alias("ka", "  გაქვთ პარკინგი?  ", SUGGESTED),
+            alias("ka", "გაქვთ  პარკინგი?", SUGGESTED),
             alias("ka", "გაქვთ პარკინგი", APPROVED),
             alias("ru", "Есть ли парковка?", SUGGESTED),
         ],
@@ -38,6 +38,14 @@ def test_aliases_are_stripped_and_kept_once_per_language_approved_first() -> Non
         ("ka", "გაქვთ პარკინგი", APPROVED),
         ("ru", "Есть ли парковка?", SUGGESTED),
     ]
+
+
+@pytest.mark.parametrize("text", ["  Parking", "Parking ", "Park\ning", "\tParking"])
+def test_an_alias_text_with_surrounding_spaces_or_control_characters_is_refused(
+    text: str,
+) -> None:
+    with pytest.raises(ValueError):
+        KnowledgeAliasText(text)
 
 
 def test_an_alias_in_another_language_or_a_fourth_one_is_refused() -> None:

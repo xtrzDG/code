@@ -79,6 +79,7 @@ class SuggestKnowledgeAliasesUseCase(
             [item.model_copy(update={"is_active": True, "import_batch_id": None})],
             business,
             self._language_detector,
+            asks_again=True,
         )
         if planned:
             self._admit_owner_action.run(

@@ -208,6 +208,15 @@ configured.
 Both install the Postgres 17 client: the image's `pg_dump` is Debian's 17,
 and an archive opens only with a `pg_restore` at least as new.
 
+Both run Postgres 16 **with pgvector** (`pgvector/pgvector:0.8.0-pg16`).
+Once an administrator enabled the knowledge embeddings in production
+(`create extension vector;`, then `select
+workshop.enable_knowledge_embeddings();`, docs/LAUNCH.md), every dump holds
+`CREATE EXTENSION IF NOT EXISTS vector` and a `vector` column, and the
+single-transaction restore stops at the first statement a server without
+pgvector refuses. `round-trip` enables the embeddings the same way after
+`workshop migrate`, so the nightly drill restores such a dump too.
+
 ## Restore runbook
 
 Decide first: did it happen inside Render (bad data, lost database) or is
@@ -224,7 +233,7 @@ string as `DATABASE_URL` of `workshop-api`, `workshop-worker` and
 
 | Step | Time |
 | --- | --- |
-| 1. A new Postgres 16 in the EU (Render in another account, or any EU provider); create the application role (neither superuser nor BYPASSRLS) with `CREATEDB` for the restore | 15 min |
+| 1. A new Postgres 16 **with the pgvector extension available** in the EU (Render in another account, or any EU provider); as a superuser run `create extension vector;` in `template1` (so every database the restore creates has it: the application role may not create this untrusted extension, and the dump's `CREATE EXTENSION IF NOT EXISTS vector` is then a no-op); create the application role (neither superuser nor BYPASSRLS) with `CREATEDB` for the restore | 15 min |
 | 2. On a trusted machine with the drill or escrow identity: restore the newest backup (below) | 30–60 min (about 10 min per GB of dump) |
 | 3. `workshop migrate` against the restored database (migrations newer than the backup) | 5 min |
 | 4. Point `DATABASE_URL` of the API, the worker and the backup cron at it; `ENCRYPTION_KEYS`/`ENCRYPTION_KEY` must hold the keys of the backup's night; deploy | 20 min |
@@ -250,7 +259,7 @@ aws s3 cp s3://<bucket>/workshop/2026/10/20261003T011700Z.pgdump.age .   # or an
 aws s3 cp s3://<bucket>/workshop/2026/10/20261003T011700Z.manifest.json .
 sha256sum 20261003T011700Z.pgdump.age      # must equal archive_checksum of the manifest
 age --decrypt --identity key.txt --output dump.pgc 20261003T011700Z.pgdump.age
-createdb --host new-host --username app_role workshop
+createdb --host new-host --username app_role workshop   # has vector from template1 (step 1)
 pg_restore --no-owner --no-acl --file=- dump.pgc \
   | sed '1,40{/^SET transaction_timeout = 0;$/d}' \
   | psql --host new-host --username app_role --dbname workshop \

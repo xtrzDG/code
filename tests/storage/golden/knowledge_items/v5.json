@@ -1,9 +1,15 @@
 {
+  "alias_request": {
+    "languages": [
+      "ka"
+    ],
+    "title": "Sample KnowledgeTitle"
+  },
   "aliases": [
     {
       "language": "ka",
       "status": "suggested",
-      "text": "Sample KnowledgeAliasText"
+      "text": "Is there parking?"
     }
   ],
   "attributes": [

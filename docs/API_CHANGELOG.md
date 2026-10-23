@@ -11,6 +11,22 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — knowledge aliases: bounded lists, trimmed texts
+
+Spec: `621b169c1d61b2da`
+
+- **Changed** `aliases` in the bodies of `POST /v1/businesses/{business_id}/knowledge`
+  and `PATCH .../knowledge/{item_id}` takes at most 30 entries (three in each
+  of a business's at most ten languages); a longer list is refused with
+  `422` before it is checked.
+- **Changed** `KnowledgeAlias.text` is one line without surrounding spaces or
+  control characters (`422` otherwise; the cabinet already trims what the
+  owner types).
+- **Changed** (behaviour) creating, editing or deleting a knowledge item
+  queues its business's `index_knowledge` job; a suggestion the owner
+  removed, or a language the model left out, is not asked for again until
+  the title changes (the owner's "Suggest" still asks).
+
 ## 2026-10-22 — knowledge across languages: aliases and the hybrid search
 
 Spec: `75c270454bc5d4e7`

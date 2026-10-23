@@ -54,7 +54,8 @@ def build_vector_queries(vector_schema: str) -> VectorQueries:
             " embedding = excluded.embedding, updated_at = excluded.updated_at"
         ).format(vector=vector_type),
         nearest=sql.SQL(
-            "select item_id, 1 - (embedding {distance} %(query)s::{vector})"
+            "select item_id, 1 - (embedding {distance} %(query)s::{vector}),"
+            " fingerprint"
             " from workshop.knowledge_embeddings"
             " where business_id = %(business_id)s and model_id = %(model_id)s"
             " and {schema}.vector_dims(embedding) = %(dimensions)s"

@@ -21,6 +21,7 @@ from app.use_cases.knowledge.knowledge_search_steps import (
     load_searched_knowledge,
     search_result,
 )
+from app.utilities.knowledge.embeddings.embedding_texts import current_neighbours
 from app.utilities.knowledge.ranking.hybrid_ranking import rank_hybrid
 from app.utilities.knowledge.ranking.lexical_ranking import rank_knowledge_items
 from app.utilities.knowledge.ranking.ranked_item import RankedItem
@@ -41,10 +42,12 @@ class EmbeddingSearchKnowledgeUseCase(
     vectors in pgvector (`hybrid_ranking`). A question in Georgian finds an
     item titled in English even before the owner gave it a Georgian alias.
 
-    The query is embedded once per search. When the endpoint fails or is
-    slow, or the database has no pgvector, the search is the lexical one;
-    a missing vector (an item changed since the last indexing) leaves that
-    item to its words until the next `index_knowledge` job.
+    The query is embedded once per search, on a short budget behind a
+    circuit breaker (`build_query_text_embedder`). When the endpoint fails
+    or is slow, or the database has no pgvector, the search is the lexical
+    one; a missing or stale vector (an item edited since its last
+    indexing: its fingerprint no longer matches) leaves that item to its
+    words until the `index_knowledge` job the edit queued has run.
     """
 
     def __init__(
@@ -75,8 +78,10 @@ class EmbeddingSearchKnowledgeUseCase(
             items=items,
             preferred_languages=[input_data.language],
         )
-        neighbours: list[KnowledgeNeighbour] = (
-            self._nearest(business.id, input_data) if items else []
+        neighbours: list[KnowledgeNeighbour] = current_neighbours(
+            self._nearest(business.id, input_data) if items else [],
+            items,
+            self._text_embedder.model_id(),
         )
         return search_result(
             business,

@@ -78,12 +78,16 @@ def read_item_aliases(
 
 
 def clean_alias_text(raw_text: object) -> str | None:
-    """One line, without quotes around it, or None when unusable."""
+    """One line without control characters or quotes around it, or None."""
 
     if not isinstance(raw_text, str):
         return None
 
-    text: str = " ".join(raw_text.split()).strip().strip("\"'«»“”„")
+    printable: str = "".join(
+        " " if ord(character) < 0x20 or ord(character) == 0x7F else character
+        for character in raw_text
+    )
+    text: str = " ".join(printable.split()).strip().strip("\"'«»“”„")
     text = text.strip()
     if text == "" or len(text) > MAX_ALIAS_LENGTH:
         return None

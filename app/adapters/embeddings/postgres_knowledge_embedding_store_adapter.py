@@ -154,6 +154,7 @@ class PostgresKnowledgeEmbeddingStoreAdapter(KnowledgeEmbeddingStoreContract):
             KnowledgeNeighbour(
                 item_id=KnowledgeItemId(str(row[0])),
                 similarity=to_similarity(float(row[1])),
+                fingerprint=KnowledgeEmbeddingFingerprint(str(row[2])),
             )
             for row in rows
         ]

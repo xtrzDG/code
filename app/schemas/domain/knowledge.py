@@ -56,6 +56,19 @@ class KnowledgeAlias(PersistentDocument):
     status: KnowledgeAliasStatus = KnowledgeAliasStatus.APPROVED
 
 
+class KnowledgeAliasRequest(PersistentDocument):
+    """
+    What the alias model was last asked about an item: the title it was
+    given and the languages it was asked to name it in. A language asked
+    for under the same title (ignoring case, accents and spacing) is not
+    asked again by the indexing job, whether the model left it out or the
+    owner removed its suggestion; a new title asks afresh.
+    """
+
+    title: KnowledgeTitle
+    languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
+
+
 class SeasonalNightlyRate(PersistentDocument):
     """
     The nightly rate of a room type from `starts_on` to `ends_on` (both
@@ -98,8 +111,9 @@ class KnowledgeItemDocument(BaseDocument):
     # item ("Fix this answer"; optional, None for every other item).
     # 4: `shared_key`, the brand's shared item this location item replaces
     # (R17-BRANDS; optional, None for every older item).
-    # 5: `aliases`, the title in other languages of the business
-    # (R17-CROSS-LANG-SEARCH; optional, empty for every older item).
+    # 5: `aliases`, the title in other languages of the business, and
+    # `alias_request`, what the alias model was last asked about the item
+    # (R17-CROSS-LANG-SEARCH; optional, empty and None for every older item).
     schema_version: SchemaVersion = SchemaVersion("5")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
@@ -120,6 +134,7 @@ class KnowledgeItemDocument(BaseDocument):
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
     aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
+    alias_request: KnowledgeAliasRequest | None = None
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER
     is_active: IsKnowledgeItemActive = True
     import_batch_id: MenuImportBatchId | None = None

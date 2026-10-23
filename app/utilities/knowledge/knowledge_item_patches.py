@@ -131,6 +131,9 @@ def patch_knowledge_item(
             if patch.aliases is None
             else check_aliases(patch.aliases, business.languages)
         ),
+        # What the alias model was asked stays (a new title voids it): a
+        # suggestion the owner removed here is not asked for again.
+        alias_request=existing.alias_request,
         source=existing.source,
         is_active=existing.is_active if patch.is_active is None else patch.is_active,
         import_batch_id=existing.import_batch_id,

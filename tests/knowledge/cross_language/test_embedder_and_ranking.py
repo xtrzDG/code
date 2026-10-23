@@ -17,7 +17,11 @@ from app.adapters.embeddings.openai_text_embedder_adapter import (
 from app.schemas.dto.knowledge_embeddings import KnowledgeNeighbour
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.knowledge.constrained_floats import EmbeddingSimilarity
-from app.schemas.typings.knowledge.constrained_strings import EmbeddingModelId
+from app.schemas.typings.knowledge.constrained_strings import (
+    EmbeddingModelId,
+    KnowledgeEmbeddingFingerprint,
+)
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.knowledge.strings import EmbeddingInputText
 from app.utilities.knowledge.embeddings.vector_math import (
     cosine_similarity,
@@ -27,6 +31,17 @@ from app.utilities.knowledge.embeddings.vector_math import (
 from app.utilities.knowledge.ranking.hybrid_ranking import rank_hybrid
 from app.utilities.knowledge.ranking.ranked_item import RankedItem
 from tests.knowledge.cross_language.world import CrossLanguageWorld
+
+ANY_FINGERPRINT = KnowledgeEmbeddingFingerprint("0" * 64)
+
+
+def neighbour(item_id: KnowledgeItemId, similarity: float) -> KnowledgeNeighbour:
+    return KnowledgeNeighbour(
+        item_id=item_id,
+        similarity=EmbeddingSimilarity(similarity),
+        fingerprint=ANY_FINGERPRINT,
+    )
+
 
 MODEL = EmbeddingModelId("text-embedding-3-small")
 
@@ -102,16 +117,10 @@ def test_words_and_meaning_together_rank_first_and_weak_meanings_stay_out() -> N
     ranked = rank_hybrid(
         [RankedItem(item=by_words, score=6.0), RankedItem(item=by_both, score=5.0)],
         [
-            KnowledgeNeighbour(item_id=by_both.id, similarity=EmbeddingSimilarity(0.8)),
-            KnowledgeNeighbour(
-                item_id=by_meaning.id, similarity=EmbeddingSimilarity(0.7)
-            ),
-            KnowledgeNeighbour(
-                item_id=unrelated.id, similarity=EmbeddingSimilarity(0.35)
-            ),
-            KnowledgeNeighbour(
-                item_id=switched_off.id, similarity=EmbeddingSimilarity(0.9)
-            ),
+            neighbour(by_both.id, 0.8),
+            neighbour(by_meaning.id, 0.7),
+            neighbour(unrelated.id, 0.35),
+            neighbour(switched_off.id, 0.9),
         ],
         items,
     )

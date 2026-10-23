@@ -123,6 +123,7 @@ def replace_knowledge_item(
         update={
             "id": existing.id,
             "created_at": existing.created_at,
+            "alias_request": existing.alias_request,
             **lineage_of(existing),
             **carried,
         }

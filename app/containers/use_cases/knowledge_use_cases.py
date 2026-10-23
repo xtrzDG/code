@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -98,6 +99,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # Knowledge across languages: the search tool, aliases, indexing.
     _search: KnowledgeSearchProviders = build_knowledge_search_providers(
@@ -189,6 +191,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        job_queue=facilitators.job_queue_facilitator,
     )
     get_knowledge_item_use_case: Factory[
         UseCaseContract[KnowledgeItemQuery, KnowledgeItemDetails]
@@ -217,12 +220,14 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        job_queue=facilitators.job_queue_facilitator,
     )
     delete_knowledge_item_use_case: Factory[
         UseCaseContract[DeleteKnowledgeItemCommand, KnowledgeItemDeletion]
     ] = Factory(
         DeleteKnowledgeItemUseCase,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        job_queue=facilitators.job_queue_facilitator,
     )
     upsert_knowledge_items_use_case: Factory[
         UseCaseContract[UpsertKnowledgeItemsCommand, KnowledgeItemList]

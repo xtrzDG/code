@@ -68,6 +68,7 @@ from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.cross_language.fakes import PhraseBookAliasSuggester
 from tests.knowledge.knowledge_store import KnowledgeStore
+from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 
 
 class KnowledgeHarness(KnowledgeStore):
@@ -133,12 +134,14 @@ class KnowledgeHarness(KnowledgeStore):
             niche_template_registry=self.niche_template_registry,
             localized_text_resolver=self.resolver,
         )
+        self.job_queue = RecordingJobQueue()
         self.create_knowledge_item = CreateKnowledgeItemUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
             resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
+            job_queue=self.job_queue,
         )
         self.update_knowledge_item = UpdateKnowledgeItemUseCase(
             business_repo=self.business_repo,
@@ -146,9 +149,11 @@ class KnowledgeHarness(KnowledgeStore):
             resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
+            job_queue=self.job_queue,
         )
         self.delete_knowledge_item = DeleteKnowledgeItemUseCase(
             knowledge_item_repo=self.knowledge_item_repo,
+            job_queue=self.job_queue,
         )
         self.get_knowledge_item = GetKnowledgeItemUseCase(
             business_repo=self.business_repo,

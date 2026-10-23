@@ -144,6 +144,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         adapters=adapters,
         clients=clients,
         config=config,
+        facilitators=facilitators,
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,

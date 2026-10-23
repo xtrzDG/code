@@ -17591,7 +17591,7 @@
           "text": {
             "maxLength": 200,
             "minLength": 1,
-            "pattern": "\\S",
+            "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
             "title": "Text",
             "type": "string"
           }
@@ -17643,6 +17643,7 @@
             "items": {
               "$ref": "#/components/schemas/KnowledgeAlias"
             },
+            "maxItems": 30,
             "title": "Aliases",
             "type": "array"
           },
@@ -64727,7 +64728,7 @@
                         "text": {
                           "maxLength": 200,
                           "minLength": 1,
-                          "pattern": "\\S",
+                          "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
                           "title": "Text",
                           "type": "string"
                         }
@@ -64739,6 +64740,7 @@
                       "title": "KnowledgeAlias",
                       "type": "object"
                     },
+                    "maxItems": 30,
                     "title": "Aliases",
                     "type": "array"
                   },
@@ -66377,7 +66379,7 @@
                             "text": {
                               "maxLength": 200,
                               "minLength": 1,
-                              "pattern": "\\S",
+                              "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
                               "title": "Text",
                               "type": "string"
                             }
@@ -66389,6 +66391,7 @@
                           "title": "KnowledgeAlias",
                           "type": "object"
                         },
+                        "maxItems": 30,
                         "type": "array"
                       },
                       {
@@ -70509,7 +70512,7 @@
                                   "text": {
                                     "maxLength": 200,
                                     "minLength": 1,
-                                    "pattern": "\\S",
+                                    "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
                                     "title": "Text",
                                     "type": "string"
                                   }
@@ -70521,6 +70524,7 @@
                                 "title": "KnowledgeAlias",
                                 "type": "object"
                               },
+                              "maxItems": 30,
                               "title": "Aliases",
                               "type": "array"
                             },

@@ -9,7 +9,11 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
+from app.schemas.constants.knowledge import (
+    MAX_ALIASES_PER_ITEM,
+    KnowledgeItemKind,
+    KnowledgeItemSource,
+)
 from app.schemas.domain.knowledge import (
     KnowledgeAlias,
     KnowledgeAttribute,
@@ -78,7 +82,9 @@ class KnowledgeItemInput(ImmutableDTO):
         default_factory=list[KnowledgeAttribute]
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
-    aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
+    aliases: list[KnowledgeAlias] = Field(
+        default_factory=list[KnowledgeAlias], max_length=MAX_ALIASES_PER_ITEM
+    )
     is_active: IsKnowledgeItemActive = True
 
 
@@ -120,7 +126,9 @@ class KnowledgeItemPatch(ImmutableDTO):
     tags: list[KnowledgeTag] | None = None
     attributes: list[KnowledgeAttribute] | None = None
     languages: list[LanguageTag] | None = None
-    aliases: list[KnowledgeAlias] | None = None
+    aliases: list[KnowledgeAlias] | None = Field(
+        default=None, max_length=MAX_ALIASES_PER_ITEM
+    )
     is_active: IsKnowledgeItemActive | None = None
 
 
@@ -222,7 +230,9 @@ class KnowledgeItemDetails(ImmutableDTO):
         default_factory=list[KnowledgeAttribute]
     )
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
-    aliases: list[KnowledgeAlias] = Field(default_factory=list[KnowledgeAlias])
+    aliases: list[KnowledgeAlias] = Field(
+        default_factory=list[KnowledgeAlias], max_length=MAX_ALIASES_PER_ITEM
+    )
     source: KnowledgeItemSource
     is_active: IsKnowledgeItemActive
     created_at: Microseconds
