@@ -12,8 +12,11 @@ list 42, a conversation 78, availability 49, the dashboard 81, a widget
 poll 9 and a Telegram webhook 27 round trips in 4 transactions. Wave 19
 added one each to /v1/me (the brands the person belongs to) and to the
 conversation list and card (a repeated view's first count in
-`audit_view_counts`); capacity.md says why. A request may get cheaper;
-raise a budget only with the reason in capacity.md.
+`audit_view_counts`); capacity.md says why. The widget poll went from 8 to
+2 on 2026-10-22 (its count and one pipelined read; "The runs of
+2026-10-19 and 2026-10-20" in capacity.md, and
+`test_widget_poll_statements.py`). A request may get cheaper; raise a
+budget only with the reason in capacity.md.
 """
 
 from collections.abc import Callable, Generator
@@ -42,7 +45,7 @@ ROUND_TRIP_BUDGETS: dict[str, tuple[Callable[[RequestCostWorld], Response], int]
     "conversation_detail": (get_conversation, 32),
     "availability": (check_availability, 21),
     "dashboard": (get_dashboard, 28),
-    "widget_poll": (poll_widget, 8),
+    "widget_poll": (poll_widget, 2),
     "telegram_webhook": (send_telegram_message, 14),
 }
 # The channel's read, then dedupe, inbox row, job and wake-up in one.

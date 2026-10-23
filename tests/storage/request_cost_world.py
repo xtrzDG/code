@@ -20,7 +20,7 @@ from app.schemas.dto.load_data import (
     SeedLoadCommand,
 )
 from app.schemas.typings.platform.strings import DatabaseUrl
-from tests.e2e.harness import start_workshop
+from tests.e2e.harness import Workshop, start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT, START
 from tests.e2e.workshop_container import replace_provider
 from tests.storage.statement_trace import TraceCount, TracedConnectionPool
@@ -44,6 +44,7 @@ class RequestCostWorld:
     pool: TracedConnectionPool
     manifest: LoadSeedManifest
     update_ids: list[int]
+    workshop: Workshop
 
     @property
     def business(self) -> LoadBusinessSeed:
@@ -87,6 +88,7 @@ def open_request_cost_world(database_url: DatabaseUrl) -> RequestCostWorld:
         pool=pool,
         manifest=manifest,
         update_ids=[],
+        workshop=workshop,
     )
 
 

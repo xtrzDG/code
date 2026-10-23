@@ -493,6 +493,206 @@ The availability (21), dashboard (28), widget poll (8) and Telegram
 webhook (14 in 2 transactions) counts are unchanged with all six
 packages merged.
 
+### The runs of 2026-10-19 and 2026-10-20: a saturated runner, and a poll of two round trips
+
+The scheduled run of `28a3a3c` (backend as `b746ddd`) failed
+`widget_polling.js` on 2026-10-19 and again on its re-run of 2026-10-20
+on one threshold only: the poll p95 was 213 ms and 254 ms against
+150 ms (median 35–37 ms, p90 about 145 ms, max 3–3.7 s). Everything else
+held: no failed request, about 250 requests a second, 73,000
+iterations, the message p95 277–368 ms against 2,300 ms. Both jobs carry
+GitHub's notice that `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19.
+
+**No code regression.** On one harness (Postgres 16, each commit's
+migrations and `seed-load --businesses 50 --messages 200000 --bookings
+20000 --visitors 1000`, four API processes and the worker as
+`perf/docker-compose.perf.yml`, k6 1.3.0 running the scenario
+unchanged), `fa1132e` (the last green run, 2026-10-07) and `20d3dc0` cost
+the same per request within the noise: 13.05 against 13.08 statements
+per poll (`pg_stat_statements` with the counting function's own), API
+CPU per poll 6.6 against 7.6 ms (2,000 sequential polls, one process),
+Postgres CPU per request 4.5 against 4.3 ms, 3.1 pool checkouts per
+request, the same lock waits (rate-limit rows, the inbound lane's claim
+lock), the worker's CPU and statements per answer (99 ms, 247). H6's
+scoped transactions add 0.3–1 ms of Python per poll at most. The
+worker's inbound backlog of 36–41 s is not new either: the scenario
+writes about 8.3 messages a second against eight inbound threads of
+about a second each, and the green run's log picks messages up 46–48 s
+late too. The thresholds time the poll and the `202` of a message, not
+the answer.
+
+**The cause.** The runner had no headroom left for what a poll cost: on
+a saturated 4 vCPU runner (k6, Postgres, four API processes and the
+worker) every poll made 8 round trips (13 statements) and wrote two rows
+every poll of the platform shares, its business's and
+`widget-poll:platform` in `rate_limit_buckets`. A poll holds those row
+locks only while its counting statement runs (1135), but a holder that
+loses its CPU mid-statement on a saturated machine holds every other
+poll behind it: the p90 at 145 ms and maxima of seconds. Under the k6
+load the sampled connections waited on those rows' locks
+(`Lock:transactionid`, below), and only there among the poll's
+statements.
+
+**What changed (2026-10-22).**
+
+- *Leased shared counters* (`RateLimitCounter.lease_size`,
+  `RateLimitLeases`, `workshop.lease_requests_within_limit` of migration
+  1194). A poll's business and platform counters are taken in leases: a
+  process counts 1% of the limit (60 and 600 polls) on the shared row in
+  one statement, as many as the sliding window still holds, and admits
+  polls from them without touching the row; the poll that finds less than
+  a fifth left tops the lease up ahead while the others go on, and a poll
+  refused by its visitor or network gives its units back. The visitor
+  and network are still counted per poll, in one statement on two rows
+  nobody else writes. Messages, uploads, handoffs and ratings count all
+  four counters per request as before.
+- *One read in one round trip* (`WidgetPollReadAdapterContract`,
+  `PostgresWidgetPollReadAdapter`, `workshop.read_widget_poll` of
+  migration 1195). One statement reads the business's allowed websites,
+  the visitor's conversations, the positions of their ten newest
+  messages and, in full, only the messages after the cursor; its scope's
+  `set_config` and the statement go as one pipeline (`fetch_in_scope`:
+  the extended protocol's implicit transaction ends at the sync, and the
+  scope with it). The statement lives in a PL/pgSQL function because the
+  application sends no prepared statements (transaction poolers drop
+  them): sent as plain SQL it was planned on every poll, about 0.5 ms of
+  Postgres CPU, more than it took to run; the function's plan is kept
+  per session. Without Postgres the use case reads through its
+  repositories as before.
+- *The origin check reads with it.* The poll checks its page against the
+  allowed websites itself, from that statement (403 as before, now after
+  the rate limit), instead of a transaction of its own in the route.
+- *The counting function switches its scope by expressions.* 1194
+  replaces `workshop.count_request_within_limits` with the same function
+  whose two `set_config` calls are PL/pgSQL assignments instead of
+  `perform` queries: two executor runs less per counted request, same
+  answers (`test_rate_limit_parity.py`, `test_rate_limit_concurrency.py`).
+
+A poll is now 2 round trips and 3 statements sent (the visitor and
+network count; the scope and the read), whether it finds nothing or a
+new answer; a lease top-up adds one per 60 polls of a business and per
+600 of the platform in each process, the open chat's channel read one
+per 10 s (`OpenChatMemory`, unchanged).
+
+**Guarantees kept, and where they are tested.**
+
+- One visitor and one network are held to 60 and 300 polls a minute
+  across every API process, exactly (`test_widget_poll_limits.py`: four
+  registries over one set of counters; `test_widget_polling_cost.py`:
+  the 61st poll gets 429 with the same Retry-After).
+- A business and the platform never pass 6,000 and 60,000 polls a minute
+  either: every unit is counted before it admits a poll, so leases bind
+  early by at most a lease and a fifth per process, never late
+  (`test_rate_limit_leases.py`: 32 threads over four pools behind a
+  barrier, drained to exactly the limit; in-memory and Postgres grant
+  alike, refused leases leave no bucket and keep the caller's scope;
+  `test_rate_limit_lease_book.py` for window edges and give-backs).
+- A refused poll counts nowhere: its leased units go back, its
+  per-request counts are taken back by the counting function as before.
+- Every cursor gets the whole chat's answer through the one statement
+  too (`test_widget_poll_window.py`, random chats with ties, several and
+  sandbox conversations, other visitors), and polls racing the answers
+  of their chat see each once, in order (`test_widget_poll_race.py`,
+  four widgets and a writer behind a barrier).
+- Row-level security binds the statement in the ambient scope, every
+  table is also filtered by the business asked for, another business's
+  scope reads nothing, no scope is refused, and the pipelined scope ends
+  with the read (`test_widget_poll_reads.py`); a foreign website gets
+  403 through both read paths.
+- `test_request_statement_counts.py` holds the poll to 2 round trips
+  (was 8), `test_widget_poll_statements.py` a poll with nothing new and
+  one with a new answer to 2 round trips and 3 statements, and five
+  polls in a row to 10.
+
+**Measured.** The counts come from libpq's trace and
+`pg_stat_statements` and do not depend on the machine; the CPU and the
+latencies were measured on a 4 vCPU machine that other jobs kept at a
+load of 5–37, before (`395027c`) and after alternating, each from the
+same seeded database (`seed-load --businesses 50 --messages 200000
+--bookings 20000 --visitors 1000`, analysed).
+
+One API process (production's 40 threads and 12 connections), 3,000
+polls one after another per phase, three pairs (medians): "nothing new"
+polls visitors with nothing after their cursor, "new answer" visitors
+whose answer came after it (the k6 scenario's cursor never moves, so
+after a visitor's first message every poll of it is one of these). API
+CPU is the process's, Postgres CPU its connections' backends
+(`/proc`); statements are `pg_stat_statements` calls per poll, the
+counting function's and the read function's own included:
+
+| Per poll | Nothing new, before | after | New answer, before | after |
+| --- | ---: | ---: | ---: | ---: |
+| Round trips (trace) | 8 | 2 | 9 | 2 |
+| Statements sent (trace) | 8 | 3 | 9 | 3 |
+| Statements, top level | 10.07 | 3.13 | 11.03 | 3.06 |
+| Statements, with functions' own | 13.07 | 5.17 | 14.03 | 5.11 |
+| API CPU | 6.37 ms | 4.01 ms | 6.86 ms | 4.86 ms |
+| Postgres CPU | 3.34 ms | 1.49 ms | 2.88 ms | 1.32 ms |
+| API and Postgres CPU | 9.71 ms | 5.50 ms | 9.74 ms | 6.18 ms |
+| Wall time, one after another | 15.2 ms | 7.1 ms | 14.1 ms | 7.8 ms |
+
+Postgres CPU fell by 54–55%, the API's by 29–37% (a request's HTTP and
+framework work, about 0.8 ms for `/healthz` here, did not change), the
+two together by 37–43%; the statements by 60–64%. Postgres had spent
+part of it planning: the application sends no prepared statements, so
+each of the four reads was planned on every poll (0.1–0.2 ms each);
+the read function's plan is kept per session. The counting statement
+averaged 1.06 ms for four keys before and 0.79 ms for two after.
+
+**Under k6.** `widget_polling.js` unchanged (1,000 visitors, 5 minutes,
+the scripted model at 800 ms) against that stack and seeded database,
+before and after alternating, with the stack at `nice -10` from the
+third pair on so the other jobs took less of its CPU (their load was 6–19
+when each run started). This machine is much slower than the CI runner
+for the scenario (before, the poll median was 0.5–0.9 s against CI's
+35 ms): every run saturated its four vCPUs, so these runs compare the two
+versions under overload, not against the 150 ms gate. Milliseconds;
+"restarts" are API processes uvicorn killed and replaced; lock waits are
+`pg_stat_activity` samples (every 0.5 s) of a statement waiting on a
+rate-limit row.
+
+| Pair | Version | Restarts | Poll p50 | p90 | p95 | Message p95 | Requests | Lock waits |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | before | 3 | 893 | 3,375 | 4,987 | 7,020 | 56,536 | 2 |
+| 1 | after | 4 | 528 | 2,587 | 7,459 | 7,065 | 47,891 (1.1% failed) | 0 |
+| 2 | before | 0 | 722 | 2,010 | 2,767 | 3,158 | 61,394 | 9 |
+| 2 | after | 4 | 894 | 3,621 | 5,387 | 7,072 | 55,871 | 0 |
+| 3 | before | 1 | 692 | 2,461 | 3,568 | 5,329 | 59,864 | 38 |
+| 3 | after | 5 | 364 | 2,454 | 7,033 | 4,951 | 47,632 (2.1% failed) | 0 |
+| 4 | before | 0 | 524 | 1,733 | 2,435 | 2,583 | 63,794 | 4 |
+| 4 | after | 1 | 189 | 1,094 | 1,596 | 1,661 | 69,079 | 0 |
+| 5 | before | 0 | 610 | 1,836 | 2,383 | 4,134 | 62,999 | 179 |
+| 5 | after | 0 | 278 | 1,163 | 1,698 | 1,685 | 68,152 | 0 |
+| 6 | after | 0 | 166 | 929 | 1,348 | 1,594 | 70,563 | 0 |
+
+(Pair 6's "before" run lost k6 itself to the machine's memory limit.)
+The rate-limit rows' lock waits are gone in every run. Where no process
+or one was restarted (pairs 4 and 5), the poll median fell by 54–64% and
+the p95 by 29–34%, and more polls got through (a visitor polls again
+sooner). The runs with several restarts are the worst of both versions.
+
+**The restarts: full garbage collections.** uvicorn replaces an API
+process that does not answer its health check within 5 s. A probe thread
+in each API process (harness only: it timed its own 50 ms sleeps and
+`gc.callbacks`) showed what stops them: every stall over a second
+coincided with a full (generation 2) collection, 1–5 s long under this
+load in both versions (before up to 4.9 s, after up to 4.1 s), 8–10 of
+them per process and run. An idle API process tracks 1.06 million
+objects (the container's providers, the pydantic and FastAPI schemas),
+and a full collection walks all of them: about 1 s on this machine at
+rest. A replaced process imports for 10–25 s while the other three take
+its visitors, so one restart often brought more. Restarts came more
+often after the change here (17 in 7 runs, two of them 3-minute runs
+under `py-spy`, against 5 in 7 before); why was not established, the
+collections themselves were no longer after it. In one experiment
+outside this change, freezing the startup heap 40 s after start
+(`gc.collect(); gc.freeze()`) gave the version after it a poll median of
+74 ms and a p95 of 812 ms with no restart (that run was stopped 15 s
+early for memory); collections still took 0.3–2 s there. Garbage
+collection pauses are the next lever on this scenario's tail; whether
+they weigh on the CI runner's p95 (its maxima were 3–3.7 s) these local
+runs cannot tell.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by
@@ -803,14 +1003,16 @@ Blueprint and the test together:
   (migration 1122); the customer search finds exact names, phones and ids
   through indexes and walks at most 500 customers for a part of a name.
 - A widget poll reads where the visitor's ten newest messages stand and
-  only the messages after its cursor; only a backlog longer than that,
-  an unknown cursor or none reads the visitor's whole chat (bounded by
-  one visitor's chat, not by the business).
+  only the messages after its cursor, in one statement; only a backlog
+  longer than that, an unknown cursor or none reads the visitor's whole
+  chat (bounded by one visitor's chat, not by the business).
 - A widget switched off still answers polls for up to 10 s in every API
   process (`OpenChatMemory`); its messages are refused at once.
-- Every widget poll of the platform counts the same rate-limit row
-  (`widget-poll:platform`): one short statement each (migration 1135),
-  so it serializes polls only for about a millisecond apiece.
+- Widget polls take their business's and the platform's rate-limit
+  counters in leases of 1% of the limit per process, topped up when a
+  fifth is left (migration 1194): with N API processes those two limits
+  may refuse up to 1.2 × N % early, never late. Messages, uploads,
+  handoffs and ratings still count every request in all four counters.
 - Seeding the full dataset took 21 minutes locally (the demo part of each
   business dominates); the weekly budgets job allows two hours.
 - The scripted model answers every message with one sentence; a

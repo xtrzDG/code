@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.registries import RequestRateLimitRegistryContract
+from app.registries.limits.rate_limit_leases import RateLimitLeases, TakenUnit
 from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.platform.constrained_integers import (
     RateLimitRequestCount,
@@ -31,10 +32,17 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
     script may send. Each counter keeps the requests of a fixed window and
     the window before it, and a request is allowed while the sliding
     estimate stays within the limit (`sliding_window_limits`).
+
+    A counter with a lease size is taken from this process's lease of it
+    (`RateLimitLeases`), topped up from the shared counter that many
+    requests at a time; the other counters of a request are counted in one
+    statement. A singleton per process, so its leases serve every request
+    of the process.
     """
 
     def __init__(self, buckets: RateLimitBucketAdapterContract) -> None:
         self._buckets: RateLimitBucketAdapterContract = buckets
+        self._leases: RateLimitLeases = RateLimitLeases(buckets)
 
     def try_acquire_all(
         self,
@@ -42,7 +50,36 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
         window: RateWindowSeconds,
         now: Microseconds,
     ) -> RateLimitKey | None:
-        return self._buckets.count_if_within(counters, locate_window(now, window))
+        position = locate_window(now, window)
+        taken: list[TakenUnit] = []
+        for counter in counters:
+            if counter.lease_size is None:
+                continue
+
+            unit: TakenUnit | None = self._leases.take(
+                counter, counter.lease_size, position
+            )
+            if unit is None:
+                self._leases.give_back(taken)
+                return counter.key
+
+            taken.append(unit)
+
+        counted: list[RateLimitCounter] = [
+            counter for counter in counters if counter.lease_size is None
+        ]
+        try:
+            refused: RateLimitKey | None = (
+                self._buckets.count_if_within(counted, position) if counted else None
+            )
+        except BaseException:
+            self._leases.give_back(taken)
+            raise
+
+        if refused is not None:
+            self._leases.give_back(taken)
+
+        return refused
 
     def seconds_until_free(
         self,

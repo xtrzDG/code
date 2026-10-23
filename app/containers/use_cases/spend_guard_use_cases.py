@@ -24,7 +24,6 @@ from app.schemas.dto.widget_origins import (
     WidgetAllowedOriginsView,
     WidgetOriginCheck,
 )
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.use_cases.spend_guard.admit_api_request_use_case import (
     AdmitApiRequestUseCase,
 )
@@ -43,7 +42,6 @@ from app.use_cases.spend_guard.get_widget_allowed_origins_use_case import (
 from app.use_cases.spend_guard.save_widget_allowed_origins_use_case import (
     SaveWidgetAllowedOriginsUseCase,
 )
-from app.utilities.spend.widget_origins import platform_page_origins
 
 
 def admit_owner_action_factory(
@@ -109,12 +107,7 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )
-    platform_origins: Singleton[list[PublicBaseUrl]] = Singleton(
-        platform_page_origins,
-        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
-        app_base_url=config.app_settings.provided.app_base_url,
-        cabinet_origins=config.app_settings.provided.cors_allowed_origins,
-    )
+    platform_origins = utilities.widget_platform_origins
     check_widget_origin_use_case: Factory[UseCaseContract[WidgetOriginCheck, None]] = (
         Factory(
             CheckWidgetOriginUseCase,

@@ -3,6 +3,9 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.adapters.storage.in_memory_document_collection import (
+    InMemoryDocumentCollectionAdapter,
+)
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.gateways.http.channel_routes import build_channel_router
@@ -30,6 +33,8 @@ from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
+from app.repositories.spend_guard_repositories import BusinessLimitsRepository
+from app.schemas.domain.business_limits import BusinessLimitsDocument
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
@@ -134,9 +139,13 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                         testbed.channel_repo,
                         testbed.conversation_repo,
                         testbed.message_repo,
+                        BusinessLimitsRepository(
+                            InMemoryDocumentCollectionAdapter(BusinessLimitsDocument)
+                        ),
                         testbed.language_registry,
                         testbed.widget_rate_limits,
                         testbed.wall_clock,
+                        [],
                     ),
                     stream_tickets,
                 )

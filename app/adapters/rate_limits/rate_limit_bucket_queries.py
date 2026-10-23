@@ -1,4 +1,4 @@
-"""Statements on `workshop.rate_limit_buckets` (migrations 1041 and 1135)."""
+"""Statements on `workshop.rate_limit_buckets` (migrations 1041, 1135, 1194)."""
 
 from typing import LiteralString
 
@@ -14,6 +14,22 @@ select workshop.count_request_within_limits(
     %(bucket_keys)s::text[],
     %(counter_keys)s::text[],
     %(counter_limits)s::integer[],
+    %(window_seconds)s::integer,
+    %(window_start)s::bigint,
+    %(previous_start)s::bigint,
+    %(expires_at)s::bigint,
+    %(window_microseconds)s::bigint,
+    %(elapsed_microseconds)s::bigint
+)
+"""
+# Up to `lease_units` requests of one key at once, as many as its limit
+# still holds (`workshop.lease_requests_within_limit`, 1194): returns how
+# many it counted, which the process then admits on its own.
+LEASE_REQUESTS_WITHIN_LIMIT: LiteralString = """
+select workshop.lease_requests_within_limit(
+    %(key)s::text,
+    %(request_limit)s::integer,
+    %(lease_units)s::integer,
     %(window_seconds)s::integer,
     %(window_start)s::bigint,
     %(previous_start)s::bigint,

@@ -9,30 +9,23 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.spend_guard_repositories import (
+    BusinessLimitsRepoContract,
+)
 from app.contracts.storage import StorageReadSessionContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import (
-    ChannelKind,
-    ChannelStatus,
-    MessageDirection,
-)
-from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
-from app.schemas.constants.localization import TextDirection
+from app.contracts.widget_poll_reads import WidgetPollReadAdapterContract
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.conversations import ConversationDocument, MessageDocument
-from app.schemas.dto.channels.widget import (
-    WidgetMessagesQuery,
-    WidgetMessagesView,
-    WidgetMessageView,
-)
+from app.schemas.domain.conversations import MessageDocument
+from app.schemas.dto.channels.widget import WidgetMessagesQuery, WidgetMessagesView
+from app.schemas.dto.channels.widget_poll_reads import WidgetPollRead
 from app.schemas.dto.message_positions import MessagePosition
-from app.schemas.dto.paging import KeysetSlice
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-    UnsupportedLanguageError,
-)
+from app.schemas.exceptions.application_errors import AccessDeniedError, NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.use_cases.channels.open_chat_memory import OpenChatMemory
@@ -40,21 +33,19 @@ from app.use_cases.channels.widget_message_window import (
     covers_from_cursor,
     find_latest_visitor_message_id,
     find_position_after,
+    ids_after_cursor,
     message_order,
 )
+from app.use_cases.channels.widget_poll_answers import build_widget_answer
+from app.use_cases.channels.widget_poll_reading import read_poll_through_repositories
 from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_rate_limits import (
     WIDGET_POLL_LIMITS,
     refuse_too_frequent_widget_requests,
 )
-from app.utilities.conversations.rating_invitations import invites_rating
+from app.utilities.spend.widget_origins import is_origin_allowed
 
-# Messages the widget shows besides the visitor's own.
-WIDGET_MESSAGE_AUTHORS: frozenset[MessageAuthor] = frozenset(
-    {MessageAuthor.ASSISTANT, MessageAuthor.STAFF}
-)
-WIDGET_MESSAGE_PAGE_SIZE: int = 50
 # The newest messages a poll reads first: a poll every few seconds finds a
 # few new ones at most, and the cursor among these settles it.
 RECENT_MESSAGE_WINDOW: KeysetReadLimit = KeysetReadLimit(10)
@@ -71,32 +62,33 @@ class GetWidgetMessagesUseCase(
     oldest first, at most 50 at a time. Staff replies written in the
     cabinet after a handoff reach the visitor this way.
 
-    The business must have the widget switched on, else the chat is
-    unavailable (the same answer for an unknown business): its web chat
-    channel is connected. A channel exists only for an existing business
-    (businesses are never deleted), so the channel alone answers it. A chat
-    found open is believed open for `OPEN_CHAT_MEMORY_SECONDS` without
+    The endpoint is public, so polls are limited first, per visitor, per
+    client network, per business and for the platform (429 with
+    Retry-After, `WIDGET_POLL_LIMITS`; the visitor and network counts are
+    one statement, the business and platform counters come from this
+    process's leases). Then one read (`WidgetPollReadAdapterContract`: one
+    statement and one round trip on Postgres; the repositories without it)
+    brings the business's allowed websites, the visitor's conversations
+    and where their newest `RECENT_MESSAGE_WINDOW` messages stand, with the
+    messages after the cursor among them in full. A page the business does
+    not allow is refused (403, as for every widget route; a request that
+    names no page passes), then a chat that is not switched on (404, the
+    same for an unknown business): its web chat channel is connected. A
+    chat found open is believed open for `OPEN_CHAT_MEMORY_SECONDS` without
     reading the channel again (`OpenChatMemory`: a widget switched off
     stops answering polls within that time, one switched on answers at
-    once), so the use case is a singleton of the container. A
-    visitor without a conversation gets nothing and no position. Without
-    `after`, or with a position the visitor does not have (erased data), no
-    messages come but a position: the visitor's latest own message, so an
-    answer the widget missed (the page was left while it was being
-    written) comes with the next poll; the widget skips answers it already
-    shows by id.
+    once), so the use case is a singleton of the container.
 
-    The endpoint is public, so polls are limited per visitor, per client
-    network, per business and for the platform (429 with Retry-After,
-    `WIDGET_POLL_LIMITS`), and only the visitor's own conversations and
-    messages are read (indexed lookups, not the whole business): first
-    where the newest `RECENT_MESSAGE_WINDOW` of them stand (ids and times
-    from the index), which settle a poll whose cursor is among them, and
-    then in full only the messages after the cursor; only a longer
-    backlog, an unknown cursor or none reads the visitor's whole chat
-    (`widget_message_window`). The reads share one read session (one
-    transaction on Postgres); the count of the poll comes before it, in its
-    own statement.
+    A visitor without a conversation gets nothing and no position. When
+    the newest messages hold the cursor and reach back past it, the answer
+    is the whole chat's (`widget_message_window`); only a longer backlog,
+    an unknown cursor or none reads the whole chat (in a read session).
+    Without `after`, or with a position the visitor does not have (erased
+    data), no messages come but a position: the visitor's latest own
+    message, so an answer the widget missed (the page was left while it
+    was being written) comes with the next poll; the widget skips answers
+    it already shows by id. Only the visitor's own conversations and
+    messages are read, by indexed lookups.
     """
 
     def __init__(
@@ -104,66 +96,93 @@ class GetWidgetMessagesUseCase(
         channel_repo: ChannelRepoContract,
         conversation_repo: ConversationRepoContract,
         message_repo: MessageRepoContract,
+        business_limits_repo: BusinessLimitsRepoContract,
         language_registry: LanguageRegistryContract,
         rate_limit_registry: RequestRateLimitRegistryContract,
         wall_clock: WallClock[Microseconds],
+        platform_origins: list[PublicBaseUrl],
         read_session: StorageReadSessionContract | None = None,
+        poll_reads: WidgetPollReadAdapterContract | None = None,
     ) -> None:
         self._channel_repo: ChannelRepoContract = channel_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._message_repo: MessageRepoContract = message_repo
+        self._business_limits_repo: BusinessLimitsRepoContract = business_limits_repo
         self._language_registry: LanguageRegistryContract = language_registry
         self._rate_limit_registry: RequestRateLimitRegistryContract = (
             rate_limit_registry
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._platform_origins: list[str] = [str(o) for o in platform_origins]
         self._read_session: StorageReadSessionContract | None = read_session
+        self._poll_reads: WidgetPollReadAdapterContract | None = poll_reads
         self._open_chats: OpenChatMemory = OpenChatMemory()
 
     def run(self, input_data: WidgetMessagesQuery) -> WidgetMessagesView:
         now: Microseconds = self._wall_clock.now_unix()
-        self._refuse_too_frequent_polls(input_data, now)
-        with in_read_session(self._read_session):
-            self._require_open_chat(input_data.business_id, now)
-            return self._answer(input_data)
+        refuse_too_frequent_widget_requests(
+            self._rate_limit_registry,
+            WIDGET_POLL_LIMITS,
+            business_id=input_data.business_id,
+            session_key=input_data.session_key,
+            client_ip_address=input_data.client_ip_address,
+            now=now,
+        )
+        read: WidgetPollRead = self._read(input_data)
+        if not is_origin_allowed(
+            input_data.page_origin, read.allowed_origins, self._platform_origins
+        ):
+            raise AccessDeniedError("This chat is not available on this website.")
 
-    def _answer(self, input_data: WidgetMessagesQuery) -> WidgetMessagesView:
-        conversations: list[ConversationDocument] = [
-            conversation
-            for conversation in self._conversation_repo.list_by_channel_user(
-                input_data.business_id,
-                ChannelKind.WEB_CHAT,
-                ChannelUserId(str(input_data.session_key)),
+        self._require_open_chat(input_data.business_id, now)
+        return self._answer(input_data, read)
+
+    def _read(self, input_data: WidgetMessagesQuery) -> WidgetPollRead:
+        visitor = ChannelUserId(str(input_data.session_key))
+        if self._poll_reads is not None:
+            return self._poll_reads.read_poll(
+                input_data.business_id, visitor, input_data.after, RECENT_MESSAGE_WINDOW
             )
-            if not conversation.is_sandbox
-        ]
-        if not conversations:
+
+        with in_read_session(self._read_session):
+            return read_poll_through_repositories(
+                self._conversation_repo,
+                self._message_repo,
+                self._business_limits_repo,
+                input_data.business_id,
+                visitor,
+                input_data.after,
+                RECENT_MESSAGE_WINDOW,
+            )
+
+    def _answer(
+        self, input_data: WidgetMessagesQuery, read: WidgetPollRead
+    ) -> WidgetMessagesView:
+        if not read.conversations:
             return WidgetMessagesView(items=[])
 
         # Conversations come newest first: the first one is the current one.
-        is_handed_off: bool = conversations[0].status is ConversationStatus.HANDOFF
-        conversation_ids: list[ConversationId] = [
-            conversation.id for conversation in conversations
-        ]
-        from_newest: tuple[list[MessageDocument], MessageId] | None = (
-            self._read_from_newest(
-                input_data.business_id, conversation_ids, input_data.after
+        is_handed_off: bool = read.conversations[0].status is ConversationStatus.HANDOFF
+        settled: tuple[list[MessageDocument], MessageId] | None = settle_from_newest(
+            read, input_data.after
+        )
+        if settled is not None:
+            later, latest_id = settled
+            return build_widget_answer(
+                later, latest_id, is_handed_off, self._language_registry
             )
-        )
-        if from_newest is not None:
-            later, latest_id = from_newest
-            return self._build_answer(later, latest_id, is_handed_off)
 
-        messages: list[MessageDocument] = sorted(
-            (
-                message
-                for conversation_id in conversation_ids
-                for message in self._message_repo.list_by_conversation(
-                    input_data.business_id, conversation_id
-                )
-            ),
-            key=message_order,
-        )
+        with in_read_session(self._read_session):
+            messages: list[MessageDocument] = sorted(
+                (
+                    message
+                    for conversation in read.conversations
+                    for message in self._message_repo.list_by_conversation(
+                        input_data.business_id, conversation.id
+                    )
+                ),
+                key=message_order,
+            )
         last_id: MessageId | None = messages[-1].id if messages else None
         start: int | None = find_position_after(messages, input_data.after)
         if start is None:
@@ -173,78 +192,8 @@ class GetWidgetMessagesUseCase(
                 is_handed_off=is_handed_off,
             )
 
-        return self._build_answer(messages[start:], last_id, is_handed_off)
-
-    def _read_from_newest(
-        self,
-        business_id: BusinessId,
-        conversation_ids: list[ConversationId],
-        after: MessageId | None,
-    ) -> tuple[list[MessageDocument], MessageId] | None:
-        """
-        When the newest few messages hold the cursor and everything from it
-        on (a poll that finds nothing new or a few answers): the messages
-        after the cursor in answer order, and the latest message's id. Only
-        the positions of the newest are read, and in full only the messages
-        after the cursor (one erased in between is left out). None when the
-        whole chat must be read.
-        """
-
-        if after is None:
-            return None
-
-        newest: list[MessagePosition] = (
-            self._message_repo.page_newest_positions_of_conversations(
-                business_id, conversation_ids, KeysetSlice(limit=RECENT_MESSAGE_WINDOW)
-            )
-        )
-        if not covers_from_cursor(newest, after, RECENT_MESSAGE_WINDOW):
-            return None
-
-        window: list[MessagePosition] = sorted(newest, key=message_order)
-        start: int | None = find_position_after(window, after)
-        if start is None:  # a covering window holds the cursor
-            return None
-
-        later_ids: list[MessageId] = [position.id for position in window[start:]]
-        found: dict[MessageId, MessageDocument] = (
-            self._message_repo.get_many(business_id, later_ids) if later_ids else {}
-        )
-        return (
-            [found[message_id] for message_id in later_ids if message_id in found],
-            window[-1].id,
-        )
-
-    def _build_answer(
-        self,
-        later: list[MessageDocument],
-        latest_id: MessageId | None,
-        is_handed_off: bool,
-    ) -> WidgetMessagesView:
-        """The assistant's and staff's messages after the cursor, a page of them."""
-
-        shown: list[MessageDocument] = [
-            message for message in later if is_shown_in_widget(message)
-        ]
-        page: list[MessageDocument] = shown[:WIDGET_MESSAGE_PAGE_SIZE]
-        has_more: bool = len(shown) > len(page)
-        return WidgetMessagesView(
-            items=[self._build_view(message) for message in page],
-            cursor=page[-1].id if has_more else latest_id,
-            has_more=has_more,
-            is_handed_off=is_handed_off,
-        )
-
-    def _refuse_too_frequent_polls(
-        self, input_data: WidgetMessagesQuery, now: Microseconds
-    ) -> None:
-        refuse_too_frequent_widget_requests(
-            self._rate_limit_registry,
-            WIDGET_POLL_LIMITS,
-            business_id=input_data.business_id,
-            session_key=input_data.session_key,
-            client_ip_address=input_data.client_ip_address,
-            now=now,
+        return build_widget_answer(
+            messages[start:], last_id, is_handed_off, self._language_registry
         )
 
     def _require_open_chat(self, business_id: BusinessId, now: Microseconds) -> None:
@@ -260,33 +209,32 @@ class GetWidgetMessagesUseCase(
 
         self._open_chats.remember_open(business_id, now)
 
-    def _build_view(self, message: MessageDocument) -> WidgetMessageView:
-        direction: TextDirection = TextDirection.LEFT_TO_RIGHT
-        if message.language is not None:
-            try:
-                direction = self._language_registry.get(message.language).direction
-            except UnsupportedLanguageError:
-                direction = TextDirection.LEFT_TO_RIGHT
 
-        return WidgetMessageView(
-            id=message.id,
-            author=message.author,
-            text=message.text,
-            language=message.language,
-            direction=direction,
-            created_at=message.created_at,
-            choices=[] if message.choices is None else list(message.choices.options),
-            invites_rating=invites_rating(message),
-        )
-
-
-def is_shown_in_widget(message: MessageDocument) -> bool:
+def settle_from_newest(
+    read: WidgetPollRead,
+    after: MessageId | None,
+) -> tuple[list[MessageDocument], MessageId] | None:
     """
-    The assistant's and staff's messages, and the platform's messages to the
-    visitor (a booking's written confirmation with its manage link).
+    When the newest messages hold the cursor and everything from it on (a
+    poll that finds nothing new or a few answers): the messages after the
+    cursor in answer order (one erased meanwhile is left out), and the
+    latest message's id. None when the whole chat must be read.
     """
 
-    return message.author in WIDGET_MESSAGE_AUTHORS or (
-        message.author is MessageAuthor.SYSTEM
-        and message.direction is MessageDirection.OUTBOUND
-    )
+    newest: list[MessagePosition] | None = read.newest
+    if (
+        after is None
+        or not newest
+        or not covers_from_cursor(newest, after, RECENT_MESSAGE_WINDOW)
+    ):
+        return None
+
+    found: dict[MessageId, MessageDocument] = {
+        message.id: message for message in read.after_cursor
+    }
+    later: list[MessageDocument] = [
+        found[message_id]
+        for message_id in ids_after_cursor(newest, after)
+        if message_id in found
+    ]
+    return later, max(newest, key=message_order).id

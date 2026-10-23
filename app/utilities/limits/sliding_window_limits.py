@@ -21,6 +21,8 @@ from app.schemas.dto.rate_limits import (
     RateLimitWindow,
 )
 from app.schemas.typings.platform.constrained_integers import (
+    RateLimitLeaseGrant,
+    RateLimitLeaseSize,
     RateWindowSeconds,
     RetryAfterSeconds,
 )
@@ -77,6 +79,34 @@ def is_within_limit(
         + int(counts.current_count) * length
     )
     return weighted <= int(counter.limit) * length
+
+
+def lease_grant(
+    counts: RateLimitBucketCounts,
+    counter: RateLimitCounter,
+    units: RateLimitLeaseSize,
+    window: RateLimitWindow,
+) -> RateLimitLeaseGrant:
+    """
+    How many of `units` more requests the window may still hold: the
+    largest n (at most `units`, at least 0) whose estimate stays within the
+    limit by `is_within_limit`'s inequality,
+
+        previous * (length - elapsed) + (current + n) * length
+            <= limit * length
+
+    The Postgres counters grant the same inside the database
+    (`workshop.lease_requests_within_limit`, migration 1194).
+    """
+
+    length: int = window_microseconds(window.length_seconds)
+    elapsed: int = int(window.now) - int(window.started_at)
+    most_in_window: int = (
+        int(counter.limit) * length - int(counts.previous_count) * (length - elapsed)
+    ) // length
+    return RateLimitLeaseGrant(
+        max(0, min(int(units), most_in_window - int(counts.current_count)))
+    )
 
 
 def seconds_until_free(

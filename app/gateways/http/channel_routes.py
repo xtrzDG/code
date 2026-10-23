@@ -57,6 +57,7 @@ from app.utilities.channels.channel_endpoints import (
     TELEGRAM_SECRET_HEADER,
     TELEGRAM_WEBHOOK_PATH_TEMPLATE,
 )
+from app.utilities.spend.widget_origins import page_origin_of
 
 WIDGET_CONFIG_PATH: str = "/v1/widget/{business_id}/config"
 WIDGET_MESSAGES_PATH: str = "/v1/widget/{business_id}/messages"
@@ -207,9 +208,10 @@ def build_channel_router(
             )
         )
 
-    # Every open chat polls every 4 s: the answer is serialized here, and
-    # the origin check runs here too, so the request makes one hop to a
-    # request thread, not two (or three).
+    # Every open chat polls every 4 s: the answer is serialized here, so the
+    # request makes one hop to a request thread, not two. The poll checks
+    # its page against the business's allowed websites itself, with the
+    # rest of what it reads in one statement (403 like the guard's).
     @router.get(WIDGET_MESSAGES_PATH, response_model=WidgetMessagesView)
     def list_widget_messages(
         request: Request,
@@ -217,14 +219,15 @@ def build_channel_router(
         session_key: Annotated[str, Header(alias=WIDGET_SESSION_KEY_HEADER)],
         after: Annotated[str | None, Query()] = None,
     ) -> Response:
-        if widget_origin_guard is not None:
-            widget_origin_guard(request, business_id)
         view: WidgetMessagesView = widget_messages_operator.operate(
             WidgetMessagesQuery(
                 business_id=parse_path_identifier(business_id, BusinessId, "Chat"),
                 session_key=parse_session_key(session_key),
                 after=parse_message_cursor(after),
                 client_ip_address=read_client_ip_address(request),
+                page_origin=page_origin_of(
+                    request.headers.get("origin"), request.headers.get("referer")
+                ),
             )
         )
         return serialized_json_response(view, WIDGET_CORS_HEADERS)

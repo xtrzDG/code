@@ -232,10 +232,13 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
+        business_limits_repo=repositories.business_limits_repo,
         language_registry=registries.language_registry,
         rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        platform_origins=utilities.widget_platform_origins,
         read_session=adapters.storage_read_session,
+        poll_reads=adapters.widget_poll_reads,
     )
     # A ticket to the visitor's live stream with each widget answer.
     issue_widget_stream_ticket_use_case: Factory[
