@@ -556,8 +556,36 @@ jobs:
       - name: Install cabinet dependencies
         run: npm ci --no-audit --no-fund
 
+      # The browser's system libraries and fonts (--with-deps) come from
+      # Ubuntu's mirror, which some runners reach at 30 kB/s: their 22 MB took
+      # 9-13 minutes of a shard's 15. They are kept in the Actions cache per
+      # runner image and lockfile; apt takes a cached package only when it
+      # matches the size and hash of its signed index, and fetches the rest.
+      - name: Name the runner image
+        id: runner-image
+        run: echo "name=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the browser's system packages
+        id: browser-packages
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/browser-packages
+          key: browser-packages-${{ steps.runner-image.outputs.name }}-${{ hashFiles('web/package-lock.json') }}
+
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: |
+          echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99keep-downloaded-packages
+          mkdir -p ~/browser-packages
+          find ~/browser-packages -maxdepth 1 -name '*.deb' -exec sudo cp -t /var/cache/apt/archives {} +
+          npx playwright install --with-deps chromium
+          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp -t ~/browser-packages {} +
+
+      - name: Keep the browser's system packages
+        if: steps.browser-packages.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/browser-packages
+          key: ${{ steps.browser-packages.outputs.cache-primary-key }}
 
       - name: Download the cabinet build
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
