@@ -84,7 +84,7 @@ describe("ClosureBanner: a closing business counts down to its deletion", () => 
     let view: BusinessClosureView = closing(20);
     answerGet(() => ok(view));
     vi.mocked(api.DELETE).mockImplementation((() => {
-      view = { business_id: "business_1", state: "active" };
+      view = { business_id: "business_1", state: "active", can_cancel: false, viewer_is_owner: true };
       return Promise.resolve({ data: undefined, response: new Response(null, { status: 204 }) });
     }) as never);
     renderBanner();
@@ -119,13 +119,13 @@ describe("ClosureBanner: a closing business counts down to its deletion", () => 
 
   it("says once the deletion has begun, and nothing for an open business", async () => {
     const { t } = textsIn("en");
-    answerGet(() => ok({ business_id: "business_1", state: "deleting" }));
+    answerGet(() => ok({ business_id: "business_1", state: "deleting", can_cancel: false, viewer_is_owner: true }));
     const { unmount } = renderBanner();
 
     expect(await screen.findByText(t("closure.banner.deleting"))).toBeTruthy();
     unmount();
     queryCache.clear();
-    answerGet(() => ok({ business_id: "business_1", state: "active" }));
+    answerGet(() => ok({ business_id: "business_1", state: "active", can_cancel: false, viewer_is_owner: true }));
     renderBanner();
     await waitFor(() => expect(vi.mocked(api.GET)).toHaveBeenCalledTimes(2));
     expect(screen.queryByTestId("closure-banner")).toBeNull();

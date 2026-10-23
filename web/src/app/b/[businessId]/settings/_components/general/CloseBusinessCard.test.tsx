@@ -26,7 +26,7 @@ const business = {
   timezone: "Asia/Tbilisi",
   currency_code: "GEL",
 } as unknown as BusinessView;
-const open: BusinessClosureView = { business_id: "business_1", state: "active", viewer_is_owner: true };
+const open: BusinessClosureView = { business_id: "business_1", state: "active", can_cancel: false, viewer_is_owner: true };
 
 function closing(changes: Partial<BusinessClosureView> = {}): BusinessClosureView {
   const now = Date.now();

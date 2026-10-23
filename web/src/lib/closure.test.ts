@@ -48,9 +48,15 @@ describe("the countdown of a closing business", () => {
       canCancel: true,
       actorName: "Nino",
     });
-    expect(closureCountdown({ business_id: "business_1", state: "active" }, NOW_MS)).toBeNull();
+    expect(closureCountdown({ business_id: "business_1", state: "active", can_cancel: false, viewer_is_owner: true }, NOW_MS)).toBeNull();
     expect(closureCountdown({ ...closing, state: "deleting" }, NOW_MS)).toBeNull();
     expect(closureCountdown(undefined, NOW_MS)).toBeNull();
+  });
+
+  it("never counts more days than the closure gives, whatever the clock read before it", () => {
+    const justClosed = { ...closing, requested_at: micros(NOW_MS), delete_after: micros(NOW_MS + 30 * DAY_MS) };
+
+    expect(closureCountdown(justClosed, NOW_MS - 5 * 60_000)?.daysLeft).toBe(30);
   });
 
   it("knows a closure for non-payment that cannot be cancelled before paying", () => {

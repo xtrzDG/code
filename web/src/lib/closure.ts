@@ -34,7 +34,10 @@ export interface ClosureCountdown {
   actorName: string | null;
 }
 
-/** A closing business's countdown; null when it is not closing (open, or already being deleted). */
+/**
+ * A closing business's countdown at `nowMs` (or at its closure, if that is
+ * later); null when it is not closing (open, or already being deleted).
+ */
 export function closureCountdown(view: BusinessClosureView | undefined, nowMs: number): ClosureCountdown | null {
   if (view?.state !== "pending_deletion" || view.delete_after == null || view.requested_at == null) {
     return null;
@@ -42,9 +45,11 @@ export function closureCountdown(view: BusinessClosureView | undefined, nowMs: n
   return {
     deleteAfter: view.delete_after,
     requestedAt: view.requested_at,
-    daysLeft: daysUntilDeletion(view.delete_after, nowMs),
+    // Never before the closure itself: a clock read before it (the page opened
+    // earlier, a device clock behind) would count a day too many.
+    daysLeft: daysUntilDeletion(view.delete_after, Math.max(nowMs, view.requested_at / 1000)),
     isUnpaid: view.reason === "unpaid_subscription",
-    canCancel: view.can_cancel ?? false,
+    canCancel: view.can_cancel,
     actorName: view.actor_name ?? null,
   };
 }
