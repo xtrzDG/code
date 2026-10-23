@@ -3,6 +3,9 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
@@ -36,6 +39,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.assembly.go_live_refusals import (
     build_check_reason,
     build_version_reason,
@@ -63,7 +67,8 @@ class PublishAssistantVersionUseCase(
     Every refusal carries machine-readable reasons: an untested version or
     one under test is refused with all failed go-live checks at once (the
     "autotests" check first in line with the others), a live or archived one
-    with an AssistantVersionRefusalCode.
+    with an AssistantVersionRefusalCode. A closing business (a closure not
+    cancelled) is refused first.
     """
 
     def __init__(
@@ -87,7 +92,9 @@ class PublishAssistantVersionUseCase(
         user_repo: UserRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -131,6 +138,9 @@ class PublishAssistantVersionUseCase(
                 f"Assistant version {input_data.version_id} was not found."
             )
 
+        # Before the version's own checks: a closing business publishes
+        # nothing (activation refuses it as well).
+        refuse_while_closing(self._closure_repo, business.id, "publish again")
         is_forced: bool = self._require_publishable(business, version, input_data)
         published_version: AssistantVersionDocument = (
             self._activate_assistant_version.run(

@@ -7,6 +7,9 @@ from app.contracts.meta_connection import (
     MetaOAuthClientContract,
     MetaPagesClientContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -54,6 +57,7 @@ from app.use_cases.channels.meta_connection.meta_states import (
     link_expired,
     meta_refusal,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.channels.meta_sign_in import meta_app_of
 
 PAGE_CHANNELS: frozenset[ChannelKind] = frozenset(
@@ -74,7 +78,8 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
     connected is refused; the app is subscribed to the page's messages),
     and the channel stores the page token encrypted and the public
     usernames customers open a chat with. The sign-in ends with the
-    connection (its token is deleted).
+    connection (its token is deleted). A closing business (a closure not
+    cancelled) connects nothing: ConflictError, before Meta is asked.
     """
 
     def __init__(
@@ -94,7 +99,9 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
         step_up: StepUpGuardContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -124,6 +131,7 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
         if input_data.channel not in PAGE_CHANNELS:
             raise NotFoundError("Only Messenger and Instagram connect a page.")
 
+        refuse_while_closing(self._closure_repo, business.id, "connect a channel")
         self._step_up.require_recent_authentication()
         app: MetaAppCredentials | None = meta_app_of(self._app_settings)
         if app is None:

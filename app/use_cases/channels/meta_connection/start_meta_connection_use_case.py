@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.meta_connection import MetaConnectionStateRepoContract
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -28,6 +31,7 @@ from app.use_cases.channels.meta_connection.meta_states import (
     meta_refusal,
     state_end,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.channels.meta_sign_in import (
     META_GRAPH_API_VERSION,
     PAGE_PERMISSIONS,
@@ -58,7 +62,8 @@ class StartMetaConnectionUseCase(
     Starting is an owner's sensitive step (step-up): the session confirms
     it is its person here, before Meta's window opens, because the code
     Meta hands back lives about thirty seconds and must not wait for a
-    confirmation when the signup completes.
+    confirmation when the signup completes. A closing business (a closure
+    not cancelled) starts none: ConflictError.
     """
 
     def __init__(
@@ -70,7 +75,9 @@ class StartMetaConnectionUseCase(
         step_up: StepUpGuardContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -87,6 +94,7 @@ class StartMetaConnectionUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        refuse_while_closing(self._closure_repo, business.id, "connect a channel")
         self._step_up.require_recent_authentication()
         purpose: MetaConnectionPurpose = input_data.request.purpose
         app: MetaAppCredentials | None = meta_app_of(self._app_settings)

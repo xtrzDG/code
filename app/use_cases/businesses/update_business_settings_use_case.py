@@ -17,7 +17,6 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -43,6 +42,7 @@ from app.use_cases.businesses.manager_contact_rules import (
     limit_manager_contacts,
     validate_manager_contact,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.businesses.business_revisions import (
     build_precondition_failed_error,
     build_stale_revision_error,
@@ -153,10 +153,9 @@ class UpdateBusinessSettingsUseCase(
             business,
             changes.status,
         )
-        if status_switch is BusinessStatus.LIVE and self._is_closing(business):
-            raise ConflictError(
-                "The business is closing: cancel the closure in Settings → "
-                "Business to resume the assistant."
+        if status_switch is BusinessStatus.LIVE:
+            refuse_while_closing(
+                self._closure_repo, business.id, "resume the assistant"
             )
 
         self._apply_profile_changes(business, changes)
@@ -217,13 +216,6 @@ class UpdateBusinessSettingsUseCase(
                 business, input_data.user_id, self._user_repo, self._brand_repo
             )
         )
-
-    def _is_closing(self, business: BusinessDocument) -> bool:
-        if self._closure_repo is None:
-            return False
-
-        closure: BusinessClosureDocument | None = self._closure_repo.get(business.id)
-        return closure is not None and closure.cancelled_at is None
 
     def _apply_profile_changes(
         self,

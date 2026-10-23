@@ -15,6 +15,9 @@ from app.contracts.phone_numbers import (
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
@@ -61,6 +64,7 @@ from app.use_cases.channels.phone_numbers.rental_checks import (
     require_unclaimed_number,
 )
 from app.use_cases.channels.phone_numbers.voice_attachment import attach_to_agent
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.analytics.product_event_drafts import channel_connected_events
 from app.utilities.telephony.rental_prices import as_rental_minor
 
@@ -85,7 +89,8 @@ class RentPhoneNumberUseCase(
     find the business by it) and imported into the voice platform for the
     business's live voice agent; an import that fails is left to the
     maintenance job. The first rental month begins now (`billed_until`).
-    Audited: the number and the channel.
+    Audited: the number and the channel. A closing business (a closure not
+    cancelled) rents nothing: ConflictError, before the carrier is asked.
     """
 
     def __init__(
@@ -110,7 +115,9 @@ class RentPhoneNumberUseCase(
         product_events: RecordProductEventFacilitatorContract,
         offer_signer: PhoneNumberOfferSignerContract,
         wall_clock: WallClock[Microseconds],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -152,6 +159,7 @@ class RentPhoneNumberUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        refuse_while_closing(self._closure_repo, business.id, "rent a number")
         # Renting costs money every month: only a recently proved person.
         self._step_up.require_recent_authentication()
         require_offered(

@@ -6,6 +6,9 @@ from app.contracts.meta_connection import (
     MetaOAuthClientContract,
     WhatsAppOnboardingClientContract,
 )
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -56,6 +59,7 @@ from app.use_cases.channels.meta_connection.whatsapp_signup_steps import (
     choose_business_account,
     choose_phone_number,
 )
+from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.meta_sign_in import meta_app_of
 
@@ -89,7 +93,9 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
     types a code, and the retry would find the state used. A number already
     connected to another business is refused; a number registered with
     another PIN is refused as `whatsapp_pin_mismatch` (its owner turns
-    two-step verification off in WhatsApp Manager, then starts again).
+    two-step verification off in WhatsApp Manager, then starts again). A
+    closing business (a closure not cancelled) connects nothing:
+    ConflictError, before the state is used or Meta is asked.
     """
 
     def __init__(
@@ -107,7 +113,9 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
         storage_scope: StorageScopeContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -132,6 +140,7 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        refuse_while_closing(self._closure_repo, business.id, "connect a channel")
         app: MetaAppCredentials = self._require_app()
         request: CompleteWhatsAppSignupRequest = input_data.request
         now: Microseconds = self._wall_clock.now_unix()
