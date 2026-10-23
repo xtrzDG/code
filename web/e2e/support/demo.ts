@@ -18,6 +18,13 @@ import { apiLogSize, waitForLoginCode } from "./login-codes";
 
 export const DEMO_OWNER_EMAIL = "demo@example.com";
 export const DEMO_RESTAURANT = "Mtsvane Ezo";
+/**
+ * The demo restaurant's first FAQ question in English: the owner wrote it in
+ * Russian and approved its English alias (app/registries/demo/
+ * tbilisi_restaurant/restaurant_menu.py), so English visitors get it as a
+ * starter instead of the niche's generic ones.
+ */
+export const DEMO_RESTAURANT_ENGLISH_STARTER = "Is there parking?";
 
 /** An address may ask for a login code every 30 seconds. */
 const LOGIN_CODE_COOLDOWN_MS = 31_000;

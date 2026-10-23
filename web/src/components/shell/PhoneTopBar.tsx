@@ -7,7 +7,10 @@
  * page is for (PhonePageInfo), and a "?" its help article. The language and theme moved to the account
  * panel ("More"), so the bar stays calm; a search button opens the
  * command palette, `action` adds one button at its end (the account, when
- * there is no tab bar), and `ring` the setup guide's progress before it.
+ * there is no tab bar), and `ring` the setup guide's progress before the
+ * buttons: the ring arrives with the owner's setup after the page, and the
+ * buttons stay where they are when it does (a tap meant for the search
+ * would otherwise land on the ring).
  * With `yields`, an open conversation's own header takes the bar's place on
  * phones once it is there (shell.css): the bar keeps its room, hidden, so
  * the page under it never moves.
@@ -33,7 +36,7 @@ export function PhoneTopBar({
   /** The business name (user content) or "Platform admin". */
   context?: ReactNode;
   action?: ReactNode;
-  /** The setup guide's progress ring, before the action. */
+  /** The setup guide's progress ring, before the buttons. */
   ring?: ReactNode;
   /** An open conversation's header may take the bar's place (see above). */
   yields?: boolean;
@@ -57,10 +60,10 @@ export function PhoneTopBar({
             </p>
           ) : null}
         </div>
+        {ring}
         {help}
         <PageInfoButton title={title} />
         <CommandPaletteButton className="-mx-1.5" />
-        {ring}
         {action}
       </div>
     </header>

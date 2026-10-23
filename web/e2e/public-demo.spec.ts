@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { DEMO_RESTAURANT } from "./support/demo";
+import { DEMO_RESTAURANT, DEMO_RESTAURANT_ENGLISH_STARTER } from "./support/demo";
 import { en } from "./support/messages";
 
 /**
@@ -15,8 +15,9 @@ test.describe("the landing page's live demo", () => {
     await expect(chat.getByText(DEMO_RESTAURANT).first()).toBeVisible();
     await expect(chat.getByText(en.publicDemo.sandbox)).toBeVisible();
 
-    // A starter in the visitor's language sends itself.
-    await chat.getByRole("button", { name: en.publicDemo.genericStarters.hours }).click();
+    // A starter in the visitor's language sends itself: the restaurant's own
+    // question through the alias its owner approved in English.
+    await chat.getByRole("button", { name: DEMO_RESTAURANT_ENGLISH_STARTER }).click();
     await expect(chat.locator("[data-role='assistant']")).toHaveCount(1, { timeout: 30_000 });
 
     await chat.getByLabel(en.publicDemo.inputLabel).fill("Can I book a table for 4 tomorrow at 8pm?");

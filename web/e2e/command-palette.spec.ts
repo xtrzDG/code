@@ -3,7 +3,8 @@
  * focus in its text box, typing finds a customer (and their booking) and
  * a page, the arrows move the highlight and wrap, Enter opens what is
  * highlighted, Escape closes it and gives the focus back. On a phone the
- * search button in the top bar opens it.
+ * search button in the top bar opens it, and stays where it is when the
+ * setup guide's ring arrives after the page.
  */
 
 import { bookedCustomer } from "./support/customers";
@@ -90,5 +91,27 @@ test.describe("on a phone", () => {
     await page.keyboard.type("team");
     await dialog.getByRole("option", { name: new RegExp(en.navigation.pages.settingsTeam) }).tap();
     await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/settings/team$`));
+  });
+
+  test("the search button stays put when the setup ring arrives", async ({ page, owner }) => {
+    // The owner's setup answers only once the page is on screen.
+    let answerSetup: () => void = () => undefined;
+    const setupHeld = new Promise<void>((resolve) => {
+      answerSetup = resolve;
+    });
+    await page.route(`**/api/backend/v1/businesses/${owner.businessId}/setup?*`, async (route) => {
+      await setupHeld;
+      await route.fallback();
+    });
+    await page.goto(`/b/${owner.businessId}/bookings`);
+    const search = page.getByRole("button", { name: palette.open, exact: true });
+    await expect(search).toBeVisible();
+    const before = await search.boundingBox();
+
+    answerSetup();
+    const ringLabel = new RegExp(`^${en.setupGuide.ring.label.replace("{percent}", "\\d+")}$`);
+    await expect(page.getByRole("banner").getByRole("link", { name: ringLabel })).toBeVisible();
+
+    expect(await search.boundingBox()).toEqual(before);
   });
 });
