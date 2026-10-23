@@ -2,13 +2,16 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.legal_text_registries import LegalTextRegistryContract
+from app.contracts.passkeys import PasskeyCeremonyAdapterContract
 from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import (
     MfaChallengeRepoContract,
+    RecoveryCodeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserRepoContract,
@@ -18,13 +21,11 @@ from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import LoginMethod
-from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
-from app.use_cases.users.mfa.mfa_challenges import issue_mfa_challenge
 from app.use_cases.users.otp_login.login_challenge_consumption import (
     consume_login_challenge,
 )
@@ -32,6 +33,7 @@ from app.use_cases.users.otp_login.login_check_limits import (
     refuse_too_frequent_code_checks,
 )
 from app.use_cases.users.otp_login.terms_acceptance import record_terms_acceptance
+from app.use_cases.users.passkeys.second_step_offer import SecondStepOffer
 from app.use_cases.users.sign_in_completion import SignInCompletion
 from app.use_cases.users.sign_in_security_audit import SignInSecurityAudit
 
@@ -48,10 +50,12 @@ class VerifyOtpLoginUseCase(
     created on first login with the language chosen when the code was
     requested; the stored platform admin flag follows the admin lists.
 
-    A person with an authenticator, and every platform admin (who sets one
-    up then if they have none), gets no session yet: the answer is
-    `mfa_required` with a five-minute second step, and
-    VerifyMfaLoginUseCase opens a two-factor session. Everyone else gets a
+    A person with a second factor (a passkey or an authenticator), and
+    every platform admin (who sets one up then if they have none), gets no
+    session yet: the answer is `mfa_required` with a five-minute second
+    step naming how it can be answered (SecondStepOffer), and
+    VerifyMfaLoginUseCase or VerifyPasskeySignInUseCase opens a two-factor
+    session. Everyone else gets a
     one-factor session at once (SignInCompletion: the token is returned
     once, only its hash is stored, the login is audited and counted); a
     wrong code is audited as LOGIN_FAILED, the one that locks the code as
@@ -78,6 +82,9 @@ class VerifyOtpLoginUseCase(
         totp_factor_repo: TotpFactorRepoContract,
         mfa_challenge_repo: MfaChallengeRepoContract,
         legal_text_registry: LegalTextRegistryContract,
+        passkey_repo: PasskeyRepoContract,
+        recovery_code_repo: RecoveryCodeRepoContract,
+        passkey_ceremony: PasskeyCeremonyAdapterContract,
     ) -> None:
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
@@ -86,8 +93,14 @@ class VerifyOtpLoginUseCase(
         self._rate_limit_registry: RequestRateLimitRegistryContract = (
             rate_limit_registry
         )
-        self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
-        self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
+        self._second_step: SecondStepOffer = SecondStepOffer(
+            mfa_challenge_repo,
+            totp_factor_repo,
+            passkey_repo,
+            recovery_code_repo,
+            passkey_ceremony,
+            wall_clock,
+        )
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._legal_text_registry: LegalTextRegistryContract = legal_text_registry
         self._security_audit: SignInSecurityAudit = SignInSecurityAudit(
@@ -125,19 +138,10 @@ class VerifyOtpLoginUseCase(
             input_data.client_ip_address,
         )
         user, is_new_user = self._find_or_create_user(challenge, input_data, now)
-        factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
-        has_active_factor: bool = (
-            factor is not None and factor.status is TotpFactorStatus.ACTIVE
+        mfa_challenge: MfaChallengeView | None = self._second_step.offer(
+            user, is_new_user, input_data.client_ip_address
         )
-        if has_active_factor or user.is_platform_admin:
-            mfa_challenge: MfaChallengeView = issue_mfa_challenge(
-                self._mfa_challenge_repo,
-                self._wall_clock,
-                user.id,
-                is_new_user,
-                input_data.client_ip_address,
-                requires_enrollment=not has_active_factor,
-            )
+        if mfa_challenge is not None:
             return MfaRequiredView(mfa_challenge=mfa_challenge, is_new_user=is_new_user)
 
         return self._sign_in.open_session(

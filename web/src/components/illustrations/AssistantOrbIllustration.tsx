@@ -11,9 +11,9 @@ export function AssistantOrbIllustration({ className, gradientId = "aw-orb-gradi
     <IllustrationFrame name="assistant-orb" className={className}>
       <defs>
         <radialGradient id={gradientId} cx="38%" cy="32%" r="72%">
-          <stop offset="0%" style={{ stopColor: "var(--tone-sand)" }} />
-          <stop offset="55%" style={{ stopColor: "var(--accent-solid)" }} />
-          <stop offset="100%" style={{ stopColor: "var(--accent-ink)" }} />
+          <stop offset="0%" className="[stop-color:var(--tone-sand)]" />
+          <stop offset="55%" className="[stop-color:var(--accent-solid)]" />
+          <stop offset="100%" className="[stop-color:var(--accent-ink)]" />
         </radialGradient>
       </defs>
       <circle cx="80" cy="60" r="46" className="aw-beat fill-accent-soft" />

@@ -138,6 +138,8 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       totp_factor: "ავთენტიფიკატორი აპლიკაცია",
       recovery_codes: "აღდგენის კოდები",
       mfa_challenge: "ორეტაპიანი შემოწმება",
+      passkey: "წვდომის გასაღები",
+      passkey_challenge: "წვდომის გასაღებით შემოწმება",
       otp_challenge: "შესვლის კოდი",
       support_access: "პლატფორმის მხარდაჭერის წვდომა",
       support_write_access: "პლატფორმის მხარდაჭერის ცვლილებები",

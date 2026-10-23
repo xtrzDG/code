@@ -1813,7 +1813,39 @@ Its motion and 3D hero: see [Motion](#motion).
   the Flitt checkout, `upgrade-insecure-requests` over HTTPS; `'unsafe-eval'`
   only under `next dev`. Zod's JIT would need eval: import `z` from
   `@/lib/zod` (jitless; ESLint refuses `"zod"`). `e2e/security.spec.ts`
-  fails when any page reports a violation.
+  and the route tour (`e2e/support/tour.ts`) fail when any page reports a
+  violation (`e2e/support/csp.ts`).
+- Styles: `style-src 'self' 'nonce-…'` without `'unsafe-inline'` (a
+  production build; `next dev` keeps it for its overlay), so the browser
+  refuses every `style` attribute in the server's HTML. Static values are
+  classes (Tailwind arbitrary properties, `src/lib/motionClasses.ts`,
+  `src/lib/tunnel/depth.ts`); a value that depends on data and must be
+  right at first paint goes into a nonce'd `<style>` (`NoncedStyle`, the
+  hosted chat's accent, `app/c/[slug]/_lib/accentRule.ts`); anything else
+  is set through the CSSOM after hydration (`useClientStyle`, `useHydrated`,
+  `useMountedAfterHydration` in `src/lib/csp/clientStyle.ts`, and `BarFill`
+  for bars and meters). Motion's `animate` and `variants` start after
+  hydration too, so its style writes are CSSOM writes, which the policy
+  allows. `src/lib/csp/styleAttributes.policy.test.ts` fails when a server
+  component passes `style`, or a client one does without waiting for
+  hydration (components drawn only in the browser are listed with why).
+- Trusted Types (`require-trusted-types-for 'script'`, production only):
+  the first script of every page installs a default policy
+  (`src/lib/csp/trustedTypes.ts`, written into `<head>` by
+  `components/csp/TrustedTypesScript.tsx` through `useServerInsertedHTML`,
+  so a page that calls `notFound()` and gets Next.js's error shell has it
+  too). It lets through script URLs of the cabinet and Cloudflare
+  Turnstile, JSON as script text, and HTML without markup; the cabinet's
+  own markup (the live preview's `srcdoc`) goes through the named policy
+  `cabinet-markup` (`src/lib/csp/trustedMarkup.ts`). Anything else throws
+  and is reported.
+- Violation reports: `report-uri /api/csp-report` and `report-to csp`
+  (`Reporting-Endpoints`). The route (`app/api/csp-report/route.ts`)
+  takes both report forms up to 16 KB, at most 30 a minute per client and
+  600 a minute per server process (429 beyond), keeps the page's path
+  without query or booking key, the directive and the blocked origin and
+  path (`src/server/cspReports.ts`) and forwards them to Sentry's security
+  endpoint of `SENTRY_DSN`; without it they are dropped.
 - Every answer sends `nosniff`, `X-Frame-Options: DENY`,
   `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy:
   same-origin`, and production builds HSTS (`next.config.ts`).
@@ -1839,4 +1871,21 @@ Its motion and 3D hero: see [Motion](#motion).
   the request runs again (`src/api/stepUp.ts`, `lib/stepUpChallenge.ts`).
   The e2e suite plays the authenticator (`e2e/support/totp.ts`,
   `e2e/support/admin.ts`).
+- Passkeys: "Account → Security" adds, renames and removes them
+  (`PasskeysCard.tsx`); at sign-in a person with a passkey is offered it
+  first ("Use a passkey", `PasskeyStepPanels.tsx`), and the "Confirm it is
+  you" dialog offers it too. The browser ceremony is
+  `src/lib/security/passkeyCeremony.ts` (`navigator.credentials`, the
+  options and answers converted by `webauthnCodec.ts`); the API checks
+  everything (py_webauthn, `WEBAUTHN_RP_ID`). A passkey whose signature
+  counter goes back (a copied authenticator) is refused with
+  `passkey_clone_suspected` and marked in the list. `e2e/passkeys.spec.ts`
+  uses Chromium's virtual authenticator over CDP
+  (`e2e/support/webauthn.ts`), rewinding its counter to play the copy.
+- The second-factor reminder (`components/shell/SecurityNudgeBanner.tsx`):
+  over an owner's cabinet once the business is live and the owner has no
+  second factor; "Not now" puts it away until the team grows past one
+  person (the API decides, `GET …/security-nudge`). It is not shown over
+  the Inbox: on a phone the list would jump up under it as a conversation
+  opens (the motion-budget spec counts that as a layout shift).
 - After sign-in the cabinet only redirects to same-site paths (`safeNextPath`).

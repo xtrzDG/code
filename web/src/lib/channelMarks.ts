@@ -56,3 +56,17 @@ export const CHANNEL_MARKS: Record<ChannelMarkKey, ChannelMark> = {
     colors: ["#b5c3cf", "#5b7186"],
   },
 };
+
+/**
+ * Each mark's gradient as a class, for HTML (the badge behind a white
+ * mark): a style attribute would be refused by the Content Security Policy.
+ * The same colours as `colors` above, which a unit test keeps in step.
+ */
+export const CHANNEL_MARK_GRADIENTS: Record<ChannelMarkKey, string> = {
+  whatsapp: "bg-[linear-gradient(135deg,#8cc29b,#3f7d57)]",
+  telegram: "bg-[linear-gradient(135deg,#8fbcdc,#3f78a4)]",
+  instagram: "bg-[linear-gradient(135deg,#dba26f,#a65a6e)]",
+  messenger: "bg-[linear-gradient(135deg,#93b3d6,#5f6fa6)]",
+  web_chat: "bg-[linear-gradient(135deg,#d9a86c,#ad5732)]",
+  phone: "bg-[linear-gradient(135deg,#b5c3cf,#5b7186)]",
+};

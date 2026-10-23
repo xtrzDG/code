@@ -103,6 +103,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"DELETE {B}/setup/skipped-steps/{{setup_step}}",
         f"PUT {B}/setup/guide-dismissal",
         f"DELETE {B}/setup/guide-dismissal",
+        f"PUT {B}/security-nudge/dismissal",
         f"PUT {B}/setup/reminders",
         f"GET {B}/text-backs",
         f"POST {B}/unanswered-questions/{{question_id}}/answer",

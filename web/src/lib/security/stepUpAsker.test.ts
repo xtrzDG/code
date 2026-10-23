@@ -4,7 +4,7 @@ import type { StepUpChallengeView } from "@/api/types";
 
 import { createStepUpAsker } from "./stepUpAsker";
 
-const TOTP: StepUpChallengeView = { method: "totp", login_code: null };
+const TOTP: StepUpChallengeView = { method: "totp", login_code: null, passkey_available: false };
 
 function loginCode(challengeId: string): StepUpChallengeView {
   return {

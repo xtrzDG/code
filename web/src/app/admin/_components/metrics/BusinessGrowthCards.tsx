@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import { BarFill, Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { barPercent, type BusinessGrowthView } from "../../_lib/metrics";
@@ -31,7 +31,7 @@ export function BusinessFunnelCard({ growth, format }: { growth: BusinessGrowthV
             <span className="text-sm font-medium text-ink">{t(`adminMetrics.funnel.steps.${step.step}`)}</span>
             <div className="min-w-0">
               <div className="h-3 overflow-hidden rounded-full bg-surface-muted" aria-hidden>
-                <div className="h-full rounded-full bg-current text-chart-3" style={{ width: `${barPercent(step.businesses, max)}%` }} />
+                <BarFill percent={barPercent(step.businesses, max)} className="h-full rounded-full bg-current text-chart-3" />
               </div>
               <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-muted">
                 <span className="font-medium text-ink tabular-nums">{tp("adminMetrics.businesses.count", step.businesses)}</span>

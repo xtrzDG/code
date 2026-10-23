@@ -10,7 +10,12 @@ from app.repositories.mfa_repositories import (
     RecoveryCodeRepository,
     TotpFactorRepository,
 )
+from app.repositories.passkey_repositories import (
+    PasskeyChallengeRepository,
+    PasskeyRepository,
+)
 from app.repositories.platform_admin_repository import PlatformAdminRepository
+from app.repositories.security_nudge_repository import SecurityNudgeRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
 )
@@ -19,7 +24,7 @@ from app.repositories.support_access_grant_repository import (
 class SecurityRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of key management (migration 1063), two-factor
-    sign-in (migration 1082) and platform access (migration 1103).
+    sign-in (migration 1082, passkeys 1201) and platform access (1103).
     `RepositoriesContainer` extends it, so they are read as
     `repositories.key_rotation_repo`, `repositories.totp_factor_repo`…
     """
@@ -42,6 +47,14 @@ class SecurityRepositoriesContainer(containers.DeclarativeContainer):
         MfaChallengeRepository,
         collection=security_collections.mfa_challenge_collection,
     )
+    passkey_repo: Singleton[PasskeyRepository] = Singleton(
+        PasskeyRepository,
+        collection=security_collections.passkey_collection,
+    )
+    passkey_challenge_repo: Singleton[PasskeyChallengeRepository] = Singleton(
+        PasskeyChallengeRepository,
+        collection=security_collections.passkey_challenge_collection,
+    )
     platform_admin_repo: Singleton[PlatformAdminRepository] = Singleton(
         PlatformAdminRepository,
         collection=security_collections.platform_admin_collection,
@@ -49,4 +62,8 @@ class SecurityRepositoriesContainer(containers.DeclarativeContainer):
     support_access_grant_repo: Singleton[SupportAccessGrantRepository] = Singleton(
         SupportAccessGrantRepository,
         collection=security_collections.support_access_grant_collection,
+    )
+    security_nudge_repo: Singleton[SecurityNudgeRepository] = Singleton(
+        SecurityNudgeRepository,
+        collection=security_collections.security_nudge_collection,
     )

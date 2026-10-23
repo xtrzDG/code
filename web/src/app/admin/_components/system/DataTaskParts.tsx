@@ -1,7 +1,7 @@
 "use client";
 
 import { IconRefresh } from "@/components/icons";
-import { Badge, Button } from "@/components/ui";
+import { Badge, BarFill, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -72,13 +72,13 @@ export function DataTaskProgress({ task }: { task: DataTask }) {
           aria-valuenow={percent}
           className="relative mb-1 h-1.5 overflow-hidden rounded-full bg-surface-muted ring-1 ring-line/60"
         >
-          <div
+          <BarFill
+            percent={percent}
             className={
               task.status === "failed"
                 ? "absolute inset-y-0 start-0 rounded-full bg-danger"
                 : "absolute inset-y-0 start-0 rounded-full bg-accent-solid"
             }
-            style={{ width: `${percent}%` }}
           />
         </div>
       ) : null}

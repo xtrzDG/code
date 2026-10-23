@@ -8,7 +8,7 @@
 
 import type { Schema } from "@/api/types";
 import { fixPath } from "@/lib/assistant/applyFixes";
-import { businessPath, setupPath } from "@/lib/navigation";
+import { ACCOUNT_SECURITY_PATH, businessPath, setupPath } from "@/lib/navigation";
 import { fixPlace } from "@/lib/tunnel/steps";
 
 type SetupView = Schema<"SetupView">;
@@ -32,7 +32,7 @@ export interface GuideRow {
 }
 
 /** The steps after the launch, in order. */
-const AFTER_LAUNCH: readonly StepCode[] = ["phone_test", "second_channel", "share"];
+const AFTER_LAUNCH: readonly StepCode[] = ["phone_test", "second_channel", "share", "protect_data"];
 
 function rowOf(step: SetupStepView, businessId: string, isLive: boolean): GuideRow {
   const isDone = step.status === "done";
@@ -44,6 +44,12 @@ function rowOf(step: SetupStepView, businessId: string, isLive: boolean): GuideR
   }
   if (step.code === "phone_test") {
     return { step, kind: "phone", href: null, canSkip, isWaiting: false };
+  }
+  if (step.code === "protect_data") {
+    // The owner's second factor: set up in Account → Security; "Skip" puts
+    // the reminder away (it comes back by itself once the team grows).
+    const href = isDone ? null : ACCOUNT_SECURITY_PATH;
+    return { step, kind: "page", href, canSkip: canSkip && step.status !== "skipped", isWaiting: false };
   }
   if (step.code === "share") {
     const href = isDone ? null : `${businessPath(businessId, "assistant/channels")}#share`;

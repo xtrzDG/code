@@ -43,6 +43,12 @@ class SetupPipelinesContainer(containers.DeclarativeContainer):
     dismiss_setup_guide_pipeline = orchestrator_pipeline(
         setup_orchestrators.dismiss_setup_guide_orchestrator
     )
+    get_security_nudge_pipeline = orchestrator_pipeline(
+        setup_orchestrators.get_security_nudge_orchestrator
+    )
+    dismiss_security_nudge_pipeline = orchestrator_pipeline(
+        setup_orchestrators.dismiss_security_nudge_orchestrator
+    )
     get_setup_reminders_pipeline = orchestrator_pipeline(
         setup_orchestrators.get_setup_reminders_orchestrator
     )

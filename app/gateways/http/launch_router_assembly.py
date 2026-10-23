@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.apply_changes_routes import build_apply_changes_router
 from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
+from app.gateways.http.security_nudge_routes import build_security_nudge_router
 from app.gateways.http.setup_guide_routes import build_setup_guide_router
 from app.gateways.http.setup_routes import build_setup_router
 from app.gateways.http.starter_routes import build_starter_router
@@ -35,6 +36,11 @@ def build_launch_routers(
             dismiss_setup_guide_operator=setup.dismiss_setup_guide_operator(),
             get_setup_reminders_operator=setup.get_setup_reminders_operator(),
             update_setup_reminders_operator=setup.update_setup_reminders_operator(),
+        ),
+        build_security_nudge_router(
+            current_user=current_user,
+            get_security_nudge_operator=setup.get_security_nudge_operator(),
+            dismiss_security_nudge_operator=setup.dismiss_security_nudge_operator(),
         ),
         build_starter_router(
             current_user=current_user,

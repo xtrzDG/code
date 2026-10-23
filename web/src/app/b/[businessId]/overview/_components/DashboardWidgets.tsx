@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { IconAlert, IconCheck, IconInfo } from "@/components/icons";
 import { AnimatedNumber } from "@/components/motion";
-import { ButtonLink, Card } from "@/components/ui";
+import { BarFill, ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -188,7 +188,7 @@ export function Meter({
         aria-valuetext={valueText}
         className={cn("mt-2 h-2 overflow-hidden rounded-full", styles.track)}
       >
-        <div className={cn("h-full rounded-full", styles.fill)} style={{ width: `${Math.min(100, percent)}%` }} />
+        <BarFill percent={percent} className={cn("h-full rounded-full", styles.fill)} />
       </div>
     </div>
   );
@@ -221,7 +221,7 @@ export function BarList<Key extends string>({
                 <span className="shrink-0 text-ink-muted tabular-nums">{valueOf(bar)}</span>
               </div>
               <div className="mt-1.5 h-2 rounded-full bg-surface-muted" aria-hidden>
-                <div className="h-full rounded-full bg-accent-solid" style={{ width: `${Math.max(bar.percent, 2)}%` }} />
+                <BarFill percent={Math.max(bar.percent, 2)} className="h-full rounded-full bg-accent-solid" />
               </div>
             </li>
           ))}

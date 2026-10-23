@@ -6,7 +6,8 @@
  *  - Server Components learn the current path (for "back after sign-in");
  *  - a signed-in user without a language cookie gets the account language;
  *  - every page gets a Content Security Policy with a fresh nonce, which
- *    Next.js puts on its own scripts (server/contentSecurityPolicy.ts);
+ *    Next.js puts on its own scripts, and the endpoint its violations are
+ *    reported to (server/contentSecurityPolicy.ts);
  *  - a session under the cookie's old name moves to `__Host-aw_session`;
  *  - the public hosted chat page (/c/{address}) gets its business and a
  *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
@@ -34,7 +35,13 @@ import {
   sanitizeRequestId,
 } from "@/server/backend";
 import { rememberFirstVisit } from "@/server/attributionCookie";
-import { NONCE_HEADER, buildContentSecurityPolicy, createNonce } from "@/server/contentSecurityPolicy";
+import {
+  NONCE_HEADER,
+  REPORTING_ENDPOINTS,
+  REPORTING_ENDPOINTS_HEADER,
+  buildContentSecurityPolicy,
+  createNonce,
+} from "@/server/contentSecurityPolicy";
 import { HOSTED_CHAT_HEADER, hostedChatAddress, isHostedChatPath } from "@/server/hostedChat";
 import { NOINDEX, ROBOTS_HEADER, routeHostedChat } from "@/server/hostedChatProxy";
 import { migrateLegacySessionCookie, readSessionToken } from "@/server/sessionCookie";
@@ -134,6 +141,8 @@ async function route(request: NextRequest): Promise<NextResponse> {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(CSP_HEADER, policy);
+  // Where the policy's `report-to` group sends violation reports.
+  response.headers.set(REPORTING_ENDPOINTS_HEADER, REPORTING_ENDPOINTS);
   if (isHostedChatPath(pathname)) {
     response.headers.set(ROBOTS_HEADER, NOINDEX);
   }

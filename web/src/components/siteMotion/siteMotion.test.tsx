@@ -47,14 +47,15 @@ afterEach(() => {
 describe("Reveal", () => {
   it("stays hidden until enough of it is seen, then stays revealed", () => {
     render(
-      <Reveal as="section" depth={1} delay={0.2} amount={0.4} aria-label="Plans">
+      <Reveal as="section" depth={1} delay={0.2} amount={0.4} aria-label="Plans" className="plans">
         Plans
       </Reveal>,
     );
     const element = screen.getByRole("region", { name: "Plans" });
     expect(element.hasAttribute("data-reveal")).toBe(true);
-    expect(element.style.getPropertyValue("--reveal-depth")).toBe("1");
-    expect(element.style.getPropertyValue("--reveal-delay")).toBe("0.2s");
+    // Classes, not a style attribute: the Content Security Policy refuses those.
+    expect(element.getAttribute("style")).toBeNull();
+    expect(element.className).toBe("[--reveal-depth:1] [--reveal-delay:0.2s] plans");
     expect(FakeObserver.all.find((observer) => observer.observed.has(element))?.options).toEqual({ threshold: 0.4 });
 
     scrollTo(element, false);
@@ -106,10 +107,10 @@ describe("Stagger", () => {
       </Stagger>,
     );
     const group = screen.getByRole("list", { name: "Steps" });
-    expect(group.style.getPropertyValue("--stagger-delay")).toBe("0.15s");
-    expect(group.style.getPropertyValue("--stagger-step")).toBe("0.45s");
+    expect(group.className).toBe("[--stagger-delay:0.15s] [--stagger-step:0.45s]");
     const [first, second] = screen.getAllByRole("listitem");
-    expect(second?.style.getPropertyValue("--reveal-depth")).toBe("1");
+    expect(second?.className).toBe("[--reveal-depth:1]");
+    expect(second?.getAttribute("style")).toBeNull();
     expect(first?.hasAttribute("data-reveal-item")).toBe(true);
 
     scrollTo(group);
@@ -128,7 +129,7 @@ describe("TiltCard", () => {
       </TiltCard>,
     );
     const card = screen.getByRole("figure");
-    expect(screen.getByText("Card").style.transform).toBe("translateZ(24px)");
+    expect(screen.getByText("Card").className).toContain("translate-z-[24px]");
     box(card, { width: 200, height: 100 });
 
     fireEvent.pointerMove(card, { pointerType: "mouse", clientX: 200, clientY: 0 });
@@ -179,7 +180,7 @@ describe("Parallax", () => {
     const { container } = render(<Parallax speed={-0.6} className="glow" />);
     const layer = container.firstElementChild as HTMLElement;
     expect(layer.getAttribute("aria-hidden")).toBe("true");
-    expect(layer.className).toBe("parallax-layer glow");
-    expect(layer.style.getPropertyValue("--parallax-shift")).toBe("-72px");
+    expect(layer.className).toBe("parallax-layer [--parallax-shift:-72px] glow");
+    expect(layer.getAttribute("style")).toBeNull();
   });
 });

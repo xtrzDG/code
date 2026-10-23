@@ -13,6 +13,7 @@ import {
   startSignInEnrollment,
   verifySecondStep,
   type SecondStepRequired,
+  type SignedInSession,
 } from "@/api/auth";
 import { toApiError } from "@/api/errors";
 import type { TotpEnrollmentView } from "@/api/types";
@@ -37,6 +38,15 @@ export function useSecondStep(step: SecondStepRequired, next: string) {
   const [newCodes, setNewCodes] = useState<string[] | null>(null);
 
   const finish = () => window.location.assign(next);
+
+  /** A session opened: show a new second factor's recovery codes once, or go on. */
+  const accept = (session: SignedInSession) => {
+    if (session.recovery_codes.length > 0) {
+      setNewCodes(session.recovery_codes);
+      return;
+    }
+    finish();
+  };
 
   async function check(body: { code?: string; recovery_code?: string }) {
     setChecking(true);
@@ -120,5 +130,6 @@ export function useSecondStep(step: SecondStepRequired, next: string) {
     startSetup,
     newCodes,
     finish,
+    accept,
   };
 }

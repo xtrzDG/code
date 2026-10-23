@@ -8,7 +8,10 @@
 
 import { readFileSync, statSync } from "node:fs";
 
+import type { Page } from "@playwright/test";
+
 import { API_LOG_PATH } from "./env";
+import { en } from "./messages";
 
 const CODE_LINE = /Login code (\d{6}) via (\w+)/g;
 const POLL_INTERVAL_MS = 100;
@@ -34,4 +37,13 @@ export async function waitForLoginCode({ since, timeoutMs = 15_000 }: { since: n
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
   throw new Error(`No login code appeared in ${API_LOG_PATH} within ${timeoutMs} ms.`);
+}
+
+/** Asks for a login code by e-mail on the sign-in page and types it in. */
+export async function passLoginCode(page: Page, email: string): Promise<void> {
+  await page.getByRole("group", { name: en.auth.methodLabel }).getByText(en.auth.methodEmail, { exact: true }).click();
+  await page.getByRole("textbox", { name: en.auth.email, exact: true }).fill(email);
+  const since = apiLogSize();
+  await page.getByRole("button", { name: en.auth.sendCode }).click();
+  await page.getByLabel(en.auth.code, { exact: true }).fill(await waitForLoginCode({ since }));
 }

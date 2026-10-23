@@ -9,6 +9,8 @@ from app.gateways.http.business_security_routes import (
     build_business_security_router,
 )
 from app.gateways.http.mfa_routes import build_mfa_router
+from app.gateways.http.passkey_account_routes import build_passkey_account_router
+from app.gateways.http.passkey_sign_in_routes import build_passkey_sign_in_router
 from app.gateways.http.session_routes import build_sessions_router
 from app.gateways.http.support_access_routes import build_support_access_router
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -20,7 +22,7 @@ def build_security_routers(
 ) -> list[APIRouter]:
     """
     The key ring's view and its re-encryption run; two-factor sign-in,
-    step-up and a business's two-factor requirement; the person's devices,
+    passkeys, step-up and a business's two-factor requirement; the person's devices,
     the admin team and platform support's access to a business.
     """
 
@@ -47,6 +49,31 @@ def build_security_routers(
             ),
             start_step_up_operator=security.start_step_up_operator(),
             verify_step_up_operator=security.verify_step_up_operator(),
+            current_user=current_user,
+        ),
+        build_passkey_sign_in_router(
+            start_passkey_sign_in_operator=security.start_passkey_sign_in_operator(),
+            verify_passkey_sign_in_operator=security.verify_passkey_sign_in_operator(),
+            start_passkey_enrollment_operator=(
+                security.start_passkey_enrollment_operator()
+            ),
+            finish_passkey_enrollment_operator=(
+                security.finish_passkey_enrollment_operator()
+            ),
+            start_passkey_step_up_operator=security.start_passkey_step_up_operator(),
+            verify_passkey_step_up_operator=security.verify_passkey_step_up_operator(),
+            current_user=current_user,
+        ),
+        build_passkey_account_router(
+            list_passkeys_operator=security.list_passkeys_operator(),
+            start_passkey_registration_operator=(
+                security.start_passkey_registration_operator()
+            ),
+            finish_passkey_registration_operator=(
+                security.finish_passkey_registration_operator()
+            ),
+            rename_passkey_operator=security.rename_passkey_operator(),
+            remove_passkey_operator=security.remove_passkey_operator(),
             current_user=current_user,
         ),
         build_business_security_router(

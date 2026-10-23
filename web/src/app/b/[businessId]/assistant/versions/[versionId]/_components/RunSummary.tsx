@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
-import { Spinner, type BadgeTone } from "@/components/ui";
+import { type BadgeTone, BarFill, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatScore, scoreTone, summarizeRun, type AutotestRunView } from "@/lib/assistant/autotests";
 import { onlyOwnerCheckFailures } from "@/lib/assistant/ownerChecks";
@@ -62,7 +62,7 @@ export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning
           aria-valuemax={summary.total}
           aria-valuenow={summary.done}
         >
-          <div className="h-full rounded-full bg-accent-solid transition-[width]" style={{ width: `${Math.round(summary.progress * 100)}%` }} />
+          <BarFill percent={Math.round(summary.progress * 100)} className="h-full rounded-full bg-accent-solid transition-[width]" />
         </div>
         <p className="text-sm text-ink-subtle">{t("assistant.autotests.runningHint")}</p>
       </div>

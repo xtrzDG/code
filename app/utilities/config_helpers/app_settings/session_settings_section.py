@@ -1,6 +1,7 @@
 """
 SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_IDLE_TIMEOUT_SECONDS and
-ADMIN_SESSION_LIFETIME_SECONDS: when unused and admin sessions end.
+ADMIN_SESSION_LIFETIME_SECONDS: when unused and admin sessions end;
+WEBAUTHN_RP_ID and GEOIP_COUNTRY_DATABASE_PATH (sign_in_security_settings).
 """
 
 from collections.abc import Mapping
@@ -20,6 +21,13 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     parse_setting,
     read_integer,
 )
+from app.utilities.config_helpers.app_settings.public_address_settings_section import (
+    read_cabinet_base_url,
+)
+from app.utilities.config_helpers.app_settings.sign_in_security_settings import (
+    read_geoip_country_database_path,
+    read_webauthn_rp_id,
+)
 
 
 class SessionSettingsSection(TypedDict):
@@ -30,6 +38,7 @@ class SessionSettingsSection(TypedDict):
 
 def read_session_settings(
     environment_variables: Mapping[str, str],
+    is_development: bool = False,
 ) -> SessionSettingsSection:
     return SessionSettingsSection(
         sessions=SessionSettings(
@@ -59,6 +68,13 @@ def read_session_settings(
                     DEFAULT_ADMIN_SESSION_LIFETIME_SECONDS,
                 ),
                 SessionLifetimeSeconds,
+            ),
+            webauthn_rp_id=read_webauthn_rp_id(
+                environment_variables,
+                read_cabinet_base_url(environment_variables, is_development),
+            ),
+            geoip_country_database_path=read_geoip_country_database_path(
+                environment_variables
             ),
         )
     )

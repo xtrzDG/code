@@ -153,6 +153,8 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       totp_factor: "Приложение-аутентификатор",
       recovery_codes: "Резервные коды",
       mfa_challenge: "Двухэтапная проверка",
+      passkey: "Ключ доступа",
+      passkey_challenge: "Проверка ключом доступа",
       otp_challenge: "Код для входа",
       support_access: "Доступ поддержки платформы",
       support_write_access: "Изменения поддержкой платформы",

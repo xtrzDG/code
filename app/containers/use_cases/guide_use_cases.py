@@ -8,6 +8,11 @@ from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.security_nudges import (
+    DismissSecurityNudgeCommand,
+    SecurityNudgeQuery,
+    SecurityNudgeView,
+)
 from app.schemas.dto.setup.setup_guide import (
     DismissSetupGuideCommand,
     MarkSetupSharedCommand,
@@ -21,6 +26,12 @@ from app.use_cases.setup.dismiss_setup_guide_use_case import DismissSetupGuideUs
 from app.use_cases.setup.get_setup_reminders_use_case import GetSetupRemindersUseCase
 from app.use_cases.setup.mark_setup_shared_use_case import MarkSetupSharedUseCase
 from app.use_cases.setup.notice_milestones_use_case import NoticeMilestonesUseCase
+from app.use_cases.setup.security_nudge.dismiss_security_nudge_use_case import (
+    DismissSecurityNudgeUseCase,
+)
+from app.use_cases.setup.security_nudge.get_security_nudge_use_case import (
+    GetSecurityNudgeUseCase,
+)
 from app.use_cases.setup.send_activation_nudges_use_case import (
     SendActivationNudgesUseCase,
 )
@@ -34,7 +45,8 @@ class GuideUseCasesContainer(containers.DeclarativeContainer):
     """
     The guide after the launch: trying the assistant from a phone, the QR
     card printed, the finished guide put away, the activation reminders,
-    and the two periodic jobs that notice milestones and send the nudges.
+    the reminder to protect customers' data with a second factor, and the
+    two periodic jobs that notice milestones and send the nudges.
     """
 
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -101,4 +113,20 @@ class GuideUseCasesContainer(containers.DeclarativeContainer):
             owner_nudges=facilitators.owner_nudge_facilitator,
             wall_clock=time_provider.microsecond_wall_clock,
         )
+    )
+    get_security_nudge_use_case: Factory[
+        UseCaseContract[SecurityNudgeQuery, SecurityNudgeView]
+    ] = Factory(
+        GetSecurityNudgeUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        describe_security_nudge=setup_use_cases.describe_security_nudge_use_case,
+    )
+    dismiss_security_nudge_use_case: Factory[
+        UseCaseContract[DismissSecurityNudgeCommand, SecurityNudgeView]
+    ] = Factory(
+        DismissSecurityNudgeUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        describe_security_nudge=setup_use_cases.describe_security_nudge_use_case,
+        security_nudge_repo=repositories.security_nudge_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

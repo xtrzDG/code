@@ -20,6 +20,7 @@ import { RowDetails } from "./rowParts";
 
 /** How long the pointer or the focus rests on a row before its card shows. */
 const SHOW_AFTER_MS = 450;
+/** The card's width in px: its `w-[264px]` class (no style attribute passes the CSP). */
 const CARD_WIDTH = 264;
 const GAP = 8;
 
@@ -90,8 +91,7 @@ export function RowHint({ target, memberOf }: { target: HintTarget | null; membe
       popover="manual"
       aria-hidden
       data-row-hint=""
-      style={{ width: CARD_WIDTH }}
-      className="pointer-events-none fixed m-0 inset-auto rounded-xl border border-line bg-surface px-3.5 py-3 text-xs text-ink shadow-xl"
+      className="pointer-events-none fixed m-0 inset-auto w-[264px] rounded-xl border border-line bg-surface px-3.5 py-3 text-xs text-ink shadow-xl"
     >
       {shown ? <RowDetails row={shown.row} member={memberOf(shown.row.assigneeUserId)} /> : null}
     </div>

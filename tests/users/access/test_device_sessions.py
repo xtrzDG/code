@@ -60,11 +60,15 @@ def test_a_session_records_its_device_and_shows_in_the_list() -> None:
     assert (first.device.browser, first.device.operating_system) == ("Chrome", "macOS")
     assert first.device.kind is SessionDeviceKind.DESKTOP
     assert str(first.created_ip) == HOME_IP
+    # An approximate country beside an address the database knows.
+    assert first.created_country == "GE"
+    assert first.last_seen_country == "GE"
     assert (second.device.browser, second.device.kind) == (
         "Safari",
         SessionDeviceKind.PHONE,
     )
     assert str(second.last_seen_ip) == CAFE_IP
+    assert second.last_seen_country is None
     assert second.idle_expires_at is not None
 
 

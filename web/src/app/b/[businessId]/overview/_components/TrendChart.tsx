@@ -9,6 +9,7 @@ import { Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
+import { useHydrated } from "@/lib/csp/clientStyle";
 
 import { nearestDayIndex, TREND_SERIES, trendAxis, trendPath, type TrendSeries } from "./dashboardModel";
 
@@ -38,6 +39,8 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
   const id = useId();
   const plotRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<number | null>(null);
+  // The axis labels are placed through the CSSOM (the CSP refuses a style attribute in the server's HTML).
+  const hydrated = useHydrated();
 
   const max = Math.max(0, ...days.flatMap((day) => TREND_SERIES.map((series) => day[series])));
   const axis = trendAxis(max);
@@ -97,7 +100,7 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
             <span
               key={tick}
               className="absolute end-0 -translate-y-1/2"
-              style={{ top: `${100 - (tick / axis.max) * 100}%` }}
+              style={hydrated ? { top: `${100 - (tick / axis.max) * 100}%` } : undefined}
             >
               {format.number(tick)}
             </span>

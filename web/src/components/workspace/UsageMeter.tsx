@@ -2,6 +2,7 @@
 
 import { useId, type ReactNode } from "react";
 
+import { BarFill } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
@@ -74,7 +75,7 @@ export function UsageMeter({
         aria-valuetext={percentText}
         className="h-2.5 w-full overflow-hidden rounded-full bg-surface-muted ring-1 ring-line ring-inset"
       >
-        <div className={cn("h-full rounded-full transition-[width]", BAR_COLORS[level])} style={{ width: `${width}%` }} />
+        <BarFill percent={width} className={cn("h-full rounded-full transition-[width]", BAR_COLORS[level])} />
       </div>
       {hint ? <p className="text-xs text-ink-subtle">{hint}</p> : null}
     </div>

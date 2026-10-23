@@ -3,7 +3,10 @@
   "review_status": "needs_review",
   "draft_keys": [
     "notifications.deposit_refund.title",
-    "notifications.deposit_refund.detail"
+    "notifications.deposit_refund.detail",
+    "setup.steps.protect_data.title",
+    "setup.steps.protect_data.description",
+    "setup.actions.account_security"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "לקוח צריך נציג",
@@ -627,6 +630,7 @@
     "setup.steps.phone_test.title": "נסו מהטלפון",
     "setup.steps.second_channel.title": "הוסיפו ערוץ שני",
     "setup.steps.share.title": "הראו ללקוחות לאן לכתוב",
+    "setup.steps.protect_data.title": "הגנו על נתוני הלקוחות",
     "setup.steps.business.description": "כמה פרטים על העסק שלכם, שעליהם לקוחות שואלים קודם כול.",
     "setup.steps.offer.description": "השירותים או התפריט שלכם עם מחירים, כדי שהעוזר יוכל למסור אותם ללקוחות.",
     "setup.steps.hours_and_bookings.description": "מתי אתם פתוחים ואיך לקוחות מזמינים.",
@@ -637,6 +641,7 @@
     "setup.steps.phone_test.description": "סרקו את הקוד וכתבו לעוזר כמו שלקוח היה כותב.",
     "setup.steps.second_channel.description": "רוב הלקוחות כותבים ב-WhatsApp, ב-Telegram או ב-Instagram — חברו אחד מהם.",
     "setup.steps.share.description": "הדפיסו את כרטיס ה-QR לדלפק או שתפו את הקישור לצ'אט.",
+    "setup.steps.protect_data.description": "הפעילו גורם אימות נוסף, מפתח גישה (passkey) או אפליקציית אימות, כדי שקוד כניסה גנוב לא יספיק כדי להיכנס.",
     "setup.actions.profile": "מילוי",
     "setup.actions.staff_contacts": "הוספת איש קשר",
     "setup.actions.channels": "חיבור ערוץ",
@@ -648,6 +653,7 @@
     "setup.actions.overview": "פתיחת הסקירה",
     "setup.actions.phone_test": "הצגת קוד ה-QR",
     "setup.actions.share": "קישור וכרטיס QR",
+    "setup.actions.account_security": "הפעלת גורם אימות נוסף",
     "setup.apply_changes_again": "החלת השינויים",
     "notifications.webhook_disabled.title": "וובהוק הושבת · {business}",
     "notifications.webhook_disabled.failures_detail": "הכתובת {endpoint} לא מקבלת יותר אירועים: ניסיונות כושלים ברציפות — {failures}. ודאו שהכתובת עובדת והפעילו אותה שוב בהגדרות ← חיבורים.",

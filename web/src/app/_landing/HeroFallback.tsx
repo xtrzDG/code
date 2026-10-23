@@ -8,23 +8,15 @@
  * `.hero-still*` in src/styles/heroPoster.css.
  */
 
-import type { CSSProperties } from "react";
-
-import { CHANNEL_MARK_KEYS, CHANNEL_MARKS } from "@/lib/channelMarks";
-import { roundTo } from "@/lib/motionMath";
+import { CHANNEL_MARK_GRADIENTS, CHANNEL_MARK_KEYS, CHANNEL_MARKS } from "@/lib/channelMarks";
 import { cn } from "@/lib/cn";
 
-/** Bubbles on an ellipse around the orb (degrees, 0 = right, clockwise). */
-const ANGLES = [-148, -62, -8, 38, 122, 168];
-
-function bubblePosition(index: number): CSSProperties {
-  const angle = ((ANGLES[index] ?? 0) * Math.PI) / 180;
-  return {
-    left: `${roundTo(50 + 39 * Math.cos(angle), 2)}%`,
-    top: `${roundTo(50 + 33 * Math.sin(angle), 2)}%`,
-    animationDelay: `${-index * 0.9}s`,
-  };
-}
+/**
+ * Bubbles on an ellipse around the orb (degrees, 0 = right, clockwise):
+ * bubble k sits at 50% + 39%·cos, 50% + 33%·sin and floats 0.9 s behind
+ * the one before. heroPoster.css places them (`[data-bubble]`).
+ */
+export const BUBBLE_ANGLES = [-148, -62, -8, 38, 122, 168] as const;
 
 export function HeroFallback({ className }: { className?: string }) {
   return (
@@ -36,11 +28,8 @@ export function HeroFallback({ className }: { className?: string }) {
       {CHANNEL_MARK_KEYS.map((channel, index) => {
         const mark = CHANNEL_MARKS[channel];
         return (
-          <div key={channel} className="hero-still-bubble" style={bubblePosition(index)}>
-            <span
-              className="hero-still-badge"
-              style={{ backgroundImage: `linear-gradient(135deg, ${mark.colors[0]}, ${mark.colors[1]})` }}
-            >
+          <div key={channel} data-bubble={index} className="hero-still-bubble">
+            <span className={cn("hero-still-badge", CHANNEL_MARK_GRADIENTS[channel])}>
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
                 {mark.paths.map((path) => (
                   <path key={path} d={path} />

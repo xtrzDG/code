@@ -15,7 +15,9 @@ import { useMotionTemplate, useMotionValue, useSpring } from "motion/react";
 import * as m from "motion/react-m";
 import type { PointerEvent, ReactNode } from "react";
 
+import { useHydrated } from "@/lib/csp/clientStyle";
 import { SPRINGS, TILT_DEGREES } from "@/lib/motion";
+import { tiltDepthClass, type TiltDepth } from "@/lib/motionClasses";
 import { tiltFromPointer } from "@/lib/motionMath";
 import { cn } from "@/lib/cn";
 
@@ -47,6 +49,9 @@ export function TiltCard({
   const glareY = useMotionValue(50);
   const glareOpacity = useSpring(0, SPRINGS.snappy);
   const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, color-mix(in oklab, var(--accent-solid) 22%, transparent), transparent 60%)`;
+  // The server's HTML carries no style attribute (the Content Security
+  // Policy refuses it): the card starts level, the glare hidden by a class.
+  const hydrated = useHydrated();
 
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     if (reduced || event.pointerType !== "mouse") {
@@ -74,15 +79,15 @@ export function TiltCard({
     <Element
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      style={{ rotateX, rotateY, transformPerspective: 1000 }}
+      style={hydrated ? { rotateX, rotateY, transformPerspective: 1000 } : undefined}
       className={cn("relative transform-3d", className)}
     >
       {children}
       {glare ? (
         <m.span
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[inherit]"
-          style={{ background: glareBackground, opacity: glareOpacity }}
+          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0"
+          style={hydrated ? { background: glareBackground, opacity: glareOpacity } : undefined}
         />
       ) : null}
     </Element>
@@ -90,9 +95,9 @@ export function TiltCard({
 }
 
 /** A layer of a TiltCard raised by `depth` px towards the viewer. */
-export function TiltLayer({ depth, children, className }: { depth: number; children: ReactNode; className?: string }) {
+export function TiltLayer({ depth, children, className }: { depth: TiltDepth; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("transform-3d", className)} style={{ transform: `translateZ(${depth}px)` }}>
+    <div className={cn("transform-3d", tiltDepthClass(depth), className)}>
       {children}
     </div>
   );

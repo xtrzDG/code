@@ -53,6 +53,12 @@ class SetupOrchestratorsContainer(containers.DeclarativeContainer):
     dismiss_setup_guide_orchestrator = use_case_orchestrator(
         guide_use_cases.dismiss_setup_guide_use_case
     )
+    get_security_nudge_orchestrator = use_case_orchestrator(
+        guide_use_cases.get_security_nudge_use_case
+    )
+    dismiss_security_nudge_orchestrator = use_case_orchestrator(
+        guide_use_cases.dismiss_security_nudge_use_case
+    )
     get_setup_reminders_orchestrator = use_case_orchestrator(
         guide_use_cases.get_setup_reminders_use_case
     )

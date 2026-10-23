@@ -18,12 +18,12 @@ from app.utilities.security.two_factor_policy import (
 )
 
 TEAM_TWO_FACTOR_MESSAGE: str = (
-    "This business asks its team to sign in with two factors: set up an "
-    "authenticator app (Account → Security) and sign in again."
+    "This business asks its team to sign in with two factors: add a passkey "
+    "or an authenticator app (Account → Security) and sign in again."
 )
 BRAND_TWO_FACTOR_MESSAGE: str = (
-    "A location of this brand asks its team to sign in with two factors: set "
-    "up an authenticator app (Account → Security) and sign in again."
+    "A location of this brand asks its team to sign in with two factors: add "
+    "a passkey or an authenticator app (Account → Security) and sign in again."
 )
 
 

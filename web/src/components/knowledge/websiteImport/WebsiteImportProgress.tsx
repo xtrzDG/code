@@ -1,5 +1,6 @@
 "use client";
 
+import { BarFill } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import {
@@ -63,15 +64,15 @@ export function WebsiteImportProgress({ view }: { view: WebsiteImport }) {
         aria-valuetext={stageText}
         className="relative h-2.5 overflow-hidden rounded-full bg-surface-muted ring-1 ring-line/60"
       >
-        <div
+        <BarFill
+          percent={percent}
           className={cn(
             "absolute inset-y-0 start-0 rounded-full bg-accent-solid shadow-[0_0_16px_var(--accent-solid)]",
             "transition-[width] duration-700 ease-out",
           )}
-          style={{ width: `${percent}%` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent motion-safe:animate-bar-glint" />
-        </div>
+        </BarFill>
       </div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm" aria-live="polite">
         <span className="text-ink">{stageText}</span>

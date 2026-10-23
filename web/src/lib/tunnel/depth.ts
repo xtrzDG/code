@@ -9,9 +9,33 @@ export const RING_COUNT = 7;
 /** Distance between two rings (px of CSS translateZ). */
 export const RING_GAP = 260;
 
+/**
+ * A ring's place and fade as classes, one per place (a style attribute
+ * would be refused by the Content Security Policy); the values are those
+ * of ringsAt(), which a unit test keeps in step.
+ */
+const RING_CLASSES = {
+  [-1]: "[--ring-z:260px] [--ring-opacity:0]",
+  0: "[--ring-z:0px] [--ring-opacity:1]",
+  1: "[--ring-z:-260px] [--ring-opacity:0.86]",
+  2: "[--ring-z:-520px] [--ring-opacity:0.71]",
+  3: "[--ring-z:-780px] [--ring-opacity:0.57]",
+  4: "[--ring-z:-1040px] [--ring-opacity:0.43]",
+  5: "[--ring-z:-1300px] [--ring-opacity:0.29]",
+  6: "[--ring-z:-1560px] [--ring-opacity:0.14]",
+} as const;
+
+export type RingDepth = keyof typeof RING_CLASSES;
+
+export function ringClass(depth: RingDepth): string {
+  return RING_CLASSES[depth];
+}
+
 export interface Ring {
   /** Stable across steps, so a ring glides forward instead of being redrawn. */
   key: number;
+  /** Places ahead of the owner: -1 just passed, 0 around the screen, RING_COUNT - 1 the deepest. */
+  depth: RingDepth;
   /** translateZ in px: 0 is the ring around the screen, negative is deeper. */
   z: number;
   /** Fades with depth; the ring the owner just passed is gone. */
@@ -25,9 +49,10 @@ export interface Ring {
 export function ringsAt(index: number, count: number = RING_COUNT): Ring[] {
   const rings: Ring[] = [];
   for (let key = index - 1; key < index + count; key += 1) {
-    const depth = key - index;
+    const depth = (key - index) as RingDepth;
     rings.push({
       key,
+      depth,
       z: -depth * RING_GAP,
       opacity: depth < 0 ? 0 : Math.round(Math.max(0, 1 - depth / count) * 100) / 100,
     });

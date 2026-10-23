@@ -1,0 +1,12 @@
+{
+  "challenge": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "created_at": 1790000000000000,
+  "expires_at": 1790000000000000,
+  "id": "passkey_challenge_a4eaa0ee-861e-4418-9407-bda4eb575fb6",
+  "is_consumed": true,
+  "mfa_challenge_id": "mfa_challenge_9e9b8974-f1de-4ecf-a38e-e4c9e57dbe9b",
+  "purpose": "registration",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "user_id": "user_9ea58246-89c8-4fa2-81db-5f6169bce57a"
+}

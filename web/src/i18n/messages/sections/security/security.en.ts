@@ -40,7 +40,8 @@ export const securityEn = {
   },
   codes: {
     title: "Recovery codes",
-    description: "For a lost phone: each code replaces the app's code once.",
+    description:
+      "For a lost phone or security key: each code stands in for your second factor once.",
     left: {
       one: "{count} unused code left",
       other: "{count} unused codes left",
@@ -53,10 +54,10 @@ export const securityEn = {
   },
   session: {
     title: "This session",
-    twoFactor: "Signed in with a login code and the authenticator app.",
+    twoFactor: "Signed in with a login code and a second factor.",
     oneFactor: "Signed in with a login code only.",
-    upgrade: "Confirm with the app",
-    upgraded: "This session now counts as signed in with the app",
+    upgrade: "Confirm with your second factor",
+    upgraded: "This session now counts as signed in with two factors",
   },
   team: {
     title: "Two-factor sign-in for the team",

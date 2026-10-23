@@ -2,8 +2,9 @@
  * The printable table card: an A6 page (105 × 148 mm) with the business's
  * name, a heading and a line in the customers' language, the QR code and
  * the link under it for people who type it. It is a self-contained HTML
- * document (inline style and SVG, no scripts) shown in a frame as the
- * preview and printed from that frame.
+ * document (its own <style>, with the page's nonce so the frame, which
+ * shares the page's Content Security Policy, applies it; SVG; no scripts)
+ * shown in a frame as the preview and printed from that frame.
  */
 
 import { escapeXml, qrPath, qrSide, type QrMatrix } from "./qrCode";
@@ -50,10 +51,14 @@ body {
 .qr svg { display: block; width: 100%; height: 100%; }
 .hint { margin: 5mm 0 0; font-size: 10.5pt; line-height: 1.35; color: #374151; max-width: 80mm; }
 .link { margin-top: auto; font-size: 8.5pt; color: #4b5563; direction: ltr; unicode-bidi: isolate; overflow-wrap: anywhere; }
+.powered { margin: 4mm 0 0; font-size: 7.5pt; line-height: 1.3; color: #57544e; }
 `;
 
-/** The card as an HTML document; every text is escaped. */
-export function buildTableCardHtml(card: TableCard): string {
+/**
+ * The card as an HTML document; every text is escaped. `styleNonce` is the
+ * page's Content Security Policy nonce (a style without it is refused).
+ */
+export function buildTableCardHtml(card: TableCard, styleNonce?: string): string {
   const accent = card.accent && ACCENT_PATTERN.test(card.accent) ? card.accent : DEFAULT_ACCENT;
   const side = qrSide(card.matrix);
   const qr = [
@@ -68,7 +73,7 @@ export function buildTableCardHtml(card: TableCard): string {
     "<head>",
     '<meta charset="utf-8">',
     `<title>${escapeXml(card.businessName)}</title>`,
-    `<style>:root { --accent: ${accent}; }${CARD_STYLE}</style>`,
+    `<style${styleNonce ? ` nonce="${escapeXml(styleNonce)}"` : ""}>:root { --accent: ${accent}; }${CARD_STYLE}</style>`,
     "</head>",
     "<body>",
     '<main class="card">',

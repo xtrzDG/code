@@ -103,7 +103,11 @@ def test_an_authenticator_confirms_and_the_confirmation_expires(
         headers=bearer(token),
     )
 
-    assert started.json() == {"method": "totp", "login_code": None}
+    assert started.json() == {
+        "method": "totp",
+        "login_code": None,
+        "passkey_available": False,
+    }
     assert confirmed.status_code == 200, confirmed.text
     assert confirmed.json()["auth_level"] == "two_factor"
     assert confirmed.json()["step_up_valid_until"] == (

@@ -705,3 +705,8 @@ _.without_deposit  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.min_sample  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.before_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
 _.since_deposits  # app/schemas/dto/deposits/deposit_report.py (DepositReport)
+# Passkeys (1201): WebAuthn fields the browser and cabinet read; transports by value.
+_.rp, _.algorithms, _.timeout_ms, _.exclude_credentials, _.allow_credentials
+_.resident_key, _.user_verification, _.passkey_count, _.passkey_available
+_.USB, _.NFC, _.BLE, _.SMART_CARD, _.HYBRID, _.CABLE, _.is_recommended
+_.created_country, _.last_seen_country

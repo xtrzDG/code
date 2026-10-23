@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Account → Security: the authenticator app, recovery codes, this
- * session and every signed-in device. The page keeps the latest `GET /v1/me/security` and
+ * Account → Security: passkeys, the authenticator app, recovery codes,
+ * this session and every signed-in device. The page keeps the latest `GET /v1/me/security` and
  * reads it again after every change; each card does its own requests
  * (sensitive ones may first ask to confirm with a code: the step-up dialog
  * is global).
@@ -13,7 +13,11 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
-import type { AccountSecurityView, CurrentUserView } from "@/api/types";
+import type {
+  AccountSecurityView,
+  CurrentUserView,
+  PasskeyListView,
+} from "@/api/types";
 import { IconArrowLeft } from "@/components/icons";
 import { Alert, ButtonLink, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -21,17 +25,20 @@ import { HOME_PATH, type SecurityReason } from "@/lib/navigation";
 
 import { AuthenticatorCard } from "./AuthenticatorCard";
 import { DevicesCard } from "./DevicesCard";
+import { PasskeysCard } from "./PasskeysCard";
 import { RecoveryCodesCard } from "./RecoveryCodesCard";
 import { SessionCard } from "./SessionCard";
 
 export function SecurityScreen({
   me,
   initial,
+  passkeys,
   reason,
   next,
 }: {
   me: CurrentUserView;
   initial: AccountSecurityView;
+  passkeys: PasskeyListView;
   reason: SecurityReason | null;
   next: string | null;
 }) {
@@ -44,7 +51,9 @@ export function SecurityScreen({
   };
 
   const isTwoFactor = security.auth_level === "two_factor";
-  const isActive = security.totp_status === "active";
+  // Recovery codes stand in for any second factor: the app or a passkey.
+  const hasSecondFactor =
+    security.totp_status === "active" || security.passkey_count > 0;
 
   return (
     <div className="space-y-6">
@@ -75,12 +84,13 @@ export function SecurityScreen({
           ) : null}
         </Alert>
       ) : null}
+      <PasskeysCard initial={passkeys} account={account} onChanged={refresh} />
       <AuthenticatorCard
         security={security}
         account={account}
         onChanged={refresh}
       />
-      {isActive ? (
+      {hasSecondFactor ? (
         <RecoveryCodesCard
           left={security.recovery_codes_left ?? 0}
           account={account}

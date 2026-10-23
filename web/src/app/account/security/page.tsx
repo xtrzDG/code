@@ -17,8 +17,8 @@ function first(value: string | string[] | undefined): string | undefined {
 }
 
 /**
- * Account → Security: the authenticator app, recovery codes and how this
- * session is signed in. A business that requires two factors, or the admin
+ * Account → Security: passkeys, the authenticator app, recovery codes and
+ * how this session is signed in. A business that requires two factors, or the admin
  * pages, send people here (`?reason=business|admin&next=…`).
  */
 export default async function AccountSecurityPage({
@@ -26,9 +26,10 @@ export default async function AccountSecurityPage({
 }: PageProps<"/account/security">) {
   const params = await searchParams;
   const api = await getServerApi();
-  const [me, security] = await Promise.all([
+  const [me, security, passkeys] = await Promise.all([
     getCurrentUser(),
     serverFetch(api.GET("/v1/me/security")),
+    serverFetch(api.GET("/v1/me/passkeys")),
   ]);
   const reason = first(params.reason);
   const next = first(params.next);
@@ -43,6 +44,7 @@ export default async function AccountSecurityPage({
         <SecurityScreen
           me={me}
           initial={security}
+          passkeys={passkeys}
           reason={isSecurityReason(reason) ? reason : null}
           next={next ? safeNextPath(next, "") || null : null}
         />

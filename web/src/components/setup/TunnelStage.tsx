@@ -13,6 +13,7 @@ import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
 import { useMotionPreference } from "@/components/motion/MotionPreference";
+import { useHydrated } from "@/lib/csp/clientStyle";
 import { EASINGS, springTransition } from "@/lib/motion";
 
 /** 1: deeper, -1: back out. */
@@ -59,17 +60,21 @@ function depthVariants(reduced: boolean): Variants {
 
 export function TunnelStage({ placeKey, direction, children }: { placeKey: string; direction: Direction; children: ReactNode }) {
   const reduced = useMotionPreference().isCalm;
+  // The screen in the server's HTML stands still: motion would write its
+  // resting values as a style attribute, which the CSP refuses. From
+  // hydration on, every screen moves in and out.
+  const hydrated = useHydrated();
   return (
     <div className="tunnel-stage relative">
       <AnimatePresence mode="wait" custom={direction} initial={false}>
         <m.div
           key={placeKey}
           custom={direction}
-          variants={depthVariants(reduced)}
+          variants={hydrated ? depthVariants(reduced) : undefined}
           initial="enter"
-          animate="center"
+          animate={hydrated ? "center" : undefined}
           exit="exit"
-          style={{ transformStyle: "preserve-3d", transformOrigin: "50% 30%" }}
+          className="origin-[50%_30%] transform-3d"
         >
           {children}
         </m.div>

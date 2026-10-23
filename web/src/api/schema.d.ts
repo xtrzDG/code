@@ -742,6 +742,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/mfa/passkey/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Passkey Enrollment */
+        post: operations["auth_start_passkey_enrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/mfa/passkey/enroll/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish Passkey Enrollment */
+        post: operations["auth_finish_passkey_enrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/mfa/passkey/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Passkey Sign In */
+        post: operations["auth_start_passkey_sign_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/mfa/passkey/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Passkey Sign In */
+        post: operations["auth_verify_passkey_sign_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/mfa/verify": {
         parameters: {
             query?: never;
@@ -804,6 +872,40 @@ export interface paths {
         put?: never;
         /** Start Step Up */
         post: operations["auth_start_step_up"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/step-up/passkey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Passkey Step Up */
+        post: operations["auth_start_passkey_step_up"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/step-up/passkey/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Passkey Step Up */
+        post: operations["auth_verify_passkey_step_up"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3703,6 +3805,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/security-nudge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Security Nudge */
+        get: operations["setup_get_security_nudge"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/security-nudge/dismissal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Dismiss Security Nudge */
+        put: operations["setup_dismiss_security_nudge"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/setup": {
         parameters: {
             query?: never;
@@ -4741,6 +4877,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/passkeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Passkeys */
+        get: operations["auth_list_passkeys"];
+        put?: never;
+        /** Finish Passkey Registration */
+        post: operations["auth_finish_passkey_registration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/passkeys/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Passkey Registration */
+        post: operations["auth_start_passkey_registration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/passkeys/{passkey_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Passkey */
+        delete: operations["auth_remove_passkey"];
+        options?: never;
+        head?: never;
+        /** Rename Passkey */
+        patch: operations["auth_rename_passkey"];
+        trace?: never;
+    };
     "/v1/me/security": {
         parameters: {
             query?: never;
@@ -5503,9 +5692,10 @@ export interface components {
         /**
          * AccountSecurityView
          * @description The signed-in person's two-factor sign-in: their authenticator (None:
-         *     none set up), how many recovery codes are left, and how the current
-         *     session is signed in. `is_mfa_required`: a platform admin, who must use
-         *     an authenticator.
+         *     none set up), how many passkeys they have (GET /v1/me/passkeys lists
+         *     them), how many recovery codes are left, and how the current session
+         *     is signed in. `is_mfa_required`: a platform admin, who must use a
+         *     second factor.
          */
         AccountSecurityView: {
             auth_level?: components["schemas"]["AuthLevel"] | null;
@@ -5516,6 +5706,11 @@ export interface components {
              * @default false
              */
             is_mfa_required: boolean;
+            /**
+             * Passkey Count
+             * @default 0
+             */
+            passkey_count: number;
             /**
              * Recovery Codes Left
              * @default 0
@@ -13511,13 +13706,21 @@ export interface components {
         };
         /**
          * MfaChallengeView
-         * @description The login code matched; the sign-in needs an authenticator code (or a
-         *     recovery code) too. `requires_enrollment`: a platform admin without an
-         *     authenticator sets one up first (`POST /v1/auth/mfa/enroll`).
+         * @description The login code matched; the sign-in needs a second factor too.
+         *     `methods`: what the person can answer with, the preferred first (a
+         *     passkey, the authenticator app, a recovery code). `requires_enrollment`:
+         *     a platform admin without a second factor sets one up first, with one of
+         *     `enrollment_methods` (a passkey, `POST /v1/auth/mfa/passkey/enroll`,
+         *     when the server offers them; the authenticator app,
+         *     `POST /v1/auth/mfa/enroll`).
          */
         MfaChallengeView: {
+            /** Enrollment Methods */
+            enrollment_methods?: components["schemas"]["SecondFactorMethod"][];
             /** Expires In Seconds */
             expires_in_seconds: number;
+            /** Methods */
+            methods?: components["schemas"]["SecondFactorMethod"][];
             /** Mfa Challenge Id */
             mfa_challenge_id: string;
             /**
@@ -14264,6 +14467,153 @@ export interface components {
          * @enum {string}
          */
         PartnerStatus: "active" | "paused";
+        /**
+         * PasskeyAddedView
+         * @description The new passkey; with the person's first second factor, a new set of
+         *     recovery codes too (shown once).
+         */
+        PasskeyAddedView: {
+            passkey: components["schemas"]["PasskeyView"];
+            /** Recovery Codes */
+            recovery_codes?: string[];
+        };
+        /**
+         * PasskeyAssertionOptionsView
+         * @description The options of `navigator.credentials.get()` for a sign-in step or a
+         *     step-up; the answer goes back with `passkey_challenge_id`.
+         */
+        PasskeyAssertionOptionsView: {
+            options: components["schemas"]["PasskeyRequestOptionsView"];
+            /** Passkey Challenge Id */
+            passkey_challenge_id: string;
+        };
+        /**
+         * PasskeyCreationOptionsView
+         * @description `PublicKeyCredentialCreationOptions` of a new passkey: no attestation
+         *     is asked for, a discoverable passkey is preferred, and the person's
+         *     passkeys are excluded so an authenticator is not added twice.
+         */
+        PasskeyCreationOptionsView: {
+            /** Algorithms */
+            algorithms: number[];
+            /** Challenge */
+            challenge: string;
+            /** Exclude Credentials */
+            exclude_credentials?: components["schemas"]["PasskeyDescriptorView"][];
+            resident_key: components["schemas"]["WebAuthnResidentKey"];
+            rp: components["schemas"]["PasskeyRelyingPartyView"];
+            /** Timeout Ms */
+            timeout_ms: number;
+            user: components["schemas"]["PasskeyUserView"];
+            user_verification: components["schemas"]["WebAuthnUserVerification"];
+        };
+        /**
+         * PasskeyDescriptorView
+         * @description A passkey the browser should offer (or must not create again).
+         */
+        PasskeyDescriptorView: {
+            /** Id */
+            id: string;
+            /** Transports */
+            transports?: components["schemas"]["WebAuthnTransport"][];
+        };
+        /**
+         * PasskeyListView
+         * @description The person's passkeys, newest first. `is_available`: the server is
+         *     set up for passkeys (WEBAUTHN_RP_ID); `is_recommended`: a platform
+         *     admin without one, who should add one.
+         */
+        PasskeyListView: {
+            /** Is Available */
+            is_available: boolean;
+            /**
+             * Is Recommended
+             * @default false
+             */
+            is_recommended: boolean;
+            /** Items */
+            items?: components["schemas"]["PasskeyView"][];
+        };
+        /**
+         * PasskeyRegistrationView
+         * @description The options of a new passkey for `navigator.credentials.create()`;
+         *     the answer goes back with `passkey_challenge_id` within five minutes.
+         */
+        PasskeyRegistrationView: {
+            options: components["schemas"]["PasskeyCreationOptionsView"];
+            /** Passkey Challenge Id */
+            passkey_challenge_id: string;
+        };
+        /**
+         * PasskeyRelyingPartyView
+         * @description The service passkeys are bound to: its domain and the name shown.
+         */
+        PasskeyRelyingPartyView: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * PasskeyRequestOptionsView
+         * @description `PublicKeyCredentialRequestOptions` of a sign-in step or a step-up:
+         *     only the person's own passkeys are allowed.
+         */
+        PasskeyRequestOptionsView: {
+            /** Allow Credentials */
+            allow_credentials?: components["schemas"]["PasskeyDescriptorView"][];
+            /** Challenge */
+            challenge: string;
+            /** Rp Id */
+            rp_id: string;
+            /** Timeout Ms */
+            timeout_ms: number;
+            user_verification: components["schemas"]["WebAuthnUserVerification"];
+        };
+        /**
+         * PasskeyUserView
+         * @description The account a new passkey belongs to: an opaque handle derived from
+         *     the user's id and the e-mail or phone number the authenticator shows.
+         */
+        PasskeyUserView: {
+            /** Display Name */
+            display_name: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * PasskeyView
+         * @description One passkey in the person's list: its name, when it was added and last
+         *     used, whether a password manager or platform account keeps it in sync,
+         *     and `clone_suspected_at` when a copy of its authenticator was used (it
+         *     signs nothing more; remove it and add a new one).
+         */
+        PasskeyView: {
+            /** Clone Suspected At */
+            clone_suspected_at?: number | null;
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            /**
+             * Is Backed Up
+             * @default false
+             */
+            is_backed_up: boolean;
+            /**
+             * Is Synced
+             * @default false
+             */
+            is_synced: boolean;
+            /** Last Used At */
+            last_used_at?: number | null;
+            /** Name */
+            name: string;
+            /** Transports */
+            transports?: components["schemas"]["WebAuthnTransport"][];
+        };
         /**
          * PauseOptionsView
          * @description Whether the business can pause now and on what terms: from
@@ -15937,6 +16287,47 @@ export interface components {
             starts_on: string;
         };
         /**
+         * SecondFactorMethod
+         * @description A way to pass the second step of a sign-in: a passkey (phishing
+         *     resistant, offered first), a code of the authenticator app, or one of
+         *     the recovery codes.
+         * @enum {string}
+         */
+        SecondFactorMethod: "passkey" | "totp" | "recovery_code";
+        /**
+         * SecurityNudgeReason
+         * @description Why an owner of a live business without a second factor is reminded to
+         *     turn one on: their customers' data is in the cabinet
+         *     (PROTECT_CUSTOMERS), or they put the reminder away while working alone
+         *     and the team has grown since (TEAM_GREW): every new person is another
+         *     way in.
+         * @enum {string}
+         */
+        SecurityNudgeReason: "protect_customers" | "team_grew";
+        /**
+         * SecurityNudgeView
+         * @description Whether the person sees the banner "Protect your customers' data: turn
+         *     on a second factor" (`is_shown`) and why (`reason`). Shown to an owner
+         *     of a live business who has neither a passkey nor an authenticator app
+         *     and has not put it away; put away while working alone, it comes back
+         *     once the team grows past one person (`team_grew`). `is_owner` tells
+         *     whether the reminder concerns the person at all (the setup guide's
+         *     step is an owner's only).
+         */
+        SecurityNudgeView: {
+            /** Dismissed At */
+            dismissed_at?: number | null;
+            /** Has Second Factor */
+            has_second_factor: boolean;
+            /** Is Owner */
+            is_owner: boolean;
+            /** Is Shown */
+            is_shown: boolean;
+            reason?: components["schemas"]["SecurityNudgeReason"] | null;
+            /** Team Size */
+            team_size: number;
+        };
+        /**
          * SegmentList
          * @description The business's segments, the oldest first, and its tags to build one with.
          */
@@ -16048,11 +16439,12 @@ export interface components {
          *     TEST_CHAT, AGREEMENT (the data processing agreement), BILLING,
          *     CHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or
          *     OVERVIEW once everything is done; after the launch PHONE_TEST (the
-         *     guide's QR code to write from a phone) and SHARE (the link and QR code
-         *     for customers).
+         *     guide's QR code to write from a phone), SHARE (the link and QR code
+         *     for customers) and ACCOUNT_SECURITY (Account → Security, a passkey or
+         *     an authenticator app).
          * @enum {string}
          */
-        SetupActionTarget: "profile" | "staff_contacts" | "channels" | "test_chat" | "agreement" | "billing" | "checks" | "apply_changes" | "overview" | "phone_test" | "share";
+        SetupActionTarget: "profile" | "staff_contacts" | "channels" | "test_chat" | "agreement" | "billing" | "checks" | "apply_changes" | "overview" | "phone_test" | "share" | "account_security";
         /**
          * SetupActionView
          * @description Where the owner goes to act: a cabinet place (and the wizard step for
@@ -16141,14 +16533,17 @@ export interface components {
          *     launch the guide goes on to the first real customer: writing to the
          *     assistant from the owner's own phone (PHONE_TEST), a second channel
          *     where customers write (SECOND_CHANNEL), and the link or QR code where
-         *     customers see it (SHARE).
+         *     customers see it (SHARE), and for an owner a second factor that
+         *     protects the customers' data (PROTECT_DATA). PROTECT_DATA is new in
+         *     this release and never stored (a closed release gate): the owner puts
+         *     it away with the reminder banner (security_nudges), not as a skip.
          *
          *     The steps after the launch are new in this release: a skip of one is
          *     stored apart (`SetupStateDocument.skipped_after_launch`), which the
          *     release before ignores.
          * @enum {string}
          */
-        SetupStepCode: "business" | "offer" | "hours_and_bookings" | "staff_contact" | "channels" | "test" | "launch" | "phone_test" | "second_channel" | "share";
+        SetupStepCode: "business" | "offer" | "hours_and_bookings" | "staff_contact" | "channels" | "test" | "launch" | "phone_test" | "second_channel" | "share" | "protect_data";
         /**
          * SetupStepStatus
          * @description Where a setup step stands: DONE, SKIPPED (an optional step the owner
@@ -16676,20 +17071,32 @@ export interface components {
         /**
          * StepUpChallengeView
          * @description How to confirm it is you: with an authenticator code (or a recovery
-         *     code), or with the login code just sent (`login_code`).
+         *     code), with a passkey (`POST /v1/auth/step-up/passkey`) or a recovery
+         *     code, with a recovery code alone (`recovery_code`: passkeys none of
+         *     which can sign now), or, for a person with no second factor, with the
+         *     login code just sent (`login_code`). `passkey_available`: the person
+         *     may use a passkey now.
          */
         StepUpChallengeView: {
             login_code?: components["schemas"]["OtpChallengeView"] | null;
             method: components["schemas"]["StepUpMethod"];
+            /**
+             * Passkey Available
+             * @default false
+             */
+            passkey_available: boolean;
         };
         /**
          * StepUpMethod
          * @description How a signed-in person confirms it is them before a sensitive action: a
          *     code of their authenticator app (or a recovery code) when they have one,
-         *     otherwise a new login code sent to their phone or e-mail.
+         *     else one of their passkeys (or a recovery code), a recovery code alone
+         *     when they have passkeys none of which can sign now, otherwise (no second
+         *     factor at all) a new login code sent to their phone or e-mail. Answers
+         *     only (never stored).
          * @enum {string}
          */
-        StepUpMethod: "totp" | "login_code";
+        StepUpMethod: "totp" | "passkey" | "recovery_code" | "login_code";
         /**
          * SubProcessor
          * @description The sub-processors that may keep copies of a business's customer data
@@ -17293,12 +17700,16 @@ export interface components {
          *     where and when it signed in, when it was last used and from where,
          *     how it was signed in, and when it ends by itself (unused until
          *     `idle_expires_at`, or at `expires_at` whatever happens). The request's
-         *     own session is `is_current`.
+         *     own session is `is_current`. `created_country` and `last_seen_country`
+         *     are the approximate countries of the addresses (an offline GeoLite2
+         *     lookup; None when unknown or not set up).
          */
         UserSessionView: {
             auth_level: components["schemas"]["AuthLevel"];
             /** Created At */
             created_at: number;
+            /** Created Country */
+            created_country?: string | null;
             /** Created Ip */
             created_ip?: string | null;
             device: components["schemas"]["SessionDevice"];
@@ -17315,6 +17726,8 @@ export interface components {
             is_current: boolean;
             /** Last Seen At */
             last_seen_at: number;
+            /** Last Seen Country */
+            last_seen_country?: string | null;
             /** Last Seen Ip */
             last_seen_ip?: string | null;
         };
@@ -17839,6 +18252,33 @@ export interface components {
             count: number;
             status: components["schemas"]["WaitlistStatus"];
         };
+        /**
+         * WebAuthnResidentKey
+         * @description Whether the authenticator should keep the passkey discoverable (a
+         *     passkey the browser can list). The cabinet asks for "preferred" only:
+         *     a discoverable passkey where the authenticator can keep one, a plain
+         *     credential otherwise (WebAuthn also knows "required" and
+         *     "discouraged").
+         * @enum {string}
+         */
+        WebAuthnResidentKey: "preferred";
+        /**
+         * WebAuthnTransport
+         * @description How a browser reaches the authenticator that keeps a passkey (WebAuthn
+         *     `AuthenticatorTransport`), remembered so the browser offers the right
+         *     one next time.
+         * @enum {string}
+         */
+        WebAuthnTransport: "usb" | "nfc" | "ble" | "smart-card" | "hybrid" | "internal" | "cable";
+        /**
+         * WebAuthnUserVerification
+         * @description Whether the authenticator checks the person (fingerprint, face, PIN)
+         *     before it signs. The cabinet asks for "preferred" only: the passkey is
+         *     the second factor after the login code, so a security key without a
+         *     PIN still counts (WebAuthn also knows "required" and "discouraged").
+         * @enum {string}
+         */
+        WebAuthnUserVerification: "preferred";
         /**
          * WebPushUrgency
          * @description How soon a push service should wake the device (RFC 8030 Urgency).
@@ -23109,6 +23549,428 @@ export interface operations {
             };
         };
     };
+    auth_start_passkey_enrollment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Mfa Challenge Id */
+                    mfa_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyRegistrationView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_finish_passkey_enrollment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * PasskeyRegistrationCredential
+                     * @description The `PublicKeyCredential` a browser created: `id` and `raw_id` are the
+                     *     same credential id.
+                     *
+                     *     Example: {"id": "AbC...", "raw_id": "AbC...", "response":
+                     *     {"client_data_json": "eyJ0...", "attestation_object": "o2Nm...",
+                     *     "transports": ["internal", "hybrid"]}}.
+                     */
+                    credential: {
+                        /** Id */
+                        id: string;
+                        /** Raw Id */
+                        raw_id: string;
+                        /**
+                         * PasskeyAttestationResponse
+                         * @description `AuthenticatorAttestationResponse` of a new passkey.
+                         */
+                        response: {
+                            /** Attestation Object */
+                            attestation_object: string;
+                            /** Client Data Json */
+                            client_data_json: string;
+                            /** Transports */
+                            transports?: string[];
+                        };
+                    };
+                    /** Mfa Challenge Id */
+                    mfa_challenge_id: string;
+                    /** Name */
+                    name?: string | null;
+                    /** Passkey Challenge Id */
+                    passkey_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginSessionView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_start_passkey_sign_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Mfa Challenge Id */
+                    mfa_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyAssertionOptionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_verify_passkey_sign_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * PasskeyAssertionCredential
+                     * @description The `PublicKeyCredential` a browser answered a sign-in step or a
+                     *     step-up with.
+                     *
+                     *     Example: {"id": "AbC...", "raw_id": "AbC...", "response":
+                     *     {"client_data_json": "eyJ0...", "authenticator_data": "SZYN...",
+                     *     "signature": "MEUC..."}}.
+                     */
+                    credential: {
+                        /** Id */
+                        id: string;
+                        /** Raw Id */
+                        raw_id: string;
+                        /**
+                         * PasskeyAssertionResponse
+                         * @description `AuthenticatorAssertionResponse`: what the passkey signed, and the signature.
+                         */
+                        response: {
+                            /** Authenticator Data */
+                            authenticator_data: string;
+                            /** Client Data Json */
+                            client_data_json: string;
+                            /** Signature */
+                            signature: string;
+                            /** User Handle */
+                            user_handle?: string | null;
+                        };
+                    };
+                    /** Mfa Challenge Id */
+                    mfa_challenge_id: string;
+                    /** Passkey Challenge Id */
+                    passkey_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginSessionView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     auth_verify_mfa_login: {
         parameters: {
             query?: never;
@@ -23436,6 +24298,212 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StepUpChallengeView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_start_passkey_step_up: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyAssertionOptionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_verify_passkey_step_up: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * PasskeyAssertionCredential
+                     * @description The `PublicKeyCredential` a browser answered a sign-in step or a
+                     *     step-up with.
+                     *
+                     *     Example: {"id": "AbC...", "raw_id": "AbC...", "response":
+                     *     {"client_data_json": "eyJ0...", "authenticator_data": "SZYN...",
+                     *     "signature": "MEUC..."}}.
+                     */
+                    credential: {
+                        /** Id */
+                        id: string;
+                        /** Raw Id */
+                        raw_id: string;
+                        /**
+                         * PasskeyAssertionResponse
+                         * @description `AuthenticatorAssertionResponse`: what the passkey signed, and the signature.
+                         */
+                        response: {
+                            /** Authenticator Data */
+                            authenticator_data: string;
+                            /** Client Data Json */
+                            client_data_json: string;
+                            /** Signature */
+                            signature: string;
+                            /** User Handle */
+                            user_handle?: string | null;
+                        };
+                    };
+                    /** Passkey Challenge Id */
+                    passkey_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionAssuranceView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -44032,6 +45100,180 @@ export interface operations {
             };
         };
     };
+    setup_get_security_nudge: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityNudgeView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    setup_dismiss_security_nudge: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityNudgeView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     setup_get_setup: {
         parameters: {
             query?: {
@@ -50177,6 +51419,476 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecoveryCodesView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_list_passkeys: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyListView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_finish_passkey_registration: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * PasskeyRegistrationCredential
+                     * @description The `PublicKeyCredential` a browser created: `id` and `raw_id` are the
+                     *     same credential id.
+                     *
+                     *     Example: {"id": "AbC...", "raw_id": "AbC...", "response":
+                     *     {"client_data_json": "eyJ0...", "attestation_object": "o2Nm...",
+                     *     "transports": ["internal", "hybrid"]}}.
+                     */
+                    credential: {
+                        /** Id */
+                        id: string;
+                        /** Raw Id */
+                        raw_id: string;
+                        /**
+                         * PasskeyAttestationResponse
+                         * @description `AuthenticatorAttestationResponse` of a new passkey.
+                         */
+                        response: {
+                            /** Attestation Object */
+                            attestation_object: string;
+                            /** Client Data Json */
+                            client_data_json: string;
+                            /** Transports */
+                            transports?: string[];
+                        };
+                    };
+                    /** Name */
+                    name?: string | null;
+                    /** Passkey Challenge Id */
+                    passkey_challenge_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyAddedView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_start_passkey_registration: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyRegistrationView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_remove_passkey: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                passkey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_rename_passkey: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                passkey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasskeyView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

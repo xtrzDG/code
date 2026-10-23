@@ -34,7 +34,8 @@ export const securityHe: Translation<typeof securityEn> = {
   },
   codes: {
     title: "קודי שחזור",
-    description: "לטלפון שאבד: כל קוד מחליף את הקוד של האפליקציה פעם אחת.",
+    description:
+      "לטלפון או למפתח אבטחה שאבדו: כל קוד מחליף את הגורם השני פעם אחת.",
     left: {
       one: "נשאר קוד אחד שלא נוצל",
       other: "נשארו {count} קודים שלא נוצלו",
@@ -47,10 +48,10 @@ export const securityHe: Translation<typeof securityEn> = {
   },
   session: {
     title: "ההתחברות הזו",
-    twoFactor: "התחברתם עם קוד כניסה ועם אפליקציית האימות.",
+    twoFactor: "התחברתם עם קוד כניסה ועם גורם שני.",
     oneFactor: "התחברתם עם קוד כניסה בלבד.",
-    upgrade: "אישור באמצעות האפליקציה",
-    upgraded: "ההתחברות הזו נחשבת עכשיו כהתחברות עם האפליקציה",
+    upgrade: "אישור באמצעות הגורם השני",
+    upgraded: "ההתחברות הזו נחשבת עכשיו כהתחברות עם שני גורמים",
   },
   team: {
     title: "התחברות דו-שלבית לצוות",

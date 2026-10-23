@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContentSecurityPolicy, buildHostedChatPolicy, createNonce } from "./contentSecurityPolicy";
+import {
+  buildContentSecurityPolicy,
+  buildHostedChatPolicy,
+  createNonce,
+  CSP_REPORT_PATH,
+  REPORTING_ENDPOINTS,
+} from "./contentSecurityPolicy";
 
 function directives(policy: string): Map<string, string> {
   return new Map(
@@ -34,9 +40,27 @@ describe("buildContentSecurityPolicy", () => {
     expect(policy.get("base-uri")).toBe("'none'");
     expect(policy.get("object-src")).toBe("'none'");
     expect(policy.get("form-action")).toBe("'self' https://pay.flitt.com");
-    // A nonce in style-src would switch 'unsafe-inline' off for style attributes.
-    expect(policy.get("style-src")).toBe("'self' 'unsafe-inline'");
+    // No style attribute applies; a <style> needs the page's nonce.
+    expect(policy.get("style-src")).toBe("'self' 'nonce-abc'");
+    expect(policy.get("require-trusted-types-for")).toBe("'script'");
     expect(policy.has("upgrade-insecure-requests")).toBe(true);
+  });
+
+  it("reports violations to the cabinet's own endpoint, both ways", () => {
+    const policy = directives(buildContentSecurityPolicy({ nonce: "n", isDevelopment: false, isHttps: false }));
+
+    expect(policy.get("report-uri")).toBe(CSP_REPORT_PATH);
+    expect(policy.get("report-to")).toBe("csp");
+    expect(REPORTING_ENDPOINTS).toBe(`csp="${CSP_REPORT_PATH}"`);
+  });
+
+  it("never allows inline styles or skips Trusted Types outside development", () => {
+    for (const isHttps of [true, false]) {
+      const policy = buildContentSecurityPolicy({ nonce: "n", isDevelopment: false, isHttps });
+      expect(policy).not.toContain("'unsafe-inline'");
+      expect(policy).not.toContain("'unsafe-eval'");
+      expect(policy).toContain("require-trusted-types-for 'script'");
+    }
   });
 
   it("allows eval only in development and upgrades requests only over HTTPS", () => {
@@ -44,6 +68,9 @@ describe("buildContentSecurityPolicy", () => {
 
     expect(development.get("script-src")).toContain("'unsafe-eval'");
     expect(development.has("upgrade-insecure-requests")).toBe(false);
+    // The dev overlay injects inline styles and sets innerHTML.
+    expect(development.get("style-src")).toBe("'self' 'unsafe-inline'");
+    expect(development.has("require-trusted-types-for")).toBe(false);
   });
 });
 
@@ -58,6 +85,9 @@ describe("buildHostedChatPolicy", () => {
     expect(policy.get("frame-src")).toBe("'none'");
     expect(policy.get("form-action")).toBe("'none'");
     expect(policy.get("frame-ancestors")).toBe("'none'");
+    expect(policy.get("style-src")).toBe("'self' 'nonce-abc'");
+    expect(policy.get("require-trusted-types-for")).toBe("'script'");
+    expect(policy.get("report-uri")).toBe(CSP_REPORT_PATH);
     expect(policy.has("upgrade-insecure-requests")).toBe(true);
   });
 

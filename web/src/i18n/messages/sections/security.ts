@@ -5,7 +5,8 @@
  * (`devices`), platform support's access to a cabinet (`supportAccess`) and
  * the terms a person accepts by signing in (`legalConsent`), and the
  * audit log's tamper check (`auditChain`) with the platform admin's Audit
- * page (`adminAudit`).
+ * page (`adminAudit`), passkeys (`passkeys`) and the owner's reminder to
+ * turn on a second factor (`securityNudge`).
  *
  * Top-level keys are namespaces, spread into the dictionaries of every
  * locale; the other languages are type-checked against `en`. Each namespace lives in its own
@@ -48,6 +49,16 @@ import { securityHe } from "./security/security.he";
 import { securityDe } from "./security/security.de";
 import { supportAccessHe } from "./security/supportAccess.he";
 import { supportAccessDe } from "./security/supportAccess.de";
+import { passkeysEn } from "./security/passkeys.en";
+import { passkeysRu } from "./security/passkeys.ru";
+import { passkeysKa } from "./security/passkeys.ka";
+import { passkeysHe } from "./security/passkeys.he";
+import { passkeysDe } from "./security/passkeys.de";
+import { securityNudgeEn } from "./security/securityNudge.en";
+import { securityNudgeRu } from "./security/securityNudge.ru";
+import { securityNudgeKa } from "./security/securityNudge.ka";
+import { securityNudgeHe } from "./security/securityNudge.he";
+import { securityNudgeDe } from "./security/securityNudge.de";
 
 export const securityFlowEn = {
   mfa: mfaEn,
@@ -57,6 +68,8 @@ export const securityFlowEn = {
   legalConsent: legalConsentEn,
   auditChain: auditChainEn,
   adminAudit: adminAuditEn,
+  passkeys: passkeysEn,
+  securityNudge: securityNudgeEn,
 } as const;
 
 export const securityFlowRu: Translation<typeof securityFlowEn> = {
@@ -67,6 +80,8 @@ export const securityFlowRu: Translation<typeof securityFlowEn> = {
   legalConsent: legalConsentRu,
   auditChain: auditChainRu,
   adminAudit: adminAuditRu,
+  passkeys: passkeysRu,
+  securityNudge: securityNudgeRu,
 };
 
 export const securityFlowKa: Translation<typeof securityFlowEn> = {
@@ -77,6 +92,8 @@ export const securityFlowKa: Translation<typeof securityFlowEn> = {
   legalConsent: legalConsentKa,
   auditChain: auditChainKa,
   adminAudit: adminAuditKa,
+  passkeys: passkeysKa,
+  securityNudge: securityNudgeKa,
 };
 
 export const securityFlowHe: Translation<typeof securityFlowEn> = {
@@ -87,6 +104,8 @@ export const securityFlowHe: Translation<typeof securityFlowEn> = {
   legalConsent: legalConsentHe,
   auditChain: auditChainHe,
   adminAudit: adminAuditHe,
+  passkeys: passkeysHe,
+  securityNudge: securityNudgeHe,
 };
 
 export const securityFlowDe: Translation<typeof securityFlowEn> = {
@@ -97,4 +116,6 @@ export const securityFlowDe: Translation<typeof securityFlowEn> = {
   legalConsent: legalConsentDe,
   auditChain: auditChainDe,
   adminAudit: adminAuditDe,
+  passkeys: passkeysDe,
+  securityNudge: securityNudgeDe,
 };

@@ -96,3 +96,28 @@
     }
   }
 }
+
+/*
+ * A row that scrolls sideways (ScrollRow): the side with more to see fades
+ * out. The row marks which sides (physical: ScrollRow works them out for
+ * right-to-left too); the mask is here, not a style attribute, which the
+ * Content Security Policy would refuse.
+ */
+[data-scroll-row] {
+  --scroll-fade: 2rem;
+}
+[data-scroll-row][data-fade-left] {
+  mask-image: linear-gradient(to right, transparent, black var(--scroll-fade));
+}
+[data-scroll-row][data-fade-right] {
+  mask-image: linear-gradient(to left, transparent, black var(--scroll-fade));
+}
+[data-scroll-row][data-fade-left][data-fade-right] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--scroll-fade),
+    black calc(100% - var(--scroll-fade)),
+    transparent
+  );
+}

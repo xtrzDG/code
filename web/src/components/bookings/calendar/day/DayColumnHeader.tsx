@@ -1,7 +1,7 @@
 "use client";
 
 import { IconPlus } from "@/components/icons";
-import { UserContent } from "@/components/ui";
+import { BarFill, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
@@ -37,9 +37,9 @@ export function DayColumnHeader({
             : `${t("bookingCalendar.day.booked", { percent })} · ${tp("bookings.count", load.count)}`}
         </p>
         <div aria-hidden className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-muted">
-          <div
+          <BarFill
+            percent={Math.round((load.share ?? 0) * 100)}
             className={cn("h-full rounded-full bg-accent-solid transition-[width] duration-300", isClosed && "bg-line")}
-            style={{ width: `${Math.round((load.share ?? 0) * 100)}%` }}
           />
         </div>
       </div>

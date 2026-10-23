@@ -30,6 +30,8 @@ from app.schemas.typings.mfa.strings import (
     TotpIssuerName,
     TotpProvisioningUri,
 )
+from app.schemas.typings.passkeys.booleans import IsPasskeySignInAvailable
+from app.schemas.typings.passkeys.constrained_integers import PasskeyCount
 from app.schemas.typings.users.constrained_strings import OtpCode, SessionUserAgent
 from app.schemas.typings.users.prefixed_id import (
     OtpChallengeId,
@@ -123,15 +125,17 @@ class RecoveryCodesView(ImmutableDTO):
 class AccountSecurityView(ImmutableDTO):
     """
     The signed-in person's two-factor sign-in: their authenticator (None:
-    none set up), how many recovery codes are left, and how the current
-    session is signed in. `is_mfa_required`: a platform admin, who must use
-    an authenticator.
+    none set up), how many passkeys they have (GET /v1/me/passkeys lists
+    them), how many recovery codes are left, and how the current session
+    is signed in. `is_mfa_required`: a platform admin, who must use a
+    second factor.
     """
 
     totp_status: TotpFactorStatus | None = None
     totp_confirmed_at: Microseconds | None = None
     totp_last_used_at: Microseconds | None = None
     recovery_codes_left: RecoveryCodeCount = RecoveryCodeCount(0)
+    passkey_count: PasskeyCount = PasskeyCount(0)
     auth_level: AuthLevel | None = None
     authenticated_at: Microseconds | None = None
     step_up_max_age_seconds: StepUpMaxAgeSeconds
@@ -146,17 +150,23 @@ class StartStepUpCommand(ImmutableDTO):
 class StepUpChallengeView(ImmutableDTO):
     """
     How to confirm it is you: with an authenticator code (or a recovery
-    code), or with the login code just sent (`login_code`).
+    code), with a passkey (`POST /v1/auth/step-up/passkey`) or a recovery
+    code, with a recovery code alone (`recovery_code`: passkeys none of
+    which can sign now), or, for a person with no second factor, with the
+    login code just sent (`login_code`). `passkey_available`: the person
+    may use a passkey now.
     """
 
     method: StepUpMethod
     login_code: OtpChallengeView | None = None
+    passkey_available: IsPasskeySignInAvailable = False
 
 
 class VerifyStepUpRequest(ImmutableDTO):
     """
-    The confirmation: `code` of the authenticator, a `recovery_code`, or the
-    `login_code` of the challenge `/v1/auth/step-up` sent.
+    The confirmation: `code` of the authenticator, a `recovery_code` (with
+    an authenticator or passkeys), or the `login_code` of the challenge
+    `/v1/auth/step-up` sent (only for a person without a second factor).
     """
 
     code: TotpCode | None = None

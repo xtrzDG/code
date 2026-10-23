@@ -80,6 +80,17 @@ export type AccountSecurityView = Schema<"AccountSecurityView">;
 export type StepUpChallengeView = Schema<"StepUpChallengeView">;
 export type SessionAssuranceView = Schema<"SessionAssuranceView">;
 export type BusinessSecurityView = Schema<"BusinessSecurityView">;
+export type SecondFactorMethod = Schema<"SecondFactorMethod">;
+
+// Passkeys (WebAuthn) and the owner's second-factor reminder
+export type PasskeyView = Schema<"PasskeyView">;
+export type PasskeyListView = Schema<"PasskeyListView">;
+export type PasskeyAddedView = Schema<"PasskeyAddedView">;
+export type PasskeyRegistrationView = Schema<"PasskeyRegistrationView">;
+export type PasskeyAssertionOptionsView = Schema<"PasskeyAssertionOptionsView">;
+export type PasskeyCreationOptionsView = Schema<"PasskeyCreationOptionsView">;
+export type PasskeyRequestOptionsView = Schema<"PasskeyRequestOptionsView">;
+export type SecurityNudgeView = Schema<"SecurityNudgeView">;
 
 // Devices, the platform admin team and support access
 export type UserSessionView = Schema<"UserSessionView">;

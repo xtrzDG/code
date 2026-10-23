@@ -10,12 +10,10 @@
  * scroll timelines, and reduced motion, keep it still.
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
-
-/** px of drift per unit of `speed` over the block's whole way across the screen. */
-const DRIFT_PX = 120;
+import { parallaxClass, type ParallaxSpeed } from "@/lib/motionClasses";
 
 export function Parallax({
   speed,
@@ -23,13 +21,12 @@ export function Parallax({
   className,
 }: {
   /** Positive: moves up faster than the page (nearer); negative: lags behind (further). */
-  speed: number;
+  speed: ParallaxSpeed;
   children?: ReactNode;
   className?: string;
 }) {
-  const shift = { "--parallax-shift": `${speed * DRIFT_PX}px` } as CSSProperties;
   return (
-    <div aria-hidden className={cn("parallax-layer", className)} style={shift}>
+    <div aria-hidden className={cn("parallax-layer", parallaxClass(speed), className)}>
       {children}
     </div>
   );

@@ -9,6 +9,7 @@ import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
 import { formatScore, scoreTone } from "@/lib/assistant/autotests";
 import { cn } from "@/lib/cn";
+import { useHydrated } from "@/lib/csp/clientStyle";
 import { formatNumber, languageName } from "@/lib/format";
 
 import { barHeight, hasWeekComparison, judgedDays, weakCriteria, type ClientQuality, type QualityDay } from "../../_lib/quality";
@@ -122,6 +123,7 @@ function QualityDetails({ quality, timeZone }: { quality: ClientQuality; timeZon
 /** One bar per day, colored by score; the same numbers as a table behind a disclosure. */
 function TrendBars({ days, dayLabel }: { days: readonly QualityDay[]; dayLabel: (day: QualityDay) => string }) {
   const { t, locale } = useI18n();
+  const hydrated = useHydrated();
   const rows = judgedDays(days);
   return (
     <div>
@@ -142,7 +144,7 @@ function TrendBars({ days, dayLabel }: { days: readonly QualityDay[]; dayLabel: 
                     ? "h-0.5 bg-line"
                     : BAR_TONES[scoreTone(day.average_score) as keyof typeof BAR_TONES] ?? "bg-accent-solid",
                 )}
-                style={height === null ? undefined : { height: `${height}%` }}
+                style={height === null || !hydrated ? undefined : { height: `${height}%` }}
               />
             </span>
           );

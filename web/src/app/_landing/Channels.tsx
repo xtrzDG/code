@@ -1,7 +1,8 @@
 import { IconChannelMark } from "@/components/icons";
 import { Reveal } from "@/components/siteMotion";
 import type { MessageKey, Translator } from "@/i18n/translate";
-import { CHANNEL_MARKS } from "@/lib/channelMarks";
+import { CHANNEL_MARK_GRADIENTS } from "@/lib/channelMarks";
+import { cn } from "@/lib/cn";
 import type { ChannelMarkKey } from "@/lib/heroScene";
 
 import { Section } from "./Section";
@@ -17,11 +18,12 @@ const CHANNELS: { kind: ChannelMarkKey; name: MessageKey; text: MessageKey }[] =
 
 /** The channel's mark in white on its own colours, like the bubbles orbiting the hero's orb. */
 function ChannelBadge({ kind }: { kind: ChannelMarkKey }) {
-  const [from, to] = CHANNEL_MARKS[kind].colors;
   return (
     <span
-      className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md"
-      style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
+      className={cn(
+        "flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md",
+        CHANNEL_MARK_GRADIENTS[kind],
+      )}
       aria-hidden
     >
       <IconChannelMark mark={kind} className="size-5" strokeWidth={1.9} />

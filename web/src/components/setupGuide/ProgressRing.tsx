@@ -31,9 +31,9 @@ export function ProgressRing({
       role="img"
       aria-label={label}
       className={cn("relative inline-flex shrink-0 items-center justify-center", className)}
-      style={{ width: size, height: size }}
     >
-      <svg viewBox={`0 0 ${size} ${size}`} className="size-full -rotate-90" aria-hidden>
+      {/* Sized by its attributes: the ring's box needs no style attribute (refused by the CSP). */}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block -rotate-90" aria-hidden>
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} className="stroke-line" />
         <circle
           cx={size / 2}

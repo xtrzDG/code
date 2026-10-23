@@ -19,6 +19,7 @@ from app.containers.use_cases.feedback_use_cases import (
 from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
+from app.containers.use_cases.passkey_use_cases import PasskeyUseCasesContainer
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -208,6 +209,18 @@ class UseCasesContainer(BusinessUseCasesContainer):
         IdempotencyUseCasesContainer,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+    )
+    # Passkeys: Account → Security, sign-in and step-up (1201).
+    passkeys: PasskeyUseCasesContainer = Container(  # type: ignore[assignment]
+        PasskeyUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
     )
     # The audit log's hash chains: views and the daily check (1193).
     audit_trail: AuditTrailUseCasesContainer = Container(  # type: ignore[assignment]

@@ -8,6 +8,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { Badge, Button, Card, Field, Fieldset, Input, Radio, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { useHydrated } from "@/lib/csp/clientStyle";
 
 import type { ChannelView } from "../_lib/channels";
 import {
@@ -37,6 +38,8 @@ export function WidgetAppearanceCard({
   onSaved: (channel: ChannelView) => void;
 }) {
   const { t } = useI18n();
+  // The swatches' colours go through the CSSOM: no style attribute in the server's HTML (the CSP refuses it).
+  const hydrated = useHydrated();
   const toast = useToast();
   const { business } = useBusiness();
   const saved = savedWidgetLook(channel);
@@ -133,7 +136,7 @@ export function WidgetAppearanceCard({
                     }
                     title={preset}
                     onClick={() => chooseColor(preset)}
-                    style={{ backgroundColor: preset }}
+                    style={hydrated ? { backgroundColor: preset } : undefined}
                     className={cn(
                       "size-9 rounded-full border border-line-strong transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-60",
                       isSelected ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : "hover:scale-105",

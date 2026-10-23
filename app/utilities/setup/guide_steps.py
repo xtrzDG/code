@@ -1,17 +1,20 @@
 """
 The guide after the launch: from a live assistant to the first real
-customer. Three optional steps follow the seven of the setup, and the
-whole guide (all ten) has its own next step, share done and minutes left.
+customer. Three optional steps follow the seven of the setup (and, for
+an owner, a fourth: a second factor that protects the customers' data),
+and the whole guide has its own next step, share done and minutes left.
 """
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
+from app.schemas.constants.security_nudges import SecurityNudgeReason
 from app.schemas.constants.setup import (
     SetupActionTarget,
     SetupStepCode,
     SetupStepStatus,
 )
+from app.schemas.dto.security_nudges import SecurityNudgeView
 from app.utilities.setup.setup_steps import OPTIONAL_STEPS, StepState, assign_statuses
 
 AFTER_LAUNCH_STEPS: tuple[SetupStepCode, ...] = (
@@ -69,6 +72,41 @@ def derive_after_launch_steps(facts: GuideFacts) -> list[StepState]:
             target=SetupActionTarget.SHARE,
         ),
     ]
+
+
+def protect_data_steps(nudge: SecurityNudgeView) -> list[StepState]:
+    """
+    An owner's last step: a passkey or an authenticator app, so the
+    customers' data needs more than a login code (staff do not see it).
+    """
+
+    if not nudge.is_owner:
+        return []
+
+    return [
+        StepState(
+            code=SetupStepCode.PROTECT_DATA,
+            is_done=nudge.has_second_factor,
+            is_required=False,
+            target=SetupActionTarget.ACCOUNT_SECURITY,
+        )
+    ]
+
+
+def protect_data_skips(nudge: SecurityNudgeView) -> frozenset[SetupStepCode]:
+    """
+    The owner put the reminder away (the step is skipped with it), unless
+    it came back because the team has grown since.
+    """
+
+    if (
+        not nudge.is_owner
+        or nudge.dismissed_at is None
+        or nudge.reason is SecurityNudgeReason.TEAM_GREW
+    ):
+        return frozenset()
+
+    return frozenset({SetupStepCode.PROTECT_DATA})
 
 
 def derive_guide(

@@ -73,6 +73,33 @@ describe("the setup guide", () => {
     expect(rows.every((row) => row.canSkip)).toBe(true);
   });
 
+  it("sends the owner to Account → Security for a second factor, skippable once", () => {
+    const withSecondFactor = (status: Status) => {
+      const guide = guideFixture();
+      const protect = {
+        code: "protect_data" as const,
+        status,
+        is_required: false,
+        title: "protect_data",
+        description: "protect_data",
+        minutes: 2,
+        action: { target: "account_security" as const, label: "protect_data" },
+        missing: [],
+      };
+      return setup({ guide: { ...guide, steps_after_launch: [...(guide.steps_after_launch ?? []), protect] } });
+    };
+    const rowFor = (status: Status) =>
+      guideRows(withSecondFactor(status), "business_1").find((row) => row.step.code === "protect_data");
+
+    expect(rowFor("todo")).toMatchObject({ kind: "page", href: "/account/security", canSkip: true, isWaiting: false });
+    // Put away: the reminder comes back by itself when the team grows, not from the guide.
+    expect(rowFor("skipped")).toMatchObject({ href: "/account/security", canSkip: false });
+    expect(rowFor("done")).toMatchObject({ href: null, canSkip: false });
+    // Before the launch it waits with the other steps after it.
+    const waiting = guideRows({ ...withSecondFactor("todo"), is_live: false }, "business_1");
+    expect(waiting.find((row) => row.step.code === "protect_data")).toMatchObject({ href: null, isWaiting: true });
+  });
+
   it("brings a setup step back only when the live guide needs it again", () => {
     const needed = setup({ guide: guideFixture({}, { next_step: "hours_and_bookings" }) }, { hours_and_bookings: "next" });
 

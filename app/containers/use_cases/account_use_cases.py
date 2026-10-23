@@ -158,6 +158,9 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         platform_admins=registries.platform_admin_registry,
         sign_in_notices=facilitators.sign_in_notice_facilitator,
         legal_text_registry=registries.legal_text_registry,
+        passkey_repo=repositories.passkey_repo,
+        recovery_code_repo=repositories.recovery_code_repo,
+        passkey_ceremony=adapters.passkey_ceremony,
     )
     authenticate_user_use_case: Factory[
         UseCaseContract[SessionCheck, SessionAssurance]

@@ -1,3 +1,4 @@
+import { NoncedStyle } from "@/components/csp/NoncedStyle";
 import type { Translator } from "@/i18n/translate";
 import { TESTIMONIALS } from "@/content/testimonials";
 import { isCountryAvailable } from "@/lib/countries";
@@ -71,9 +72,9 @@ export function LandingPage({
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col">
-      {/* Without scripts nothing would reveal itself: show every block as it is. */}
+      {/* Without scripts nothing would reveal itself: show every block as it is (nonce'd: the CSP). */}
       <noscript>
-        <style>{NO_SCRIPT_STYLE}</style>
+        <NoncedStyle css={NO_SCRIPT_STYLE} />
       </noscript>
       <JsonLd data={landingJsonLd(translator, data, origin)} />
       <div aria-hidden className="landing-grain -z-10" />

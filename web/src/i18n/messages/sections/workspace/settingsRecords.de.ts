@@ -135,6 +135,8 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       totp_factor: "Authenticator-App",
       recovery_codes: "Wiederherstellungscodes",
       mfa_challenge: "Zwei-Schritt-Prüfung",
+      passkey: "Passkey",
+      passkey_challenge: "Passkey-Prüfung",
       otp_challenge: "Anmeldecode",
       support_access: "Zugriff des Plattform-Supports",
       support_write_access: "Änderungen durch den Plattform-Support",

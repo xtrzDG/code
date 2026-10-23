@@ -48,6 +48,12 @@ class SetupOperatorsContainer(containers.DeclarativeContainer):
     dismiss_setup_guide_operator = pipeline_operator(
         setup_pipelines.dismiss_setup_guide_pipeline, storage_scope
     )
+    get_security_nudge_operator = pipeline_operator(
+        setup_pipelines.get_security_nudge_pipeline, storage_scope
+    )
+    dismiss_security_nudge_operator = pipeline_operator(
+        setup_pipelines.dismiss_security_nudge_pipeline, storage_scope
+    )
     get_setup_reminders_operator = pipeline_operator(
         setup_pipelines.get_setup_reminders_pipeline, storage_scope
     )

@@ -40,8 +40,14 @@ def test_before_the_launch_the_guide_leads_back_into_the_setup(
         "phone_test": "todo",
         "second_channel": "todo",
         "share": "todo",
+        "protect_data": "todo",
     }
-    assert started["next_step"] not in {"phone_test", "second_channel", "share"}
+    assert started["next_step"] not in {
+        "phone_test",
+        "second_channel",
+        "share",
+        "protect_data",
+    }
     assert started["is_complete"] is False
     assert started["minutes_left"] > 0
     refused = workshop.client.put(
@@ -101,6 +107,11 @@ def test_the_qr_card_and_skips_finish_the_guide_and_the_owner_puts_it_away(
             f"{assistant.base}/setup/skipped-steps/{step}", headers=assistant.headers
         )
         assert skipped.status_code == 200, skipped.text
+    assert guide(workshop, assistant)["is_complete"] is False
+    put_away = workshop.client.put(
+        f"{assistant.base}/security-nudge/dismissal", headers=assistant.headers
+    )
+    assert put_away.status_code == 200, put_away.text
 
     finished = guide(workshop, assistant)
     assert finished["is_complete"] is True

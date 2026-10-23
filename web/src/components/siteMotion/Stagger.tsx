@@ -13,10 +13,12 @@
  * (src/styles/siteMotion.css).
  */
 
-import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 import type { MotionBlockProps } from "@/components/motion/elements";
+import { cn } from "@/lib/cn";
 import { STAGGER } from "@/lib/motion";
+import { staggerClasses, type StaggerDelay, type StaggerStep } from "@/lib/motionClasses";
 
 import { onceInView } from "./inView";
 
@@ -34,14 +36,14 @@ export function Stagger({
   delay = 0,
   step = STAGGER.landing,
   amount = 0.15,
-  style,
+  className,
   children,
   ...props
 }: MotionBlockProps & {
   /** Seconds before the first item. */
-  delay?: number;
+  delay?: StaggerDelay;
   /** Seconds between two items. */
-  step?: number;
+  step?: StaggerStep;
   /** Share of the group that must be visible before it starts. */
   amount?: number;
 }) {
@@ -50,10 +52,14 @@ export function Stagger({
     const group = ref.current;
     return group ? onceInView(group, amount, () => revealGroup(group)) : undefined;
   }, [amount]);
-  const timing = { "--stagger-delay": `${delay}s`, "--stagger-step": `${step}s` } as CSSProperties;
   const Element = as as "div";
   return (
-    <Element ref={ref as RefObject<HTMLDivElement>} data-reveal-group="" style={{ ...timing, ...style }} {...props}>
+    <Element
+      ref={ref as RefObject<HTMLDivElement>}
+      data-reveal-group=""
+      className={cn(staggerClasses(delay, step), className) || undefined}
+      {...props}
+    >
       {children}
     </Element>
   );

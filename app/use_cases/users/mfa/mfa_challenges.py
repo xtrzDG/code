@@ -1,10 +1,12 @@
 """The second step of a sign-in: issuing it, and checking it once."""
 
 import logging
+from collections.abc import Sequence
 
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.repositories.mfa_repositories import MfaChallengeRepoContract
+from app.schemas.constants.passkeys import SecondFactorMethod
 from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.dto.mfa_login import MfaChallengeView
 from app.schemas.exceptions.application_errors import (
@@ -38,6 +40,8 @@ def issue_mfa_challenge(
     is_new_user: IsNewUser,
     client_ip_address: ClientIpAddress | None,
     requires_enrollment: bool,
+    methods: Sequence[SecondFactorMethod] = (),
+    enrollment_methods: Sequence[SecondFactorMethod] = (),
 ) -> MfaChallengeView:
     now: Microseconds = wall_clock.now_unix()
     challenge = MfaChallengeDocument(
@@ -53,6 +57,8 @@ def issue_mfa_challenge(
         mfa_challenge_id=challenge.id,
         expires_in_seconds=MFA_CHALLENGE_LIFETIME,
         requires_enrollment=requires_enrollment,
+        methods=list(methods),
+        enrollment_methods=list(enrollment_methods),
     )
 
 

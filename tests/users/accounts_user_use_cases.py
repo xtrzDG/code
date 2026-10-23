@@ -10,6 +10,9 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
 from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
     InMemoryRateLimitBucketAdapter,
 )
+from app.adapters.security.webauthn_passkey_ceremony_adapter import (
+    WebAuthnPasskeyCeremonyAdapter,
+)
 from app.contracts.session_assurance import StepUpGuardContract
 from app.registries.legal.legal_text_registry import LegalTextRegistry
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
@@ -65,6 +68,7 @@ from tests.users.accounts_recorders import (
     RecordingVoiceAgentRemoval,
 )
 from tests.users.accounts_repositories import AccountsRepositories
+from tests.users.fake_ip_countries import TEST_IP_COUNTRIES, FixedIpCountries
 from tests.users.login_protection_fakes import FakeBotCheck, RecordingCapAlerts
 
 
@@ -160,6 +164,9 @@ class AccountsUserUseCases(AccountsRepositories):
             platform_admins=self.platform_admins,
             sign_in_notices=self.sign_in_notices,
             legal_text_registry=self.legal_text_registry,
+            passkey_repo=self.passkey_repo,
+            recovery_code_repo=self.recovery_code_repo,
+            passkey_ceremony=WebAuthnPasskeyCeremonyAdapter(self.settings),
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,
@@ -177,6 +184,7 @@ class AccountsUserUseCases(AccountsRepositories):
             user_session_repo=self.user_session_repo,
             session_assurance=self.session_assurance,
             wall_clock=wall_clock,
+            ip_countries=FixedIpCountries(TEST_IP_COUNTRIES),
         )
         self.revoke_session = RevokeSessionUseCase(
             user_session_repo=self.user_session_repo,

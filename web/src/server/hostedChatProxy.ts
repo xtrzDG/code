@@ -12,7 +12,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isPreviewRequest } from "@/lib/hostedChat/preview";
 
 import { PATHNAME_HEADER, isCookieSecure } from "./backend";
-import { NONCE_HEADER, buildHostedChatPolicy, createNonce } from "./contentSecurityPolicy";
+import {
+  NONCE_HEADER,
+  REPORTING_ENDPOINTS,
+  REPORTING_ENDPOINTS_HEADER,
+  buildHostedChatPolicy,
+  createNonce,
+} from "./contentSecurityPolicy";
 import {
   HOSTED_CHAT_HEADER,
   chatApiBase,
@@ -52,6 +58,7 @@ export async function routeHostedChat(request: NextRequest, address: string): Pr
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(CSP_HEADER, policy);
+  response.headers.set(REPORTING_ENDPOINTS_HEADER, REPORTING_ENDPOINTS);
   response.headers.set(ROBOTS_HEADER, NOINDEX);
   return response;
 }

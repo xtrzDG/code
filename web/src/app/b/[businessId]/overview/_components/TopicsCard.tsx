@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconBook } from "@/components/icons";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
-import { Badge, Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
+import { Badge, BarFill, Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import {
   chosenGroup,
   needsAnswer,
@@ -125,7 +125,7 @@ function TopicRow({
         <span className="shrink-0 text-ink-muted tabular-nums">{tp("topics.conversations", topic.conversation_count)}</span>
       </div>
       <div className="mt-1.5 h-2 rounded-full bg-surface-muted" aria-hidden>
-        <div className="h-full rounded-full bg-accent-solid" style={{ width: `${Math.max(share, 2)}%` }} />
+        <BarFill percent={Math.max(share, 2)} className="h-full rounded-full bg-accent-solid" />
       </div>
       {needsAnswer(topic) ? (
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">

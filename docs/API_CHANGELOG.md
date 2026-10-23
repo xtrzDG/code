@@ -30,6 +30,52 @@ Spec: `68667cd1d325dff4`
   until then no job is in it and `GET /v1/admin/system` lists no `ops`
   lane, so a cabinet of the release before never meets the value.
 
+## 2026-10-22 — passkeys, the second-factor reminder, device countries
+
+Spec: `11fff31cc2af3e44`
+
+- **Added** passkeys (WebAuthn) in Account → Security: `GET
+  /v1/me/passkeys` (the person's passkeys, `is_available` when the server
+  has a relying party, `is_recommended` for a platform admin without one),
+  `POST /v1/me/passkeys/registration` (options for
+  `navigator.credentials.create()`, step-up required) and `POST
+  /v1/me/passkeys` (the authenticator's answer → the new passkey; the
+  first second factor answers recovery codes once), `PATCH`/`DELETE
+  /v1/me/passkeys/{passkey_id}` (rename; remove, step-up required, 204).
+- **Added** a passkey as the second step of a sign-in: `POST
+  /v1/auth/mfa/passkey/options` and `POST /v1/auth/mfa/passkey/verify`
+  (the session, as `POST /v1/auth/mfa/verify` answers it); a platform admin
+  without a second factor may enrol a passkey while signing in (`POST
+  /v1/auth/mfa/passkey/enroll`, `.../enroll/finish`). Step-up with a
+  passkey: `POST /v1/auth/step-up/passkey` and `.../verify`. A refused
+  passkey answer is 422 `passkey_rejected`; a passkey whose signature
+  counter went back is suspended (422 `passkey_clone_suspected`, its
+  `clone_suspected_at` set); without `WEBAUTHN_RP_ID` (or a cabinet host
+  name) the passkey operations answer 409 `passkeys_unavailable`.
+- **Changed** (additive) `MfaChallengeView` names the second factors the
+  person can answer with, preferred first (`methods`), and what a platform
+  admin may enrol (`enrollment_methods`); `AccountSecurityView.passkey_count`;
+  `StepUpChallengeView.passkey_available`.
+- **Changed** (additive) step-up for a person whose second factor is a
+  passkey: `POST /v1/auth/step-up` answers `method` `passkey` (or the new
+  `recovery_code` while none of their passkeys can sign) and sends no login
+  code; `POST /v1/auth/step-up/verify` takes a `recovery_code` from them
+  (two factors) and refuses a login code (422). Only a person with no
+  second factor confirms with a login code. `POST /v1/auth/mfa/enroll`
+  answers 409 when the person already has a second factor, and `POST
+  /v1/me/passkeys/registration` is limited to ten requests per person in
+  ten minutes (429 with Retry-After, shared with the passkey step-up).
+- **Added** the owner's reminder to protect customers' data with a second
+  factor: `GET /v1/businesses/{business_id}/security-nudge` (owners and
+  staff; shown to owners of a live business without one) and `PUT
+  .../security-nudge/dismissal` (owners; back once the team grows past one
+  person). The setup guide has the owner-only step `protect_data` (target
+  `account_security`), put away with the reminder rather than skipped.
+- **Changed** (additive) `UserSessionView.created_country` and
+  `last_seen_country`: the approximate country of each address from an
+  offline GeoLite2 database (`GEOIP_COUNTRY_DATABASE_PATH`), null when
+  unknown.
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

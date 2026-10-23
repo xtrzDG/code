@@ -73,6 +73,8 @@ here, and nothing else is. A new variable goes to its settings section,
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | no platform admins. The lists only found the team: the first of them to sign in becomes the first SUPER admin and adds the others in Admin → Team (the roles SUPER, SUPPORT_READONLY and BILLING are read from the `platform_admins` collection on every request; the admin area needs a two-factor sign-in) |
 | `STEP_UP_MAX_AGE_SECONDS` | 600: exporting and deleting a contact's data, team changes, connecting a channel, an admin entering a client's cabinet and key rotation need a sign-in or confirmation code no older than 10 minutes (60–86400) |
 | `MFA_ISSUER_NAME` | `Assistant Workshop`: the name under which the authenticator app shows the account |
+| `WEBAUTHN_RP_ID` | the host of `CABINET_BASE_URL`: the domain passkeys are bound to, the cabinet's host or a domain above it (`workshop.example` for `app.workshop.example`). Without a domain (a cabinet on an IP address or without `CABINET_BASE_URL`) passkeys are not offered; changing the value makes the stored passkeys unusable |
+| `GEOIP_COUNTRY_DATABASE_PATH` | empty: the device list (Account → Security) shows addresses only. A path to an offline GeoLite2-Country database (`.mmdb`) adds the approximate country; addresses are sent nowhere |
 | `RESTRICTED_COUNTRY_CODES` | `CU,IR,KP,SY`: numbers of these countries can neither sign in nor create a business; empty lifts the restriction (check the list with a lawyer) |
 | `DEFAULT_DATA_REGION` | `eu`: the data processing region in the country profiles (`eu` or `us`) |
 | `RECORDING_RETENTION_DAYS` | 90 days of keeping call recordings and transcripts (a business may change its own period) |

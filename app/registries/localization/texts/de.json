@@ -3,7 +3,10 @@
   "review_status": "needs_review",
   "draft_keys": [
     "notifications.deposit_refund.title",
-    "notifications.deposit_refund.detail"
+    "notifications.deposit_refund.detail",
+    "setup.steps.protect_data.title",
+    "setup.steps.protect_data.description",
+    "setup.actions.account_security"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "Ein Kunde braucht einen Menschen",
@@ -627,6 +630,7 @@
     "setup.steps.phone_test.title": "Vom Handy aus testen",
     "setup.steps.second_channel.title": "Einen zweiten Kanal hinzufügen",
     "setup.steps.share.title": "Zeigen Sie Kunden, wo sie schreiben können",
+    "setup.steps.protect_data.title": "Schützen Sie die Daten Ihrer Kunden",
     "setup.steps.business.description": "Ein paar Fakten über Ihr Unternehmen, nach denen Kunden zuerst fragen.",
     "setup.steps.offer.description": "Ihre Leistungen oder Ihre Speisekarte mit Preisen, damit der Assistent sie nennen kann.",
     "setup.steps.hours_and_bookings.description": "Wann Sie geöffnet haben und wie Kunden buchen.",
@@ -637,6 +641,7 @@
     "setup.steps.phone_test.description": "Scannen Sie den Code und schreiben Sie Ihrem Assistenten wie ein Kunde.",
     "setup.steps.second_channel.description": "Die meisten Kunden schreiben über WhatsApp, Telegram oder Instagram – verbinden Sie einen davon.",
     "setup.steps.share.description": "Drucken Sie die QR-Karte für die Theke aus oder teilen Sie den Chat-Link.",
+    "setup.steps.protect_data.description": "Schalten Sie einen zweiten Faktor ein, einen Passkey oder eine Authenticator-App, damit ein gestohlener Anmeldecode zum Anmelden nicht reicht.",
     "setup.actions.profile": "Ausfüllen",
     "setup.actions.staff_contacts": "Kontakt hinzufügen",
     "setup.actions.channels": "Kanal verbinden",
@@ -648,6 +653,7 @@
     "setup.actions.overview": "Übersicht öffnen",
     "setup.actions.phone_test": "QR-Code anzeigen",
     "setup.actions.share": "Link und QR-Karte",
+    "setup.actions.account_security": "Zweiten Faktor einschalten",
     "setup.apply_changes_again": "Änderungen übernehmen",
     "notifications.webhook_disabled.title": "Ein Webhook wurde abgeschaltet · {business}",
     "notifications.webhook_disabled.failures_detail": "Die Adresse {endpoint} erhält keine Ereignisse mehr: fehlgeschlagene Versuche in Folge – {failures}. Prüfen Sie, ob sie funktioniert, und schalten Sie sie unter Einstellungen → Integrationen wieder ein.",

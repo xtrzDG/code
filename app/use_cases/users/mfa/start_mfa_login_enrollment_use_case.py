@@ -6,14 +6,19 @@ from app.contracts.repositories.mfa_repositories import (
     MfaChallengeRepoContract,
     TotpFactorRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa import StartMfaEnrollmentCommand, TotpEnrollmentView
-from app.schemas.exceptions.application_errors import AuthenticationRequiredError
+from app.schemas.exceptions.application_errors import (
+    AuthenticationRequiredError,
+    ConflictError,
+)
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
+from app.use_cases.shared.second_factors import has_second_factor
 from app.use_cases.users.mfa.mfa_challenges import (
     EXPIRED_STEP_MESSAGE,
     open_mfa_challenge,
@@ -23,6 +28,11 @@ from app.use_cases.users.mfa.mfa_check_limits import (
 )
 from app.use_cases.users.mfa.totp_enrollment import begin_totp_enrollment
 
+HAS_FACTOR_MESSAGE: str = (
+    "A second factor is already set up: sign in with it, then add an "
+    "authenticator app in Account → Security."
+)
+
 
 class StartMfaLoginEnrollmentUseCase(
     UseCaseContract[StartMfaEnrollmentCommand, TotpEnrollmentView]
@@ -31,8 +41,11 @@ class StartMfaLoginEnrollmentUseCase(
     A platform admin without an authenticator sets one up in the middle of
     signing in (the login code already matched): a new pending
     authenticator for the step's person, shown once. Its first code, sent
-    to VerifyMfaLoginUseCase, turns it on and opens the session. A person
-    whose authenticator is on cannot replace it here (ConflictError).
+    to VerifyMfaLoginUseCase, turns it on and opens the session. Only a
+    step that asks for enrollment may: a person who already has a second
+    factor (an authenticator that is on, or a passkey) cannot add one here
+    (ConflictError), so a login code alone never plants an authenticator
+    secret on their account.
     """
 
     def __init__(
@@ -44,7 +57,9 @@ class StartMfaLoginEnrollmentUseCase(
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
+        passkey_repo: PasskeyRepoContract,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._user_repo: UserRepoContract = user_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
@@ -70,6 +85,9 @@ class StartMfaLoginEnrollmentUseCase(
         user: UserDocument | None = self._user_repo.get(challenge.user_id)
         if user is None:
             raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
+
+        if has_second_factor(self._totp_factor_repo, self._passkey_repo, user.id):
+            raise ConflictError(HAS_FACTOR_MESSAGE)
 
         return begin_totp_enrollment(
             self._totp_factor_repo,
