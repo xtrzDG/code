@@ -35,9 +35,10 @@ class AccountDeletionOperatorFactories:
     One operator per endpoint and job, each the generic role chain over one
     use case. The closure's endpoints run in the scope of their business;
     a person's account and certificates name no business (platform
-    collections, the caller's scope); the sweep, the offboarding and the
-    deletion job run platform-wide (the platform pool: the deletion reaches
-    every row of the business, whatever its table).
+    collections, the caller's scope); the sweep, the offboarding, the
+    deletion job and the ledger applied again run platform-wide (the
+    platform pool: the deletion reaches every row of the business, whatever
+    its table).
     """
 
     def __init__(
@@ -79,6 +80,11 @@ class AccountDeletionOperatorFactories:
 
     def delete_business(self) -> OperatorContract[QueuedJobInput, JobReport]:
         return platform_wide_operator(self._deletions.delete_business(), self._scope)
+
+    def reapply_deletion_ledger(self) -> OperatorContract[JobTick, JobReport]:
+        return platform_wide_operator(
+            self._deletions.reapply_deletion_ledger(), self._scope
+        )
 
     def list_business_deletions(
         self,

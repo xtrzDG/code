@@ -61,11 +61,11 @@ class ClosureWorld:
 
     def tick(self, job: str) -> None:
         operators = self.operators()
-        operator = (
-            operators.queue_due_deletions()
-            if job == "queue_business_deletions"
-            else operators.offboard_unpaid_businesses()
-        )
+        operator = {
+            "queue_business_deletions": operators.queue_due_deletions,
+            "offboard_unpaid_businesses": operators.offboard_unpaid_businesses,
+            "reapply_deletion_ledger": operators.reapply_deletion_ledger,
+        }[job]()
         operator.operate(
             JobTick(
                 job_name=JobName(job),

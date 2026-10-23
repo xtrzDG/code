@@ -91,3 +91,9 @@ class BusinessDeletionRepoContract(RepoContract, Protocol):
     ) -> list[BusinessDeletionDocument]:
         """The entries naming this person among the owners, newest first."""
         raise NotImplementedError
+
+    def page_all(
+        self, after: BusinessDeletionDocument | None, limit: DocumentQueryLimit
+    ) -> list[BusinessDeletionDocument]:
+        """Every entry in the order the deletions began, a page after `after`."""
+        raise NotImplementedError

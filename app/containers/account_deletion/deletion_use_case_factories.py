@@ -10,7 +10,7 @@ from app.schemas.dto.business_closures.business_deletions import (
     DeletionCertificateFile,
     DeletionCertificateQuery,
 )
-from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.typings.users.prefixed_id import UserId
 from app.transformers.business_closures.deletion_certificate_html_transformer import (
     DeletionCertificateHtmlTransformer,
@@ -31,6 +31,9 @@ from app.use_cases.businesses.deletion.delete_business_use_case import (
     DeleteBusinessUseCase,
 )
 from app.use_cases.businesses.deletion.deletion_completion import DeletionCompletion
+from app.use_cases.businesses.deletion.reapply_deletion_ledger_use_case import (
+    ReapplyDeletionLedgerUseCase,
+)
 from app.use_cases.users.account_deletion.delete_current_user_use_case import (
     DeleteCurrentUserUseCase,
 )
@@ -46,8 +49,8 @@ class DeletionUseCaseFactories:
     """
     One typed factory per use case of a deletion: the hard delete of a
     closed business (the worker's `delete_business` job, with its
-    deprovisioner and erasers), a person's certificates, and deleting the
-    person's own account.
+    deprovisioner and erasers), the ledger applied again after a restore,
+    a person's certificates, and deleting the person's own account.
     """
 
     def __init__(self, dependencies: AccountDeletionDependencies) -> None:
@@ -84,6 +87,14 @@ class DeletionUseCaseFactories:
                 audit_log_repo=given.audit_log_repo,
             ),
             wall_clock=given.wall_clock,
+        )
+
+    def reapply_deletion_ledger(self) -> UseCaseContract[JobTick, JobReport]:
+        given = self._dependencies
+        return ReapplyDeletionLedgerUseCase(
+            deletion_repo=given.deletion_repo,
+            ledger_mirror=given.ledger_mirror,
+            row_eraser=given.row_eraser,
         )
 
     def _deprovisioner(self) -> BusinessDeprovisioner:

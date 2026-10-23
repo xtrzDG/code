@@ -7,10 +7,10 @@
 -- job of the platform pool switches off what the business had at the
 -- providers, queues the sub-processors' erasure and deletes every row and
 -- file of the business. The deletion ledger records each deletion: its
--- owners download the certificate from it, and the restore drill applies
--- it to a restored database (with its copy outside the database, in the
--- backup bucket), so a restored backup never brings a deleted business
--- back.
+-- owners download the certificate from it, and the restore drill and a
+-- daily job apply it to a restored database (with its copy outside the
+-- database, in the backup bucket), so a restored backup never brings a
+-- deleted business back.
 --
 -- Online-safe (migrations/README.md): one transaction; both tables are new
 -- and empty, so their trigger-filled lookup columns and indexes are built
@@ -31,6 +31,10 @@
 --                                         workshop.document_lookup_keys by
 --                                         the sync_document_lookup_keys
 --                                         trigger
+--   (doc_started_at)                      every entry in the order the
+--                                         deletions began (the daily job
+--                                         that applies the ledger again
+--                                         after a restore)
 
 select workshop.create_document_collection('business_closures');
 select workshop.add_lookup_column('business_closures', 'delete_after', 'bigint');
@@ -38,6 +42,9 @@ create index if not exists business_closures_doc_delete_after_idx
     on workshop.business_closures (doc_delete_after, row_sequence);
 
 select workshop.create_platform_collection('business_deletions');
+select workshop.add_lookup_column('business_deletions', 'started_at', 'bigint');
+create index if not exists business_deletions_doc_started_at_idx
+    on workshop.business_deletions (doc_started_at, row_sequence);
 create or replace trigger business_deletions_owners_lookup_keys
     after insert or update or delete on workshop.business_deletions
     for each row execute function workshop.sync_document_lookup_keys('owners', 'user_id');

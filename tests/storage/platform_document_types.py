@@ -14,6 +14,7 @@ from app.schemas.domain.audit_chain import (
 )
 from app.schemas.domain.billing_profiles import InvoiceCounterDocument
 from app.schemas.domain.brands import BrandDocument, BrandKnowledgeItemDocument
+from app.schemas.domain.business_closures import BusinessDeletionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.client_health_changes import AdminDigestStateDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -119,5 +120,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # A brand spans its locations (1192): its team and shared knowledge.
         BrandDocument,
         BrandKnowledgeItemDocument,
+        # The deletion ledger outlives the business it records (1220).
+        BusinessDeletionDocument,
     }
 )

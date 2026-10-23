@@ -3,7 +3,9 @@ Closing and deleting businesses as periodic jobs of the background worker,
 across every business (R15-ACCOUNT-DELETION): hourly, the closures whose 30
 days are over get their deletion job (`QueueDueDeletionsUseCase`); daily,
 businesses whose subscription ended unpaid OFFBOARD_AFTER_DAYS ago are
-closed, and those paid again are reopened (`OffboardUnpaidBusinessesUseCase`).
+closed, and those paid again are reopened (`OffboardUnpaidBusinessesUseCase`);
+daily, the deletion ledger is applied again, so a database restored from a
+backup holds no deleted business (`ReapplyDeletionLedgerUseCase`).
 """
 
 from app.contracts.jobs import PeriodicJobOperator
@@ -35,5 +37,19 @@ def offboard_unpaid_businesses_job(operator: PeriodicJobOperator) -> PeriodicJob
     return PeriodicJobSpec(
         name=OFFBOARD_UNPAID_BUSINESSES_JOB,
         interval_seconds=OFFBOARD_UNPAID_BUSINESSES_INTERVAL,
+        operator=operator,
+    )
+
+
+REAPPLY_DELETION_LEDGER_JOB: JobName = JobName("reapply_deletion_ledger")
+REAPPLY_DELETION_LEDGER_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(24 * 60 * 60)
+
+
+def reapply_deletion_ledger_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:
+    """The daily ledger, applied again (a restore since the last run)."""
+
+    return PeriodicJobSpec(
+        name=REAPPLY_DELETION_LEDGER_JOB,
+        interval_seconds=REAPPLY_DELETION_LEDGER_INTERVAL,
         operator=operator,
     )

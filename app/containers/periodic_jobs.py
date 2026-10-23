@@ -9,16 +9,13 @@ from app.containers.account_deletion.account_deletion_operator_factories import 
     AccountDeletionOperatorFactories,
 )
 from app.containers.billing_jobs import billing_job_specs
+from app.containers.closure_periodic_jobs import closure_periodic_job_specs
 from app.containers.operators.operators_container import OperatorsContainer
 from app.containers.voice_periodic_jobs import voice_periodic_job_specs
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.activation_follow_up import (
     notice_milestones_job,
     send_activation_nudges_job,
-)
-from app.gateways.worker.periodic.business_closure_jobs import (
-    offboard_unpaid_businesses_job,
-    queue_business_deletions_job,
 )
 from app.gateways.worker.periodic.calendar_sync import sync_calendars_job
 from app.gateways.worker.periodic.channel_credentials import (
@@ -278,18 +275,5 @@ def periodic_job_specs(
             operator=operators.webhooks.purge_webhook_deliveries_operator,
         ),
         *voice_periodic_job_specs(operators),
-        # Closed businesses deleted when due, unpaid ones closed (1220).
-        Factory(
-            queue_business_deletions_job,
-            operator=Factory(
-                AccountDeletionOperatorFactories.queue_due_deletions, account_deletions
-            ),
-        ),
-        Factory(
-            offboard_unpaid_businesses_job,
-            operator=Factory(
-                AccountDeletionOperatorFactories.offboard_unpaid_businesses,
-                account_deletions,
-            ),
-        ),
+        *closure_periodic_job_specs(account_deletions),
     )

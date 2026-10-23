@@ -29,6 +29,7 @@ from app.utilities.business_closures.closure_identity import (
 
 DELETE_AFTER_FIELD: DocumentFieldPath = DocumentFieldPath("delete_after")
 OWNER_FIELD: DocumentFieldPath = DocumentFieldPath("owners[].user_id")
+STARTED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("started_at")
 
 
 class BusinessClosureRepository(
@@ -124,3 +125,21 @@ class BusinessDeletionRepository(BusinessDeletionRepoContract):
             [field_equals(OWNER_FIELD, user_id)], limit=limit
         )
         return sorted(entries, key=lambda entry: -int(entry.started_at))
+
+    def page_all(
+        self, after: BusinessDeletionDocument | None, limit: DocumentQueryLimit
+    ) -> list[BusinessDeletionDocument]:
+        return self._collection.page_by(
+            DocumentPageQuery(
+                where=DocumentFilter(),
+                sort_fields=(STARTED_AT_FIELD,),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(DocumentFieldInteger(int(after.started_at)),),
+                    document_key=StoredDocumentKey(str(after.id)),
+                ),
+                limit=limit,
+            )
+        )

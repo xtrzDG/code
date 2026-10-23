@@ -39,5 +39,8 @@ BUSINESS_CLOSURE_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName, tuple[DocumentLookupField, ...]
 ] = {
     BUSINESS_CLOSURES: (integer_field("delete_after"),),
-    BUSINESS_DELETIONS: (element_field("owners[].user_id"),),
+    BUSINESS_DELETIONS: (
+        element_field("owners[].user_id"),
+        integer_field("started_at"),
+    ),
 }
