@@ -189,6 +189,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
         resume_assistant=resume_assistant_use_case,
+        closure_repo=repositories.business_closure_repo,
     )
     publish_assistant_version_use_case: Factory[
         UseCaseContract[PublishAssistantVersionCommand, AssistantVersionDetails]

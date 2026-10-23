@@ -4,8 +4,11 @@ use cases through the job queue facilitator):
 `GatewaysContainer.queued_job_operators`.
 """
 
-from dependency_injector.providers import Dict
+from dependency_injector.providers import Dict, Factory, Provider
 
+from app.containers.account_deletion.account_deletion_operator_factories import (
+    AccountDeletionOperatorFactories,
+)
 from app.containers.operators.operators_container import OperatorsContainer
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     SEND_PLATFORM_ALERT_JOB,
@@ -24,6 +27,7 @@ from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
     DISCARD_CALL_RECORDING_JOB,
 )
+from app.utilities.business_closures.deletion_jobs import DELETE_BUSINESS_JOB
 from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
 )
@@ -41,7 +45,10 @@ from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_
 from app.utilities.waitlist.offer_jobs import OFFER_FREED_PLACE_JOB
 
 
-def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
+def queued_job_operator_map(
+    operators: OperatorsContainer,
+    account_deletions: Provider[AccountDeletionOperatorFactories],
+) -> Dict:
     """The operator that runs each kind of queued job."""
 
     return Dict(
@@ -97,6 +104,10 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             # A booking written to (or cancelled in) its resource's Cal.com.
             WRITE_BOOKING_SYSTEM_BOOKING_JOB: (
                 operators.calendars.write_booking_system_booking_operator
+            ),
+            # A closed business deleted for good, on the platform pool (1220).
+            DELETE_BUSINESS_JOB: Factory(
+                AccountDeletionOperatorFactories.delete_business, account_deletions
             ),
         }
     )

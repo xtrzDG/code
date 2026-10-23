@@ -1,11 +1,18 @@
-"""SUPPRESSION_LIST_KEY and EXPORT_DOWNLOAD_LINK_MINUTES: data-subject rights."""
+"""
+SUPPRESSION_LIST_KEY, EXPORT_DOWNLOAD_LINK_MINUTES and OFFBOARD_AFTER_DAYS:
+data-subject rights and the automatic offboarding.
+"""
 
 from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.configurations.privacy_settings import (
     DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES,
+    DEFAULT_OFFBOARD_AFTER_DAYS,
     PrivacySettings,
+)
+from app.schemas.typings.business_closures.constrained_integers import (
+    OffboardAfterDays,
 )
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.privacy.constrained_integers import ExportDownloadLinkMinutes
@@ -25,7 +32,7 @@ class PrivacySettingsSection(TypedDict):
 def read_privacy_settings(
     environment_variables: Mapping[str, str],
 ) -> PrivacySettingsSection:
-    """Both optional: the key falls back as `PrivacySettings` explains."""
+    """All optional: the key falls back as `PrivacySettings` explains."""
 
     return PrivacySettingsSection(
         privacy=PrivacySettings(
@@ -40,6 +47,15 @@ def read_privacy_settings(
                     DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES,
                 ),
                 ExportDownloadLinkMinutes,
+            ),
+            offboard_after_days=parse_setting(
+                "OFFBOARD_AFTER_DAYS",
+                read_integer(
+                    environment_variables,
+                    "OFFBOARD_AFTER_DAYS",
+                    DEFAULT_OFFBOARD_AFTER_DAYS,
+                ),
+                OffboardAfterDays,
             ),
         )
     )

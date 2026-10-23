@@ -33,7 +33,9 @@ def certificate_digest(entry: BusinessDeletionDocument) -> DeletionCertificateDi
     change to what it certifies changes it.
     """
 
-    facts: dict[str, object] = entry.model_dump(mode="json", include=CERTIFIED_FIELDS)
+    facts: dict[str, object] = entry.model_dump(
+        mode="json", include=set(CERTIFIED_FIELDS)
+    )
     canonical: str = json.dumps(facts, sort_keys=True, separators=(",", ":"))
     return DeletionCertificateDigest(
         hashlib.sha256(canonical.encode("utf-8")).hexdigest()

@@ -35,4 +35,5 @@ def document_collection[StoredDocument: PersistentDocument](
         connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
+        in_memory_registry=clients.in_memory_collections,
     )

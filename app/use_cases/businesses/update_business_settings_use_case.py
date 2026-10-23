@@ -6,6 +6,9 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.brand_repositories import BrandRepoContract
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -14,6 +17,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -101,7 +105,9 @@ class UpdateBusinessSettingsUseCase(
         wall_clock: WallClock[Microseconds],
         remove_voice_agent: UseCaseContract[BusinessId, None],
         resume_assistant: UseCaseContract[BusinessDocument, None],
+        closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -147,6 +153,12 @@ class UpdateBusinessSettingsUseCase(
             business,
             changes.status,
         )
+        if status_switch is BusinessStatus.LIVE and self._is_closing(business):
+            raise ConflictError(
+                "The business is closing: cancel the closure in Settings → "
+                "Business to resume the assistant."
+            )
+
         self._apply_profile_changes(business, changes)
         self._apply_language_changes(business, changes)
 
@@ -205,6 +217,13 @@ class UpdateBusinessSettingsUseCase(
                 business, input_data.user_id, self._user_repo, self._brand_repo
             )
         )
+
+    def _is_closing(self, business: BusinessDocument) -> bool:
+        if self._closure_repo is None:
+            return False
+
+        closure: BusinessClosureDocument | None = self._closure_repo.get(business.id)
+        return closure is not None and closure.cancelled_at is None
 
     def _apply_profile_changes(
         self,

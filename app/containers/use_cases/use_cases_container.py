@@ -11,6 +11,7 @@ from app.containers.use_cases.brand_use_cases import BrandUseCasesContainer
 from app.containers.use_cases.business_use_cases_container import (
     BusinessUseCasesContainer,
 )
+from app.containers.use_cases.closure_use_cases import ClosureUseCasesContainer
 from app.containers.use_cases.core_use_cases_container import CoreUseCasesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
@@ -46,7 +47,7 @@ from app.containers.use_cases.widget_visitor_use_cases import (
 from app.use_cases.example_use_case import ExampleUseCase
 
 
-class UseCasesContainer(BusinessUseCasesContainer):
+class UseCasesContainer(ClosureUseCasesContainer):
     """
     Every use case, one child container per bounded context, typed by its
     contract, so the orchestrator, pipeline and operator chains built on them

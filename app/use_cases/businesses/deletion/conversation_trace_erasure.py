@@ -4,7 +4,6 @@ conversations: the raw model turns (a platform collection keyed by
 conversation) go here, the copies at the sub-processors by queued jobs.
 """
 
-from app.contracts.knowledge_embeddings import KnowledgeEmbeddingStoreContract
 from app.contracts.processor_erasure import ProcessorErasureFacilitatorContract
 from app.contracts.repositories.business_document_pages import (
     BusinessDocumentPagesContract,
@@ -12,7 +11,6 @@ from app.contracts.repositories.business_document_pages import (
 from app.contracts.repositories.conversation_repositories import LlmTurnRepoContract
 from app.schemas.constants.privacy import ProcessorErasureReason
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
-from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.processor_erasure import ProcessorErasureScope
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import ProviderCallId
@@ -31,32 +29,26 @@ class ConversationTraceEraser:
     turns are deleted, and the sub-processors that keep copies (the model
     calls' traces at Langfuse, the calls at ElevenLabs) get erasure jobs
     with retries (`ProcessorErasureFacilitatorContract`), so an outage
-    there never holds the deletion up and never loses it. The knowledge's
-    search vectors go too (pgvector rows of the business).
+    there never holds the deletion up and never loses it. (The knowledge's
+    search vectors are rows of the business: they go with its other rows.)
     """
 
     def __init__(
         self,
         conversations: BusinessDocumentPagesContract[ConversationDocument],
         calls: BusinessDocumentPagesContract[CallDocument],
-        knowledge_items: BusinessDocumentPagesContract[KnowledgeItemDocument],
         llm_turn_repo: LlmTurnRepoContract,
-        embedding_store: KnowledgeEmbeddingStoreContract,
         processor_erasure: ProcessorErasureFacilitatorContract,
     ) -> None:
         self._conversations: BusinessDocumentPagesContract[ConversationDocument] = (
             conversations
         )
         self._calls: BusinessDocumentPagesContract[CallDocument] = calls
-        self._knowledge_items: BusinessDocumentPagesContract[KnowledgeItemDocument] = (
-            knowledge_items
-        )
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
-        self._embedding_store: KnowledgeEmbeddingStoreContract = embedding_store
         self._processor_erasure: ProcessorErasureFacilitatorContract = processor_erasure
 
     def erase(self, business_id: BusinessId) -> ProcessorErasureJobCount:
-        """Delete the model turns and vectors; how many erasure jobs were queued."""
+        """Delete the model turns; how many erasure jobs were queued."""
 
         queued: int = 0
         for page in pages_in_write_order(
@@ -89,10 +81,5 @@ class ConversationTraceEraser:
                     )
                 )
             )
-
-        for items in pages_in_write_order(
-            self._knowledge_items, business_id, lambda item: str(item.id)
-        ):
-            self._embedding_store.delete(business_id, [item.id for item in items])
 
         return ProcessorErasureJobCount(queued)
