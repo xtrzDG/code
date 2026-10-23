@@ -13,6 +13,13 @@ WIDGET_PREFIX: str = f"/v1/widget/{BUSINESS_ID}"
 REPLY: str = (
     "Thank you for your message! This is the test assistant of a staging server."
 )
+SECURITY_TXT: str = (
+    "# Assistant Workshop: how to report a security vulnerability (RFC 9116).\n"
+    "Contact: mailto:security@workshop.test\n"
+    "Contact: https://github.com/xtrzDG/code/security/advisories/new\n"
+    "Expires: 2027-07-01T00:00:00Z\n"
+    "Canonical: https://app.workshop.test/.well-known/security.txt\n"
+)
 
 
 @dataclass
@@ -23,6 +30,7 @@ class FakeDeployment:
     configured_channels: list[str] = field(default_factory=lambda: ["email"])
     reply_inline: bool = True
     reply_text: str = REPLY
+    security_txt: str = SECURITY_TXT
     is_ready: bool = True
     # `checks.data_tasks` of /readyz; None leaves the line out (an older release).
     data_tasks: dict[str, object] | None = None
@@ -57,6 +65,8 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
                 )
             elif path == "/cabinet/login":
                 self.answer_text(200, "<html>login</html>", "text/html")
+            elif path == "/cabinet/.well-known/security.txt":
+                self.answer_text(200, deployment.security_txt, "text/plain")
             elif path == f"{WIDGET_PREFIX}/config":
                 self.answer(200, {"business_name": "Smoke"})
             elif path == f"{WIDGET_PREFIX}/messages":

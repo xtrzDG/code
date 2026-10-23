@@ -10,6 +10,7 @@ from tests.platform.environment_sources import ROOT
 from tests.platform.smoke_server import (
     BUSINESS_ID,
     REPLY,
+    SECURITY_TXT,
     FakeDeployment,
     running_deployment,
 )
@@ -62,12 +63,13 @@ def test_a_healthy_deployment_passes_every_check() -> None:
         )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.splitlines()[:6] == [
+    assert result.stdout.splitlines()[:7] == [
         "ok    GET /healthz",
         "ok    GET /readyz",
         "ok    GET /widget.js",
         "ok    GET /v1/auth/login-options",
         "ok    GET cabinet /login",
+        "ok    GET cabinet /.well-known/security.txt",
         "ok    GET widget config",
     ]
     assert f'ok    test chat: "{REPLY[:80]}"' in result.stdout
@@ -108,6 +110,29 @@ def test_a_broken_deployment_fails_with_the_reason(
 ) -> None:
     with running_deployment(deployment) as url:
         result = run_smoke(url, business_id=BUSINESS_ID, expected_reply=expected_reply)
+
+    assert result.returncode == 1
+    assert message in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("security_txt", "message"),
+    [
+        (
+            SECURITY_TXT.replace("Contact: mailto:security@workshop.test\n", ""),
+            "names no security mailbox (SECURITY_CONTACT_EMAIL)",
+        ),
+        (
+            SECURITY_TXT.replace("Canonical: https://", "Canonical: http://"),
+            "no https Canonical address (SITE_URL)",
+        ),
+    ],
+)
+def test_a_cabinet_without_its_security_contact_fails(
+    security_txt: str, message: str
+) -> None:
+    with running_deployment(FakeDeployment(security_txt=security_txt)) as url:
+        result = run_smoke(url, f"{url}/cabinet")
 
     assert result.returncode == 1
     assert message in result.stderr

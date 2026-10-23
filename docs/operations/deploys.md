@@ -11,13 +11,18 @@ is for every release after it.
 pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
       │ merge
       ▼
-    main ──► staging (render.staging.yaml)   deploys only when every GitHub
+    main ──► CI again, then publish-images (signed, with provenance);
+      │       zap.yml (DAST baseline of the running stack)
+      │
+      ├────► staging (render.staging.yaml)   deploys only when every GitHub
       │       check of the commit passed (autoDeployTrigger: checksPass)
       │
-      │      deploy-smoke.yml: scripts/smoke.sh against staging
+      │      deploy-smoke.yml: scripts/smoke.sh against staging and
+      │      scripts/verify_images.sh for the deployed commit
       ▼ green
   release ──► production (render.yaml)       checksPass again, same commit
-              deploy-smoke.yml: scripts/smoke.sh against production
+              deploy-smoke.yml: scripts/smoke.sh and verify_images.sh
+              against production
 ```
 
 - Every Render service (API, worker, cabinet) follows a branch with
@@ -35,12 +40,45 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
   `/readyz` (the database answers, the release's migrations are applied),
-  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and,
+  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and
+  `/.well-known/security.txt` (a security mailbox and an https
+  `Canonical` address) and,
   with `SMOKE_WIDGET_BUSINESS_ID`, a test chat through the website widget
   (`/v1/widget/{business_id}/config`, a message accepted with `202` and
   the worker's answer polled from `/v1/widget/{business_id}/messages`, so
   the check also proves the worker runs). CI runs the same script against
   the freshly built image.
+
+### Signed images
+
+CI publishes both images of every commit of `main` to ghcr.io
+(`assistant-workshop-backend` and `-web`, tagged with the full commit SHA)
+with SLSA build provenance and a keyless cosign signature (`.github/workflows/ci.yml`, job
+`publish-images`). Render builds its own images from the same commit, so
+the signature does not sign what Render runs; it proves that the deployed
+commit is one this repository's CI built, scanned (Trivy, SBOM) and passed
+on `main` after review. Deploy smoke's `Signed images` job runs
+`scripts/verify_images.sh <deployed commit>` for staging and production:
+
+- the tag resolves to a digest, and everything is checked against it;
+- cosign: the certificate names `.github/workflows/ci.yml` of this
+  repository on `refs/heads/main`, issued by GitHub's OIDC provider, for
+  exactly this commit;
+- `gh attestation verify`: provenance signed by the same workflow, from the
+  same commit and ref, built on a GitHub-hosted runner.
+
+A commit pushed to `release` without passing CI on `main`, or images signed
+by another workflow or a fork, fail this job, and the promotion to
+`release` waits for it. The scan of the running stack (`.github/workflows/zap.yml`, SECURITY.md
+"Dynamic scan") is a check of every commit of `main` as well, so
+`checksPass` holds a commit with an unreviewed Medium finding back from
+staging. The security contact is part of the smoke test: the cabinet's
+`/.well-known/security.txt` must name a mailbox (`SECURITY_CONTACT_EMAIL`)
+and an https `Canonical` address (`SITE_URL`).
+
+To check a commit by hand: `GITHUB_REPOSITORY=<owner>/<repo>
+scripts/verify_images.sh <commit>` with cosign, gh (`GH_TOKEN` with
+`packages: read`) and docker logged in to ghcr.io.
 
 ### One-time setup
 

@@ -23,6 +23,7 @@ Everything starts at once except `coverage` (after every backend part),
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/9 … 9/9) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | ~1:30 |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
@@ -50,6 +51,32 @@ part 283, about 30 of each collecting, on four workers (factors 0.53 and
 those seconds, about 2:45 and 2:10 on four workers plus the collection;
 the slowest Postgres file (the chaos game days, about 157 seconds) sets
 the floor of its part.
+
+## Signed images, the dynamic scan and the repository settings
+
+- `publish-images` runs only for a push to `main`, after every gate. The
+  images are the ones `images` built and scanned (a saved artifact, not a
+  rebuild). Signing is keyless: Sigstore issues a short-lived certificate
+  for this workflow's OIDC identity (`ci.yml` on `refs/heads/main`), so
+  there is no signing key to keep or leak. Deploy smoke runs the same
+  `scripts/verify_images.sh` for every deployed commit
+  (`docs/operations/deploys.md`, "Signed images").
+- `zap.yml` (OWASP ZAP baseline, about 15 minutes) starts the docker
+  compose stack with a scripted model, seeds one business and scans the
+  cabinet, the hosted chat page, the widget and every read-only `/v1`
+  operation with the owner's token. It runs on every push to `main`, every
+  Tuesday for ZAP's newer rules, and on pull requests that change the scan.
+  `scripts/zap_gate.py` fails it on any Medium or High finding
+  `.zap/rules.tsv` has not reviewed (SECURITY.md, "Dynamic scan"); the job
+  summary lists every finding with the reason of each reviewed exception.
+- `repo-settings.yml` checks every morning that branch protection, private
+  vulnerability reporting and Dependabot security updates are as
+  `.github/repository-settings.json` expects (SECURITY.md, "Repository
+  settings"). The required checks there are job names of `ci.yml`,
+  `codeql.yml` and `api-contract.yml`: renaming a job means changing that
+  file and the branch protection together
+  (`tests/platform/test_supply_chain_workflows.py` fails until both
+  agree).
 
 ## Backend tests in parts
 
