@@ -439,7 +439,7 @@ Messenger и Instagram распознаёт модель OpenAI `LLM_TRANSCRIBE_
 от суперпользователя, затем `select workshop.enable_knowledge_embeddings();`
 от роли миграций (до этого поиск остаётся по словам, ключ ни на что не
 влияет). После этого резервные копии содержат расширение `vector`: сервер,
-на который их восстанавливают (учения `restore-drill.yml` и запасной сервер
+на который их восстанавливают (учения `.github/workflows/restore-drill.yml` и запасной сервер
 из docs/operations/backup-restore.md), должен предлагать pgvector, а на
 запасном сервере администратор заранее выполняет `create extension vector;`
 в `template1`. Эмбеддинги — новая цель субобработчика OpenAI: уведомление

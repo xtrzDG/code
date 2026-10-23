@@ -140,16 +140,11 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         account_use_cases=accounts,
     )
     knowledge: KnowledgeUseCasesContainer = Container(  # type: ignore[assignment]
-        KnowledgeUseCasesContainer,
-        adapters=adapters,
-        clients=clients,
-        config=config,
-        facilitators=facilitators,
-        registries=registries,
-        repositories=repositories,
-        time_provider=time_provider,
+        KnowledgeUseCasesContainer, adapters=adapters, clients=clients,
+        config=config, facilitators=facilitators, registries=registries,
+        repositories=repositories, time_provider=time_provider,
         utilities=utilities,
-    )
+    )  # fmt: skip
     menu_import: MenuImportUseCasesContainer = Container(  # type: ignore[assignment]
         MenuImportUseCasesContainer,
         adapters=adapters,
