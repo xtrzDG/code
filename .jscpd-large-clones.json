@@ -163,13 +163,6 @@
     },
     {
       "files": [
-        "web/src/app/api/auth/mfa/verify/route.ts",
-        "web/src/app/api/auth/verify/route.ts"
-      ],
-      "count": 1
-    },
-    {
-      "files": [
         "web/src/app/b/[businessId]/assistant/knowledge/import/MenuImportScreen.tsx",
         "web/src/components/setup/offer/OfferImport.tsx"
       ],

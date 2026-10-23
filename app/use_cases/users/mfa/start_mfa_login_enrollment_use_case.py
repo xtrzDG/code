@@ -10,19 +10,11 @@ from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.domain.mfa import MfaChallengeDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa import StartMfaEnrollmentCommand, TotpEnrollmentView
-from app.schemas.exceptions.application_errors import (
-    AuthenticationRequiredError,
-    ConflictError,
-)
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.shared.second_factors import has_second_factor
-from app.use_cases.users.mfa.mfa_challenges import (
-    EXPIRED_STEP_MESSAGE,
-    open_mfa_challenge,
-)
+from app.use_cases.users.mfa.mfa_challenges import open_mfa_step
 from app.use_cases.users.mfa.mfa_check_limits import (
     refuse_too_frequent_second_factor_checks,
 )
@@ -79,12 +71,9 @@ class StartMfaLoginEnrollmentUseCase(
             input_data.client_ip_address,
             now,
         )
-        challenge: MfaChallengeDocument = open_mfa_challenge(
-            self._mfa_challenge_repo, input_data.mfa_challenge_id, now
+        _, user = open_mfa_step(
+            self._mfa_challenge_repo, self._user_repo, input_data.mfa_challenge_id, now
         )
-        user: UserDocument | None = self._user_repo.get(challenge.user_id)
-        if user is None:
-            raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
 
         if has_second_factor(self._totp_factor_repo, self._passkey_repo, user.id):
             raise ConflictError(HAS_FACTOR_MESSAGE)

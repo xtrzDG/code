@@ -16,60 +16,24 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import type { LoginSessionView, MfaRequiredView } from "@/api/types";
-import { callBackend, jsonError, pickResponseHeaders } from "@/server/backend";
+import { pickResponseHeaders } from "@/server/backend";
 import {
   readAttributionCookie,
   withSignupAttribution,
 } from "@/server/attributionCookie";
-import {
-  BodyTooLargeError,
-  DEFAULT_BODY_LIMIT_BYTES,
-  readLimitedText,
-} from "@/server/bodyLimits";
-import { prepareBackendCall } from "@/server/relay";
 import { openSession } from "@/server/sessionOpening";
+import { relaySignInStep } from "@/server/sessionOpeningRelay";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest): Promise<Response> {
-  const prepared = prepareBackendCall(request, { useSession: false });
-  if ("refusal" in prepared) {
-    return prepared.refusal;
+  const step = await relaySignInStep(request, "/v1/auth/otp/verify", (body) =>
+    withSignupAttribution(body, readAttributionCookie(request)),
+  );
+  if ("refusal" in step) {
+    return step.refusal;
   }
-  const { requestId, headers } = prepared;
-
-  let body: string;
-  try {
-    body = await readLimitedText(request, DEFAULT_BODY_LIMIT_BYTES);
-  } catch (error) {
-    if (error instanceof BodyTooLargeError) {
-      return jsonError(413, "payload_too_large", error.message, requestId);
-    }
-    throw error;
-  }
-
-  let upstream: Response;
-  try {
-    upstream = await callBackend("/v1/auth/otp/verify", {
-      method: "POST",
-      headers,
-      body: withSignupAttribution(body, readAttributionCookie(request)),
-    });
-  } catch {
-    return jsonError(
-      502,
-      "backend_unavailable",
-      "The API is not reachable.",
-      requestId,
-    );
-  }
-
-  if (!upstream.ok) {
-    return new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers: pickResponseHeaders(upstream.headers, requestId),
-    });
-  }
+  const { upstream, requestId } = step;
 
   const answer = (await upstream.json()) as LoginSessionView | MfaRequiredView;
   if ("mfa_required" in answer && answer.mfa_required) {

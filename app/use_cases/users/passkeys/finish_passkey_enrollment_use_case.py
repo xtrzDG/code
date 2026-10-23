@@ -23,23 +23,17 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
-from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.passkeys import PasskeyChallengeDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.passkeys import FinishPasskeyEnrollmentCommand
 from app.schemas.dto.users import LoginSessionView, UserView
-from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
-from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.users.mfa.mfa_challenges import (
-    EXPIRED_STEP_MESSAGE,
     consume_mfa_challenge,
-    open_mfa_challenge,
+    open_mfa_step,
     take_mfa_attempt,
 )
-from app.use_cases.users.mfa.mfa_check_limits import (
-    refuse_too_frequent_second_factor_checks,
-)
+from app.use_cases.users.mfa.mfa_check_limits import refuse_too_frequent_step_answers
 from app.use_cases.users.mfa.mfa_records import audit_mfa_change
 from app.use_cases.users.passkeys.passkey_challenges import take_passkey_challenge
 from app.use_cases.users.passkeys.passkey_records import PASSKEY_ENTITY
@@ -108,19 +102,16 @@ class FinishPasskeyEnrollmentUseCase(
 
     def run(self, input_data: FinishPasskeyEnrollmentCommand) -> LoginSessionView:
         now: Microseconds = self._wall_clock.now_unix()
-        refuse_too_frequent_second_factor_checks(
+        refuse_too_frequent_step_answers(
             self._rate_limit_registry,
             self._app_settings,
-            RateLimitKey(f"mfa-check:challenge:{input_data.mfa_challenge_id}"),
+            input_data.mfa_challenge_id,
             input_data.client_ip_address,
             now,
         )
-        step: MfaChallengeDocument = open_mfa_challenge(
-            self._mfa_challenge_repo, input_data.mfa_challenge_id, now
+        step, user = open_mfa_step(
+            self._mfa_challenge_repo, self._user_repo, input_data.mfa_challenge_id, now
         )
-        user: UserDocument | None = self._user_repo.get(step.user_id)
-        if user is None:
-            raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
 
         take_mfa_attempt(self._mfa_challenge_repo, step, now)
         challenge: PasskeyChallengeDocument = take_passkey_challenge(

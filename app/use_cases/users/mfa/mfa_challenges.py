@@ -6,8 +6,10 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.repositories.mfa_repositories import MfaChallengeRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.schemas.constants.passkeys import SecondFactorMethod
 from app.schemas.domain.mfa import MfaChallengeDocument
+from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -83,6 +85,32 @@ def open_mfa_challenge(
         raise RateLimitedError(LOCKED_STEP_MESSAGE)
 
     return challenge
+
+
+def open_mfa_step(
+    mfa_challenge_repo: MfaChallengeRepoContract,
+    user_repo: UserRepoContract,
+    challenge_id: MfaChallengeId,
+    now: Microseconds,
+) -> tuple[MfaChallengeDocument, UserDocument]:
+    """
+    The challenge while it may still be answered (open_mfa_challenge), and
+    the person signing in.
+
+    Raises:
+        AuthenticationRequiredError: unknown, used or expired, or the
+            person is gone.
+        RateLimitedError: locked after too many wrong codes.
+    """
+
+    challenge: MfaChallengeDocument = open_mfa_challenge(
+        mfa_challenge_repo, challenge_id, now
+    )
+    user: UserDocument | None = user_repo.get(challenge.user_id)
+    if user is None:
+        raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
+
+    return challenge, user
 
 
 def take_mfa_attempt(

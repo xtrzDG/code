@@ -13,20 +13,12 @@ from app.contracts.repositories.passkey_repositories import (
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
-from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.passkeys import PasskeyChallengeDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.passkeys import PasskeyRegistrationView, PasskeySignInStepCommand
-from app.schemas.exceptions.application_errors import (
-    AuthenticationRequiredError,
-    ConflictError,
-)
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.shared.second_factors import has_second_factor
-from app.use_cases.users.mfa.mfa_challenges import (
-    EXPIRED_STEP_MESSAGE,
-    open_mfa_challenge,
-)
+from app.use_cases.users.mfa.mfa_challenges import open_mfa_step
 from app.use_cases.users.passkeys.passkey_challenges import issue_passkey_challenge
 from app.use_cases.users.passkeys.passkey_records import account_name_of
 from app.use_cases.users.passkeys.passkey_request_limits import (
@@ -81,12 +73,9 @@ class StartPasskeyEnrollmentUseCase(
             RateLimitKey(f"passkey-options:challenge:{input_data.mfa_challenge_id}"),
             now,
         )
-        step: MfaChallengeDocument = open_mfa_challenge(
-            self._mfa_challenge_repo, input_data.mfa_challenge_id, now
+        step, user = open_mfa_step(
+            self._mfa_challenge_repo, self._user_repo, input_data.mfa_challenge_id, now
         )
-        user: UserDocument | None = self._user_repo.get(step.user_id)
-        if user is None:
-            raise AuthenticationRequiredError(EXPIRED_STEP_MESSAGE)
 
         if not self._ceremony.is_available():
             raise passkeys_unavailable()

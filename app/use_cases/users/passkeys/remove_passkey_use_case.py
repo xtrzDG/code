@@ -9,15 +9,11 @@ from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.passkeys import PasskeyDocument
 from app.schemas.dto.passkeys import RemovePasskeyCommand
-from app.schemas.dto.sessions import SessionSweep
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.use_cases.shared.second_factors import has_second_factor
-from app.use_cases.shared.session_sweeps import lower_sessions
-from app.use_cases.users.mfa.mfa_records import audit_mfa_change
+from app.use_cases.users.mfa.factor_removal import settle_factor_removal
 from app.use_cases.users.passkeys.passkey_records import PASSKEY_ENTITY
 from app.use_cases.users.passkeys.rename_passkey_use_case import NOT_FOUND_MESSAGE
 
@@ -61,26 +57,15 @@ class RemovePasskeyUseCase(UseCaseContract[RemovePasskeyCommand, None]):
         if not self._passkey_repo.delete(passkey.id):
             raise NotFoundError(NOT_FOUND_MESSAGE)
 
-        lowered: DocumentCount | None = None
-        if not has_second_factor(
-            self._totp_factor_repo, self._passkey_repo, input_data.user_id
-        ):
-            self._recovery_code_repo.delete_for_user(input_data.user_id)
-            lowered = lower_sessions(
-                self._user_session_repo,
-                SessionSweep(
-                    user_id=input_data.user_id,
-                    actor_id=input_data.user_id,
-                    reason=SessionSweepReason.AUTHENTICATOR_REMOVED,
-                    client_ip_address=input_data.client_ip_address,
-                    now=now,
-                ),
-            )
-        audit_mfa_change(
-            self._audit_log_repo,
-            input_data.user_id,
-            PASSKEY_ENTITY,
-            input_data.client_ip_address,
-            now,
-            lowered,
+        settle_factor_removal(
+            recovery_code_repo=self._recovery_code_repo,
+            user_session_repo=self._user_session_repo,
+            audit_log_repo=self._audit_log_repo,
+            user_id=input_data.user_id,
+            entity=PASSKEY_ENTITY,
+            client_ip_address=input_data.client_ip_address,
+            now=now,
+            has_factor_left=has_second_factor(
+                self._totp_factor_repo, self._passkey_repo, input_data.user_id
+            ),
         )

@@ -6,6 +6,7 @@ from app.contracts.registries import RequestRateLimitRegistryContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.mfa.prefixed_id import MfaChallengeId
 from app.schemas.typings.platform.constrained_integers import RequestsPerWindow
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.users.check_limit_policy import refuse_too_frequent_checks
@@ -36,6 +37,30 @@ def refuse_too_frequent_second_factor_checks(
         rate_limit_registry,
         app_settings,
         RateLimitCounter(key=subject, limit=CHECKS_PER_SUBJECT),
+        client_ip_address,
+        now,
+    )
+
+
+def refuse_too_frequent_step_answers(
+    rate_limit_registry: RequestRateLimitRegistryContract,
+    app_settings: AppSettings,
+    mfa_challenge_id: MfaChallengeId,
+    client_ip_address: ClientIpAddress | None,
+    now: Microseconds,
+) -> None:
+    """
+    One answer to the second step of a sign-in (a code or a passkey),
+    counted for the step and for the client network.
+
+    Raises:
+        RateLimitedError: a limit is used up (with Retry-After).
+    """
+
+    refuse_too_frequent_second_factor_checks(
+        rate_limit_registry,
+        app_settings,
+        RateLimitKey(f"mfa-check:challenge:{mfa_challenge_id}"),
         client_ip_address,
         now,
     )
