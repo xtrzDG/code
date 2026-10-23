@@ -12,13 +12,15 @@ import { useI18n } from "@/i18n/client";
 import type { BusinessView } from "../_lib/general";
 import { AssistantStatusCard } from "./general/AssistantStatusCard";
 import { BrandMembershipCard } from "./general/BrandMembershipCard";
+import { CloseBusinessCard } from "./general/CloseBusinessCard";
 import { CustomerMemoryCard } from "./general/CustomerMemoryCard";
 import { GeneralSettingsForm } from "./general/GeneralSettingsForm";
 
 /**
  * Business details, languages and time, recording retention; the
  * assistant's live/paused switch and its memory of returning customers;
- * for owners of a brand's location, the brand and leaving it. The form starts from the business as
+ * for owners of a brand's location, the brand and leaving it; for owners,
+ * closing the business (the danger zone). The form starts from the business as
  * stored when the tab opens (the layout's copy may be older), and saves
  * carry the business revision they were made from. A save refused because
  * someone saved since is put on top of what is stored now: when nobody
@@ -54,6 +56,7 @@ export function GeneralTab() {
         <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonCard lines={6} /></LoadingRegion>
       )}
       <BrandMembershipCard />
+      <CloseBusinessCard />
     </div>
   );
 }
