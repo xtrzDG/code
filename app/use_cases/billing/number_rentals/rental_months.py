@@ -16,7 +16,8 @@ from app.schemas.domain.phone_numbers import PhoneNumberDocument
 from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.utilities.billing.billing_periods import add_calendar_months
 
-# A paying customer: the month goes on the subscription's bill.
+# A paying customer: the month goes on the subscription's bill (PAST_DUE
+# only while its grace lasts, `_is_paying`).
 BILLED_STATUSES: frozenset[SubscriptionStatus] = frozenset(
     {
         SubscriptionStatus.ACTIVE,
@@ -47,14 +48,21 @@ def decide_rental_month(
     month_start: Microseconds,
 ) -> RentalMonthOutcome:
     """
-    BILLED for a paying customer (active, past due or paused). On the
-    platform (INCLUDED): the first month of a number taken before the
-    first payment, a month that begins in a running trial, and the month
-    that begins in a cancelled subscription's last paid period. Otherwise
-    nobody pays for the service, so the number goes back (RELEASED).
+    What the month is, judged at its start (the job may settle it later,
+    catching up). On the platform (INCLUDED): a month that begins in the
+    trial, whatever the subscription became since. BILLED for a paying
+    customer: active, paused, or past due while the grace lasts. On the
+    platform as well: the first month of a number taken before the first
+    payment, and the month that begins in a cancelled subscription's last
+    paid period. Otherwise nobody pays for the service, a past due
+    subscription whose grace ran out included, so the number goes back
+    (RELEASED).
     """
 
-    if subscription is not None and subscription.status in BILLED_STATUSES:
+    if subscription is not None and _begins_in_trial(subscription, month_start):
+        return RentalMonthOutcome.INCLUDED
+
+    if subscription is not None and _is_paying(subscription, month_start):
         return RentalMonthOutcome.BILLED
 
     if month_start <= number.rented_at:
@@ -63,11 +71,6 @@ def decide_rental_month(
     if subscription is None:
         return RentalMonthOutcome.RELEASED
 
-    if subscription.status is SubscriptionStatus.TRIALING and (
-        subscription.trial_ends_at is None or month_start < subscription.trial_ends_at
-    ):
-        return RentalMonthOutcome.INCLUDED
-
     if (
         subscription.status is SubscriptionStatus.CANCELLED
         and month_start < subscription.period_end
@@ -75,3 +78,22 @@ def decide_rental_month(
         return RentalMonthOutcome.INCLUDED
 
     return RentalMonthOutcome.RELEASED
+
+
+def _begins_in_trial(
+    subscription: SubscriptionDocument, month_start: Microseconds
+) -> bool:
+    if subscription.trial_ends_at is None:
+        return subscription.status is SubscriptionStatus.TRIALING
+
+    return month_start < subscription.trial_ends_at
+
+
+def _is_paying(subscription: SubscriptionDocument, month_start: Microseconds) -> bool:
+    if subscription.status not in BILLED_STATUSES:
+        return False
+
+    if subscription.status is not SubscriptionStatus.PAST_DUE:
+        return True
+
+    return subscription.grace_until is None or month_start < subscription.grace_until

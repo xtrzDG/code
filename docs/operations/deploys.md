@@ -326,7 +326,9 @@ records no rental month and issues no rental invoice: a number taken in
 the cabinet (only when `PHONE_NUMBER_PROVIDER` is set) is rented and
 answers, and the platform carries its cost. The next release opens the
 gate and the job catches up month by month from each number's
-`billed_until`. The old release ignores both collections: during the
+`billed_until`, judging each month by the subscription at its start (a
+month that began in the trial stays on the platform). Renting itself is
+not gated: it works as soon as `PHONE_NUMBER_PROVIDER` is set. The old release ignores both collections: during the
 overlap an old instance shows no "Get a number", and a phone channel an old
 instance turns off does not give its rented number back: the number stays
 ACTIVE (no month is billed while the gate is closed) and the phone card

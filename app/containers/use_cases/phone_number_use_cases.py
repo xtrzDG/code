@@ -10,7 +10,10 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
-from app.containers.use_cases.spend_guard_use_cases import admit_owner_action_factory
+from app.containers.use_cases.spend_guard_use_cases import (
+    admit_owner_action_factory,
+    check_owner_action_room_factory,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, JobTick
@@ -80,6 +83,7 @@ class PhoneNumberUseCasesContainer(containers.DeclarativeContainer):
             phone_number_provisioner=adapters.calls.phone_number_provisioner,
             phone_number_country_registry=registries.phone_number_country_registry,
             phone_number_parser=utilities.phone_number_parser,
+            assistant_version_repo=repositories.assistant_version_repo,
         )
     )
     search_phone_numbers_use_case: Factory[
@@ -93,6 +97,8 @@ class PhoneNumberUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         admit_owner_action=admit_owner_action_factory(registries, time_provider),
         app_settings=config.app_settings,
+        offer_signer=utilities.phone_number_offer_signer,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     rent_phone_number_use_case: Factory[
         UseCaseContract[RentPhoneNumberCommand, RentedPhoneNumberView]
@@ -111,8 +117,12 @@ class PhoneNumberUseCasesContainer(containers.DeclarativeContainer):
         exchange_rate_registry=registries.exchange_rate_registry,
         phone_number_parser=utilities.phone_number_parser,
         phone_line_lock=registries.phone_line_lock_registry,
+        check_owner_action_room=check_owner_action_room_factory(
+            registries, time_provider
+        ),
         admit_owner_action=admit_owner_action_factory(registries, time_provider),
         product_events=facilitators.product_events,
+        offer_signer=utilities.phone_number_offer_signer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     request_phone_number_use_case: Factory[
@@ -124,6 +134,7 @@ class PhoneNumberUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         manager_notifier=facilitators.manager_notification_facilitator,
         app_settings=config.app_settings,
+        admit_owner_action=admit_owner_action_factory(registries, time_provider),
         wall_clock=time_provider.microsecond_wall_clock,
     )
     cancel_phone_number_request_use_case: Factory[

@@ -30,7 +30,7 @@ const AUSTIN: PhoneNumberOffers = {
   number_type: "local",
   availability: "self_serve",
   monthly_price: PRICE,
-  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", locality: "Austin", region: "TX" }],
+  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA", locality: "Austin", region: "TX" }],
 };
 const RENTED: RentedPhoneNumber = {
   phone_number: "+15125550142",
@@ -41,6 +41,7 @@ const RENTED: RentedPhoneNumber = {
   monthly_price: PRICE,
   status: "active",
   is_attached: true,
+  has_answering_agent: true,
   rented_at: 1,
 };
 const COUNTRIES = {
@@ -114,6 +115,7 @@ describe("the phone card's number from us", () => {
     expect(init.body).toEqual({
       phone_number: "+15125550142",
       number_type: "local",
+      offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA",
       monthly_price: { amount_minor: 500, currency_code: "GEL" },
       locality: "Austin",
     });
@@ -195,6 +197,28 @@ describe("the phone card's number from us", () => {
     expect((country as HTMLSelectElement).value).toBe("GE");
     expect(within(country).getByRole("option", { name: /Georgia/ })).toBeTruthy();
     expect(within(country).queryByRole("option", { name: "GE" })).toBeNull();
+  });
+
+  it("shows the card loading", async () => {
+    answerGet(() => pending());
+    renderPanel();
+    expect(await screen.findByRole("status")).toBeTruthy();
+    expect(screen.getByText(t("phoneNumbers.panel.loading"))).toBeTruthy();
+  });
+
+  it("offers a retry when the phone line cannot be loaded", async () => {
+    let calls = 0;
+    answerGet((path) => {
+      if (path !== LINE_PATH) return pending();
+      calls += 1;
+      return calls === 1 ? failure(500, { error: "internal", message: "Down." }) : ok(EMPTY_LINE);
+    });
+    renderPanel();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: t("common.retry") }));
+
+    expect(await screen.findByText(t("phoneNumbers.panel.getNumber"))).toBeTruthy();
   });
 
   it("tells staff only an owner takes a number", async () => {

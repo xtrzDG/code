@@ -21,7 +21,7 @@ const AUSTIN: Schema<"PhoneNumberOfferList"> = {
   number_type: "local",
   availability: "self_serve",
   monthly_price: { money: { amount_minor: 1200, currency_code: "EUR" }, text: "€12.00", is_estimated: false },
-  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", locality: "Austin", region: "TX" }],
+  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA", locality: "Austin", region: "TX" }],
 };
 
 async function openGetNumber(page: Page) {
@@ -70,6 +70,7 @@ test.describe("on a phone", () => {
         monthly_price: AUSTIN.monthly_price!,
         status: "active",
         is_attached: false,
+        has_answering_agent: true,
         rented_at: 1,
       };
       await route.fulfill({ status: 201, json: rented });

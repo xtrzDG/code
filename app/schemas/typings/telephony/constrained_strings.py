@@ -29,6 +29,23 @@ class PhoneNumberLabel(BaseConstrainedTypedString):
     max_length = 64
 
 
+class PhoneNumberOfferToken(BaseConstrainedTypedString):
+    """
+    The platform's signature on one number it offered a business: until
+    when the offer holds (Unix seconds), a dot, and a truncated HMAC over
+    the business, the number, its kind and that time (base64url). Taking a
+    number needs the token of its offer, so the kind (and with it the
+    price and whether papers are needed) is the one the search found.
+
+    Example:
+        token = PhoneNumberOfferToken("1767225600.AAAAAAAAAAAAAAAAAAAAAA")
+    """
+
+    min_length = 24
+    max_length = 33
+    pattern = r"^[0-9]{1,10}\.[A-Za-z0-9_-]{22}$"
+
+
 class RentedLineNumber(BaseConstrainedTypedString):
     """
     The E.164 number of a line the platform rents for a business from a

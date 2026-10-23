@@ -71,4 +71,16 @@ OWNER_ACTION_LIMITS: dict[OwnerAction, OwnerActionLimit] = {
         window_seconds=DAY_SECONDS,
         refusal="A business can take 3 numbers a day; try again tomorrow.",
     ),
+    # A request (re)opened e-mails every platform admin: asking, cancelling
+    # and asking again in a loop must not flood the team's inbox.
+    OwnerAction.PHONE_NUMBER_REQUEST: OwnerActionLimit(
+        key_prefix="owner-phone-number-request",
+        is_per_person=False,
+        limit=3,
+        window_seconds=DAY_SECONDS,
+        refusal=(
+            "A business can ask the team for a number 3 times a day; try again "
+            "tomorrow."
+        ),
+    ),
 }

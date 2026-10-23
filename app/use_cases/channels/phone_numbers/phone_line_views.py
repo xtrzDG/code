@@ -23,7 +23,11 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
-from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
+from app.schemas.typings.telephony.booleans import HasAnsweringVoiceAgent
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberOfferToken,
+    RentedLineNumber,
+)
 from app.use_cases.shared.subscription_pricing import quote_money
 
 
@@ -54,6 +58,7 @@ def build_rented_number_view(
     number: PhoneNumberDocument,
     phone_number_parser: PhoneNumberParserContract,
     language: LanguageTag,
+    has_answering_agent: HasAnsweringVoiceAgent,
 ) -> RentedPhoneNumberView:
     return RentedPhoneNumberView(
         phone_number=number.phone_number,
@@ -65,6 +70,7 @@ def build_rented_number_view(
         status=number.status,
         is_attached=number.attached_agent_id is not None
         and number.voice_platform_number_id is not None,
+        has_answering_agent=has_answering_agent,
         rented_at=number.rented_at,
     )
 
@@ -87,11 +93,14 @@ def build_open_request_view(
 
 
 def build_offer_view(
-    offer: AvailablePhoneNumber, phone_number_parser: PhoneNumberParserContract
+    offer: AvailablePhoneNumber,
+    phone_number_parser: PhoneNumberParserContract,
+    offer_token: PhoneNumberOfferToken,
 ) -> PhoneNumberOfferView:
     return PhoneNumberOfferView(
         phone_number=offer.phone_number,
         display_number=display_number(phone_number_parser, offer.phone_number),
+        offer_token=offer_token,
         locality=offer.locality,
         region=offer.region,
     )

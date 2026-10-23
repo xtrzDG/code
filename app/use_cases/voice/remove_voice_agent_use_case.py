@@ -5,6 +5,7 @@ from app.contracts.repositories.assistant_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
+from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -18,8 +19,10 @@ class RemoveVoiceAgentUseCase(UseCaseContract[BusinessId, None]):
     business is paused, moves to a plan without voice, publishes a version
     without voice or disconnects its phone number (concept section 7: the
     agent exists only while voice is part of the live service). Every agent
-    id the business's versions know is removed; publishing a voice version
-    later creates a new agent.
+    id the business's versions know is removed, and the versions forget an
+    agent once it is gone, so nothing (a rented number, the next publish)
+    points at a deleted agent; publishing a voice version later creates a
+    new agent.
 
     Best effort: when the platform cannot be reached the switch is logged
     and the calls are still refused by the call-initiation and tool
@@ -46,6 +49,7 @@ class RemoveVoiceAgentUseCase(UseCaseContract[BusinessId, None]):
                 if version.voice_agent_id is not None
             )
         )
+        removed: set[VoiceAgentId] = set()
         for agent_id in agent_ids:
             try:
                 self._voice_agent_provisioner.remove_agent(agent_id)
@@ -56,3 +60,22 @@ class RemoveVoiceAgentUseCase(UseCaseContract[BusinessId, None]):
                     input_data,
                     error,
                 )
+            else:
+                removed.add(agent_id)
+
+        self._forget(input_data, removed)
+
+    def _forget(self, business_id: BusinessId, removed: set[VoiceAgentId]) -> None:
+        """Clear a removed agent's id from every version that names it."""
+
+        def forget(
+            stored: AssistantVersionDocument,
+        ) -> AssistantVersionDocument | None:
+            if stored.voice_agent_id not in removed:
+                return None
+
+            return stored.model_copy(update={"voice_agent_id": None})
+
+        for version in self._assistant_version_repo.list_by_business(business_id):
+            if version.voice_agent_id in removed:
+                self._assistant_version_repo.modify(business_id, version.id, forget)

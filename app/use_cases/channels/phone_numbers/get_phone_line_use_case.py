@@ -7,12 +7,18 @@ from app.contracts.phone_numbers import (
     PhoneNumberRepoContract,
     PhoneNumberRequestRepoContract,
 )
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.phone_numbers import PhoneNumberDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.phone_numbers.phone_line import PhoneLineQuery, PhoneLineView
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.channels.phone_numbers.phone_line_lookups import (
+    find_answering_agent,
+)
 from app.use_cases.channels.phone_numbers.phone_line_views import (
     build_open_request_view,
     build_rented_number_view,
@@ -38,6 +44,7 @@ class GetPhoneLineUseCase(UseCaseContract[PhoneLineQuery, PhoneLineView]):
         phone_number_provisioner: PhoneNumberProvisionerAdapterContract,
         phone_number_country_registry: PhoneNumberCountryRegistryContract,
         phone_number_parser: PhoneNumberParserContract,
+        assistant_version_repo: AssistantVersionRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -53,6 +60,9 @@ class GetPhoneLineUseCase(UseCaseContract[PhoneLineQuery, PhoneLineView]):
             phone_number_country_registry
         )
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
+        self._assistant_version_repo: AssistantVersionRepoContract = (
+            assistant_version_repo
+        )
 
     def run(self, input_data: PhoneLineQuery) -> PhoneLineView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -70,7 +80,13 @@ class GetPhoneLineUseCase(UseCaseContract[PhoneLineQuery, PhoneLineView]):
             rented_number=(
                 None
                 if held is None
-                else build_rented_number_view(held, self._phone_number_parser, language)
+                else build_rented_number_view(
+                    held,
+                    self._phone_number_parser,
+                    language,
+                    find_answering_agent(self._assistant_version_repo, business.id)
+                    is not None,
+                )
             ),
             open_request=build_open_request_view(
                 self._phone_number_request_repo.get_by_business(business.id)

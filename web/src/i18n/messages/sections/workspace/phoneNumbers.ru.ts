@@ -11,6 +11,7 @@ export const phoneNumbersRu: Translation<typeof phoneNumbersEn> = {
     monthly: "{price} в месяц",
     answering: "Отвечает ваш помощник",
     connecting: "Подключаем к помощнику…",
+    waitsForPublish: "Пока не отвечает: опубликуйте помощника с включёнными звонками, и он будет отвечать на этот номер.",
     releasing: "Возвращается оператору",
     giveBackHint: "Чтобы вернуть номер, отключите телефонный канал. Оплата за него прекратится, и номер вернётся оператору.",
     requestTitle: "Номер запрошен",
@@ -19,6 +20,8 @@ export const phoneNumbersRu: Translation<typeof phoneNumbersEn> = {
     cancelRequest: "Отменить запрос",
     requestCancelled: "Запрос отменён",
     ownerOnly: "Взять номер может только владелец.",
+    loading: "Загружаем ваш номер…",
+    disconnectReleases: "При отключении номер {number} вернётся оператору насовсем: оплата за него прекратится, а получить тот же номер снова может не получиться.",
   },
   tunnel: {
     title: "Звонки",

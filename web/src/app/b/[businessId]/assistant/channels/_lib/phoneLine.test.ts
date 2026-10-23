@@ -43,7 +43,7 @@ const OFFERS: PhoneNumberOffers = {
   number_type: "local",
   availability: "self_serve",
   monthly_price: { money: { amount_minor: 500, currency_code: "GEL" }, text: "5.00 ₾", is_estimated: false },
-  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", locality: "Austin", region: "TX" }],
+  offers: [{ phone_number: "+15125550142", display_number: "+1 512-555-0142", offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA", locality: "Austin", region: "TX" }],
 };
 
 const RENTED: RentedPhoneNumber = {
@@ -54,6 +54,7 @@ const RENTED: RentedPhoneNumber = {
   monthly_price: { money: { amount_minor: 500, currency_code: "GEL" }, text: "5.00 ₾", is_estimated: false },
   status: "active",
   is_attached: true,
+  has_answering_agent: true,
   rented_at: 1,
 };
 
@@ -75,6 +76,7 @@ describe("the phone line", () => {
     expect(rentBody(OFFERS.offers![0]!, OFFERS)).toEqual({
       phone_number: "+15125550142",
       number_type: "local",
+      offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA",
       monthly_price: { amount_minor: 500, currency_code: "GEL" },
       locality: "Austin",
     });
@@ -84,6 +86,10 @@ describe("the phone line", () => {
   it("says whether a rented number answers yet or is going back", () => {
     expect(rentedNumberState(RENTED)).toBe("phoneNumbers.panel.answering");
     expect(rentedNumberState({ ...RENTED, is_attached: false })).toBe("phoneNumbers.panel.connecting");
+    // No live voice agent at all (the phone was switched off since the last publish).
+    expect(rentedNumberState({ ...RENTED, is_attached: false, has_answering_agent: false })).toBe(
+      "phoneNumbers.panel.waitsForPublish",
+    );
     expect(rentedNumberState({ ...RENTED, status: "releasing" })).toBe("phoneNumbers.panel.releasing");
   });
 

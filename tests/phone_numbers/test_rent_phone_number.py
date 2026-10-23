@@ -23,7 +23,10 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from tests.phone_numbers.phone_world import AUSTIN_NUMBER, PhoneWorld
-from tests.phone_numbers.provisioner_fakes import AUSTIN_NUMBERS
+from tests.phone_numbers.provisioner_fakes import (
+    AUSTIN_NUMBERS,
+    FakePhoneNumberProvisioner,
+)
 
 
 def test_the_number_is_bought_recorded_connected_and_audited() -> None:
@@ -208,3 +211,21 @@ def test_a_business_takes_three_numbers_a_day() -> None:
         world.rent_austin_number(
             owner, business, phone_number=E164PhoneNumber("+15125550199")
         )
+
+
+def test_purchases_the_carrier_refuses_do_not_use_up_the_day() -> None:
+    carrier = FakePhoneNumberProvisioner()
+    carrier.taken_numbers.update(AUSTIN_NUMBERS)
+    world = PhoneWorld(provisioner=carrier)
+    owner, business = world.owner_and_business()
+    for phone_number in AUSTIN_NUMBERS:
+        with pytest.raises(PhoneNumberUnavailableError):
+            world.rent_austin_number(
+                owner, business, phone_number=E164PhoneNumber(phone_number)
+            )
+
+    world.rent_austin_number(
+        owner, business, phone_number=E164PhoneNumber("+15125550199")
+    )
+
+    assert [str(number.phone_number) for number in carrier.bought] == ["+15125550199"]

@@ -15,6 +15,7 @@ PHONE_NUMBER_BODIES: dict[str, JsonObject] = {
     f"POST {B}/phone-line/number": {
         "phone_number": "+15125550142",
         "number_type": "local",
+        "offer_token": "1767225600.AAAAAAAAAAAAAAAAAAAAAA",
         "monthly_price": {"amount_minor": 500, "currency_code": "GEL"},
     },
     f"POST {B}/phone-line/request": {"country_code": "GE", "number_type": "local"},

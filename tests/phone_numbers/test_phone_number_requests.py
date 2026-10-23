@@ -19,11 +19,19 @@ from app.schemas.dto.phone_numbers.phone_line import (
     PhoneNumberRequestView,
     RequestPhoneNumberCommand,
 )
-from app.schemas.exceptions.application_errors import AccessDeniedError, NotFoundError
+from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
+    NotFoundError,
+    RateLimitedError,
+)
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.telephony.constrained_strings import PhoneNumberCityQuery
+from app.use_cases.channels.phone_numbers import (
+    maintain_phone_numbers_use_case as maintain_module,
+)
 from tests.phone_numbers.phone_settings import PLATFORM_TEAM_EMAIL
 from tests.phone_numbers.phone_world import PhoneWorld
 
@@ -140,3 +148,52 @@ def test_the_request_closes_once_the_team_connects_the_number() -> None:
     assert request is not None
     assert request.status is PhoneNumberRequestStatus.DONE
     assert request.closed_at == world.clock.now()
+
+
+def test_asking_and_cancelling_in_a_loop_mails_the_team_three_times_a_day() -> None:
+    world = PhoneWorld()
+    owner, business = world.owner_and_business()
+    cancel = CancelPhoneNumberRequestCommand(user_id=owner.id, business_id=business.id)
+    for _ in range(3):
+        ask(world, owner, business)
+        ask(world, owner, business)  # asking while open counts nothing
+        world.cancel_request.run(cancel)
+
+    with pytest.raises(RateLimitedError):
+        ask(world, owner, business)
+
+    assert len(team_mails(world)) == 3
+    world.clock.advance(days=1, hours=1)
+    assert ask(world, owner, business).status is PhoneNumberRequestStatus.OPEN
+    assert len(team_mails(world)) == 4
+
+
+def test_requests_beyond_the_first_page_close_too(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(maintain_module, "BATCH", DocumentQueryLimit(2))
+    world = PhoneWorld()
+    waiting = [
+        world.owner_and_business(f"owner{index}@example.com") for index in range(5)
+    ]
+    for owner, business in waiting:
+        ask(world, owner, business)
+    _, last = waiting[-1]
+    world.channel_repo.save(
+        ChannelDocument(
+            business_id=last.id,
+            kind=ChannelKind.PHONE,
+            external_id=ChannelExternalId("+995322000111"),
+            status=ChannelStatus.CONNECTED,
+            created_at=world.clock.now(),
+            updated_at=world.clock.now(),
+        )
+    )
+    tick = JobTick(
+        job_name=JobName("maintain_phone_numbers"), scheduled_at=world.clock.now()
+    )
+
+    assert int(world.maintain.run(tick).processed_count) == 1
+    request = world.request_repo.get_by_business(last.id)
+    assert request is not None
+    assert request.status is PhoneNumberRequestStatus.DONE

@@ -94,7 +94,7 @@ export function NumberSearchFields({
           <Input
             {...control}
             value={form.city}
-            maxLength={64}
+            maxLength={60}
             autoComplete="address-level2"
             onChange={(event) => onChange({ city: event.target.value })}
           />

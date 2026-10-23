@@ -225,6 +225,9 @@ def test_a_voice_platform_outage_does_not_block_switching_voice_off() -> None:
     RemoveVoiceAgentUseCase(testbed.version_repo, unreachable).run(business.id)
 
     assert unreachable.attempts == [VoiceAgentId("agent_1")]
+    # Not removed, so still known: a later switch-off tries it again.
+    [stored] = testbed.version_repo.list_by_business(business.id)
+    assert stored.voice_agent_id == VoiceAgentId("agent_1")
 
 
 class UnreachableVoicePlatform:

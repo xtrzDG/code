@@ -1,6 +1,11 @@
 """What must hold before the platform rents a number for a business."""
 
-from app.contracts.phone_numbers import PhoneNumberRepoContract
+from typed_time_provider import Microseconds
+
+from app.contracts.phone_numbers import (
+    PhoneNumberOfferSignerContract,
+    PhoneNumberRepoContract,
+)
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.channels import ChannelKind
@@ -9,11 +14,14 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.phone_numbers import PhoneNumberDocument
 from app.schemas.dto.billing import Money
+from app.schemas.dto.phone_numbers.phone_line import RentPhoneNumberRequest
+from app.schemas.dto.phone_numbers.provisioning import PhoneNumberOfferClaims
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.exceptions.phone_number_errors import (
     PhoneNumberPriceChangedError,
     PhoneNumberUnavailableError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -32,6 +40,40 @@ from app.utilities.money.money_formatting import format_money
 LABEL_LENGTH: int = 64
 # Refusals are English, like every API error; the cabinet words its own.
 REFUSAL_LANGUAGE: LanguageTag = LanguageTag("en")
+
+
+def require_offered(
+    offer_signer: PhoneNumberOfferSignerContract,
+    business_id: BusinessId,
+    request: RentPhoneNumberRequest,
+    now: Microseconds,
+) -> None:
+    """
+    The number was offered to this business, as this kind, within the last
+    hour: the server, not the request, decides the kind (and with it the
+    price and whether papers are needed).
+
+    Raises:
+        PhoneNumberUnavailableError: no such offer, or it lapsed.
+    """
+
+    expires_at: Microseconds = offer_signer.read_expiry(request.offer_token)
+    claims = PhoneNumberOfferClaims(
+        business_id=business_id,
+        phone_number=request.phone_number,
+        number_type=request.number_type,
+        expires_at=expires_at,
+    )
+    if not offer_signer.is_genuine(claims, request.offer_token):
+        raise PhoneNumberUnavailableError(
+            "This number was not offered to this business as this kind of "
+            "number. Search again and pick one of the offers."
+        )
+
+    if expires_at <= now:
+        raise PhoneNumberUnavailableError(
+            "The offer of this number has lapsed. Search again and pick a number."
+        )
 
 
 def require_free_line(

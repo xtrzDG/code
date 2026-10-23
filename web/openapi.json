@@ -23345,7 +23345,7 @@
       },
       "PhoneNumberOfferView": {
         "additionalProperties": false,
-        "description": "One number the owner may take now.",
+        "description": "One number the owner may take now; taking it sends `offer_token` back\n(the offer lapses after an hour: search again).",
         "properties": {
           "display_number": {
             "title": "Display Number",
@@ -23361,6 +23361,13 @@
               }
             ],
             "title": "Locality"
+          },
+          "offer_token": {
+            "maxLength": 33,
+            "minLength": 24,
+            "pattern": "^[0-9]{1,10}\\.[A-Za-z0-9_-]{22}$",
+            "title": "Offer Token",
+            "type": "string"
           },
           "phone_number": {
             "maxLength": 16,
@@ -23383,7 +23390,8 @@
         },
         "required": [
           "phone_number",
-          "display_number"
+          "display_number",
+          "offer_token"
         ],
         "title": "PhoneNumberOfferView",
         "type": "object"
@@ -26190,7 +26198,7 @@
       },
       "RentedPhoneNumberView": {
         "additionalProperties": false,
-        "description": "The number the platform rents for the business: where it is from, what\nit costs a month (fixed when it was taken), ACTIVE or RELEASING (being\ngiven back), and whether calls to it reach the voice agent yet\n(`is_attached`: false until the business has an agent, or for a few\nminutes after it was taken).",
+        "description": "The number the platform rents for the business: where it is from, what\nit costs a month (fixed when it was taken), ACTIVE or RELEASING (being\ngiven back), and whether calls to it reach the voice agent yet\n(`is_attached`: false until the business has an agent, or for a few\nminutes after it was taken). `has_answering_agent` is false while the\nbusiness has no live voice agent at all (voice off, or the phone\nchannel was switched off since the last publish): the number answers\nonly once the assistant is published again.",
         "properties": {
           "country_code": {
             "maxLength": 2,
@@ -26202,6 +26210,10 @@
           "display_number": {
             "title": "Display Number",
             "type": "string"
+          },
+          "has_answering_agent": {
+            "title": "Has Answering Agent",
+            "type": "boolean"
           },
           "is_attached": {
             "title": "Is Attached",
@@ -26247,6 +26259,7 @@
           "monthly_price",
           "status",
           "is_attached",
+          "has_answering_agent",
           "rented_at"
         ],
         "title": "RentedPhoneNumberView",
@@ -68866,7 +68879,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The number the owner chose, its kind, the monthly price the cabinet\nshowed (the purchase is refused when the price changed meanwhile) and\nthe city the search named for it (kept for the card only).",
+                "description": "The number the owner chose, its kind, the token of the offer that\nnamed both (a number nobody offered this business, or of another kind,\nis refused), the monthly price the cabinet showed (the purchase is\nrefused when the price changed meanwhile) and the city the search named\nfor it (kept for the card only).",
                 "properties": {
                   "locality": {
                     "anyOf": [
@@ -68916,6 +68929,13 @@
                     "title": "PhoneNumberType",
                     "type": "string"
                   },
+                  "offer_token": {
+                    "maxLength": 33,
+                    "minLength": 24,
+                    "pattern": "^[0-9]{1,10}\\.[A-Za-z0-9_-]{22}$",
+                    "title": "Offer Token",
+                    "type": "string"
+                  },
                   "phone_number": {
                     "maxLength": 16,
                     "minLength": 8,
@@ -68927,6 +68947,7 @@
                 "required": [
                   "phone_number",
                   "number_type",
+                  "offer_token",
                   "monthly_price"
                 ],
                 "title": "RentPhoneNumberRequest",

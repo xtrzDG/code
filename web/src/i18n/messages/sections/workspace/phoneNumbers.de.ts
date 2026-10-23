@@ -11,6 +11,7 @@ export const phoneNumbersDe: Translation<typeof phoneNumbersEn> = {
     monthly: "{price} pro Monat",
     answering: "Ihr Assistent nimmt ab",
     connecting: "Wird mit Ihrem Assistenten verbunden…",
+    waitsForPublish: "Noch keine Annahme: Veröffentlichen Sie Ihren Assistenten mit aktivierten Anrufen, dann nimmt er Anrufe auf dieser Nummer an.",
     releasing: "Wird zurückgegeben",
     giveBackHint: "Um die Nummer zurückzugeben, trennen Sie den Telefonkanal. Sie wird nicht mehr berechnet und geht an den Anbieter zurück.",
     requestTitle: "Nummer angefragt",
@@ -19,6 +20,8 @@ export const phoneNumbersDe: Translation<typeof phoneNumbersEn> = {
     cancelRequest: "Anfrage zurückziehen",
     requestCancelled: "Anfrage zurückgezogen",
     ownerOnly: "Nur Inhaber können eine Nummer nehmen.",
+    loading: "Ihre Nummer wird geladen…",
+    disconnectReleases: "Beim Trennen geht die Nummer {number} endgültig an den Anbieter zurück: Sie wird nicht mehr berechnet, und dieselbe Nummer ist danach womöglich nicht mehr erhältlich.",
   },
   tunnel: {
     title: "Anrufe",

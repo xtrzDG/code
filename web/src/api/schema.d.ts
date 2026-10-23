@@ -14648,13 +14648,16 @@ export interface components {
         };
         /**
          * PhoneNumberOfferView
-         * @description One number the owner may take now.
+         * @description One number the owner may take now; taking it sends `offer_token` back
+         *     (the offer lapses after an hour: search again).
          */
         PhoneNumberOfferView: {
             /** Display Number */
             display_number: string;
             /** Locality */
             locality?: string | null;
+            /** Offer Token */
+            offer_token: string;
             /** Phone Number */
             phone_number: string;
             /** Region */
@@ -15716,13 +15719,18 @@ export interface components {
          *     it costs a month (fixed when it was taken), ACTIVE or RELEASING (being
          *     given back), and whether calls to it reach the voice agent yet
          *     (`is_attached`: false until the business has an agent, or for a few
-         *     minutes after it was taken).
+         *     minutes after it was taken). `has_answering_agent` is false while the
+         *     business has no live voice agent at all (voice off, or the phone
+         *     channel was switched off since the last publish): the number answers
+         *     only once the assistant is published again.
          */
         RentedPhoneNumberView: {
             /** Country Code */
             country_code: string;
             /** Display Number */
             display_number: string;
+            /** Has Answering Agent */
+            has_answering_agent: boolean;
             /** Is Attached */
             is_attached: boolean;
             /** Locality */
@@ -40193,6 +40201,8 @@ export interface operations {
                      * @enum {string}
                      */
                     number_type: "local" | "mobile" | "toll_free";
+                    /** Offer Token */
+                    offer_token: string;
                     /** Phone Number */
                     phone_number: string;
                 };

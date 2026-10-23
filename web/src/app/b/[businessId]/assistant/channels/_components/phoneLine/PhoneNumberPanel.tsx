@@ -12,7 +12,7 @@ import { useState } from "react";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPhone } from "@/components/icons";
-import { Badge, Button, useToast } from "@/components/ui";
+import { Badge, Button, ErrorState, LoadingRegion, Skeleton, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/lib/countries";
 
@@ -39,7 +39,14 @@ export function PhoneNumberPanel({
   const [isOpen, setOpen] = useState(false);
   const data = line.data;
   if (!data) {
-    return null;
+    if (line.error) {
+      return <ErrorState error={line.error} onRetry={line.reload} className="mt-4 py-4" />;
+    }
+    return (
+      <LoadingRegion label={t("phoneNumbers.panel.loading")} className="mt-4">
+        <Skeleton className="h-16 w-full rounded-xl" />
+      </LoadingRegion>
+    );
   }
 
   if (data.rented_number) {

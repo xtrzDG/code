@@ -34,10 +34,16 @@ export function numberInText(displayNumber: string): string {
   return `\u2066${displayNumber}\u2069`;
 }
 
-/** One rented number's state on the card: answering, still being attached, or going back. */
+/**
+ * One rented number's state on the card: answering, still being attached,
+ * waiting for the assistant to be published with calls, or going back.
+ */
 export function rentedNumberState(number: RentedPhoneNumber): MessageKey {
   if (number.status !== "active") {
     return "phoneNumbers.panel.releasing";
+  }
+  if (!number.is_attached && !number.has_answering_agent) {
+    return "phoneNumbers.panel.waitsForPublish";
   }
   return number.is_attached ? "phoneNumbers.panel.answering" : "phoneNumbers.panel.connecting";
 }
@@ -92,6 +98,7 @@ export function rentBody(offer: PhoneNumberOffer, offers: PhoneNumberOffers): Re
   return {
     phone_number: offer.phone_number,
     number_type: offers.number_type,
+    offer_token: offer.offer_token,
     monthly_price: offers.monthly_price.money,
     ...(offer.locality ? { locality: offer.locality } : {}),
   };

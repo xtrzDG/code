@@ -99,6 +99,7 @@ def test_an_owner_takes_a_number_once_and_gives_it_back(
     body: JsonObject = {
         "phone_number": AUSTIN_NUMBERS[0],
         "number_type": "local",
+        "offer_token": offers["offers"][0]["offer_token"],
         "monthly_price": price,
         "locality": "Austin",
     }
@@ -138,7 +139,8 @@ def test_a_changed_price_buys_nothing(
     workshop: Workshop, carrier: FakePhoneNumberProvisioner
 ) -> None:
     base, headers = open_business(workshop)
-    price = search_austin(workshop, base, headers)["monthly_price"]["money"]
+    offers = search_austin(workshop, base, headers)
+    price = offers["monthly_price"]["money"]
     stale = {**price, "amount_minor": int(price["amount_minor"]) - 100}
 
     refused = workshop.client.post(
@@ -146,12 +148,41 @@ def test_a_changed_price_buys_nothing(
         json={
             "phone_number": AUSTIN_NUMBERS[1],
             "number_type": "local",
+            "offer_token": offers["offers"][1]["offer_token"],
             "monthly_price": stale,
         },
         headers=headers,
     )
 
     assert refused.status_code == 409, refused.text
+    assert [reason["code"] for reason in refused.json()["reasons"]] == ["price_changed"]
+    assert carrier.bought == []
+
+
+def test_a_number_is_taken_only_as_the_kind_it_was_offered(
+    workshop: Workshop, carrier: FakePhoneNumberProvisioner
+) -> None:
+    base, headers = open_business(workshop)
+    offers = search_austin(workshop, base, headers)
+    body: JsonObject = {
+        "phone_number": AUSTIN_NUMBERS[0],
+        "number_type": "toll_free",
+        "offer_token": offers["offers"][0]["offer_token"],
+        "monthly_price": offers["monthly_price"]["money"],
+    }
+
+    refused = workshop.client.post(
+        f"{base}/phone-line/number", json=body, headers=headers
+    )
+    unoffered = workshop.client.post(
+        f"{base}/phone-line/number",
+        json={**body, "number_type": "local", "phone_number": "+15125550199"},
+        headers=headers,
+    )
+
+    assert refused.status_code == 409, refused.text
+    assert [reason["code"] for reason in refused.json()["reasons"]] == ["number_taken"]
+    assert unoffered.status_code == 409, unoffered.text
     assert carrier.bought == []
 
 

@@ -8,6 +8,7 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.phone_numbers import (
     PhoneLineLockRegistryContract,
     PhoneNumberCountryRegistryContract,
+    PhoneNumberOfferSignerContract,
     PhoneNumberProvisionerAdapterContract,
     PhoneNumberRepoContract,
 )
@@ -55,6 +56,7 @@ from app.use_cases.channels.phone_numbers.phone_line_views import (
 from app.use_cases.channels.phone_numbers.rental_checks import (
     label_of,
     require_free_line,
+    require_offered,
     require_quoted_price,
     require_unclaimed_number,
 )
@@ -68,12 +70,15 @@ class RentPhoneNumberUseCase(
 ):
     """
     The owner (just signed in or confirmed: step-up) takes the number they
-    picked, at the monthly price the cabinet showed. Under the business's
+    picked from a search's offers (the offer's token vouches for the number
+    and its kind: `require_offered`), at the monthly price the cabinet
+    showed. Under the business's
     phone line lock (two clicks never rent two numbers): the business rents
     none yet and its phone channel carries no other number, nobody holds
     this one, its country is self-serve, and the carrier's price with the
     markup is still the price shown (else PhoneNumberPriceChangedError).
-    A business takes at most three numbers a day (`owner_action_limits`).
+    A business takes at most three numbers a day (`owner_action_limits`;
+    a purchase the carrier refuses is not counted).
 
     The number is rented, put on record at once (whatever fails later, the
     platform knows what it pays for), connected as the phone channel (calls
@@ -100,8 +105,10 @@ class RentPhoneNumberUseCase(
         exchange_rate_registry: ExchangeRateRegistryContract,
         phone_number_parser: PhoneNumberParserContract,
         phone_line_lock: PhoneLineLockRegistryContract,
+        check_owner_action_room: UseCaseContract[OwnerActionAdmission, None],
         admit_owner_action: UseCaseContract[OwnerActionAdmission, None],
         product_events: RecordProductEventFacilitatorContract,
+        offer_signer: PhoneNumberOfferSignerContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -127,10 +134,14 @@ class RentPhoneNumberUseCase(
         )
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._phone_line_lock: PhoneLineLockRegistryContract = phone_line_lock
+        self._check_owner_action_room: UseCaseContract[OwnerActionAdmission, None] = (
+            check_owner_action_room
+        )
         self._admit_owner_action: UseCaseContract[OwnerActionAdmission, None] = (
             admit_owner_action
         )
         self._product_events: RecordProductEventFacilitatorContract = product_events
+        self._offer_signer: PhoneNumberOfferSignerContract = offer_signer
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: RentPhoneNumberCommand) -> RentedPhoneNumberView:
@@ -143,6 +154,12 @@ class RentPhoneNumberUseCase(
         )
         # Renting costs money every month: only a recently proved person.
         self._step_up.require_recent_authentication()
+        require_offered(
+            self._offer_signer,
+            business.id,
+            input_data.request,
+            self._wall_clock.now_unix(),
+        )
         details: PhoneNumberDetails = self._phone_number_parser.parse(
             RawPhoneNumberInput(str(input_data.request.phone_number)), None
         )
@@ -167,7 +184,13 @@ class RentPhoneNumberUseCase(
             number: PhoneNumberDocument = self._rent(business, details, input_data)
 
         language = input_data.display_language or business.owner_language
-        return build_rented_number_view(number, self._phone_number_parser, language)
+        return build_rented_number_view(
+            number,
+            self._phone_number_parser,
+            language,
+            find_answering_agent(self._records.assistant_version_repo, business.id)
+            is not None,
+        )
 
     def _rent(
         self,
@@ -201,16 +224,18 @@ class RentPhoneNumberUseCase(
             self._exchange_rate_registry,
         )
         require_quoted_price(price, command.request.monthly_price)
-        self._admit_owner_action.run(
-            OwnerActionAdmission(
-                action=OwnerAction.PHONE_NUMBER_RENTAL,
-                user_id=command.user_id,
-                business_id=business.id,
-            )
+        admission = OwnerActionAdmission(
+            action=OwnerAction.PHONE_NUMBER_RENTAL,
+            user_id=command.user_id,
+            business_id=business.id,
         )
+        # Only numbers bought count (the carrier refusing one does not);
+        # under the line lock nobody else counts for this business meanwhile.
+        self._check_owner_action_room.run(admission)
         provisioned: ProvisionedPhoneNumber = self._provisioner.buy_number(
             PhoneNumberPurchase(phone_number=details.e164, label=label_of(business))
         )
+        self._admit_owner_action.run(admission)
         now: Microseconds = self._wall_clock.now_unix()
         number = PhoneNumberDocument(
             business_id=business.id,

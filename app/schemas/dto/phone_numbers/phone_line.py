@@ -25,10 +25,12 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.schemas.typings.telephony.booleans import (
     ArePhoneNumbersSelfServe,
+    HasAnsweringVoiceAgent,
     IsPhoneNumberAttached,
 )
 from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberCityQuery,
+    PhoneNumberOfferToken,
     RentedLineNumber,
 )
 from app.schemas.typings.telephony.strings import (
@@ -52,7 +54,10 @@ class RentedPhoneNumberView(ImmutableDTO):
     it costs a month (fixed when it was taken), ACTIVE or RELEASING (being
     given back), and whether calls to it reach the voice agent yet
     (`is_attached`: false until the business has an agent, or for a few
-    minutes after it was taken).
+    minutes after it was taken). `has_answering_agent` is false while the
+    business has no live voice agent at all (voice off, or the phone
+    channel was switched off since the last publish): the number answers
+    only once the assistant is published again.
     """
 
     phone_number: RentedLineNumber
@@ -63,6 +68,7 @@ class RentedPhoneNumberView(ImmutableDTO):
     monthly_price: QuotedMoney
     status: PhoneNumberStatus
     is_attached: IsPhoneNumberAttached
+    has_answering_agent: HasAnsweringVoiceAgent
     rented_at: Microseconds
 
 
@@ -106,10 +112,14 @@ class PhoneNumberOfferQuery(ImmutableDTO):
 
 
 class PhoneNumberOfferView(ImmutableDTO):
-    """One number the owner may take now."""
+    """
+    One number the owner may take now; taking it sends `offer_token` back
+    (the offer lapses after an hour: search again).
+    """
 
     phone_number: E164PhoneNumber
     display_number: FormattedPhoneNumber
+    offer_token: PhoneNumberOfferToken
     locality: PhoneNumberLocality | None = None
     region: PhoneNumberRegion | None = None
 
@@ -132,13 +142,16 @@ class PhoneNumberOfferList(ImmutableDTO):
 
 class RentPhoneNumberRequest(ImmutableDTO):
     """
-    The number the owner chose, its kind, the monthly price the cabinet
-    showed (the purchase is refused when the price changed meanwhile) and
-    the city the search named for it (kept for the card only).
+    The number the owner chose, its kind, the token of the offer that
+    named both (a number nobody offered this business, or of another kind,
+    is refused), the monthly price the cabinet showed (the purchase is
+    refused when the price changed meanwhile) and the city the search named
+    for it (kept for the card only).
     """
 
     phone_number: E164PhoneNumber
     number_type: PhoneNumberType
+    offer_token: PhoneNumberOfferToken
     monthly_price: Money
     locality: PhoneNumberCityQuery | None = None
 

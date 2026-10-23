@@ -8,6 +8,7 @@ from app.contracts.repositories.compliance_repositories import AuditLogRepoContr
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.spend import OwnerAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -17,6 +18,7 @@ from app.schemas.dto.phone_numbers.phone_line import (
     PhoneNumberRequestView,
     RequestPhoneNumberCommand,
 )
+from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -41,8 +43,10 @@ class RequestPhoneNumberUseCase(
     business): asking while one is open keeps it as it is (one e-mail to
     the team, never a stream of them); asking after it was done or
     cancelled opens it again. A new request e-mails every platform admin
-    and is audited. The team closes it by connecting the number as the
-    phone channel (the maintenance job then marks it DONE).
+    and is audited; a business (re)opens at most three a day
+    (`owner_action_limits`), so asking and cancelling in a loop never
+    floods the team's inbox. The team closes it by connecting the number as
+    the phone channel (the maintenance job then marks it DONE).
     """
 
     def __init__(
@@ -54,6 +58,7 @@ class RequestPhoneNumberUseCase(
         audit_log_repo: AuditLogRepoContract,
         manager_notifier: ManagerNotificationFacilitatorContract,
         app_settings: AppSettings,
+        admit_owner_action: UseCaseContract[OwnerActionAdmission, None],
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -65,6 +70,9 @@ class RequestPhoneNumberUseCase(
             manager_notifier
         )
         self._app_settings: AppSettings = app_settings
+        self._admit_owner_action: UseCaseContract[OwnerActionAdmission, None] = (
+            admit_owner_action
+        )
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: RequestPhoneNumberCommand) -> PhoneNumberRequestView:
@@ -75,6 +83,19 @@ class RequestPhoneNumberUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        if (
+            build_open_request_view(self._request_repo.get_by_business(business.id))
+            is None
+        ):
+            # Only a request that opens (and e-mails the team) counts.
+            self._admit_owner_action.run(
+                OwnerActionAdmission(
+                    action=OwnerAction.PHONE_NUMBER_REQUEST,
+                    user_id=input_data.user_id,
+                    business_id=business.id,
+                )
+            )
+
         now: Microseconds = self._wall_clock.now_unix()
         request = PhoneNumberRequestDocument(
             id=phone_number_request_id_of(business.id),

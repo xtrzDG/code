@@ -2,10 +2,12 @@
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.phone_numbers import PhoneNumberProvider, PhoneNumberType
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -90,3 +92,15 @@ class PhoneNumberRelease(ImmutableDTO):
 
     provider_number_id: ProviderPhoneNumberId
     voice_platform_number_id: VoicePlatformPhoneNumberId | None = None
+
+
+class PhoneNumberOfferClaims(ImmutableDTO):
+    """
+    What an offer's token vouches for: this number, of this kind, offered
+    to this business, until then.
+    """
+
+    business_id: BusinessId
+    phone_number: E164PhoneNumber
+    number_type: PhoneNumberType
+    expires_at: Microseconds

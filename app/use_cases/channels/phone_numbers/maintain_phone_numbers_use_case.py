@@ -25,7 +25,10 @@ from app.schemas.constants.phone_numbers import (
     PhoneNumberStatus,
 )
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.phone_numbers import PhoneNumberDocument
+from app.schemas.domain.phone_numbers import (
+    PhoneNumberDocument,
+    PhoneNumberRequestDocument,
+)
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.phone_numbers.provisioning import PhoneNumberRelease
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -197,7 +200,7 @@ class MaintainPhoneNumbersUseCase(UseCaseContract[JobTick, JobReport]):
 
     def _close_fulfilled_requests(self) -> int:
         closed: int = 0
-        for request in self._request_repo.list_open(BATCH):
+        for request in self._open_requests():
             if (
                 connected_number(
                     find_phone_channel(self._channel_repo, request.business_id)
@@ -214,3 +217,17 @@ class MaintainPhoneNumbersUseCase(UseCaseContract[JobTick, JobReport]):
             closed += 1
 
         return closed
+
+    def _open_requests(self) -> Iterator[PhoneNumberRequestDocument]:
+        """Every open request, page by page (however many wait)."""
+
+        after: PhoneNumberRequestDocument | None = None
+        while True:
+            page: list[PhoneNumberRequestDocument] = self._request_repo.page_open(
+                after, BATCH
+            )
+            yield from page
+            if len(page) < int(BATCH):
+                return
+
+            after = page[-1]

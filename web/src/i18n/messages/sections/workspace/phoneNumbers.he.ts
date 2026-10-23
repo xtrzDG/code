@@ -11,6 +11,7 @@ export const phoneNumbersHe: Translation<typeof phoneNumbersEn> = {
     monthly: "{price} לחודש",
     answering: "העוזר שלכם עונה בו",
     connecting: "מחברים לעוזר שלכם…",
+    waitsForPublish: "עדיין לא עונה: פרסמו את העוזר עם שיחות טלפון מופעלות, והוא יענה במספר הזה.",
     releasing: "מוחזר לספק",
     giveBackHint: "כדי להחזיר את המספר, נתקו את ערוץ הטלפון. החיוב עליו ייפסק והמספר יחזור לספק.",
     requestTitle: "המספר התבקש",
@@ -19,6 +20,8 @@ export const phoneNumbersHe: Translation<typeof phoneNumbersEn> = {
     cancelRequest: "ביטול הבקשה",
     requestCancelled: "הבקשה בוטלה",
     ownerOnly: "רק בעלים יכולים לקחת מספר.",
+    loading: "טוענים את המספר שלכם…",
+    disconnectReleases: "בניתוק, המספר {number} יחזור לספק לצמיתות: החיוב עליו ייפסק, וייתכן שלא תוכלו לקבל שוב את אותו מספר.",
   },
   tunnel: {
     title: "שיחות טלפון",

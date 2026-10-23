@@ -72,7 +72,8 @@ class BillPhoneNumberRentalsUseCase(UseCaseContract[JobTick, JobReport]):
       not billed.
     - Either way the month is a NUMBER_RENTAL usage event with the
       carrier's price as its cost (the client's cost and margin).
-    - When nobody pays for the service, the number is given back instead
+    - A month is judged as of its start (`decide_rental_month`). When
+      nobody pays (past due beyond the grace too), the number goes back
       (RELEASING, for want of payment; the maintenance job returns it and
       turns the phone channel off) and the owners are told.
 

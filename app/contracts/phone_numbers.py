@@ -4,9 +4,12 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from typed_time_provider import Microseconds
+
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.registry_contract import RegistryContract
 from app.contracts.repo_contract import RepoContract
+from app.contracts.utility_contract import UtilityContract
 from app.schemas.constants.phone_numbers import (
     PhoneNumberAvailability,
     PhoneNumberStatus,
@@ -17,6 +20,7 @@ from app.schemas.domain.phone_numbers import (
     PhoneNumberRequestDocument,
 )
 from app.schemas.dto.phone_numbers.provisioning import (
+    PhoneNumberOfferClaims,
     PhoneNumberPurchase,
     PhoneNumberRelease,
     PhoneNumberSearchQuery,
@@ -32,7 +36,10 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
-from app.schemas.typings.telephony.constrained_strings import RentedLineNumber
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberOfferToken,
+    RentedLineNumber,
+)
 from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
 from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
 
@@ -170,8 +177,15 @@ class PhoneNumberRequestRepoContract(RepoContract, Protocol):
     def save(self, request: PhoneNumberRequestDocument) -> None:
         raise NotImplementedError
 
-    def list_open(self, limit: DocumentQueryLimit) -> list[PhoneNumberRequestDocument]:
-        """Across businesses (platform-wide): open requests, oldest first."""
+    def page_open(
+        self,
+        after: PhoneNumberRequestDocument | None,
+        limit: DocumentQueryLimit,
+    ) -> list[PhoneNumberRequestDocument]:
+        """
+        Across businesses (platform-wide): open requests, oldest first, the
+        page after `after` (a keyset walk over all of them).
+        """
         raise NotImplementedError
 
 
@@ -198,5 +212,26 @@ class PhoneLineLockRegistryContract(RegistryContract, Protocol):
         Lock serializing the changes of one business's phone line across
         every process (taking a number, giving it back, the jobs acting on
         it); the block may call the carrier and the voice platform.
+        """
+        raise NotImplementedError
+
+
+class PhoneNumberOfferSignerContract(UtilityContract, Protocol):
+    """Signs the numbers a search offers, so a rental takes only those."""
+
+    def sign(self, claims: PhoneNumberOfferClaims) -> PhoneNumberOfferToken:
+        """The offer's token (its expiry in clear, the rest signed)."""
+        raise NotImplementedError
+
+    def read_expiry(self, token: PhoneNumberOfferToken) -> Microseconds:
+        """Until when the token says its offer holds (not yet verified)."""
+        raise NotImplementedError
+
+    def is_genuine(
+        self, claims: PhoneNumberOfferClaims, token: PhoneNumberOfferToken
+    ) -> bool:
+        """
+        True when this platform signed exactly these claims (the expiry
+        included); whether the offer still holds is the caller's check.
         """
         raise NotImplementedError

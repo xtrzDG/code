@@ -25,6 +25,7 @@ import { ChannelsSkeleton } from "./_components/ChannelsSkeleton";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
+import { DisconnectPhoneNote } from "./_components/phoneLine/DisconnectPhoneNote";
 import { PhoneNumberPanel } from "./_components/phoneLine/PhoneNumberPanel";
 import { ShareSection } from "./_components/ShareSection";
 import { STAFF_TEMPLATES_ID, StaffTemplatesEditor } from "./_components/StaffTemplatesEditor";
@@ -106,7 +107,8 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
       api.DELETE("/v1/businesses/{business_id}/channels/{channel}", {
         params: { path: { business_id: business.id, channel: channelPathName(kind) } },
       }),
-    { errorToast: false, stale: [queryKeys.assistant.all(business.id)] },
+    // Turning the phone off gives a rented number back: its card reloads too.
+    { errorToast: false, invalidate: [queryKeys.channels.all(business.id)], stale: [queryKeys.assistant.all(business.id)] },
   );
 
   const runConnect = async (kind: ConnectableChannel, body: ConnectChannelBody): Promise<boolean> => {
@@ -289,7 +291,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
         {disconnecting ? (
           <>
             <p>{t("channels.disconnectDescription", { channel: t(CHANNEL_NAMES[disconnecting]) })}</p>
-            {disconnecting === "phone" ? <p>{t("channels.disconnectPhoneNote")}</p> : null}
+            {disconnecting === "phone" ? <DisconnectPhoneNote /> : null}
           </>
         ) : null}
       </ConfirmDialog>

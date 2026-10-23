@@ -134,7 +134,24 @@ class PhoneNumberRequestRepository(
     def save(self, request: PhoneNumberRequestDocument) -> None:
         self._store(str(request.id), request)
 
-    def list_open(self, limit: DocumentQueryLimit) -> list[PhoneNumberRequestDocument]:
-        return self._collection.list_by_fields(
-            [field_equals(STATUS_FIELD, PhoneNumberRequestStatus.OPEN)], limit=limit
+    def page_open(
+        self,
+        after: PhoneNumberRequestDocument | None,
+        limit: DocumentQueryLimit,
+    ) -> list[PhoneNumberRequestDocument]:
+        # First-write order on (doc_status, row_sequence) of 1213.
+        return self._collection.page_by(
+            DocumentPageQuery(
+                where=DocumentFilter(
+                    matches=(field_equals(STATUS_FIELD, PhoneNumberRequestStatus.OPEN),)
+                ),
+                sort_fields=(),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(), document_key=StoredDocumentKey(str(after.id))
+                ),
+                limit=limit,
+            )
         )

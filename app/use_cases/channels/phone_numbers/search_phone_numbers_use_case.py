@@ -1,9 +1,12 @@
 """The owner looks for a number: country, kind, and optionally a city."""
 
+from typed_time_provider import Microseconds, WallClock
+
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.phone_numbers import (
     PhoneNumberCountryRegistryContract,
+    PhoneNumberOfferSignerContract,
     PhoneNumberProvisionerAdapterContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
@@ -19,17 +22,22 @@ from app.schemas.dto.phone_numbers.phone_line import (
     PhoneNumberOfferQuery,
 )
 from app.schemas.dto.phone_numbers.provisioning import (
+    AvailablePhoneNumber,
+    PhoneNumberOfferClaims,
     PhoneNumberSearchQuery,
     PhoneNumberSearchResult,
 )
 from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.telephony.constrained_integers import PhoneNumberOfferCount
+from app.schemas.typings.telephony.constrained_strings import PhoneNumberOfferToken
 from app.use_cases.channels.phone_numbers.phone_line_lookups import quote_owner_price
 from app.use_cases.channels.phone_numbers.phone_line_views import build_offer_view
 from app.use_cases.shared.subscription_pricing import quote_money
 
 OFFER_COUNT: PhoneNumberOfferCount = PhoneNumberOfferCount(10)
+# How long an offer holds: the owner picks and confirms within it.
+OFFER_LIFETIME_MICROSECONDS: int = 60 * 60 * 1_000_000
 
 
 class SearchPhoneNumbersUseCase(
@@ -43,7 +51,9 @@ class SearchPhoneNumbersUseCase(
     ON_REQUEST. Otherwise up to ten numbers that take calls and need no
     papers, near the city when one is given, at the owner's monthly price
     (the carrier's with the platform's markup, in the business's currency,
-    rounded up to a whole unit).
+    rounded up to a whole unit). Each offer carries a signed token (the
+    business, the number, its kind, an hour to take it): renting takes only
+    numbers offered so.
 
     Searches ask the carrier's API, so a business runs 30 an hour
     (`owner_action_limits`; RateLimitedError with Retry-After).
@@ -60,6 +70,8 @@ class SearchPhoneNumbersUseCase(
         phone_number_parser: PhoneNumberParserContract,
         admit_owner_action: UseCaseContract[OwnerActionAdmission, None],
         app_settings: AppSettings,
+        offer_signer: PhoneNumberOfferSignerContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -78,6 +90,8 @@ class SearchPhoneNumbersUseCase(
             admit_owner_action
         )
         self._app_settings: AppSettings = app_settings
+        self._offer_signer: PhoneNumberOfferSignerContract = offer_signer
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: PhoneNumberOfferQuery) -> PhoneNumberOfferList:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -121,15 +135,38 @@ class SearchPhoneNumbersUseCase(
             self._exchange_rate_registry,
         )
         language: LanguageTag = input_data.display_language or business.owner_language
+        expires_at = Microseconds(
+            int(self._wall_clock.now_unix()) + OFFER_LIFETIME_MICROSECONDS
+        )
         return PhoneNumberOfferList(
             country_code=input_data.country_code,
             number_type=input_data.number_type,
             availability=PhoneNumberAvailability.SELF_SERVE,
             monthly_price=quote_money(price, False, language),
             offers=[
-                build_offer_view(offer, self._phone_number_parser)
+                build_offer_view(
+                    offer,
+                    self._phone_number_parser,
+                    self._sign(business, input_data, offer, expires_at),
+                )
                 for offer in result.numbers
             ],
+        )
+
+    def _sign(
+        self,
+        business: BusinessDocument,
+        query: PhoneNumberOfferQuery,
+        offer: AvailablePhoneNumber,
+        expires_at: Microseconds,
+    ) -> PhoneNumberOfferToken:
+        return self._offer_signer.sign(
+            PhoneNumberOfferClaims(
+                business_id=business.id,
+                phone_number=offer.phone_number,
+                number_type=query.number_type,
+                expires_at=expires_at,
+            )
         )
 
     def _without_offers(

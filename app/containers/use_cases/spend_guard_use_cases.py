@@ -30,6 +30,7 @@ from app.use_cases.spend_guard.admit_api_request_use_case import (
 )
 from app.use_cases.spend_guard.admit_owner_action_use_case import (
     AdmitOwnerActionUseCase,
+    CheckOwnerActionRoomUseCase,
 )
 from app.use_cases.spend_guard.check_business_spend_use_case import (
     CheckBusinessSpendUseCase,
@@ -44,6 +45,21 @@ from app.use_cases.spend_guard.save_widget_allowed_origins_use_case import (
     SaveWidgetAllowedOriginsUseCase,
 )
 from app.utilities.spend.widget_origins import platform_page_origins
+
+
+def check_owner_action_room_factory(
+    registries: RegistriesContainer, time_provider: TimeProviderContainer
+) -> Factory[UseCaseContract[OwnerActionAdmission, None]]:
+    """
+    The owner action limits checked without counting, for actions counted
+    only once they succeed (number rentals).
+    """
+
+    return Factory(
+        CheckOwnerActionRoomUseCase,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
 
 
 def admit_owner_action_factory(

@@ -13,6 +13,7 @@ export const phoneNumbersEn = {
     monthly: "{price} a month",
     answering: "Answers with your assistant",
     connecting: "Connecting to your assistant…",
+    waitsForPublish: "Not answering yet: publish your assistant with phone calls on, and it answers on this number.",
     releasing: "Being given back",
     giveBackHint: "To give the number back, disconnect the phone channel. It stops being billed and returns to the carrier.",
     requestTitle: "Number requested",
@@ -21,6 +22,8 @@ export const phoneNumbersEn = {
     cancelRequest: "Cancel the request",
     requestCancelled: "Request cancelled",
     ownerOnly: "Only an owner can take a number.",
+    loading: "Loading your phone number…",
+    disconnectReleases: "{number} goes back to the carrier when you disconnect, for good: it stops being billed, and the same number may not be available again.",
   },
   tunnel: {
     title: "Phone calls",

@@ -34,7 +34,8 @@ class OwnerAction(StrEnum):
     """
     A cabinet action that makes the platform pay a provider and is limited
     per person or per business: a test chat message, a menu import, an
-    autotest run, a search of the carrier's numbers and a number rented.
+    autotest run, a search of the carrier's numbers, a number rented and a
+    request for a number (it e-mails the platform team).
     """
 
     TEST_CHAT = "test_chat"
@@ -42,6 +43,7 @@ class OwnerAction(StrEnum):
     AUTOTEST_RUN = "autotest_run"
     PHONE_NUMBER_SEARCH = "phone_number_search"
     PHONE_NUMBER_RENTAL = "phone_number_rental"
+    PHONE_NUMBER_REQUEST = "phone_number_request"
 
 
 class RequestLimitClass(StrEnum):

@@ -11,6 +11,7 @@ export const phoneNumbersKa: Translation<typeof phoneNumbersEn> = {
     monthly: "{price} თვეში",
     answering: "პასუხობს თქვენი ასისტენტი",
     connecting: "ვუკავშირებთ ასისტენტს…",
+    waitsForPublish: "ჯერ არ პასუხობს: გამოაქვეყნეთ ასისტენტი ჩართული ზარებით და ის ამ ნომერზე უპასუხებს.",
     releasing: "უბრუნდება ოპერატორს",
     giveBackHint: "ნომრის დასაბრუნებლად გათიშეთ სატელეფონო არხი. მისი გადახდა შეწყდება და ნომერი ოპერატორს დაუბრუნდება.",
     requestTitle: "ნომერი მოთხოვნილია",
@@ -19,6 +20,8 @@ export const phoneNumbersKa: Translation<typeof phoneNumbersEn> = {
     cancelRequest: "მოთხოვნის გაუქმება",
     requestCancelled: "მოთხოვნა გაუქმდა",
     ownerOnly: "ნომრის აღება მხოლოდ მფლობელს შეუძლია.",
+    loading: "თქვენი ნომერი იტვირთება…",
+    disconnectReleases: "გათიშვისას ნომერი {number} სამუდამოდ დაუბრუნდება ოპერატორს: მისი გადახდა შეწყდება და იგივე ნომრის ხელახლა მიღება შეიძლება ვეღარ მოხერხდეს.",
   },
   tunnel: {
     title: "ზარები",
