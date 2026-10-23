@@ -13,8 +13,22 @@ label and a migration path).
 
 ## 2026-10-24 — voice agent tuning, voice checks and the call fallback
 
-Spec: `3f8cce4377e58f68`
+Spec: `2f89b819202bc64f`
 
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}`, the
+  call fallback of the business's rented numbers (each number's Twilio
+  VoiceFallbackUrl, set by the platform): Twilio asks it what to do with a
+  call the voice platform refused or did not answer in time. The form is
+  Twilio's (`CallSid`, `From`, `To`, `ForwardedFrom`, ...), signed in
+  `X-Twilio-Signature` (HMAC-SHA1 of the address and the fields with the
+  platform's `TWILIO_AUTH_TOKEN`; 401 otherwise). It answers TwiML
+  (`text/xml`): a `<Dial>` to the staff mobile on duty (the profile's
+  handoff phone, else the first manager reachable by phone), or
+  `<Hangup/>` when nobody can take the call (then a missed call with its
+  text-back). The owner hears of it at most once an hour.
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}/dial-status`,
+  the `<Dial>`'s action: a staff mobile that was busy, rang out or failed
+  leaves a missed call with its text-back; it answers `<Hangup/>`.
 - **Changed** `CallDocument` (the calls of a contact's data export,
   `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`) gains
   `analysis` (`CallAnalysis`, optional): what the voice platform's own

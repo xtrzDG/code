@@ -1,8 +1,9 @@
 """
 Twilio's phone numbers as the number picker uses them: the documented
 AvailablePhoneNumbers page and price list read into offers and a monthly
-price, the purchase form, and the documented errors the purchase tells
-apart (a number taken since the search, a refused account, a 404 country).
+price, the purchase form, the call fallback of a rented number, and the
+documented errors the purchase tells apart (a number taken since the
+search, a refused account, a 404 country).
 """
 
 import base64
@@ -31,6 +32,7 @@ from app.schemas.typings.telephony.constrained_integers import PhoneNumberOfferC
 from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberCityQuery,
     PhoneNumberLabel,
+    VoiceFallbackUrl,
 )
 from app.schemas.typings.telephony.strings import ProviderPhoneNumberId
 from tests.channels.recording_transport import RecordingTransport
@@ -42,6 +44,9 @@ AVAILABLE_PATH: str = r"/AvailablePhoneNumbers/US/Local\.json$"
 PRICES_PATH: str = r"/v1/PhoneNumbers/Countries/US$"
 BUY_PATH: str = r"/IncomingPhoneNumbers\.json$"
 RELEASE_PATH: str = r"/IncomingPhoneNumbers/PN0+42\.json$"
+FALLBACK = VoiceFallbackUrl(
+    "https://api.example.com/v1/telephony/twilio/voice-fallback"
+)
 PURCHASE = PhoneNumberPurchase(
     phone_number=E164PhoneNumber("+15125550142"),
     label=PhoneNumberLabel("Assistant Workshop: Austin Coffee Lab"),
@@ -167,6 +172,42 @@ def test_returning_a_number_deletes_it() -> None:
     client(transport).release_number(ProviderPhoneNumberId("PN" + "0" * 30 + "42"))
 
     assert [request.method for request in transport.requests] == ["DELETE"]
+
+
+def test_the_call_fallback_is_set_on_the_number() -> None:
+    transport = RecordingTransport()
+    transport.respond(
+        "POST",
+        RELEASE_PATH,
+        load_json_fixture("twilio", "incoming_phone_number_created.json"),
+    )
+
+    client(transport).set_voice_fallback(
+        ProviderPhoneNumberId("PN" + "0" * 30 + "42"), FALLBACK
+    )
+
+    [request] = transport.requests
+    assert request.method == "POST"
+    assert dict(parse_qsl(request.body.decode())) == {
+        "VoiceFallbackUrl": str(FALLBACK),
+        "VoiceFallbackMethod": "POST",
+    }
+
+
+def test_a_refused_call_fallback_names_twilio_s_code_only() -> None:
+    transport = RecordingTransport()
+    transport.respond(
+        "POST",
+        RELEASE_PATH,
+        {"code": 20404, "message": "The requested resource was not found"},
+        404,
+    )
+
+    with pytest.raises(ExternalServiceError, match="HTTP 404, error 20404") as raised:
+        client(transport).set_voice_fallback(
+            ProviderPhoneNumberId("PN" + "0" * 30 + "42"), FALLBACK
+        )
+    assert str(TOKEN) not in str(raised.value)
 
 
 @pytest.mark.parametrize(

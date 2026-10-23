@@ -13,6 +13,11 @@ from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.calls.call_fallback import (
+    CallFallbackPlan,
+    CallFallbackWebhookRequest,
+    FallbackDialOutcome,
+)
 from app.schemas.dto.calls.call_settings import (
     CallSettingsQuery,
     CallSettingsView,
@@ -40,6 +45,15 @@ from app.use_cases.voice.call_settings.list_text_backs_use_case import (
 )
 from app.use_cases.voice.call_settings.update_call_settings_use_case import (
     UpdateCallSettingsUseCase,
+)
+from app.use_cases.voice.fallback.notify_call_fallback_use_case import (
+    NotifyCallFallbackUseCase,
+)
+from app.use_cases.voice.fallback.read_fallback_dial_use_case import (
+    ReadFallbackDialUseCase,
+)
+from app.use_cases.voice.fallback.route_call_fallback_use_case import (
+    RouteCallFallbackUseCase,
 )
 from app.use_cases.voice.finished_call.open_call_conversation_use_case import (
     OpenCallConversationUseCase,
@@ -167,6 +181,33 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         staff_alerts=facilitators.staff_alert_facilitator,
         report_text_transformer=transformers.call_report_text_transformer,
         report_brief_transformer=transformers.call_report_brief_transformer,
+        phone_number_parser=utilities.phone_number_parser,
+    )
+    # --- The call fallback of rented numbers: put through to staff.
+    route_call_fallback_use_case: Factory[
+        UseCaseContract[CallFallbackWebhookRequest, CallFallbackPlan]
+    ] = Factory(
+        RouteCallFallbackUseCase,
+        call_fallback_adapter=adapters.calls.call_fallback_adapter,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        phone_number_parser=utilities.phone_number_parser,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    read_fallback_dial_use_case: Factory[
+        UseCaseContract[CallFallbackWebhookRequest, FallbackDialOutcome]
+    ] = Factory(
+        ReadFallbackDialUseCase,
+        call_fallback_adapter=adapters.calls.call_fallback_adapter,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    notify_call_fallback_use_case: Factory[
+        UseCaseContract[CallFallbackPlan, DeliveredNotificationCount]
+    ] = Factory(
+        NotifyCallFallbackUseCase,
+        business_repo=repositories.business_repo,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        text_resolver=utilities.localized_text_resolver,
         phone_number_parser=utilities.phone_number_parser,
     )
     send_text_back_use_case: Factory[UseCaseContract[QueuedJobInput, JobReport]] = (

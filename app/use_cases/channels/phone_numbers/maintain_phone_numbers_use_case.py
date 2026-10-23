@@ -44,7 +44,11 @@ from app.use_cases.channels.phone_numbers.rented_line_channel import (
     disconnect_rented_line,
     find_phone_channel,
 )
-from app.use_cases.channels.phone_numbers.voice_attachment import attach_to_agent
+from app.use_cases.channels.phone_numbers.voice_attachment import (
+    attach_to_agent,
+    needs_fallback,
+    route_to_fallback,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 BATCH: DocumentQueryLimit = DocumentQueryLimit(100)
@@ -62,6 +66,8 @@ class MaintainPhoneNumbersUseCase(UseCaseContract[JobTick, JobReport]):
     - an ACTIVE number answers with the business's live voice agent: one
       the voice platform has not imported yet is imported, one whose
       business went live (or changed or lost its agent) is assigned anew;
+      and its carrier's call fallback points at the platform (set once
+      imported, and again when APP_BASE_URL changes);
     - an open request for a number is DONE once the business's phone
       channel is connected (the team connected the number it arranged).
 
@@ -174,6 +180,9 @@ class MaintainPhoneNumbersUseCase(UseCaseContract[JobTick, JobReport]):
         if (
             number.voice_platform_number_id is not None
             and number.attached_agent_id == agent_id
+            and not needs_fallback(
+                number, self._provisioner.voice_fallback_url_of(number.business_id)
+            )
         ):
             return False
 
@@ -188,15 +197,19 @@ class MaintainPhoneNumbersUseCase(UseCaseContract[JobTick, JobReport]):
             if stored is None:
                 return False
 
+            now: Microseconds = self._wall_clock.now_unix()
             attached: PhoneNumberDocument = attach_to_agent(
                 self._provisioner,
                 self._phone_number_repo,
                 stored,
                 agent_id,
                 label_of(business),
-                self._wall_clock.now_unix(),
+                now,
             )
-            return attached is not stored
+            routed: PhoneNumberDocument = route_to_fallback(
+                self._provisioner, self._phone_number_repo, attached, now
+            )
+            return routed is not stored
 
     def _close_fulfilled_requests(self) -> int:
         closed: int = 0

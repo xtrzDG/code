@@ -6,7 +6,10 @@
     "notifications.deposit_refund.detail",
     "setup.steps.protect_data.title",
     "setup.steps.protect_data.description",
-    "setup.actions.account_security"
+    "setup.actions.account_security",
+    "notifications.voice_fallback.title",
+    "notifications.voice_fallback.transferred_detail",
+    "notifications.voice_fallback.no_staff_detail"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "לקוח צריך נציג",
@@ -662,6 +665,9 @@
     "notifications.webhook_disabled.title": "וובהוק הושבת · {business}",
     "notifications.webhook_disabled.failures_detail": "הכתובת {endpoint} לא מקבלת יותר אירועים: ניסיונות כושלים ברציפות — {failures}. ודאו שהכתובת עובדת והפעילו אותה שוב בהגדרות ← חיבורים.",
     "notifications.webhook_disabled.gone_detail": "הכתובת {endpoint} השיבה שהיא כבר לא קיימת (410) ולא מקבלת יותר אירועים. אם הכתובת השתנתה, עדכנו אותה בהגדרות ← חיבורים והפעילו אותה שוב.",
+    "notifications.voice_fallback.title": "העוזר הטלפוני לא הצליח לענות לשיחה · {business}",
+    "notifications.voice_fallback.transferred_detail": "פלטפורמת הקול לא ענתה לשיחה, ולכן היא הועברה אל {phone}. אם זה חוזר על עצמו, בדקו את קו הטלפון ב„ערוצים”.",
+    "notifications.voice_fallback.no_staff_detail": "פלטפורמת הקול לא ענתה לשיחה ולא היה טלפון להעביר אליו, ולכן היא נרשמה כשיחה שלא נענתה. הוסיפו בפרופיל העסק טלפון לשיחות שדורשות אדם.",
     "calendar_sync.booking_system.guest_without_name": "אורח",
     "notifications.deposit_refund.title": "פיקדון להחזר · {business}",
     "notifications.deposit_refund.detail": "{amount}, אסמכתה {reference}: ההזמנה ל-{date} בשעה {time} בוטלה בזמן לפי כללי הפיקדון שלכם. החזירו את הפיקדון בחשבון התשלומים שלכם.",

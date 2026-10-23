@@ -1,7 +1,7 @@
 {
   "collection": "phone_numbers",
   "document_type": "PhoneNumberDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -130,7 +130,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {
@@ -144,6 +144,20 @@
       },
       "updated_at": {
         "type": "integer"
+      },
+      "voice_fallback_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 12,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "voice_platform_number_id": {
         "anyOf": [

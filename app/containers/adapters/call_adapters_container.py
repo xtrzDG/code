@@ -9,6 +9,9 @@ from dependency_injector.providers import (
 from app.adapters.monitoring.bucket_signal_counter_adapter import (
     BucketSignalCounterAdapter,
 )
+from app.adapters.telephony.twilio_call_fallback_adapter import (
+    TwilioCallFallbackAdapter,
+)
 from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
     ElevenLabsVoiceAgentProvisioner,
 )
@@ -92,6 +95,10 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     pbx_webhook_adapter: Singleton[ZadarmaPbxWebhookAdapter] = Singleton(
         ZadarmaPbxWebhookAdapter, app_settings=config.app_settings
     )
+    # The call fallback of rented numbers (Twilio's VoiceFallbackUrl).
+    call_fallback_adapter: Singleton[TwilioCallFallbackAdapter] = Singleton(
+        TwilioCallFallbackAdapter, app_settings=config.app_settings
+    )
     voice_webhook_adapter: Singleton[ElevenLabsVoiceWebhookAdapter] = Singleton(
         ElevenLabsVoiceWebhookAdapter,
         app_settings=config.app_settings,
@@ -127,5 +134,9 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     # PHONE_NUMBER_PROVIDER=twilio with the Twilio and ElevenLabs keys; a
     # stand-in naming what is missing otherwise.
     phone_number_provisioner: Singleton[PhoneNumberProvisionerAdapterContract] = (
-        Singleton(build_phone_number_provisioner, settings=config.app_settings)
+        Singleton(
+            build_phone_number_provisioner,
+            settings=config.app_settings,
+            circuit_breaker=circuit_breaker,
+        )
     )

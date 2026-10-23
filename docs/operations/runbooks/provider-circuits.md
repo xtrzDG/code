@@ -17,6 +17,7 @@ models in [llm-outage](llm-outage.md)):
 | `provider:smtp` | e-mail: staff notifications, invoices, platform alerts by e-mail |
 | `provider:flitt` | Flitt (Georgia, Armenia): creating a checkout or a card page, stopping automatic charges, retrying a declined charge |
 | `provider:stripe` | Stripe (the EU, the US, Israel): the same calls, apart from Flitt's circuit |
+| `provider:elevenlabs` | ElevenLabs, the voice platform: setting up voice agents and their tools, the voice checks of autotests, call recordings, deleting conversations, importing and assigning rented numbers. A call the voice platform cannot take still reaches staff: rented numbers fall back to the staff mobile through Twilio (docs/LAUNCH.md, section 4.6) |
 
 Web push has none: it reaches many push services, and one being down is not
 the others'. Login codes do not go through the circuits.

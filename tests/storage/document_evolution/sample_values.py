@@ -17,6 +17,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "PaymentLinkAddress": "https://pay.example.com/deposit?sum={amount}&ref={reference}",
     "CampaignMonthKey": "2026-10",
     "PhoneNumberCityQuery": "Austin",
+    "RentedLineNumber": "+15125550142",
+    "VoiceFallbackUrl": "https://api.example.com/v1/telephony/twilio/voice-fallback",
     "BookingSystemResourceId": "1203845",
     "CalendarFeedHost": "www.airbnb.com",
     "IcalExportTokenHash": "ab" * 32,

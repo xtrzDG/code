@@ -62,4 +62,22 @@ class RentedLineNumber(BaseConstrainedTypedString):
     pattern = r"^\+[1-9][0-9]{6,14}$"
 
 
+class VoiceFallbackUrl(BaseConstrainedTypedString):
+    """
+    The platform's address a carrier calls when the voice platform could
+    not take a call to a rented number (Twilio's VoiceFallbackUrl):
+    APP_BASE_URL and the fallback route. Stored with the number once the
+    carrier has it, so a changed address is set again.
+
+    Example:
+        url = VoiceFallbackUrl(
+            "https://api.example.com/v1/telephony/twilio/voice-fallback"
+        )
+    """
+
+    min_length = 12
+    max_length = 2048
+    pattern = r"^https?://[^\s/]+(/[^\s]*)?$"
+
+
 # Keep abc order for all non example types, if possible.

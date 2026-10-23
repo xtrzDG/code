@@ -60,7 +60,10 @@ from app.use_cases.channels.phone_numbers.rental_checks import (
     require_quoted_price,
     require_unclaimed_number,
 )
-from app.use_cases.channels.phone_numbers.voice_attachment import attach_to_agent
+from app.use_cases.channels.phone_numbers.voice_attachment import (
+    attach_to_agent,
+    route_to_fallback,
+)
 from app.utilities.analytics.product_event_drafts import channel_connected_events
 from app.utilities.telephony.rental_prices import as_rental_minor
 
@@ -83,7 +86,8 @@ class RentPhoneNumberUseCase(
     The number is rented, put on record at once (whatever fails later, the
     platform knows what it pays for), connected as the phone channel (calls
     find the business by it) and imported into the voice platform for the
-    business's live voice agent; an import that fails is left to the
+    business's live voice agent, with the carrier's call fallback pointing
+    at the platform; an import or a fallback that fails is left to the
     maintenance job. The first rental month begins now (`billed_until`).
     Audited: the number and the channel.
     """
@@ -265,11 +269,14 @@ class RentPhoneNumberUseCase(
         self._product_events.record(
             *channel_connected_events(command.user_id, business.id, ChannelKind.PHONE)
         )
-        return attach_to_agent(
+        attached: PhoneNumberDocument = attach_to_agent(
             self._provisioner,
             records.phone_number_repo,
             number,
             find_answering_agent(records.assistant_version_repo, business.id),
             label_of(business),
             now,
+        )
+        return route_to_fallback(
+            self._provisioner, records.phone_number_repo, attached, now
         )

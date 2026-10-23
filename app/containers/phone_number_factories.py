@@ -1,5 +1,8 @@
 """The carrier behind rented phone numbers, chosen by the settings."""
 
+from app.adapters.telephony.guarded_elevenlabs_phone_numbers_client import (
+    GuardedElevenLabsPhoneNumbersClient,
+)
 from app.adapters.telephony.twilio_phone_number_provisioner_adapter import (
     TwilioPhoneNumberProvisionerAdapter,
 )
@@ -11,16 +14,21 @@ from app.clients.elevenlabs.elevenlabs_phone_numbers_client import (
 )
 from app.clients.twilio.twilio_phone_numbers_client import TwilioPhoneNumbersClient
 from app.contracts.phone_numbers import PhoneNumberProvisionerAdapterContract
+from app.contracts.resilience import CircuitBreakerContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
+from app.utilities.resilience.provider_circuits import provider_circuit
 
 
 def build_phone_number_provisioner(
     settings: AppSettings,
+    circuit_breaker: CircuitBreakerContract,
 ) -> PhoneNumberProvisionerAdapterContract:
     """
     Twilio with ElevenLabs when PHONE_NUMBER_PROVIDER=twilio and both have
-    their keys; otherwise a stand-in that names what is missing (owners
+    their keys (ElevenLabs behind its circuit, the call fallback at
+    APP_BASE_URL); otherwise a stand-in that names what is missing (owners
     then ask the platform team for a number).
     """
 
@@ -47,9 +55,13 @@ def build_phone_number_provisioner(
 
     return TwilioPhoneNumberProvisionerAdapter(
         twilio_client=TwilioPhoneNumbersClient(account_sid, auth_token),
-        elevenlabs_client=ElevenLabsPhoneNumbersClient(
-            api_key, settings.elevenlabs_api_base_url
+        # ElevenLabs' numbers behind the voice platform's circuit.
+        elevenlabs_client=GuardedElevenLabsPhoneNumbersClient(
+            ElevenLabsPhoneNumbersClient(api_key, settings.elevenlabs_api_base_url),
+            circuit_breaker,
+            provider_circuit(OutboundProvider.ELEVENLABS),
         ),
         account_sid=account_sid,
         auth_token=auth_token,
+        public_base_url=settings.app_base_url,
     )

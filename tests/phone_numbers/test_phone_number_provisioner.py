@@ -14,6 +14,9 @@ from app.adapters.telephony.unconfigured_phone_number_provisioner_adapter import
     UnconfiguredPhoneNumberProvisionerAdapter,
 )
 from app.containers.phone_number_factories import build_phone_number_provisioner
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
+)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.configurations.phone_number_settings import PhoneNumberSettings
 from app.schemas.constants.phone_numbers import PhoneNumberProvider, PhoneNumberType
@@ -54,6 +57,7 @@ from tests.phone_numbers.provisioner_fakes import (
     FakeElevenLabsNumbersClient,
     FakeTwilioNumbersClient,
 )
+from tests.resilience.test_circuit_breaker import Ticks
 
 ACCOUNT = TwilioAccountSid("AC" + "0" * 32)
 # The Twilio account of login codes, which rents the numbers too.
@@ -62,6 +66,7 @@ SMS_LOGIN: dict[str, str] = {
     "TWILIO_AUTH_TOKEN": "test-token-0000",
     "TWILIO_FROM_NUMBER": "+15005550006",
 }
+BREAKER = CircuitBreakerFacilitator(Ticks().clock())
 QUERY = PhoneNumberSearchQuery(
     country_code=CountryCode("US"),
     number_type=PhoneNumberType.LOCAL,
@@ -185,7 +190,7 @@ def settings(**variables: str) -> AppSettings:
 def test_the_settings_choose_the_stand_in_until_every_key_is_set(
     variables: dict[str, str], missing: list[str]
 ) -> None:
-    provisioner = build_phone_number_provisioner(settings(**variables))
+    provisioner = build_phone_number_provisioner(settings(**variables), BREAKER)
 
     assert isinstance(provisioner, UnconfiguredPhoneNumberProvisionerAdapter)
     assert [str(name) for name in provisioner.list_missing_settings()] == missing
@@ -200,7 +205,8 @@ def test_twilio_with_every_key_rents_numbers() -> None:
     )
 
     assert isinstance(
-        build_phone_number_provisioner(configured), TwilioPhoneNumberProvisionerAdapter
+        build_phone_number_provisioner(configured, BREAKER),
+        TwilioPhoneNumberProvisionerAdapter,
     )
     assert configured.phone_numbers == PhoneNumberSettings(
         provider=PhoneNumberProvider.TWILIO,

@@ -6,7 +6,10 @@
     "notifications.deposit_refund.detail",
     "setup.steps.protect_data.title",
     "setup.steps.protect_data.description",
-    "setup.actions.account_security"
+    "setup.actions.account_security",
+    "notifications.voice_fallback.title",
+    "notifications.voice_fallback.transferred_detail",
+    "notifications.voice_fallback.no_staff_detail"
   ],
   "texts": {
     "notifications.staff_alert.handoff_title": "Ein Kunde braucht einen Menschen",
@@ -662,6 +665,9 @@
     "notifications.webhook_disabled.title": "Ein Webhook wurde abgeschaltet · {business}",
     "notifications.webhook_disabled.failures_detail": "Die Adresse {endpoint} erhält keine Ereignisse mehr: fehlgeschlagene Versuche in Folge – {failures}. Prüfen Sie, ob sie funktioniert, und schalten Sie sie unter Einstellungen → Integrationen wieder ein.",
     "notifications.webhook_disabled.gone_detail": "Die Adresse {endpoint} hat geantwortet, dass es sie nicht mehr gibt (410), und erhält keine Ereignisse mehr. Wenn sie umgezogen ist, ändern Sie sie unter Einstellungen → Integrationen und schalten Sie sie wieder ein.",
+    "notifications.voice_fallback.title": "Der Telefonassistent konnte einen Anruf nicht annehmen · {business}",
+    "notifications.voice_fallback.transferred_detail": "Die Sprachplattform hat den Anruf nicht angenommen, deshalb wurde er an {phone} durchgestellt. Wenn das öfter passiert, prüfen Sie die Telefonleitung unter „Kanäle“.",
+    "notifications.voice_fallback.no_staff_detail": "Die Sprachplattform hat den Anruf nicht angenommen, und es gab kein Telefon, an das er durchgestellt werden konnte, deshalb wurde er als verpasster Anruf erfasst. Hinterlegen Sie im Unternehmensprofil ein Telefon für Anrufe, die einen Menschen brauchen.",
     "calendar_sync.booking_system.guest_without_name": "Gast",
     "notifications.deposit_refund.title": "Eine Anzahlung ist zu erstatten · {business}",
     "notifications.deposit_refund.detail": "{amount}, Referenz {reference}: Die Buchung am {date} um {time} wurde gemäß Ihren Anzahlungsregeln rechtzeitig storniert. Erstatten Sie die Anzahlung in Ihrem Zahlungskonto.",

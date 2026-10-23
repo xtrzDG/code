@@ -7,12 +7,17 @@ a trial call after the wait closes it again.
 
 import pytest
 
+from app.adapters.telephony.guarded_elevenlabs_phone_numbers_client import (
+    GuardedElevenLabsPhoneNumbersClient,
+)
 from app.adapters.voice.guarded_elevenlabs_client import GuardedElevenLabsClient
+from app.contracts.telephony_clients import ElevenLabsPhoneNumbersClientContract
 from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
 from app.schemas.constants.monitoring import PlatformSignal
 from app.schemas.constants.resilience import CircuitState, OutboundProvider
+from app.schemas.dto.phone_numbers.provisioning import VoicePlatformImport
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ProviderCircuitOpenError,
@@ -20,7 +25,14 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
+from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.resilience.constrained_strings import CircuitName
+from app.schemas.typings.telephony.constrained_strings import (
+    PhoneNumberLabel,
+    RentedLineNumber,
+)
+from app.schemas.typings.telephony.strings import VoicePlatformPhoneNumberId
 from app.schemas.typings.voice.constrained_strings import VoiceCheckTestId
 from app.utilities.resilience.provider_circuits import provider_circuit
 from tests.platform_ops.elevenlabs_fakes import ScriptedElevenLabsClient
@@ -97,3 +109,66 @@ def test_the_voice_checks_go_through_the_circuit_too() -> None:
             guarded.client.run_tests(AGENT, [], None)
 
     assert guarded.breaker.state(ELEVENLABS) is CircuitState.OPEN
+
+
+class RecordedNumbers(ElevenLabsPhoneNumbersClientContract):
+    """ElevenLabs' phone numbers that time out until told otherwise."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+        self.is_down: bool = True
+
+    def import_twilio_number(
+        self,
+        request: VoicePlatformImport,
+        account_sid: TwilioAccountSid,
+        auth_token: PlatformSecret,
+    ) -> VoicePlatformPhoneNumberId:
+        del account_sid, auth_token
+        return VoicePlatformPhoneNumberId(self._call(f"import {request.phone_number}"))
+
+    def assign_agent(
+        self,
+        phone_number_id: VoicePlatformPhoneNumberId,
+        agent_id: VoiceAgentId | None,
+    ) -> None:
+        self._call(f"assign {phone_number_id} {agent_id}")
+
+    def delete_number(self, phone_number_id: VoicePlatformPhoneNumberId) -> None:
+        self._call(f"delete {phone_number_id}")
+
+    def _call(self, call: str) -> str:
+        self.calls.append(call)
+        if self.is_down:
+            raise ExternalServiceError("ElevenLabs phone-numbers request timed out.")
+        return "phnum_1"
+
+
+def test_elevenlabs_numbers_share_the_voice_platform_s_circuit() -> None:
+    ticks = Ticks()
+    breaker = CircuitBreakerFacilitator(ticks.clock())
+    inner = RecordedNumbers()
+    numbers = GuardedElevenLabsPhoneNumbersClient(inner, breaker, ELEVENLABS)
+    number = VoicePlatformPhoneNumberId("phnum_1")
+
+    for _ in range(5):
+        with pytest.raises(ExternalServiceError):
+            numbers.assign_agent(number, AGENT)
+    with pytest.raises(ProviderCircuitOpenError):
+        numbers.delete_number(number)
+    with pytest.raises(ProviderCircuitOpenError):
+        numbers.import_twilio_number(
+            VoicePlatformImport(
+                phone_number=RentedLineNumber("+15125550142"),
+                label=PhoneNumberLabel("Austin Coffee Lab"),
+            ),
+            TwilioAccountSid("AC" + "0" * 32),
+            PlatformSecret("test-token-0000"),
+        )
+
+    assert len(inner.calls) == 5
+    assert breaker.state(ELEVENLABS) is CircuitState.OPEN
+    ticks.advance(31)
+    inner.is_down = False
+    numbers.delete_number(number)
+    assert breaker.state(ELEVENLABS) is CircuitState.CLOSED
