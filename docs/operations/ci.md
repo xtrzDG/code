@@ -22,15 +22,19 @@ Everything starts at once except `coverage` (after every backend part),
 | `web-checks` | check:intl, lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
-| `e2e` (1/9 … 9/9) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
 | `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
 about 1:45 + 4:40 + 0:20, under seven minutes. The backend path
-(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 18
-jobs run at the same time (nine shards, six backend parts and three
+(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 19
+jobs run at the same time (ten shards, six backend parts and three
 others), within the 20 that GitHub runs at once for a free account.
+Wave 22's closing of a business brought the suite to about 2037 seconds,
+more than nine shards hold within their budget (9 × 225), so a tenth
+shard was added; branch protection requires only "CI passed (every
+gate)", which waits for every shard whatever their count.
 
 Expected times are local measurements scaled to GitHub's runners (public
 repository: four vCPUs, the same core count as the machine they were
@@ -42,7 +46,7 @@ the build's download). `web/e2e/durations.json` comes from one later
 local run of the whole suite on a machine busy with other work, whose
 specs took 1.22 times as long as in that calibrating local run: every
 duration was scaled by 0.86 (1.05 / 1.22) to CI's runners, and a shard of
-the plan holds about 194 of those seconds. `tests/durations.json` comes
+the plan holds about 204 of those seconds. `tests/durations.json` comes
 from one local run of the whole backend suite on four xdist workers, scaled
 per group so that each group's sum matches the worker-seconds of run
 37537772194: its `rest` part spent 679 seconds in pytest and its `postgres`
