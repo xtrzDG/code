@@ -178,9 +178,14 @@ class RecordedCall(ImmutableDTO):
 
 
 class PostCallWebhookOutcome(ImmutableDTO):
-    """Result of one post-call webhook."""
+    """
+    Result of one post-call webhook. `is_recording_declined`: the caller
+    declined the recording, so the report as delivered (its unredacted
+    transcript) must not be kept once it is processed.
+    """
 
     status: PostCallEventStatus
     call_id: CallId | None = None
     outcome: CallOutcome | None = None
     is_confirmation_sent: IsCallConfirmationSent = False
+    is_recording_declined: IsCallRecordingDeclined = False

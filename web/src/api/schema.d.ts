@@ -14842,7 +14842,9 @@ export interface components {
         PostCallEventStatus: "recorded" | "duplicate" | "ignored" | "queued";
         /**
          * PostCallWebhookOutcome
-         * @description Result of one post-call webhook.
+         * @description Result of one post-call webhook. `is_recording_declined`: the caller
+         *     declined the recording, so the report as delivered (its unredacted
+         *     transcript) must not be kept once it is processed.
          */
         PostCallWebhookOutcome: {
             /** Call Id */
@@ -14852,6 +14854,11 @@ export interface components {
              * @default false
              */
             is_confirmation_sent: boolean;
+            /**
+             * Is Recording Declined
+             * @default false
+             */
+            is_recording_declined: boolean;
             outcome?: components["schemas"]["CallOutcome"] | null;
             status: components["schemas"]["PostCallEventStatus"];
         };

@@ -2,8 +2,13 @@
 
 from typing import Any
 
+from typed_time_provider import Microseconds
+
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.conversations import CallDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from tests.calls.call_steps import add_staff_chat
 from tests.channels.post_call_steps import post_call_payload, process_call, stored_calls
 from tests.channels.voice_setup import VoiceSetup, build_voice_setup
@@ -92,3 +97,29 @@ def test_staff_are_told_about_the_call_without_its_identifiers() -> None:
     asked = str(request.transcript)
     assert "nino@example.ge" not in asked and "4111" not in asked
     assert "[email]" in asked
+
+
+def answered_reports(setup: VoiceSetup) -> list[InboundEventDocument]:
+    return setup.testbed.inbound_event_repo.list_stale(
+        InboundEventStatus.ANSWERED,
+        Microseconds(2**62),
+        DocumentQueryLimit(10),
+    )
+
+
+def test_the_inbox_keeps_no_raw_report_of_a_declined_call() -> None:
+    setup = build_voice_setup()
+
+    process_call(setup, declined_payload())
+
+    [report] = answered_reports(setup)
+    assert report.payload is None
+
+
+def test_the_inbox_keeps_the_report_of_a_call_whose_caller_did_not_decline() -> None:
+    setup = build_voice_setup()
+
+    process_call(setup, declined_payload(declined=False))
+
+    [report] = answered_reports(setup)
+    assert report.payload is not None and "nino@example.ge" in str(report.payload)

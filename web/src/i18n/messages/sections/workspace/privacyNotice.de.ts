@@ -22,7 +22,7 @@ export const privacyNoticeDe: Translation<typeof privacyNoticeEn> = {
   callsTitle: "Telefonanrufe",
   callsRecorded: "Wenn Sie {business} anrufen, antwortet ein KI-Assistent. Der Anruf wird aufgezeichnet und transkribiert; die Mitarbeitenden von {business} können die Aufnahme anhören und das Transkript lesen.",
   callsNotice: "Zu Beginn des Anrufs weist der Assistent darauf hin, dass das Gespräch aufgezeichnet wird.",
-  callsConsent: "Zu Beginn des Anrufs fragt der Assistent, ob Sie mit der Aufzeichnung einverstanden sind.",
+  callsConsent: "Zu Beginn des Anrufs weist der Assistent darauf hin, dass das Gespräch aufgezeichnet wird und dass Sie die Aufzeichnung ablehnen können.",
   callsDecline: "Sie können jederzeit sagen, dass Sie nicht aufgezeichnet werden möchten. Das Gespräch geht weiter; danach wird die Audioaufnahme gelöscht und nur ein schriftliches Transkript ohne Telefonnummern, E-Mail-Adressen sowie Karten- und Kontonummern aufbewahrt.",
   callsKept: "{business} speichert Aufnahmen und Transkripte von Anrufen {recordings}, danach werden sie automatisch gelöscht.",
   rightsTitle: "Ihre Möglichkeiten",

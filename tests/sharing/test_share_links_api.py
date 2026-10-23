@@ -161,7 +161,10 @@ def test_the_public_page_config_names_no_secret(workshop: Workshop) -> None:
         "takes_bookings",
         "booking_url",
         "powered_by_url",
+        "phone_calls",
     }
+    # A business whose assistant does not answer the phone names no call policy.
+    assert body["phone_calls"] is None
     # "Powered by" names only the platform's site and the business's code.
     assert body["powered_by_url"].startswith(f"{CABINET_BASE_URL}/?ref=")
     # The privacy notice names the business's own periods (the defaults).

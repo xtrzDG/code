@@ -192,6 +192,8 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # --- Voice platform (ElevenLabs Agents), built with the call adapters.
     voice_webhook_adapter = calls.voice_webhook_adapter
     voice_agent_provisioner = calls.voice_agent_provisioner
+    # The ElevenLabs client whose calls and failures voice_health counts.
+    counted_elevenlabs_client = calls.elevenlabs_client
 
     # --- Messaging channels.
     channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]

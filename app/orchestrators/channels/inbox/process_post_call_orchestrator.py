@@ -20,7 +20,9 @@ class ProcessPostCallOrchestrator(InboundEventOrchestrator):
     with its outcome and cost, confirm a booking to the caller). The flow
     reads the stored report without checking the signature again: it was
     checked when the report arrived, and a retry may come after the
-    signature's 30 minutes.
+    signature's 30 minutes. A report whose caller declined the recording
+    is cleared from the inbox when it is closed: only the call's redacted
+    transcript stays.
     """
 
     def __init__(
@@ -47,7 +49,9 @@ class ProcessPostCallOrchestrator(InboundEventOrchestrator):
         if claim.event.payload is None:
             raise ValidationFailedError("The inbox event holds no call report.")
 
-        self._process_finished_call.execute(
+        outcome: PostCallWebhookOutcome = self._process_finished_call.execute(
             PostCallWebhookRequest(body=str(claim.event.payload).encode("utf-8"))
         )
-        return InboundAnswer(event=claim.event)
+        return InboundAnswer(
+            event=claim.event, is_payload_discarded=outcome.is_recording_declined
+        )

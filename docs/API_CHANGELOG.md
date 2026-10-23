@@ -13,13 +13,14 @@ label and a migration path).
 
 ## 2026-10-22 — calls: recording consent, call memory and voice health
 
-Spec: `e8b56b82aaf7d4d5`
+Spec: `6f983e65391ed36f`
 
 - **Added** `phone_calls` on the hosted chat's view (`GET
   /v1/public/chat/{address}`, `HostedChatPhoneCalls`): set while the
   business's AI assistant answers its phone, with the
   `recording_consent_rule` of its country (`notice`, or
-  `all_party_consent`: callers are asked at the start of the call) and
+  `all_party_consent`: callers are told at the start of the call that it
+  is recorded and that they may refuse) and
   the `recording_retention_days` its recordings and transcripts are kept.
   The privacy notice states the policy from it.
 - **Added** `recording_declined` on a conversation's calls (`CallDocument`
@@ -30,6 +31,9 @@ Spec: `e8b56b82aaf7d4d5`
   call's tool; versions and stored tool calls do not name it before its
   release gate opens) and the value `voice_health` of `PlatformAlertCode`
   (Admin → System).
+- **Added** `is_recording_declined` on the voice platform's post-call
+  webhook answer (`PostCallWebhookOutcome`, default false): the caller
+  declined the recording, so the stored report is cleared once processed.
 
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 

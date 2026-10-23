@@ -210,6 +210,8 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             assistant_version_repo=repositories.assistant_version_repo,
             business_profile_repo=repositories.business_profile_repo,
+            channel_repo=repositories.channel_repo,
+            plan_registry=registries.plan_registry,
             voice_agent_provisioner=adapters.voice_agent_provisioner,
             build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
             assistant_tool_catalog=registries.assistant_tool_registry,

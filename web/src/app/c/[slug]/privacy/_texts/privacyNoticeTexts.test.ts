@@ -82,4 +82,15 @@ describe("privacyNoticeFor", () => {
       expect([language, notice.text("callsConsent") === notice.text("callsNotice")]).toEqual([language, false]);
     }
   });
+
+  it("describes the consent call as the greeting makes it: told, and free to refuse", () => {
+    // The greeting says the call is recorded and that the caller may refuse;
+    // it asks no yes-or-no question, so the notice must not claim one.
+    const consent = privacyNoticeFor("en").text("callsConsent");
+    expect(consent).toContain("is recorded");
+    expect(consent).toContain("refuse");
+    expect(consent).not.toMatch(/asks whether/);
+    expect(privacyNoticeFor("ru").text("callsConsent")).not.toContain("спрашивает");
+    expect(privacyNoticeFor("de").text("callsConsent")).not.toContain("fragt");
+  });
 });

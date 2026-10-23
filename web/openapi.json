@@ -23980,7 +23980,7 @@
       },
       "PostCallWebhookOutcome": {
         "additionalProperties": false,
-        "description": "Result of one post-call webhook.",
+        "description": "Result of one post-call webhook. `is_recording_declined`: the caller\ndeclined the recording, so the report as delivered (its unredacted\ntranscript) must not be kept once it is processed.",
         "properties": {
           "call_id": {
             "anyOf": [
@@ -23996,6 +23996,11 @@
           "is_confirmation_sent": {
             "default": false,
             "title": "Is Confirmation Sent",
+            "type": "boolean"
+          },
+          "is_recording_declined": {
+            "default": false,
+            "title": "Is Recording Declined",
             "type": "boolean"
           },
           "outcome": {

@@ -33,10 +33,33 @@ def test_identifiers_become_placeholders(said: str, kept: str) -> None:
         "A table for 4 on 2026-10-03 at 19:30.",
         "It costs 45 GEL, room 204, for 3 nights.",
         "Saturday at 8, please, by the window.",
+        "Book for 25.10.2026 at 20:00 for 4.",
+        "On 25/10/2026 or 2026.10.26, please.",
+        "The banquet costs 1 500 000 som.",
+        "Total 1500000 UZS for the hall.",
+        "Банкет стоит 2 400 000 сум.",
+        "It is $ 1,250,000 all in.",
     ],
 )
 def test_what_was_agreed_stays(said: str) -> None:
     assert redact_call_text(said) == said
+
+
+@pytest.mark.parametrize(
+    ("said", "kept"),
+    [
+        # Not a date: no such month.
+        ("Call 25.13.2026 now", "Call [phone] now"),
+        # A phone number said before a price stays a phone number.
+        ("Ring +998 90 123 45 67 UZS", "Ring [phone] UZS"),
+        (
+            "Number 0599123456, the deposit is 50 GEL",
+            "Number [phone], the deposit is 50 GEL",
+        ),
+    ],
+)
+def test_numbers_that_only_look_like_dates_or_prices_go(said: str, kept: str) -> None:
+    assert redact_call_text(said) == kept
 
 
 def test_only_a_declined_call_is_rendered_redacted() -> None:
@@ -62,6 +85,7 @@ def test_only_a_declined_call_is_rendered_redacted() -> None:
         ('{"en": "x", "memory": "Booked a table for 4."}', "Booked a table for 4."),
         ('{"memory": "Call back on +995 599 12 34 56."}', "Call back on [phone]."),
         ('{"memory": "Write to a@b.ge."}', "Write to [email]."),
+        ('{"memory": "Banquet on 25.10.2026."}', "Banquet on 25.10.2026."),
     ],
 )
 def test_the_memory_is_read_without_contact_details(answer: str, memory: str) -> None:

@@ -3,12 +3,14 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.assistant_assembly import AssistantToolCatalogContract
+from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+    ChannelRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import (
@@ -16,6 +18,7 @@ from app.contracts.voice_platform import (
     VoiceAgentProvisionerAdapterContract,
 )
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
@@ -31,10 +34,12 @@ from app.utilities.assembly.voice_agents import (
     VOICE_AGENT_REVISION,
     needs_voice_agent_resync,
 )
+from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.voice_service import find_voice_refusal
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
-# Each re-sync calls the voice platform a dozen times: a run sets up at most
-# this many agents, and the next run goes on.
+# Each re-sync calls the voice platform a dozen times: a run tries at most
+# this many agents (set up or refused alike), and the next run goes on.
 MAX_AGENTS_PER_RUN: int = 50
 # An agent being published now is skipped; the next run takes it if needed.
 RESYNC_LOCK_WAIT: LockWaitSeconds = LockWaitSeconds(2)
@@ -49,14 +54,22 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
     decline_recording gets them without the owner publishing anew. The
     version then records the revision, and the next runs skip it.
 
+    Only an agent that serves calls now is set up again: the business is
+    live, its plan includes voice and its phone number is connected (the
+    conditions of the call-initiation webhook, `find_voice_refusal`). An
+    agent removed on purpose (a pause, a plan without voice, a disconnected
+    number) is never created anew; publishing or the next run after the
+    business serves calls again takes it.
+
     Each agent is set up under the agent's lock that publishing holds too,
     with the business and its live version read again inside it: a version
     published meanwhile is never overwritten by the one going out (a
     publish in progress makes this run skip the business). Nothing runs
-    while the voice platform is not configured on this server. A run sets
-    up at most MAX_AGENTS_PER_RUN agents; an agent the platform refused is
-    logged and tried again on the next run. The report counts the agents
-    set up.
+    while the voice platform is not configured on this server. A run tries
+    at most MAX_AGENTS_PER_RUN agents, refused ones included, so a voice
+    platform that fails costs a bounded number of calls; an agent the
+    platform refused is logged and tried again on the next run. The report
+    counts the agents set up.
     """
 
     def __init__(
@@ -64,6 +77,8 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
+        channel_repo: ChannelRepoContract,
+        plan_registry: PlanRegistryContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
         build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
         assistant_tool_catalog: AssistantToolCatalogContract,
@@ -73,6 +88,8 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._version_repo: AssistantVersionRepoContract = assistant_version_repo
+        self._channel_repo: ChannelRepoContract = channel_repo
+        self._plan_registry: PlanRegistryContract = plan_registry
         self._setup: VoiceAgentSetup = VoiceAgentSetup(
             business_profile_repo,
             voice_agent_provisioner,
@@ -88,13 +105,15 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
             return JobReport()
 
         synced: int = 0
+        attempted: int = 0
         for business in walk_businesses(self._business_repo):
-            if synced >= MAX_AGENTS_PER_RUN:
+            if attempted >= MAX_AGENTS_PER_RUN:
                 break
 
             if self._live_version(business) is None:
                 continue
 
+            attempted += 1
             try:
                 with self._locks.lock_agent(business.id, RESYNC_LOCK_WAIT):
                     synced += int(self._resync(business.id))
@@ -108,7 +127,10 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
     def _live_version(
         self, business: BusinessDocument
     ) -> AssistantVersionDocument | None:
-        """The business's live version when its agent needs a re-sync."""
+        """
+        The business's live version when its agent needs a re-sync and
+        serves calls now.
+        """
 
         if business.published_assistant_version_id is None:
             return None
@@ -119,7 +141,13 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
         if version is None or not needs_voice_agent_resync(version):
             return None
 
-        return version
+        refusal: str | None = find_voice_refusal(
+            business,
+            version,
+            self._plan_registry.get(business.plan_key),
+            find_business_channel(self._channel_repo, business.id, ChannelKind.PHONE),
+        )
+        return None if refusal is not None else version
 
     def _resync(self, business_id: BusinessId) -> bool:
         """Set the agent up again from the live version as stored now."""

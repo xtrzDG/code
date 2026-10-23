@@ -30,6 +30,7 @@ from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.deliveries.booleans import IsInboundPayloadDiscarded
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText, InboundErrorText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
@@ -92,7 +93,9 @@ class InboundAnswer(ImmutableDTO):
     """
     What the assistant made of a customer message: the reply to send (None
     when staff own the conversation) in its conversation, and the options
-    it offers to tap.
+    it offers to tap. `is_payload_discarded`: the event's stored payload is
+    cleared when it is closed (a finished-call report whose caller declined
+    the recording keeps no unredacted transcript in the inbox).
     """
 
     event: InboundEventDocument
@@ -100,6 +103,7 @@ class InboundAnswer(ImmutableDTO):
     text: MessageText | None = None
     is_handed_off: IsConversationHandedOff = False
     choices: ReplyChoices | None = None
+    is_payload_discarded: IsInboundPayloadDiscarded = False
 
 
 class InboundFailure(ImmutableDTO):

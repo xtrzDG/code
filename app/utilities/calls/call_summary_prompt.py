@@ -28,7 +28,6 @@ from app.utilities.channels.json_values import (
 from app.utilities.memory.conversation_summary_prompt import (
     read_conversation_summary,
 )
-from app.utilities.observability.trace_redaction import redact_contact_details
 
 CALL_SUMMARY_SYSTEM_PROMPT: str = (
     "You summarize phone calls between a business's AI phone assistant and a "
@@ -107,8 +106,8 @@ def render_transcript(
 def read_call_memory(answer: str | None) -> ConversationSummaryText | None:
     """
     The caller's memory the model wrote under "memory": one line of at most
-    300 characters, any phone number or e-mail address it slipped in taken
-    out; None when there is none.
+    300 characters, any phone, card or account number or e-mail address it
+    slipped in taken out (dates and prices stay); None when there is none.
     """
 
     parsed: JsonObject | None = read_answer_object(answer)
@@ -116,7 +115,7 @@ def read_call_memory(answer: str | None) -> ConversationSummaryText | None:
     if value is None:
         return None
 
-    return read_conversation_summary(redact_contact_details(value))
+    return read_conversation_summary(redact_call_text(value))
 
 
 def read_answer_object(answer: str | None) -> JsonObject | None:
