@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — wave 20 together: provider circuits, passkeys, call consent
+
+Spec: `387b41e1ed4fb535`
+
+The API description with the three entries below merged together (the
+providers' circuit breakers on the System page; passkeys, the
+second-factor reminder and device countries; recording consent, call
+memory and voice health). Each of those entries names the description of
+its own change alone; nothing else changed for clients. The separate
+database roles of this release (migration 1200) change no route.
+
 ## 2026-10-22 — the providers' circuit breakers on the System page
 
 Spec: `68667cd1d325dff4`
