@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
@@ -97,6 +97,14 @@ class KnowledgeItemRepository(
         return self._find_in_business(
             business_id, [field_equals(CORRECTION_OF_FIELD, message_id)]
         )
+
+    def update(
+        self,
+        business_id: BusinessId,
+        item_id: KnowledgeItemId,
+        change: Callable[[KnowledgeItemDocument], KnowledgeItemDocument | None],
+    ) -> KnowledgeItemDocument | None:
+        return self._modify_in_business(business_id, str(item_id), change)
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:
         self._remove(business_id, str(item_id))

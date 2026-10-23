@@ -3,6 +3,7 @@ from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.database_role_settings import DatabaseRoleSettings
+from app.schemas.configurations.embedding_settings import EmbeddingSettings
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
@@ -118,9 +119,8 @@ class AppSettings(ImmutableDTO):
     # Live updates LISTEN here when DATABASE_URL goes through a transaction
     # pooler (LIVE_EVENTS_DATABASE_URL, a direct session connection).
     live_events_database_url: DatabaseUrl | None = None
-    # The key ring (ENCRYPTION_KEYS, newest first, then ENCRYPTION_KEY): the
-    # current key encrypts and signs; the previous ones only decrypt and
-    # verify what they sealed until `rotate_encrypted_secrets` moved it.
+    # Key ring (ENCRYPTION_KEYS newest first, then ENCRYPTION_KEY): the current key
+    # seals; older ones only open what they sealed until `rotate_encrypted_secrets`.
     encryption_key: PlatformSecret | None = Field(default=None, repr=False)
     previous_encryption_keys: list[PlatformSecret] = Field(
         default_factory=list[PlatformSecret], repr=False
@@ -270,6 +270,7 @@ class AppSettings(ImmutableDTO):
     backup: BackupSettings = Field(default_factory=BackupSettings)
     # Voice notes and photos of customers (LLM_TRANSCRIBE_MODEL, MEDIA_MAX_*).
     media: MediaSettings = Field(default_factory=MediaSettings)
+    embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     # Grouped bursts, the turn deadline and model failover
     # (MESSAGE_COALESCE_SECONDS, CHAT_TURN_DEADLINE_SECONDS, LLM_FALLBACK_MODEL_ID).
     reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)

@@ -1,15 +1,19 @@
 """Lexical ranking of knowledge items without external models.
 
-Scores are technical floats used only for ordering. The concept's next step
-is pgvector embeddings; they will sit behind the same use-case contracts.
-How two tokens compare is described in `token_similarity`.
+Scores are technical floats used only for ordering. With an embeddings key
+the hybrid search (`hybrid_ranking`) adds the meaning of the query to these
+scores. How two tokens compare is described in `token_similarity`.
 """
 
 import math
 from collections.abc import Sequence
 
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.utilities.knowledge.ranking.indexed_item import IndexedItem, index_item
+from app.utilities.knowledge.ranking.indexed_item import (
+    IndexedItem,
+    index_item,
+    item_titles,
+)
 from app.utilities.knowledge.ranking.ranked_item import RankedItem, ranking_key
 from app.utilities.knowledge.ranking.token_similarity import (
     PREFIX_SIMILARITY,
@@ -39,7 +43,8 @@ def rank_knowledge_items(
 
     A query token counts once per item, in the field where it matches best;
     rare tokens weigh more (IDF over the given items); covering more query
-    tokens and containing the whole query in the title rank higher. Items
+    tokens and containing the whole query in the title (or an alias) rank
+    higher. Items
     written in one of `preferred_languages` (or their base language) get a
     small bonus.
     """
@@ -90,7 +95,10 @@ def rank_knowledge_items(
 
         coverage: float = matched_weight / total_query_weight
         score *= 0.5 + 0.5 * coverage
-        if contains_phrase(fold_words(indexed_item.item.title), folded_query):
+        if any(
+            contains_phrase(fold_words(title), folded_query)
+            for title in item_titles(indexed_item.item)
+        ):
             score *= PHRASE_BONUS
 
         if is_in_preferred_language(indexed_item.item, preferred):

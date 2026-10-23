@@ -57,6 +57,12 @@ class KnowledgePipelinesContainer(containers.DeclarativeContainer):
     search_knowledge_pipeline = orchestrator_pipeline(
         knowledge_orchestrators.search_knowledge_orchestrator
     )
+    suggest_knowledge_aliases_pipeline = orchestrator_pipeline(
+        knowledge_orchestrators.suggest_knowledge_aliases_orchestrator
+    )
+    index_knowledge_pipeline = orchestrator_pipeline(
+        knowledge_orchestrators.index_knowledge_orchestrator
+    )
 
     # --- Resources and schedule exceptions.
     list_resources_pipeline = orchestrator_pipeline(

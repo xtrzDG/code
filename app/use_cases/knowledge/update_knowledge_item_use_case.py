@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.knowledge_repositories import (
@@ -19,6 +20,7 @@ from app.use_cases.knowledge.performer_links import (
     check_item_performers,
     unlink_left_out_resources,
 )
+from app.use_cases.shared.knowledge_index_queue import queue_knowledge_index
 from app.utilities.knowledge.knowledge_item_patches import patch_knowledge_item
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 
@@ -42,6 +44,7 @@ class UpdateKnowledgeItemUseCase(
         resource_repo: ResourceRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         wall_clock: WallClock[Microseconds],
+        job_queue: JobQueueFacilitatorContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
@@ -50,6 +53,7 @@ class UpdateKnowledgeItemUseCase(
             niche_template_registry
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._job_queue: JobQueueFacilitatorContract = job_queue
 
     def run(self, input_data: UpdateKnowledgeItemCommand) -> KnowledgeItemDetails:
         business: BusinessDocument | None = self._business_repo.get(
@@ -78,6 +82,8 @@ class UpdateKnowledgeItemUseCase(
         )
         check_item_performers([updated], resources)
         self._knowledge_item_repo.save(updated)
+        # Its aliases and vector follow the edit in the worker.
+        queue_knowledge_index(self._job_queue, business.id)
         if input_data.patch.performer_resource_ids is not None:
             resources = unlink_left_out_resources(
                 self._resource_repo, updated, resources, now

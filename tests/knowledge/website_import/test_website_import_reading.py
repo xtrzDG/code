@@ -104,6 +104,7 @@ def test_drafts_are_never_published_until_confirmed() -> None:
             app_settings=ACCESS_SETTINGS,
         ),
         knowledge_item_repo=world.knowledge_item_repo,
+        job_queue=world.job_queue,
         wall_clock=world.wall_clock,
     )
     parking = next(draft for draft in drafts if draft.kind is KnowledgeItemKind.FAQ)
@@ -122,6 +123,9 @@ def test_drafts_are_never_published_until_confirmed() -> None:
     ]
     active = [draft for draft in drafts_of(world) if draft.is_active]
     assert [str(draft.title) for draft in active] == ["Do you have parking?"]
+    # The confirmed item is indexed in the background (aliases, embeddings).
+    assert world.job_queue.jobs[-1].name == "index_knowledge"
+    assert world.job_queue.jobs[-1].business_id == world.business.id
 
 
 def test_the_reader_gets_fenced_untrusted_text_without_hidden_parts() -> None:

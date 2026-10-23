@@ -32,6 +32,7 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeSearchInput,
     UpdateKnowledgeItemCommand,
 )
+from app.schemas.dto.knowledge_aliases import SuggestKnowledgeAliasesCommand
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.users.prefixed_id import UserId
@@ -64,6 +65,9 @@ def build_knowledge_router(
     search_knowledge_operator: OperatorContract[
         KnowledgeSearchRequest, KnowledgeSearchResult
     ],
+    suggest_aliases_operator: OperatorContract[
+        SuggestKnowledgeAliasesCommand, KnowledgeItemDetails
+    ],
 ) -> APIRouter:
     """
     Routes of the knowledge base: menu, services, rooms, packages, FAQ, rules.
@@ -73,7 +77,10 @@ def build_knowledge_router(
     default). GET .../knowledge pages newest first (`?limit=&cursor=`, with
     `kind` and `is_active` filters) and answers {items, next_cursor}.
     POST .../knowledge/search runs the same search as the assistant's
-    search_knowledge tool, so the owner can test it.
+    search_knowledge tool, so the owner can test it. POST
+    .../knowledge/{item_id}/aliases/suggest asks the model for the item's
+    title in the business's languages it has no alias in yet (stored as
+    suggestions to review; limited per business, 429 beyond).
     """
 
     router: APIRouter = APIRouter(
@@ -187,6 +194,25 @@ def build_knowledge_router(
                     item_id, KnowledgeItemId, "Knowledge item"
                 ),
                 patch=patch,
+                language=parse_language_parameter(language),
+            )
+        )
+
+    @router.post("/v1/businesses/{business_id}/knowledge/{item_id}/aliases/suggest")
+    def suggest_knowledge_aliases(
+        business_id: str,
+        item_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        language: Annotated[str | None, Query()] = None,
+    ) -> KnowledgeItemDetails:
+        business: BusinessDocument = authorize(user_id, business_id)
+        return suggest_aliases_operator.operate(
+            SuggestKnowledgeAliasesCommand(
+                user_id=user_id,
+                business_id=business.id,
+                item_id=parse_path_identifier(
+                    item_id, KnowledgeItemId, "Knowledge item"
+                ),
                 language=parse_language_parameter(language),
             )
         )

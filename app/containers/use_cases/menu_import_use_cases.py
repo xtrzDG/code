@@ -82,6 +82,7 @@ class MenuImportUseCasesContainer(containers.DeclarativeContainer):
         ConfirmImportedItemsUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     discard_import_batch_use_case: Factory[

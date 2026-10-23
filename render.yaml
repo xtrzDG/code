@@ -165,6 +165,9 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      # knowledge search by meaning (OpenAI EU embeddings); empty: by words
+      - key: EMBEDDINGS_API_KEY
+        sync: false
       # login codes by SMS
       - key: TWILIO_ACCOUNT_SID
         sync: false
@@ -422,6 +425,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: ANTHROPIC_API_KEY
+      - key: EMBEDDINGS_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: EMBEDDINGS_API_KEY
       - key: TWILIO_ACCOUNT_SID
         fromService:
           type: web
@@ -825,6 +833,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: ANTHROPIC_API_KEY
+      - key: EMBEDDINGS_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: EMBEDDINGS_API_KEY
       - key: TWILIO_ACCOUNT_SID
         fromService:
           type: web

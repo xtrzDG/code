@@ -84,6 +84,7 @@ from tests.assembly.deferred_use_case import DeferredUseCase
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
+from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
@@ -131,6 +132,8 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.autotest_case_repo,
             self.run_repo,
         )
+        # Assembly queues the knowledge's indexing (aliases, embeddings).
+        self.knowledge_index_jobs = RecordingJobQueue()
         self.assemble_use_case = AssembleAssistantVersionUseCase(
             authorize_business_access=authorize,
             business_repo=self.business_repo,
@@ -138,6 +141,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             build_assistant_draft=self.build_draft_use_case,
             version_details_transformer=details_transformer,
             app_settings=self.settings,
+            job_queue=self.knowledge_index_jobs,
             wall_clock=self.wall_clock,
         )
         self.list_versions_use_case = ListAssistantVersionsUseCase(

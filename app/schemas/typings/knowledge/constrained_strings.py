@@ -3,12 +3,51 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class EmbeddingModelId(BaseConstrainedTypedString):
+    """
+    Identifier of a text embedding model ("text-embedding-3-small"); the
+    vectors of different models are never compared.
+    """
+
+    min_length = 1
+    max_length = 100
+    pattern = r"^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+
+
+class KnowledgeAliasText(BaseConstrainedTypedString):
+    """
+    A knowledge item's title in another language of the business (or a
+    synonym customers use): "Is there parking?" for "Есть ли парковка?".
+    Searched like the title; an approved one is a starter question in its
+    language. One line without surrounding spaces: callers strip the raw
+    text before they build it.
+
+    Example:
+        alias = KnowledgeAliasText("Is there parking?")
+    """
+
+    min_length = 1
+    max_length = 200
+    pattern = r"^\S(?:[^\x00-\x1f\x7f]*\S)?\Z"
+
+
 class KnowledgeAttributeKey(BaseConstrainedTypedString):
     """Snake-case key of a structured knowledge attribute ("season", "floor")."""
 
     min_length = 1
     max_length = 64
     pattern = r"^[a-z][a-z0-9_]*$"
+
+
+class KnowledgeEmbeddingFingerprint(BaseConstrainedTypedString):
+    """
+    SHA-256 (hex) of the model and the text a knowledge item's embedding was
+    computed from: a stored vector whose fingerprint differs is stale.
+    """
+
+    min_length = 64
+    max_length = 64
+    pattern = r"^[0-9a-f]{64}$"
 
 
 class KnowledgeShareKey(BaseConstrainedTypedString):

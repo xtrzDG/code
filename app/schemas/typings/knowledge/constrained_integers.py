@@ -13,6 +13,13 @@ class BufferMinutes(BaseConstrainedTypedInt):
     le = 240
 
 
+class EmbeddingNeighbourLimit(BaseConstrainedTypedInt):
+    """How many nearest knowledge items one embedding search reads."""
+
+    ge = 1
+    le = 200
+
+
 class KnowledgeSearchLimit(BaseConstrainedTypedInt):
     """How many knowledge items a search returns (concept: up to 5)."""
 

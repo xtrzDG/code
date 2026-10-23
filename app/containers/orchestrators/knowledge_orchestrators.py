@@ -59,6 +59,12 @@ class KnowledgeOrchestratorsContainer(containers.DeclarativeContainer):
     search_knowledge_orchestrator = use_case_orchestrator(
         knowledge_use_cases.search_knowledge_use_case
     )
+    suggest_knowledge_aliases_orchestrator = use_case_orchestrator(
+        knowledge_use_cases.suggest_knowledge_aliases_use_case
+    )
+    index_knowledge_orchestrator = use_case_orchestrator(
+        knowledge_use_cases.index_knowledge_use_case
+    )
 
     # --- Resources and schedule exceptions.
     list_resources_orchestrator = use_case_orchestrator(

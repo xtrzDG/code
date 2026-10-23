@@ -54,7 +54,10 @@ jobs:
     timeout-minutes: 30
     services:
       postgres:
-        image: postgres:16-alpine
+        # Postgres 16 with pgvector: a production dump holds the knowledge
+        # embeddings (migration 1211) once an administrator enabled them,
+        # and `CREATE EXTENSION vector` must succeed on the restore target.
+        image: pgvector/pgvector:0.8.0-pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -134,6 +137,18 @@ jobs:
           uv run python -m app.gateways.cli.seed_load --businesses 4 \
             --messages 2000 --bookings 200 --visitors 10 --manifest "$RUNNER_TEMP/manifest.json"
 
+      # As docs/LAUNCH.md has an administrator do in production: the backup
+      # then holds the vector extension and a vector column, and the restore
+      # proves the scratch server can take them.
+      - name: Knowledge embeddings enabled, as in production
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql --host localhost --username postgres --dbname workshop \
+            --set ON_ERROR_STOP=1 --command "create extension if not exists vector;"
+          test "$(psql "$DATABASE_URL" --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command "select workshop.enable_knowledge_embeddings();")" = "t"
+
       - name: S3 bucket (a local moto server)
         run: |
           uv run moto_server --host 127.0.0.1 --port 9000 > "$RUNNER_TEMP/moto.log" 2>&1 &
@@ -185,7 +200,10 @@ jobs:
     environment: backup-drill
     services:
       postgres:
-        image: postgres:16-alpine
+        # Postgres 16 with pgvector: a production dump holds the knowledge
+        # embeddings (migration 1211) once an administrator enabled them,
+        # and `CREATE EXTENSION vector` must succeed on the restore target.
+        image: pgvector/pgvector:0.8.0-pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

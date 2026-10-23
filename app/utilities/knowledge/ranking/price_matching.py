@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.utilities.knowledge.ranking.character_ngrams import character_ngram_dice
+from app.utilities.knowledge.ranking.indexed_item import item_titles
 from app.utilities.knowledge.ranking.ranked_item import RankedItem, ranking_key
 from app.utilities.knowledge.ranking.token_similarity import (
     EXACT_SIMILARITY,
@@ -32,10 +33,12 @@ def rank_price_matches(
     """
     Fuzzy-match a dish, service or product name to item titles, best first.
 
-    The score mixes how much of the asked name is found in the title, how
-    much of the title is covered, and character n-gram overlap for typos.
-    Only matches scoring at least PRICE_MATCH_THRESHOLD are returned, so an
-    empty result honestly means "not in the price list".
+    An item is matched by its title and by each of its aliases (its title
+    in the business's other languages), by the best of them. The score
+    mixes how much of the asked name is found in the name, how much of the
+    name is covered, and character n-gram overlap for typos. Only matches
+    scoring at least PRICE_MATCH_THRESHOLD are returned, so an empty result
+    honestly means "not in the price list".
     """
 
     query_tokens: list[SearchToken] = unique_tokens(tokenize(item_name))
@@ -44,47 +47,59 @@ def rank_price_matches(
         return []
 
     similarity_cache: dict[tuple[str, str], float] = {}
-    titles_tokens: list[list[SearchToken]] = [
-        unique_tokens(tokenize(item.title)) for item in items
-    ]
+    names_of_items: list[list[str]] = [item_titles(item) for item in items]
     query_tokens = reweight_unmatched_tokens(
         query_tokens,
-        titles_tokens,
+        [unique_tokens(tokenize(name)) for names in names_of_items for name in names],
         similarity_cache,
     )
     ranked_items: list[RankedItem] = []
-    for item, title_tokens in zip(items, titles_tokens, strict=True):
-        if title_tokens == []:
-            continue
-
-        folded_title: str = fold_words(item.title)
-        if folded_title == folded_name:
-            ranked_items.append(RankedItem(item=item, score=EXACT_SIMILARITY))
-            continue
-
-        query_coverage: float = weighted_coverage(
-            query_tokens,
-            title_tokens,
-            similarity_cache,
+    for item, names in zip(items, names_of_items, strict=True):
+        score: float = max(
+            name_score(query_tokens, folded_name, name, similarity_cache)
+            for name in names
         )
-        title_coverage: float = weighted_coverage(
-            title_tokens,
-            query_tokens,
-            similarity_cache,
-        )
-        token_score: float = (
-            PRICE_QUERY_COVERAGE_SHARE * query_coverage
-            + (1.0 - PRICE_QUERY_COVERAGE_SHARE) * title_coverage
-        )
-        ngram_score: float = PRICE_NGRAM_SHARE * character_ngram_dice(
-            folded_name,
-            folded_title,
-        )
-        score: float = max(token_score, ngram_score)
         if score >= PRICE_MATCH_THRESHOLD:
             ranked_items.append(RankedItem(item=item, score=score))
 
     return sorted(ranked_items, key=ranking_key)
+
+
+def name_score(
+    query_tokens: list[SearchToken],
+    folded_name: str,
+    name: str,
+    similarity_cache: dict[tuple[str, str], float],
+) -> float:
+    """How well the asked name matches one name of an item (0 to 1)."""
+
+    name_tokens: list[SearchToken] = unique_tokens(tokenize(name))
+    if name_tokens == []:
+        return 0.0
+
+    folded_title: str = fold_words(name)
+    if folded_title == folded_name:
+        return EXACT_SIMILARITY
+
+    query_coverage: float = weighted_coverage(
+        query_tokens,
+        name_tokens,
+        similarity_cache,
+    )
+    title_coverage: float = weighted_coverage(
+        name_tokens,
+        query_tokens,
+        similarity_cache,
+    )
+    token_score: float = (
+        PRICE_QUERY_COVERAGE_SHARE * query_coverage
+        + (1.0 - PRICE_QUERY_COVERAGE_SHARE) * title_coverage
+    )
+    ngram_score: float = PRICE_NGRAM_SHARE * character_ngram_dice(
+        folded_name,
+        folded_title,
+    )
+    return max(token_score, ngram_score)
 
 
 def reweight_unmatched_tokens(

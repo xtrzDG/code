@@ -7,7 +7,11 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.businesses import Weekday
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
+from app.schemas.constants.knowledge import (
+    KnowledgeAliasStatus,
+    KnowledgeItemKind,
+    KnowledgeItemSource,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import (
     ChannelDocument,
@@ -15,7 +19,11 @@ from app.schemas.domain.channels import (
     WebChatAppearance,
     WhatsAppStaffTemplate,
 )
-from app.schemas.domain.knowledge import KnowledgeAttribute, KnowledgeItemDocument
+from app.schemas.domain.knowledge import (
+    KnowledgeAlias,
+    KnowledgeAttribute,
+    KnowledgeItemDocument,
+)
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
@@ -40,6 +48,7 @@ from app.schemas.typings.knowledge.constrained_integers import (
     ServiceDurationMinutes,
 )
 from app.schemas.typings.knowledge.constrained_strings import (
+    KnowledgeAliasText,
     KnowledgeAttributeKey,
     KnowledgeTag,
 )
@@ -154,7 +163,10 @@ def knowledge_item(
     attributes: Sequence[tuple[str, str]] = (),
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER,
     is_active: bool = True,
+    aliases: Sequence[tuple[str, str]] = (),
 ) -> KnowledgeItemDocument:
+    """`aliases`: (language, text) the owner approved, in other languages."""
+
     return KnowledgeItemDocument(
         business_id=business.id,
         kind=kind,
@@ -178,6 +190,14 @@ def knowledge_item(
             for key, value in attributes
         ],
         languages=[LanguageTag(str(business.owner_language))],
+        aliases=[
+            KnowledgeAlias(
+                language=LanguageTag(language),
+                text=KnowledgeAliasText(text),
+                status=KnowledgeAliasStatus.APPROVED,
+            )
+            for language, text in aliases
+        ],
         source=source,
         is_active=is_active,
         created_at=since,

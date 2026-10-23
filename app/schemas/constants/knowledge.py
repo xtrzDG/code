@@ -23,6 +23,18 @@ class KnowledgeItemSource(StrEnum):
     MENU_IMPORT = "menu_import"
 
 
+class KnowledgeAliasStatus(StrEnum):
+    """
+    Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+    by the model (searched, but never offered to visitors as a starter
+    question) or APPROVED by the owner (typed by them, or a suggestion
+    they accepted in the editor).
+    """
+
+    SUGGESTED = "suggested"
+    APPROVED = "approved"
+
+
 class AnswerCorrectionScope(StrEnum):
     """
     What an owner's correction of an assistant answer teaches: a question
@@ -34,3 +46,13 @@ class AnswerCorrectionScope(StrEnum):
     PRICE = "price"
     HOURS = "hours"
     RULE = "rule"
+
+
+MAX_ALIASES_PER_LANGUAGE: int = 3
+"""The most aliases a knowledge item has in one language of the business."""
+
+MAX_ALIASES_PER_ITEM: int = 30
+"""
+The most aliases one request may send for an item: three in each of a
+business's at most ten languages. A longer list is refused before it is read.
+"""

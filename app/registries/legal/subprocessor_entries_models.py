@@ -21,6 +21,22 @@ ANTHROPIC_QUALITY_ANNOUNCED_ON: SubprocessorChangeDate = SubprocessorChangeDate(
     "2026-10-06"
 )
 ANTHROPIC_QUALITY_FROM: SubprocessorChangeDate = SubprocessorChangeDate("2026-11-05")
+# The knowledge search's embeddings (EMBEDDINGS_API_KEY) are a new purpose of
+# OpenAI's EU project: announced on this day, in force 30 days later. Until
+# then a production deployment with the key refuses to start.
+OPENAI_EMBEDDINGS_ANNOUNCED_ON: SubprocessorChangeDate = SubprocessorChangeDate(
+    "2026-10-23"
+)
+OPENAI_EMBEDDINGS_FROM: SubprocessorChangeDate = SubprocessorChangeDate("2026-11-22")
+# The purposes of the original list (the embeddings came later).
+ORIGINAL_OPENAI_FLOWS: list[ProcessorFlow] = [
+    ProcessorFlow.ASSISTANT_REPLIES,
+    ProcessorFlow.CLAIM_VERIFIER,
+    ProcessorFlow.CONVERSATION_SUMMARIES,
+    ProcessorFlow.AUTOTEST_JUDGE,
+    ProcessorFlow.QUALITY_SAMPLING,
+    ProcessorFlow.TRANSCRIPTION,
+]
 
 MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
     SubprocessorEntry(
@@ -56,7 +72,7 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "ევროკავშირი (შენახვა ევროკავშირში)",
         ),
         client_modules=modules("openai"),
-        flows=list(ProcessorFlow),
+        flows=ORIGINAL_OPENAI_FLOWS,
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -177,5 +193,43 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         flows=[ProcessorFlow.QUALITY_SAMPLING],
         added_on=ANTHROPIC_QUALITY_FROM,
         addition_announced_on=ANTHROPIC_QUALITY_ANNOUNCED_ON,
+    ),
+    SubprocessorEntry(
+        key=key("openai_knowledge_search"),
+        name=texts(
+            "OpenAI (EU data residency project, knowledge search)",
+            "OpenAI (проект с хранением данных в ЕС, поиск по знаниям)",
+            "OpenAI (ევროკავშირში მონაცემების შენახვის პროექტი, ცოდნაში ძიება)",
+        ),
+        purpose=texts(
+            "Embeddings that let the assistant find the Client's knowledge by "
+            "meaning, across languages: the assistant's search queries and the "
+            "Client's knowledge items are turned into vectors",
+            "Векторные представления (эмбеддинги), с которыми помощник находит "
+            "знания Клиента по смыслу и на разных языках: поисковые запросы "
+            "помощника и элементы знаний Клиента превращаются в векторы",
+            "ვექტორული წარმოდგენები (ემბედინგები), რომლებითაც ასისტენტი "
+            "კლიენტის ცოდნას აზრით და სხვადასხვა ენაზე პოულობს: ასისტენტის "
+            "საძიებო მოთხოვნები და კლიენტის ცოდნის ერთეულები ვექტორებად "
+            "გარდაიქმნება",
+        ),
+        personal_data=texts(
+            "Search queries the assistant writes from customers' messages (they "
+            "may name people or describe their wishes), the Client's knowledge",
+            "Поисковые запросы, которые помощник пишет по сообщениям клиентов "
+            "(в них могут быть имена и пожелания), знания Клиента",
+            "საძიებო მოთხოვნები, რომლებსაც ასისტენტი მომხმარებლების "
+            "შეტყობინებებიდან წერს (შეიძლება შეიცავდეს სახელებს და სურვილებს), "
+            "კლიენტის ცოდნა",
+        ),
+        location=texts(
+            "EU (data residency)",
+            "ЕС (хранение в ЕС)",
+            "ევროკავშირი (შენახვა ევროკავშირში)",
+        ),
+        client_modules=modules("openai"),
+        flows=[ProcessorFlow.KNOWLEDGE_EMBEDDINGS],
+        added_on=OPENAI_EMBEDDINGS_FROM,
+        addition_announced_on=OPENAI_EMBEDDINGS_ANNOUNCED_ON,
     ),
 )

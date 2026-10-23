@@ -29,7 +29,8 @@ DAY_SECONDS: int = 24 * 60 * 60
 # the test chat is held at 30 model turns a minute. A menu is imported a
 # few times while an owner fixes it; ten an hour is plenty. Autotests run
 # after each change: twenty a day per business (one at a time, see
-# StartAutotestRunUseCase).
+# StartAutotestRunUseCase). Aliases of one item are asked for while an
+# owner edits it: sixty an hour per business (one cheap model call each).
 OWNER_ACTION_LIMITS: dict[OwnerAction, OwnerActionLimit] = {
     OwnerAction.TEST_CHAT: OwnerActionLimit(
         key_prefix="owner-test-chat",
@@ -51,5 +52,12 @@ OWNER_ACTION_LIMITS: dict[OwnerAction, OwnerActionLimit] = {
         limit=20,
         window_seconds=DAY_SECONDS,
         refusal="Autotests can run 20 times a day; try again tomorrow.",
+    ),
+    OwnerAction.ALIAS_SUGGESTION: OwnerActionLimit(
+        key_prefix="owner-alias-suggestion",
+        is_per_person=False,
+        limit=60,
+        window_seconds=HOUR_SECONDS,
+        refusal="Translations can be suggested 60 times an hour; try again later.",
     ),
 }

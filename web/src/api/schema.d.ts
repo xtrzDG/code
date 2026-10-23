@@ -3145,6 +3145,23 @@ export interface paths {
         patch: operations["knowledge_update_knowledge_item"];
         trace?: never;
     };
+    "/v1/businesses/{business_id}/knowledge/{item_id}/aliases/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suggest Knowledge Aliases */
+        post: operations["knowledge_suggest_knowledge_aliases"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/leads": {
         parameters: {
             query?: never;
@@ -12632,6 +12649,29 @@ export interface components {
             webhooks_renewed: number;
         };
         /**
+         * KnowledgeAlias
+         * @description The item's title in one more language of the business, or a synonym
+         *     customers use. Search matches it like the title; an APPROVED alias in
+         *     a visitor's language is a starter question of the website chat.
+         */
+        KnowledgeAlias: {
+            /** Language */
+            language: string;
+            /** @default approved */
+            status: components["schemas"]["KnowledgeAliasStatus"];
+            /** Text */
+            text: string;
+        };
+        /**
+         * KnowledgeAliasStatus
+         * @description Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+         *     by the model (searched, but never offered to visitors as a starter
+         *     question) or APPROVED by the owner (typed by them, or a suggestion
+         *     they accepted in the editor).
+         * @enum {string}
+         */
+        KnowledgeAliasStatus: "suggested" | "approved";
+        /**
          * KnowledgeAttribute
          * @description Structured attribute of a knowledge item ("season": "summer").
          */
@@ -12648,8 +12688,12 @@ export interface components {
          *     side (the item names them, or they list the item as a service or as
          *     their room type). `shared_key`: the brand's shared fact this item
          *     replaces in this location (None: an item of the location's own).
+         *     `aliases`: the item in the business's other languages, the owner's
+         *     (APPROVED) and the model's suggestions waiting for review (SUGGESTED).
          */
         KnowledgeItemDetails: {
+            /** Aliases */
+            aliases?: components["schemas"]["KnowledgeAlias"][];
             /** Attributes */
             attributes?: components["schemas"]["KnowledgeAttribute"][];
             /** Body */
@@ -38814,6 +38858,23 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Aliases */
+                    aliases?: {
+                        /** Language */
+                        language: string;
+                        /**
+                         * KnowledgeAliasStatus
+                         * @description Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+                         *     by the model (searched, but never offered to visitors as a starter
+                         *     question) or APPROVED by the owner (typed by them, or a suggestion
+                         *     they accepted in the editor).
+                         * @default approved
+                         * @enum {string}
+                         */
+                        status?: "suggested" | "approved";
+                        /** Text */
+                        text: string;
+                    }[];
                     /** Attributes */
                     attributes?: {
                         /** Key */
@@ -39786,6 +39847,23 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Aliases */
+                    aliases?: {
+                        /** Language */
+                        language: string;
+                        /**
+                         * KnowledgeAliasStatus
+                         * @description Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+                         *     by the model (searched, but never offered to visitors as a starter
+                         *     question) or APPROVED by the owner (typed by them, or a suggestion
+                         *     they accepted in the editor).
+                         * @default approved
+                         * @enum {string}
+                         */
+                        status?: "suggested" | "approved";
+                        /** Text */
+                        text: string;
+                    }[] | null;
                     /** Attributes */
                     attributes?: {
                         /** Key */
@@ -39828,6 +39906,96 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItemDetails"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    knowledge_suggest_knowledge_aliases: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -41812,6 +41980,23 @@ export interface operations {
                     }[];
                     /** Items */
                     items?: {
+                        /** Aliases */
+                        aliases?: {
+                            /** Language */
+                            language: string;
+                            /**
+                             * KnowledgeAliasStatus
+                             * @description Whether the owner has reviewed an alias of a knowledge item: SUGGESTED
+                             *     by the model (searched, but never offered to visitors as a starter
+                             *     question) or APPROVED by the owner (typed by them, or a suggestion
+                             *     they accepted in the editor).
+                             * @default approved
+                             * @enum {string}
+                             */
+                            status?: "suggested" | "approved";
+                            /** Text */
+                            text: string;
+                        }[];
                         /** Attributes */
                         attributes?: {
                             /** Key */

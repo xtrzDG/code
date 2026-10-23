@@ -95,6 +95,7 @@ def build_fixture(niche_key: NicheKey = NicheKey.RESTAURANT) -> RoutesFixture:
             update_knowledge_item_operator=operator(harness.update_knowledge_item),
             delete_knowledge_item_operator=operator(harness.delete_knowledge_item),
             search_knowledge_operator=operator(harness.search_knowledge),
+            suggest_aliases_operator=operator(harness.suggest_knowledge_aliases),
         )
     )
     http_application.include_router(

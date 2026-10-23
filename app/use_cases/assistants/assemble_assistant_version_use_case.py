@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -24,6 +25,7 @@ from app.schemas.dto.assistants.assistant_drafts import (
 from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
+from app.use_cases.shared.knowledge_index_queue import queue_knowledge_index
 from app.utilities.assembly.autotest_scenarios import (
     list_applicable_kinds,
     select_kinds,
@@ -45,7 +47,9 @@ class AssembleAssistantVersionUseCase(
     changed in place. A business still onboarding moves to TESTING.
 
     Autotest languages and kinds in the request are validated here, before
-    anything is stored, so a later autotest phase cannot fail on them.
+    anything is stored, so a later autotest phase cannot fail on them. The
+    knowledge is indexed in the background (`index_knowledge`: aliases in
+    the business's other languages, embeddings for the hybrid search).
     """
 
     def __init__(
@@ -62,6 +66,7 @@ class AssembleAssistantVersionUseCase(
             AssistantVersionDetails,
         ],
         app_settings: AppSettings,
+        job_queue: JobQueueFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -80,6 +85,7 @@ class AssembleAssistantVersionUseCase(
             AssistantVersionDetails,
         ] = version_details_transformer
         self._app_settings: AppSettings = app_settings
+        self._job_queue: JobQueueFacilitatorContract = job_queue
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(
@@ -122,6 +128,7 @@ class AssembleAssistantVersionUseCase(
             updated_at=now,
         )
         self._assistant_version_repo.save(version)
+        queue_knowledge_index(self._job_queue, business.id)
         if business.status is BusinessStatus.ONBOARDING:
 
             def start_testing(current: BusinessDocument) -> None:

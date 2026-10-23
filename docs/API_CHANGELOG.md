@@ -11,6 +11,44 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — knowledge aliases: bounded lists, trimmed texts
+
+Spec: `621b169c1d61b2da`
+
+- **Changed** `aliases` in the bodies of `POST /v1/businesses/{business_id}/knowledge`
+  and `PATCH .../knowledge/{item_id}` takes at most 30 entries (three in each
+  of a business's at most ten languages); a longer list is refused with
+  `422` before it is checked.
+- **Changed** `KnowledgeAlias.text` is one line without surrounding spaces or
+  control characters (`422` otherwise; the cabinet already trims what the
+  owner types).
+- **Changed** (behaviour) creating, editing or deleting a knowledge item
+  queues its business's `index_knowledge` job; a suggestion the owner
+  removed, or a language the model left out, is not asked for again until
+  the title changes (the owner's "Suggest" still asks).
+
+## 2026-10-22 — knowledge across languages: aliases and the hybrid search
+
+Spec: `75c270454bc5d4e7`
+
+- **Added** `aliases` on knowledge items (`KnowledgeItemDetails`, and in the
+  bodies of `POST /v1/businesses/{business_id}/knowledge` and `PATCH
+  .../knowledge/{item_id}`): the item's title in the business's other
+  languages, `{language, text, status}` with `status` `approved` (the
+  owner's) or `suggested` (the model's, waiting for review). A PATCH with
+  `aliases` replaces the whole list (at most three per language, only the
+  business's languages: `422` otherwise); without it a new title keeps the
+  approved aliases and drops the suggestions.
+- **Added** `POST /v1/businesses/{business_id}/knowledge/{item_id}/aliases/suggest`
+  (owners and staff): the model names the item in the business's languages
+  it has no alias in yet and answers the item with those suggestions;
+  limited to 60 calls an hour per business (`429` with `Retry-After`).
+- **Changed** (behaviour) `POST .../knowledge/search` and the assistant's
+  search find items by their aliases too and, with `EMBEDDINGS_API_KEY`, by
+  meaning across languages. Starter questions of the website chat and the
+  hosted page use the owner's approved aliases in the visitor's language.
+- **Added** schema `KnowledgeAlias` and enum `KnowledgeAliasStatus`.
+
 ## 2026-10-23 — wave 20 together: provider circuits, passkeys, call consent
 
 Spec: `387b41e1ed4fb535`

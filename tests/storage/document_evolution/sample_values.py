@@ -74,6 +74,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "JobName": "send_booking_reminders",
     "JobPeriodKey": "2026-09-21",
     "JobSerialKey": "business:business_42",
+    "KnowledgeAliasText": "Is there parking?",
     "KnowledgeAttributeKey": "spice_level",
     "KnowledgeShareKey": "parking",
     "KnowledgeTag": "signature",

@@ -100,6 +100,7 @@ describe("the item form", () => {
       performerIds: [],
       seasons: [],
       languages: ["ka"],
+      aliases: [],
       isActive: false,
     });
     expect(knowledgeFormFromItem({ kind: "menu_item", title: "Ramen", body: null, price_minor: 1200, duration_minutes: null }, "JPY").price).toBe("1200");
@@ -150,6 +151,7 @@ describe("the item form", () => {
       price_minor: 1850,
       duration_minutes: null,
       languages: ["ka"],
+      aliases: [],
       is_active: true,
     });
   });

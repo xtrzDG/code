@@ -1,14 +1,20 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.clients import ClientsContainer
+from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.knowledge_search_use_cases import (
+    KnowledgeSearchProviders,
+    build_knowledge_search_providers,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.knowledge import (
-    KnowledgeSearchRequest,
-    KnowledgeSearchResult,
     PriceLookupQuery,
     PriceLookupResult,
     SendLinkQuery,
@@ -57,7 +63,6 @@ from app.use_cases.knowledge.get_price_use_case import GetPriceUseCase
 from app.use_cases.knowledge.list_knowledge_items_use_case import (
     ListKnowledgeItemsUseCase,
 )
-from app.use_cases.knowledge.search_knowledge_use_case import SearchKnowledgeUseCase
 from app.use_cases.knowledge.send_link_use_case import SendLinkUseCase
 from app.use_cases.knowledge.update_knowledge_item_use_case import (
     UpdateKnowledgeItemUseCase,
@@ -91,6 +96,18 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    # Knowledge across languages: the search tool, aliases, indexing.
+    _search: KnowledgeSearchProviders = build_knowledge_search_providers(
+        adapters, clients, config, registries, repositories, time_provider, utilities
+    )
+    text_embedder = _search.text_embedder
+    embedding_store = _search.embedding_store
+    alias_suggester = _search.alias_suggester
 
     # --- Niche templates and the profile wizard.
     list_niche_templates_use_case: Factory[
@@ -174,6 +191,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        job_queue=facilitators.job_queue_facilitator,
     )
     get_knowledge_item_use_case: Factory[
         UseCaseContract[KnowledgeItemQuery, KnowledgeItemDetails]
@@ -202,12 +220,14 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        job_queue=facilitators.job_queue_facilitator,
     )
     delete_knowledge_item_use_case: Factory[
         UseCaseContract[DeleteKnowledgeItemCommand, KnowledgeItemDeletion]
     ] = Factory(
         DeleteKnowledgeItemUseCase,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        job_queue=facilitators.job_queue_facilitator,
     )
     upsert_knowledge_items_use_case: Factory[
         UseCaseContract[UpsertKnowledgeItemsCommand, KnowledgeItemList]
@@ -219,14 +239,10 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    search_knowledge_use_case: Factory[
-        UseCaseContract[KnowledgeSearchRequest, KnowledgeSearchResult]
-    ] = Factory(
-        SearchKnowledgeUseCase,
-        business_repo=repositories.business_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
-    )
+    # Hybrid with EMBEDDINGS_API_KEY, lexical without.
+    search_knowledge_use_case = _search.search_knowledge_use_case
+    suggest_knowledge_aliases_use_case = _search.suggest_knowledge_aliases_use_case
+    index_knowledge_use_case = _search.index_knowledge_use_case
     get_price_use_case: Factory[
         UseCaseContract[PriceLookupQuery, PriceLookupResult]
     ] = Factory(

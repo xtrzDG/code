@@ -23,6 +23,11 @@ import { assistantChecksRu } from "./content/assistantChecks.ru";
 import { assistantComparisonEn } from "./content/assistantComparison.en";
 import { assistantComparisonKa } from "./content/assistantComparison.ka";
 import { assistantComparisonRu } from "./content/assistantComparison.ru";
+import { knowledgeAliasesEn } from "./content/knowledgeAliases.en";
+import { knowledgeAliasesRu } from "./content/knowledgeAliases.ru";
+import { knowledgeAliasesKa } from "./content/knowledgeAliases.ka";
+import { knowledgeAliasesHe } from "./content/knowledgeAliases.he";
+import { knowledgeAliasesDe } from "./content/knowledgeAliases.de";
 import { knowledgeEn } from "./content/knowledge.en";
 import { knowledgeKa } from "./content/knowledge.ka";
 import { knowledgeRu } from "./content/knowledge.ru";
@@ -53,26 +58,26 @@ import { knowledgeWebsiteHe } from "./content/knowledgeWebsite.he";
 import { knowledgeWebsiteDe } from "./content/knowledgeWebsite.de";
 
 export const contentEn = {
-  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn, ...knowledgeOfferEn },
+  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn, ...knowledgeOfferEn, ...knowledgeAliasesEn },
   assistant: { ...assistantEn, ...assistantChecksEn, ...assistantComparisonEn, ...assistantChatEn },
 } as const;
 
 export const contentRu: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu, ...knowledgeOfferRu },
+  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu, ...knowledgeOfferRu, ...knowledgeAliasesRu },
   assistant: { ...assistantRu, ...assistantChecksRu, ...assistantComparisonRu, ...assistantChatRu },
 };
 
 export const contentKa: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa, ...knowledgeOfferKa },
+  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa, ...knowledgeOfferKa, ...knowledgeAliasesKa },
   assistant: { ...assistantKa, ...assistantChecksKa, ...assistantComparisonKa, ...assistantChatKa },
 };
 
 export const contentHe: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeHe, ...knowledgeResourcesHe, ...knowledgeWebsiteHe, ...knowledgeOfferHe },
+  knowledge: { ...knowledgeHe, ...knowledgeResourcesHe, ...knowledgeWebsiteHe, ...knowledgeOfferHe, ...knowledgeAliasesHe },
   assistant: { ...assistantHe, ...assistantChecksHe, ...assistantComparisonHe, ...assistantChatHe },
 };
 
 export const contentDe: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeDe, ...knowledgeResourcesDe, ...knowledgeWebsiteDe, ...knowledgeOfferDe },
+  knowledge: { ...knowledgeDe, ...knowledgeResourcesDe, ...knowledgeWebsiteDe, ...knowledgeOfferDe, ...knowledgeAliasesDe },
   assistant: { ...assistantDe, ...assistantChecksDe, ...assistantComparisonDe, ...assistantChatDe },
 };

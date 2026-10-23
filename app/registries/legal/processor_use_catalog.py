@@ -89,4 +89,17 @@ PROCESSOR_USES: tuple[ProcessorUse, ...] = (
             "Customers' voice notes are turned into text"
         ),
     ),
+    ProcessorUse(
+        flow=ProcessorFlow.KNOWLEDGE_EMBEDDINGS,
+        provider_settings=settings("EMBEDDINGS_API_KEY", "EMBEDDINGS_MODEL_ID"),
+        data_categories=[
+            ProcessorDataCategory.CUSTOMER_MESSAGES,
+            ProcessorDataCategory.BUSINESS_KNOWLEDGE,
+        ],
+        description=ProcessorUseDescription(
+            "The knowledge search compares the meaning of the assistant's "
+            "search queries (written from customers' messages) with the "
+            "business's knowledge"
+        ),
+    ),
 )

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.knowledge import KnowledgeItemSource
@@ -14,6 +15,7 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
+from app.use_cases.shared.knowledge_index_queue import queue_knowledge_index
 from app.utilities.knowledge.imported_item_views import build_knowledge_item_view
 
 
@@ -24,6 +26,8 @@ class ConfirmImportedItemsUseCase(
     Activate the imported menu lines the owner checked, so the assistant may
     use them. Every id must be an imported item of this business; nothing is
     activated when one is not. Confirming an active item again is harmless.
+    Newly confirmed items are indexed in the background (`index_knowledge`:
+    aliases in the business's other languages, embeddings).
     """
 
     def __init__(
@@ -32,12 +36,14 @@ class ConfirmImportedItemsUseCase(
             BusinessAccessRequest, BusinessDocument
         ],
         knowledge_item_repo: KnowledgeItemRepoContract,
+        job_queue: JobQueueFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._job_queue: JobQueueFacilitatorContract = job_queue
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(
@@ -68,6 +74,7 @@ class ConfirmImportedItemsUseCase(
             items.append(item)
 
         now: Microseconds = self._wall_clock.now_unix()
+        confirmed: int = 0
         for item in items:
             if not item.is_active or item.import_batch_id is not None:
                 # A confirmed item no longer belongs to its import's drafts,
@@ -76,6 +83,10 @@ class ConfirmImportedItemsUseCase(
                 item.import_batch_id = None
                 item.updated_at = now
                 self._knowledge_item_repo.save(item)
+                confirmed += 1
+
+        if confirmed > 0:
+            queue_knowledge_index(self._job_queue, business.id)
 
         return ConfirmImportedItemsResult(
             business_id=business.id,

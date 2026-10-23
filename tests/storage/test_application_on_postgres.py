@@ -87,10 +87,11 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
     # autotests the worker played (ka, ru, en): pass^k plays each booking
     # scenario twice.
     assert stored["bookings"] == 7
-    # The autotest run, the safety job of each widget message (they find
-    # their message answered), the staff notification of the booking and
-    # the summary of the customer's conversation, due in two hours.
-    assert stored["queued_jobs"] == 5
+    # The autotest run, the knowledge index of the assembled version, the
+    # safety job of each widget message (they find their message answered),
+    # the staff notification of the booking and the summary of the
+    # customer's conversation, due in two hours.
+    assert stored["queued_jobs"] == 6
     assert stored["inbound_events"] == 2
     assert stored["outbound_messages"] == 1
     assert stored["contacts"] >= 1

@@ -136,6 +136,13 @@ jobs:
             sudo apt-get install --yes --no-install-recommends postgresql-16
           fi
           "$POSTGRES_BIN_DIRECTORY/postgres" --version
+          # pgvector for the knowledge embeddings (migration 1211); the
+          # tests of its store skip without it, so check it is there.
+          if [ ! -f /usr/share/postgresql/16/extension/vector.control ]; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-16-pgvector
+          fi
+          test -f /usr/share/postgresql/16/extension/vector.control
 
       # Backups must open with the age tool (tests/backups/test_age_cli_interop.py);
       # the invoice and receipt PDFs (WeasyPrint) lay text out with Pango.

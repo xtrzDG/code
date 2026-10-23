@@ -34,12 +34,13 @@ class OwnerAction(StrEnum):
     """
     A cabinet action that makes the platform pay a provider and is limited
     per person or per business: a test chat message, a menu import, an
-    autotest run.
+    autotest run, a request for an item's aliases in other languages.
     """
 
     TEST_CHAT = "test_chat"
     MENU_IMPORT = "menu_import"
     AUTOTEST_RUN = "autotest_run"
+    ALIAS_SUGGESTION = "alias_suggestion"
 
 
 class RequestLimitClass(StrEnum):

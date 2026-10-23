@@ -1,4 +1,9 @@
-"""The search tokens of one knowledge item, by field, with field weights."""
+"""
+The search tokens of one knowledge item, by field, with field weights. The
+item's aliases (its title in the business's other languages) are titles
+too: a Georgian question matches the Georgian alias of an English title as
+strongly as the title itself.
+"""
 
 from dataclasses import dataclass
 
@@ -36,10 +41,16 @@ def index_item(item: KnowledgeItemDocument) -> IndexedItem:
     )
     return IndexedItem(
         item=item,
-        title_tokens=unique_tokens(tokenize(item.title)),
+        title_tokens=unique_tokens(tokenize(" ".join(item_titles(item)))),
         tag_tokens=unique_tokens(
             tokenize(" ".join(tag.replace("_", " ") for tag in item.tags))
         ),
         attribute_tokens=unique_tokens(tokenize(attribute_text.replace("_", " "))),
         body_tokens=unique_tokens(tokenize(item.body or "")),
     )
+
+
+def item_titles(item: KnowledgeItemDocument) -> list[str]:
+    """The item's title and its aliases, every name it is searched by."""
+
+    return [str(item.title), *(str(alias.text) for alias in item.aliases)]

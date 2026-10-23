@@ -19,6 +19,7 @@ from app.use_cases.knowledge.website_import.start_website_import_use_case import
     IMPORT_WEBSITE_JOB,
 )
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
+from app.use_cases.shared.knowledge_index_queue import INDEX_KNOWLEDGE_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
     DISCARD_CALL_RECORDING_JOB,
@@ -69,6 +70,8 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             BUILD_BUSINESS_EXPORT_JOB: operators.privacy.run_business_export_operator,
             # A business's website read into knowledge drafts.
             IMPORT_WEBSITE_JOB: operators.knowledge.run_website_import_operator,
+            # Aliases in the business's languages and search vectors (1211).
+            INDEX_KNOWLEDGE_JOB: operators.knowledge.index_knowledge_operator,
             # Every stored secret sealed again with the current key.
             ROTATE_ENCRYPTED_SECRETS_JOB: (
                 operators.security.rotate_encrypted_secrets_operator
