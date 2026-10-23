@@ -9,8 +9,9 @@ Storage scope policy (fail-closed, docs/architecture.md "Данные"):
 """
 
 import typing
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 
+from dependency_injector import providers
 from fastapi import APIRouter
 from fastapi.routing import APIRoute
 from starlette.routing import BaseRoute
@@ -157,15 +158,27 @@ def test_business_routes_run_in_the_scope_of_their_business() -> None:
     assert unscoped == []
 
 
+def built_class(provider: object) -> object:
+    """
+    The class a provider builds: the one it declares, or, for a factory
+    method of a typed root (ADR 0010), the class of what it returns.
+    """
+
+    provided: object = getattr(provider, "cls", None)
+    declared: object = typing.get_origin(provided) or provided
+    if isinstance(declared, type) or not isinstance(provider, providers.Factory):
+        return declared
+
+    build = typing.cast(Callable[[], object], provider)
+    return type(build())
+
+
 def test_platform_wide_operators_are_the_reviewed_ones() -> None:
     operators = start_workshop().container.operators
     platform_wide: set[str] = set()
     for context, child in operators.providers.items():
         for name, provider in getattr(child, "providers", {}).items():
-            provided: object = getattr(provider, "cls", None)
-            if (
-                typing.get_origin(provided) or provided
-            ) is PlatformWidePipelineOperator:
+            if built_class(provider) is PlatformWidePipelineOperator:
                 platform_wide.add(f"{context}.{name}")
 
     assert platform_wide == set(PLATFORM_WIDE_OPERATORS)

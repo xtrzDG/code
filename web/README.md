@@ -798,7 +798,7 @@ the device, OS and browser versions and each step's result in the release's
 PR.
 
 Before you start: a deployment over HTTPS (a service worker and push need
-it) with `WEB_PUSH_VAPID_*` set (see the root README and `docs/LAUNCH.md`),
+it) with `WEB_PUSH_VAPID_*` set (see `docs/dev/environment.md` and `docs/LAUNCH.md`),
 a live assistant, a signed-in owner or staff member, and a second device or
 a desktop browser to play the customer on the hosted chat page
 (`/c/{address}`, Assistant → Channels → Share).

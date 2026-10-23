@@ -28,7 +28,7 @@ dev:
     wait
 
 # Every check CI runs on the code (backend and cabinet), fastest first.
-check: check-backend check-web
+check: check-backend duplication check-web
 
 # Lint, format, types, then tests with the 95 % coverage floor.
 check-backend:
@@ -60,6 +60,11 @@ test *args:
 architecture:
     uv run lint-imports
     uv run vulture
+
+# Copy-paste ratchet as CI runs it (.jscpd.json, docs/dev/code-health.md).
+duplication:
+    npx --yes jscpd@5.4.0 --config .jscpd.json --no-tips
+    uv run python -m scripts.check_duplication
 
 # Regenerate the API description, typed client and generated tables.
 gen:

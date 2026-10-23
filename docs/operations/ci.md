@@ -15,7 +15,7 @@ Everything starts at once except `coverage` (after every backend part),
 
 | Job | What it does | Waits for | Expected |
 | --- | --- | --- | ---: |
-| `backend-checks` | ruff, mypy, pyright, legal texts | — | ~2:15 |
+| `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
 | `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4) | pytest with coverage on four xdist workers, one part of a group each | — | ~4:15 (tests ~3:15) |
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
 | `web-build` | `npm ci`, `.next/cache` restored, `next build`, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |

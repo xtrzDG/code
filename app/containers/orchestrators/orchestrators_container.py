@@ -30,9 +30,6 @@ from app.containers.orchestrators.core_orchestrators_container import (
 from app.containers.orchestrators.customer_orchestrators import (
     CustomerOrchestratorsContainer,
 )
-from app.containers.orchestrators.feedback_orchestrators import (
-    FeedbackOrchestratorsContainer,
-)
 from app.containers.orchestrators.growth_orchestrators import (
     GrowthOrchestratorsContainer,
 )
@@ -180,10 +177,6 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         BookingLinkOrchestratorsContainer,
         booking_link_use_cases=CoreOrchestratorsContainer.use_cases.booking_links,
         utilities=CoreOrchestratorsContainer.utilities,
-    )
-    feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]
-        FeedbackOrchestratorsContainer,
-        feedback_use_cases=CoreOrchestratorsContainer.use_cases.feedback,
     )
     # The waitlist and the rebooking campaigns (1151), the deposits (1190).
     growth: GrowthOrchestratorsContainer = Container(  # type: ignore[assignment]

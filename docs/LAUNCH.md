@@ -4,10 +4,10 @@
 компьютере, поднять рабочую версию на Render в Европе (Франкфурт), завести
 внешние аккаунты и вписать их ключи. Названия переменных, адреса вебхуков и то,
 что происходит без ключа, взяты из репозитория: `.env.example`, `render.yaml`,
-`docker-compose.yml`, `README.md`, `web/README.md`, настроек приложения
+`docker-compose.yml`, `docs/dev/`, `web/README.md`, настроек приложения
 (`app/utilities/config_helpers/app_settings/`) и `docs/legal`. Полный
-список переменных с поведением по умолчанию — таблица «Окружение» в
-[`README.md`](../README.md#окружение); тест
+список переменных с поведением по умолчанию — таблица «Variables» в
+[`docs/dev/environment.md`](dev/environment.md); тест
 `tests/platform/test_environment_variables.py` не даёт ей разойтись с кодом.
 
 Два адреса встречаются в тексте постоянно:
@@ -463,7 +463,7 @@ Anthropic с `OPENAI_API_KEY`; судья другого семейства ст
 помнит вернувшихся клиентов (по умолчанию — `LLM_MODEL_ID`; подойдёт более
 дешёвая, например `gpt-5-nano`); `LLM_CHAT_EFFORT`,
 `LLM_JUDGE_EFFORT`, `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT`,
-`AUTOTEST_TURN_LIMIT` — значения по умолчанию в таблице «Окружение» `README.md`.
+`AUTOTEST_TURN_LIMIT` — значения по умолчанию в таблице `docs/dev/environment.md`.
 Другой `OPENAI_BASE_URL` — тоже в группе `workshop-backend`.
 
 **Голосовые сообщения и фото клиентов.** Голосовые из WhatsApp, Telegram,
@@ -1125,8 +1125,8 @@ Messenger и Instagram шаблонов не принимают: вне 24 ча�
 
 ### 4.10. Остальные настройки
 
-У остальных переменных разумные значения по умолчанию (таблица «Окружение» в
-`README.md`). На Render их задавайте в группе `workshop-backend`, которую читают и
+У остальных переменных разумные значения по умолчанию (таблица
+`docs/dev/environment.md`). На Render их задавайте в группе `workshop-backend`, которую читают и
 API, и воркер. Чаще всего могут понадобиться:
 
 - `RESTRICTED_COUNTRY_CODES` — страны, из которых нельзя войти по номеру и

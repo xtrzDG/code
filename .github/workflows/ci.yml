@@ -26,11 +26,14 @@ concurrency:
 env:
   GITLEAKS_VERSION: "8.30.1"
   GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  # jscpd's prebuilt Linux binary (the npm package jscpd-linux-x64-gnu).
+  JSCPD_VERSION: "5.4.0"
+  JSCPD_SHA256: "4c7c9ed9afa5dc02a929fd57958098eaef42081a52e2bd3f88cb490e350f9222"
   PIP_AUDIT_VERSION: "2.10.1"
 
 jobs:
   backend-checks:
-    name: Backend checks (ruff, mypy, pyright, legal texts)
+    name: Backend checks (ruff, mypy, pyright, legal texts, duplication)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -69,6 +72,20 @@ jobs:
         env:
           LEGAL_TEXTS_FINAL: ${{ vars.LEGAL_TEXTS_FINAL || 'false' }}
         run: uv run python -m scripts.check_legal_texts
+
+      # Copy-paste ratchet (docs/dev/code-health.md): jscpd fails when the
+      # duplicated share of app/, scripts/ and web/src/ rises above the
+      # threshold in .jscpd.json; the script fails on a clone of more than
+      # 20 lines that .jscpd-large-clones.json does not list.
+      - name: Duplication (jscpd)
+        run: |
+          archive="jscpd-linux-x64-gnu-${JSCPD_VERSION}.tgz"
+          curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
+            "https://registry.npmjs.org/jscpd-linux-x64-gnu/-/$archive"
+          echo "${JSCPD_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" package/bin/jscpd
+          "$RUNNER_TEMP/package/bin/jscpd" --config .jscpd.json --no-tips
+          uv run python -m scripts.check_duplication
 
   backend-tests:
     name: Backend tests (${{ matrix.group }} ${{ matrix.part }}/${{ matrix.parts }})

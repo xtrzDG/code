@@ -22,6 +22,7 @@ from app.transformers.notifications.reschedule_confirmation_transformer import (
 from app.transformers.notifications.staff_alert_brief_transformer import (
     StaffAlertBriefTransformer,
 )
+from app.use_cases.bookings.booking_status_transition import BookingStatusTransition
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
@@ -160,13 +161,13 @@ class OperationsBookingFactories(OperationsSeeding):
             wall_clock=self.clock.wall_clock,
         )
 
-    def update_booking(self) -> UpdateBookingUseCase:
-        return UpdateBookingUseCase(
+    def booking_status_transition(self) -> BookingStatusTransition:
+        return BookingStatusTransition(
             business_repo=self.business_repo,
             business_profile_repo=self.profile_repo,
+            resource_repo=self.resource_repo,
             schedule_exception_repo=self.exception_repo,
             booking_repo=self.booking_repo,
-            resource_repo=self.resource_repo,
             contact_repo=self.contact_repo,
             audit_log_repo=self.audit_repo,
             lock_registry=self.lock_registry,
@@ -177,19 +178,12 @@ class OperationsBookingFactories(OperationsSeeding):
             wall_clock=self.clock.wall_clock,
         )
 
-    def revert_booking_status(self) -> RevertBookingStatusUseCase:
-        return RevertBookingStatusUseCase(
-            business_repo=self.business_repo,
-            business_profile_repo=self.profile_repo,
-            resource_repo=self.resource_repo,
-            schedule_exception_repo=self.exception_repo,
-            booking_repo=self.booking_repo,
+    def update_booking(self) -> UpdateBookingUseCase:
+        return UpdateBookingUseCase(
+            transition=self.booking_status_transition(),
             contact_repo=self.contact_repo,
             audit_log_repo=self.audit_repo,
-            lock_registry=self.lock_registry,
-            calendar_sync=self.calendar_sync,
-            live_events=self.live_events,
-            growth=self.growth,
-            busy_times_repo=self.busy_times_repo,
-            wall_clock=self.clock.wall_clock,
         )
+
+    def revert_booking_status(self) -> RevertBookingStatusUseCase:
+        return RevertBookingStatusUseCase(transition=self.booking_status_transition())

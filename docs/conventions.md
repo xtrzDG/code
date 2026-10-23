@@ -209,3 +209,9 @@ a stored shape changes only by expand and contract
   (`vulture`, whitelist in `vulture_whitelist.py`) and the 300-line limit.
   CI also enforces at least 95 % line-and-branch coverage of `app/`
   (`uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`).
+- Duplication, dead code and untyped wiring are ratchets
+  (`docs/dev/code-health.md`): jscpd fails above the recorded duplicated
+  share and on a new clone of more than 20 lines (`just duplication`), the
+  vulture whitelist and the `# type: ignore` comments of `app/containers`
+  only shrink. Extract shared code into one helper instead of listing a
+  clone; wire a new context as a typed root (ADR 0010).

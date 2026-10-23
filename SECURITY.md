@@ -91,7 +91,8 @@ At run time:
 - Codes are not sent to premium-rate, shared-cost or satellite numbers;
   codes to new phones are capped per country, verified users have a budget
   of their own, a cap that trips alerts the platform admins, and risky
-  requests need a Cloudflare Turnstile check (README, "Защита входа").
+  requests need a Cloudflare Turnstile check
+  ([docs/dev/login-codes.md](docs/dev/login-codes.md#protection)).
 - The API sends `nosniff`, `Referrer-Policy`, `X-Frame-Options`,
   `frame-ancestors 'none'`, `no-store` on `/v1` and HSTS in production,
   serves no `/docs` or `/openapi.json` in production and refuses request

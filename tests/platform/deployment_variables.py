@@ -6,8 +6,8 @@ from tests.platform.environment_sources import read
 
 # Deployment-only: read when the image starts (docker/entrypoint.sh runs
 # uvicorn), not by the application. The Dockerfile, docker-compose.yml and
-# render.yaml set them, so README.md describes them and .env.example does
-# not list them.
+# render.yaml set them, so docs/dev/environment.md describes them and
+# .env.example does not list them.
 DEPLOYMENT_VARIABLES: frozenset[str] = frozenset(
     {
         # uvicorn --port; the Dockerfile sets 8000, Render sets it too.
