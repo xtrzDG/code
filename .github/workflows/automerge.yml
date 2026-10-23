@@ -7,9 +7,18 @@ name: Dependabot automerge
 # for a person. This runs from the default branch: no code of the pull
 # request is checked out or run, and the merge names the exact head commit
 # CI passed on, so a later push to the branch stops it.
+#
+# Branch protection requires checks of three workflows (CI, CodeQL, API
+# contract; .github/repository-settings.json), which finish in any order: the
+# job runs after each of them and merges only once no required check of the
+# head is pending, so the last one to finish merges. After the merge it
+# starts every workflow a push to main would have started, since a merge
+# made with this job's token pushes no event: CI (whose run on main
+# publishes the signed images deploy smoke verifies), CodeQL, Lighthouse
+# and the ZAP baseline, all checks Render's checksPass waits for.
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [CI, CodeQL, API contract]
     types: [completed]
 
 permissions:
@@ -30,10 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      # actions: write starts CI on the base branch after the merge.
+      # actions: write starts the push workflows of the base branch after
+      # the merge.
       actions: write
+      # checks and statuses: read tell which required checks are pending.
+      checks: read
       contents: write
       pull-requests: write
+      statuses: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,6 +82,14 @@ jobs:
             echo "::notice::#${pr} conflicts with its base: left for Dependabot's rebase."
             exit 0
           fi
+          # A required check of another workflow still running: that
+          # workflow's completion runs this job again, and it merges then.
+          if pending="$(gh pr checks "$pr" --required --json bucket \
+              --jq '[.[] | select(.bucket == "pending")] | length')" \
+              && [ "${pending:-0}" -gt 0 ]; then
+            echo "::notice::#${pr} waits for ${pending} required check(s): the last workflow to finish merges it."
+            exit 0
+          fi
           if gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.commit.message' \
               | uv run --no-project python -m scripts.dependabot_automerge; then
             base="$(gh pr view "$pr" --json baseRefName --jq '.baseRefName')"
@@ -84,6 +105,9 @@ jobs:
               esac
             fi
             # A merge made with this job's token starts no workflow on the
-            # base branch, so its new head would carry no CI: ask for it.
-            gh workflow run ci.yml --ref "$base"
+            # base branch, so its new head would carry no CI, no signed
+            # images and no scan: ask for every push workflow of main.
+            for name in ci.yml codeql.yml lighthouse.yml zap.yml; do
+              gh workflow run "$name" --ref "$base"
+            done
           fi

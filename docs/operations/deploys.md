@@ -12,7 +12,8 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
       │ merge
       ▼
     main ──► CI again, then publish-images (signed, with provenance);
-      │       zap.yml (DAST baseline of the running stack)
+      │       zap.yml (DAST baseline of the running stack); after a
+      │       Dependabot automerge, automerge.yml starts both itself
       │
       ├────► staging (render.staging.yaml)   deploys only when every GitHub
       │       check of the commit passed (autoDeployTrigger: checksPass)
@@ -51,7 +52,8 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
 
 ### Signed images
 
-CI publishes both images of every commit of `main` to ghcr.io
+CI publishes both images of every commit of `main` (pushed, or merged by
+`.github/workflows/automerge.yml`, which then starts CI on `main` itself) to ghcr.io
 (`assistant-workshop-backend` and `-web`, tagged with the full commit SHA)
 with SLSA build provenance and a keyless cosign signature (`.github/workflows/ci.yml`, job
 `publish-images`). Render builds its own images from the same commit, so
@@ -69,7 +71,14 @@ on `main` after review. Deploy smoke's `Signed images` job runs
 
 A commit pushed to `release` without passing CI on `main`, or images signed
 by another workflow or a fork, fail this job, and the promotion to
-`release` waits for it. The scan of the running stack (`.github/workflows/zap.yml`, SECURITY.md
+`release` waits for it. This catches mistakes, not a deliberate bypass: the
+job runs the deployed commit's own `.github/workflows/deploy-smoke.yml` and
+`scripts/verify_images.sh`, so a commit pushed straight to `release` could
+replace the check itself. Against intent the boundary is who may push to
+`release` at all: write access to the repository
+(`docs/security/access-review.md`).
+
+The scan of the running stack (`.github/workflows/zap.yml`, SECURITY.md
 "Dynamic scan") is a check of every commit of `main` as well, so
 `checksPass` holds a commit with an unreviewed Medium finding back from
 staging. The security contact is part of the smoke test: the cabinet's

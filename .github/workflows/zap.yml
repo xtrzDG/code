@@ -17,7 +17,10 @@ name: ZAP baseline
 #   - every read-only operation of /v1 (scripts/zap_api_definition.py) with
 #     the owner's token.
 # scripts/zap_gate.py then fails the job on any Medium or High finding that
-# .zap/rules.tsv has not reviewed (SECURITY.md, "Dynamic scan").
+# .zap/rules.tsv has not reviewed (SECURITY.md, "Dynamic scan"), and
+# scripts/zap_auth_check.py when the /v1 scan was not signed in. A commit
+# that automerge.yml merges pushes no event: automerge starts this workflow
+# on main itself.
 on:
   push:
     branches: [main]
@@ -94,6 +97,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/zap"
           cp .zap/rules.tsv "$RUNNER_TEMP/zap/rules.tsv"
+          cp scripts/zap_status_hook.py "$RUNNER_TEMP/zap/zap_status_hook.py"
           uv run --no-project python -m scripts.zap_api_definition web/openapi.json \
             --server http://localhost:8000 --business-id "$BUSINESS_ID" \
             > "$RUNNER_TEMP/zap/api-definition.json"
@@ -123,9 +127,11 @@ jobs:
           scan cabinet zap-baseline.py -t http://localhost:3000/ -m 3 || failed=1
           scan hosted-chat zap-baseline.py -t "http://localhost:3000/c/$SLUG" -j -m 2 || failed=1
           scan widget zap-baseline.py -t "http://localhost:8000/widget/demo?business_id=$BUSINESS_ID" -j -m 2 || failed=1
-          # ZAP adds the header to requests whose host name contains the site.
+          # ZAP adds the header to requests whose host name contains the site;
+          # the hook records every answer's status (api-statuses.json).
           ZAP_AUTH_HEADER_VALUE="Bearer $(cat "$RUNNER_TEMP/owner-token")" ZAP_AUTH_HEADER_SITE=localhost \
-            scan api zap-api-scan.py -t api-definition.json -f openapi -S || failed=1
+            scan api zap-api-scan.py -t api-definition.json -f openapi -S \
+            --hook=/zap/wrk/zap_status_hook.py || failed=1
           exit "$failed"
 
       - name: New Medium or High findings fail (reviewed rules in .zap/rules.tsv)
@@ -135,6 +141,14 @@ jobs:
           --rules .zap/rules.tsv --summary "$GITHUB_STEP_SUMMARY"
           "$RUNNER_TEMP/zap/cabinet.json" "$RUNNER_TEMP/zap/hosted-chat.json"
           "$RUNNER_TEMP/zap/widget.json" "$RUNNER_TEMP/zap/api.json"
+
+      # A scan whose bearer header never reached the API would pass on 401
+      # answers alone: the seeded business's routes must have answered 2xx.
+      - name: The /v1 scan was signed in as the seeded owner
+        if: ${{ !cancelled() && steps.seed.outcome == 'success' }}
+        run: >-
+          uv run --no-project python -m scripts.zap_auth_check
+          --summary "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/zap/api-statuses.json"
 
       - name: Keep the reports
         if: ${{ !cancelled() }}
@@ -147,6 +161,7 @@ jobs:
             ${{ runner.temp }}/zap/hosted-chat.json
             ${{ runner.temp }}/zap/widget.json
             ${{ runner.temp }}/zap/api.json
+            ${{ runner.temp }}/zap/api-statuses.json
           if-no-files-found: ignore
           retention-days: 14
 

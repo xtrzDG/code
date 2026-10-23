@@ -69,14 +69,24 @@ the floor of its part.
   `scripts/zap_gate.py` fails it on any Medium or High finding
   `.zap/rules.tsv` has not reviewed (SECURITY.md, "Dynamic scan"); the job
   summary lists every finding with the reason of each reviewed exception.
+  `scripts/zap_auth_check.py` fails it when the `/v1` scan was not signed
+  in (the seeded business's routes answered 401 instead of 2xx).
 - `repo-settings.yml` checks every morning that branch protection, private
   vulnerability reporting and Dependabot security updates are as
   `.github/repository-settings.json` expects (SECURITY.md, "Repository
-  settings"). The required checks there are job names of `ci.yml`,
-  `codeql.yml` and `api-contract.yml`: renaming a job means changing that
-  file and the branch protection together
-  (`tests/platform/test_supply_chain_workflows.py` fails until both
-  agree).
+  settings"). The required checks there are `CI passed (every gate)`
+  (the last job of `ci.yml`, which always runs and fails unless every other
+  CI job succeeded: a required job that was skipped because a job it needs
+  failed would count as passed) and the jobs of `codeql.yml` and
+  `api-contract.yml`: renaming a job means changing that file and the
+  branch protection together (`tests/platform/test_supply_chain_workflows.py`
+  and `tests/platform/test_release_paths.py` fail until both agree).
+- `automerge.yml` merges a green grouped Dependabot update after each of
+  the workflows that own a required check (CI, CodeQL, API contract) and
+  only once none of those checks is pending. Its merge, made with the
+  workflow's token, pushes no event, so it then starts every workflow a
+  push to `main` starts: CI (whose run on `main` publishes the signed
+  images deploy smoke verifies), CodeQL, Lighthouse and the ZAP baseline.
 
 ## Backend tests in parts
 

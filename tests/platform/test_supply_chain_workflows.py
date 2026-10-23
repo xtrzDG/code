@@ -68,7 +68,10 @@ def test_ci_publishes_attests_and_signs_both_images_on_main_only() -> None:
     job = workflow("ci.yml")["jobs"]["publish-images"]
 
     assert set(job["needs"]) >= GATES
-    assert job["if"] == "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+    assert job["if"] == (
+        "github.ref == 'refs/heads/main' && (github.event_name == 'push'"
+        " || github.event_name == 'workflow_dispatch')"
+    )
     assert job["permissions"]["id-token"] == "write"
     assert job["permissions"]["attestations"] == "write"
     assert job["permissions"]["packages"] == "write"
@@ -205,12 +208,7 @@ def test_the_required_checks_are_jobs_every_pull_request_runs() -> None:
                 checks |= rendered_names(job_id, cast(dict[str, Any], job))
 
     assert set(main["required_status_checks"]) <= checks
-    assert {f"End-to-end ({shard}/9)" for shard in range(1, 10)} <= set(
-        main["required_status_checks"]
-    )
-    assert (
-        "Backend coverage (every part, at least 95 %)" in main["required_status_checks"]
-    )
+    assert "CI passed (every gate)" in main["required_status_checks"]
     assert (
         main["pull_request_required"]
         and main["force_pushes_blocked"]

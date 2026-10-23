@@ -30,7 +30,9 @@ of this file. Anything not needed any more is removed the same day.
 ### GitHub
 
 - [ ] Organisation and repository members, outside collaborators and teams;
-      two-factor authentication required for everyone.
+      two-factor authentication required for everyone. Write access can push
+      to `release`, which production deploys, past every check of `main`
+      (deploy smoke verifies with the deployed commit's own scripts).
 - [ ] Branch protection on the default branch: pull requests only, the CI
       checks required, no force push or deletion; the daily
       `.github/workflows/repo-settings.yml` is green and its token

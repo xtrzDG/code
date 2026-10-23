@@ -463,15 +463,17 @@ jobs:
 
       # On main the images scanned above, not a rebuild of them, go on to be
       # published, attested and signed (job "publish-images"); a pull
-      # request publishes nothing.
+      # request publishes nothing. A run of main started by hand or by
+      # automerge.yml (a merge with its token pushes no event) publishes
+      # like a push does: every commit of main needs signed images.
       - name: Keep the scanned images for publishing
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: >-
           docker save --output "$RUNNER_TEMP/images.tar"
           assistant-workshop-backend:ci assistant-workshop-web:ci
 
       - name: Upload the scanned images
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: scanned-images
@@ -582,7 +584,30 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Main only, once every gate passed: the images the "images" job built and
+  # The one check of this workflow that branch protection requires
+  # (.github/repository-settings.json). GitHub counts a required check whose
+  # job was skipped as passed, and a job is skipped when a job it needs
+  # failed: requiring "Backend coverage" alone would let a red "Backend
+  # tests" part through. This job always runs and fails unless every gate
+  # succeeded, skipped or cancelled ones included.
+  ci-passed:
+    name: CI passed (every gate)
+    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Every gate succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null \
+            || { echo "::error::A gate of this run did not succeed."; exit 1; }
+
+  # Main only (a push, or a run automerge.yml or a person started on main),
+  # once every gate passed: the images the "images" job built and
   # scanned go to the GitHub container registry under the commit SHA, each
   # with SLSA build provenance (GitHub's attestation store and the registry)
   # and a keyless cosign signature (Sigstore, issued for this workflow's
@@ -592,7 +617,7 @@ jobs:
   publish-images:
     name: Images (publish, provenance, signature)
     needs: [backend-checks, coverage, web-checks, security, images, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -680,7 +705,7 @@ jobs:
 
   durations:
     name: CI job durations
-    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, publish-images]
+    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, ci-passed, publish-images]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

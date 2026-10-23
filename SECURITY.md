@@ -84,7 +84,9 @@ Every pull request runs (`.github/workflows/`):
 
 ### Signed images and build provenance
 
-On every push to `main`, after every gate passed, CI publishes the backend
+On every commit of `main` (a push, or the CI run `automerge.yml` starts
+after it merged a Dependabot group, since that merge pushes no event),
+after every gate passed, CI publishes the backend
 and cabinet images it built and scanned to ghcr.io under the commit SHA,
 attaches SLSA build provenance (`actions/attest-build-provenance`) and
 signs them with cosign, keyless: Sigstore certifies this workflow's GitHub
@@ -102,6 +104,12 @@ against the running docker compose stack on every push to `main`, weekly,
 and on pull requests that change the scan: the cabinet's public pages and
 sign-in, a business's hosted chat page (`/c/{slug}`), the website widget,
 and every read-only `/v1` operation with a seeded owner's bearer token.
+`automerge.yml` starts it for the commits it merges, like every other
+workflow a push to `main` starts. The `/v1` scan must prove it was signed
+in: a hook records every answer ZAP received (`scripts/zap_status_hook.py`)
+and `scripts/zap_auth_check.py` fails the job unless the seeded business's
+routes answered 2xx at least once and 401 for fewer than half of them, so a
+bearer header that never reached the API cannot pass on refusals alone.
 The job fails on every Medium or High finding that `.zap/rules.tsv` has not
 reviewed, and on any finding of a rule marked `FAIL` there (the security
 headers the cabinet and the API promise). A reviewed exception names its
@@ -121,10 +129,20 @@ Two settings this policy relies on live in GitHub, not in a file:
 - **Branch protection of `main`** (a classic rule or a ruleset): changes
   arrive only through pull requests, the CI, CodeQL and API contract
   checks must pass, force pushes and deleting the branch are blocked.
+  The CI check required is `CI passed (every gate)`, one job that always
+  runs and fails unless every other CI job succeeded: GitHub counts a
+  required check whose job was skipped as passed, and a job is skipped when
+  one it needs failed, so requiring e.g. `Backend coverage` alone would let
+  a red backend test part through.
   Approvals are not required while one maintainer reviews every change
   and Dependabot's grouped patch updates merge themselves
   (`automerge.yml`); raise `required_approving_review_count` when a second
-  maintainer joins.
+  maintainer joins. Automerge runs after each workflow that owns a required
+  check (CI, CodeQL, API contract) and merges only once none of the
+  required checks is pending, so the last of them to finish merges; adding
+  a required check of another workflow means adding that workflow to its
+  `workflow_run` list (`tests/platform/test_release_paths.py` fails until
+  both agree).
 
 `.github/workflows/repo-settings.yml` reads both every morning with
 `gh api`, together with Dependabot security updates, and fails when one is
