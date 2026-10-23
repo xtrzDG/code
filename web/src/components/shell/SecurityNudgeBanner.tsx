@@ -5,7 +5,9 @@
  * with a login code alone: turn on a second factor (a passkey or an
  * authenticator app) in Account → Security, or put the reminder away. Put
  * away, it comes back when the team grows past the owner. Hidden for staff
- * and once the owner has a second factor.
+ * and once the owner has a second factor. On a phone it keeps to its title
+ * and actions: a page's first card still starts in the top half of the
+ * screen (e2e/phone-layout.spec.ts).
  */
 
 import Link from "next/link";
@@ -47,14 +49,14 @@ export function SecurityNudgeBanner() {
       aria-label={t("securityNudge.title")}
       data-testid="security-nudge"
       data-shell-banner=""
-      className="mb-5 flex flex-wrap items-start gap-3 rounded-2xl border border-accent/30 bg-accent-soft/50 px-4 py-3 text-sm"
+      className="mb-3 flex flex-wrap items-start gap-x-3 gap-y-2 rounded-2xl border border-accent/30 bg-accent-soft/50 px-4 py-2.5 text-sm sm:mb-5 sm:gap-y-3 sm:py-3"
     >
       <IconShield className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
       <div className="min-w-0 flex-1 basis-60 space-y-1">
         <p id={titleId} className="font-medium text-ink">
           {t("securityNudge.title")}
         </p>
-        <p className="text-ink-muted">
+        <p className="hidden text-ink-muted sm:block">
           {t(nudge.data.reason === "team_grew" ? "securityNudge.teamGrew" : "securityNudge.description")}
         </p>
       </div>
