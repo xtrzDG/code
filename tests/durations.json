@@ -145,6 +145,7 @@
     "tests/analytics/test_record_product_event_facilitator.py": 0.01,
     "tests/analytics/test_telemetry_api.py": 16.75,
     "tests/architecture_policy/test_business_routes_are_scoped.py": 3.89,
+    "tests/architecture_policy/test_container_build_headroom.py": 6.64,
     "tests/architecture_policy/test_container_ignores_ratchet.py": 0.14,
     "tests/architecture_policy/test_customer_messages_go_through_the_outbox.py": 0.71,
     "tests/architecture_policy/test_dead_code.py": 6.64,

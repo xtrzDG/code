@@ -17,11 +17,14 @@ from app.containers.use_cases.use_cases_container import UseCasesContainer
 
 # Building AppContainer deep-copies the whole provider graph (how
 # dependency-injector instantiates a DeclarativeContainer), one Python frame
-# per edge of the deepest copy path: about 925 frames for this graph, too
-# close to CPython's default limit of 1000 once a server's or a test
-# runner's own frames sit below it. A process that builds the container gets
-# headroom; recursion stays bounded.
-CONTAINER_BUILD_RECURSION_LIMIT: int = 3000
+# per step of the deepest copy path. That path follows the copy order, which
+# string hashing changes from process to process: the graph needs about 2,600
+# to 2,900 frames (30 hash seeds measured), so the earlier 3,000 left a worker
+# started under runpy too little room now and then. A process that builds the
+# container gets more than three times the deepest path; recursion stays
+# bounded, and tests/architecture_policy/test_container_build_headroom.py
+# fails once the graph needs more than half of it.
+CONTAINER_BUILD_RECURSION_LIMIT: int = 10_000
 if sys.getrecursionlimit() < CONTAINER_BUILD_RECURSION_LIMIT:
     sys.setrecursionlimit(CONTAINER_BUILD_RECURSION_LIMIT)
 
