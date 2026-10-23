@@ -92,6 +92,8 @@ test.describe("on a phone", () => {
     expect(sent).toEqual({
       phone_number: "+15125550142",
       number_type: "local",
+      // The token of the offer the search gave: the server takes only that.
+      offer_token: "1767225600.AAAAAAAAAAAAAAAAAAAAAA",
       monthly_price: { amount_minor: 1200, currency_code: "EUR" },
       locality: "Austin",
     });
