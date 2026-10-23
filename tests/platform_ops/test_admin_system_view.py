@@ -37,6 +37,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.system.get_admin_system_use_case import (
     GetAdminSystemUseCase,
 )
+from app.utilities.jobs.live_lanes import live_lanes
 from tests.platform_ops.ops_documents import (
     DAY,
     HOUR,
@@ -228,7 +229,7 @@ def test_an_unreadable_database_size_leaves_the_rest() -> None:
     )
 
     assert view.database_bytes is None and view.tables == []
-    assert len(view.lanes) == len(JobLane)
+    assert [lane.lane for lane in view.lanes] == list(live_lanes())
 
 
 def test_only_platform_admins_see_the_page() -> None:

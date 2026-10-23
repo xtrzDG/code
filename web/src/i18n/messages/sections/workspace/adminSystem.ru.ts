@@ -154,6 +154,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       outbound: "Доставка",
       default: "Прочие задачи",
       autotests: "Автотесты",
+      ops: "Оповещения платформы",
     },
   },
   deadLetters: {

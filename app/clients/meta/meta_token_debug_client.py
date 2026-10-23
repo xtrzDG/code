@@ -4,7 +4,7 @@ from typed_time_provider import Microseconds
 from app.clients.meta.meta_graph_client import (
     DEFAULT_GRAPH_API_VERSION,
     META_GRAPH_BASE_URL,
-    REQUEST_TIMEOUT_SECONDS,
+    REQUEST_TIMEOUT,
 )
 from app.clients.meta.meta_graph_errors import build_graph_error
 from app.contracts.channel_clients import ProviderToken
@@ -40,7 +40,7 @@ class MetaTokenDebugClient(MetaTokenDebugClientContract):
     ) -> None:
         self._http_client: httpx.Client = httpx.Client(
             base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=REQUEST_TIMEOUT,
             transport=transport,
         )
 

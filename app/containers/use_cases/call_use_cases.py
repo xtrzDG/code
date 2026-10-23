@@ -184,7 +184,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
             ),
             sms=Factory(
                 TextBackSms,
-                sms_client=clients.twilio_messaging_client,
+                sms_client=adapters.guarded_sms_sender,
                 text_resolver=utilities.localized_text_resolver,
             ),
             live_events=facilitators.event_publisher,

@@ -145,6 +145,7 @@ export const adminSystemEn = {
       outbound: "Deliveries",
       default: "Other jobs",
       autotests: "Autotests",
+      ops: "Platform alerts",
     },
   },
   deadLetters: {

@@ -6,6 +6,9 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.contracts.health import WorkerHeartbeatRepoContract
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
+)
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import (
     UNKNOWN_HOST_NAME,
@@ -13,6 +16,7 @@ from app.gateways.worker.heartbeat_recorder import (
     current_host_name,
 )
 from app.schemas.constants.observability import PeriodicJobOutcome
+from app.schemas.constants.resilience import CircuitState
 from app.schemas.domain.jobs import WorkerHeartbeatDocument
 from app.schemas.dto.observability import JobCheckIn
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -25,6 +29,7 @@ from app.schemas.typings.platform.constrained_strings import (
     ReleaseVersion,
     WorkerHostName,
 )
+from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.platform.readiness_fakes import build_heartbeat_repo, heartbeat_at
@@ -36,6 +41,7 @@ from tests.platform.worker_fakes import (
     RecordingErrorReporter,
     build_job_stores,
 )
+from tests.resilience.test_circuit_breaker import Ticks
 
 SECOND: int = 1_000_000
 HOURLY: JobIntervalSeconds = JobIntervalSeconds(3600)
@@ -180,3 +186,36 @@ def test_the_host_name_falls_back_when_it_is_not_a_plain_name(
     monkeypatch.setattr(socket, "gethostname", lambda: "bad host!")
 
     assert current_host_name() == UNKNOWN_HOST_NAME
+
+
+def test_the_pulse_carries_the_circuit_breakers_and_when_one_opened() -> None:
+    clock = ControlledClock()
+    ticks = Ticks()
+    breaker = CircuitBreakerFacilitator(
+        ticks.clock(), known_circuits=[CircuitName("provider:telegram")]
+    )
+    for _ in range(5):
+        breaker.record_failure(CircuitName("provider:meta"))
+    ticks.advance(12)
+    repo = build_heartbeat_repo()
+    recorder = WorkerHeartbeatRecorder(
+        heartbeat_repo=repo,
+        storage_scope=StorageScopeContext(),
+        wall_clock=clock.wall_clock(),
+        release=ReleaseVersion("4718714"),
+        host_name=WorkerHostName("worker-1"),
+        circuit_breaker=breaker,
+    )
+
+    recorder.beat([])
+
+    pulse = repo.find_freshest()
+    assert pulse is not None
+    meta, telegram = pulse.circuits
+    assert (str(meta.circuit), meta.state) == ("provider:meta", CircuitState.OPEN)
+    assert int(pulse.beat_at) - int(meta.opened_at or 0) == 12 * SECOND
+    assert (str(telegram.circuit), telegram.state, telegram.opened_at) == (
+        "provider:telegram",
+        CircuitState.CLOSED,
+        None,
+    )

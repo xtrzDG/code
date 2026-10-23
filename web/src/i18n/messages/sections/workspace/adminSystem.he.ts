@@ -139,6 +139,7 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       outbound: "מסירות",
       default: "משימות אחרות",
       autotests: "בדיקות אוטומטיות",
+      ops: "התראות הפלטפורמה",
     },
   },
   deadLetters: {

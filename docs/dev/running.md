@@ -62,10 +62,14 @@ There may be several workers (processes, service instances, an embedded one
 next to a separate one, all on one Postgres): a job is taken from the queue
 with a lease (`FOR UPDATE SKIP LOCKED`), the worker extends the lease while
 the job runs, and another worker picks up a crashed worker's job once its
-lease ends. Each lane (`inbound`, `outbound`, `default`, `autotests`) has its
-own threads (`WORKER_LANE_CONCURRENCY`), so a long autotest run never delays
-reminders or answers to customers; one business's autotests run one at a
-time. Periodic jobs run in a thread of their own and once per period (a day,
+lease ends. Each lane (`inbound`, `outbound`, `default`, `autotests`, `ops`)
+has its own threads (`WORKER_LANE_CONCURRENCY`), so a long autotest run never
+delays reminders or answers to customers; one business's autotests run one at
+a time. Each sending provider (Meta, Telegram, the platform bot, Twilio, SMTP,
+Flitt) has its own circuit breaker, and one provider takes at most half of the
+`outbound` threads: a hanging provider does not hold up the others, and the
+platform's alerts go in their own `ops` lane
+(`docs/operations/runbooks/provider-circuits.md`). Periodic jobs run in a thread of their own and once per period (a day,
 an ISO week or an interval) across all workers, recorded in
 `periodic_job_runs`, so a restart does not repeat today's reminders and
 digests. Finished jobs are kept for 30 days; a platform admin sees dead ones

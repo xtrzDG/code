@@ -1,6 +1,8 @@
 import logging
+import math
 import threading
 from collections import deque
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from typed_time_provider import MonotonicClock, Nanoseconds
@@ -8,7 +10,12 @@ from typed_time_provider import MonotonicClock, Nanoseconds
 from app.contracts.resilience import CircuitBreakerContract
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.schemas.constants.resilience import CircuitState
-from app.schemas.dto.resilience import CircuitBreakerPolicy
+from app.schemas.dto.resilience import CircuitBreakerPolicy, CircuitSnapshot
+from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
+from app.schemas.typings.resilience.constrained_integers import (
+    CircuitFailureCount,
+    CircuitOpenAgeSeconds,
+)
 from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
@@ -37,7 +44,9 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
     goes through (half-open), and its success closes the circuit, its
     failure opens it again. Each process keeps its own breakers: a worker
     learns of an outage from its own calls within seconds. Thread-safe.
-    Each state change goes to /metrics (the circuit breaker state gauge).
+    Each state change goes to /metrics (the circuit breaker state gauge),
+    and `snapshot` tells the worker's pulse (GET /v1/admin/system) how each
+    circuit stands; `known_circuits` are listed from the start, closed.
     """
 
     def __init__(
@@ -45,6 +54,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
         monotonic_clock: MonotonicClock[Nanoseconds],
         policy: CircuitBreakerPolicy | None = None,
         metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
+        known_circuits: Sequence[CircuitName] = (),
     ) -> None:
         self._metrics: ServiceMetricsContract = metrics
         self._monotonic_clock: MonotonicClock[Nanoseconds] = monotonic_clock
@@ -53,6 +63,8 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
         )
         self._lock: threading.Lock = threading.Lock()
         self._circuits: dict[CircuitName, CircuitRecord] = {}
+        for circuit in known_circuits:
+            self._record(circuit)
 
     def allows_call(self, circuit: CircuitName) -> bool:
         now: int = self._now()
@@ -98,9 +110,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
                 return
 
             record.failures.append(now)
-            window_start: int = now - int(self._policy.window_seconds) * (
-                NANOSECONDS_PER_SECOND
-            )
+            window_start: int = now - self._window_nanoseconds()
             while record.failures and record.failures[0] < window_start:
                 record.failures.popleft()
 
@@ -116,6 +126,47 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
     def state(self, circuit: CircuitName) -> CircuitState:
         with self._lock:
             return self._record(circuit).state
+
+    def seconds_until_trial(self, circuit: CircuitName) -> RetryAfterSeconds | None:
+        now: int = self._now()
+        with self._lock:
+            record: CircuitRecord = self._record(circuit)
+            if record.state is not CircuitState.OPEN:
+                return None
+
+            remaining: int = record.opened_at + self._open_nanoseconds() - now
+            if remaining <= 0:
+                return None
+
+            return RetryAfterSeconds(
+                max(1, math.ceil(remaining / NANOSECONDS_PER_SECOND))
+            )
+
+    def snapshot(self) -> list[CircuitSnapshot]:
+        now: int = self._now()
+        window_start: int = now - self._window_nanoseconds()
+        with self._lock:
+            return [
+                CircuitSnapshot(
+                    circuit=circuit,
+                    state=record.state,
+                    recent_failures=CircuitFailureCount(
+                        sum(
+                            1
+                            for failed_at in record.failures
+                            if failed_at >= window_start
+                        )
+                    ),
+                    open_for_seconds=(
+                        None
+                        if record.state is CircuitState.CLOSED
+                        else CircuitOpenAgeSeconds(
+                            max(0, now - record.opened_at) // NANOSECONDS_PER_SECOND
+                        )
+                    ),
+                )
+                for circuit, record in sorted(self._circuits.items())
+            ]
 
     def _open(
         self, circuit: CircuitName, record: CircuitRecord, now: int, reason: str
@@ -140,6 +191,9 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
             self._metrics.set_circuit_state(circuit, record.state)
 
         return record
+
+    def _window_nanoseconds(self) -> int:
+        return int(self._policy.window_seconds) * NANOSECONDS_PER_SECOND
 
     def _open_nanoseconds(self) -> int:
         return int(self._policy.open_seconds) * NANOSECONDS_PER_SECOND

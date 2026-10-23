@@ -47,3 +47,5 @@ queued in the last hour that settled died, with at least 20 settled.
   fires at the next five-minute check and /status shows the messengers
   degraded; once Meta answers new replies go out and the alert resolves
   after the hour. (The dead replies stay dead letters: retry them here.)
+- The provider's circuit breaker and the outbound bulkheads: see
+  [provider-circuits](provider-circuits.md).

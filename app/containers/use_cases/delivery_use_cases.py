@@ -236,8 +236,9 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         push_sender=facilitators.push_notification_sender,
         usage_event_repo=repositories.usage_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
-        whatsapp_templates=adapters.whatsapp_channel_adapter,
+        whatsapp_templates=adapters.whatsapp_template_sender,
         billing_attachments=facilitators.billing_email_attachments,
+        bulkhead=adapters.outbound_bulkhead,
     )
     record_outbound_attempt_use_case: Factory[
         UseCaseContract[OutboundAttempt, OutboundMessageDocument | None]

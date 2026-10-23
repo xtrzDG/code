@@ -10,6 +10,9 @@ from app.facilitators.invoicing.billing_email_attachments_facilitator import (
 from app.facilitators.notifications.staff_notification_sender_facilitator import (
     StaffNotificationSenderFacilitator,
 )
+from app.facilitators.resilience.outbound_bulkhead_facilitator import (
+    OutboundBulkheadFacilitator,
+)
 from app.schemas.constants.deliveries import DeliveryFailureKind
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.invoicing import BillingDocumentKind
@@ -28,6 +31,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 )
 from app.schemas.typings.messaging.strings import EmailBodyText, EmailSubject
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
+from app.schemas.typings.resilience.constrained_integers import ProviderSlotCount
 from app.use_cases.channels.outbox.send_outbound_message_use_case import (
     SendOutboundMessageUseCase,
 )
@@ -107,6 +111,7 @@ def send_one(
         inbox.wall_clock,
         inbox.whatsapp_adapter,
         attachments,
+        OutboundBulkheadFacilitator(ProviderSlotCount(2)),
     )
     return mailer, attachments, send.run(queued).failure
 

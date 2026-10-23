@@ -11,11 +11,13 @@ import {
   largestTables,
   sortWorkers,
   tableName,
+  withCircuits,
   type AdminSystem,
   type AlertState,
   type MaintenanceRun,
   type WorkerPulse,
 } from "./system";
+import type { CircuitSummary } from "./circuits";
 
 const SECOND = 1_000_000;
 const DAY = 24 * 60 * 60 * SECOND;
@@ -63,7 +65,20 @@ function worker(overrides: Partial<WorkerPulse>): WorkerPulse {
     age_seconds: 4,
     is_stale: false,
     failing_jobs: [],
+    circuits: [],
     release: "4718714c0f2e",
+    ...overrides,
+  };
+}
+
+function circuit(overrides: Partial<CircuitSummary>): CircuitSummary {
+  return {
+    circuit: "provider:meta",
+    state: "closed",
+    workers_not_closed: 0,
+    workers_reporting: 2,
+    recent_failures: 0,
+    opened_at: null,
     ...overrides,
   };
 }
@@ -72,6 +87,7 @@ function system(overrides: Partial<AdminSystem> = {}): AdminSystem {
   return {
     checked_at: NOW,
     workers: [],
+    circuits: [],
     lanes: [],
     dead_jobs: [],
     channels_in_error: [],
@@ -192,9 +208,32 @@ describe("workers and attention", () => {
         { name: "process_inbound_message", count: 1 },
       ],
       channels_in_error_count: 4,
+      circuits: [circuit({ state: "open" }), circuit({ circuit: "provider:smtp", state: "half_open" }), circuit({})],
     });
 
     expect(attentionCount(system())).toBe(0);
-    expect(attentionCount(busy)).toBe(1 + 1 + 3 + 4);
+    expect(attentionCount(busy)).toBe(1 + 1 + 2 + 3 + 4);
+  });
+});
+
+describe("an API without circuit breakers", () => {
+  it("reads absent circuits as none, so the page and its count still work", () => {
+    const { circuits: _unused, workers, ...rest } = system({ workers: [worker({})] });
+    const old = {
+      ...rest,
+      workers: workers.map(({ circuits: _none, ...pulse }) => pulse),
+    };
+
+    const read = withCircuits(old);
+
+    expect(read.circuits).toEqual([]);
+    expect(read.workers.map((pulse) => pulse.circuits)).toEqual([[]]);
+    expect(attentionCount(read)).toBe(0);
+  });
+
+  it("keeps the circuits an API sends", () => {
+    const sent = system({ circuits: [circuit({ state: "open" })] });
+
+    expect(withCircuits(sent).circuits).toEqual(sent.circuits);
   });
 });

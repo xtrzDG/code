@@ -2,6 +2,7 @@ from typing import cast
 
 import httpx
 
+from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.telegram.telegram_bot_calls import call_bot_api
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
 from app.schemas.dto.channels.provider_profiles import (
@@ -34,7 +35,6 @@ from app.utilities.channels.json_values import (
 )
 
 TELEGRAM_API_BASE_URL: str = "https://api.telegram.org"
-REQUEST_TIMEOUT_SECONDS: float = 10.0
 CALLBACK_QUERY_UPDATE: str = "callback_query"
 # Customer messages and taps on the bot's inline buttons; edits and the
 # rest are not handled.
@@ -61,7 +61,7 @@ class TelegramBotClient(TelegramBotApiClientContract):
     ) -> None:
         self._http_client: httpx.Client = httpx.Client(
             base_url=base_url.rstrip("/"),
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=provider_timeout(),
             transport=transport,
         )
 

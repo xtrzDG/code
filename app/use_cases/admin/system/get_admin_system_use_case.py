@@ -31,6 +31,7 @@ from app.schemas.typings.monitoring.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.admin.alerts.alert_rules import PLATFORM_ALERT_RULES
+from app.use_cases.admin.system.circuit_views import circuit_summaries
 from app.use_cases.admin.system.system_views import (
     alert_views,
     channel_issue_view,
@@ -38,6 +39,7 @@ from app.use_cases.admin.system.system_views import (
     run_view,
     worker_view,
 )
+from app.utilities.jobs.live_lanes import live_lanes
 
 logger: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -50,8 +52,10 @@ CHANNELS_SHOWN: DocumentQueryLimit = DocumentQueryLimit(20)
 class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
     """
     GET /v1/admin/system: the whole platform on one page for a platform
-    admin. Worker pulses of the last day, each lane's waiting, scheduled,
-    running and dead jobs with the oldest wait, dead letters by job name,
+    admin. Worker pulses of the last day and the circuit breakers the live
+    ones report (a provider or model refused for now), each lane's waiting,
+    scheduled, running and dead jobs with the oldest wait, dead letters by
+    job name,
     channels in ERROR and Meta tokens running out within 14 days, the
     database's size by table, the last backup and restore drill, and the
     platform alerts that fire or resolved within a day.
@@ -115,6 +119,7 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
         return AdminSystemView(
             checked_at=now,
             workers=[worker_view(pulse, now) for pulse in pulses],
+            circuits=circuit_summaries(pulses, now),
             lanes=self._lanes(now),
             dead_jobs=self._health.count_dead_jobs_by_name(),
             channels_in_error=[
@@ -149,7 +154,9 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
             )
 
         lanes: list[LaneView] = []
-        for lane in JobLane:
+        # A lane behind a closed release gate holds no job, and the cabinet
+        # of the release before cannot name it.
+        for lane in live_lanes():
             due: int = int(self._health.count_due_jobs(lane, now))
             oldest = self._health.find_oldest_due_job(lane, now) if due else None
             lanes.append(

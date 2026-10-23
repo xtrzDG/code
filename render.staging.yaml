@@ -155,14 +155,14 @@ services:
           type: web
           name: workshop-staging-api
           envVarKey: DATABASE_URL_PLATFORM
-      # One worker serves every lane (no WORKER_LANES): 16 lane threads, the
+      # One worker serves every lane (no WORKER_LANES): 17 lane threads, the
       # periodic thread and the heartbeat, one tenant connection each at
       # most; the queue's claims and platform-wide jobs: 4 platform
       # connections.
       - key: THREADPOOL_SIZE
         value: "20"
       - key: DB_POOL_SIZE
-        value: "18"
+        value: "19"
       - key: DB_PLATFORM_POOL_SIZE
         value: "4"
       - key: LLM_MAX_CONCURRENCY

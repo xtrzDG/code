@@ -10,12 +10,14 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.platform.constrained_integers import WorkerLaneConcurrency
 
 # Customer messages first; autotest runs (hundreds of model calls each) and
-# other background work cannot take their threads.
+# other background work cannot take their threads. The platform alerts have
+# one thread of their own.
 DEFAULT_WORKER_LANE_CONCURRENCY: dict[JobLane, int] = {
     JobLane.INBOUND: 8,
     JobLane.OUTBOUND: 4,
     JobLane.DEFAULT: 2,
     JobLane.AUTOTESTS: 2,
+    JobLane.OPS: 1,
 }
 LANE_SEPARATOR: str = ","
 VALUE_SEPARATOR: str = "="
@@ -25,9 +27,10 @@ def read_worker_lane_concurrency(
     environment_variables: Mapping[str, str],
 ) -> dict[JobLane, WorkerLaneConcurrency]:
     """
-    WORKER_LANE_CONCURRENCY, e.g. "inbound=8,outbound=4,default=2,autotests=2"
-    (the default). Lanes left out keep their default; each value is 1 to 64
-    threads per worker process.
+    WORKER_LANE_CONCURRENCY, e.g.
+    "inbound=8,outbound=4,default=2,autotests=2,ops=1" (the default). Lanes
+    left out keep their default; each value is 1 to 64 threads per worker
+    process.
 
     Raises:
         ValidationFailedError: an unknown lane, a repeated lane, or a value

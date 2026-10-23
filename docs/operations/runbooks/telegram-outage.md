@@ -41,3 +41,5 @@ themselves may not arrive in the Telegram ops chat: keep
 ## Afterwards
 
 - Postmortem if it lasted over an hour or owners missed bookings.
+- The provider's circuit breaker and the outbound bulkheads: see
+  [provider-circuits](provider-circuits.md).

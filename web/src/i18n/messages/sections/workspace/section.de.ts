@@ -29,6 +29,7 @@ import { workspaceCommonDe } from "./common.de";
 import { customerMemoryDe } from "./customerMemory.de";
 import { dataExportsDe } from "./dataExports.de";
 import { dataTasksDe } from "./dataTasks.de";
+import { providerCircuitsDe } from "./providerCircuits.de";
 import { formFieldsDe } from "./formFields.de";
 import { loginOptionsDe } from "./loginOptions.de";
 import { notificationsDe } from "./notifications.de";
@@ -77,5 +78,6 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   widgetSites: widgetSitesDe,
   adminSpend: adminSpendDe,
   dataTasks: dataTasksDe,
+  providerCircuits: providerCircuitsDe,
   formFields: formFieldsDe,
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { IconPlus } from "@/components/icons";
 import { LiveStatus } from "@/components/shell/LiveStatus";
@@ -9,12 +9,13 @@ import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
 
 import type { CreateIncidentBody } from "../../_lib/incidentForm";
-import { attentionCount } from "../../_lib/system";
+import { attentionCount, withCircuits } from "../../_lib/system";
 import { useAdminSystem } from "../../_lib/useAdminSystem";
 import { useIncidents } from "../../_lib/useIncidents";
 import { AlertsCard } from "./AlertsCard";
 import { AnnouncementsCard } from "./AnnouncementsCard";
 import { ChannelsCard } from "./ChannelsCard";
+import { CircuitsCard } from "./CircuitsCard";
 import { DataTasksCard } from "./DataTasksCard";
 import { DeadLettersCard } from "./DeadLettersCard";
 import { ErrorBudgetCard } from "./ErrorBudgetCard";
@@ -25,8 +26,8 @@ import { LanesCard, WorkersCard } from "./WorkersAndQueues";
 
 /**
  * /admin/system: what on call looks at first (docs/operations/slo.md). The
- * platform alerts, worker pulses, queue lanes and dead letters, channels in
- * error and expiring tokens, the database's size and the backups, and the
+ * platform alerts, worker pulses and the providers' circuit breakers, queue
+ * lanes and dead letters, channels in error and expiring tokens, the database's size and the backups, and the
  * incident log with "Record incident". Every figure is an indexed count or
  * the database catalog; the page looks again every 30 seconds. The SLOs'
  * error budgets and the announcements of the public status page sit under
@@ -38,7 +39,7 @@ export function SystemScreen() {
   const system = useAdminSystem();
   const { incidents, record, isRecording, createError } = useIncidents();
   const [isRecordOpen, setRecordOpen] = useState(false);
-  const data = system.data;
+  const data = useMemo(() => (system.data ? withCircuits(system.data) : undefined), [system.data]);
   const attention = data ? attentionCount(data) : null;
 
   const recordIncident = async (body: CreateIncidentBody) => {
@@ -86,6 +87,7 @@ export function SystemScreen() {
           <AnnouncementsCard />
           {/* Full width: both tables have six columns. */}
           <WorkersCard workers={data.workers} />
+          <CircuitsCard circuits={data.circuits} />
           <LanesCard lanes={data.lanes} />
           <DeadLettersCard tallies={data.dead_jobs} />
           <DataTasksCard />

@@ -1,5 +1,6 @@
 import httpx
 
+from app.clients.http.provider_timeouts import provider_timeout
 from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.schemas.exceptions.application_errors import (
     DeliveryNotConfiguredError,
@@ -22,7 +23,6 @@ from app.utilities.channels.json_values import (
 )
 
 TWILIO_API_BASE_URL: str = "https://api.twilio.com"
-REQUEST_TIMEOUT_SECONDS: float = 10.0
 
 
 class TwilioMessagingClient(SmsMessagingClientContract):
@@ -59,7 +59,7 @@ class TwilioMessagingClient(SmsMessagingClientContract):
         )
         self._http_client: httpx.Client = httpx.Client(
             base_url=base_url.rstrip("/"),
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=provider_timeout(),
             transport=transport,
             auth=httpx.BasicAuth(str(account_sid), str(auth_token)),
         )

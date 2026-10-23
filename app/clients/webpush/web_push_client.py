@@ -5,6 +5,7 @@ from collections.abc import Callable
 import httpx
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.webpush.push_encryption import (
     decode_base64url,
     encode_base64url,
@@ -34,7 +35,6 @@ from app.schemas.typings.notifications.constrained_strings import (
 from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 from app.schemas.typings.platform.strings import PlatformSecret
 
-REQUEST_TIMEOUT_SECONDS: float = 10.0
 GONE_STATUSES: frozenset[int] = frozenset({403, 404, 410})
 # A Topic header is at most 32 base64url characters (RFC 8030, 5.4).
 TOPIC_DIGEST_BYTES: int = 24
@@ -73,7 +73,7 @@ class WebPushClient(WebPushClientContract):
         )
         self._salt_factory: Callable[[], bytes] = salt_factory
         self._http_client: httpx.Client = httpx.Client(
-            timeout=REQUEST_TIMEOUT_SECONDS, transport=transport
+            timeout=provider_timeout(), transport=transport
         )
 
     @property

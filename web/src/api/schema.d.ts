@@ -5757,9 +5757,11 @@ export interface components {
         };
         /**
          * AdminSystemView
-         * @description The platform at `checked_at`: workers, queue lanes and dead letters,
-         *     channels that need the team, database size by table (None without
-         *     Postgres), the last backup and restore drill, and the platform alerts.
+         * @description The platform at `checked_at`: workers and their circuit breakers
+         *     (`circuits`, across the live workers, those not closed first), queue
+         *     lanes and dead letters, channels that need the team, database size by
+         *     table (None without Postgres), the last backup and restore drill, and
+         *     the platform alerts.
          */
         AdminSystemView: {
             /** Alerts */
@@ -5770,6 +5772,8 @@ export interface components {
             channels_in_error_count: number;
             /** Checked At */
             checked_at: number;
+            /** Circuits */
+            circuits: components["schemas"]["CircuitSummaryView"][];
             /** Database Bytes */
             database_bytes?: number | null;
             /** Dead Jobs */
@@ -8669,6 +8673,34 @@ export interface components {
              * @default 0
              */
             win_back_sent: number;
+        };
+        /**
+         * CircuitState
+         * @description A circuit breaker's state: CLOSED lets calls through and counts their
+         *     failures; OPEN refuses calls until its wait is over; HALF_OPEN lets one
+         *     trial call through, whose outcome closes or opens the circuit again.
+         * @enum {string}
+         */
+        CircuitState: "closed" | "open" | "half_open";
+        /**
+         * CircuitSummaryView
+         * @description One circuit across the live workers (pulses not stale): the worst state
+         *     any of them reports (open, then half-open, then closed), how many of
+         *     them report it not closed out of how many report it, the failures they
+         *     counted within the window, and when the earliest of them opened.
+         */
+        CircuitSummaryView: {
+            /** Circuit */
+            circuit: string;
+            /** Opened At */
+            opened_at?: number | null;
+            /** Recent Failures */
+            recent_failures: number;
+            state: components["schemas"]["CircuitState"];
+            /** Workers Not Closed */
+            workers_not_closed: number;
+            /** Workers Reporting */
+            workers_reporting: number;
         };
         /**
          * ClaimFinding
@@ -12313,10 +12345,13 @@ export interface components {
          * JobLane
          * @description Worker lane of a queued job. Each lane has its own threads in every
          *     worker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up
-         *     a customer message or a notification.
+         *     a customer message or a notification. OPS carries the platform alerts
+         *     on a thread of their own, so the alerts of a provider outage never wait
+         *     behind the sends that outage holds up (behind the release gate
+         *     `ops_lane` until the next release: until then they use OUTBOUND).
          * @enum {string}
          */
-        JobLane: "inbound" | "outbound" | "default" | "autotests";
+        JobLane: "inbound" | "outbound" | "default" | "autotests" | "ops";
         /**
          * JudgeCriterion
          * @description The five things the judge scores (concept section 11).
@@ -18342,16 +18377,34 @@ export interface components {
             title: string;
         };
         /**
+         * WorkerCircuitView
+         * @description One circuit breaker of a worker process at its last pulse: a provider
+         *     the platform sends through (`provider:meta`, ...) or a language model
+         *     (`openai:gpt-5-mini`), the failures a closed circuit counted within its
+         *     window, and when a circuit that is not closed opened.
+         */
+        WorkerCircuitView: {
+            /** Circuit */
+            circuit: string;
+            /** Opened At */
+            opened_at?: number | null;
+            /** Recent Failures */
+            recent_failures: number;
+            state: components["schemas"]["CircuitState"];
+        };
+        /**
          * WorkerPulseView
          * @description One worker process that beat within the last day: its build, since when
-         *     it runs, how old its last pulse is (stale after five minutes) and the
-         *     periodic jobs whose last run in it failed.
+         *     it runs, how old its last pulse is (stale after five minutes), the
+         *     periodic jobs whose last run in it failed, and its circuit breakers.
          */
         WorkerPulseView: {
             /** Age Seconds */
             age_seconds: number;
             /** Beat At */
             beat_at: number;
+            /** Circuits */
+            circuits: components["schemas"]["WorkerCircuitView"][];
             /** Failing Jobs */
             failing_jobs: string[];
             /** Host Name */

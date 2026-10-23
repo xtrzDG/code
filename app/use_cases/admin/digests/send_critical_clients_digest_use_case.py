@@ -15,7 +15,6 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.constants.client_health import AdminDigestKind, ClientHealthStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
-from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.client_health_changes import (
     AdminDigestStateDocument,
     ClientHealthChangeDocument,
@@ -33,6 +32,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     recipient_serial_key,
 )
 from app.use_cases.admin.digests.critical_digest_texts import compose_critical_digest
+from app.utilities.jobs.platform_alert_lane import platform_alert_lane
 
 MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
 
@@ -128,7 +128,7 @@ class SendCriticalClientsDigestUseCase(UseCaseContract[JobTick, JobReport]):
                 SEND_PLATFORM_ALERT_JOB,
                 JobPayloadJson(delivery.model_dump_json()),
                 None,
-                lane=JobLane.OUTBOUND,
+                lane=platform_alert_lane(),
                 serial_key=recipient_serial_key(
                     ManagerContactChannel.TELEGRAM, str(chat_id)
                 ),

@@ -29,6 +29,7 @@ import { workspaceCommonHe } from "./common.he";
 import { customerMemoryHe } from "./customerMemory.he";
 import { dataExportsHe } from "./dataExports.he";
 import { dataTasksHe } from "./dataTasks.he";
+import { providerCircuitsHe } from "./providerCircuits.he";
 import { formFieldsHe } from "./formFields.he";
 import { loginOptionsHe } from "./loginOptions.he";
 import { notificationsHe } from "./notifications.he";
@@ -77,5 +78,6 @@ export const workspaceHe: Translation<typeof workspaceEn> = {
   widgetSites: widgetSitesHe,
   adminSpend: adminSpendHe,
   dataTasks: dataTasksHe,
+  providerCircuits: providerCircuitsHe,
   formFields: formFieldsHe,
 };

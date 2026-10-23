@@ -19,6 +19,7 @@ from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.jobs import JobLane
+from app.schemas.constants.telemetry import OutboundAttemptOutcome
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import OutboundAttempt
 from app.schemas.typings.deliveries.constrained_integers import DeliveryAttemptCount
@@ -40,7 +41,11 @@ from app.utilities.deliveries.outbound_metrics_labels import (
     outbound_attempt_outcome,
     outbound_provider_label,
 )
-from app.utilities.deliveries.retry_policy import is_retryable, retry_delay_seconds
+from app.utilities.deliveries.retry_policy import (
+    busy_delay_seconds,
+    is_retryable,
+    retry_delay_seconds,
+)
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
 )
@@ -67,6 +72,11 @@ class RecordOutboundAttemptUseCase(
     hear about a staff reply's state, and a missed call's text-back goes on
     once its WhatsApp template is settled. /metrics counts the attempt by
     provider and outcome.
+
+    An attempt that found its provider busy (no free slot of its share of
+    the worker's outbound threads) stored nothing and spent no attempt: the
+    message's job comes back in a few seconds (`busy_delay_seconds`), the
+    message stays as it was, and nothing else follows.
     """
 
     def __init__(
@@ -95,6 +105,10 @@ class RecordOutboundAttemptUseCase(
     def run(self, input_data: OutboundAttempt) -> OutboundMessageDocument | None:
         message: OutboundMessageDocument = input_data.message
         now: Microseconds = input_data.attempted_at
+        if input_data.busy_provider is not None:
+            self._come_back_later(message, now)
+            return None
+
         attempts = DeliveryAttemptCount(int(message.attempts) + 1)
         next_attempt_at: Microseconds | None = None
         if input_data.failure is not None and is_retryable(
@@ -164,3 +178,19 @@ class RecordOutboundAttemptUseCase(
         announce_staff_reply_delivery(self._live_events, stored)
         continue_text_back(self._job_queue, stored)
         return stored
+
+    def _come_back_later(
+        self, message: OutboundMessageDocument, now: Microseconds
+    ) -> None:
+        delay: int = busy_delay_seconds(self._jitter())
+        self._job_queue.enqueue(
+            DELIVER_OUTBOUND_JOB,
+            encode_outbound_message_payload(message.id),
+            message.business_id,
+            run_at=Microseconds(int(now) + delay * MICROSECONDS_PER_SECOND),
+            lane=JobLane.OUTBOUND,
+            serial_key=outbound_serial_key(message.business_id, message.recipient_key),
+        )
+        self._metrics.count_outbound_attempt(
+            outbound_provider_label(message), OutboundAttemptOutcome.DEFERRED
+        )

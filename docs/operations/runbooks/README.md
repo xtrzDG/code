@@ -10,6 +10,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [llm-outage](llm-outage.md) | `llm_errors` | SEV1 |
 | [meta-outage](meta-outage.md) | `outbound_failures`, channels in ERROR | SEV2 |
 | [telegram-outage](telegram-outage.md) | `outbound_failures` | SEV2 |
+| [provider-circuits](provider-circuits.md) | a circuit open on `/admin/system`, `outbound_failures` | SEV2 |
 | [voice-outage](voice-outage.md) | Sentry, owners (calls not answered) | SEV2 |
 | [worker-down](worker-down.md) | `worker_down`, `inbound_backlog` (the API's watchdog), `GET /healthz/pipeline` 503 | SEV1 |
 | [stuck-worker](stuck-worker.md) | `dead_jobs`, `inbound_backlog`, `stale_worker`, Sentry Crons | SEV1-SEV2 |
@@ -27,7 +28,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [audit-chain-broken](audit-chain-broken.md) | `audit_chain_broken`, a broken chain on Admin → Audit | SEV1 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
-queue lanes and dead letters, channels in ERROR, the last backup. Each
+the providers' circuits, queue lanes and dead letters, channels in ERROR, the last backup. Each
 likely failure has a scripted game day in `tests/chaos/` (worker killed,
 Meta black-holed, model 30 s slow, Postgres restarted) that asserts its
 alert, the status level and the recovery; run them before changing a

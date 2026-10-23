@@ -9,6 +9,7 @@ from app.contracts.invoicing import BillingEmailAttachmentsFacilitatorContract
 from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.resilience import OutboundBulkheadContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
@@ -53,6 +54,12 @@ class SendOutboundMessageUseCase(
     part, a WhatsApp template to a customer (outside the 24-hour window)
     as one template. An e-mail to the billing contact attaches its invoice
     PDFs, made at each attempt.
+
+    Every attempt holds one slot of its provider's share of the worker's
+    outbound threads (`OutboundBulkheadContract`) while its parts go out;
+    when the provider's slots are all taken (it is slow or hanging), the
+    attempt sends nothing and says so (`busy_provider`), so the thread
+    moves on to messages of other providers instead of queuing behind it.
     """
 
     def __init__(
@@ -69,7 +76,9 @@ class SendOutboundMessageUseCase(
         wall_clock: WallClock[Microseconds],
         whatsapp_templates: WhatsAppTemplateAdapterContract,
         billing_attachments: BillingEmailAttachmentsFacilitatorContract,
+        bulkhead: OutboundBulkheadContract,
     ) -> None:
+        self._bulkhead: OutboundBulkheadContract = bulkhead
         self._billing_attachments: BillingEmailAttachmentsFacilitatorContract = (
             billing_attachments
         )
@@ -97,12 +106,16 @@ class SendOutboundMessageUseCase(
         route: OutboundRoute | None = None
         try:
             route = self._route(input_data)
-            while delivered < len(route.parts):
-                provider_message_id = (
-                    route.sender_of(delivered)(route.parts[delivered])
-                    or provider_message_id
-                )
-                delivered += 1
+            with self._bulkhead.reserve(route.provider) as is_slot_taken:
+                if not is_slot_taken:
+                    return busy_attempt(input_data, route, now)
+
+                while delivered < len(route.parts):
+                    provider_message_id = (
+                        route.sender_of(delivered)(route.parts[delivered])
+                        or provider_message_id
+                    )
+                    delivered += 1
         except ApplicationError as error:
             self._meter(input_data, delivered)
             return OutboundAttempt(
@@ -192,3 +205,20 @@ class SendOutboundMessageUseCase(
                 self._wall_clock.now_unix(),
             )
         )
+
+
+def busy_attempt(
+    message: OutboundMessageDocument,
+    route: OutboundRoute,
+    now: Microseconds,
+) -> OutboundAttempt:
+    """Nothing was sent: the provider's slots were all taken."""
+
+    return OutboundAttempt(
+        message=message,
+        channel=route.channel,
+        delivered_parts=message.delivered_parts,
+        provider_message_id=message.provider_message_id,
+        attempted_at=now,
+        busy_provider=route.provider,
+    )

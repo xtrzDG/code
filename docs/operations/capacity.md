@@ -580,7 +580,7 @@ customers:
 
 | Service | Instances, plan | Lanes | Shared periodic jobs | Sizing |
 | --- | --- | --- | --- | --- |
-| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults), `DB_POOL_SIZE` 14 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
+| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` (`ops` joins with the release that opens the gate `ops_lane`) | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults; 13 with `ops=1`), `DB_POOL_SIZE` 14 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
 | `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 8 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
 
 - A periodic job belongs to a lane (`PeriodicJobSpec.lane`, `default`
@@ -600,6 +600,38 @@ customers:
   `LLM_MAX_CONCURRENCY` >= its `inbound` threads (a turn waits for a
   place before it takes a connection); `THREADPOOL_SIZE` above the pool.
   Then check the connection budget below.
+
+## Bulkheads: one provider cannot take the outbound lane
+
+A provider that hangs holds a thread for its whole read timeout (10 s, 3 s
+to connect; SMTP the same). Without a limit four slow WhatsApp sends would
+take all four `outbound` threads of a worker, and Telegram replies, staff
+notifications and the platform alerts would wait behind them.
+
+- **Per-provider slots.** Each worker gives every provider at most half of
+  its `outbound` threads (`OutboundBulkheadFacilitator`, 2 of the default
+  4, at least 1). A send that finds its provider's slots taken does not
+  wait: the job comes back in about 4 s, the message keeps its attempts
+  and its place (same serial key). Meta hanging therefore costs 2 threads;
+  the other 2 keep sending through Telegram, the platform bot, Twilio and
+  SMTP.
+- **Circuit breakers.** Five failures of a provider within 60 s open its
+  circuit in that process: sends fail at once without a call and the
+  outbox retries after the circuit's 30 s (runbook
+  [provider-circuits](runbooks/provider-circuits.md)). A brownout costs
+  five timeouts per worker, not one per message.
+- **The ops lane.** `send_platform_alert` jobs get their own lane with one
+  thread per worker (`ops=1`, the default), to be served by the customer
+  workers. It is behind the release gate `ops_lane` (the release before
+  cannot read the lane): until the next release opens it, alerts use
+  `outbound`, where the bulkheads leave them two threads, and no
+  Blueprint names `ops` in `WORKER_LANES` or `WORKER_LANE_CONCURRENCY`
+  (the release before refuses the value at startup, and a rollback keeps
+  the environment). The release that opens the gate adds `ops` to
+  `workshop-worker`'s `WORKER_LANES`.
+- Measured in `tests/resilience/test_send_bulkheads.py`: with Meta hanging
+  10 s and the production lanes, a Telegram reply and a platform alert go
+  out within 2 s, and no outbox row is lost or sent twice.
 
 ## When a worker dies
 
@@ -760,7 +792,7 @@ up two connections each (12 to 10, 16 to 14, 10 to 8) for the platform
 pools, so the work a process can run at once stays about the same while
 the second pool fits; there is no room left for a third customer worker
 without one of the routes below. Staging (one API, one worker serving
-every lane, `basic-256mb`): 2 x (10 + 4 + 1) + 2 x (18 + 4 + 1) + 8 = 84
+every lane, `basic-256mb`): 2 x (10 + 4 + 1) + 2 x (19 + 4 + 1) + 8 = 86
 of 100. The defaults (64 threads, 32 + 8 connections) would not fit: a
 Blueprint without `DB_POOL_SIZE` on any service fails the test, and so
 does a worker without `DB_PLATFORM_POOL_SIZE`.

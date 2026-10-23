@@ -350,7 +350,10 @@ services:
       # The customer role (docs/operations/capacity.md, "Worker roles"):
       # customer messages and deliveries, and the periodic jobs of those
       # lanes (booking reminders, the inbox sweeper). Everything else runs
-      # on workshop-batch-worker.
+      # on workshop-batch-worker. The platform alerts' lane (ops) joins this
+      # list in the release that opens the release gate ops_lane: the
+      # release before this one does not know the lane, and a rollback
+      # keeps this value (docs/operations/deploys.md).
       - key: WORKER_LANES
         value: "inbound,outbound"
       # Its lanes run 12 jobs at once (inbound=8, outbound=4, the defaults

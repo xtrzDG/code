@@ -14,6 +14,7 @@ from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.outbound_messages import (
@@ -33,6 +34,10 @@ from app.schemas.typings.channels.strings import ChannelSecret, ProviderMessageI
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import decrypt_channel_secret
+from app.utilities.resilience.provider_circuits import (
+    customer_channel_provider,
+    staff_channel_provider,
+)
 
 type PartSender = Callable[[MessageText], ProviderMessageId | None]
 
@@ -40,13 +45,16 @@ type PartSender = Callable[[MessageText], ProviderMessageId | None]
 @dataclass(frozen=True)
 class OutboundRoute:
     """
-    The parts of one message, how to send one of them, and the business
-    channel they go through (None for staff notifications). A reply that
-    offers options sends its last part with them (`send_last_part`).
+    The parts of one message, how to send one of them, the provider that
+    carries them (its share of the outbound lane is held while they go
+    out) and the business channel they go through (None for staff
+    notifications). A reply that offers options sends its last part with
+    them (`send_last_part`).
     """
 
     parts: list[MessageText]
     send_part: PartSender
+    provider: OutboundProvider
     channel: ChannelDocument | None = None
     send_last_part: PartSender | None = None
 
@@ -74,9 +82,11 @@ def route_customer_reply(
     """
 
     adapter: ChannelAdapterContract | None = adapters.get(recipient.channel)
+    provider: OutboundProvider | None = customer_channel_provider(recipient.channel)
     channel: ChannelDocument | None = channel_repo.get(recipient.channel_id)
     if (
         adapter is None
+        or provider is None
         or channel is None
         or channel.business_id != message.business_id
         or not is_channel_active(channel)
@@ -103,6 +113,7 @@ def route_customer_reply(
     return OutboundRoute(
         parts=adapter.split(message.text, choices),
         send_part=lambda part: adapter.send(target, part).provider_message_id,
+        provider=provider,
         channel=channel,
         send_last_part=(
             None
@@ -122,6 +133,7 @@ def route_staff_notification(
     return OutboundRoute(
         parts=staff_sender.split(contact, message.text),
         send_part=lambda part: staff_sender.send(contact, part, message.template),
+        provider=staff_channel_provider(contact.channel),
     )
 
 
@@ -136,7 +148,9 @@ def route_push_notification(
         push_sender.send(message.business_id, recipient, part)
         return None
 
-    return OutboundRoute(parts=[message.text], send_part=send_part)
+    return OutboundRoute(
+        parts=[message.text], send_part=send_part, provider=OutboundProvider.WEB_PUSH
+    )
 
 
 def route_billing_email(
@@ -156,4 +170,6 @@ def route_billing_email(
         )
         return None
 
-    return OutboundRoute(parts=[message.text], send_part=send_part)
+    return OutboundRoute(
+        parts=[message.text], send_part=send_part, provider=OutboundProvider.SMTP
+    )

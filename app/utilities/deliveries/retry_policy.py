@@ -9,6 +9,7 @@ from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     DeliveryNotConfiguredError,
     ExternalServiceError,
+    ProviderCircuitOpenError,
     ProviderRateLimitedError,
     ProviderRejectedMessageError,
     WhatsAppTemplateRejectedError,
@@ -27,6 +28,10 @@ RETRY_MAX_SECONDS: int = 30 * 60
 # together (a platform outage) do not all come back at the same second.
 JITTER_SHARE: float = 0.25
 MAX_ERROR_TEXT_LENGTH: int = 500
+# A message whose provider had no free slot in the worker comes back after
+# this long (moved by the jitter too): long enough for a slow call to end,
+# short enough that a busy but healthy provider barely delays it.
+PROVIDER_BUSY_SECONDS: int = 4
 RETRYABLE_FAILURES: frozenset[DeliveryFailureKind] = frozenset(
     {DeliveryFailureKind.RATE_LIMITED, DeliveryFailureKind.TRANSIENT}
 )
@@ -82,7 +87,12 @@ def explain_delivery_error(error: ApplicationError) -> DeliveryFailureReason:
 
 
 def read_retry_after(error: ApplicationError) -> RetryAfterSeconds | None:
-    if isinstance(error, ProviderRateLimitedError):
+    """
+    The pause the platform asked for, or the rest of an open circuit's
+    (no attempt comes back before the circuit lets a trial call through).
+    """
+
+    if isinstance(error, ProviderRateLimitedError | ProviderCircuitOpenError):
         return error.retry_after_seconds
 
     return None
@@ -117,6 +127,20 @@ def retry_delay_seconds(
         delay = max(delay, int(retry_after))
 
     return delay
+
+
+def busy_delay_seconds(jitter_fraction: float) -> int:
+    """
+    Seconds until a message whose provider was busy is tried: no attempt
+    was spent, so no backoff, only the jitter that spreads the messages
+    that waited together.
+    """
+
+    bounded_fraction: float = min(max(jitter_fraction, 0.0), 1.0)
+    return max(
+        1,
+        round(PROVIDER_BUSY_SECONDS * (1 + JITTER_SHARE * (2 * bounded_fraction - 1))),
+    )
 
 
 def describe_delivery_error(error: ApplicationError) -> DeliveryErrorText:

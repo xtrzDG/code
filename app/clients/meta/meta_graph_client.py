@@ -1,5 +1,6 @@
 import httpx
 
+from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.meta.graph_requests import graph_request
 from app.clients.meta.meta_graph_readers import (
     read_instagram_username,
@@ -35,7 +36,8 @@ META_GRAPH_BASE_URL: str = "https://graph.facebook.com"
 # Graph API version the payloads were written against; Meta keeps a version
 # working for at least two years after the next one is released.
 DEFAULT_GRAPH_API_VERSION: str = "v23.0"
-REQUEST_TIMEOUT_SECONDS: float = 10.0
+# Connect within 3 s, answer within 10 s (`provider_timeout`).
+REQUEST_TIMEOUT: httpx.Timeout = provider_timeout()
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
 # The page and its Instagram account with the public usernames chat links
 # (m.me, ig.me) open.
@@ -58,7 +60,7 @@ class MetaGraphClient(MetaGraphApiClientContract):
     ) -> None:
         self._http_client: httpx.Client = httpx.Client(
             base_url=f"{base_url.rstrip('/')}/{api_version}",
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=REQUEST_TIMEOUT,
             transport=transport,
         )
 

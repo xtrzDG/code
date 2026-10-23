@@ -1,7 +1,8 @@
 """
 The worker roles of the Render Blueprints: customer replies run on at least
 two workers, batch jobs on another, every lane has exactly one role, each
-role's pool fits its threads, and only light customer-facing periodic jobs
+role's pool fits its threads (a lane behind a closed release gate takes
+no role yet), and only light customer-facing periodic jobs
 run with the workers that answer customers.
 """
 
@@ -17,6 +18,7 @@ from app.schemas.constants.jobs import JobLane
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.jobs.live_lanes import closed_lanes
 from tests.platform.connection_budget import (
     WORKER_COMMAND,
     BlueprintService,
@@ -25,7 +27,12 @@ from tests.platform.connection_budget import (
 )
 from tests.platform.environment_sources import read
 
-CUSTOMER_LANES: frozenset[JobLane] = frozenset({JobLane.INBOUND, JobLane.OUTBOUND})
+# The lanes no job is queued in yet (behind a closed release gate) take no
+# role: the release before does not know them (tests/platform/test_gated_lanes.py).
+LIVE_LANES: frozenset[JobLane] = frozenset(JobLane) - closed_lanes()
+CUSTOMER_LANES: frozenset[JobLane] = (
+    frozenset({JobLane.INBOUND, JobLane.OUTBOUND, JobLane.OPS}) & LIVE_LANES
+)
 BATCH_LANES: frozenset[JobLane] = frozenset({JobLane.DEFAULT, JobLane.AUTOTESTS})
 # Threads of a worker besides its lanes that may hold a connection: the
 # periodic thread (its jobs, the reaper) and the lease heartbeat.
@@ -78,9 +85,10 @@ def test_every_lane_has_exactly_one_role(blueprint_path: str) -> None:
         lane
         for service in workers(blueprint_path)
         for lane in settings_of(service).worker_lanes
+        if lane in LIVE_LANES
     ]
 
-    assert sorted(served) == sorted(JobLane)
+    assert sorted(served) == sorted(LIVE_LANES)
 
 
 def test_customer_replies_survive_one_lost_worker() -> None:

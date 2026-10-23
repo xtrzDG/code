@@ -53,3 +53,5 @@
 - Game day: `tests/chaos/test_meta_blackhole_game_day.py` (Meta's host
   takes requests and never answers; see
   [delivery-failures](delivery-failures.md)).
+- The provider's circuit breaker and the outbound bulkheads: see
+  [provider-circuits](provider-circuits.md).

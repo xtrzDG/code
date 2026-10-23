@@ -11,6 +11,25 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-22 — the providers' circuit breakers on the System page
+
+Spec: `68667cd1d325dff4`
+
+- **Added** `GET /v1/admin/system` returns `circuits` (`CircuitSummaryView`):
+  every circuit breaker the live workers report (`provider:meta`,
+  `provider:telegram`, `provider:platform_bot`, `provider:twilio_sms`,
+  `provider:smtp`, `provider:flitt`, and the language models'), its worst
+  state (`CircuitState`: `closed`, `half_open`, `open`), in how many workers
+  it is not closed out of how many report it, the failures of the last
+  minute and when the earliest of them opened. Not closed first.
+- **Added** each `workers[]` item (`WorkerPulseView`) carries `circuits`
+  (`WorkerCircuitView`), the worker's own circuits at its last pulse.
+- **Added** `JobLane` may be `ops`, the platform alerts' lane (in the job
+  lists of `GET /v1/admin/jobs` and the lanes of `GET /v1/admin/system`).
+  Jobs use it once the release gate `ops_lane` opens in the next release;
+  until then no job is in it and `GET /v1/admin/system` lists no `ops`
+  lane, so a cabinet of the release before never meets the value.
+
 ## 2026-10-13 — wave 19 together: brands, the audit trail, deposits, website chat photos, voice and thumbs
 
 Spec: `4a535aa5b8e4215c`

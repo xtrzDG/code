@@ -410,6 +410,20 @@ settle the paid ones in the merchant account; nothing needs cleaning.
 A payment is confirmed by hand ("Paid" in the cabinet): no merchant
 webhook is read.
 
+The release with the provider circuits (W20-SEND-BULKHEADS;
+`QueuedJobDocument` version 4, `WorkerHeartbeatDocument` version 2) adds
+the worker lane `ops` for the platform alerts behind the closed release
+gate `ops_lane`: no job is queued in it yet, and the alerts keep the
+outbound lane. Environment variables survive a rollback, and the release
+before this one refuses an unknown lane in `WORKER_LANES` and
+`WORKER_LANE_CONCURRENCY` at startup, so neither names `ops` in this
+release (`render.yaml`, `.env.example`; `tests/platform/test_worker_roles.py`
+checks it). The release that opens the gate adds `ops` to the customer
+worker's `WORKER_LANES`; this release already reads it, so a rollback
+from that one starts. GET /v1/admin/system lists the `ops` lane only
+once the gate is open, so the previous cabinet never meets it, and the
+new cabinet reads an absent `circuits` as none.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

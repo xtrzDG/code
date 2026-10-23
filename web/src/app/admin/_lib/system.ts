@@ -8,6 +8,8 @@
 import type { Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
 
+import { openCircuitCount } from "./circuits";
+
 export type AdminSystem = Schema<"AdminSystemView">;
 export type AlertState = Schema<"AlertStateView">;
 export type AlertUnit = Schema<"AlertUnit">;
@@ -162,17 +164,40 @@ export function drillState(system: Pick<AdminSystem, "last_restore_drill" | "che
   return system.checked_at - run.finished_at > DRILL_OVERDUE_DAYS * MICROSECONDS_PER_DAY ? "overdue" : "ok";
 }
 
+/** The page as an API without circuit breakers (the release before) sends it: `circuits` absent. */
+export type AdminSystemReply = Omit<AdminSystem, "circuits" | "workers"> & {
+  circuits?: AdminSystem["circuits"];
+  workers: (Omit<WorkerPulse, "circuits"> & { circuits?: WorkerPulse["circuits"] })[];
+};
+
+/**
+ * The page with `circuits` read as none where the API leaves them out: the
+ * API of the release before (a rollback, the deploy overlap) has no
+ * circuit breakers.
+ */
+export function withCircuits(system: AdminSystemReply): AdminSystem {
+  return {
+    ...system,
+    circuits: system.circuits ?? [],
+    workers: system.workers.map((worker) => ({ ...worker, circuits: worker.circuits ?? [] })),
+  };
+}
+
 /** Workers that stopped beating first, then by host. */
 export function sortWorkers(workers: readonly WorkerPulse[]): WorkerPulse[] {
   return [...workers].sort((a, b) => Number(b.is_stale) - Number(a.is_stale) || a.host_name.localeCompare(b.host_name));
 }
 
-/** How many things want a look now: firing alerts, stale workers, dead jobs, channels in error. */
+/**
+ * How many things want a look now: firing alerts, stale workers, provider
+ * circuits that are not closed, dead jobs, channels in error.
+ */
 export function attentionCount(system: AdminSystem): number {
   const deadJobs = system.dead_jobs.reduce((total, tally) => total + tally.count, 0);
   return (
     system.alerts.filter((alert) => alert.status === "firing").length +
     system.workers.filter((worker) => worker.is_stale).length +
+    openCircuitCount(system.circuits) +
     deadJobs +
     system.channels_in_error_count
   );
