@@ -101,7 +101,7 @@ def test_a_closing_business_rents_no_number(
             "offer_token": offers["offers"][0]["offer_token"],
             "monthly_price": offers["monthly_price"]["money"],
         },
-        headers={**headers, "Idempotency-Key": "0c6f3e2a-7d14-4b9e-a8c5-3f2e1d0b9a87"},
+        headers={**headers, "Idempotency-Key": "closing-rent-0000"},
     )
 
     assert_refused_as_closing(rented)
