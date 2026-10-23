@@ -22,6 +22,7 @@ from scripts.zap_findings import (
     Alert,
     ReportError,
     ReviewedRules,
+    Risk,
     RuleAction,
     RulesError,
     Verdict,
@@ -39,6 +40,18 @@ def describe(alert: Alert) -> str:
     return (
         f"{alert.target}: {alert.risk.name.title()} {alert.alert_ref} {alert.name} "
         f"({alert.count}x, e.g. {alert.example_uri})"
+    )
+
+
+def advice(alert: Alert, reviewed: ReviewedRules) -> str:
+    """Why a listed rule did not accept a Medium or High finding."""
+
+    rule = reviewed.rule_for(alert)
+    if rule is None or rule.action not in (RuleAction.INFO, RuleAction.WARN):
+        return ""
+    return (
+        f" .zap/rules.tsv lists {rule.key} as {rule.action}: only an IGNORE"
+        " with a reviewed reason accepts it."
     )
 
 
@@ -99,7 +112,15 @@ def render(verdict: Verdict, reviewed: ReviewedRules, targets: list[str]) -> str
         lines += ["### Reviewed exceptions (.zap/rules.tsv)", ""]
         lines += table(verdict.accepted, reviewed, with_reason=True) + [""]
     if verdict.listed:
-        lines += ["### Low and informational findings (listed, not failing)", ""]
+        low: int = sum(alert.risk is Risk.LOW for alert in verdict.listed)
+        informational: int = sum(
+            alert.risk is Risk.INFORMATIONAL for alert in verdict.listed
+        )
+        lines += [
+            "### Low and informational findings (listed, not failing):"
+            f" {low} low, {informational} informational",
+            "",
+        ]
         lines += table(verdict.listed, reviewed, with_reason=False) + [""]
     unseen: list[str] = unseen_exceptions(every_alert, reviewed)
     if unseen:
@@ -136,7 +157,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
 
     verdict: Verdict = judge(alerts, reviewed)
     for alert in verdict.failing:
-        print(f"::error::New ZAP finding: {describe(alert)}")
+        print(f"::error::New ZAP finding: {describe(alert)}{advice(alert, reviewed)}")
     for alert in verdict.accepted:
         print(f"reviewed  {describe(alert)}")
     for alert in verdict.listed:

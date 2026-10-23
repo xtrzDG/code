@@ -95,7 +95,8 @@ def test_both_images_pass_when_signed_and_attested_by_ci_on_main(
     ]
     lookups = [call for call in calls if call.startswith("docker ")]
     assert lookups == [
-        f"docker buildx imagetools inspect ghcr.io/xtrzdg/assistant-workshop-{image}:{SHA}"
+        "docker buildx imagetools inspect"
+        f" ghcr.io/xtrzdg/assistant-workshop-{image}:{SHA}"
         " --format {{.Manifest.Digest}}"
         for image in ("backend", "web")
     ]

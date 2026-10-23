@@ -16,6 +16,7 @@ RULES: str = (
     "#!10055-6\tIGNORE\t(CSP: style-src unsafe-inline)"
     "\tReact renders style attributes.\n"
     "10049\tIGNORE\t(Storable)\tNever raised in these reports.\n"
+    "10035\tWARN\t(Strict-Transport-Security Header Not Set)\n"
     "\n"
     "# The widget answers every origin, without credentials.\n"
     "10098\tOUTOFSCOPE\t^https?://[^/]+/widget\\.js\n"
@@ -67,6 +68,7 @@ def test_reviewed_and_low_findings_pass(tmp_path: Path) -> None:
         "cabinet",
         zap_alert("10055", 2, "http://localhost:3000/", ref="10055-6"),
         zap_alert("10096", 1, "http://localhost:3000/en"),
+        zap_alert("10109", 0, "http://localhost:3000/"),
     )
     widget = write_report(
         tmp_path, "widget", zap_alert("10098", 2, "http://localhost:8000/widget.js")
@@ -86,6 +88,7 @@ def test_reviewed_and_low_findings_pass(tmp_path: Path) -> None:
         " | The widget answers every origin, without credentials. |" in summary
     )
     assert "Reviewed exceptions this run did not raise: 10049." in summary
+    assert "(listed, not failing): 1 low, 1 informational" in summary
 
 
 def test_a_new_medium_finding_or_a_fail_rule_fails_the_job(tmp_path: Path) -> None:
@@ -94,6 +97,7 @@ def test_a_new_medium_finding_or_a_fail_rule_fails_the_job(tmp_path: Path) -> No
         "api",
         zap_alert("10098", 2, "http://localhost:8000/v1/businesses/b/bookings"),
         zap_alert("10020", 1, "http://localhost:8000/v1/me"),
+        zap_alert("10035", 2, "http://localhost:8000/v1/me"),
     )
 
     code, output, _, summary = run(tmp_path, api)
@@ -104,7 +108,12 @@ def test_a_new_medium_finding_or_a_fail_rule_fails_the_job(tmp_path: Path) -> No
         in output
     )
     assert "::error::New ZAP finding: api: Low 10020" in output
-    assert "failed: 2 new finding(s)" in summary
+    assert (
+        "::error::New ZAP finding: api: Medium 10035 Rule 10035"
+        " (1x, e.g. http://localhost:8000/v1/me) .zap/rules.tsv lists 10035 as"
+        " WARN: only an IGNORE with a reviewed reason accepts it." in output
+    )
+    assert "failed: 3 new finding(s)" in summary
     assert "### New findings (fix them, or review them into .zap/rules.tsv)" in summary
 
 
