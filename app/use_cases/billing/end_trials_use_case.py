@@ -19,6 +19,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.typings.billing.constrained_integers import CardChargeWaitHours
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.billing.owner_notifications import notify_business_owners
@@ -36,7 +37,8 @@ from app.utilities.analytics.billing_event_drafts import billing_event
 from app.utilities.billing.billing_periods import add_local_days
 
 # How long a trial with a saved card waits for the card's first charge.
-CARD_CHARGE_WAIT_MICROSECONDS: int = 24 * 60 * 60 * 1_000_000
+CARD_CHARGE_WAIT_HOURS: CardChargeWaitHours = CardChargeWaitHours(24)
+MICROSECONDS_PER_HOUR: int = 60 * 60 * 1_000_000
 
 
 class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
@@ -124,9 +126,10 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             self._activate(business, subscription, paid_invoice, invoices, now)
             return True
 
-        if subscription.provider_reference is not None and now < (
-            trial_ends_at + CARD_CHARGE_WAIT_MICROSECONDS
-        ):
+        charge_wait_ends_at: Microseconds = Microseconds(
+            int(trial_ends_at) + int(CARD_CHARGE_WAIT_HOURS) * MICROSECONDS_PER_HOUR
+        )
+        if subscription.provider_reference is not None and now < charge_wait_ends_at:
             # The saved card is charged when the trial ends; its notice
             # settles the first period (or starts grace when declined).
             return False

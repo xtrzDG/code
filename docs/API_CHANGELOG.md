@@ -11,6 +11,21 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — the card on file: setup fee, card update in dunning
+
+Spec: `c4a6610f7c8651f5`
+
+- **Changed** `PaymentMethodView` gains `setup_fee_due` (`Money`, optional):
+  what saving the card in a done-for-you trial charges now, the one-time
+  setup fee with tax that a trial without a card is billed at its end.
+- **Changed** `POST /v1/businesses/{business_id}/billing/payment-method`:
+  in such a trial the provider's page charges that setup fee (the card
+  then runs the charges from the trial's end); otherwise it still charges
+  nothing. A card can now also be replaced while a declined automatic
+  charge is retried (`can_save_card` is true for a past-due subscription
+  whose charges run); the retries charge the new card. The page names the
+  charges in the page's language.
+
 ## 2026-10-22 — payments by region: Stripe, the card on file and retries
 
 Spec: `b43d331afb64159b`

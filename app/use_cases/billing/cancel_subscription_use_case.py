@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -62,6 +65,7 @@ class CancelSubscriptionUseCase(
         subscription_repo: SubscriptionRepoContract,
         invoice_repo: InvoiceRepoContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -77,6 +81,7 @@ class CancelSubscriptionUseCase(
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -121,7 +126,9 @@ class CancelSubscriptionUseCase(
         pause_end: SubscriptionEventDocument | None = pause_ended_event(
             subscription, now, input_data.user_id
         )
-        stop_recurring_charges(self._payment_gateway, subscription)
+        stop_recurring_charges(
+            self._payment_gateway, self._payment_order_repo, subscription
+        )
 
         for invoice in list_open_invoices(
             list_subscription_invoices(self._invoice_repo, subscription)

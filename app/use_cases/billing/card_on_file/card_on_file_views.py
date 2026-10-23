@@ -3,20 +3,18 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.payment_methods import PaymentProviderRegistryContract
-from app.schemas.constants.billing import SubscriptionStatus
+from app.schemas.constants.billing import InvoiceKind, SubscriptionStatus
 from app.schemas.constants.payments import PaymentProvider
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.dto.payment_methods import PaymentCardView
+from app.schemas.typings.billing.constrained_integers import TrialCardPromptDayOffset
 from app.use_cases.shared.billing_records import list_open_invoices
 from app.utilities.billing.billing_periods import add_local_days
 
 # "Save card" is asked for from day 10 of a trial (nine full days in).
-TRIAL_CARD_PROMPT_DAY_OFFSET: int = 9
-CARD_SETUP_STATUSES: frozenset[SubscriptionStatus] = frozenset(
-    {SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE}
-)
+TRIAL_CARD_PROMPT_DAY_OFFSET: TrialCardPromptDayOffset = TrialCardPromptDayOffset(9)
 
 
 def select_card_provider(
@@ -53,16 +51,28 @@ def can_save_card(
     subscription: SubscriptionDocument | None, invoices: list[InvoiceDocument]
 ) -> bool:
     """
-    A card is saved or replaced in a trial or a paid subscription without
-    unpaid bills; an unpaid bill is paid instead (its checkout saves the
-    card too).
+    A card is saved or replaced in a trial (its page pays a setup fee the
+    trial owes), in a paid subscription without unpaid bills, and while a
+    declined automatic charge is retried (past due with the charges still
+    running: the retries and the next charges use the new card). Another
+    unpaid bill is paid instead (its checkout saves the card too).
     """
 
-    return (
-        subscription is not None
-        and subscription.status in CARD_SETUP_STATUSES
-        and list_open_invoices(invoices) == []
-    )
+    if subscription is None:
+        return False
+
+    open_invoices: list[InvoiceDocument] = list_open_invoices(invoices)
+    match subscription.status:
+        case SubscriptionStatus.TRIALING:
+            return all(
+                invoice.kind is InvoiceKind.SETUP_FEE for invoice in open_invoices
+            )
+        case SubscriptionStatus.ACTIVE:
+            return open_invoices == []
+        case SubscriptionStatus.PAST_DUE:
+            return subscription.provider_reference is not None
+        case _:
+            return False
 
 
 def is_trial_card_prompt_due(
@@ -82,6 +92,8 @@ def is_trial_card_prompt_due(
         return False
 
     prompt_from: Microseconds = add_local_days(
-        subscription.period_start, TRIAL_CARD_PROMPT_DAY_OFFSET, business.timezone
+        subscription.period_start,
+        int(TRIAL_CARD_PROMPT_DAY_OFFSET),
+        business.timezone,
     )
     return now >= prompt_from

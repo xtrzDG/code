@@ -37,6 +37,7 @@ def test_the_owner_reads_and_saves_the_card_on_file() -> None:
         "trial_ends_at": read.json()["trial_ends_at"],
         "is_trial_card_prompt_due": False,
         "retry": None,
+        "setup_fee_due": {"amount_minor": 44300, "currency_code": "GEL"},
     }
     assert isinstance(read.json()["trial_ends_at"], int)
     assert saved.status_code == 201

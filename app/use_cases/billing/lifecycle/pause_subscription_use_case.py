@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -65,6 +68,7 @@ class PauseSubscriptionUseCase(
         invoice_repo: InvoiceRepoContract,
         subscription_event_repo: SubscriptionEventRepoContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         lifecycle_policy_registry: SubscriptionLifecyclePolicyRegistryContract,
         app_settings: AppSettings,
         assemble_billing_overview: UseCaseContract[
@@ -81,6 +85,7 @@ class PauseSubscriptionUseCase(
             subscription_event_repo
         )
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._lifecycle_policy_registry: SubscriptionLifecyclePolicyRegistryContract = (
             lifecycle_policy_registry
         )
@@ -142,7 +147,9 @@ class PauseSubscriptionUseCase(
         input_data: PauseSubscriptionCommand,
     ) -> None:
         now: Microseconds = self._wall_clock.now_unix()
-        stop_recurring_charges(self._payment_gateway, subscription)
+        stop_recurring_charges(
+            self._payment_gateway, self._payment_order_repo, subscription
+        )
 
         for invoice in list_open_invoices(invoices):
             # A renewal billed ahead for a period the pause now covers.

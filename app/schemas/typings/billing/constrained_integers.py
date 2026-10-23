@@ -179,6 +179,32 @@ class PaymentRetryDayOffset(BaseConstrainedTypedInt):
     le = 30
 
 
+class TrialCardPromptDayOffset(BaseConstrainedTypedInt):
+    """
+    Whole local days after a trial starts from which the cabinet asks the
+    owner to save a card for the first charge (9: from day 10).
+
+    Example:
+        prompt_from = TrialCardPromptDayOffset(9)
+    """
+
+    ge = 1
+    le = 60
+
+
+class CardChargeWaitHours(BaseConstrainedTypedInt):
+    """
+    Hours the end of a trial with a saved card waits for the card's first
+    automatic charge before it is billed like a trial without a card.
+
+    Example:
+        wait = CardChargeWaitHours(24)
+    """
+
+    ge = 1
+    le = 72
+
+
 class PackageUsagePercent(BaseConstrainedTypedInt):
     """
     Whole percent of an included package used in one period (may exceed 100).

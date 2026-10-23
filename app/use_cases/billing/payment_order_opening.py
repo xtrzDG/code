@@ -34,7 +34,8 @@ class PaymentOrderOpening(ImmutableDTO):
     """
     What a new payment order charges now (`amount` for `invoice_ids`;
     nothing for a card setup) and the automatic charges of `recurring`
-    that follow from `charges_from`, at `provider`.
+    that follow from `charges_from`, at `provider` (named
+    `recurring_description` when given).
     """
 
     provider: PaymentProvider
@@ -47,6 +48,7 @@ class PaymentOrderOpening(ImmutableDTO):
     language: LanguageTag
     return_url: PaymentReturnUrl | None = None
     customer_reference: PaymentProviderReference | None = None
+    recurring_description: InvoiceDescription | None = None
 
 
 def open_payment_order(
@@ -90,6 +92,7 @@ def open_payment_order(
                     opening.charges_from, business.timezone
                 ),
                 starts_at=opening.charges_from,
+                description=opening.recurring_description,
             ),
             language=opening.language,
             return_url=opening.return_url,

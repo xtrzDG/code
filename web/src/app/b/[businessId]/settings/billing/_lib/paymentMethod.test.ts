@@ -7,10 +7,12 @@ import {
   cardExpiryState,
   cardExpiryText,
   cardReturnUrl,
+  cardSaveNoteText,
   isCardConfirmed,
   isCardPromptShown,
   maskedCardNumber,
   retryStatusText,
+  trialPromptBodyText,
   withoutTrialNotice,
   type PaymentCardView,
   type PaymentMethodView,
@@ -119,5 +121,19 @@ describe("back from the provider's page", () => {
     expect(cardReturnUrl("https://app.example.com/", "/b/business_1/settings/billing")).toBe(
       "https://app.example.com/b/business_1/settings/billing?card=return",
     );
+  });
+});
+
+describe("what saving the card charges", () => {
+  const fee = { amount_minor: 44_300, currency_code: "GEL" };
+
+  it("names the trial's setup fee the card's page charges, or nothing charged", () => {
+    expect(cardSaveNoteText(method())).toBe("billingCard.noCharge");
+    expect(cardSaveNoteText(method({ setup_fee_due: fee }))).toBe("billingCard.setupFeeNow");
+  });
+
+  it("asks for the card with the setup fee named when there is one", () => {
+    expect(trialPromptBodyText(method())).toBe("billingCard.trialPrompt.body");
+    expect(trialPromptBodyText(method({ setup_fee_due: fee }))).toBe("billingCard.trialPrompt.bodyWithSetupFee");
   });
 });

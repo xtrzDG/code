@@ -22753,6 +22753,16 @@
               }
             ]
           },
+          "setup_fee_due": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "trial_ends_at": {
             "anyOf": [
               {

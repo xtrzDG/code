@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.payment_methods import PaymentRetryRepoContract
 from app.contracts.referrals import ReferralEarningsFacilitatorContract
@@ -14,7 +17,11 @@ from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
-from app.schemas.constants.payments import PaymentStatus, PaymentWebhookOutcome
+from app.schemas.constants.payments import (
+    PaymentRetryOutcome,
+    PaymentStatus,
+    PaymentWebhookOutcome,
+)
 from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
@@ -45,7 +52,8 @@ from app.use_cases.billing.payment_webhook.payment_order_rules import (
 )
 from app.use_cases.billing.payment_webhook.payment_retry_settlement import (
     find_retried_invoice,
-    settle_retried_invoice,
+    record_retry_outcome,
+    settle_retry_approval,
 )
 from app.use_cases.shared.service_mode_restoration import restore_full_service
 from app.use_cases.shared.subscription_payment_transitions import activate_paid_period
@@ -66,7 +74,9 @@ class ApplyPaymentStatusUseCase(
       serves in full. Money that settles no bill is marked for refund.
     - approved, later automatic charge of the current schedule: the next
       period is invoiced as PAID (for what was charged); a retry of a
-      declined charge pays the invoice it retried. Either way the paid
+      declined charge pays the invoice it retried (and records the
+      retry's answer); a retry whose invoice is already paid is marked
+      for refund (REFUND_DUE). Either way the paid
       period becomes current once it starts and what the paid invoices
       earn a referral is recorded.
     - an automatic charge of any other schedule (replaced, stopped, or of a
@@ -76,7 +86,8 @@ class ApplyPaymentStatusUseCase(
       charge - the next period is invoiced as FAILED and an active
       subscription (or a trial that has ended) becomes PAST_DUE with grace
       until now + the plan's grace days. Owners are told either way. A
-      declined retry changes nothing: the dunning job tells the owners.
+      declined retry changes no bill (its row records the decline): the
+      dunning job tells the owners.
     - a card setup's own verification only records its status: the card it
       saved settled the setup already.
     - expired, created, processing, reversed: recorded on the payment order
@@ -97,6 +108,7 @@ class ApplyPaymentStatusUseCase(
         wall_clock: WallClock[Microseconds],
         referral_earnings: ReferralEarningsFacilitatorContract,
         payment_retry_repo: PaymentRetryRepoContract,
+        payment_order_repo: PaymentOrderRepoContract,
     ) -> None:
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
@@ -116,6 +128,7 @@ class ApplyPaymentStatusUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._referral_earnings: ReferralEarningsFacilitatorContract = referral_earnings
         self._payment_retry_repo: PaymentRetryRepoContract = payment_retry_repo
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
 
     def run(self, input_data: PaymentStatusChange) -> PaymentWebhookOutcome:
         notification = input_data.notification
@@ -141,6 +154,7 @@ class ApplyPaymentStatusUseCase(
                     return PaymentWebhookOutcome.IGNORED
 
                 if notification.is_retry and payment_order.is_initial_payment_settled:
+                    self._record_declined_retry(input_data)
                     return PaymentWebhookOutcome.IGNORED
 
                 self._apply_decline(input_data)
@@ -169,23 +183,33 @@ class ApplyPaymentStatusUseCase(
                 subscription,
                 notification,
             )
-            paid: list[InvoiceDocument] = [
-                settle_retried_invoice(self._invoice_repo, retried, notification, now)
-                if retried is not None
-                else record_renewal_invoice(
+            paid: list[InvoiceDocument]
+            if retried is None:
+                paid = [
+                    record_renewal_invoice(
+                        self._invoice_repo,
+                        self._issue_due_invoices,
+                        business,
+                        subscription,
+                        InvoiceStatus.PAID,
+                        notification.payment_reference,
+                        now,
+                        charge=notification,
+                    )
+                ]
+            else:
+                paid, outcome = settle_retry_approval(
+                    self._payment_retry_repo,
                     self._invoice_repo,
-                    self._issue_due_invoices,
-                    business,
-                    subscription,
-                    InvoiceStatus.PAID,
-                    notification.payment_reference,
+                    payment_order,
+                    retried,
+                    notification,
                     now,
-                    charge=notification,
                 )
-            ]
         else:
             outcome = settle_checkout_payment(
                 self._payment_gateway,
+                self._payment_order_repo,
                 self._invoice_repo,
                 payment_order,
                 subscription,
@@ -207,6 +231,24 @@ class ApplyPaymentStatusUseCase(
             restore_full_service(self._business_repo, business, now)
 
         return outcome
+
+    def _record_declined_retry(self, change: PaymentStatusChange) -> None:
+        """A declined retry changes no bill; its row says it was declined."""
+
+        record_retry_outcome(
+            self._payment_retry_repo,
+            change.payment_order,
+            find_retried_invoice(
+                self._payment_retry_repo,
+                self._invoice_repo,
+                change.payment_order,
+                change.subscription,
+                change.notification,
+            ),
+            change.notification,
+            PaymentRetryOutcome.DECLINED,
+            self._wall_clock.now_unix(),
+        )
 
     def _apply_decline(self, change: PaymentStatusChange) -> None:
         notification, payment_order = change.notification, change.payment_order

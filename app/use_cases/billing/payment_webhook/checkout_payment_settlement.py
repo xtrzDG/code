@@ -2,7 +2,10 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.payments import PaymentWebhookOutcome
@@ -25,6 +28,7 @@ from app.use_cases.shared.subscription_payment_transitions import (
 
 def settle_checkout_payment(
     payment_gateway: PaymentGatewayAdapterContract,
+    payment_order_repo: PaymentOrderRepoContract,
     invoice_repo: InvoiceRepoContract,
     payment_order: PaymentOrderDocument,
     subscription: SubscriptionDocument,
@@ -40,7 +44,9 @@ def settle_checkout_payment(
     REFUND_DUE.
     """
 
-    replace_charge_schedule(payment_gateway, payment_order, subscription)
+    replace_charge_schedule(
+        payment_gateway, payment_order_repo, payment_order, subscription
+    )
     outcome: PaymentWebhookOutcome = PaymentWebhookOutcome.APPLIED
     settled_count: int = settle_order_invoices(
         invoice_repo,
@@ -64,18 +70,25 @@ def settle_checkout_payment(
 
 def replace_charge_schedule(
     payment_gateway: PaymentGatewayAdapterContract,
+    payment_order_repo: PaymentOrderRepoContract,
     payment_order: PaymentOrderDocument,
     subscription: SubscriptionDocument,
 ) -> None:
     """
     The order's automatic charges become the subscription's, at its
     provider; those of an earlier checkout or card setup stop, so only one
-    schedule ever runs (the earlier card is forgotten with them).
+    schedule ever runs (the earlier card and its saved tokens are
+    forgotten with them).
     """
 
     order_reference: PaymentProviderReference = build_order_reference(payment_order)
     if subscription.provider_reference != order_reference:
-        stop_recurring_charges(payment_gateway, subscription)
+        stop_recurring_charges(
+            payment_gateway,
+            payment_order_repo,
+            subscription,
+            keep_order_id=payment_order.id,
+        )
 
     subscription.provider_reference = order_reference
     subscription.payment_provider = payment_order.provider

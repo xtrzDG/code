@@ -78,6 +78,7 @@ def build_payment_parts(
         wall_clock=wall_clock,
         referral_earnings=world.referral_earnings,
         payment_retry_repo=world.payment_retry_repo,
+        payment_order_repo=world.payment_order_repo,
     )
     dunning_notices = DunningNoticeFacilitator(
         user_repo=world.user_repo,
@@ -120,6 +121,9 @@ def build_payment_parts(
             plan_registry=world.plan_registry,
             payment_provider_registry=registry,
             wall_clock=wall_clock,
+            invoice_issuing=world.invoicing.invoice_issuing,
+            brand_repo=world.brand_repo,
+            business_repo=world.business_repo,
         ),
         start_card_setup=StartCardSetupUseCase(
             authorize_business_access=authorize,
@@ -131,6 +135,9 @@ def build_payment_parts(
             invoice_issuing=world.invoicing.invoice_issuing,
             app_settings=world.settings,
             wall_clock=wall_clock,
+            issue_due_invoices=issue_due_invoices,
+            plan_registry=world.plan_registry,
+            invoice_description_transformer=world.invoice_description_transformer,
         ),
         dunning_notices=dunning_notices,
         retry_failed_payments=RetryFailedPaymentsUseCase(

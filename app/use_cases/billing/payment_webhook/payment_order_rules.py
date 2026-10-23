@@ -89,8 +89,12 @@ def stop_stray_schedule(
     payment_gateway: PaymentGatewayAdapterContract,
     payment_order: PaymentOrderDocument,
 ) -> None:
-    """Stop the automatic charges of a schedule nothing books any more."""
+    """
+    Stop the automatic charges of a schedule nothing books any more and
+    forget its saved card token (the caller saves the order).
+    """
 
     payment_gateway.stop_recurring(
         payment_order.provider, build_order_reference(payment_order)
     )
+    payment_order.sealed_card_token = None

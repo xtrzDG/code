@@ -5,7 +5,7 @@ import { Alert, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { daysUntil } from "../_lib/billing";
-import { isCardConfirmed, isCardPromptShown, type PaymentMethodView } from "../_lib/paymentMethod";
+import { isCardConfirmed, isCardPromptShown, trialPromptBodyText, type PaymentMethodView } from "../_lib/paymentMethod";
 
 /**
  * From day 10 of a trial without a card: how many days are left and
@@ -31,7 +31,12 @@ export function TrialCardPrompt({
   }
   return (
     <Alert tone="info" title={tp("billingCard.trialPrompt.title", daysUntil(view.trial_ends_at, nowUs))}>
-      <p>{t("billingCard.trialPrompt.body", { date: format.date(view.trial_ends_at) })}</p>
+      <p>
+        {t(trialPromptBodyText(view), {
+          date: format.date(view.trial_ends_at),
+          amount: view.setup_fee_due ? format.money(view.setup_fee_due.amount_minor, view.setup_fee_due.currency_code) : "",
+        })}
+      </p>
       {canManage ? (
         <div className="mt-3">
           <Button size="sm" onClick={onSave} isLoading={isOpening} loadingText={t("billingCard.opening")}>

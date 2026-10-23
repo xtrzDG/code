@@ -14,12 +14,15 @@ from app.schemas.constants.billing import (
     InvoiceStatus,
     SubscriptionStatus,
 )
+from app.schemas.constants.payments import PaymentRetryOutcome
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payment_retries import PaymentRetryAttemptDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.payment_methods import PaymentRetryView
 from app.schemas.typings.billing.constrained_integers import PaymentRetryAttempt
+from app.schemas.typings.billing.prefixed_id import InvoiceId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.billing.payment_webhook.payment_order_rules import (
     build_order_reference,
 )
@@ -53,6 +56,30 @@ def find_dunning_invoice(
         and invoice.provider_reference is not None
     ]
     return max(declined, key=lambda invoice: int(invoice.created_at), default=None)
+
+
+# A retry the provider took (or is still taking): its notice settles the
+# invoice, so no further retry charges the card for it meanwhile.
+SETTLING_RETRY_OUTCOMES: frozenset[PaymentRetryOutcome] = frozenset(
+    {PaymentRetryOutcome.APPROVED, PaymentRetryOutcome.PROCESSING}
+)
+
+
+def has_settling_retry(
+    retry_repo: PaymentRetryRepoContract,
+    business_id: BusinessId,
+    invoice_id: InvoiceId,
+) -> bool:
+    """
+    An earlier retry of the invoice was approved or is being processed and
+    its notice has not said otherwise yet: charging the card again could
+    take the money twice.
+    """
+
+    return any(
+        attempt.outcome in SETTLING_RETRY_OUTCOMES
+        for attempt in retry_repo.list_for_invoice(business_id, invoice_id)
+    )
 
 
 def find_grace_start_of(

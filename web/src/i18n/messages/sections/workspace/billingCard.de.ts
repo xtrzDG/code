@@ -25,6 +25,8 @@ export const billingCardDe: Translation<typeof billingCardEn> = {
   expiringHint: "Diese Karte läuft bald ab. Speichern Sie eine neue, damit die nächste Zahlung durchgeht.",
   noCharge: "Beim Speichern wird nichts abgebucht: Der Zahlungsdienst prüft die Karte nur.",
   payToSave: "Wenn Sie die offene Rechnung bezahlen, wird die Karte gespeichert, mit der Sie zahlen.",
+  setupFeeNow: "Beim Speichern der Karte wird jetzt die einmalige Einrichtungsgebühr von {amount} abgebucht. Die monatlichen Zahlungen beginnen nach dem Testzeitraum.",
+  retryUsesNewCard: "Der nächste Versuch belastet die Karte, die Sie speichern.",
   save: "Karte speichern",
   update: "Karte ändern",
   opening: "Wird geöffnet…",
@@ -46,6 +48,7 @@ export const billingCardDe: Translation<typeof billingCardEn> = {
   trialPrompt: {
     title: { one: "Noch {count} Tag Testzeitraum", other: "Noch {count} Tage Testzeitraum" },
     body: "Bis zum {date} wird nichts abgebucht: Speichern Sie jetzt eine Karte, dann antwortet der Assistent auch nach dem Testzeitraum weiter.",
+    bodyWithSetupFee: "Speichern Sie jetzt eine Karte: Sie zahlt die einmalige Einrichtungsgebühr von {amount}, und ab dem {date} laufen die monatlichen Zahlungen darüber. Der Assistent antwortet auch nach dem Testzeitraum weiter.",
   },
   returned: {
     title: "Ihre Karte wird gespeichert",

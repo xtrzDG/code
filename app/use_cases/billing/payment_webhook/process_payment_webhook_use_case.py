@@ -187,5 +187,7 @@ class ProcessPaymentWebhookUseCase(
         if not is_pending_card_setup(payment_order):
             return PaymentWebhookOutcome.IGNORED
 
-        settle_card_setup(self._payment_gateway, payment_order, subscription)
+        settle_card_setup(
+            self._payment_gateway, self._payment_order_repo, payment_order, subscription
+        )
         return PaymentWebhookOutcome.APPLIED

@@ -136,7 +136,8 @@ def test_the_retries_of_a_declined_charge_are_shown() -> None:
     assert after.next_retry_at == add_local_days(
         grace_start, 3, world.business.timezone
     )
-    assert not payment_method(world).can_save_card
+    # A declined charge being retried: the card may be replaced meanwhile.
+    assert payment_method(world).can_save_card
 
 
 def test_a_business_without_a_subscription_has_no_card_to_save() -> None:

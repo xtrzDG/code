@@ -4,7 +4,10 @@ automatic charges of a payment order (with the first payment, through a
 card setup, or replaced through the provider's own page).
 """
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.payments import PaymentOrderPurpose, PaymentStatus
 from app.schemas.domain.billing import SubscriptionDocument
@@ -61,6 +64,7 @@ def is_pending_card_setup(payment_order: PaymentOrderDocument) -> bool:
 
 def settle_card_setup(
     payment_gateway: PaymentGatewayAdapterContract,
+    payment_order_repo: PaymentOrderRepoContract,
     payment_order: PaymentOrderDocument,
     subscription: SubscriptionDocument,
 ) -> None:
@@ -70,7 +74,9 @@ def settle_card_setup(
     so no invoice changes; a cancelled subscription stays cancelled.
     """
 
-    replace_charge_schedule(payment_gateway, payment_order, subscription)
+    replace_charge_schedule(
+        payment_gateway, payment_order_repo, payment_order, subscription
+    )
     payment_order.is_initial_payment_settled = True
     payment_order.status = PaymentStatus.APPROVED
 

@@ -14,6 +14,7 @@ import {
   cardBrandName,
   cardExpiryState,
   cardExpiryText,
+  cardSaveNoteText,
   type PaymentCardView,
   type PaymentMethodView,
 } from "../_lib/paymentMethod";
@@ -76,7 +77,14 @@ export function PaymentMethodCard({
             ]}
           />
           {view.retry ? <PaymentRetryStatus retry={view.retry} /> : null}
-          {canSave ? <p className="text-sm text-ink-muted">{t("billingCard.noCharge")}</p> : null}
+          {canSave ? (
+            <p className="text-sm text-ink-muted">
+              {t(cardSaveNoteText(view), {
+                amount: view.setup_fee_due ? format.money(view.setup_fee_due.amount_minor, view.setup_fee_due.currency_code) : "",
+              })}
+            </p>
+          ) : null}
+          {canSave && view.retry ? <p className="text-sm text-ink-muted">{t("billingCard.retryUsesNewCard")}</p> : null}
           {canManage && !view.can_save_card && view.retry ? <p className="text-sm text-ink-muted">{t("billingCard.payToSave")}</p> : null}
         </div>
       )}

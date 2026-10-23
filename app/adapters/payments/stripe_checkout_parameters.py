@@ -34,12 +34,15 @@ def build_checkout_parameters(
 
     order_id: str = str(request.payment_order_id)
     currency: str = str(request.amount.currency_code).lower()
+    recurring_name: str = str(
+        request.recurring_charge.description or request.description
+    )
     line_items: list[FormValue] = [
         {
             "price_data": {
                 "currency": currency,
                 "unit_amount": int(request.recurring_charge.amount.amount_minor),
-                "product_data": {"name": str(request.description)},
+                "product_data": {"name": recurring_name},
                 "recurring": recurring_interval(
                     int(request.recurring_charge.interval_months)
                 ),

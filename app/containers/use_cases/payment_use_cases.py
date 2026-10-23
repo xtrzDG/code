@@ -109,6 +109,7 @@ class PaymentUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         referral_earnings=facilitators.referral_earnings,
         payment_retry_repo=repositories.payment_retry_repo,
+        payment_order_repo=repositories.payment_order_repo,
     )
     process_payment_webhook_use_case: Factory[
         UseCaseContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
@@ -134,6 +135,9 @@ class PaymentUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         payment_provider_registry=payment_provider_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        invoice_issuing=facilitators.invoice_issuing_facilitator,
+        brand_repo=repositories.brand_repo,
+        business_repo=repositories.business_repo,
     )
     start_card_setup_use_case: Factory[
         UseCaseContract[StartCardSetupCommand, CardSetupSessionView]
@@ -148,6 +152,9 @@ class PaymentUseCasesContainer(containers.DeclarativeContainer):
         invoice_issuing=facilitators.invoice_issuing_facilitator,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        issue_due_invoices=billing_use_cases.issue_due_invoices_use_case,
+        plan_registry=registries.plan_registry,
+        invoice_description_transformer=transformers.invoice_description_transformer,
     )
     retry_failed_payments_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

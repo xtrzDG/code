@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -65,6 +68,7 @@ class ResumeSubscriptionUseCase(
         business_repo: BusinessRepoContract,
         subscription_event_repo: SubscriptionEventRepoContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         assemble_billing_overview: UseCaseContract[
             BillingOverviewSource, BillingOverview
         ],
@@ -80,6 +84,7 @@ class ResumeSubscriptionUseCase(
             subscription_event_repo
         )
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._assemble_billing_overview: UseCaseContract[
             BillingOverviewSource, BillingOverview
         ] = assemble_billing_overview
@@ -145,7 +150,9 @@ class ResumeSubscriptionUseCase(
             subscription, now, input_data.user_id
         )
         # A schedule a pause checkout started from the pause's end.
-        stop_recurring_charges(self._payment_gateway, subscription)
+        stop_recurring_charges(
+            self._payment_gateway, self._payment_order_repo, subscription
+        )
 
         subscription.status = SubscriptionStatus.ACTIVE
         subscription.period_end = now

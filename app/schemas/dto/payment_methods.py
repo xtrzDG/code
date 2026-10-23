@@ -4,6 +4,7 @@ from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.payments import PaymentProvider, PaymentRetryOutcome
+from app.schemas.dto.billing import Money
 from app.schemas.typings.billing.booleans import (
     IsAutoDebitActive,
     IsCardSetupAvailable,
@@ -66,6 +67,7 @@ class PaymentMethodView(ImmutableDTO):
     trial_ends_at: Microseconds | None = None
     is_trial_card_prompt_due: IsTrialCardPromptDue = False
     retry: PaymentRetryView | None = None
+    setup_fee_due: Money | None = None
 
 
 class PaymentMethodQuery(ImmutableDTO):

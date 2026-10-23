@@ -22,6 +22,8 @@ export const billingCardEn = {
   expiringHint: "This card expires soon. Save a new one so the next payment goes through.",
   noCharge: "Saving a card charges nothing: the payment service only checks it.",
   payToSave: "Paying the open bill saves the card you pay with.",
+  setupFeeNow: "Saving the card charges the one-time setup fee of {amount} now. The monthly payments start when the trial ends.",
+  retryUsesNewCard: "The next try charges the card you save.",
   save: "Save card",
   update: "Update card",
   opening: "Opening…",
@@ -43,6 +45,7 @@ export const billingCardEn = {
   trialPrompt: {
     title: { one: "{count} day of the trial left", other: "{count} days of the trial left" },
     body: "Nothing is charged until {date}: save a card now and the assistant keeps answering after the trial.",
+    bodyWithSetupFee: "Save a card now: it pays the one-time setup fee of {amount}, and from {date} the monthly payments go to it. The assistant keeps answering after the trial.",
   },
   returned: {
     title: "Saving your card",

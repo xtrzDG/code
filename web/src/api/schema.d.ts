@@ -14383,6 +14383,7 @@ export interface components {
             is_trial_card_prompt_due: boolean;
             provider: components["schemas"]["PaymentProvider"];
             retry?: components["schemas"]["PaymentRetryView"] | null;
+            setup_fee_due?: components["schemas"]["Money"] | null;
             /** Trial Ends At */
             trial_ends_at?: number | null;
         };

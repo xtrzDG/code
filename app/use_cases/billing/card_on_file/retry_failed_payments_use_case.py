@@ -29,6 +29,7 @@ from app.use_cases.billing.card_on_file.dunning_rules import (
     find_dunning_invoice,
     find_grace_start_of,
     find_schedule_order,
+    has_settling_retry,
 )
 from app.use_cases.billing.card_on_file.payment_retry_run import PaymentRetryRun
 from app.use_cases.shared.billing_records import (
@@ -50,6 +51,9 @@ class RetryFailedPaymentsUseCase(UseCaseContract[JobTick, JobReport]):
     derives from the invoice and the attempt), so it is charged once
     however many workers run the job; a retry missed while the job did
     not run is recorded as skipped and only the latest due one is made.
+    While an earlier retry is approved or still processing (its notice
+    has not arrived), no further retry is made: the card is never charged
+    twice for one invoice.
     Flitt charges the saved card's token, Stripe pays its own invoice
     again with the card on file. The owners hear about every declined
     retry (and the last one before the assistant only takes requests) and
@@ -74,6 +78,7 @@ class RetryFailedPaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
+        self._payment_retry_repo: PaymentRetryRepoContract = payment_retry_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._run: PaymentRetryRun = PaymentRetryRun(
@@ -114,7 +119,9 @@ class RetryFailedPaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         attempt: PaymentRetryAttempt | None = find_due_attempt(
             grace_start, now, business.timezone
         )
-        if attempt is None:
+        if attempt is None or has_settling_retry(
+            self._payment_retry_repo, business.id, invoice.id
+        ):
             return False
 
         schedule_order: PaymentOrderDocument | None = find_schedule_order(

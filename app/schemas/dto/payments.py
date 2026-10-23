@@ -36,13 +36,16 @@ class RecurringCharge(ImmutableDTO):
     """
     Automatic charge the provider repeats after the first payment, from
     `start_date` (the business-local day) or `starts_at` (the moment, for a
-    provider that schedules by time).
+    provider that schedules by time). `description` names what each charge
+    pays (Stripe names the subscription's item after it); without it the
+    page's own description is used.
     """
 
     amount: Money
     interval_months: BillingIntervalMonths
     start_date: AutoDebitStartDate
     starts_at: Microseconds
+    description: InvoiceDescription | None = None
 
 
 class PaymentCheckoutRequest(ImmutableDTO):

@@ -15,6 +15,7 @@ IsPaymentRetry = bool
 IsPriceEstimated = bool
 IsRefundDue = bool
 IsSetupFeeIncluded = bool
+IsSetupFeeOnly = bool
 IsSetupFeeWaived = bool
 IsSubscriptionCreated = bool
 IsTrialAvailable = bool

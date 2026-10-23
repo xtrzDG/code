@@ -7,7 +7,7 @@
  * (`PaymentMethodView`: provider, card.{brand, last_digits, expiry_month,
  * expiry_year, saved_at}, has_auto_debit, can_save_card, trial_ends_at,
  * is_trial_card_prompt_due, retry.{last_attempt, last_outcome,
- * next_retry_at, grace_until}) and POST …/billing/payment-method
+ * next_retry_at, grace_until}, setup_fee_due) and POST …/billing/payment-method
  * (`CardSetupSessionView`: provider, url, payment_order_id).
  */
 
@@ -103,6 +103,19 @@ export function cardExpiryState(card: Pick<PaymentCardView, "expiry_month" | "ex
 /** "Update card" when a card is saved, "Save card" before. */
 export function cardActionText(view: Pick<PaymentMethodView, "card">): MessageKey {
   return view.card ? "billingCard.update" : "billingCard.save";
+}
+
+/**
+ * What saving the card charges now: a done-for-you trial pays its one-time
+ * setup fee on the card's page; otherwise the provider only checks the card.
+ */
+export function cardSaveNoteText(view: Pick<PaymentMethodView, "setup_fee_due">): MessageKey {
+  return view.setup_fee_due ? "billingCard.setupFeeNow" : "billingCard.noCharge";
+}
+
+/** The trial's "Save card" prompt, naming the setup fee the card's page charges when there is one. */
+export function trialPromptBodyText(view: Pick<PaymentMethodView, "setup_fee_due">): MessageKey {
+  return view.setup_fee_due ? "billingCard.trialPrompt.bodyWithSetupFee" : "billingCard.trialPrompt.body";
 }
 
 /** What the retry block says first: the last retry and how it went, or that the charge was declined. */
