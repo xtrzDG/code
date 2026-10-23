@@ -35,6 +35,7 @@ GUARDED_PROVIDERS: tuple[OutboundProvider, ...] = (
     OutboundProvider.TWILIO_SMS,
     OutboundProvider.SMTP,
     OutboundProvider.FLITT,
+    OutboundProvider.STRIPE,
 )
 CUSTOMER_CHANNEL_PROVIDERS: dict[ChannelKind, OutboundProvider] = {
     ChannelKind.WHATSAPP: OutboundProvider.META,

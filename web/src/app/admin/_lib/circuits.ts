@@ -12,7 +12,7 @@ export type CircuitSummary = Schema<"CircuitSummaryView">;
 export type CircuitState = Schema<"CircuitState">;
 
 /** The providers the platform sends through (`provider:<name>` circuits). */
-const CIRCUIT_PROVIDERS = ["meta", "telegram", "platform_bot", "twilio_sms", "smtp", "flitt", "web_push"] as const;
+const CIRCUIT_PROVIDERS = ["meta", "telegram", "platform_bot", "twilio_sms", "smtp", "flitt", "stripe", "web_push"] as const;
 export type CircuitProvider = (typeof CIRCUIT_PROVIDERS)[number];
 
 const PROVIDER_PREFIX = "provider:";

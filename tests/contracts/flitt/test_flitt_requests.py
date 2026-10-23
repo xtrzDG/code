@@ -8,11 +8,13 @@ answers are read as the billing flow expects.
 from typing import Any
 
 import pytest
+from typed_time_provider import Microseconds, WallClock
 
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
 from app.clients.flitt.flitt_client import FlittClient
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.dto.billing import Money
 from app.schemas.dto.payments import PaymentCheckoutRequest, RecurringCharge
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -35,11 +37,14 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
+from tests.billing.billing_fakes import AdjustableClock
 from tests.billing.billing_settings import APP_BASE_URL, FLITT_MERCHANT_ID
 from tests.channels.recording_transport import RecordingTransport
 from tests.contracts.contract_files import load_json_fixture
 from tests.contracts.flitt.flitt_signing import TEST_SECRET, opened
 from tests.contracts.vendor_schemas import assert_inbound, assert_outbound
+
+FIXED_CLOCK: WallClock[Microseconds] = AdjustableClock().wall_clock
 
 SPEC: str = "flitt_api.json"
 
@@ -51,13 +56,16 @@ def gateway(transport: RecordingTransport) -> FlittPaymentGatewayAdapter:
         transport=transport.build(),
     )
     return FlittPaymentGatewayAdapter(
-        flitt_client=client, app_base_url=PublicBaseUrl(APP_BASE_URL)
+        flitt_client=client,
+        app_base_url=PublicBaseUrl(APP_BASE_URL),
+        wall_clock=FIXED_CLOCK,
     )
 
 
 def checkout_request() -> PaymentCheckoutRequest:
     gel = CurrencyCode("GEL")
     return PaymentCheckoutRequest(
+        provider=PaymentProvider.FLITT,
         payment_order_id=PaymentOrderId(),
         amount=Money(amount_minor=MoneyAmountMinor(96000), currency_code=gel),
         description=InvoiceDescription("Call and message handling service"),
@@ -65,6 +73,7 @@ def checkout_request() -> PaymentCheckoutRequest:
             amount=Money(amount_minor=MoneyAmountMinor(51700), currency_code=gel),
             interval_months=BillingIntervalMonths(1),
             start_date=AutoDebitStartDate("2026-11-15"),
+            starts_at=Microseconds(1_794_700_800_000_000),
         ),
         language=LanguageTag("ka"),
         return_url=PaymentReturnUrl("https://app.assistant.example/billing"),
@@ -126,7 +135,9 @@ def test_stopping_the_charges_matches_the_protocol() -> None:
         load_json_fixture("flitt", "subscription_stop_response.json"),
     )
 
-    gateway(transport).stop_recurring(PaymentProviderReference("payment_order_1"))
+    gateway(transport).stop_recurring(
+        PaymentProvider.FLITT, PaymentProviderReference("payment_order_1")
+    )
 
     [request] = transport.requests
     assert_outbound(request.json(), SPEC, "request:api")

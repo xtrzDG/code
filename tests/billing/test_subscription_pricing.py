@@ -29,7 +29,17 @@ def money(amount_minor: int, currency_code: str) -> Money:
 
 @pytest.mark.parametrize(
     ("business_currency", "expected"),
-    [("GEL", "GEL"), ("EUR", "EUR"), ("USD", "EUR"), ("JPY", "EUR"), ("ILS", "EUR")],
+    [
+        ("GEL", "GEL"),
+        ("EUR", "EUR"),
+        ("USD", "USD"),
+        ("AMD", "AMD"),
+        ("ILS", "ILS"),
+        ("KZT", "KZT"),
+        ("PLN", "PLN"),
+        ("JPY", "EUR"),
+        ("GBP", "EUR"),
+    ],
 )
 def test_subscription_currency_follows_the_price_book(
     business_currency: str,
@@ -110,11 +120,11 @@ def test_prices_are_never_converted() -> None:
             PlanRegistry(),
             PlanKey.CHAT,
             BillingPeriod.MONTHLY,
-            CurrencyCode("USD"),
+            CurrencyCode("JPY"),
         )
 
     with pytest.raises(ValidationFailedError):
-        price_setup_fee(PlanRegistry(), PlanKey.CHAT, CurrencyCode("USD"))
+        price_setup_fee(PlanRegistry(), PlanKey.CHAT, CurrencyCode("JPY"))
 
 
 def test_setup_fee_comes_from_the_price_book() -> None:

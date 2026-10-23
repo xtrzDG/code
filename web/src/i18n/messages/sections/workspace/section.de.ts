@@ -18,6 +18,7 @@ import { adminStoryDe } from "./adminStory.de";
 import { adminSystemDe } from "./adminSystem.de";
 import { adminTeamDe } from "./adminTeam.de";
 import { billingDe } from "./billing.de";
+import { billingCardDe } from "./billingCard.de";
 import { billingLifecycleDe } from "./billingLifecycle.de";
 import { apiIntegrationsDe } from "./apiIntegrations.de";
 import { calendarSyncDe } from "./calendarSync.de";
@@ -51,6 +52,7 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   loginOptions: loginOptionsDe,
   billing: billingDe,
   billingLifecycle: billingLifecycleDe,
+  billingCard: billingCardDe,
   settings: { ...settingsDe, ...settingsRecordsDe },
   notifications: notificationsDe,
   callSettings: callSettingsDe,

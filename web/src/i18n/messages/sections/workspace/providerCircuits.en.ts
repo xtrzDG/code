@@ -28,6 +28,7 @@ export const providerCircuitsEn = {
     twilio_sms: "SMS (Twilio)",
     smtp: "E-mail (SMTP)",
     flitt: "Payments (Flitt)",
+    stripe: "Payments (Stripe)",
     web_push: "Web push",
   },
 } as const;

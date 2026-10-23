@@ -15,13 +15,15 @@ from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
 )
+from app.repositories.payment_retry_repository import PaymentRetryRepository
 
 
 class BillingRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of payments and invoicing: checkout orders and
     package usage warnings (0003), billing details and invoice numbers
-    (1114). `RepositoriesContainer` extends it, so they are read as
+    (1114), the retries of declined automatic charges (1214).
+    `RepositoriesContainer` extends it, so they are read as
     `repositories.billing_profile_repo` like every other repository.
     """
 
@@ -43,4 +45,8 @@ class BillingRepositoriesContainer(containers.DeclarativeContainer):
     invoice_counter_repo: Singleton[InvoiceCounterRepository] = Singleton(
         InvoiceCounterRepository,
         collection=invoicing_collections.invoice_counter_collection,
+    )
+    payment_retry_repo: Singleton[PaymentRetryRepository] = Singleton(
+        PaymentRetryRepository,
+        collection=invoicing_collections.payment_retry_attempt_collection,
     )

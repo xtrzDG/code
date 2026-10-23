@@ -1,5 +1,5 @@
 """
-Plan quotes per country: the lari price book, euros, dated estimates, no made-up rate.
+Plan quotes per country: the local price books, euros, dated estimates, no made-up rate.
 """
 
 import pytest
@@ -125,16 +125,16 @@ def test_the_plan_catalog_renders_in_hebrew() -> None:
         assert "Voice" not in str(quote.description)
 
 
-def test_without_a_dollar_rate_usa_quotes_never_invent_a_dollar_price() -> None:
+def test_without_a_rate_quotes_never_invent_a_local_price() -> None:
     quote_list = build_quote_plans_use_case(
         static_rate_registry([("EUR", "GEL", "2.9552")])
     ).run(
         PlanQuoteRequest(
-            country_code=CountryCode("US"), display_language=LanguageTag("en")
+            country_code=CountryCode("JP"), display_language=LanguageTag("en")
         )
     )
 
-    assert quote_list.local_currency_code == "USD"
+    assert quote_list.local_currency_code == "JPY"
     assert quote_list.exchange_rate is None
     for quote in quote_list.quotes:
         assert quote.monthly_price.money.currency_code == "EUR"
@@ -144,7 +144,7 @@ def test_without_a_dollar_rate_usa_quotes_never_invent_a_dollar_price() -> None:
         assert quote.local_overage_price_per_minute is None
 
 
-def test_usa_quotes_estimate_dollars_with_the_published_euro_rate() -> None:
+def test_usa_quotes_dollars_from_the_price_book_whatever_the_rate() -> None:
     quote_list = build_quote_plans_use_case(
         rate_registry([("EUR", "USD", "1.1351")])
     ).run(
@@ -154,15 +154,22 @@ def test_usa_quotes_estimate_dollars_with_the_published_euro_rate() -> None:
     )
     plus = find_quote(quote_list.quotes, PlanKey.PLUS)
 
+    assert plus.local_monthly_price is not None
+    assert plus.local_monthly_price.is_estimated is False
+    assert plus.local_monthly_price.money.amount_minor == 38900
+    assert plus.local_monthly_price.money.currency_code == "USD"
+    assert plus.local_setup_fee is not None
+    assert plus.local_setup_fee.money.amount_minor == 16900
+    assert plus.local_setup_fee.is_estimated is False
+    # Only the per-minute overage, which no book prices, is an estimate.
+    assert plus.local_overage_price_per_minute is not None
+    assert plus.local_overage_price_per_minute.is_estimated is True
     rate = quote_list.exchange_rate
     assert rate is not None
     assert (str(rate.rate_value), str(rate.source)) == (
         "1.1351",
         "European Central Bank",
     )
-    assert plus.local_monthly_price is not None
-    assert plus.local_monthly_price.is_estimated is True
-    assert plus.local_monthly_price.money.currency_code == "USD"
 
 
 def test_euro_countries_get_the_euro_price_as_local() -> None:
@@ -183,10 +190,10 @@ def test_euro_countries_get_the_euro_price_as_local() -> None:
 
 def test_a_known_rate_gives_estimated_local_prices() -> None:
     quote_list = build_quote_plans_use_case(
-        rate_registry([("EUR", "AMD", "450")], today="2026-09-30")
+        rate_registry([("EUR", "TRY", "38")], today="2026-09-30")
     ).run(
         PlanQuoteRequest(
-            country_code=CountryCode("AM"), display_language=LanguageTag("hy")
+            country_code=CountryCode("TR"), display_language=LanguageTag("tr")
         )
     )
     chat = find_quote(quote_list.quotes, PlanKey.CHAT)
@@ -194,18 +201,47 @@ def test_a_known_rate_gives_estimated_local_prices() -> None:
     rate = quote_list.exchange_rate
     assert rate is not None
     assert (str(rate.rate_value), str(rate.rate_date), rate.is_derived) == (
-        "450",
+        "38",
         "2026-09-30",
         False,
     )
     assert chat.local_monthly_price is not None
-    assert chat.local_monthly_price.money.amount_minor == 4455000
-    assert chat.local_monthly_price.money.currency_code == "AMD"
+    assert chat.local_monthly_price.money.amount_minor == 376200
+    assert chat.local_monthly_price.money.currency_code == "TRY"
     assert chat.local_monthly_price.is_estimated is True
     assert chat.local_annual_price is not None
     assert chat.local_annual_price.is_estimated is True
     assert chat.local_setup_fee is not None
     assert chat.local_setup_fee.is_estimated is True
+
+
+@pytest.mark.parametrize(
+    ("country", "currency", "monthly_minor", "setup_minor"),
+    [
+        ("AM", "AMD", 4290000, 6490000),
+        ("IL", "ILS", 39900, 59900),
+        ("KZ", "KZT", 5590000, 8390000),
+        ("PL", "PLN", 42900, 64900),
+    ],
+)
+def test_regional_price_books_are_quoted_as_billed(
+    country: str, currency: str, monthly_minor: int, setup_minor: int
+) -> None:
+    quote_list = build_quote_plans_use_case(
+        rate_registry([("EUR", currency, "400")], today="2026-09-30")
+    ).run(
+        PlanQuoteRequest(
+            country_code=CountryCode(country), display_language=LanguageTag("en")
+        )
+    )
+    chat = find_quote(quote_list.quotes, PlanKey.CHAT)
+
+    assert chat.local_monthly_price is not None
+    assert chat.local_monthly_price.is_estimated is False
+    assert chat.local_monthly_price.money.currency_code == currency
+    assert chat.local_monthly_price.money.amount_minor == monthly_minor
+    assert chat.local_setup_fee is not None
+    assert chat.local_setup_fee.money.amount_minor == setup_minor
 
 
 def test_quotes_reject_unknown_countries_and_languages() -> None:

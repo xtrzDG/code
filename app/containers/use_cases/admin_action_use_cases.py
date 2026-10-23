@@ -161,6 +161,7 @@ class AdminActionUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         plan_registry=registries.plan_registry,
         payment_gateway=adapters.payment_gateway,
+        payment_order_repo=repositories.payment_order_repo,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
         product_events=facilitators.product_events,
         wall_clock=wall_clock,

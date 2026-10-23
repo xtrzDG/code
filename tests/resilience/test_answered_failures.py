@@ -21,6 +21,7 @@ from app.clients.flitt.flitt_client import FlittClient
 from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.resilience import CircuitState, OutboundProvider
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
@@ -35,6 +36,7 @@ from app.schemas.typings.billing.strings import PaymentProviderReference
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from app.utilities.resilience.provider_circuits import provider_circuit
+from tests.billing.billing_fakes import AdjustableClock
 from tests.billing.test_flitt_payment_gateway import build_checkout_request
 from tests.resilience.test_circuit_breaker import Ticks
 
@@ -62,7 +64,11 @@ def guarded(
     client: FlittClient | None, breaker: CircuitBreakerFacilitator
 ) -> CircuitBreakingPaymentGatewayAdapter:
     return CircuitBreakingPaymentGatewayAdapter(
-        FlittPaymentGatewayAdapter(client, PublicBaseUrl("https://api.example.com")),
+        FlittPaymentGatewayAdapter(
+            client,
+            PublicBaseUrl("https://api.example.com"),
+            AdjustableClock().wall_clock,
+        ),
         breaker,
         FLITT,
     )
@@ -96,7 +102,11 @@ def test_flitt_refusals_leave_the_circuit_closed(
     breaker = CircuitBreakerFacilitator(Ticks().clock())
     gateway = guarded(flitt_answering(status_code, body, calls), breaker)
 
-    call_repeatedly(lambda: gateway.stop_recurring(ORDER), error, CALLS_TO_OPEN + 1)
+    call_repeatedly(
+        lambda: gateway.stop_recurring(PaymentProvider.FLITT, ORDER),
+        error,
+        CALLS_TO_OPEN + 1,
+    )
     call_repeatedly(lambda: gateway.create_checkout(build_checkout_request()), error, 1)
 
     # Every call reached Flitt: it answers, so it is up.
@@ -108,11 +118,15 @@ def test_payments_not_set_up_leave_the_circuit_closed() -> None:
     breaker = CircuitBreakerFacilitator(Ticks().clock())
     unconfigured = guarded(None, breaker)
     no_base_url = CircuitBreakingPaymentGatewayAdapter(
-        FlittPaymentGatewayAdapter(flitt_answering(200, {}, []), None), breaker, FLITT
+        FlittPaymentGatewayAdapter(
+            flitt_answering(200, {}, []), None, AdjustableClock().wall_clock
+        ),
+        breaker,
+        FLITT,
     )
 
     call_repeatedly(
-        lambda: unconfigured.stop_recurring(ORDER),
+        lambda: unconfigured.stop_recurring(PaymentProvider.FLITT, ORDER),
         PaymentsNotConfiguredError,
         CALLS_TO_OPEN,
     )
@@ -131,10 +145,12 @@ def test_flitt_5xx_still_opens_the_circuit() -> None:
     gateway = guarded(flitt_answering(503, {}, calls), breaker)
 
     call_repeatedly(
-        lambda: gateway.stop_recurring(ORDER), ExternalServiceError, CALLS_TO_OPEN
+        lambda: gateway.stop_recurring(PaymentProvider.FLITT, ORDER),
+        ExternalServiceError,
+        CALLS_TO_OPEN,
     )
     with pytest.raises(ProviderCircuitOpenError):
-        gateway.stop_recurring(ORDER)
+        gateway.stop_recurring(PaymentProvider.FLITT, ORDER)
 
     assert len(calls) == CALLS_TO_OPEN
     assert breaker.state(FLITT) is CircuitState.OPEN

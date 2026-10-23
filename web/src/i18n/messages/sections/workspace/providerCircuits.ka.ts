@@ -27,6 +27,7 @@ export const providerCircuitsKa: Translation<typeof providerCircuitsEn> = {
     twilio_sms: "SMS (Twilio)",
     smtp: "ელფოსტა (SMTP)",
     flitt: "გადახდები (Flitt)",
+    stripe: "გადახდები (Stripe)",
     web_push: "ვებ-შეტყობინებები",
   },
 };

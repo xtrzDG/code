@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -35,6 +38,7 @@ from app.use_cases.shared.billing_records import (
     require_current_subscription,
 )
 from app.use_cases.shared.brand_billing import is_additional_location
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.use_cases.shared.subscription_pricing import price_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -68,6 +72,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         business_repo: BusinessRepoContract,
         plan_registry: PlanRegistryContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -85,6 +90,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         self._business_repo: BusinessRepoContract = business_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -126,9 +132,10 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             return self._overview(business, input_data)
 
         now: Microseconds = self._wall_clock.now_unix()
-        if is_charge_changed and subscription.provider_reference is not None:
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        if is_charge_changed:
+            stop_recurring_charges(
+                self._payment_gateway, self._payment_order_repo, subscription
+            )
 
         self._void_outdated_invoices(
             subscription,

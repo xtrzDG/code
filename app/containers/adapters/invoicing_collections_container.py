@@ -10,14 +10,16 @@ from app.schemas.domain.billing_profiles import (
     BillingProfileDocument,
     InvoiceCounterDocument,
 )
+from app.schemas.domain.payment_retries import PaymentRetryAttemptDocument
 
 
 class InvoicingCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of invoicing (migration 1114): each
-    business's billing details and the seller's yearly invoice counters. A
-    sibling of DocumentCollectionsContainer with the same storage factory
-    (Postgres with DATABASE_URL, else in memory).
+    business's billing details and the seller's yearly invoice counters,
+    and the retries of declined automatic charges (dunning, migration
+    1214). A sibling of DocumentCollectionsContainer with the same storage
+    factory (Postgres with DATABASE_URL, else in memory).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -36,6 +38,14 @@ class InvoicingCollectionsContainer(containers.DeclarativeContainer):
     invoice_counter_collection = document_collection(
         InvoiceCounterDocument,
         "invoice_counters",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    payment_retry_attempt_collection = document_collection(
+        PaymentRetryAttemptDocument,
+        "payment_retry_attempts",
         config,
         clients,
         utilities,

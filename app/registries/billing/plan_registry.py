@@ -1,10 +1,10 @@
 from app.contracts.registries import PlanRegistryContract
-from app.registries.billing.plan_catalog import (
+from app.registries.billing.local_price_books import (
     LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK,
     LOCAL_MONTHLY_PRICE_BOOK,
     LOCAL_SETUP_FEE_BOOK,
-    PLAN_DEFINITIONS,
 )
+from app.registries.billing.plan_catalog import PLAN_DEFINITIONS
 from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.exceptions.application_errors import NotFoundError
@@ -15,7 +15,7 @@ from app.schemas.typings.localization.constrained_strings import CurrencyCode
 class PlanRegistry(PlanRegistryContract):
     """
     The concept's three plans with packages, priced in EUR, and the price
-    book of explicit local prices (GEL in Georgia).
+    books of explicit local prices (GEL, USD, AMD, ILS, KZT, PLN).
 
     A plan's own currency counts as a price-book currency, so EUR lookups
     return the EUR price. Other currencies return None unless the price book

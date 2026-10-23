@@ -63,6 +63,7 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "POST /v1/voice/webhooks/conversation-initiation": "voice platform secret",
     "POST /v1/voice/webhooks/post-call": "the voice platform's HMAC signature",
     "POST /v1/payments/flitt/webhook": "Flitt's signature",
+    "POST /v1/payments/stripe/webhook": "Stripe's signature",
     "GET /v1/telephony/zadarma/notifications": "Zadarma's echo handshake",
     "POST /v1/telephony/zadarma/notifications": "Zadarma's signature",
     "GET /v1/integrations/google-calendar/callback": "a signed OAuth state",

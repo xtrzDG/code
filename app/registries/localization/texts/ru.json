@@ -654,6 +654,9 @@
     "notifications.webhook_disabled.gone_detail": "Адрес {endpoint} ответил, что его больше нет (410), и больше не получает события. Если адрес сменился, измените его и включите снова: Настройки → Интеграции.",
     "calendar_sync.booking_system.guest_without_name": "Гость",
     "notifications.deposit_refund.title": "Нужно вернуть депозит · {business}",
-    "notifications.deposit_refund.detail": "{amount}, назначение платежа {reference}: бронь на {date} в {time} отменена вовремя по вашим правилам депозита. Верните депозит в своём платёжном кабинете."
+    "notifications.deposit_refund.detail": "{amount}, назначение платежа {reference}: бронь на {date} в {time} отменена вовремя по вашим правилам депозита. Верните депозит в своём платёжном кабинете.",
+    "billing.dunning.retry_declined": "{business}: мы снова попробовали списать {amount}, но банк отклонил карту. Следующая попытка: {next_date}. Оплатить или сменить карту можно в разделе «Тариф и счета».",
+    "billing.dunning.last_retry_declined": "{business}: последняя попытка списать {amount} не прошла. Пожалуйста, оплатите в разделе «Тариф и счета» или смените карту.",
+    "billing.dunning.payment_recovered": "{business}: оплата {amount} прошла с повторной попытки. Спасибо, ассистент продолжает работать в полном режиме."
   }
 }

@@ -19,6 +19,14 @@ class InvoiceDescription(BaseTypedString):
     """
 
 
+class PaymentCardToken(BaseTypedString):
+    """
+    The payment provider's token of a saved card (Flitt's `rectoken`), which
+    lets the platform charge that card again. Only ever stored sealed with
+    the platform's key ring; never logged.
+    """
+
+
 class PaymentFailureReason(BaseTypedString):
     """Reason a payment provider gave for a declined payment (no card data)."""
 
@@ -42,6 +50,16 @@ class PaymentWebhookBody(BaseTypedString):
 
 class PaymentWebhookContentType(BaseTypedString):
     """Content-Type header of a payment provider notification."""
+
+
+class PaymentWebhookSignature(BaseTypedString):
+    """
+    Signature header of a payment provider notification, before
+    verification (Stripe's `Stripe-Signature`: a timestamp and HMACs).
+
+    Example:
+        signature = PaymentWebhookSignature("t=1792540800,v1=5257a8...")
+    """
 
 
 # Keep abc order for all non example types, if possible.

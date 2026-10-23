@@ -56,6 +56,9 @@ import { adminTeamRu } from "./workspace/adminTeam.ru";
 import { billingEn } from "./workspace/billing.en";
 import { billingKa } from "./workspace/billing.ka";
 import { billingRu } from "./workspace/billing.ru";
+import { billingCardEn } from "./workspace/billingCard.en";
+import { billingCardKa } from "./workspace/billingCard.ka";
+import { billingCardRu } from "./workspace/billingCard.ru";
 import { billingLifecycleEn } from "./workspace/billingLifecycle.en";
 import { billingLifecycleKa } from "./workspace/billingLifecycle.ka";
 import { billingLifecycleRu } from "./workspace/billingLifecycle.ru";
@@ -131,6 +134,7 @@ export const workspaceEn = {
   loginOptions: loginOptionsEn,
   billing: billingEn,
   billingLifecycle: billingLifecycleEn,
+  billingCard: billingCardEn,
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
   callSettings: callSettingsEn,
@@ -170,6 +174,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   loginOptions: loginOptionsRu,
   billing: billingRu,
   billingLifecycle: billingLifecycleRu,
+  billingCard: billingCardRu,
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
   callSettings: callSettingsRu,
@@ -209,6 +214,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   loginOptions: loginOptionsKa,
   billing: billingKa,
   billingLifecycle: billingLifecycleKa,
+  billingCard: billingCardKa,
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
   callSettings: callSettingsKa,

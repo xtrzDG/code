@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.billing_routes import build_billing_router
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.payment_method_routes import build_payment_method_router
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.operators.pipeline_operator import PipelineOperator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
@@ -30,6 +31,16 @@ def build_billing_http_client(testbed: BillingUseCases) -> TestClient:
             subscribe_operator=PipelineOperator(
                 OrchestratorPipeline(testbed.subscribe)
             ),
+            payment_webhook_operator=build_operator(testbed.process_webhook),
+            current_user=current_user,
+        )
+    )
+    http_application.include_router(
+        build_payment_method_router(
+            get_payment_method_operator=build_operator(
+                testbed.payments.get_payment_method
+            ),
+            start_card_setup_operator=build_operator(testbed.payments.start_card_setup),
             payment_webhook_operator=build_operator(testbed.process_webhook),
             current_user=current_user,
         )

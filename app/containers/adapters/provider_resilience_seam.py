@@ -34,7 +34,9 @@ def provider_resilience(
         smtp_email_client=clients.smtp_email_client,
         twilio_messaging_client=clients.twilio_messaging_client,
         flitt_client=clients.flitt_client,
+        stripe_client=clients.stripe_client,
         settings=config.app_settings,
         monotonic_clock=time_provider.monotonic_clock,
+        wall_clock=time_provider.microsecond_wall_clock,
         metrics=utilities.service_metrics,
     )

@@ -20,8 +20,6 @@ from app.schemas.dto.billing_cabinet import (
     BillingOverviewSource,
     CancelSubscriptionCommand,
     ChangePlanCommand,
-    CheckoutSessionView,
-    StartCheckoutCommand,
     StartTrialCommand,
     SubscribeCommand,
     SubscriptionOpening,
@@ -32,7 +30,6 @@ from app.schemas.dto.billing_ledger import (
     DueInvoicesRequest,
 )
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.use_cases.billing.assemble_billing_overview_use_case import (
     AssembleBillingOverviewUseCase,
 )
@@ -57,19 +54,16 @@ from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUs
 from app.use_cases.billing.open_subscription_use_case import (
     OpenSubscriptionUseCase,
 )
-from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
-    ProcessPaymentWebhookUseCase,
-)
 from app.use_cases.billing.refresh_exchange_rates_use_case import (
     RefreshExchangeRatesUseCase,
 )
-from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 
 
 class BillingUseCasesContainer(containers.DeclarativeContainer):
     """Billing: subscriptions, invoices (with the team's discounts and credit),
-    checkout, the payment webhook, the periodic jobs and a client's cost."""
+    the periodic jobs and a client's cost (checkout and the payment webhooks
+    are PaymentUseCasesContainer's)."""
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -142,6 +136,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         plan_registry=registries.plan_registry,
         payment_gateway=adapters.payment_gateway,
+        payment_order_repo=repositories.payment_order_repo,
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
@@ -155,24 +150,11 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         subscription_repo=repositories.subscription_repo,
         invoice_repo=repositories.invoice_repo,
         payment_gateway=adapters.payment_gateway,
+        payment_order_repo=repositories.payment_order_repo,
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
         product_events=facilitators.product_events,
         subscription_event_repo=repositories.subscription_event_repo,
-    )
-    start_checkout_use_case: Factory[
-        UseCaseContract[StartCheckoutCommand, CheckoutSessionView]
-    ] = Factory(
-        StartCheckoutUseCase,
-        authorize_business_access=account_use_cases.authorize_business_access_use_case,
-        subscription_repo=repositories.subscription_repo,
-        invoice_repo=repositories.invoice_repo,
-        payment_order_repo=repositories.payment_order_repo,
-        issue_due_invoices=issue_due_invoices_use_case,
-        payment_gateway=adapters.payment_gateway,
-        app_settings=config.app_settings,
-        wall_clock=time_provider.microsecond_wall_clock,
-        invoice_issuing=facilitators.invoice_issuing_facilitator,
     )
     choose_setup_option_use_case: Factory[ChooseSetupOptionUseCase] = Factory(
         ChooseSetupOptionUseCase,
@@ -195,24 +177,6 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         choose_setup_option=choose_setup_option_use_case,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
-    )
-    process_payment_webhook_use_case: Factory[
-        UseCaseContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
-    ] = Factory(
-        ProcessPaymentWebhookUseCase,
-        payment_gateway=adapters.payment_gateway,
-        payment_order_repo=repositories.payment_order_repo,
-        subscription_repo=repositories.subscription_repo,
-        invoice_repo=repositories.invoice_repo,
-        business_repo=repositories.business_repo,
-        user_repo=repositories.user_repo,
-        plan_registry=registries.plan_registry,
-        issue_due_invoices=issue_due_invoices_use_case,
-        manager_notifier=facilitators.manager_notification_facilitator,
-        billing_notice_transformer=transformers.billing_notice_transformer,
-        wall_clock=time_provider.microsecond_wall_clock,
-        product_events=facilitators.product_events,
-        referral_earnings=facilitators.referral_earnings,
     )
     end_trials_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         EndTrialsUseCase,

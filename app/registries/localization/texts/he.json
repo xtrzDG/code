@@ -660,6 +660,9 @@
     "notifications.webhook_disabled.gone_detail": "הכתובת {endpoint} השיבה שהיא כבר לא קיימת (410) ולא מקבלת יותר אירועים. אם הכתובת השתנתה, עדכנו אותה בהגדרות ← חיבורים והפעילו אותה שוב.",
     "calendar_sync.booking_system.guest_without_name": "אורח",
     "notifications.deposit_refund.title": "פיקדון להחזר · {business}",
-    "notifications.deposit_refund.detail": "{amount}, אסמכתה {reference}: ההזמנה ל-{date} בשעה {time} בוטלה בזמן לפי כללי הפיקדון שלכם. החזירו את הפיקדון בחשבון התשלומים שלכם."
+    "notifications.deposit_refund.detail": "{amount}, אסמכתה {reference}: ההזמנה ל-{date} בשעה {time} בוטלה בזמן לפי כללי הפיקדון שלכם. החזירו את הפיקדון בחשבון התשלומים שלכם.",
+    "billing.dunning.retry_declined": "{business}: ניסינו שוב לחייב {amount} והכרטיס נדחה. הניסיון הבא ב־{next_date}. אפשר לשלם או להחליף כרטיס ב„מסלול וחיוב”.",
+    "billing.dunning.last_retry_declined": "{business}: הניסיון האחרון לחייב {amount} נדחה. נא לשלם ב„מסלול וחיוב” או להחליף כרטיס.",
+    "billing.dunning.payment_recovered": "{business}: התשלום של {amount} עבר בניסיון חוזר. תודה, העוזר ממשיך בשירות מלא."
   }
 }

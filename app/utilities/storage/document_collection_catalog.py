@@ -43,8 +43,6 @@ from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
 )
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
-from app.schemas.domain.package_usage import PackageUsageWarningDocument
-from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.public_slugs import PublicSlugClaimDocument
@@ -80,6 +78,7 @@ from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
 from app.utilities.storage.media_collections import MEDIA_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
+from app.utilities.storage.payment_collections import PAYMENT_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.quality_collections import QUALITY_COLLECTIONS
 from app.utilities.storage.referral_collections import REFERRAL_COLLECTIONS
@@ -190,14 +189,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Google Calendar: connection, OAuth state, event per booking (0002);
     # the calendars that block resources and their busy times (1160).
     *CALENDAR_COLLECTIONS,
-    # Payments: checkout orders and package usage warnings (0003).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("payment_orders"), PaymentOrderDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("package_usage_warnings"),
-        PackageUsageWarningDocument,
-    ),
+    # Payments: checkout orders, usage warnings (0003), charge retries (1214).
+    *PAYMENT_COLLECTIONS,
     # Staff notifications: devices that receive them (Web Push), each
     # user's preferences, how delivery to each staff contact went (1043).
     DocumentCollectionDefinition(

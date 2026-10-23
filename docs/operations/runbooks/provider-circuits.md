@@ -15,7 +15,8 @@ models in [llm-outage](llm-outage.md)):
 | `provider:platform_bot` | the platform bot: staff notifications and platform alerts by Telegram |
 | `provider:twilio_sms` | staff SMS and missed-call text-backs |
 | `provider:smtp` | e-mail: staff notifications, invoices, platform alerts by e-mail |
-| `provider:flitt` | creating a checkout, stopping automatic charges |
+| `provider:flitt` | Flitt (Georgia, Armenia): creating a checkout or a card page, stopping automatic charges, retrying a declined charge |
+| `provider:stripe` | Stripe (the EU, the US, Israel): the same calls, apart from Flitt's circuit |
 
 Web push has none: it reaches many push services, and one being down is not
 the others'. Login codes do not go through the circuits.
@@ -25,9 +26,11 @@ the others'. Login codes do not go through the circuits.
 - **5 failures within 60 s open a circuit.** A failure is a timeout, a
   connection error or a 5xx. A refusal (4xx), a rate limit, a revoked token
   or a business's own missing setting is an answer, not an outage: it never
-  opens a circuit. The same holds for Flitt: an HTTP 4xx or an answer with
-  the status "failure" (`PaymentProviderRefusedError`) and payments not set
-  up (`PaymentsNotConfiguredError`) leave `provider:flitt` closed.
+  opens a circuit. The same holds for the payment providers: an HTTP 4xx,
+  a declined card or a Flitt answer with the status "failure"
+  (`PaymentProviderRefusedError`), a 429 and payments not set up
+  (`PaymentsNotConfiguredError`) leave `provider:flitt` and
+  `provider:stripe` closed.
 - **Typing signals are best effort.** They run only while the circuit is
   closed and never report a success (they often make no call at all), so
   they cannot take the half-open trial or close a circuit; a typing call

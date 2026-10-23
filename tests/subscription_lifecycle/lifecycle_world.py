@@ -91,6 +91,7 @@ class LifecycleWorld(BillingTestbed):
             invoice_repo=self.invoice_repo,
             subscription_event_repo=self.subscription_event_repo,
             payment_gateway=self.payment_gateway,
+            payment_order_repo=self.payment_order_repo,
             lifecycle_policy_registry=self.policy_registry,
             app_settings=self.settings,
             assemble_billing_overview=self.assemble_overview,
@@ -103,6 +104,7 @@ class LifecycleWorld(BillingTestbed):
             business_repo=self.business_repo,
             subscription_event_repo=self.subscription_event_repo,
             payment_gateway=self.payment_gateway,
+            payment_order_repo=self.payment_order_repo,
             assemble_billing_overview=self.assemble_overview,
             wall_clock=self.clock.wall_clock,
         )

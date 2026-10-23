@@ -1,7 +1,7 @@
 {
   "collection": "payment_orders",
   "document_type": "PaymentOrderDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -35,6 +35,17 @@
         "minLength": 3,
         "pattern": "^[A-Z]{3}$",
         "type": "string"
+      },
+      "customer_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "id": {
         "pattern": "^payment_order_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -85,7 +96,16 @@
       },
       "provider": {
         "enum": [
-          "flitt"
+          "flitt",
+          "stripe"
+        ],
+        "type": "string"
+      },
+      "purpose": {
+        "default": "checkout",
+        "enum": [
+          "checkout",
+          "card_setup"
         ],
         "type": "string"
       },
@@ -98,9 +118,31 @@
         "minimum": 1,
         "type": "integer"
       },
+      "schedule_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
+      },
+      "sealed_card_token": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "status": {
         "default": "created",

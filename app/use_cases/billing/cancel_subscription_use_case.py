@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -33,6 +36,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.utilities.analytics.billing_event_drafts import billing_event
 
 
@@ -61,6 +65,7 @@ class CancelSubscriptionUseCase(
         subscription_repo: SubscriptionRepoContract,
         invoice_repo: InvoiceRepoContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -76,6 +81,7 @@ class CancelSubscriptionUseCase(
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._assemble_billing_overview: UseCaseContract[
             BillingOverviewSource,
             BillingOverview,
@@ -120,9 +126,9 @@ class CancelSubscriptionUseCase(
         pause_end: SubscriptionEventDocument | None = pause_ended_event(
             subscription, now, input_data.user_id
         )
-        if subscription.provider_reference is not None:
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        stop_recurring_charges(
+            self._payment_gateway, self._payment_order_repo, subscription
+        )
 
         for invoice in list_open_invoices(
             list_subscription_invoices(self._invoice_repo, subscription)

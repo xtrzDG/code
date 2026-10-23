@@ -101,6 +101,7 @@ class ActionWorld:
             testbed.business_repo,
             testbed.plan_registry,
             testbed.payment_gateway,
+            testbed.payment_order_repo,
             testbed.voice_agent_removals,
             testbed.product_events,
             clock,

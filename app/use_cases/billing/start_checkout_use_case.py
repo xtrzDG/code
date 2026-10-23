@@ -5,6 +5,7 @@ from app.contracts.billing import (
     PaymentOrderRepoContract,
 )
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
+from app.contracts.payment_methods import PaymentProviderRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -15,11 +16,10 @@ from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
 )
-from app.schemas.constants.payments import PaymentProvider
+from app.schemas.constants.payments import PaymentOrderPurpose
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_cabinet import (
@@ -27,17 +27,16 @@ from app.schemas.dto.billing_cabinet import (
     StartCheckoutCommand,
 )
 from app.schemas.dto.billing_ledger import DueInvoicesRequest
-from app.schemas.dto.payments import (
-    PaymentCheckoutRequest,
-    PaymentCheckoutSession,
-    RecurringCharge,
-)
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.billing.checkout_rules import (
     is_service_unpaid,
     select_order_description,
+)
+from app.use_cases.billing.payment_order_opening import (
+    PaymentOrderOpening,
+    open_payment_order,
 )
 from app.use_cases.shared.billing_records import (
     OPEN_INVOICE_STATUSES,
@@ -51,10 +50,6 @@ from app.use_cases.shared.subscription_pricing import (
     quote_money,
     subscription_price,
 )
-from app.utilities.billing.billing_periods import (
-    get_interval_months,
-    to_local_calendar_day,
-)
 from app.utilities.billing.return_urls import require_allowed_return_url
 from app.utilities.localization.babel_locales import require_babel_locale
 
@@ -62,7 +57,8 @@ from app.utilities.localization.babel_locales import require_babel_locale
 class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSessionView]):
     """
     Owner pays the open invoices on the provider's page and subscribes the
-    card to automatic charges (concept: Flitt subscriptions with auto-debit).
+    card to automatic charges (concept: Flitt subscriptions with auto-debit;
+    Stripe in the EU, the US and Israel, `PaymentProviderRegistry`).
 
     Without open invoices the next service period is invoiced first: during
     the trial it starts when the trial ends (paid ahead, the trial is kept),
@@ -93,7 +89,11 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         invoice_issuing: InvoiceIssuingFacilitatorContract,
+        payment_provider_registry: PaymentProviderRegistryContract,
     ) -> None:
+        self._payment_provider_registry: PaymentProviderRegistryContract = (
+            payment_provider_registry
+        )
         self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -153,36 +153,24 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         recurring: Money = self._invoice_issuing.price_with_tax(
             business, subscription_price(subscription)
         ).total
-        payment_order = PaymentOrderDocument(
-            business_id=business.id,
-            subscription_id=subscription.id,
-            provider=PaymentProvider.FLITT,
-            invoice_ids=[invoice.id for invoice in invoices],
-            amount_minor=amount.amount_minor,
-            currency_code=amount.currency_code,
-            recurring_amount_minor=recurring.amount_minor,
-            recurring_interval_months=get_interval_months(subscription.billing_period),
-        )
-        session: PaymentCheckoutSession = self._payment_gateway.create_checkout(
-            PaymentCheckoutRequest(
-                payment_order_id=payment_order.id,
+        payment_order, session = open_payment_order(
+            self._payment_gateway,
+            self._payment_order_repo,
+            business,
+            subscription,
+            PaymentOrderOpening(
+                provider=self._payment_provider_registry.select(business.country_code),
+                purpose=PaymentOrderPurpose.CHECKOUT,
+                invoice_ids=[invoice.id for invoice in invoices],
                 amount=amount,
+                recurring=recurring,
+                charges_from=paid_until,
                 description=select_order_description(invoices),
-                recurring_charge=RecurringCharge(
-                    amount=recurring,
-                    interval_months=payment_order.recurring_interval_months,
-                    start_date=to_local_calendar_day(paid_until, business.timezone),
-                ),
                 language=language,
                 return_url=input_data.request.return_url,
-            )
+            ),
+            self._wall_clock.now_unix(),
         )
-        now: Microseconds = self._wall_clock.now_unix()
-        payment_order.checkout_url = session.checkout_url
-        payment_order.last_payment_reference = session.payment_reference
-        payment_order.created_at = now
-        payment_order.updated_at = now
-        self._payment_order_repo.save(payment_order)
         return CheckoutSessionView(
             payment_order_id=payment_order.id,
             checkout_url=session.checkout_url,

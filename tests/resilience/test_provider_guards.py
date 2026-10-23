@@ -28,17 +28,19 @@ from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelWebhookPayload,
 )
 from app.schemas.dto.messaging import EmailAttachment
+from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryResult
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
-    PaymentNotification,
     PaymentWebhookDelivery,
+    VerifiedPaymentEvent,
 )
 from app.schemas.exceptions.application_errors import ProviderCircuitOpenError
 from app.schemas.typings.billing.strings import (
@@ -117,14 +119,20 @@ class RecordingSenders:
 
     def read_notification(
         self, delivery: PaymentWebhookDelivery
-    ) -> PaymentNotification:
+    ) -> VerifiedPaymentEvent:
         del delivery
         self.calls.append("read_notification")
         raise LookupError("not a real notification")
 
-    def stop_recurring(self, provider_reference: PaymentProviderReference) -> None:
-        del provider_reference
+    def stop_recurring(
+        self, provider: PaymentProvider, provider_reference: PaymentProviderReference
+    ) -> None:
+        del provider, provider_reference
         self.calls.append("stop_recurring")
+
+    def retry_charge(self, request: PaymentRetryRequest) -> PaymentRetryResult:
+        del request
+        raise AssertionError("A retried charge reached the provider.")
 
 
 def test_an_open_meta_circuit_sends_nothing_but_webhooks_are_still_read() -> None:
@@ -235,7 +243,9 @@ def test_mail_sms_and_payments_wait_for_their_circuits() -> None:
     with pytest.raises(ProviderCircuitOpenError):
         payments.create_checkout(build_checkout_request())
     with pytest.raises(ProviderCircuitOpenError):
-        payments.stop_recurring(PaymentProviderReference("802345671"))
+        payments.stop_recurring(
+            PaymentProvider.FLITT, PaymentProviderReference("802345671")
+        )
     # A notification is checked locally: no circuit in the way.
     with pytest.raises(LookupError):
         payments.read_notification(

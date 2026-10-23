@@ -39,6 +39,7 @@ PAYMENT_LINK_TOOL_GATE: ReleaseGateName = ReleaseGateName("send_payment_link_too
 OPS_LANE_GATE: ReleaseGateName = ReleaseGateName("ops_lane")
 PROTECT_DATA_STEP_GATE: ReleaseGateName = ReleaseGateName("protect_data_step")
 DECLINE_RECORDING_GATE: ReleaseGateName = ReleaseGateName("decline_recording_tool")
+STRIPE_PAYMENTS_GATE: ReleaseGateName = ReleaseGateName("stripe_payments")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -149,6 +150,24 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("decline_recording")],
         is_open=False,
+    ),
+    # Stripe (R17-PAYMENTS-REGIONAL, migration 1214): the provider registry
+    # routes owners in the EU, the US and Israel to Stripe only once the
+    # next release opens this gate; until then everyone pays through Flitt.
+    *(
+        ReleaseGate(
+            name=STRIPE_PAYMENTS_GATE,
+            collection_name=DocumentCollectionName(collection),
+            path=StoredEnumPath(path),
+            values=[GatedEnumValue("stripe")],
+            is_open=False,
+        )
+        for collection, path in (
+            ("payment_orders", "provider"),
+            ("subscriptions", "payment_provider"),
+            ("subscriptions", "payment_method_summary.provider"),
+            ("payment_retry_attempts", "provider"),
+        )
     ),
 )
 

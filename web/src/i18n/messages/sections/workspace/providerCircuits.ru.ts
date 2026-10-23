@@ -27,6 +27,7 @@ export const providerCircuitsRu: Translation<typeof providerCircuitsEn> = {
     twilio_sms: "СМС (Twilio)",
     smtp: "Почта (SMTP)",
     flitt: "Платежи (Flitt)",
+    stripe: "Платежи (Stripe)",
     web_push: "Веб-уведомления",
   },
 };

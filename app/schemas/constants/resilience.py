@@ -24,7 +24,8 @@ class OutboundProvider(StrEnum):
     bots; PLATFORM_BOT the platform's Telegram bot (staff notifications and
     alerts); TWILIO_SMS and SMTP staff SMS and e-mail; WEB_PUSH the cabinet's
     devices (a share of the lane, no circuit: its endpoints are many
-    services); FLITT payments (a circuit; it sends no outbox messages).
+    services); FLITT and STRIPE payments (a circuit each; they send no
+    outbox messages).
     """
 
     META = "meta"
@@ -34,3 +35,4 @@ class OutboundProvider(StrEnum):
     SMTP = "smtp"
     WEB_PUSH = "web_push"
     FLITT = "flitt"
+    STRIPE = "stripe"

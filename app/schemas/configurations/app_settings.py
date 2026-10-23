@@ -6,6 +6,7 @@ from app.schemas.configurations.database_role_settings import DatabaseRoleSettin
 from app.schemas.configurations.embedding_settings import EmbeddingSettings
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
+from app.schemas.configurations.payment_settings import PaymentSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.public_api_settings import PublicApiSettings
@@ -271,13 +272,11 @@ class AppSettings(ImmutableDTO):
     # Voice notes and photos of customers (LLM_TRANSCRIBE_MODEL, MEDIA_MAX_*).
     media: MediaSettings = Field(default_factory=MediaSettings)
     embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
-    # Grouped bursts, the turn deadline and model failover
-    # (MESSAGE_COALESCE_SECONDS, CHAT_TURN_DEADLINE_SECONDS, LLM_FALLBACK_MODEL_ID).
+    # Bursts, turn deadline, failover (MESSAGE_COALESCE_*, CHAT_TURN_*, LLM_FALLBACK_*).
     reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)
     # pass^k of autotests and the nightly judging of real conversations.
     quality: QualitySettings = Field(default_factory=QualitySettings)
-    # The claim check and the prompt-injection brake of the reply guard
-    # (LLM_VERIFIER_MODEL_ID, INJECTION_FLAG_LIMIT).
+    # The reply guard's claim check and injection brake (LLM_VERIFIER_*, INJECTION_*).
     reply_safety: ReplySafetySettings = Field(default_factory=ReplySafetySettings)
     # Where the platform alerts go (PLATFORM_ALERT_*, docs/operations/slo.md).
     platform_alerts: PlatformAlertSettings = Field(
@@ -299,3 +298,4 @@ class AppSettings(ImmutableDTO):
     growth: GrowthSettings = Field(default_factory=GrowthSettings)
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
     public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)
+    payments: PaymentSettings = Field(default_factory=PaymentSettings)  # STRIPE_*

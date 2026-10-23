@@ -1,6 +1,7 @@
 from dependency_injector.providers import Container, Factory, Singleton
 
 from app.containers.passkeys.passkey_root import PasskeyRoot
+from app.containers.payments.payment_root import PaymentRoot
 from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
 from app.containers.use_cases.audit_trail_use_cases import (
@@ -21,6 +22,7 @@ from app.containers.use_cases.idempotency_use_cases import (
     IdempotencyUseCasesContainer,
 )
 from app.containers.use_cases.passkey_root_provider import passkey_root_provider
+from app.containers.use_cases.payment_root_provider import payment_root_provider
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -177,6 +179,21 @@ class UseCasesContainer(BusinessUseCasesContainer):
     )
     subscription_lifecycle: SubscriptionLifecycleUseCasesContainer = Container(  # type: ignore[assignment]
         SubscriptionLifecycleUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        billing_use_cases=BusinessUseCasesContainer.billing,
+    )
+    # Payments: providers by country, checkout, webhooks, card on file and
+    # retries (1214), a typed root (ADR 0010) whose use cases the billing
+    # orchestrators call.
+    payment_root: Singleton[PaymentRoot] = payment_root_provider(
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,

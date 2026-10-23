@@ -4,17 +4,18 @@ import json
 
 import httpx
 import pytest
+from typed_time_provider import Microseconds
 
+from app.adapters.payments.flitt_order_parameters import select_page_language
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FLITT_WEBHOOK_PATH,
     FlittPaymentGatewayAdapter,
-    read_money,
-    read_reference,
-    select_page_language,
 )
+from app.adapters.payments.payment_fields import read_money, read_reference
+from app.clients.flitt.flitt_client import FlittClient
 from app.clients.flitt.flitt_protocol import build_parameter_signature
 from app.gateways.http import billing_routes
-from app.schemas.constants.payments import PaymentStatus
+from app.schemas.constants.payments import PaymentProvider, PaymentStatus
 from app.schemas.dto.billing import Money
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
@@ -47,6 +48,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
+from tests.billing.billing_fakes import AdjustableClock
 from tests.billing.billing_settings import (
     APP_BASE_URL,
     CHECKOUT_URL,
@@ -57,8 +59,19 @@ from tests.billing.flitt_sandbox import FlittSandbox
 from tests.billing.flitt_test_clients import build_client, build_client_with
 
 
+def build_adapter(
+    client: FlittClient | None, base_url: str | None = APP_BASE_URL
+) -> FlittPaymentGatewayAdapter:
+    return FlittPaymentGatewayAdapter(
+        flitt_client=client,
+        app_base_url=None if base_url is None else PublicBaseUrl(base_url),
+        wall_clock=AdjustableClock().wall_clock,
+    )
+
+
 def build_checkout_request(language: str = "ka") -> PaymentCheckoutRequest:
     return PaymentCheckoutRequest(
+        provider=PaymentProvider.FLITT,
         payment_order_id=PaymentOrderId(),
         amount=Money(
             amount_minor=MoneyAmountMinor(96000),
@@ -72,6 +85,7 @@ def build_checkout_request(language: str = "ka") -> PaymentCheckoutRequest:
             ),
             interval_months=BillingIntervalMonths(1),
             start_date=AutoDebitStartDate("2026-11-15"),
+            starts_at=Microseconds(1_794_700_800_000_000),
         ),
         language=LanguageTag(language),
         return_url=PaymentReturnUrl("https://app.assistant.example/billing"),
@@ -80,10 +94,7 @@ def build_checkout_request(language: str = "ka") -> PaymentCheckoutRequest:
 
 def test_adapter_builds_a_subscription_checkout() -> None:
     sandbox = FlittSandbox()
-    adapter = FlittPaymentGatewayAdapter(
-        flitt_client=build_client(sandbox),
-        app_base_url=PublicBaseUrl(f"{APP_BASE_URL}/"),
-    )
+    adapter = build_adapter(build_client(sandbox), f"{APP_BASE_URL}/")
     request: PaymentCheckoutRequest = build_checkout_request()
 
     session = adapter.create_checkout(request)
@@ -98,6 +109,7 @@ def test_adapter_builds_a_subscription_checkout() -> None:
             "currency": "GEL",
             "server_callback_url": f"{APP_BASE_URL}{FLITT_WEBHOOK_PATH}",
             "merchant_data": str(request.payment_order_id),
+            "required_rectoken": "Y",
             "subscription": "Y",
             "subscription_callback_url": f"{APP_BASE_URL}{FLITT_WEBHOOK_PATH}",
             "recurring_data": {
@@ -128,11 +140,8 @@ def test_payment_page_language_only_when_flitt_has_it() -> None:
 
 
 def test_adapter_refuses_to_work_unconfigured() -> None:
-    unconfigured = FlittPaymentGatewayAdapter(flitt_client=None, app_base_url=None)
-    without_base_url = FlittPaymentGatewayAdapter(
-        flitt_client=build_client(),
-        app_base_url=None,
-    )
+    unconfigured = build_adapter(None, None)
+    without_base_url = build_adapter(build_client(), None)
     delivery = PaymentWebhookDelivery(body=PaymentWebhookBody("{}"))
 
     with pytest.raises(ExternalServiceError):
@@ -142,7 +151,9 @@ def test_adapter_refuses_to_work_unconfigured() -> None:
         without_base_url.create_checkout(build_checkout_request())
 
     with pytest.raises(ExternalServiceError):
-        unconfigured.stop_recurring(PaymentProviderReference("o-1"))
+        unconfigured.stop_recurring(
+            PaymentProvider.FLITT, PaymentProviderReference("o-1")
+        )
 
     with pytest.raises(AccessDeniedError):
         unconfigured.read_notification(delivery)
@@ -152,10 +163,7 @@ def test_adapter_rejects_a_page_link_flitt_did_not_send() -> None:
     def respond(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"response": {"response_status": "success"}})
 
-    adapter = FlittPaymentGatewayAdapter(
-        flitt_client=build_client_with(httpx.MockTransport(respond)),
-        app_base_url=PublicBaseUrl(APP_BASE_URL),
-    )
+    adapter = build_adapter(build_client_with(httpx.MockTransport(respond)))
 
     with pytest.raises(ExternalServiceError):
         adapter.create_checkout(build_checkout_request())
@@ -171,19 +179,18 @@ def deliver(
             "signature": build_parameter_signature(FLITT_SECRET_KEY, parameters),
         }
     )
-    return adapter.read_notification(
+    payment: PaymentNotification | None = adapter.read_notification(
         PaymentWebhookDelivery(
             body=PaymentWebhookBody(body),
             content_type=PaymentWebhookContentType("application/json"),
         )
-    )
+    ).payment
+    assert payment is not None
+    return payment
 
 
 def test_adapter_reads_a_declined_notification() -> None:
-    adapter = FlittPaymentGatewayAdapter(
-        flitt_client=build_client(),
-        app_base_url=PublicBaseUrl(APP_BASE_URL),
-    )
+    adapter = build_adapter(build_client())
 
     notification = deliver(
         adapter,
@@ -211,10 +218,7 @@ def test_adapter_reads_a_declined_notification() -> None:
 
 
 def test_adapter_rejects_notifications_without_order_or_known_status() -> None:
-    adapter = FlittPaymentGatewayAdapter(
-        flitt_client=build_client(),
-        app_base_url=PublicBaseUrl(APP_BASE_URL),
-    )
+    adapter = build_adapter(build_client())
 
     with pytest.raises(ValidationFailedError):
         deliver(adapter, {"merchant_id": FLITT_MERCHANT_ID, "order_status": "approved"})

@@ -38,6 +38,25 @@ def find_payment_order(
     raise NotFoundError("Payment order was not found.")
 
 
+def find_payment_order_by_reference(
+    payment_order_repo: PaymentOrderRepoContract,
+    reference: PaymentProviderReference,
+) -> PaymentOrderDocument:
+    """
+    Raises:
+        NotFoundError: the reference names no payment order.
+    """
+
+    payment_order_id: PaymentOrderId | None = parse_payment_order_id(reference)
+    payment_order: PaymentOrderDocument | None = (
+        None if payment_order_id is None else payment_order_repo.get(payment_order_id)
+    )
+    if payment_order is None:
+        raise NotFoundError("Payment order was not found.")
+
+    return payment_order
+
+
 def parse_payment_order_id(
     reference: PaymentProviderReference | None,
 ) -> PaymentOrderId | None:

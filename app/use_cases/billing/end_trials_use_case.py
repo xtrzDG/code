@@ -19,6 +19,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.typings.billing.constrained_integers import CardChargeWaitHours
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.billing.owner_notifications import notify_business_owners
@@ -35,16 +36,21 @@ from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.analytics.billing_event_drafts import billing_event
 from app.utilities.billing.billing_periods import add_local_days
 
+# How long a trial with a saved card waits for the card's first charge.
+CARD_CHARGE_WAIT_HOURS: CardChargeWaitHours = CardChargeWaitHours(24)
+MICROSECONDS_PER_HOUR: int = 60 * 60 * 1_000_000
+
 
 class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     Background job: end free trials whose `trial_ends_at` has passed.
 
     A trial paid ahead at checkout becomes ACTIVE for the paid period. A
-    trial without payment gets the invoices of its first period (with the
-    setup fee for monthly billing) and becomes PAST_DUE with grace until
-    now + the plan's grace days; the owners are told what to pay and until
-    when the assistant keeps full service.
+    trial with a saved card waits a day for the card's automatic charge,
+    whose notice settles it. A trial without payment gets the invoices of
+    its first period (with the setup fee for monthly billing) and becomes
+    PAST_DUE with grace until now + the plan's grace days; the owners are
+    told what to pay and until when the assistant keeps full service.
     """
 
     def __init__(
@@ -89,8 +95,8 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             if subscription is None or not self._is_trial_over(subscription):
                 continue
 
-            self._end_trial(business, subscription)
-            processed += 1
+            if self._end_trial(business, subscription):
+                processed += 1
 
         return JobReport(processed_count=ProcessedItemCount(processed))
 
@@ -105,7 +111,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
         self,
         business: BusinessDocument,
         subscription: SubscriptionDocument,
-    ) -> None:
+    ) -> bool:
         now: Microseconds = self._wall_clock.now_unix()
         trial_ends_at: Microseconds = subscription.trial_ends_at or now
         invoices: list[InvoiceDocument] = list_subscription_invoices(
@@ -118,7 +124,15 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
         ) or find_covering_paid_invoice(invoices, now)
         if paid_invoice is not None:
             self._activate(business, subscription, paid_invoice, invoices, now)
-            return
+            return True
+
+        charge_wait_ends_at: Microseconds = Microseconds(
+            int(trial_ends_at) + int(CARD_CHARGE_WAIT_HOURS) * MICROSECONDS_PER_HOUR
+        )
+        if subscription.provider_reference is not None and now < charge_wait_ends_at:
+            # The saved card is charged when the trial ends; its notice
+            # settles the first period (or starts grace when declined).
+            return False
 
         issued: list[InvoiceDocument] = self._issue_due_invoices.run(
             DueInvoicesRequest(
@@ -136,7 +150,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             self._activate(
                 business, subscription, paid_by_credit, invoices + issued, now
             )
-            return
+            return True
 
         plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
         subscription.status = SubscriptionStatus.PAST_DUE
@@ -165,6 +179,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
                 )
             ),
         )
+        return True
 
     def _activate(
         self,

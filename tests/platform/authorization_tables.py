@@ -51,6 +51,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/billing/checkout",
         f"GET {B}/billing/lifecycle",
         f"POST {B}/billing/offers/accept",
+        f"GET {B}/billing/payment-method",
+        f"POST {B}/billing/payment-method",
         f"POST {B}/billing/pause",
         f"POST {B}/billing/resume",
         f"POST {B}/billing/plan",

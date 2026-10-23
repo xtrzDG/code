@@ -655,3 +655,9 @@ _.BLE  # app/schemas/constants/passkeys.py (WebAuthnTransport)
 _.SMART_CARD  # app/schemas/constants/passkeys.py (WebAuthnTransport)
 _.HYBRID  # app/schemas/constants/passkeys.py (WebAuthnTransport)
 _.CABLE  # app/schemas/constants/passkeys.py (WebAuthnTransport)
+
+# The card on file (GET /v1/businesses/{id}/billing/payment-method): how the
+# last retry of a declined charge went, read by the cabinet's billing page.
+_.last_outcome  # app/schemas/dto/payment_methods.py
+# ...and what saving the card in a done-for-you trial charges now.
+_.setup_fee_due  # app/schemas/dto/payment_methods.py

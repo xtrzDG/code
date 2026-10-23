@@ -49,6 +49,17 @@ class PaymentOrderId(BasePrefixedTypedId):
     prefix = "payment_order"
 
 
+class PaymentRetryId(BasePrefixedTypedId):
+    """
+    Identifier of one retry of a declined automatic charge, derived (UUID
+    v5) from the unpaid invoice and the attempt number: each retry of an
+    invoice is claimed once, however many workers try.
+    """
+
+    prefix = "payment_retry"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
+
+
 class SubscriptionId(BasePrefixedTypedId):
     """Random identifier of a subscription."""
 

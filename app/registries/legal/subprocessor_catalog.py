@@ -34,6 +34,7 @@ TABLE_ORDER: tuple[str, ...] = (
     "meta",
     "telegram",
     "flitt",
+    "stripe",
     "langfuse",
     "sentry",
     "render",

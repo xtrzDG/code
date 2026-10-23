@@ -654,6 +654,9 @@
     "notifications.webhook_disabled.gone_detail": "The address {endpoint} answered that it is gone (410) and gets no more events. If it moved, change it in Settings → Integrations and switch it on again.",
     "calendar_sync.booking_system.guest_without_name": "Guest",
     "notifications.deposit_refund.title": "A deposit to refund · {business}",
-    "notifications.deposit_refund.detail": "{amount}, reference {reference}: the booking on {date} at {time} was cancelled in time under your deposit rules. Return the deposit in your payment account."
+    "notifications.deposit_refund.detail": "{amount}, reference {reference}: the booking on {date} at {time} was cancelled in time under your deposit rules. Return the deposit in your payment account.",
+    "billing.dunning.retry_declined": "{business}: we tried to charge {amount} again and the card was declined. The next try is on {next_date}. You can pay or update the card in Billing.",
+    "billing.dunning.last_retry_declined": "{business}: the last try to charge {amount} was declined. Please pay in Billing or update the card.",
+    "billing.dunning.payment_recovered": "{business}: the payment of {amount} went through on a new try. Thank you, the assistant keeps working in full."
   }
 }

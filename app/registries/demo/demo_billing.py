@@ -5,6 +5,7 @@ in the current package window (the dashboard and billing pages read it).
 """
 
 from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime
 
 from typed_time_provider import Microseconds
 
@@ -18,6 +19,7 @@ from app.schemas.constants.billing import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.domain.billing import (
     InvoiceDocument,
     SubscriptionDocument,
@@ -34,9 +36,12 @@ from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
+from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
+    PaymentCardExpiryMonth,
+    PaymentCardExpiryYear,
     UsageQuantity,
 )
 from app.schemas.typings.billing.strings import (
@@ -125,6 +130,7 @@ def paid_subscription(
         period_start=period_start,
         period_end=period_end,
         provider_reference=PaymentProviderReference(reference),
+        payment_method_summary=demo_card_on_file(period_start),
         created_at=period_start,
         updated_at=period_start,
     )
@@ -151,6 +157,20 @@ def paid_subscription(
         updated_at=period_start,
     )
     return subscription, invoice
+
+
+def demo_card_on_file(saved_at: Microseconds) -> PaymentMethodSummary:
+    """The demo card as the card on file, valid for three more years."""
+
+    saved_year: int = datetime.fromtimestamp(int(saved_at) / 1_000_000, UTC).year
+    return PaymentMethodSummary(
+        provider=PaymentProvider.FLITT,
+        brand=DEMO_CARD.brand,
+        last_digits=DEMO_CARD.last_digits,
+        expiry_month=PaymentCardExpiryMonth(9),
+        expiry_year=PaymentCardExpiryYear(saved_year + 3),
+        saved_at=saved_at,
+    )
 
 
 def billing_details(

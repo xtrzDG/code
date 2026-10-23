@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.billing import (
     PackageUsageWarningRepoContract,
+    PaymentOrderChange,
     PaymentOrderRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
@@ -21,6 +22,14 @@ class PaymentOrderRepository(
 
     def get(self, payment_order_id: PaymentOrderId) -> PaymentOrderDocument | None:
         return self._collection.get(str(payment_order_id))
+
+    def update(
+        self,
+        business_id: BusinessId,
+        payment_order_id: PaymentOrderId,
+        change: PaymentOrderChange,
+    ) -> PaymentOrderDocument | None:
+        return self._modify_in_business(business_id, str(payment_order_id), change)
 
     def list_by_business(self, business_id: BusinessId) -> list[PaymentOrderDocument]:
         return sorted(

@@ -34,6 +34,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "analytics.reconcile_product_events_operator": "daily job over every business",
     "billing.process_payment_webhook_operator": "payment webhook: order first",
     "billing.end_trials_operator": "periodic job over every business",
+    "billing.dunning_operator": "periodic job: retries over every business",
     "billing.enforce_grace_periods_operator": "periodic job over every business",
     "billing.check_package_usage_operator": "periodic job over every business",
     "billing.invoice_usage_overage_operator": "periodic job over every business",

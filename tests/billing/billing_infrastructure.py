@@ -8,10 +8,16 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
+from app.adapters.payments.payment_gateway_router_adapter import (
+    PaymentGatewayRouterAdapter,
+)
+from app.adapters.payments.stripe_billing_adapter import StripeBillingAdapter
+from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.clients.flitt.flitt_client import FlittClient
+from app.clients.stripe.stripe_client import StripeClient
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.registries.billing.plan_registry import PlanRegistry
@@ -39,6 +45,7 @@ from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
 )
+from app.repositories.payment_retry_repository import PaymentRetryRepository
 from app.repositories.subscription_event_repositories import (
     SubscriptionEventRepository,
 )
@@ -57,10 +64,12 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
+from app.schemas.domain.payment_retries import PaymentRetryAttemptDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.subscription_events import SubscriptionEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from app.transformers.billing.billing_notice_transformer import BillingNoticeTransformer
 from app.transformers.billing.invoice_description_transformer import (
@@ -73,13 +82,17 @@ from app.utilities.localization.localized_text_resolver import LocalizedTextReso
 from tests.billing.billing_fakes import AdjustableClock, RecordingNotifier
 from tests.billing.billing_settings import (
     APP_BASE_URL,
+    CABINET_ORIGIN,
     FLITT_MERCHANT_ID,
     FLITT_SECRET_KEY,
+    STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET,
     build_settings,
 )
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
 from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
+from tests.billing.stripe_sandbox import StripeSandbox
 from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.referrals.referral_parts import ReferralRepositories
@@ -179,9 +192,29 @@ class BillingInfrastructure:
             secret_key=PlatformSecret(FLITT_SECRET_KEY),
             transport=httpx.MockTransport(self.flitt.handle),
         )
-        self.payment_gateway = FlittPaymentGatewayAdapter(
-            flitt_client=self.flitt_client,
-            app_base_url=PublicBaseUrl(APP_BASE_URL),
+        self.stripe = StripeSandbox()
+        self.stripe_client = StripeClient(
+            secret_key=PlatformSecret(STRIPE_SECRET_KEY),
+            webhook_secret=PlatformSecret(STRIPE_WEBHOOK_SECRET),
+            transport=httpx.MockTransport(self.stripe.handle),
+        )
+        self.payment_gateway = PaymentGatewayRouterAdapter(
+            flitt_gateway=FlittPaymentGatewayAdapter(
+                flitt_client=self.flitt_client,
+                app_base_url=PublicBaseUrl(APP_BASE_URL),
+                wall_clock=self.clock.wall_clock,
+            ),
+            stripe_gateway=StripeBillingAdapter(
+                stripe_client=self.stripe_client,
+                cabinet_base_url=CabinetBaseUrl(CABINET_ORIGIN),
+                wall_clock=self.clock.wall_clock,
+            ),
+        )
+        self.secret_cipher = SecretCipherAdapter(self.settings)
+        self.payment_retry_repo = PaymentRetryRepository(
+            InMemoryDocumentCollectionAdapter[PaymentRetryAttemptDocument](
+                PaymentRetryAttemptDocument
+            )
         )
         self.invoice_description_transformer = InvoiceDescriptionTransformer(resolver)
         self.invoice_line_texts_transformer = InvoiceLineTextsTransformer(resolver)

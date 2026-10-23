@@ -18,7 +18,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.localization import LocalizedText
-from app.schemas.typings.billing.booleans import IsSetupFeeIncluded
+from app.schemas.typings.billing.booleans import IsSetupFeeIncluded, IsSetupFeeOnly
 from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
@@ -55,7 +55,9 @@ class DueInvoicesRequest(ImmutableDTO):
     it), FAILED for one that was declined. `charged_amount` is what an
     automatic charge took (or tried to): its invoice totals exactly that.
     With `pause_price_percent` the period is one month of a seasonal pause
-    at that share of the monthly price, never with a setup fee.
+    at that share of the monthly price, never with a setup fee. With
+    `is_setup_fee_only` only the setup fee is issued (when it is due), not
+    the period: a card saved in the trial pays it on the card's page.
     """
 
     business: BusinessDocument
@@ -66,6 +68,7 @@ class DueInvoicesRequest(ImmutableDTO):
     payment_card: PaymentCardSnapshot | None = None
     charged_amount: Money | None = None
     is_setup_fee_included: IsSetupFeeIncluded = False
+    is_setup_fee_only: IsSetupFeeOnly = False
     pause_price_percent: PausePricePercent | None = None
 
 

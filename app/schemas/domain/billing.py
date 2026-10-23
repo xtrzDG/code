@@ -14,11 +14,13 @@ from app.schemas.constants.billing import (
     UsageKind,
 )
 from app.schemas.constants.invoicing import TaxTreatment
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.domain.billing_profiles import (
     InvoiceLineText,
     InvoiceParty,
     PaymentCardSnapshot,
 )
+from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.typings.billing.booleans import IsSetupFeeWaived
 from app.schemas.typings.billing.constrained_integers import (
     ClientDiscountPercent,
@@ -74,9 +76,13 @@ class SubscriptionDocument(BaseDocument):
     Version 4: a seasonal pause (R14, optional): `pause_starts_at` (the end
     of the paid period, when the pause job makes it PAUSED) and
     `pause_until` (when the job resumes it); both None without a pause.
+    Version 5: the card on file (R17, optional): `payment_provider`, who
+    runs the automatic charges of `provider_reference` (rows of version 4
+    with charges running are Flitt's), and `payment_method_summary`, the
+    card those charges go to as the provider reported it.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: SubscriptionId = Field(default_factory=SubscriptionId)
     business_id: BusinessId
     plan_key: PlanKey
@@ -94,6 +100,8 @@ class SubscriptionDocument(BaseDocument):
     is_setup_fee_waived: IsSetupFeeWaived = False
     pause_starts_at: Microseconds | None = None
     pause_until: Microseconds | None = None
+    payment_provider: PaymentProvider | None = None
+    payment_method_summary: PaymentMethodSummary | None = None
 
 
 class OnboardingRequestDocument(BaseDocument):

@@ -61,9 +61,7 @@ def test_trial_in_georgia_is_priced_in_lari_from_the_price_book() -> None:
     ("country", "expected_text"),
     [
         (ITALY, "175,00\xa0€"),
-        (USA, "€175.00"),
         (JAPAN, "€175.00"),
-        (ISRAEL, "‏175.00\xa0‏€"),
     ],
 )
 def test_trial_elsewhere_is_priced_in_euro(
@@ -79,6 +77,31 @@ def test_trial_elsewhere_is_priced_in_euro(
     assert overview.currency_code == "EUR"
     assert overview.subscription is not None
     assert int(overview.subscription.price.money.amount_minor) == 17500
+    assert overview.subscription.price.text == expected_text
+
+
+@pytest.mark.parametrize(
+    ("country", "currency", "amount_minor", "expected_text"),
+    [
+        (USA, "USD", 19900, "$199.00"),
+        (ISRAEL, "ILS", 69900, "‏699.00\xa0‏₪"),
+    ],
+)
+def test_trial_in_a_country_with_a_price_book_is_priced_locally(
+    country: CountryPreset,
+    currency: str,
+    amount_minor: int,
+    expected_text: str,
+) -> None:
+    testbed = BillingTestbed()
+    owner = testbed.add_user(email="owner@example.com")
+    business = testbed.add_business(owner, country)
+
+    overview = start_trial(testbed, owner, business)
+
+    assert overview.currency_code == currency
+    assert overview.subscription is not None
+    assert int(overview.subscription.price.money.amount_minor) == amount_minor
     assert overview.subscription.price.text == expected_text
 
 

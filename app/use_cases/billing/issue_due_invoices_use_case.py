@@ -13,7 +13,6 @@ from app.contracts.storage import StorageScopeContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (
-    BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
     SetupOption,
@@ -36,6 +35,7 @@ from app.use_cases.billing.invoice_period_terms import (
 from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
 from app.use_cases.shared.brand_billing import owes_brand_setup_fee
 from app.use_cases.shared.invoice_payments import record_invoice_payment
+from app.use_cases.shared.setup_fee_rules import is_setup_fee_pending
 from app.use_cases.shared.subscription_pricing import price_setup_fee
 
 
@@ -71,6 +71,9 @@ class IssueDueInvoicesUseCase(
     A month of a seasonal pause (R14, `pause_price_percent`) is invoiced
     like a period, at its share of the monthly price and worded as a
     pause, and never brings the setup fee (`invoice_period_terms.py`).
+
+    With `is_setup_fee_only` only a setup fee that is due is issued (a
+    card saved in the trial pays it on the card's page).
 
     A brand (R17) pays one setup fee: its first location carries it, by
     claiming it on the brand last of all, and no other location is ever
@@ -126,6 +129,9 @@ class IssueDueInvoicesUseCase(
         if self._needs_setup_fee(input_data, business_invoices):
             issued.append(self._issue_setup_fee(input_data, plan))
 
+        if input_data.is_setup_fee_only:
+            return issued
+
         issued.append(self._issue_period_invoice(input_data, plan, business_invoices))
         return issued
 
@@ -135,24 +141,9 @@ class IssueDueInvoicesUseCase(
         business_invoices: list[InvoiceDocument],
     ) -> bool:
         if (
-            not input_data.is_setup_fee_included
+            not (input_data.is_setup_fee_included or input_data.is_setup_fee_only)
             or input_data.pause_price_percent is not None
-            or input_data.subscription.billing_period is not BillingPeriod.MONTHLY
-            or input_data.subscription.setup_option is not SetupOption.DONE_FOR_YOU
-            or input_data.subscription.is_setup_fee_waived
-        ):
-            return False
-
-        if any(
-            (
-                invoice.kind is InvoiceKind.SETUP_FEE
-                and invoice.status is not InvoiceStatus.VOID
-            )
-            or (
-                invoice.kind is InvoiceKind.SERVICE_PERIOD
-                and invoice.status is InvoiceStatus.PAID
-            )
-            for invoice in business_invoices
+            or not is_setup_fee_pending(input_data.subscription, business_invoices)
         ):
             return False
 

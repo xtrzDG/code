@@ -51,14 +51,16 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
         "removed_on": None,
         "is_in_force": True,
     }
-    # Anthropic as the judge of a sample of real conversations: announced
-    # on 2026-10-06, in force 30 days later; OpenAI embeddings for the
-    # knowledge search across languages: owners hear of it on 2026-10-23.
+    # Anthropic as the judge of a sample of real conversations (announced on
+    # 2026-10-06), OpenAI embeddings for the knowledge search across
+    # languages and Stripe for owners in the EU, the US and Israel (both
+    # announced on 2026-10-23), each in force 30 days later.
     assert [
         (change["key"], change["notice_from"]) for change in body["upcoming_changes"]
     ] == [
         ("anthropic_quality_review-added-2026-11-05", "2026-10-06"),
         ("openai_knowledge_search-added-2026-11-22", "2026-10-23"),
+        ("stripe-added-2026-11-22", "2026-10-23"),
     ]
     assert russian.json()["language"] == "ru"
     assert russian.json()["subprocessors"][0]["purpose"].startswith("Языковая модель")

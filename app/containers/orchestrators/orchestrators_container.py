@@ -161,6 +161,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         BillingOrchestratorsContainer,
         billing_use_cases=CoreOrchestratorsContainer.use_cases.billing,
         invoicing_use_cases=CoreOrchestratorsContainer.use_cases.invoicing,
+        payment_root=CoreOrchestratorsContainer.use_cases.payment_root,
     )
     notifications: NotificationOrchestratorsContainer = Container(  # type: ignore[assignment]
         NotificationOrchestratorsContainer,

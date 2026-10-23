@@ -109,6 +109,7 @@ class SubscriptionLifecycleUseCasesContainer(containers.DeclarativeContainer):
         invoice_repo=repositories.invoice_repo,
         subscription_event_repo=repositories.subscription_event_repo,
         payment_gateway=adapters.payment_gateway,
+        payment_order_repo=repositories.payment_order_repo,
         lifecycle_policy_registry=lifecycle_policy_registry,
         app_settings=config.app_settings,
         assemble_billing_overview=billing_use_cases.assemble_billing_overview_use_case,
@@ -124,6 +125,7 @@ class SubscriptionLifecycleUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         subscription_event_repo=repositories.subscription_event_repo,
         payment_gateway=adapters.payment_gateway,
+        payment_order_repo=repositories.payment_order_repo,
         assemble_billing_overview=billing_use_cases.assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
     )

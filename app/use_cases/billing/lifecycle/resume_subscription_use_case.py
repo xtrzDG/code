@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -34,6 +37,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 
 
 class ResumeSubscriptionUseCase(
@@ -64,6 +68,7 @@ class ResumeSubscriptionUseCase(
         business_repo: BusinessRepoContract,
         subscription_event_repo: SubscriptionEventRepoContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         assemble_billing_overview: UseCaseContract[
             BillingOverviewSource, BillingOverview
         ],
@@ -79,6 +84,7 @@ class ResumeSubscriptionUseCase(
             subscription_event_repo
         )
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._assemble_billing_overview: UseCaseContract[
             BillingOverviewSource, BillingOverview
         ] = assemble_billing_overview
@@ -143,10 +149,10 @@ class ResumeSubscriptionUseCase(
         ended: SubscriptionEventDocument | None = pause_ended_event(
             subscription, now, input_data.user_id
         )
-        if subscription.provider_reference is not None:
-            # A schedule a pause checkout started from the pause's end.
-            self._payment_gateway.stop_recurring(subscription.provider_reference)
-            subscription.provider_reference = None
+        # A schedule a pause checkout started from the pause's end.
+        stop_recurring_charges(
+            self._payment_gateway, self._payment_order_repo, subscription
+        )
 
         subscription.status = SubscriptionStatus.ACTIVE
         subscription.period_end = now

@@ -2,14 +2,16 @@
 Seal one business's stored secrets again with the current key: its
 channels' credentials, its Google Calendar tokens and its resources'
 calendar secrets (iCal feed addresses, booking-system keys), its webhooks'
-signing secrets and its payment pages that carry a key, each written back
-only if it did not change meanwhile; and register its Telegram bots'
-webhooks again with the secret of the current key.
+signing secrets, its payment pages that carry a key and its saved cards'
+tokens, each written back only if it did not change meanwhile; and
+register its Telegram bots' webhooks again with the secret of the current
+key.
 """
 
 import logging
 from dataclasses import dataclass
 
+from app.contracts.billing import PaymentOrderRepoContract
 from app.contracts.calendar_sync import ResourceCalendarLinkRepoContract
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.operations import CalendarConnectionRepoContract
@@ -34,6 +36,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.use_cases.admin.security.calendar_link_resealer import reseal_calendar_links
+from app.use_cases.admin.security.card_token_resealer import reseal_card_tokens
 from app.use_cases.admin.security.payment_link_resealer import reseal_payment_links
 from app.use_cases.admin.security.webhook_secret_resealer import (
     reseal_webhook_endpoints,
@@ -72,7 +75,9 @@ class SecretResealer:
         calendar_link_repo: ResourceCalendarLinkRepoContract | None = None,
         webhook_endpoint_repo: WebhookEndpointRepoContract | None = None,
         deposit_settings_repo: DepositSettingsRepoContract | None = None,
+        payment_order_repo: PaymentOrderRepoContract | None = None,
     ) -> None:
+        self._payment_order_repo: PaymentOrderRepoContract | None = payment_order_repo
         self._deposit_settings_repo: DepositSettingsRepoContract | None = (
             deposit_settings_repo
         )
@@ -126,6 +131,12 @@ class SecretResealer:
         if self._deposit_settings_repo is not None:
             reseal_payment_links(
                 self._deposit_settings_repo,
+                business_id,
+                lambda encrypted: self._reseal(encrypted, tally),
+            )
+        if self._payment_order_repo is not None:
+            reseal_card_tokens(
+                self._payment_order_repo,
                 business_id,
                 lambda encrypted: self._reseal(encrypted, tally),
             )

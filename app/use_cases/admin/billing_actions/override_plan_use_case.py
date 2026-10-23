@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
-from app.contracts.billing import PaymentGatewayAdapterContract
+from app.contracts.billing import (
+    PaymentGatewayAdapterContract,
+    PaymentOrderRepoContract,
+)
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -33,6 +36,7 @@ from app.use_cases.shared.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
 )
+from app.use_cases.shared.recurring_charges import stop_recurring_charges
 from app.use_cases.shared.subscription_pricing import price_subscription
 from app.utilities.analytics.billing_event_drafts import billing_event
 
@@ -63,6 +67,7 @@ class OverridePlanUseCase(UseCaseContract[OverridePlanCommand, AdminActionReceip
         business_repo: BusinessRepoContract,
         plan_registry: PlanRegistryContract,
         payment_gateway: PaymentGatewayAdapterContract,
+        payment_order_repo: PaymentOrderRepoContract,
         remove_voice_agent: UseCaseContract[BusinessId, None],
         product_events: RecordProductEventFacilitatorContract,
         wall_clock: WallClock[Microseconds],
@@ -73,6 +78,7 @@ class OverridePlanUseCase(UseCaseContract[OverridePlanCommand, AdminActionReceip
         self._business_repo: BusinessRepoContract = business_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
         self._product_events: RecordProductEventFacilitatorContract = product_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -122,10 +128,10 @@ class OverridePlanUseCase(UseCaseContract[OverridePlanCommand, AdminActionReceip
                 now,
             )
 
-        reference = subscription.provider_reference
-        if is_charge_changed and reference is not None:
-            self._payment_gateway.stop_recurring(reference)
-            subscription.provider_reference = None
+        if is_charge_changed and subscription.provider_reference is not None:
+            stop_recurring_charges(
+                self._payment_gateway, self._payment_order_repo, subscription
+            )
             self._subscription_repo.save(subscription)
 
         self._product_events.record(

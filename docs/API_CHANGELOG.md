@@ -11,6 +11,43 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — the card on file: setup fee, card update in dunning
+
+Spec: `c4a6610f7c8651f5`
+
+- **Changed** `PaymentMethodView` gains `setup_fee_due` (`Money`, optional):
+  what saving the card in a done-for-you trial charges now, the one-time
+  setup fee with tax that a trial without a card is billed at its end.
+- **Changed** `POST /v1/businesses/{business_id}/billing/payment-method`:
+  in such a trial the provider's page charges that setup fee (the card
+  then runs the charges from the trial's end); otherwise it still charges
+  nothing. A card can now also be replaced while a declined automatic
+  charge is retried (`can_save_card` is true for a past-due subscription
+  whose charges run); the retries charge the new card. The page names the
+  charges in the page's language.
+
+## 2026-10-22 — payments by region: Stripe, the card on file and retries
+
+Spec: `b43d331afb64159b`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/payment-method`
+  (owners): the card on file (`PaymentMethodView`: who charges it —
+  `provider` `flitt` or `stripe` —, the card's brand, last four digits and
+  expiry, whether automatic charges run, whether a card can be saved now,
+  the trial's "Save card" prompt from day 10 and where the retries of a
+  declined charge stand: last attempt and outcome, next retry, end of
+  grace).
+- **Added** `POST /v1/businesses/{business_id}/billing/payment-method`
+  (owners, 201, `Idempotency-Key`): the provider's page that saves or
+  replaces the card without charging it now (`CardSetupSessionView`);
+  optional body `{"return_url"}` and `?language=`. 409 when no card can be
+  saved (an unpaid bill is paid instead; a paused or cancelled
+  subscription), 404 without a subscription.
+- **Added** `POST /v1/payments/stripe/webhook` (no token): Stripe events,
+  verified by their `Stripe-Signature` (403 when missing, wrong, stale or
+  Stripe is not configured), applied once each; answers like the Flitt
+  webhook (`PaymentWebhookReceipt`).
+
 ## 2026-10-23 — knowledge aliases: bounded lists, trimmed texts
 
 Spec: `621b169c1d61b2da`

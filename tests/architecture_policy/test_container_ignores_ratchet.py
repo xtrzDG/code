@@ -22,6 +22,7 @@ CONTAINER_TYPE_IGNORES: int = 1090
 TYPED_ROOTS: tuple[Path, ...] = (
     CONTAINERS / "feedback",
     CONTAINERS / "passkeys",
+    CONTAINERS / "payments",
     CONTAINERS / "adapters" / "provider_resilience.py",
     CONTAINERS / "role_chain_factories.py",
 )
