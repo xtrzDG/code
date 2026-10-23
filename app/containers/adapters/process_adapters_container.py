@@ -24,6 +24,7 @@ from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
 from app.adapters.storage.unit_of_work_factory import (
     build_read_session_adapter,
     build_unit_of_work_adapter,
+    build_widget_poll_read_adapter,
 )
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
@@ -34,6 +35,7 @@ from app.contracts.database_roles import DatabaseRoleInspectionAdapterContract
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.jobs import JobWakeupContract
 from app.contracts.storage import StorageReadSessionContract, StorageUnitOfWorkContract
+from app.contracts.widget_poll_reads import WidgetPollReadAdapterContract
 
 
 class ProcessAdaptersContainer(containers.DeclarativeContainer):
@@ -66,6 +68,12 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     # Several reads in one transaction (Postgres), None in memory.
     storage_read_session: Singleton[StorageReadSessionContract | None] = Singleton(
         build_read_session_adapter,
+        connection_pools=clients.postgres_pools,
+        storage_scope=utilities.storage_scope,
+    )
+    # A widget poll's reads in one statement (Postgres), None in memory.
+    widget_poll_reads: Singleton[WidgetPollReadAdapterContract | None] = Singleton(
+        build_widget_poll_read_adapter,
         connection_pools=clients.postgres_pools,
         storage_scope=utilities.storage_scope,
     )

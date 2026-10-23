@@ -81,6 +81,23 @@ def find_position_after(
     return None
 
 
+def ids_after_cursor(
+    newest: Sequence[PlacedMessage],
+    after: MessageId,
+) -> list[MessageId]:
+    """
+    The ids of `newest` that come after the cursor in answer order (the
+    messages a poll needs in full); none when the cursor is not among them.
+    """
+
+    window: list[PlacedMessage] = sorted(newest, key=message_order)
+    start: int | None = find_position_after(window, after)
+    if start is None:
+        return []
+
+    return [message.id for message in window[start:]]
+
+
 def find_latest_visitor_message_id(
     messages: list[MessageDocument],
 ) -> MessageId | None:

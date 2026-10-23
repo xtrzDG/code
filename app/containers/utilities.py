@@ -13,6 +13,7 @@ from app.contracts.session_assurance import (
     StepUpGuardContract,
 )
 from app.contracts.storage import StorageScopeContract
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
@@ -41,6 +42,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from app.utilities.security.widget_stream_ticket_signer import (
     WidgetStreamTicketSigner,
 )
+from app.utilities.spend.widget_origins import platform_page_origins
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
@@ -75,6 +77,14 @@ class UtilitiesContainer(containers.DeclarativeContainer):
         BookingManageTokenSigner,
         encryption_key=config.app_settings.provided.encryption_key,
         previous_keys=config.app_settings.provided.previous_encryption_keys,
+    )
+    # The platform's own pages, which may always show a business's chat (the
+    # cabinet's hosted chat page and preview, the API's demo page).
+    widget_platform_origins: Singleton[list[PublicBaseUrl]] = Singleton(
+        platform_page_origins,
+        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+        app_base_url=config.app_settings.provided.app_base_url,
+        cabinet_origins=config.app_settings.provided.cors_allowed_origins,
     )
     # Tickets of the website chat's live stream (the visitor key never goes
     # into its address); the key derives from ENCRYPTION_KEYS as well.

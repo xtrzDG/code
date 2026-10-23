@@ -42,6 +42,7 @@ from app.schemas.typings.localization.strings import LanguageDisplayName
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.constrained_strings import ShareLinkUrl
+from app.schemas.typings.spend.constrained_strings import WidgetPageOrigin
 from app.schemas.typings.users.prefixed_id import UserId
 
 # The photos and voice notes one widget message may carry.
@@ -154,13 +155,16 @@ class WidgetMessagesQuery(ImmutableDTO):
     A widget polls for new answers of its visitor's conversations: the
     assistant's and staff's messages after the message `after`. Without
     `after` nothing is returned but the current position (a widget that has
-    shown everything starts from there).
+    shown everything starts from there). `page_origin`: the page the poll
+    came from (Origin, else Referer; None when it names neither), checked
+    against the business's allowed websites.
     """
 
     business_id: BusinessId
     session_key: WidgetSessionKey
     after: MessageId | None = None
     client_ip_address: ClientIpAddress | None = None
+    page_origin: WidgetPageOrigin | None = None
 
 
 class WidgetMessageView(ImmutableDTO):

@@ -137,6 +137,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
     migration_source = processes.migration_source
     storage_unit_of_work = processes.storage_unit_of_work
     storage_read_session = processes.storage_read_session
+    widget_poll_reads = processes.widget_poll_reads
     job_wakeup, data_task_batches = processes.job_wakeup, processes.data_task_batches
     # Locks every process respects (Postgres advisory locks; in-process without one).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(

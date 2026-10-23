@@ -9,12 +9,17 @@ from app.schemas.dto.rate_limits import (
     RateLimitCounter,
     RateLimitWindow,
 )
-from app.schemas.typings.platform.constrained_integers import RateLimitRequestCount
+from app.schemas.typings.platform.constrained_integers import (
+    RateLimitLeaseGrant,
+    RateLimitLeaseSize,
+    RateLimitRequestCount,
+)
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.utilities.limits.sliding_window_limits import (
     bucket_expiry,
     is_within_limit,
+    lease_grant,
     previous_window_start,
 )
 
@@ -65,6 +70,23 @@ class InMemoryRateLimitBucketAdapter(RateLimitBucketAdapterContract):
                 self._buckets[bucket_id] = (count + 1, bucket_expiry(window))
 
             return None
+
+    def lease_within(
+        self,
+        counter: RateLimitCounter,
+        units: RateLimitLeaseSize,
+        window: RateLimitWindow,
+    ) -> RateLimitLeaseGrant:
+        with self._lock:
+            counts = self._counts(counter.key, window)
+            granted: RateLimitLeaseGrant = lease_grant(counts, counter, units, window)
+            if int(granted) > 0:
+                self._buckets[_current_bucket(counter.key, window)] = (
+                    int(counts.current_count) + int(granted),
+                    bucket_expiry(window),
+                )
+
+            return granted
 
     def read_counts(
         self,

@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.adapters.rate_limits.rate_limit_bucket_queries import (
     COUNT_REQUEST_WITHIN_LIMITS,
     DELETE_EXPIRED_BATCH,
+    LEASE_REQUESTS_WITHIN_LIMIT,
     RATE_LIMIT_BUCKETS_TABLE,
     READ_COUNTS,
 )
@@ -22,7 +23,11 @@ from app.schemas.dto.rate_limits import (
     RateLimitWindow,
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.platform.constrained_integers import RateLimitRequestCount
+from app.schemas.typings.platform.constrained_integers import (
+    RateLimitLeaseGrant,
+    RateLimitLeaseSize,
+    RateLimitRequestCount,
+)
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.utilities.limits.sliding_window_limits import (
@@ -47,7 +52,9 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
     runs: concurrent requests of any process wait for the final counts and
     never both take the last place, and a refused request counts nowhere,
     yet no request waits for another one's round trip to the application
-    (every widget poll counts the same platform row). Inside a unit of
+    (every widget message counts the same platform row). A lease
+    (`lease_within`, `workshop.lease_requests_within_limit` of 1215) is
+    one such statement too. Inside a unit of
     work the statement is a savepoint of its transaction
     (`platform_statement`), so its error rolls back only itself. The table is
     UNLOGGED: counters are short-lived and not worth the write-ahead log (a
@@ -81,6 +88,32 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
             ).fetchone()
 
         return find_refused_key(counters, None if row is None else row[0])
+
+    def lease_within(
+        self,
+        counter: RateLimitCounter,
+        units: RateLimitLeaseSize,
+        window: RateLimitWindow,
+    ) -> RateLimitLeaseGrant:
+        with platform_statement(
+            self._connection_pool, RATE_LIMIT_BUCKETS_TABLE
+        ) as connection:
+            row = connection.execute(
+                LEASE_REQUESTS_WITHIN_LIMIT,
+                {
+                    "key": str(counter.key),
+                    "request_limit": int(counter.limit),
+                    "lease_units": int(units),
+                    "window_seconds": int(window.length_seconds),
+                    "window_start": int(window.started_at),
+                    "previous_start": previous_window_start(window),
+                    "expires_at": bucket_expiry(window),
+                    "window_microseconds": window_microseconds(window.length_seconds),
+                    "elapsed_microseconds": int(window.now) - int(window.started_at),
+                },
+            ).fetchone()
+
+        return RateLimitLeaseGrant(0 if row is None else read_count(row[0]))
 
     def read_counts(
         self,

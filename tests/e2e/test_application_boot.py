@@ -40,6 +40,9 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "adapters.processes.storage_unit_of_work",
         "adapters.storage_read_session",
         "adapters.storage_unit_of_work",
+        # In memory a widget poll reads through its repositories.
+        "adapters.processes.widget_poll_reads",
+        "adapters.widget_poll_reads",
         # No OTEL_EXPORTER_OTLP_ENDPOINT: no tracer provider, nothing exported.
         "utilities.tracer_provider",
     }

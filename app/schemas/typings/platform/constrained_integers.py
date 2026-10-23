@@ -142,6 +142,25 @@ class ProcessedItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class RateLimitLeaseGrant(BaseConstrainedTypedInt):
+    """
+    How many requests a shared rate-limit counter granted one process to
+    admit on its own (counted there already); 0 when the limit is used up.
+    """
+
+    ge = 0
+
+
+class RateLimitLeaseSize(BaseConstrainedTypedInt):
+    """
+    How many requests one process takes from a shared rate-limit counter at
+    a time, to admit them without a round trip each.
+    """
+
+    ge = 1
+    le = 10_000_000
+
+
 class RateLimitRequestCount(BaseConstrainedTypedInt):
     """How many requests one rate-limit counter recorded in one window."""
 

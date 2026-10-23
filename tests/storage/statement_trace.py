@@ -10,6 +10,9 @@ protocol trace of every connection of a pool (`PGconn.trace`), counted.
 - A transaction ends whenever a ReadyForQuery reports the session idle
   again ('I'): a COMMIT or ROLLBACK, or a statement outside a transaction
   block (its own transaction).
+- A statement is one the client sends: an extended-protocol Execute or a
+  simple Query message (`begin; select set_config(...)` counts once here;
+  statements a database function runs inside are not seen).
 
 The trace sees everything the application sends, psycopg's own BEGIN,
 SAVEPOINT and COMMIT included, so the counts are deterministic: unlike
@@ -37,15 +40,18 @@ from app.schemas.typings.platform.strings import DatabaseUrl
 
 # "B	5	ReadyForQuery	 I" in the trace (regress mode, no timestamps).
 READY_FOR_QUERY: re.Pattern[str] = re.compile(r"^B\t\d+\tReadyForQuery\t (\w)$")
+# "F	9	Execute	 "" 0" or "F	25	Query	 "commit"": a statement sent.
+STATEMENT_SENT: re.Pattern[str] = re.compile(r"^F\t\d+\t(?:Execute|Query)\t")
 TRACE_FLAGS: pq.Trace = pq.Trace.SUPPRESS_TIMESTAMPS | pq.Trace.REGRESS_MODE
 
 
 @dataclass
 class TraceCount:
-    """What one traced block sent: round trips and transactions ended."""
+    """What one traced block sent: round trips, statements, transactions ended."""
 
     round_trips: int = 0
     transactions: int = 0
+    statements: int = 0
 
 
 class TracedConnectionPool(PostgresConnectionPoolClient):
@@ -143,6 +149,10 @@ def start_trace(connection: PostgresConnection, directory: Path) -> IO[str]:
 
 def add_counts(count: TraceCount, trace_text: str) -> None:
     for line in trace_text.splitlines():
+        if STATEMENT_SENT.match(line) is not None:
+            count.statements += 1
+            continue
+
         ready = READY_FOR_QUERY.match(line)
         if ready is None:
             continue

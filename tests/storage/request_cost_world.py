@@ -21,7 +21,7 @@ from app.schemas.dto.load_data import (
     LoadSeedManifest,
     SeedLoadCommand,
 )
-from tests.e2e.harness import start_workshop
+from tests.e2e.harness import Workshop, start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT, START
 from tests.e2e.workshop_container import replace_provider
 from tests.storage.postgres_roles import RoleDatabase
@@ -46,6 +46,7 @@ class RequestCostWorld:
     pools: PostgresConnectionPools
     manifest: LoadSeedManifest
     update_ids: list[int]
+    workshop: Workshop
 
     @property
     def business(self) -> LoadBusinessSeed:
@@ -89,6 +90,7 @@ def open_request_cost_world(role_urls: RoleDatabase) -> RequestCostWorld:
         pools=pools,
         manifest=manifest,
         update_ids=[],
+        workshop=workshop,
     )
 
 

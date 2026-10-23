@@ -16,17 +16,24 @@ A platform-wide read outside a transaction (`scoped_read`) needs neither:
 the platform role sees every row whatever `app.business_id` says
 (migration 1200), so its statements run on their own, one round trip
 each instead of three.
+
+A single read needs no block: `fetch_in_scope` pipelines the scope and the
+read on an idle connection (one round trip, one implicit transaction that
+ends at the pipeline's sync, so the scope ends with it), and inside a
+transaction runs them in a scoped savepoint.
 """
 
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar, Token
 from typing import LiteralString
 
 import psycopg
 from psycopg import sql
+from psycopg.rows import TupleRow
 
 from app.adapters.storage.postgres.postgres_session_settings import (
+    apply_storage_scope,
     begin_in_scope,
     savepoint_in_scope,
 )
@@ -73,6 +80,37 @@ def scoped_transaction(
         )
         with finished(connection, RELEASE, ROLLBACK_TO):
             yield connection
+
+
+def fetch_in_scope(
+    connection_pool: PostgresConnectionPoolClient,
+    scope: StorageScope,
+    query: LiteralString,
+    parameters: Mapping[str, object],
+) -> list[TupleRow]:
+    """
+    The rows of one read in `scope`, in one round trip.
+
+    On an idle connection the scope's `set_config` and the read go as one
+    pipeline: the extended protocol runs the statements up to its sync as
+    one implicit transaction, so the scope binds the read and ends with it
+    (a failure rolls both back). Inside a transaction (a unit of work's
+    pinned connection) they run in a savepoint with the scope instead, as
+    `scoped_transaction` does.
+    """
+
+    with connection_pool.connection() as connection:
+        if not is_idle(connection):
+            savepoint_in_scope(
+                connection, joined_scope(connection, scope), SCOPED_SAVEPOINT
+            )
+            with finished(connection, RELEASE, ROLLBACK_TO):
+                return connection.execute(query, parameters).fetchall()
+
+        with connection.pipeline():
+            apply_storage_scope(connection, scope)
+            cursor = connection.execute(query, parameters)
+        return cursor.fetchall()
 
 
 @contextmanager

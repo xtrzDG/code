@@ -11,6 +11,10 @@ from app.schemas.dto.rate_limits import (
     RateLimitCounter,
     RateLimitWindow,
 )
+from app.schemas.typings.platform.constrained_integers import (
+    RateLimitLeaseGrant,
+    RateLimitLeaseSize,
+)
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 
@@ -33,6 +37,22 @@ class RateLimitBucketAdapterContract(AdapterContract, Protocol):
         count none, create no bucket and return the first counter's key
         (in the given order) whose limit is used up. Concurrent calls of
         any process never both pass the last free place.
+        """
+        raise NotImplementedError
+
+    def lease_within(
+        self,
+        counter: RateLimitCounter,
+        units: RateLimitLeaseSize,
+        window: RateLimitWindow,
+    ) -> RateLimitLeaseGrant:
+        """
+        In one atomic step, count up to `units` requests in the window's
+        bucket of `counter` (as many as keep it within its limit by
+        `lease_grant`) and return how many it counted: the caller admits
+        that many requests on its own. 0 counts nothing and creates no
+        bucket. Concurrent calls of any process (and `count_if_within` on
+        the same key) never count past the limit together.
         """
         raise NotImplementedError
 

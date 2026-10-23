@@ -146,6 +146,14 @@ class RequestRateLimitRegistryContract(RegistryContract, Protocol):
         within their limits, in one step; otherwise count none and return
         the first key whose limit is used up. A refused request leaves no
         state behind (no counter is created for its keys).
+
+        Counters with a lease size are taken first, from requests this
+        process counted ahead in their shared counters (a lease, topped up
+        that many at a time; a refused request gives its unit back to the
+        lease): every process together still admits at most the limit,
+        and the limit may bind up to a lease and a fifth per process early
+        (a low lease is topped up ahead). The other
+        counters are counted per request, as above, after them.
         """
         raise NotImplementedError
 
