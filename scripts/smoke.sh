@@ -11,6 +11,8 @@
 #   2. GET  /widget.js                  serves the website widget
 #   3. GET  /v1/auth/login-options      sign-in works and names its channels
 #   4. GET  <cabinet>/login             the cabinet answers (if its URL is given)
+#      GET  <cabinet>/.well-known/security.txt  names the security mailbox
+#                                       and its https Canonical address
 #   5. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
 #      (only when set): config, one visitor message, an assistant answer
 #      (in the response, or polled from GET .../messages); with
@@ -24,7 +26,7 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,23p' "$0" >&2
+  sed -n '2,25p' "$0" >&2
   exit 2
 fi
 
@@ -124,6 +126,17 @@ if [ -n "$cabinet_url" ]; then
   status="$(request GET "$cabinet_url/login")"
   [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
   pass "GET cabinet /login"
+
+  # RFC 9116: reports reach the platform's mailbox (SECURITY_CONTACT_EMAIL)
+  # and the file names its own address (SITE_URL), SECURITY.md.
+  status="$(request GET "$cabinet_url/.well-known/security.txt")"
+  [ "$status" = "200" ] \
+    || fail "GET $cabinet_url/.well-known/security.txt answered $status"
+  grep -Eq '^Contact: mailto:[^[:space:]@]+@[^[:space:]@]+$' "$body_file" \
+    || fail "security.txt names no security mailbox (SECURITY_CONTACT_EMAIL)"
+  grep -Eq '^Canonical: https://[^[:space:]]+/\.well-known/security\.txt$' "$body_file" \
+    || fail "security.txt has no https Canonical address (SITE_URL)"
+  pass "GET cabinet /.well-known/security.txt"
 fi
 
 # 5. A test chat through the website widget.

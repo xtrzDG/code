@@ -1224,6 +1224,10 @@ services:
       # links, hreflang, sitemap.xml and robots.txt of the public pages
       - key: SITE_URL
         sync: false
+      # the security mailbox (security@<your domain>): the first Contact of
+      # /.well-known/security.txt; the deploy smoke test checks it is there
+      - key: SECURITY_CONTACT_EMAIL
+        sync: false
       # Render's edge appends one X-Forwarded-For hop in front of the cabinet:
       # only that right-most entry is forwarded to the API.
       - key: TRUSTED_PROXY_HOPS

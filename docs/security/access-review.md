@@ -30,14 +30,20 @@ of this file. Anything not needed any more is removed the same day.
 ### GitHub
 
 - [ ] Organisation and repository members, outside collaborators and teams;
-      two-factor authentication required for everyone.
-- [ ] Branch protection on the default branch: reviews and the CI checks
-      required.
+      two-factor authentication required for everyone. Write access can push
+      to `release`, which production deploys, past every check of `main`
+      (deploy smoke verifies with the deployed commit's own scripts).
+- [ ] Branch protection on the default branch: pull requests only, the CI
+      checks required, no force push or deletion; the daily
+      `.github/workflows/repo-settings.yml` is green and its token
+      (`REPO_SETTINGS_TOKEN`, SECURITY.md "Repository settings") has more
+      than a quarter left.
 - [ ] Deploy keys, GitHub Apps and personal access tokens with access to the
       repository: each one still needed.
 - [ ] Environment secrets (the restore drill's age key, the contract tests'
       provider keys): who can read them.
-- [ ] Private vulnerability reporting is switched on (SECURITY.md).
+- [ ] Private vulnerability reporting is switched on (SECURITY.md; the same
+      daily check reads it).
 
 ### Provider consoles
 
@@ -57,8 +63,10 @@ Cloudflare, the object storage, the e-mail provider, Twilio):
       (docs/operations/backup-restore.md).
 - [ ] The age private key of the backups is held by the restore drill and in
       escrow only; the last restore drill passed.
-- [ ] `web/public/.well-known/security.txt` has more than a quarter left
-      before `Expires` (the test fails 30 days ahead).
+- [ ] The security.txt fields (`web/src/server/securityTxt.ts`) have more
+      than a quarter left before `Expires` (the test fails 30 days ahead),
+      and production's `/.well-known/security.txt` names the security
+      mailbox that someone reads.
 
 ### Records
 

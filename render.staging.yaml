@@ -243,6 +243,10 @@ services:
         sync: false
       - key: COOKIE_SECURE
         value: "true"
+      # the security mailbox (security@<your domain>): the first Contact of
+      # /.well-known/security.txt; the deploy smoke test checks it is there
+      - key: SECURITY_CONTACT_EMAIL
+        sync: false
       - key: TRUSTED_PROXY_HOPS
         value: "1"
       # errors of the cabinet (server and browser); empty: none are sent

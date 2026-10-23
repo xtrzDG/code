@@ -1,0 +1,36 @@
+# The stack the ZAP baseline scans (.github/workflows/zap.yml), on top of
+# docker-compose.yml:
+#
+#   COMPOSE_FILE=docker-compose.yml:.zap/docker-compose.zap.yml \
+#     docker compose up --detach --build --wait api web
+#
+# docker compose's development defaults (sign-in codes in the API log, the
+# cabinet over plain http), the scripted model instead of a provider, and
+# every provider host resolved to nowhere, so nothing a scan sets off leaves
+# the runner. No worker: a passive scan reads, and what the AJAX spider sends
+# through the widget only waits in the queue. Never use these settings for a
+# deployment.
+x-scan-environment: &scan-environment
+  APP_ENV: development
+  LLM_PROVIDER: scripted
+  SEED_DEMO_DATA: "false"
+  # ZAP reads quickly from one address: production's 120 requests a minute
+  # per address would answer most of its requests with 429 and hide the
+  # headers of the real answers. tests/spend_guard covers the limit itself.
+  API_REQUESTS_PER_IP_PER_MINUTE: "6000"
+
+x-offline-providers: &offline-providers
+  - "api.telegram.org:127.0.0.1"
+  - "graph.facebook.com:127.0.0.1"
+  - "api.openai.com:127.0.0.1"
+  - "eu.api.openai.com:127.0.0.1"
+  - "api.anthropic.com:127.0.0.1"
+  - "api.elevenlabs.io:127.0.0.1"
+  - "oauth2.googleapis.com:127.0.0.1"
+  - "www.googleapis.com:127.0.0.1"
+
+services:
+  api:
+    environment:
+      <<: *scan-environment
+    extra_hosts: *offline-providers

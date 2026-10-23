@@ -29,6 +29,7 @@ EXTERNAL_VARIABLES: frozenset[str] = frozenset(
         "COOKIE_SECURE",
         "TRUSTED_PROXY_HOPS",
         "SITE_URL",
+        "SECURITY_CONTACT_EMAIL",
     }
 )
 

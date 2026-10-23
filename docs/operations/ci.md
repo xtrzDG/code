@@ -23,6 +23,7 @@ Everything starts at once except `coverage` (after every backend part),
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/9 … 9/9) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
@@ -50,6 +51,42 @@ part 283, about 30 of each collecting, on four workers (factors 0.53 and
 those seconds, about 2:45 and 2:10 on four workers plus the collection;
 the slowest Postgres file (the chaos game days, about 157 seconds) sets
 the floor of its part.
+
+## Signed images, the dynamic scan and the repository settings
+
+- `publish-images` runs only for a push to `main`, after every gate. The
+  images are the ones `images` built and scanned (a saved artifact, not a
+  rebuild). Signing is keyless: Sigstore issues a short-lived certificate
+  for this workflow's OIDC identity (`ci.yml` on `refs/heads/main`), so
+  there is no signing key to keep or leak. Deploy smoke runs the same
+  `scripts/verify_images.sh` for every deployed commit
+  (`docs/operations/deploys.md`, "Signed images").
+- `zap.yml` (OWASP ZAP baseline, at most 45 minutes) starts the docker
+  compose stack with a scripted model, seeds one business and scans the
+  cabinet, the hosted chat page, the widget and every read-only `/v1`
+  operation with the owner's token. It runs on every push to `main`, every
+  Tuesday for ZAP's newer rules, and on pull requests that change the scan.
+  `scripts/zap_gate.py` fails it on any Medium or High finding
+  `.zap/rules.tsv` has not reviewed (SECURITY.md, "Dynamic scan"); the job
+  summary lists every finding with the reason of each reviewed exception.
+  `scripts/zap_auth_check.py` fails it when the `/v1` scan was not signed
+  in (the seeded business's routes answered 401 instead of 2xx).
+- `repo-settings.yml` checks every morning that branch protection, private
+  vulnerability reporting and Dependabot security updates are as
+  `.github/repository-settings.json` expects (SECURITY.md, "Repository
+  settings"). The required checks there are `CI passed (every gate)`
+  (the last job of `ci.yml`, which always runs and fails unless every other
+  CI job succeeded: a required job that was skipped because a job it needs
+  failed would count as passed) and the jobs of `codeql.yml` and
+  `api-contract.yml`: renaming a job means changing that file and the
+  branch protection together (`tests/platform/test_supply_chain_workflows.py`
+  and `tests/platform/test_release_paths.py` fail until both agree).
+- `automerge.yml` merges a green grouped Dependabot update after each of
+  the workflows that own a required check (CI, CodeQL, API contract) and
+  only once none of those checks is pending. Its merge, made with the
+  workflow's token, pushes no event, so it then starts every workflow a
+  push to `main` starts: CI (whose run on `main` publishes the signed
+  images deploy smoke verifies), CodeQL, Lighthouse and the ZAP baseline.
 
 ## Backend tests in parts
 

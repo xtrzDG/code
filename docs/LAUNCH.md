@@ -1522,11 +1522,23 @@ Telegram остаётся в приложении клиента — эти пл
 
 ### Контакт по безопасности
 
-Кабинет отдаёт `/.well-known/security.txt` (`web/public/.well-known/security.txt`):
-там адрес для сообщений об уязвимостях (приватные отчёты GitHub) и правила
-(SECURITY.md). До запуска добавьте строку `Contact: mailto:security@<ваш
-домен>` и `Canonical: https://<адрес кабинета>/.well-known/security.txt`.
-Поле `Expires` продлевайте не реже раза в год: тест падает за 30 дней до срока.
+Кабинет отдаёт `/.well-known/security.txt` (RFC 9116, поля — в
+`web/src/server/securityTxt.ts`): куда сообщать об уязвимостях и правила
+(SECURITY.md). До запуска заведите ящик `security@<ваш домен>` и впишите его
+в `SECURITY_CONTACT_EMAIL` кабинета (Render → `workshop-cabinet` и
+`workshop-staging-cabinet`): он встанет первой строкой `Contact:` перед
+приватными отчётами GitHub, а строка `Canonical:` назовёт адрес самого файла
+по `SITE_URL`. Без ящика проверка после деплоя (`scripts/smoke.sh`) не
+пропустит релиз. Поле `Expires` продлевайте не реже раза в год: тест падает
+за 30 дней до срока.
+
+Ещё два раза в начале работы репозитория (SECURITY.md, «Repository
+settings»): включите приватные отчёты об уязвимостях (Settings → Code
+security → Private vulnerability reporting) и защиту ветки `main` (только
+через pull request, обязательные проверки CI, без force push и удаления), а
+для ежедневной проверки этих настроек положите в секреты репозитория
+fine-grained токен только этого репозитория с правом «Administration:
+Read-only» (имя секрета — в SECURITY.md).
 Раз в квартал проходите проверку доступов (`docs/security/access-review.md`)
 и сверяйте модель угроз (`docs/security/threat-model.md`).
 

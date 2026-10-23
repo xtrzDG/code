@@ -11,14 +11,20 @@ about the safety of that data as urgent.
   the report, and we can discuss and fix it in a private fork. (Maintainers:
   keep *Settings > Code security > Private vulnerability reporting*
   switched on.)
+- Or write to the security mailbox named first in the cabinet's
+  `/.well-known/security.txt`.
 - Do **not** open a public issue, pull request or discussion about it.
 - Include what you found, where (route, page, file), how to reproduce it,
   what an attacker gains, and any proof of concept. Use test accounts and
   your own data only.
 
-The cabinet publishes this contact as `/.well-known/security.txt`
-(`web/public/.well-known/security.txt`, RFC 9116); a test fails 30 days
-before its `Expires`, so it is renewed in time. The trust boundaries, the
+The cabinet publishes these contacts as `/.well-known/security.txt`
+(RFC 9116, `web/src/server/securityTxt.ts`): the platform's security
+mailbox first (`SECURITY_CONTACT_EMAIL`), then GitHub's private reporting,
+this policy on `main` and the file's own `Canonical` address (`SITE_URL`).
+A test fails 30 days before its `Expires`, so it is renewed in time, and
+the deploy smoke test (`scripts/smoke.sh`) fails when a deployed cabinet
+names no mailbox or no https canonical address. The trust boundaries, the
 STRIDE threats and the code and tests behind each mitigation are in
 [docs/security/threat-model.md](docs/security/threat-model.md); who has
 access to what is reviewed every quarter
@@ -76,13 +82,90 @@ Every pull request runs (`.github/workflows/`):
 | API contract | `oasdiff breaking` against the merge base | breaking changes without the `api-breaking` label |
 | Action pinning | `tests/platform/test_ci_workflows.py` | an action not pinned to a commit SHA |
 
+### Signed images and build provenance
+
+On every commit of `main` (a push, or the CI run `automerge.yml` starts
+after it merged a Dependabot group, since that merge pushes no event),
+after every gate passed, CI publishes the backend
+and cabinet images it built and scanned to ghcr.io under the commit SHA,
+attaches SLSA build provenance (`actions/attest-build-provenance`) and
+signs them with cosign, keyless: Sigstore certifies this workflow's GitHub
+OIDC identity, so no signing key exists to keep or to leak. Deploy smoke
+verifies both for every deployed commit (`scripts/verify_images.sh`): the
+certificate and the provenance must name `.github/workflows/ci.yml` of this
+repository on `refs/heads/main`, that exact commit and a GitHub-hosted
+runner; otherwise the promotion to production stops
+(`docs/operations/deploys.md`, "Signed images").
+
+### Dynamic scan
+
+`.github/workflows/zap.yml` runs OWASP ZAP's baseline (passive) scans
+against the running docker compose stack on every push to `main`, weekly,
+and on pull requests that change the scan: the cabinet's public pages and
+sign-in, a business's hosted chat page (`/c/{slug}`), the website widget,
+and every read-only `/v1` operation with a seeded owner's bearer token.
+`automerge.yml` starts it for the commits it merges, like every other
+workflow a push to `main` starts. The `/v1` scan must prove it was signed
+in: a hook records every answer ZAP received (`scripts/zap_status_hook.py`)
+and `scripts/zap_auth_check.py` fails the job unless the seeded business's
+routes answered 2xx at least once and 401 for fewer than half of them, so a
+bearer header that never reached the API cannot pass on refusals alone.
+The job fails on every Medium or High finding that `.zap/rules.tsv` has not
+reviewed, and on any finding of a rule marked `FAIL` there (the security
+headers the cabinet and the API promise). A reviewed exception names its
+rule (or one variant of it), the addresses it covers and the reason, which
+the job summary repeats next to the finding. The scan never attacks
+(no active scan). It runs over plain http, so the https-only rules (HSTS,
+the `Secure` cookie flag) are left to the header tests
+(`tests/security/test_api_security_headers.py`, `web/e2e/security.spec.ts`).
+
+### Repository settings
+
+Two settings this policy relies on live in GitHub, not in a file:
+
+- **Private vulnerability reporting** must stay on (*Settings > Code
+  security > Private vulnerability reporting*): it is the first way to
+  report above.
+- **Branch protection of `main`** (a classic rule or a ruleset): changes
+  arrive only through pull requests, the CI, CodeQL and API contract
+  checks must pass, force pushes and deleting the branch are blocked.
+  The CI check required is `CI passed (every gate)`, one job that always
+  runs and fails unless every other CI job succeeded: GitHub counts a
+  required check whose job was skipped as passed, and a job is skipped when
+  one it needs failed, so requiring e.g. `Backend coverage` alone would let
+  a red backend test part through.
+  Approvals are not required while one maintainer reviews every change
+  and Dependabot's grouped patch updates merge themselves
+  (`automerge.yml`); raise `required_approving_review_count` when a second
+  maintainer joins. Automerge runs after each workflow that owns a required
+  check (CI, CodeQL, API contract) and merges only once none of the
+  required checks is pending, so the last of them to finish merges; adding
+  a required check of another workflow means adding that workflow to its
+  `workflow_run` list (`tests/platform/test_release_paths.py` fails until
+  both agree).
+
+`.github/workflows/repo-settings.yml` reads both every morning with
+`gh api`, together with Dependabot security updates, and fails when one is
+off or weaker than `.github/repository-settings.json`
+(`scripts/check_repository_settings.py`). The workflow's own token cannot
+read these settings: it uses the repository secret `REPO_SETTINGS_TOKEN`, a
+fine-grained token for this repository only with *Administration:
+Read-only*, which can change nothing. A missing or expired token fails the
+check too (renew it before it expires), and `schedule-watch.yml` opens an
+issue when the check has not succeeded for eight days. Change the expected
+settings only together with the settings themselves, in a reviewed pull
+request.
+
+### Dependency updates
+
 Dependabot (`.github/dependabot.yml`) proposes updates for Python, npm,
 GitHub Actions and Docker base images every week, grouped, after a short
 cooldown; security updates arrive as soon as an advisory is published. This
 is how the DPA's promise of "regular updates of software dependencies"
-(section 9.1) is kept.
+(section 9.1) is kept; the daily repository settings check above keeps
+Dependabot security updates switched on.
 
-At run time:
+### At run time
 
 - Sign-in codes cannot be guessed in parallel: each check takes one of the
   challenge's attempts atomically before the code is compared, checks are
@@ -120,7 +203,11 @@ At run time:
   - `.gitleaksignore`: one fingerprint per finding, only for values that
     are not real secrets (fake test keys get an inline `# gitleaks:allow`);
   - `.trivyignore`: one vulnerability id per line with a comment and a
-    review date.
+    review date;
+  - `.zap/rules.tsv`: an `IGNORE` of one rule (or one variant of it) with
+    its reason, or an `OUTOFSCOPE` address pattern with its reason in the
+    comment above it, each with its review date; the gate refuses an
+    exception without a reason.
 - **A real secret that reached git** is revoked and rotated at once;
   removing it from history comes second.
 

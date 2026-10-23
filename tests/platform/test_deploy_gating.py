@@ -132,7 +132,7 @@ def test_the_smoke_workflow_tests_every_deploy_and_promotes_only_staging() -> No
         assert f"\n  {trigger}" in workflow, trigger
     assert "scripts/smoke.sh" in workflow
     assert "needs.target.outputs.environment == 'staging'" in promote
-    assert "needs: [target, smoke]" in promote
+    assert "needs: [target, smoke, images]" in promote
     assert 'git push origin "$SHA:refs/heads/release"' in promote
     assert "--force" not in promote
     assert "contents: write" in promote

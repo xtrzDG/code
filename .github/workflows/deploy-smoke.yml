@@ -1,9 +1,12 @@
 name: Deploy smoke test
 
-# After every Render deploy of the API: scripts/smoke.sh against it. A green
-# staging smoke test fast-forwards the `release` branch, which production
-# deploys (render.yaml); a red production smoke test is the signal to roll
-# back (docs/operations/deploys.md).
+# After every Render deploy of the API: scripts/smoke.sh against it, and the
+# deployed commit's images checked against what CI published on main
+# (scripts/verify_images.sh: the cosign signature and the SLSA provenance
+# name this repository's ci.yml, refs/heads/main and exactly this commit). A
+# green staging run of both fast-forwards the `release` branch, which
+# production deploys (render.yaml); a red production run is the signal to
+# roll back (docs/operations/deploys.md).
 #
 # Setup: GitHub environments `staging` and `production`, each with the
 # variables API_URL (and optionally CABINET_URL, SMOKE_WIDGET_BUSINESS_ID,
@@ -100,9 +103,39 @@ jobs:
           fi
           scripts/smoke.sh "$API_URL" ${CABINET_URL:+"$CABINET_URL"}
 
+  # Render builds from the same commit; this proves the commit is one CI
+  # built, scanned, attested and signed on main after review: an image of a
+  # commit pushed past main, or of a forged workflow, has no such signature.
+  images:
+    name: Signed images (${{ needs.target.outputs.environment }})
+    needs: target
+    if: needs.target.outputs.environment != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.target.outputs.sha }}
+          persist-credentials: false
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Verify the deployed commit's signatures and provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.target.outputs.sha }}
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          scripts/verify_images.sh "$SHA"
+
   promote:
     name: Promote to production (release branch)
-    needs: [target, smoke]
+    needs: [target, smoke, images]
     if: >-
       needs.target.outputs.environment == 'staging'
       && vars.PROMOTE_AFTER_STAGING_SMOKE != 'false'
