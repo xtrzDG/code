@@ -3352,6 +3352,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/phone-line": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Phone Line */
+        get: operations["phone_numbers_get_phone_line"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/phone-line/number": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rent Phone Number */
+        post: operations["phone_numbers_rent_phone_number"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/phone-line/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Phone Numbers */
+        get: operations["phone_numbers_search_phone_numbers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/phone-line/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Phone Number */
+        post: operations["phone_numbers_request_phone_number"];
+        /** Cancel Phone Number Request */
+        delete: operations["phone_numbers_cancel_phone_number_request"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/privacy-settings": {
         parameters: {
             query?: never;
@@ -12571,7 +12640,7 @@ export interface components {
          * @description What an invoice charges for.
          * @enum {string}
          */
-        InvoiceKind: "service_period" | "setup_fee" | "usage_overage";
+        InvoiceKind: "service_period" | "setup_fee" | "usage_overage" | "number_rental";
         /**
          * InvoiceStatus
          * @description Invoice state.
@@ -15080,6 +15149,40 @@ export interface components {
             question: string;
         };
         /**
+         * PhoneLineView
+         * @description The phone card: the rented number (None: the business rents none, its
+         *     line is its own or not connected yet), an open request (None: none),
+         *     whether this server rents numbers by itself
+         *     (`are_numbers_self_serve`), the countries where an owner picks a number
+         *     and has it at once (`self_serve_countries`; elsewhere the team arranges
+         *     it), and the country the card starts with (the business's).
+         */
+        PhoneLineView: {
+            /** Are Numbers Self Serve */
+            are_numbers_self_serve: boolean;
+            /** Business Id */
+            business_id: string;
+            /** Default Country Code */
+            default_country_code: string;
+            open_request?: components["schemas"]["PhoneNumberRequestView"] | null;
+            rented_number?: components["schemas"]["RentedPhoneNumberView"] | null;
+            /** Self Serve Countries */
+            self_serve_countries?: string[];
+        };
+        /**
+         * PhoneNumberAvailability
+         * @description How a business gets a number in a country.
+         *
+         *     SELF_SERVE: the owner picks one in the cabinet and has it at once.
+         *     REQUIRES_DOCUMENTS: the country's regulator wants the business's papers
+         *     (an address or a company proof), so the platform team arranges the
+         *     number from an admin request. ON_REQUEST: this server rents no numbers
+         *     by itself (no carrier configured) or the carrier sells none there, so
+         *     the team arranges it too.
+         * @enum {string}
+         */
+        PhoneNumberAvailability: "self_serve" | "requires_documents" | "on_request";
+        /**
          * PhoneNumberDetails
          * @description A phone number of any country, validated against its numbering plan.
          */
@@ -15106,6 +15209,74 @@ export interface components {
          * @enum {string}
          */
         PhoneNumberKind: "mobile" | "fixed_line" | "fixed_line_or_mobile" | "toll_free" | "voip" | "other";
+        /**
+         * PhoneNumberOfferList
+         * @description What a search found. SELF_SERVE: `offers` (possibly none near that
+         *     city) at `monthly_price`, the owner's price of any of them.
+         *     REQUIRES_DOCUMENTS or ON_REQUEST: no offers; the owner asks the team.
+         */
+        PhoneNumberOfferList: {
+            availability: components["schemas"]["PhoneNumberAvailability"];
+            /** Country Code */
+            country_code: string;
+            monthly_price?: components["schemas"]["QuotedMoney"] | null;
+            number_type: components["schemas"]["PhoneNumberType"];
+            /** Offers */
+            offers?: components["schemas"]["PhoneNumberOfferView"][];
+        };
+        /**
+         * PhoneNumberOfferView
+         * @description One number the owner may take now; taking it sends `offer_token` back
+         *     (the offer lapses after an hour: search again).
+         */
+        PhoneNumberOfferView: {
+            /** Display Number */
+            display_number: string;
+            /** Locality */
+            locality?: string | null;
+            /** Offer Token */
+            offer_token: string;
+            /** Phone Number */
+            phone_number: string;
+            /** Region */
+            region?: string | null;
+        };
+        /**
+         * PhoneNumberRequestStatus
+         * @description An owner's request for a number the team arranges by hand.
+         * @enum {string}
+         */
+        PhoneNumberRequestStatus: "open" | "done" | "cancelled";
+        /**
+         * PhoneNumberRequestView
+         * @description The owner's request for a number the platform team arranges by hand.
+         */
+        PhoneNumberRequestView: {
+            /** City */
+            city?: string | null;
+            /** Country Code */
+            country_code: string;
+            number_type: components["schemas"]["PhoneNumberType"];
+            /** Requested At */
+            requested_at: number;
+            status: components["schemas"]["PhoneNumberRequestStatus"];
+        };
+        /**
+         * PhoneNumberStatus
+         * @description ACTIVE: rented, answering for the business. RELEASING: given up (the
+         *     phone channel was turned off, or nobody pays for it any more); the
+         *     maintenance job returns it to the carrier and the voice platform.
+         *     RELEASED: returned; the row stays as the record of the rental.
+         * @enum {string}
+         */
+        PhoneNumberStatus: "active" | "releasing" | "released";
+        /**
+         * PhoneNumberType
+         * @description What kind of number: a city (geographic) line, a mobile number, or a
+         *     toll-free one. The carrier's price list prices each kind per country.
+         * @enum {string}
+         */
+        PhoneNumberType: "local" | "mobile" | "toll_free";
         /**
          * PhoneTestLinkView
          * @description A link the owner opens on their phone (or as a QR code) to write to
@@ -16128,6 +16299,36 @@ export interface components {
             powered_by: components["schemas"]["PoweredByView"];
             /** Rewarded */
             rewarded: number;
+        };
+        /**
+         * RentedPhoneNumberView
+         * @description The number the platform rents for the business: where it is from, what
+         *     it costs a month (fixed when it was taken), ACTIVE or RELEASING (being
+         *     given back), and whether calls to it reach the voice agent yet
+         *     (`is_attached`: false until the business has an agent, or for a few
+         *     minutes after it was taken). `has_answering_agent` is false while the
+         *     business has no live voice agent at all (voice off, or the phone
+         *     channel was switched off since the last publish): the number answers
+         *     only once the assistant is published again.
+         */
+        RentedPhoneNumberView: {
+            /** Country Code */
+            country_code: string;
+            /** Display Number */
+            display_number: string;
+            /** Has Answering Agent */
+            has_answering_agent: boolean;
+            /** Is Attached */
+            is_attached: boolean;
+            /** Locality */
+            locality?: string | null;
+            monthly_price: components["schemas"]["QuotedMoney"];
+            number_type: components["schemas"]["PhoneNumberType"];
+            /** Phone Number */
+            phone_number: string;
+            /** Rented At */
+            rented_at: number;
+            status: components["schemas"]["PhoneNumberStatus"];
         };
         /**
          * ReplyChoices
@@ -17863,7 +18064,7 @@ export interface components {
          * @description Metered usage unit, as in the concept's usage_events table.
          * @enum {string}
          */
-        UsageKind: "voice_seconds" | "llm_input_tokens" | "llm_output_tokens" | "dialog" | "whatsapp_reply" | "whatsapp_template" | "transfer_seconds" | "transcription_seconds";
+        UsageKind: "voice_seconds" | "llm_input_tokens" | "llm_output_tokens" | "dialog" | "whatsapp_reply" | "whatsapp_template" | "transfer_seconds" | "transcription_seconds" | "number_rental";
         /**
          * UserMembershipView
          * @description A business the user works in and the role they act with there (their
@@ -41440,6 +41641,496 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MyNotificationSettingsView"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    phone_numbers_get_phone_line: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneLineView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    phone_numbers_rent_phone_number: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Locality */
+                    locality?: string | null;
+                    /**
+                     * Money
+                     * @description Amount in minor units of an ISO 4217 currency.
+                     */
+                    monthly_price: {
+                        /** Amount Minor */
+                        amount_minor: number;
+                        /** Currency Code */
+                        currency_code: string;
+                    };
+                    /**
+                     * PhoneNumberType
+                     * @description What kind of number: a city (geographic) line, a mobile number, or a
+                     *     toll-free one. The carrier's price list prices each kind per country.
+                     * @enum {string}
+                     */
+                    number_type: "local" | "mobile" | "toll_free";
+                    /** Offer Token */
+                    offer_token: string;
+                    /** Phone Number */
+                    phone_number: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RentedPhoneNumberView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    phone_numbers_search_phone_numbers: {
+        parameters: {
+            query: {
+                country: string;
+                number_type: string;
+                city?: string | null;
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneNumberOfferList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    phone_numbers_request_phone_number: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** City */
+                    city?: string | null;
+                    /** Country Code */
+                    country_code: string;
+                    /**
+                     * PhoneNumberType
+                     * @description What kind of number: a city (geographic) line, a mobile number, or a
+                     *     toll-free one. The carrier's price list prices each kind per country.
+                     * @enum {string}
+                     */
+                    number_type: "local" | "mobile" | "toll_free";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneNumberRequestView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    phone_numbers_cancel_phone_number_request: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

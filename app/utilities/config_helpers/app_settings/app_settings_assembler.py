@@ -65,6 +65,9 @@ from app.utilities.config_helpers.app_settings.otp_provider_settings_section imp
 from app.utilities.config_helpers.app_settings.payment_settings_section import (
     read_payment_settings,
 )
+from app.utilities.config_helpers.app_settings.phone_number_settings_section import (
+    read_phone_number_settings,
+)
 from app.utilities.config_helpers.app_settings.platform_admin_settings_section import (
     read_platform_admin_settings,
 )
@@ -200,5 +203,6 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_growth_settings(environment_variables),
         **read_public_api_settings(environment_variables),
         **read_payment_settings(environment_variables),
+        **read_phone_number_settings(environment_variables),
         **read_telemetry_settings(environment_variables),
     )

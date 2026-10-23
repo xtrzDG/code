@@ -38,6 +38,12 @@ NOTICE_TEXTS: dict[BillingNoticeKind, LocalizedText] = {
         "billing.texts.notice_texts.pause_started"
     ),
     BillingNoticeKind.PAUSE_ENDED: owner_text("billing.texts.notice_texts.pause_ended"),
+    BillingNoticeKind.NUMBER_RENTAL_INVOICED: owner_text(
+        "billing.texts.notice_texts.number_rental_invoiced"
+    ),
+    BillingNoticeKind.PHONE_NUMBER_RELEASED: owner_text(
+        "billing.texts.notice_texts.phone_number_released"
+    ),
 }
 FULL_SERVICE_DEADLINE: LocalizedText = owner_text("billing.texts.full_service_deadline")
 VOICE_MINUTES_WARNING: LocalizedText = owner_text("billing.texts.voice_minutes_warning")

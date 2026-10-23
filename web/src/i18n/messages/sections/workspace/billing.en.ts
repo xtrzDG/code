@@ -111,6 +111,7 @@ export const billingEn = {
       service_period: "Service",
       setup_fee: "Setup",
       usage_overage: "Usage above the package",
+      number_rental: "Phone number rental",
     },
     status: {
       issued: "Unpaid",

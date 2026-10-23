@@ -13,7 +13,9 @@ class CallOperatorsContainer(containers.DeclarativeContainer):
     """
     Operators of what follows a phone call: the telephony line's webhook
     (platform-wide: its business is known only from the called number),
-    the text-back job (in its business's scope) and Settings → Calls.
+    the text-back job (in its business's scope) and Settings → Calls; the
+    phone line's rented number (1213) in its business's scope, and the
+    numbers' two jobs platform-wide (they walk every business's numbers).
     """
 
     call_pipelines: CallPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -34,4 +36,25 @@ class CallOperatorsContainer(containers.DeclarativeContainer):
     )
     list_text_backs_operator = pipeline_operator(
         call_pipelines.list_text_backs_pipeline, storage_scope
+    )
+    get_phone_line_operator = pipeline_operator(
+        call_pipelines.get_phone_line_pipeline, storage_scope
+    )
+    search_phone_numbers_operator = pipeline_operator(
+        call_pipelines.search_phone_numbers_pipeline, storage_scope
+    )
+    rent_phone_number_operator = pipeline_operator(
+        call_pipelines.rent_phone_number_pipeline, storage_scope
+    )
+    request_phone_number_operator = pipeline_operator(
+        call_pipelines.request_phone_number_pipeline, storage_scope
+    )
+    cancel_phone_number_request_operator = pipeline_operator(
+        call_pipelines.cancel_phone_number_request_pipeline, storage_scope
+    )
+    maintain_phone_numbers_operator = platform_pipeline_operator(
+        call_pipelines.maintain_phone_numbers_pipeline, storage_scope
+    )
+    bill_phone_number_rentals_operator = platform_pipeline_operator(
+        call_pipelines.bill_phone_number_rentals_pipeline, storage_scope
     )

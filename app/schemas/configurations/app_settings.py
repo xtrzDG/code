@@ -7,6 +7,7 @@ from app.schemas.configurations.embedding_settings import EmbeddingSettings
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.payment_settings import PaymentSettings
+from app.schemas.configurations.phone_number_settings import PhoneNumberSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.public_api_settings import PublicApiSettings
@@ -250,8 +251,7 @@ class AppSettings(ImmutableDTO):
     # The API runs the background worker in a thread of its own process
     # (EMBEDDED_WORKER; see `read_embedded_worker`).
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)
-    # Development only: the API fills an empty instance with demo businesses
-    # at startup (SEED_DEMO_DATA; refused in production).
+    # Development only: demo businesses at startup (SEED_DEMO_DATA, not production).
     is_demo_data_seeding_enabled: IsDemoDataSeedingEnabled = IsDemoDataSeedingEnabled(
         False
     )
@@ -299,3 +299,4 @@ class AppSettings(ImmutableDTO):
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
     public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)
     payments: PaymentSettings = Field(default_factory=PaymentSettings)  # STRIPE_*
+    phone_numbers: PhoneNumberSettings = Field(default_factory=PhoneNumberSettings)

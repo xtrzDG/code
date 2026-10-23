@@ -111,12 +111,9 @@ class AdaptersContainer(containers.DeclarativeContainer):
         utilities=utilities,
     )
     launch_collections: LaunchCollectionsContainer = Container(  # type: ignore[assignment]
-        LaunchCollectionsContainer,
-        clients=clients,
-        config=config,
-        time_provider=time_provider,
-        utilities=utilities,
-    )
+        LaunchCollectionsContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
     # The waitlist and the rebooking campaigns (1151).
     growth_collections: GrowthCollectionsContainer = Container(  # type: ignore[assignment]
         GrowthCollectionsContainer,
@@ -187,9 +184,11 @@ class AdaptersContainer(containers.DeclarativeContainer):
     recording_storage = files.recording_storage
     export_archive_storage = files.export_archive_storage
 
-    # --- Voice platform (ElevenLabs Agents), built with the call adapters.
+    # --- Voice platform (ElevenLabs Agents) and the numbers rented for the
+    # phone line (1213), built with the call adapters.
     voice_webhook_adapter = calls.voice_webhook_adapter
     voice_agent_provisioner = calls.voice_agent_provisioner
+    phone_number_provisioner = calls.phone_number_provisioner
     # The ElevenLabs client whose calls and failures voice_health counts.
     counted_elevenlabs_client = calls.elevenlabs_client
 

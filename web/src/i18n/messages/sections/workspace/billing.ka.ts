@@ -114,6 +114,7 @@ export const billingKa: Translation<typeof billingEn> = {
       service_period: "მომსახურება",
       setup_fee: "ჩართვა",
       usage_overage: "პაკეტის გადაჭარბება",
+      number_rental: "ტელეფონის ნომრის ქირა",
     },
     status: {
       issued: "გადაუხდელი",

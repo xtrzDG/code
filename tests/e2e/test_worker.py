@@ -7,12 +7,14 @@ from typing import cast
 
 import pytest
 
-from app.containers.periodic_jobs import (
+from app.containers.billing_jobs import (
     CHECK_PACKAGE_USAGE_JOB,
     END_TRIALS_JOB,
     ENFORCE_GRACE_PERIODS_JOB,
-    FLUSH_LLM_TRACES_JOB,
     INVOICE_USAGE_OVERAGE_JOB,
+)
+from app.containers.periodic_jobs import (
+    FLUSH_LLM_TRACES_JOB,
     PURGE_EXPIRED_RECORDINGS_JOB,
     PURGE_FINISHED_JOBS_JOB,
     SEND_BOOKING_REMINDERS_JOB,
@@ -44,6 +46,10 @@ from app.gateways.worker.periodic.growth_jobs import (
     EXPIRE_WAITLIST_OFFERS_JOB,
     RUN_REBOOKING_CAMPAIGNS_JOB,
     SWEEP_DEPOSITS_JOB,
+)
+from app.gateways.worker.periodic.phone_number_jobs import (
+    BILL_PHONE_NUMBER_RENTALS_JOB,
+    MAINTAIN_PHONE_NUMBERS_JOB,
 )
 from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_business_exports import (
@@ -143,12 +149,14 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (PURGE_EXPIRED_RECORDINGS_JOB, 86_400),
         (END_TRIALS_JOB, 3_600),
         (INVOICE_USAGE_OVERAGE_JOB, 3_600),
+        (BILL_PHONE_NUMBER_RENTALS_JOB, 3_600),
         (RUN_SUBSCRIPTION_PAUSES_JOB, 3_600),
         (RETRY_FAILED_PAYMENTS_JOB, 3_600),
         (ENFORCE_GRACE_PERIODS_JOB, 3_600),
         (CHECK_PACKAGE_USAGE_JOB, 86_400),
         (SEND_BOOKING_REMINDERS_JOB, 900),
         (SYNC_CALENDARS_JOB, 300),
+        (MAINTAIN_PHONE_NUMBERS_JOB, 300),
         (PURGE_FINISHED_JOBS_JOB, 86_400),
         (FLUSH_LLM_TRACES_JOB, 60),
         (PURGE_STALE_ROWS_JOB, 86_400),
@@ -210,7 +218,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         DELIVER_WEBHOOK_JOB,
         WRITE_BOOKING_SYSTEM_BOOKING_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (42, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (44, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush, the end of the waitlist's expired holds and the
     # deposits' holds and reminders.
@@ -224,9 +232,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # waitlist's expired holds, the rebooking campaigns, the deposits' holds
     # and reminders, the seasonal pauses, the win-back messages, the retries
     # of declined payments, the post-deploy data tasks, the calendars' busy
-    # times, the purge of expired idempotency keys and the voice agents'
-    # re-sync.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (29, 0)
+    # times, the purge of expired idempotency keys, the voice agents'
+    # re-sync and the rented phone numbers' two jobs.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (31, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

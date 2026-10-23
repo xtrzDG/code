@@ -23,6 +23,7 @@ TYPED_ROOTS: tuple[Path, ...] = (
     CONTAINERS / "feedback",
     CONTAINERS / "passkeys",
     CONTAINERS / "payments",
+    CONTAINERS / "phone_numbers",
     CONTAINERS / "adapters" / "provider_resilience.py",
     CONTAINERS / "role_chain_factories.py",
 )

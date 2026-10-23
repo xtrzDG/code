@@ -111,6 +111,7 @@ export const billingDe: Translation<typeof billingEn> = {
       service_period: "Service",
       setup_fee: "Einrichtung",
       usage_overage: "Nutzung über dem Paket",
+      number_rental: "Miete der Telefonnummer",
     },
     status: {
       issued: "Unbezahlt",

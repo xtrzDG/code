@@ -99,6 +99,10 @@ _.linked_chat_id  # app/schemas/domain/manager_links.py
 _.changed_by  # app/schemas/domain/bookings.py (BookingStatusChange)
 _.resolved_by  # app/schemas/domain/handoffs.py
 _.identity_digest  # app/schemas/domain/suppression.py (the id is derived from it)
+_.rented_by  # app/schemas/domain/phone_numbers.py (PhoneNumberDocument)
+_.release_requested_at  # app/schemas/domain/phone_numbers.py (PhoneNumberDocument)
+_.released_at  # app/schemas/domain/phone_numbers.py (PhoneNumberDocument)
+_.closed_at  # app/schemas/domain/phone_numbers.py (PhoneNumberRequestDocument)
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.
@@ -616,6 +620,14 @@ _.broken_chains  # app/schemas/dto/audit_chain_views.py
 _.is_locked  # app/schemas/dto/brands/brand_dashboard.py (BrandLocationDashboard)
 _.brand_name  # app/schemas/dto/users.py (UserMembershipView)
 _.own_item_id  # app/schemas/dto/brands/brand_knowledge.py (LocationSharedItemView)
+# Phone numbers (W21-PHONE-NUMBERS, 1213): response fields the phone card
+# reads (the rented number, whether it answers with the agent, where numbers
+# are self-serve); no Python code reads them.
+_.is_attached  # app/schemas/dto/phone_numbers/phone_line.py (RentedPhoneNumberView)
+_.rented_number  # app/schemas/dto/phone_numbers/phone_line.py (PhoneLineView)
+_.are_numbers_self_serve  # app/schemas/dto/phone_numbers/phone_line.py
+_.self_serve_countries  # app/schemas/dto/phone_numbers/phone_line.py
+_.default_country_code  # app/schemas/dto/phone_numbers/phone_line.py
 # Deposits (W19-DEPOSITS, 1190): response fields the cabinet reads (the
 # deposit settings card, the booking's deposit line, Reports → Deposits);
 # no Python code reads them.

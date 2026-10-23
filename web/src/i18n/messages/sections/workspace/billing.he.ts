@@ -111,6 +111,7 @@ export const billingHe: Translation<typeof billingEn> = {
       service_period: "שירות",
       setup_fee: "הקמה",
       usage_overage: "ניצול מעבר לחבילה",
+      number_rental: "השכרת מספר טלפון",
     },
     status: {
       issued: "לא שולמה",

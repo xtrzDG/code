@@ -1,5 +1,9 @@
-from dependency_injector.providers import Container
+from dependency_injector.providers import Container, Factory, Singleton
 
+from app.containers.phone_numbers.phone_number_root import PhoneNumberRoot
+from app.containers.phone_numbers.phone_number_use_case_factories import (
+    PhoneNumberUseCaseFactories,
+)
 from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
 from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
@@ -21,6 +25,9 @@ from app.containers.use_cases.notification_use_cases import (
 )
 from app.containers.use_cases.pending_change_use_cases import (
     PendingChangeUseCasesContainer,
+)
+from app.containers.use_cases.phone_number_root_provider import (
+    phone_number_root_provider,
 )
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
@@ -159,6 +166,19 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
+    # Numbers rented for businesses' phone lines (1213), a typed root (ADR
+    # 0010) whose use cases the call orchestrators and the channels call.
+    phone_number_root: Singleton[PhoneNumberRoot] = phone_number_root_provider(
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]
         ChannelUseCasesContainer,
         facilitators=CoreUseCasesContainer.facilitators,
@@ -171,6 +191,10 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
         voice_use_cases=voice,
+        give_back_phone_number_use_case=Factory(
+            PhoneNumberUseCaseFactories.give_back_phone_number,
+            phone_number_root.provided.use_cases,
+        ),
     )
     deliveries: DeliveryUseCasesContainer = Container(  # type: ignore[assignment]
         DeliveryUseCasesContainer,

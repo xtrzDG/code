@@ -17,6 +17,7 @@ import { cn } from "@/lib/cn";
 import { StepScreen } from "../StepScreen";
 import type { StepContext } from "../flow/stepContext";
 import { TelegramBotCard } from "./TelegramBotCard";
+import { TunnelPhoneCard } from "./TunnelPhoneCard";
 import { useChannelsStep } from "./useChannelsStep";
 
 const CARD = "rounded-2xl border bg-surface/85 p-5 backdrop-blur-sm";
@@ -70,6 +71,8 @@ export function ChannelsScreen({ ctx }: { ctx: StepContext }) {
               </p>
             ) : null}
           </section>
+
+          <TunnelPhoneCard channel={step.phone} onChanged={step.reload} />
 
           <TelegramBotCard
             channel={step.telegram.channel}

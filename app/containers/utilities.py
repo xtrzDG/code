@@ -31,6 +31,9 @@ from app.utilities.observability.tracing.span_tracer_factory import build_span_t
 from app.utilities.security.booking_manage_token_signer import (
     BookingManageTokenSigner,
 )
+from app.utilities.security.phone_number_offer_signer import (
+    PhoneNumberOfferSigner,
+)
 from app.utilities.security.require_recent_authentication import (
     RequireRecentAuthentication,
 )
@@ -77,6 +80,13 @@ class UtilitiesContainer(containers.DeclarativeContainer):
     # into its address); the key derives from ENCRYPTION_KEYS as well.
     widget_stream_ticket_signer: Singleton[WidgetStreamTicketSigner] = Singleton(
         WidgetStreamTicketSigner,
+        encryption_key=config.app_settings.provided.encryption_key,
+        previous_keys=config.app_settings.provided.previous_encryption_keys,
+    )
+    # Signed offers of numbers to rent (a rental takes only a number a
+    # search offered, as the kind it offered); keyed from ENCRYPTION_KEYS.
+    phone_number_offer_signer: Singleton[PhoneNumberOfferSigner] = Singleton(
+        PhoneNumberOfferSigner,
         encryption_key=config.app_settings.provided.encryption_key,
         previous_keys=config.app_settings.provided.previous_encryption_keys,
     )

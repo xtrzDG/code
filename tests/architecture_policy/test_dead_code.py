@@ -19,7 +19,7 @@ from pathlib import Path
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 VULTURE: Path = Path(sys.executable).with_name("vulture")
 WHITELIST: Path = PROJECT_ROOT / "vulture_whitelist.py"
-WHITELISTED_NAMES: int = 457
+WHITELISTED_NAMES: int = 466
 
 
 @dataclass(frozen=True)

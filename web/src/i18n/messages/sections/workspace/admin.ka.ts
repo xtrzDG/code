@@ -136,6 +136,7 @@ export const adminKa: Translation<typeof adminEn> = {
       whatsapp_template: "WhatsApp შაბლონები",
       transfer_seconds: "ზარის გადამისამართება, წამები",
       transcription_seconds: "ამოცნობილი ხმოვანი შეტყობინებები, წამები",
+      number_rental: "ნაქირავები ტელეფონის ნომრები, თვეები",
     },
     autotestsTitle: "ვერ გავლილი შემოწმებები",
     noFailedTests: "ბოლო გაშვებაში ყველა შემოწმება გავლილია.",

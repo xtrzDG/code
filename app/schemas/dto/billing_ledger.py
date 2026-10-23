@@ -39,6 +39,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.schemas.typings.subscription_lifecycle.booleans import IsPausePeriod
 from app.schemas.typings.subscription_lifecycle.constrained_integers import (
     PausePricePercent,
@@ -76,7 +77,8 @@ class InvoiceDescriptionInput(ImmutableDTO):
     """
     What an invoice line says, in the reader's language. An overage line
     names the minutes above the package of its window; a pause month says
-    the assistant was on pause, taking requests.
+    the assistant was on pause, taking requests; a rental month names the
+    rented phone number.
     """
 
     kind: InvoiceKind
@@ -88,6 +90,7 @@ class InvoiceDescriptionInput(ImmutableDTO):
     period_end: Microseconds
     overage_voice_minutes: OverageVoiceMinutes | None = None
     is_pause_period: IsPausePeriod = False
+    rented_phone_number: FormattedPhoneNumber | None = None
 
 
 class PackageUsageTotals(ImmutableDTO):

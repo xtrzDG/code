@@ -17,6 +17,10 @@ from httpx2 import Response
 from tests.platform.authorization_billing import BILLING_BODIES
 from tests.platform.authorization_brands import BRAND_BODIES
 from tests.platform.authorization_calendars import CALENDAR_BODIES
+from tests.platform.authorization_calls import (
+    PHONE_NUMBER_BODIES,
+    PHONE_NUMBER_QUERIES,
+)
 from tests.platform.authorization_customers import CUSTOMER_BODIES, CUSTOMER_QUERIES
 from tests.platform.authorization_deposits import DEPOSIT_BODIES
 from tests.platform.authorization_inbox import INBOX_BODIES
@@ -83,6 +87,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
 }
 REQUEST_BODIES.update(NOTIFICATION_BODIES)
 REQUEST_BODIES.update(INBOX_BODIES)
+REQUEST_BODIES.update(PHONE_NUMBER_BODIES)
 REQUEST_BODIES.update(TEACHING_BODIES)
 REQUEST_BODIES.update(BILLING_BODIES)
 REQUEST_BODIES.update(CUSTOMER_BODIES)
@@ -95,6 +100,7 @@ REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},
     f"GET {B}/bookings/grid": {"date": "2026-10-20", "days": "7"},
     **CUSTOMER_QUERIES,
+    **PHONE_NUMBER_QUERIES,
 }
 
 

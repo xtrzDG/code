@@ -8,6 +8,7 @@ from app.contracts.channel_clients import (
     TelegramBotApiClientContract,
 )
 from app.contracts.localization_utilities import PhoneNumberParserContract
+from app.contracts.phone_numbers import PhoneNumberRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -80,7 +81,8 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
       webhooks when its id is given.
     - Messenger / Instagram: the page token must open the page; the app is
       subscribed to the page; Instagram uses the linked professional account.
-    - Phone: the assistant line (bought from Zadarma by hand) as E.164.
+    - Phone: the assistant line (bought from Zadarma by hand) as E.164;
+      while the platform rents the business a number, only that one.
     - Web chat: switched on, nothing to check; the widget's colour and
       launcher corner are saved (fields left out keep their values).
 
@@ -105,8 +107,10 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         storage_scope: StorageScopeContract,
         product_events: RecordProductEventFacilitatorContract,
         step_up: StepUpGuardContract,
+        phone_number_repo: PhoneNumberRepoContract | None = None,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
+        self._phone_number_repo: PhoneNumberRepoContract | None = phone_number_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -240,7 +244,11 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
 
         if channel_kind is ChannelKind.PHONE:
             return connect_phone(
-                self._phone_number_parser, require_free_account, business, request
+                self._phone_number_parser,
+                require_free_account,
+                business,
+                request,
+                self._phone_number_repo,
             )
 
         return ChannelConnection(external_id=None, secret=None)

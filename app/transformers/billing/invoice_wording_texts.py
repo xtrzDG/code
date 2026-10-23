@@ -18,6 +18,10 @@ SETUP_FEE_LINE: LocalizedText = reviewed_owner_text("billing.texts.setup_fee_lin
 USAGE_OVERAGE_LINE: LocalizedText = reviewed_owner_text(
     "billing.texts.usage_overage_line"
 )
+# A month of a phone number the platform rents for the business (W21).
+NUMBER_RENTAL_LINE: LocalizedText = reviewed_owner_text(
+    "billing.texts.number_rental_line"
+)
 SERVICE_PERIOD_LINE: LocalizedText = reviewed_owner_text(
     "billing.texts.service_period_line"
 )

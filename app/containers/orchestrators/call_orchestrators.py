@@ -1,6 +1,10 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
+from app.containers.phone_numbers.phone_number_root import PhoneNumberRoot
+from app.containers.phone_numbers.phone_number_use_case_factories import (
+    PhoneNumberUseCaseFactories as PhoneNumbers,
+)
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.call_use_cases import CallUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
@@ -20,10 +24,16 @@ class CallOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of what follows a phone call: a caller who did not get
     through (the telephony line's webhook, a failed start), the text-back
-    job and Settings → Calls.
+    job and Settings → Calls; and the phone line's number the platform
+    rents (1213): the cabinet's phone line and the numbers' two jobs.
     """
 
     call_use_cases: CallUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The phone numbers context's typed root (app/containers/phone_numbers/).
+    phone_number_root: Dependency[PhoneNumberRoot] = Dependency(
+        instance_of=PhoneNumberRoot
+    )
+    phone_numbers = phone_number_root.provided.use_cases
 
     missed_call_orchestrator: Factory[
         OrchestratorContract[MissedCallReport, RegisteredMissedCall | None]
@@ -50,4 +60,27 @@ class CallOrchestratorsContainer(containers.DeclarativeContainer):
     )
     list_text_backs_orchestrator = use_case_orchestrator(
         call_use_cases.list_text_backs_use_case
+    )
+
+    # --- The phone line's rented number (1213).
+    get_phone_line_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.get_phone_line, phone_numbers)
+    )
+    search_phone_numbers_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.search_phone_numbers, phone_numbers)
+    )
+    rent_phone_number_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.rent_phone_number, phone_numbers)
+    )
+    request_phone_number_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.request_phone_number, phone_numbers)
+    )
+    cancel_phone_number_request_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.cancel_phone_number_request, phone_numbers)
+    )
+    maintain_phone_numbers_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.maintain_phone_numbers, phone_numbers)
+    )
+    bill_phone_number_rentals_orchestrator = use_case_orchestrator(
+        Factory(PhoneNumbers.bill_phone_number_rentals, phone_numbers)
     )

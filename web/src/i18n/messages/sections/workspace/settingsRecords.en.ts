@@ -168,6 +168,8 @@ export const settingsRecordsEn = {
       partner: "Partner",
       partner_code: "Partner code",
       partner_payout: "Partner payout",
+      phone_number: "Phone number",
+      phone_number_request: "Phone number request",
     },
   },
   roles: {

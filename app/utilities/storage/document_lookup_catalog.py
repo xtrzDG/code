@@ -30,6 +30,7 @@ from app.utilities.storage.lookup_field_builders import (
     integer_field,
     text_field,
 )
+from app.utilities.storage.phone_number_collections import PHONE_NUMBER_LOOKUP_FIELDS
 from app.utilities.storage.platform_lookup_catalog import PLATFORM_LOOKUP_FIELDS
 from app.utilities.storage.quality_collections import QUALITY_LOOKUP_FIELDS
 from app.utilities.storage.referral_collections import REFERRAL_LOOKUP_FIELDS
@@ -288,6 +289,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **GROWTH_LOOKUP_FIELDS,
     **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
     **INTEGRATION_LOOKUP_FIELDS,  # Webhooks and API keys (1181).
+    **PHONE_NUMBER_LOOKUP_FIELDS,  # Rented phone numbers and requests (1213).
     **BRAND_LOOKUP_FIELDS,  # Brands and their shared knowledge (1192).
     **DEPOSIT_LOOKUP_FIELDS,  # Deposits and prepayment links (1190).
     # The platform's own records.

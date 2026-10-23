@@ -1,5 +1,12 @@
+from typing import cast
+
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory, Singleton
+from dependency_injector.providers import (
+    DependenciesContainer,
+    Dependency,
+    Factory,
+    Singleton,
+)
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
@@ -10,6 +17,10 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
+from app.containers.use_cases.widget_use_case_providers import (
+    WidgetUseCaseProviders,
+    build_widget_use_case_providers,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.channels.channel_settings import (
@@ -35,27 +46,13 @@ from app.schemas.dto.channels.telegram_token_checks import (
     TelegramBotCheckView,
     ValidateTelegramTokenCommand,
 )
-from app.schemas.dto.channels.widget import (
-    WidgetConfigView,
-    WidgetMessageCommand,
-    WidgetMessagesQuery,
-    WidgetMessagesView,
-    WidgetSnippetQuery,
-    WidgetSnippetView,
-)
-from app.schemas.dto.channels.widget_streams import WidgetStreamTicketRequest
-from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.deliveries import RoutedInboundMessage
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
     SetWhatsAppStaffTemplatesCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import WidgetStreamTicket
 from app.schemas.typings.channels.strings import MetaWebhookChallenge
-from app.use_cases.channels.accept_widget_message_use_case import (
-    AcceptWidgetMessageUseCase,
-)
 from app.use_cases.channels.acknowledge_telegram_taps_use_case import (
     AcknowledgeTelegramTapsUseCase,
 )
@@ -72,9 +69,6 @@ from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
-from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
-from app.use_cases.channels.get_widget_messages_use_case import GetWidgetMessagesUseCase
-from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
 )
@@ -92,9 +86,6 @@ from app.use_cases.channels.set_whatsapp_staff_templates_use_case import (
     SetWhatsAppStaffTemplatesUseCase,
 )
 from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
-from app.use_cases.channels.widget_stream.issue_widget_stream_ticket_use_case import (
-    IssueWidgetStreamTicketUseCase,
-)
 
 
 class ChannelUseCasesContainer(containers.DeclarativeContainer):
@@ -113,6 +104,10 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # A rented number given back (the phone numbers root's; typed, not checked).
+    give_back_phone_number_use_case: Dependency[UseCaseContract[BusinessId, None]] = (
+        cast(Dependency[UseCaseContract[BusinessId, None]], Dependency())
+    )
 
     receive_telegram_webhook_use_case: Factory[
         UseCaseContract[TelegramWebhookRequest, list[RoutedInboundMessage]]
@@ -161,6 +156,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         product_events=facilitators.product_events,
         step_up=utilities.step_up_guard,
+        phone_number_repo=repositories.phone_number_repo,
     )
     set_whatsapp_staff_template_use_case: Factory[
         UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]
@@ -201,6 +197,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
+        give_back_phone_number=give_back_phone_number_use_case,
     )
     list_channels_use_case: Factory[
         UseCaseContract[ChannelListQuery, list[ChannelView]]
@@ -209,59 +206,16 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         channel_repo=repositories.channel_repo,
     )
-    get_widget_config_use_case: Factory[
-        UseCaseContract[BusinessId, WidgetConfigView]
-    ] = Factory(
-        GetWidgetConfigUseCase,
-        business_repo=repositories.business_repo,
-        channel_repo=repositories.channel_repo,
-        assistant_version_repo=repositories.assistant_version_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        language_registry=registries.language_registry,
-        language_detector=utilities.language_detector,
-        app_settings=config.app_settings,
-        referral_links=facilitators.referral_links,
-        starter_answer_registry=registries.starter_answer_registry,
-    )
-    # Singleton: it remembers the web chats it found open (OpenChatMemory).
-    get_widget_messages_use_case: Singleton[
-        UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]
-    ] = Singleton(
-        GetWidgetMessagesUseCase,
-        channel_repo=repositories.channel_repo,
-        conversation_repo=repositories.conversation_repo,
-        message_repo=repositories.message_repo,
-        language_registry=registries.language_registry,
-        rate_limit_registry=registries.request_rate_limit_registry,
-        wall_clock=time_provider.microsecond_wall_clock,
-        read_session=adapters.storage_read_session,
-    )
-    # A ticket to the visitor's live stream with each widget answer.
-    issue_widget_stream_ticket_use_case: Factory[
-        UseCaseContract[WidgetStreamTicketRequest, WidgetStreamTicket]
-    ] = Factory(
-        IssueWidgetStreamTicketUseCase,
-        ticket_signer=utilities.widget_stream_ticket_signer,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    accept_widget_message_use_case: Factory[
-        UseCaseContract[WidgetMessageCommand, AcceptedWidgetMessage]
-    ] = Factory(
-        AcceptWidgetMessageUseCase,
-        business_repo=repositories.business_repo,
-        channel_repo=repositories.channel_repo,
-        rate_limit_registry=registries.request_rate_limit_registry,
-        wall_clock=time_provider.microsecond_wall_clock,
-        widget_upload_repo=repositories.widget_upload_repo,
-    )
-    get_widget_snippet_use_case: Factory[
-        UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]
-    ] = Factory(
-        GetWidgetSnippetUseCase,
-        authorize_business_access=account_use_cases.authorize_business_access_use_case,
-        app_settings=config.app_settings,
-    )
+    # The website widget (widget_use_case_providers.py).
+    _widget: WidgetUseCaseProviders = build_widget_use_case_providers(
+        account_use_cases, adapters, config, facilitators, registries,
+        repositories, time_provider, utilities,
+    )  # fmt: skip
+    get_widget_config_use_case = _widget.get_widget_config_use_case
+    get_widget_messages_use_case = _widget.get_widget_messages_use_case
+    issue_widget_stream_ticket_use_case = _widget.issue_widget_stream_ticket_use_case
+    accept_widget_message_use_case = _widget.accept_widget_message_use_case
+    get_widget_snippet_use_case = _widget.get_widget_snippet_use_case
     # Singleton: it caches the platform bot's username.
     create_telegram_link_use_case: Singleton[
         UseCaseContract[CreateTelegramLinkCommand, TelegramLinkView]

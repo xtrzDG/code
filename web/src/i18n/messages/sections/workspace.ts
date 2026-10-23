@@ -98,6 +98,9 @@ import { loginOptionsRu } from "./workspace/loginOptions.ru";
 import { notificationsEn } from "./workspace/notifications.en";
 import { notificationsKa } from "./workspace/notifications.ka";
 import { notificationsRu } from "./workspace/notifications.ru";
+import { phoneNumbersEn } from "./workspace/phoneNumbers.en";
+import { phoneNumbersKa } from "./workspace/phoneNumbers.ka";
+import { phoneNumbersRu } from "./workspace/phoneNumbers.ru";
 import { privacyNoticeEn } from "./workspace/privacyNotice.en";
 import { privacyRetentionEn } from "./workspace/privacyRetention.en";
 import { privacyRetentionKa } from "./workspace/privacyRetention.ka";
@@ -138,6 +141,7 @@ export const workspaceEn = {
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
   callSettings: callSettingsEn,
+  phoneNumbers: phoneNumbersEn,
   reviewSettings: reviewSettingsEn,
   calendarSync: calendarSyncEn,
   apiIntegrations: apiIntegrationsEn,
@@ -178,6 +182,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
   callSettings: callSettingsRu,
+  phoneNumbers: phoneNumbersRu,
   reviewSettings: reviewSettingsRu,
   calendarSync: calendarSyncRu,
   apiIntegrations: apiIntegrationsRu,
@@ -218,6 +223,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
   callSettings: callSettingsKa,
+  phoneNumbers: phoneNumbersKa,
   reviewSettings: reviewSettingsKa,
   calendarSync: calendarSyncKa,
   apiIntegrations: apiIntegrationsKa,

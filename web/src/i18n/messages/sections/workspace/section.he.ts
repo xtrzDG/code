@@ -34,6 +34,7 @@ import { providerCircuitsHe } from "./providerCircuits.he";
 import { formFieldsHe } from "./formFields.he";
 import { loginOptionsHe } from "./loginOptions.he";
 import { notificationsHe } from "./notifications.he";
+import { phoneNumbersHe } from "./phoneNumbers.he";
 import { privacyNoticeHe } from "./privacyNotice.he";
 import { privacyRetentionHe } from "./privacyRetention.he";
 import { qualityHe } from "./quality.he";
@@ -56,6 +57,7 @@ export const workspaceHe: Translation<typeof workspaceEn> = {
   settings: { ...settingsHe, ...settingsRecordsHe },
   notifications: notificationsHe,
   callSettings: callSettingsHe,
+  phoneNumbers: phoneNumbersHe,
   reviewSettings: reviewSettingsHe,
   calendarSync: calendarSyncHe,
   apiIntegrations: apiIntegrationsHe,

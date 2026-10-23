@@ -496,6 +496,26 @@ workers only. The alert code `voice_health` is written only by the
 cleaning: declined calls keep no recording (the discard already ran) and
 their redacted transcripts, which the old release shows as they are.
 
+The release with rented phone numbers (W21-PHONE-NUMBERS, migration 1213;
+new collections `phone_numbers` and `phone_number_requests`, nothing
+upcast) follows the enum rule below with one closed release gate,
+`phone_number_rental`, over the usage kind and the invoice kind
+`number_rental`. Until it opens the hourly `bill_phone_number_rentals` job
+records no rental month and issues no rental invoice: a number taken in
+the cabinet (only when `PHONE_NUMBER_PROVIDER` is set) is rented and
+answers, and the platform carries its cost. The next release opens the
+gate and the job catches up month by month from each number's
+`billed_until`, judging each month by the subscription at its start (a
+month that began in the trial stays on the platform). Renting itself is
+not gated: it works as soon as `PHONE_NUMBER_PROVIDER` is set. The old release ignores both collections: during the
+overlap an old instance shows no "Get a number", and a phone channel an old
+instance turns off does not give its rented number back: the number stays
+ACTIVE (no month is billed while the gate is closed) and the phone card
+still shows it, so the owner disconnects the channel again, or support
+does, before the next release opens the gate. After a
+rollback the rented numbers stay with the carrier and keep answering;
+release them from the carrier's console if the rollback is final.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their
