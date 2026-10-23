@@ -13,7 +13,6 @@ import anyio.to_thread
 from fastapi import FastAPI
 from starlette.types import Lifespan
 
-from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
@@ -34,6 +33,10 @@ from app.gateways.http.spend_guard_router_assembly import (
     anonymous_request_admission_of,
 )
 from app.gateways.metrics.metrics_rendering import metrics_renderer
+from app.gateways.process_lifecycle import (
+    release_process_resources,
+    settle_startup_heap,
+)
 from app.gateways.startup_checks import check_database_roles, check_processor_uses
 from app.gateways.telemetry_lifecycle import (
     API_SERVICE_NAME,
@@ -110,10 +113,12 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     catalog, check the DPA text, the sub-processor list and the database
     roles, report the login code channels, seed the demo businesses
     (SEED_DEMO_DATA, once), point the platform bot at this API, start the
-    trace flush, the pipeline watchdog and (EMBEDDED_WORKER) the worker;
-    live streams end as soon as the process is asked to stop. Shutdown:
-    stop the worker (running jobs may finish) and the watchdog, flush
-    traces and spans, close the live event bus and the Postgres pools.
+    trace flush, the pipeline watchdog and (EMBEDDED_WORKER) the worker,
+    then, warmed up and before the first request, freeze the startup heap
+    (GC_FREEZE_AFTER_WARMUP); live streams end as soon as the process is
+    asked to stop. Shutdown: stop the worker (running jobs may finish) and
+    the watchdog, flush traces and spans, close the live event bus and the
+    Postgres pools, unfreeze the heap.
     """
 
     @asynccontextmanager
@@ -140,6 +145,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         worker_thread: threading.Thread | None = None
         try:
             worker_thread = start_embedded_worker(app_container, stop_event)
+            settle_startup_heap(app_container)
             yield
         finally:
             stop_event.set()
@@ -150,7 +156,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
             trace_facilitator.flush()
             finish_telemetry(app_container)
             live_event_bus.close()
-            close_postgres_pool(app_container)
+            release_process_resources(app_container)
 
     return lifespan
 
@@ -289,11 +295,3 @@ def configure_platform_bot(app_container: AppContainer) -> None:
         return
 
     LOGGER.info("Platform bot webhook registered for @%s", profile.username)
-
-
-def close_postgres_pool(app_container: AppContainer) -> None:
-    connection_pools: PostgresConnectionPools | None = (
-        app_container.clients.postgres_pools()
-    )
-    if connection_pools is not None:
-        connection_pools.close()

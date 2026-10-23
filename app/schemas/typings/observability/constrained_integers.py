@@ -36,6 +36,16 @@ class ErrorBudgetLeftPermille(BaseConstrainedTypedInt):
     le = 1000
 
 
+class FrozenObjectCount(BaseConstrainedTypedInt):
+    """
+    Objects of a process the cyclic garbage collector no longer scans: its
+    startup heap, frozen once after warm-up (`gc.freeze`).
+    """
+
+    ge = 0
+    le = 1_000_000_000
+
+
 class HttpStatusCode(BaseConstrainedTypedInt):
     """The status code an HTTP response was answered with."""
 

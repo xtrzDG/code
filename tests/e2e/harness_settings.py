@@ -29,6 +29,10 @@ E2E_ENVIRONMENT: dict[str, str] = {
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "xi-e2e-key",
     "ELEVENLABS_WEBHOOK_SECRET": "elevenlabs-webhook-secret-e2e",  # gitleaks:allow
+    # A frozen heap would make every test's startup collect the whole test
+    # process (about a second); tests/platform/test_startup_heap_wiring.py
+    # proves the freeze itself.
+    "GC_FREEZE_AFTER_WARMUP": "false",
 }
 
 type JsonObject = dict[str, Any]

@@ -34,6 +34,9 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     optional_text,
     read_text,
 )
+from app.utilities.config_helpers.app_settings.gc_settings_section import (
+    read_garbage_collection_settings,
+)
 from app.utilities.config_helpers.app_settings.growth_settings_section import (
     read_growth_settings,
 )
@@ -205,4 +208,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_payment_settings(environment_variables),
         **read_phone_number_settings(environment_variables),
         **read_telemetry_settings(environment_variables),
+        **read_garbage_collection_settings(environment_variables),
     )

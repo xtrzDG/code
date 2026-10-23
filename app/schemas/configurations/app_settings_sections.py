@@ -8,6 +8,9 @@ from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.embedding_settings import EmbeddingSettings
+from app.schemas.configurations.garbage_collection_settings import (
+    GarbageCollectionSettings,
+)
 from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.payment_settings import PaymentSettings
@@ -63,3 +66,8 @@ class AppSettingsSections(ImmutableDTO):
     public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)
     payments: PaymentSettings = Field(default_factory=PaymentSettings)  # STRIPE_*
     phone_numbers: PhoneNumberSettings = Field(default_factory=PhoneNumberSettings)
+    # The startup heap frozen after warm-up, the collector's thresholds
+    # (GC_FREEZE_AFTER_WARMUP, GC_THRESHOLDS; docs/operations/capacity.md).
+    garbage_collection: GarbageCollectionSettings = Field(
+        default_factory=GarbageCollectionSettings
+    )

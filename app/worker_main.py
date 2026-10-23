@@ -6,10 +6,12 @@ Background worker entry point:
 Runs the periodic jobs (retention purge, trials and grace periods, package
 usage, booking reminders, purge of finished jobs, trace flush) once per
 period, and the queued jobs of every lane on their own threads, until SIGINT
-or SIGTERM. Any number of workers may run side by side (leased claims). On
-stop, running jobs get up to 25 seconds; a job cut off then runs again on
-another worker once its lease ends. With WORKER_METRICS_PORT and
-METRICS_TOKEN it serves its metrics (docs/operations/observability.md).
+or SIGTERM; warmed up, it freezes its startup heap first
+(GC_FREEZE_AFTER_WARMUP, docs/operations/capacity.md). Any number of
+workers may run side by side (leased claims). On stop, running jobs get up
+to 25 seconds; a job cut off then runs again on another worker once its
+lease ends. With WORKER_METRICS_PORT and METRICS_TOKEN it serves its
+metrics (docs/operations/observability.md).
 """
 
 import logging
@@ -17,10 +19,13 @@ import signal
 import threading
 from types import FrameType
 
-from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.containers.app import AppContainer
 from app.gateways.metrics.metrics_rendering import start_worker_metrics
 from app.gateways.metrics.worker_metrics_server import WorkerMetricsServer
+from app.gateways.process_lifecycle import (
+    release_process_resources,
+    settle_startup_heap,
+)
 from app.gateways.startup_checks import check_database_roles, check_processor_uses
 from app.gateways.telemetry_lifecycle import (
     WORKER_SERVICE_NAME,
@@ -45,7 +50,8 @@ def main(
     personal data to a provider the sub-processor list does not cover stops
     it in production before it starts (`check_processor_uses`). The reply
     guard's locale data is loaded before the lanes start, not by the first
-    customer's turn (`warm_turn_caches`).
+    customer's turn (`warm_turn_caches`). Its startup heap is frozen once
+    all of that is built, before the first job (`settle_startup_heap`).
     """
 
     container: AppContainer = AppContainer() if app_container is None else app_container
@@ -57,6 +63,7 @@ def main(
     warm_turn_caches()
     worker: BackgroundWorker = container.gateways.background_worker()
     metrics_server: WorkerMetricsServer | None = start_worker_metrics(container)
+    settle_startup_heap(container)
     LOGGER.info("Background worker started")
     try:
         worker.run_forever(stop)
@@ -85,15 +92,14 @@ def install_stop_signal_handlers(stop_event: threading.Event) -> None:
 
 
 def shut_down(app_container: AppContainer) -> None:
-    """Send the remaining traces and spans, close the Postgres pools."""
+    """
+    Send the remaining traces and spans, close the Postgres pools, give the
+    frozen heap back.
+    """
 
     app_container.adapters.llm_trace_facilitator().flush()
     finish_telemetry(app_container)
-    connection_pools: PostgresConnectionPools | None = (
-        app_container.clients.postgres_pools()
-    )
-    if connection_pools is not None:
-        connection_pools.close()
+    release_process_resources(app_container)
 
 
 def run_from_environment() -> int:

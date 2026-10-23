@@ -6,6 +6,7 @@ from prometheus_client import CollectorRegistry
 from app.containers.config import ConfigContainer
 from app.containers.telemetry_factories import is_sentry_tracing_enabled
 from app.containers.time_provider import TimeProviderContainer
+from app.contracts.garbage_collection import GarbageCollectorContract
 from app.contracts.health import ReadinessMemoryContract
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.session_assurance import (
@@ -17,8 +18,17 @@ from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.observability.garbage_collection.python_garbage_collector import (
+    PythonGarbageCollector,
+)
+from app.utilities.observability.garbage_collection.startup_heap_tuner import (
+    StartupHeapTuner,
+)
 from app.utilities.observability.metrics.metrics_exposition import (
     build_metrics_registry,
+)
+from app.utilities.observability.metrics.prometheus_gc_metrics import (
+    PrometheusGcMetrics,
 )
 from app.utilities.observability.metrics.prometheus_service_metrics import (
     PrometheusServiceMetrics,
@@ -111,6 +121,20 @@ class UtilitiesContainer(containers.DeclarativeContainer):
     )
     service_metrics: Singleton[ServiceMetricsContract] = Singleton(
         PrometheusServiceMetrics, registry=metrics_registry
+    )
+    # The process's garbage collector: thresholds, the startup heap frozen
+    # after warm-up and the pause series (app.main, app.worker_main).
+    garbage_collector: Singleton[GarbageCollectorContract] = Singleton(
+        PythonGarbageCollector
+    )
+    gc_metrics: Singleton[PrometheusGcMetrics] = Singleton(
+        PrometheusGcMetrics, registry=metrics_registry
+    )
+    startup_heap_tuner: Singleton[StartupHeapTuner] = Singleton(
+        StartupHeapTuner,
+        collector=garbage_collector,
+        settings=config.app_settings.provided.garbage_collection,
+        metrics=gc_metrics,
     )
     tracer_provider: Singleton[TracerProvider | None] = Singleton(
         build_tracer_provider,

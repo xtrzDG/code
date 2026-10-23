@@ -46,6 +46,41 @@ class ElapsedMilliseconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class GcFullCollectionThreshold(BaseConstrainedTypedInt):
+    """
+    The cyclic garbage collector's third threshold (GC_THRESHOLDS): how many
+    collections of the middle generation pass before the oldest one, the
+    whole heap, is collected too (CPython also waits until a quarter more
+    objects have grown old since the last full collection).
+    """
+
+    ge = 1
+    le = 10_000
+
+
+class GcMiddleCollectionThreshold(BaseConstrainedTypedInt):
+    """
+    The cyclic garbage collector's second threshold (GC_THRESHOLDS): how
+    many collections of the youngest generation pass before the middle
+    generation is collected too.
+    """
+
+    ge = 1
+    le = 10_000
+
+
+class GcYoungCollectionThreshold(BaseConstrainedTypedInt):
+    """
+    The cyclic garbage collector's first threshold (GC_THRESHOLDS): how many
+    more container objects may be allocated than freed before the youngest
+    generation is collected. Below 100 the collector would run almost on
+    every allocation; 0 (collection off) is refused.
+    """
+
+    ge = 100
+    le = 10_000_000
+
+
 class HeartbeatAgeSeconds(BaseConstrainedTypedInt):
     """How long ago the freshest background worker heartbeat was written."""
 

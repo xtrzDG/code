@@ -30,6 +30,18 @@ class PipelineState(StrEnum):
     STALLED = "stalled"
 
 
+class GcGeneration(StrEnum):
+    """
+    A generation of CPython's cyclic garbage collector, by its number (the
+    `generation` label of `workshop_gc_pause_seconds`): new objects start
+    in the youngest; a collection of the oldest walks the whole heap.
+    """
+
+    YOUNG = "0"
+    MIDDLE = "1"
+    OLDEST = "2"
+
+
 class HealthCheckStatus(StrEnum):
     """Outcome of one check of the readiness report."""
 
