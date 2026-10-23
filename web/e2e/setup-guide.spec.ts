@@ -22,8 +22,8 @@ test("a business being set up sees the guide and goes back into the tunnel", asy
   await page.goto(`/b/${owner.businessId}/overview`);
   const card = guide(page);
   await expect(card.getByRole("heading", { name: en.setupGuide.titleSetup })).toBeVisible();
-  // The steps of the setup, then the three after the launch, waiting.
-  await expect(card.getByRole("listitem")).toHaveCount(10);
+  // The steps of the setup, then the four after the launch, waiting: the owner's second factor last.
+  await expect(card.getByRole("listitem")).toHaveCount(11);
   await expect(card.getByText(en.setupGuide.afterLaunchHint)).toBeVisible();
   // The status card gave way to the guide.
   await expect(page.getByText(en.dashboard.status.onboarding.title)).toHaveCount(0);

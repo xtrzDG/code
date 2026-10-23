@@ -157,24 +157,33 @@ async function pressLaunch(page: Page): Promise<void> {
 /**
  * Nothing of the tunnel's backdrop (rings, floor lines) lies on top of a
  * heading: with the backdrop made hit-testable and the screen's content
- * not, every point across the heading meets the screen's veil first.
+ * not, every point across the heading meets the screen's veil first. The
+ * rules go in through a constructed style sheet: the policy refuses a
+ * <style> element without the page's nonce (support/csp.ts).
  */
 export async function expectBackdropBehind(page: Page, heading: Locator): Promise<void> {
-  const style = await page.addStyleTag({
-    content:
-      "[data-tunnel-backdrop], [data-tunnel-backdrop] * { pointer-events: auto !important; } " +
-      "main#main, main#main *:not([data-tunnel-veil]) { pointer-events: none !important; } " +
-      "[data-tunnel-veil] { pointer-events: auto !important; }",
-  });
   const box = (await heading.boundingBox())!;
   const hits = await page.evaluate(
-    ({ x, y, width, height }) =>
-      [0.1, 0.3, 0.5, 0.7, 0.9].map((share) => {
-        const hit = document.elementFromPoint(x + width * share, y + height / 2);
-        return hit?.closest("[data-tunnel-backdrop]") ? "backdrop" : hit?.hasAttribute("data-tunnel-veil") ? "veil" : (hit?.tagName ?? "nothing");
-      }),
-    box,
+    ({ x, y, width, height, rules }) => {
+      const probe = new CSSStyleSheet();
+      probe.replaceSync(rules);
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, probe];
+      try {
+        return [0.1, 0.3, 0.5, 0.7, 0.9].map((share) => {
+          const hit = document.elementFromPoint(x + width * share, y + height / 2);
+          return hit?.closest("[data-tunnel-backdrop]") ? "backdrop" : hit?.hasAttribute("data-tunnel-veil") ? "veil" : (hit?.tagName ?? "nothing");
+        });
+      } finally {
+        document.adoptedStyleSheets = document.adoptedStyleSheets.filter((sheet) => sheet !== probe);
+      }
+    },
+    {
+      ...box,
+      rules:
+        "[data-tunnel-backdrop], [data-tunnel-backdrop] * { pointer-events: auto !important; } " +
+        "main#main, main#main *:not([data-tunnel-veil]) { pointer-events: none !important; } " +
+        "[data-tunnel-veil] { pointer-events: auto !important; }",
+    },
   );
-  await style.evaluate((node) => (node as HTMLElement).remove());
   expect(hits).toEqual(["veil", "veil", "veil", "veil", "veil"]);
 }
