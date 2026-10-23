@@ -3,7 +3,8 @@ from urllib.parse import quote
 import httpx
 
 from app.clients.elevenlabs.elevenlabs_errors import raise_for_error
-from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
+from app.contracts.channel_clients import JsonObject
+from app.contracts.voice_check_clients import ElevenLabsPlatformClientContract
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -12,6 +13,10 @@ from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.channels.strings import VoicePlatformToolId
 from app.schemas.typings.conversations.strings import ProviderCallId
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.voice.constrained_strings import (
+    VoiceCheckInvocationId,
+    VoiceCheckTestId,
+)
 from app.utilities.channels.json_values import (
     parse_json_object,
     read_identifier,
@@ -29,7 +34,7 @@ ASSISTANT_TOOL_NAMES: frozenset[str] = frozenset(
 )
 
 
-class ElevenLabsClient(ElevenLabsApiClientContract):
+class ElevenLabsClient(ElevenLabsPlatformClientContract):
     """
     Minimal ElevenLabs Agents API client (header `xi-api-key`).
 
@@ -37,7 +42,11 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
     /v1/convai/agents/{agent_id}. Tools: POST /v1/convai/tools, GET, PATCH and
     DELETE /v1/convai/tools/{tool_id}. Conversations: GET
     /v1/convai/conversations/{conversation_id}/audio (the call recording)
-    and DELETE /v1/convai/conversations/{conversation_id}. The base URL
+    and DELETE /v1/convai/conversations/{conversation_id}. Agent testing:
+    POST /v1/convai/agent-testing/create, POST
+    /v1/convai/agents/{agent_id}/run-tests, GET
+    /v1/convai/test-invocations/{id}, DELETE
+    /v1/convai/agent-testing/{test_id}. The base URL
     selects the data residency (https://api.eu.residency.elevenlabs.io keeps
     data in the EU).
     """
@@ -136,6 +145,49 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
 
     def delete_conversation(self, conversation_id: ProviderCallId) -> None:
         self._delete(conversation_path(conversation_id))
+
+    def create_test(self, test_config: JsonObject) -> VoiceCheckTestId:
+        body: JsonObject = self._send(
+            "POST", "/v1/convai/agent-testing/create", test_config
+        )
+        test_id: str | None = read_text(body, "id")
+        if test_id is None:
+            raise ExternalServiceError("ElevenLabs created a test without an id.")
+
+        return VoiceCheckTestId(test_id)
+
+    def run_tests(
+        self,
+        agent_id: VoiceAgentId,
+        test_ids: list[VoiceCheckTestId],
+        agent_config_override: JsonObject | None,
+    ) -> VoiceCheckInvocationId:
+        payload: JsonObject = {
+            "tests": [{"test_id": str(test_id)} for test_id in test_ids]
+        }
+        if agent_config_override is not None:
+            payload["agent_config_override"] = agent_config_override
+
+        body: JsonObject = self._send(
+            "POST",
+            f"/v1/convai/agents/{quote(str(agent_id), safe='')}/run-tests",
+            payload,
+        )
+        invocation_id: str | None = read_text(body, "id")
+        if invocation_id is None:
+            raise ExternalServiceError("ElevenLabs started tests without a run id.")
+
+        return VoiceCheckInvocationId(invocation_id)
+
+    def get_test_invocation(
+        self, invocation_id: VoiceCheckInvocationId
+    ) -> JsonObject | None:
+        return self._read(
+            f"/v1/convai/test-invocations/{quote(str(invocation_id), safe='')}"
+        )
+
+    def delete_test(self, test_id: VoiceCheckTestId) -> None:
+        self._delete(f"/v1/convai/agent-testing/{quote(str(test_id), safe='')}")
 
     def _read(self, path: str) -> JsonObject | None:
         response: httpx.Response = self._perform("GET", path, None)

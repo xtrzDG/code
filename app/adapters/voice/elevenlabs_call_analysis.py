@@ -70,8 +70,11 @@ DATA_COLLECTION: tuple[tuple[str, str, str], ...] = (
         "True when the caller asked to be called back by a person.",
     ),
 )
+# The platform's words for a criterion's result.
 EVALUATION_RESULTS: dict[str, CallEvaluationResult] = {
-    result.value: result for result in CallEvaluationResult
+    "success": CallEvaluationResult.SUCCESS,
+    "failure": CallEvaluationResult.FAILURE,
+    "unknown": CallEvaluationResult.UNKNOWN,
 }
 
 

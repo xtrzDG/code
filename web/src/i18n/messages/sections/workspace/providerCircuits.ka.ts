@@ -28,6 +28,7 @@ export const providerCircuitsKa: Translation<typeof providerCircuitsEn> = {
     smtp: "ელფოსტა (SMTP)",
     flitt: "გადახდები (Flitt)",
     stripe: "გადახდები (Stripe)",
+    elevenlabs: "ხმა (ElevenLabs)",
     web_push: "ვებ-შეტყობინებები",
   },
 };

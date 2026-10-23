@@ -25,7 +25,8 @@ class OutboundProvider(StrEnum):
     alerts); TWILIO_SMS and SMTP staff SMS and e-mail; WEB_PUSH the cabinet's
     devices (a share of the lane, no circuit: its endpoints are many
     services); FLITT and STRIPE payments (a circuit each; they send no
-    outbox messages).
+    outbox messages); ELEVENLABS the voice platform's API (a circuit, no
+    outbox messages: agents, recordings, voice checks).
     """
 
     META = "meta"
@@ -36,3 +37,4 @@ class OutboundProvider(StrEnum):
     WEB_PUSH = "web_push"
     FLITT = "flitt"
     STRIPE = "stripe"
+    ELEVENLABS = "elevenlabs"

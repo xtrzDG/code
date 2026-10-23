@@ -169,6 +169,8 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         transformers=CoreUseCasesContainer.transformers,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
+        voice_check_adapter=CoreUseCasesContainer.adapters.voice_check_adapter,
+        voice_agent_sources=voice.voice_agent_sources,
     )
     # Numbers rented for businesses' phone lines (1213), a typed root (ADR
     # 0010) whose use cases the call orchestrators and the channels call.

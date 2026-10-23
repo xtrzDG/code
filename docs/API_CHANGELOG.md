@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-24 — voice agent tuning, voice checks and the call fallback
 
-Spec: `ef38ddba58cf2843`
+Spec: `3f8cce4377e58f68`
 
 - **Changed** `CallDocument` (the calls of a contact's data export,
   `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`) gains
@@ -22,6 +22,16 @@ Spec: `ef38ddba58cf2843`
   `success`, `failure` or `unknown`) and read from it (`booking_date`,
   `booking_time`, `party_size`, `callback_requested`).
   Calls stored before have none; erasing a contact's data clears it.
+- **Changed** `AutotestScenarioResultView` (the results of
+  `GET /v1/businesses/{business_id}/assistant-versions/{version_id}/autotest-run`
+  and of `POST .../autotests`) gains `channel` (`ChannelKind`, optional): `phone` for
+  a voice check, a simulated call to the version's voice agent in one of its
+  languages, played by the voice platform; `null` for a test chat. A version
+  with voice is checked by such calls (one per tested language, kind
+  `booking`, or `unknown_question` for a version that takes no bookings)
+  while `VOICE_CHECKS_ENABLED` is on and the voice platform is configured; a
+  failed voice booking keeps the version from going live like a failed chat
+  booking (`autotests` reason of the go-live checklist).
 
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 

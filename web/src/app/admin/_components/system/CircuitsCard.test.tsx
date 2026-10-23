@@ -51,6 +51,7 @@ describe("circuits", () => {
   it("knows the provider of a provider circuit only", () => {
     expect(circuitProvider("provider:meta")).toBe("meta");
     expect(circuitProvider("provider:platform_bot")).toBe("platform_bot");
+    expect(circuitProvider("provider:elevenlabs")).toBe("elevenlabs");
     expect(circuitProvider("provider:pigeon")).toBeNull();
     expect(circuitProvider("anthropic:claude-sonnet-5-5")).toBeNull();
   });

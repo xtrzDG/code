@@ -11,6 +11,7 @@ from app.schemas.constants.assistants import (
     AutotestScenarioKind,
     JudgeCriterion,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.autotest_cases import OwnerCheckSnapshot
@@ -191,6 +192,9 @@ class AutotestScenarioResult(PersistentDocument):
     owner_check: OwnerCheckSnapshot | None = None
     conversation_id: ConversationId | None = None
     answer_message_id: MessageId | None = None
+    # PHONE: a voice check (a simulated call to the version's voice agent);
+    # None: a test chat (every result stored before voice checks).
+    channel: ChannelKind | None = None
 
 
 class AutotestRunDocument(BaseDocument):
@@ -222,7 +226,8 @@ class AutotestRunDocument(BaseDocument):
     # 6: what an owner check asked (`owner_check`) and the test conversation
     # of a result (`conversation_id`, `answer_message_id`) (optional fields,
     # no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: the voice checks' `channel` on the results (optional, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId

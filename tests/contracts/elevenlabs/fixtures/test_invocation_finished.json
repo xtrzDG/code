@@ -1,0 +1,53 @@
+{
+  "id": "suite_0000contract0001",
+  "agent_id": "agent_7101k6contract0000",
+  "created_at": 1790855000,
+  "test_runs": [
+    {
+      "test_run_id": "run_0000contract0001",
+      "test_invocation_id": "suite_0000contract0001",
+      "agent_id": "agent_7101k6contract0000",
+      "status": "passed",
+      "test_id": "test_0000contract0001",
+      "test_name": "Voice check phone__booking__ka",
+      "agent_responses": [
+        {
+          "role": "agent",
+          "message": "გამარჯობა! ეს არის Funicular VR-ის AI ასისტენტი.",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "მინდა ორი ადამიანისთვის დავჯავშნო ხვალ საღამოს შვიდზე.",
+          "time_in_call_secs": 4
+        },
+        {
+          "role": "agent",
+          "message": "ჯავშანი მზადაა: ხვალ, 19:00, ორი ადამიანი.",
+          "time_in_call_secs": 11,
+          "tool_calls": [
+            {
+              "type": "webhook",
+              "request_id": "req_0001",
+              "tool_name": "create_booking",
+              "params_as_json": "{\"arguments\": {\"name\": \"ნინო\", \"date\": \"2026-10-02\", \"time\": \"19:00\", \"party_size\": 2}}",
+              "tool_has_been_called": true
+            }
+          ]
+        }
+      ],
+      "condition_result": {
+        "result": "success",
+        "rationale": {
+          "summary": "The agent booked two people for 19:00 tomorrow and read it back.",
+          "messages": ["The greeting says it is an AI assistant."]
+        }
+      },
+      "last_updated_at_unix": 1790855090,
+      "charging": {
+        "llm_price": 0.004,
+        "platform_price": 0.012
+      }
+    }
+  ]
+}

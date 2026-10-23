@@ -150,10 +150,21 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_rate_limit_bucket_adapter,
         connection_pool=clients.postgres_platform_pool,
     )
+    # --- Circuit breakers and the outbound lane's bulkheads (W20), typed.
+    resilience: Singleton[ProviderResilience] = provider_resilience(
+        clients=clients, config=config, time_provider=time_provider, utilities=utilities
+    )
+    guarded = resilience.provided
+    circuit_breaker, payment_gateway = guarded.circuit_breaker, guarded.payment_gateway
+    outbound_bulkhead = guarded.outbound_bulkhead
+    platform_bot_client = guarded.platform_bot_client
+    guarded_email_sender, guarded_sms_sender = guarded.email_sender, guarded.sms_sender
+
+    # The voice platform's calls go through its circuit (provider:elevenlabs).
     calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
         CallAdaptersContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,
-        rate_limit_buckets=rate_limit_buckets,
+        rate_limit_buckets=rate_limit_buckets, circuit_breaker=circuit_breaker,
     )  # fmt: skip
 
     # --- The cabinet's live updates between processes (Postgres NOTIFY/LISTEN).
@@ -189,19 +200,10 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # phone line (1213), built with the call adapters.
     voice_webhook_adapter = calls.voice_webhook_adapter
     voice_agent_provisioner = calls.voice_agent_provisioner
+    voice_check_adapter = calls.voice_check_adapter
     phone_number_provisioner = calls.phone_number_provisioner
     # The ElevenLabs client whose calls and failures voice_health counts.
     counted_elevenlabs_client = calls.elevenlabs_client
-
-    # --- Circuit breakers and the outbound lane's bulkheads (W20), typed.
-    resilience: Singleton[ProviderResilience] = provider_resilience(
-        clients=clients, config=config, time_provider=time_provider, utilities=utilities
-    )
-    guarded = resilience.provided
-    circuit_breaker, payment_gateway = guarded.circuit_breaker, guarded.payment_gateway
-    outbound_bulkhead = guarded.outbound_bulkhead
-    platform_bot_client = guarded.platform_bot_client
-    guarded_email_sender, guarded_sms_sender = guarded.email_sender, guarded.sms_sender
 
     # --- Messaging channels, each behind its provider's circuit.
     channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]

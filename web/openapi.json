@@ -3301,6 +3301,16 @@
             ],
             "title": "Autotest Case Id"
           },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "check_codes": {
             "items": {
               "$ref": "#/components/schemas/AutotestCheckCode"

@@ -46,6 +46,7 @@ def test_checks_the_worker_gives_up_on_stop_the_apply() -> None:
                         testbed.abandon_autotest_run_use_case,
                         testbed.record_autotest_progress_use_case,
                         testbed.publish_applied_use_case,
+                        testbed.run_voice_checks_use_case,
                     )
                 )
             )

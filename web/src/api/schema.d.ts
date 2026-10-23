@@ -7127,6 +7127,7 @@ export interface components {
             answer_message_id?: string | null;
             /** Autotest Case Id */
             autotest_case_id?: string | null;
+            channel?: components["schemas"]["ChannelKind"] | null;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Check Notes */

@@ -28,6 +28,7 @@ export const providerCircuitsHe: Translation<typeof providerCircuitsEn> = {
     smtp: "דואר אלקטרוני (SMTP)",
     flitt: "תשלומים (Flitt)",
     stripe: "תשלומים (Stripe)",
+    elevenlabs: "קול (ElevenLabs)",
     web_push: "התראות דפדפן",
   },
 };

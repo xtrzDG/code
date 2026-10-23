@@ -10,7 +10,6 @@ from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.assistants.assemble_assistant_version_pipeline import (
     AssembleAssistantVersionPipeline,
 )
-from app.registries.localization.voice_profile_registry import VoiceProfileRegistry
 from app.registries.locks.voice_agent_lock_registry import VoiceAgentLockRegistry
 from app.use_cases.assistants.activate_assistant_version_use_case import (
     ActivateAssistantVersionUseCase,
@@ -54,7 +53,6 @@ from app.use_cases.billing.start_trial_at_go_live_use_case import (
 from app.use_cases.setup.record_activation_event_use_case import (
     RecordActivationEventUseCase,
 )
-from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.analytics.recording_product_events import RecordingProductEvents
@@ -97,16 +95,6 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             product_events=self.product_events,
         )
         self.voice_agent_locks = VoiceAgentLockRegistry(InMemoryAdvisoryLockAdapter())
-        self.voice_agent_sources = VoiceAgentSources(
-            business_profile_repo=self.profile_repo,
-            knowledge_item_repo=self.knowledge_repo,
-            brand_knowledge_item_repo=self.brand_knowledge_repo,
-            resource_repo=self.resource_repo,
-            build_call_greeting=self.call_greeting,
-            assistant_tool_catalog=self.tool_catalog,
-            voice_profile_registry=VoiceProfileRegistry(),
-            app_settings=self.settings,
-        )
         activate = self.activate_use_case = ActivateAssistantVersionUseCase(
             check_go_live_readiness=check_readiness,
             remove_voice_agent=RemoveVoiceAgentUseCase(

@@ -48,6 +48,8 @@ export const assistantChecksHe: Translation<typeof assistantChecksEn> = {
     notes: "הערות",
     transcript: "שיחה",
     noTranscript: "השיחה לא התחילה.",
+    phoneCall: "שיחת טלפון",
+    phoneCallHint: "שיחה מדומה עם העוזר הטלפוני בשפה הזו, שפלטפורמת הקול מנהלת.",
     outcomes: {
       passed: "עבר",
       failed: "נכשל",

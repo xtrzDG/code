@@ -6,6 +6,7 @@ from typing import Protocol
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.registry_contract import RegistryContract
 from app.schemas.dto.voice import VoiceAgentSpec, VoiceProfile
+from app.schemas.dto.voice_checks import VoiceCheckBatch, VoiceCheckOutcome
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -58,5 +59,25 @@ class VoiceProfileRegistryContract(RegistryContract, Protocol):
         """
         The tuned voice of a language: its own profile, else its base
         language's ("pt-BR" -> "pt"), else the multilingual default.
+        """
+        raise NotImplementedError
+
+
+class VoiceCheckAdapterContract(AdapterContract, Protocol):
+    def list_missing_settings(self) -> list[EnvironmentVariableName]:
+        """Server settings the voice checks still need (empty: none)."""
+        raise NotImplementedError
+
+    def run_checks(self, batch: VoiceCheckBatch) -> list[VoiceCheckOutcome]:
+        """
+        Play every simulated call of the batch against an agent built from
+        `batch.agent` that no caller can reach and whose tools never run
+        (each answers its mock), then remove that agent: one outcome per
+        case, in order. A call the platform could not play is ERRORED, one
+        still running when the time is up UNFINISHED.
+
+        Raises:
+            ExternalServiceError: the agent of the checks could not be set
+                up (nothing was played).
         """
         raise NotImplementedError

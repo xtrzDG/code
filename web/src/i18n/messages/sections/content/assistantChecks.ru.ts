@@ -56,6 +56,8 @@ export const assistantChecksRu: Translation<typeof assistantChecksEn> = {
     notes: "Замечания",
     transcript: "Разговор",
     noTranscript: "Разговор не начался.",
+    phoneCall: "Звонок",
+    phoneCallHint: "Имитация звонка голосовому помощнику на этом языке; её проводит голосовая платформа.",
     outcomes: {
       passed: "Пройден",
       failed: "Не пройден",
