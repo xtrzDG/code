@@ -11,6 +11,36 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — closing a business, deleting it for good, deleting an account
+
+Spec: `c2911998130fe426`
+
+- **Added** `GET /v1/businesses/{business_id}/closure` (`BusinessClosureView`):
+  where the business stands on its way out — `active`, `pending_deletion`
+  (with `reason`, `requested_at`, `delete_after`, `actor_name` and
+  `can_cancel`) or `deleting`. Any member may read it; `viewer_is_owner`
+  says whether the danger zone is theirs.
+- **Added** `POST /v1/businesses/{business_id}/closure` (owner only, a sign-in
+  within the last 10 minutes, body `{"confirmation_name": "<the business's
+  name>"}`): the business is paused, its channels disconnected, its
+  automatic charges stopped, and it is deleted for good 30 days later.
+  Closing again answers the same closure. `422` for a name that does not
+  match; `401` with the reason `step_up_required` for an old sign-in.
+- **Added** `DELETE /v1/businesses/{business_id}/closure` (owner only, `204`):
+  cancels the closure within its 30 days and brings the channels back; a
+  closure for non-payment is cancelled only once the subscription is paid
+  (`409`), and a deletion that has begun cannot be cancelled (`409`).
+- **Added** `DELETE /v1/me` (`204`, a recent sign-in): deletes the signed-in
+  account — its sessions, second factors, passkeys, push subscriptions and
+  notification preferences, and its memberships. Refused with `409` while
+  the person is the last owner of a business that is not closing, or the
+  only owner of a brand, and for members of the platform team.
+- **Added** `GET /v1/me/business-deletions` (`BusinessDeletionList`): the
+  businesses this person owned that are deleted or being deleted, and
+  `GET /v1/me/business-deletions/{deletion_id}/certificate?language=` the
+  deletion certificate (`application/pdf`; `409` while the deletion runs,
+  `404` for anyone who was not an owner).
+
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 
 Spec: `a9b957c2ee6887dd`

@@ -46,7 +46,7 @@ from app.use_cases.users.account_deletion.account_departure_checks import (
 )
 
 USER_ENTITY: AuditEntityName = AuditEntityName("user")
-MEMBER_ENTITY: AuditEntityName = AuditEntityName("member")
+MEMBER_ENTITY: AuditEntityName = AuditEntityName("business_member")
 
 
 class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):

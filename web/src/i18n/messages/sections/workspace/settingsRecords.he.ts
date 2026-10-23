@@ -85,6 +85,7 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       brand_location: "סניף ברשת",
       brand_member: "חבר בצוות הרשת",
       business_member: "חבר צוות",
+      business_closure: "סגירת העסק",
       user: "משתמש",
       lead: "פנייה",
       handoff: "דורש אדם",

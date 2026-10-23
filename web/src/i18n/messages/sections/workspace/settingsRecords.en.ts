@@ -86,6 +86,7 @@ export const settingsRecordsEn = {
       brand_location: "Brand location",
       brand_member: "Brand team member",
       business_member: "Team member",
+      business_closure: "Business closure",
       user: "User",
       lead: "Lead",
       handoff: "Needs a person",
