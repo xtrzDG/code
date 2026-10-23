@@ -1,53 +1,55 @@
 """Fakes of the providers a business's deletion switches off."""
 
-from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext
 
 from app.contracts.billing import PaymentGatewayAdapterContract
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
 from app.contracts.channel_deprovisioning import MetaSubscriptionClientContract
-from app.contracts.phone_numbers import (
-    PhoneLineLockRegistryContract,
-    PhoneNumberProvisionerAdapterContract,
-    PhoneNumberRepoContract,
-)
+from app.contracts.phone_numbers import PhoneLineLockRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
-from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
-from app.contracts.repositories.business_repositories import ChannelRepoContract
-from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.payments import PaymentProvider
-from app.schemas.domain.assistants import AssistantVersionDocument
-from app.schemas.domain.billing import SubscriptionDocument
-from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.phone_numbers import PhoneNumberDocument
+from app.schemas.dto.channels.provider_profiles import (
+    TelegramBotProfile,
+    TelegramWebhookInfo,
+)
 from app.schemas.dto.operations.calendar_connection import (
     CalendarDisconnectResult,
     DisconnectCalendarCommand,
 )
-from app.schemas.dto.phone_numbers.provisioning import PhoneNumberRelease
+from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryResult
+from app.schemas.dto.payments import (
+    PaymentCheckoutRequest,
+    PaymentCheckoutSession,
+    PaymentWebhookDelivery,
+    VerifiedPaymentEvent,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.billing.strings import PaymentProviderReference
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ChannelSecret, EncryptedChannelSecret
+from app.schemas.typings.channels.constrained_strings import (
+    ChannelWebhookUrl,
+    TelegramBotUserId,
+    TelegramWebhookSecret,
+)
+from app.schemas.typings.channels.strings import (
+    OutboundMessagePart,
+    ProviderMessageId,
+    TelegramCallbackQueryId,
+)
+from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.media.strings import ProviderMediaId
 from app.schemas.typings.meta_connection.constrained_strings import (
     WhatsAppBusinessAccountId,
 )
-from app.schemas.typings.telephony.prefixed_id import PhoneNumberId
-
-UNREADABLE: str = "unreadable"
-
-
-class Cipher(SecretCipherAdapterContract):
-    def decrypt(self, encrypted_secret: EncryptedChannelSecret) -> ChannelSecret:
-        if str(encrypted_secret) == UNREADABLE:
-            raise ExternalServiceError("The credential cannot be read.")
-        return ChannelSecret(f"plain-{encrypted_secret}")
+from app.utilities.channels.json_values import JsonObject
 
 
 class Telegram(TelegramBotApiClientContract):
+    """Records the bots whose webhook went; only that call is expected."""
+
     def __init__(self, failing: bool = False) -> None:
         self.removed: list[str] = []
         self.failing: bool = failing
@@ -56,6 +58,52 @@ class Telegram(TelegramBotApiClientContract):
         if self.failing:
             raise ExternalServiceError("Telegram is down.")
         self.removed.append(str(bot_token))
+
+    def get_me(self, bot_token: ProviderToken) -> TelegramBotProfile:
+        raise NotImplementedError
+
+    def get_profile_photo_file_id(
+        self, bot_token: ProviderToken, bot_user_id: TelegramBotUserId
+    ) -> ProviderMediaId | None:
+        raise NotImplementedError
+
+    def set_webhook(
+        self,
+        bot_token: ProviderToken,
+        url: ChannelWebhookUrl,
+        secret_token: TelegramWebhookSecret,
+    ) -> None:
+        raise NotImplementedError
+
+    def send_message(
+        self,
+        bot_token: ProviderToken,
+        chat_id: ChannelUserId,
+        text: OutboundMessagePart,
+        reply_markup: JsonObject | None = None,
+    ) -> ProviderMessageId | None:
+        raise NotImplementedError
+
+    def answer_callback_query(
+        self, bot_token: ProviderToken, callback_query_id: TelegramCallbackQueryId
+    ) -> None:
+        raise NotImplementedError
+
+    def edit_message_text(
+        self,
+        bot_token: ProviderToken,
+        message_id: ProviderMessageId,
+        text: OutboundMessagePart,
+    ) -> None:
+        raise NotImplementedError
+
+    def get_webhook_info(self, bot_token: ProviderToken) -> TelegramWebhookInfo:
+        raise NotImplementedError
+
+    def send_typing_action(
+        self, bot_token: ProviderToken, chat_id: ChannelUserId
+    ) -> None:
+        raise NotImplementedError
 
 
 class MetaSubscriptions(MetaSubscriptionClientContract):
@@ -74,39 +122,23 @@ class MetaSubscriptions(MetaSubscriptionClientContract):
         self.accounts.append(str(business_account_id))
 
 
-class Channels(ChannelRepoContract):
-    def __init__(self, channels: list[ChannelDocument]) -> None:
-        self.channels: list[ChannelDocument] = channels
-
-    def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
-        return [
-            channel for channel in self.channels if channel.business_id == business_id
-        ]
-
-
-class Versions(AssistantVersionRepoContract):
-    def __init__(self, versions: list[AssistantVersionDocument]) -> None:
-        self.versions: list[AssistantVersionDocument] = versions
-
-    def list_by_business(
-        self, business_id: BusinessId
-    ) -> list[AssistantVersionDocument]:
-        return list(self.versions)
-
-
 class RemoveVoiceAgents(UseCaseContract[BusinessId, None]):
     """Forgets the agents, or keeps them as a platform that cannot be reached."""
 
-    def __init__(self, versions: Versions, reachable: bool) -> None:
-        self._versions: Versions = versions
+    def __init__(self, versions: AssistantVersionRepoContract, reachable: bool) -> None:
+        self._versions: AssistantVersionRepoContract = versions
         self._reachable: bool = reachable
 
     def run(self, input_data: BusinessId) -> None:
-        if self._reachable:
-            self._versions.versions = [
-                version.model_copy(update={"voice_agent_id": None})
-                for version in self._versions.versions
-            ]
+        if not self._reachable:
+            return
+
+        for version in self._versions.list_by_business(input_data):
+            self._versions.modify(
+                input_data,
+                version.id,
+                lambda stored: stored.model_copy(update={"voice_agent_id": None}),
+            )
 
 
 class DisconnectCalendar(
@@ -121,50 +153,14 @@ class DisconnectCalendar(
         )
 
 
-class PhoneNumbers(PhoneNumberRepoContract):
-    def __init__(self, held: PhoneNumberDocument | None) -> None:
-        self.held: PhoneNumberDocument | None = held
-
-    def find_held(self, business_id: BusinessId) -> PhoneNumberDocument | None:
-        return self.held
-
-    def modify(
-        self,
-        business_id: BusinessId,
-        number_id: PhoneNumberId,
-        change: Callable[[PhoneNumberDocument], PhoneNumberDocument | None],
-    ) -> PhoneNumberDocument | None:
-        if self.held is None:
-            return None
-        self.held = change(self.held)
-        return self.held
-
-
-class Provisioner(PhoneNumberProvisionerAdapterContract):
-    def __init__(self, refusing: bool = False) -> None:
-        self.released: list[str] = []
-        self.refusing: bool = refusing
-
-    def release_number(self, release: PhoneNumberRelease) -> None:
-        if self.refusing:
-            raise ExternalServiceError("The carrier refused.")
-        self.released.append(str(release.provider_number_id))
-
-
 class Lock(PhoneLineLockRegistryContract):
     def lock_for(self, business_id: BusinessId) -> AbstractContextManager[object]:
         return nullcontext(object())
 
 
-class Subscriptions(SubscriptionRepoContract):
-    def __init__(self, subscriptions: list[SubscriptionDocument]) -> None:
-        self.subscriptions: list[SubscriptionDocument] = subscriptions
-
-    def list_by_business(self, business_id: BusinessId) -> list[SubscriptionDocument]:
-        return list(self.subscriptions)
-
-
 class Gateway(PaymentGatewayAdapterContract):
+    """Records the charges stopped; only that call is expected."""
+
     def __init__(self, failure: ExternalServiceError | None = None) -> None:
         self.stopped: list[str] = []
         self.failure: ExternalServiceError | None = failure
@@ -177,3 +173,16 @@ class Gateway(PaymentGatewayAdapterContract):
         if self.failure is not None:
             raise self.failure
         self.stopped.append(f"{provider.value}:{provider_reference}")
+
+    def create_checkout(
+        self, request: PaymentCheckoutRequest
+    ) -> PaymentCheckoutSession:
+        raise NotImplementedError
+
+    def read_notification(
+        self, delivery: PaymentWebhookDelivery
+    ) -> VerifiedPaymentEvent:
+        raise NotImplementedError
+
+    def retry_charge(self, request: PaymentRetryRequest) -> PaymentRetryResult:
+        raise NotImplementedError

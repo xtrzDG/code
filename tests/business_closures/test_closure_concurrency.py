@@ -13,12 +13,17 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.contracts.jobs import JobQueueFacilitatorContract, QueuedJobRepoContract
+from app.adapters.storage.in_memory_queued_job_claim_adapter import (
+    InMemoryQueuedJobClaimAdapter,
+)
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.repositories.business_closure_repositories import BusinessClosureRepository
+from app.repositories.job_repositories import QueuedJobRepository
 from app.schemas.constants.business_closures import BusinessClosureReason
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.business_closures import BusinessClosureDocument
+from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import JobName, JobSerialKey
@@ -53,11 +58,9 @@ class Queue(JobQueueFacilitatorContract):
         return QueuedJobId()
 
 
-class NoActiveJobs(QueuedJobRepoContract):
-    def list_active_payloads(
-        self, job_name: JobName, payloads: object
-    ) -> set[JobPayloadJson]:
-        return set()
+def no_jobs() -> QueuedJobRepository:
+    jobs = InMemoryDocumentCollectionAdapter(QueuedJobDocument)
+    return QueuedJobRepository(jobs, InMemoryQueuedJobClaimAdapter(jobs))
 
 
 def due_closure(business_id: BusinessId) -> BusinessClosureDocument:
@@ -117,7 +120,7 @@ def cancel_while_sweeping() -> tuple[bool, bool, BusinessClosureDocument, Queue]
     )
     closures, business_id, queue = repository(), BusinessId(), Queue()
     closures.open(due_closure(business_id))
-    sweep = QueueDueDeletionsUseCase(closures, queue, NoActiveJobs(), clock)
+    sweep = QueueDueDeletionsUseCase(closures, queue, no_jobs(), clock)
     tick = JobTick(job_name=JobName("queue_business_deletions"), scheduled_at=NOW)
     cancelled, queued = race(
         lambda: take_pending_closure(closures, business_id, NOW) is not None,
