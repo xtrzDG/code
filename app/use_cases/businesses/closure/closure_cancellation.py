@@ -7,6 +7,7 @@ from app.contracts.repositories.business_closure_repositories import (
 )
 from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.businesses.closure.closure_effects import ClosureEffects
 
 
@@ -24,7 +25,7 @@ def cancel_closure(
     """
 
     taken: BusinessClosureDocument | None = take_pending_closure(
-        closure_repo, business, now
+        closure_repo, business.id, now
     )
     if taken is None:
         return None
@@ -36,7 +37,7 @@ def cancel_closure(
 
 def take_pending_closure(
     closure_repo: BusinessClosureRepoContract,
-    business: BusinessDocument,
+    business_id: BusinessId,
     now: Microseconds,
 ) -> BusinessClosureDocument | None:
     """
@@ -54,4 +55,4 @@ def take_pending_closure(
         closure.updated_at = now
         return closure
 
-    return closure_repo.modify(business.id, claim)
+    return closure_repo.modify(business_id, claim)
