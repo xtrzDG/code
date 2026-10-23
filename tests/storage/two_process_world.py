@@ -25,6 +25,8 @@ from tests.e2e.workshop_container import replace_provider
 from tests.storage.storage_testing import PROJECT_ROOT_DIRECTORY
 
 STARTUP_SECONDS: float = 90.0
+# Logged by a worker once its lane threads take jobs (`LaneThreads.start`).
+WORKER_STARTED: str = "Worker lanes started"
 # The subprocesses get only what they need: no provider keys (no network),
 # no platform bot to register at startup.
 PROCESS_ENVIRONMENT_KEYS: tuple[str, ...] = ("APP_ENV", "ENCRYPTION_KEY")
@@ -114,9 +116,12 @@ def worker_processes(
     extra_environment: Mapping[str, str] | None = None,
 ) -> Generator[list[Path]]:
     """
-    Start `count` worker processes; yield the files of their logs. With a
-    model call log they answer with the logging stand-in model, without
-    one they are the real `workshop worker` (its scripted model).
+    Start `count` worker processes and wait until each one takes jobs; yield
+    the files of their logs. With a model call log they answer with the
+    logging stand-in model, without one they are the real `workshop worker`
+    (its scripted model). A message sent before the workers start waits for
+    them, and past CHAT_TURN_DEADLINE_SECONDS its customer gets the "one
+    moment" holding reply on top of the answer.
     """
 
     environment = worker_environment(database_url, extra_environment)
@@ -138,11 +143,23 @@ def worker_processes(
         for handle in handles
     ]
     try:
+        for process, log in zip(processes, logs, strict=True):
+            wait_until_taking_jobs(process, log)
         yield logs
     finally:
         stop_processes(processes)
         for handle in handles:
             handle.close()
+
+
+def wait_until_taking_jobs(process: subprocess.Popen[bytes], log: Path) -> None:
+    deadline = time.monotonic() + STARTUP_SECONDS
+    while WORKER_STARTED not in log.read_text(encoding="utf-8", errors="replace"):
+        if process.poll() is not None:
+            raise AssertionError(f"The worker logging to {log.name} exited early.")
+        if time.monotonic() > deadline:
+            raise AssertionError(f"The worker logging to {log.name} did not start.")
+        time.sleep(0.2)
 
 
 def stop_processes(processes: list[subprocess.Popen[bytes]]) -> None:
