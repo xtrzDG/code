@@ -20,8 +20,8 @@ from app.schemas.typings.business_closures.constrained_integers import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.business_closures.closure_identity import deletion_id_for
 from app.utilities.business_closures.retained_tables import (
-    QUEUED_JOBS_TABLE,
     is_retained,
+    outlives_deletion,
 )
 
 
@@ -67,11 +67,7 @@ def erasable_tables(counts: list[BusinessTableRows]) -> list[BusinessTableRows]:
     there for their turn; finished jobs are purged like every other).
     """
 
-    return [
-        count
-        for count in counts
-        if not is_retained(count.table) and count.table != QUEUED_JOBS_TABLE
-    ]
+    return [count for count in counts if not outlives_deletion(count.table)]
 
 
 def row_counts(counts: list[BusinessTableRows]) -> list[CollectionRowCount]:

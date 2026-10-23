@@ -33,6 +33,18 @@ def is_retained(table: DocumentCollectionName) -> bool:
     return table in RETAINED_TABLES
 
 
+def outlives_deletion(table: DocumentCollectionName) -> bool:
+    """
+    Kept when a deletion (or the ledger, again after a restore) erases the
+    business's rows: the retained tables, and the queue, where the
+    deletion's own sub-processor erasure jobs wait for their turn (the
+    deletion clears the business's other jobs itself before queueing them;
+    finished jobs leave with the queue's own purge).
+    """
+
+    return is_retained(table) or table == QUEUED_JOBS_TABLE
+
+
 def erase_order(
     tables: list[DocumentCollectionName],
 ) -> list[DocumentCollectionName]:
@@ -46,3 +58,11 @@ def erase_order(
         erasable.append(BUSINESSES_TABLE)
 
     return erasable
+
+
+def ledger_erase_order(
+    tables: list[DocumentCollectionName],
+) -> list[DocumentCollectionName]:
+    """What the deletion ledger erases again: the erase order without the queue."""
+
+    return [table for table in erase_order(tables) if not outlives_deletion(table)]

@@ -1,8 +1,9 @@
 """
 The deletion ledger applied to a restored database: every business the
 ledger names (its copy in the bucket, and the restored database's own
-entries) loses its rows again, in every table but what the law keeps, so a
-restored backup never brings a deleted business back.
+entries) loses its rows again, in every table but what the law keeps and the
+job queue (the deletion's own sub-processor erasure jobs), so a restored
+backup never brings a deleted business back.
 """
 
 from collections.abc import Sequence
@@ -24,7 +25,7 @@ from app.schemas.typings.business_closures.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
-from app.utilities.business_closures.retained_tables import erase_order
+from app.utilities.business_closures.retained_tables import ledger_erase_order
 
 LEDGER_TABLE_SQL: LiteralString = "select to_regclass('workshop.business_deletions')"
 LEDGER_ENTRIES_SQL: LiteralString = (
@@ -58,7 +59,7 @@ def apply_deletion_ledger(
     """Delete the ledger's businesses' rows again; count what is left of them."""
 
     business_ids: list[str] = ledger_business_ids(connection, mirrored)
-    tables: list[DocumentCollectionName] = erase_order(
+    tables: list[DocumentCollectionName] = ledger_erase_order(
         [DocumentCollectionName(table) for table in list_business_tables(connection)]
     )
     erased: int = 0

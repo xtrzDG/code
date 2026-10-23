@@ -6,6 +6,9 @@ is left to its own job, and a business the ledger does not name is never
 touched.
 """
 
+import logging
+
+import pytest
 from typed_time_provider import Microseconds
 
 from app.adapters.business_closures.in_memory_deletion_ledger_mirror_adapter import (
@@ -25,14 +28,16 @@ from app.schemas.domain.business_closures import BusinessDeletionDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.business_closures.deletion_ledger import DeletionLedgerRecord
-from app.schemas.dto.jobs import JobTick
+from app.schemas.dto.jobs import JobTick, QueuedJobInput
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.use_cases.businesses.deletion.reapply_deletion_ledger_use_case import (
     ReapplyDeletionLedgerUseCase,
 )
 from app.utilities.business_closures.closure_identity import deletion_id_for
+from app.utilities.business_closures.deletion_jobs import deletion_payload
 from tests.business_closures.closure_world import DAY_SECONDS, open_closure_world
 from tests.storage.builders import COUNTRY_SAMPLES, build_contact
 from tests.storage.document_evolution.sample_documents import sample_document
@@ -152,3 +157,30 @@ def test_the_daily_job_deletes_a_restored_business_again() -> None:
 
         assert "contacts" not in world.rows_of(world.business_b)
         assert world.rows_of(world.business_a) == before_a
+
+
+def test_the_daily_job_keeps_the_deletions_own_erasure_jobs(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with open_closure_world() as world:
+        world.close_b()
+        world.workshop.clock.advance(31 * DAY_SECONDS)
+        world.tick("queue_business_deletions")
+        # The deletion runs; the sub-processors' erasure jobs it queued have
+        # not (Langfuse is down, say).
+        with world.workshop.container.utilities.storage_scope().platform_wide():
+            world.operators().delete_business().operate(
+                QueuedJobInput(
+                    job_id=QueuedJobId(),
+                    job_name=JobName("delete_business"),
+                    payload=deletion_payload(BusinessId(world.business_b)),
+                )
+            )
+        waiting = world.rows_of(world.business_b).get("queued_jobs", 0)
+        assert waiting > 0
+
+        with caplog.at_level(logging.WARNING):
+            world.tick("reapply_deletion_ledger")
+
+        assert world.rows_of(world.business_b).get("queued_jobs", 0) == waiting
+        assert "Deletion ledger" not in caplog.text

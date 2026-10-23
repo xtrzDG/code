@@ -18,7 +18,10 @@ from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.use_cases.businesses.closure.closure_rules import require_name_confirmation
 from app.use_cases.businesses.closure.unpaid_ends import unpaid_end
-from app.utilities.business_closures.retained_tables import erase_order
+from app.utilities.business_closures.retained_tables import (
+    erase_order,
+    ledger_erase_order,
+)
 from tests.storage.document_evolution.sample_documents import sample_document
 
 DAY: int = 24 * 60 * 60 * 1_000_000
@@ -107,6 +110,19 @@ def test_the_retained_tables_are_never_erased_and_the_business_goes_last() -> No
         [
             DocumentCollectionName(name)
             for name in ("businesses", "invoices", "contacts", "audit_log_entries")
+        ]
+    )
+
+    assert [str(name) for name in order] == ["contacts", "businesses"]
+
+
+def test_the_ledger_applied_again_keeps_the_job_queue() -> None:
+    # The deletion's own sub-processor erasure jobs wait in the queue; the
+    # ledger (the daily job, restore-check) never erases them.
+    order = ledger_erase_order(
+        [
+            DocumentCollectionName(name)
+            for name in ("businesses", "queued_jobs", "contacts", "invoices")
         ]
     )
 

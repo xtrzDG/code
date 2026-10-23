@@ -4,7 +4,8 @@ restores a backup taken before the deletions into a scratch database and
 applies the deletion ledger to it, both its copy in the bucket (a business
 deleted after the backup) and the restored database's own entries (a
 deletion that was under way when the backup ran). What the law keeps
-stays; the other business is restored whole.
+stays, and so does the job queue, where a deletion's own sub-processor
+erasure jobs wait; the other business is restored whole.
 """
 
 import json
@@ -22,7 +23,8 @@ from app.schemas.dto.business_closures.deletion_ledger import DeletionLedgerReco
 from app.schemas.typings.backups.constrained_strings import BackupObjectPrefix
 from app.schemas.typings.business_closures.prefixed_id import BusinessDeletionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.utilities.business_closures.retained_tables import RETAINED_TABLES
+from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.business_closures.retained_tables import outlives_deletion
 from tests.compliance.moto_object_storage import moto_storage
 from tests.storage.backup_drill_world import BackupDrillWorld
 from tests.storage.postgres_server import (
@@ -33,9 +35,17 @@ from tests.storage.postgres_server import (
 DELETED: BusinessId = BusinessId()
 MID_DELETION: BusinessId = BusinessId()
 KEPT: BusinessId = BusinessId()
-ROWS: dict[str, int] = {"businesses": 1, "channels": 2, "contacts": 3, "invoices": 1}
+ROWS: dict[str, int] = {
+    "businesses": 1,
+    "channels": 2,
+    "contacts": 3,
+    "invoices": 1,
+    "queued_jobs": 1,
+}
 ERASED_PER_BUSINESS: int = sum(
-    count for table, count in ROWS.items() if table not in RETAINED_TABLES
+    count
+    for table, count in ROWS.items()
+    if not outlives_deletion(DocumentCollectionName(table))
 )
 LEDGER_PREFIX: BackupObjectPrefix = BackupObjectPrefix("workshop/")
 
@@ -129,7 +139,7 @@ def test_a_restore_applies_the_deletion_ledger(
             table: count
             for (business_id, table), count in restored.items()
             if business_id == str(gone)
-        } == {"invoices": 1}
+        } == {"invoices": 1, "queued_jobs": 1}
     assert {
         table: count
         for (business_id, table), count in restored.items()

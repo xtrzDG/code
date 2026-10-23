@@ -14,7 +14,7 @@ from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
-from app.utilities.business_closures.retained_tables import is_retained
+from app.use_cases.businesses.deletion.deletion_ledger_entries import erasable_tables
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -72,11 +72,12 @@ class ReapplyDeletionLedgerUseCase(UseCaseContract[JobTick, JobReport]):
             after = page[-1]
 
     def _erase_again(self, business_id: BusinessId) -> int:
-        left: list[BusinessTableRows] = [
-            count
-            for count in self._row_eraser.count_rows(business_id)
-            if not is_retained(count.table)
-        ]
+        # The queue stays: the deletion's sub-processor erasure jobs wait
+        # there (pending, retrying or dead), and erasing them would lose that
+        # erasure at Langfuse and ElevenLabs.
+        left: list[BusinessTableRows] = erasable_tables(
+            self._row_eraser.count_rows(business_id)
+        )
         if not left:
             return 0
 
