@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds
 
+from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.business_closures.constrained_integers import (
@@ -15,12 +16,25 @@ from app.schemas.typings.business_closures.constrained_strings import (
 # export window of DPA 13.3), unless the closure is cancelled before.
 CLOSURE_DAYS: int = 30
 MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
+# How long a cancel may take to restore the business (channels, the
+# assistant and its voice agent: seconds); a cancelled closure older than
+# this is a cancel that died, and a new closure replaces it.
+CANCEL_LEASE_MICROSECONDS: int = 10 * 60 * 1_000_000
 
 
 def deletion_moment(closed_at: Microseconds) -> Microseconds:
     """When a business closed at `closed_at` is deleted."""
 
     return Microseconds(int(closed_at) + CLOSURE_DAYS * MICROSECONDS_PER_DAY)
+
+
+def is_cancel_under_way(closure: BusinessClosureDocument, now: Microseconds) -> bool:
+    """A cancelled closure whose cancel may still be restoring the business."""
+
+    return (
+        closure.cancelled_at is not None
+        and int(now) - int(closure.cancelled_at) < CANCEL_LEASE_MICROSECONDS
+    )
 
 
 def offboarding_moment(

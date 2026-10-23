@@ -34,6 +34,7 @@ from app.use_cases.businesses.closure.closure_notices import ClosureNotices
 from app.use_cases.businesses.closure.closure_reads import is_owner_of
 from app.use_cases.businesses.closure.closure_rules import (
     deletion_moment,
+    is_cancel_under_way,
     require_name_confirmation,
 )
 from app.use_cases.businesses.closure.closure_views import closure_view
@@ -125,7 +126,12 @@ class CloseBusinessUseCase(UseCaseContract[CloseBusinessCommand, BusinessClosure
         )
 
     def _open(self, closure: BusinessClosureDocument) -> bool:
-        """Open the closure; a cancelled one left by a cancel that died goes first."""
+        """
+        Open the closure. A cancelled one is a cancel still restoring the
+        business (refused: its last step removes the closure, which would
+        take a new one with it) or, past CANCEL_LEASE, one that died, which
+        goes first.
+        """
 
         if self._closure_repo.open(closure):
             return True
@@ -135,6 +141,11 @@ class CloseBusinessUseCase(UseCaseContract[CloseBusinessCommand, BusinessClosure
         )
         if existing is None or existing.cancelled_at is None:
             return False
+
+        if is_cancel_under_way(existing, closure.requested_at):
+            raise ConflictError(
+                "The closure is being cancelled right now; try again in a few minutes."
+            )
 
         self._closure_repo.remove(closure.business_id)
         return self._closure_repo.open(closure)

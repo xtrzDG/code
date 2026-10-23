@@ -42,6 +42,16 @@ Spec: `c2911998130fe426`
   `GET /v1/me/business-deletions/{deletion_id}/certificate?language=` the
   deletion certificate (`application/pdf`; `409` while the deletion runs,
   `404` for anyone who was not an owner).
+- **Changed** while a business is closing (a closure not cancelled), the
+  routes that would bring it back answer `409` until the closure is
+  cancelled: publishing or rolling back an assistant version,
+  `PATCH /v1/businesses/{business_id}` with `status: live`, connecting a
+  channel (`PUT …/channels/{channel}`), the Facebook sign-in
+  (`POST …/channels/meta/sign-in`, `POST …/channels/whatsapp/embedded-signup`,
+  `PUT …/channels/{channel}/page`) and renting a number
+  (`POST …/phone-line/number`). `POST …/closure` answers `409` while a
+  cancel of the same business is still bringing it back (try again in a
+  few minutes).
 
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 

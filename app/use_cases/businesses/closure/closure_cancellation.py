@@ -18,10 +18,12 @@ def cancel_closure(
     now: Microseconds,
 ) -> BusinessClosureDocument | None:
     """
-    The closure is marked cancelled, its effects undone and then removed;
-    None, and nothing changed, when its deletion is queued already. A
-    cancel that dies half-way leaves a cancelled closure, which counts as
-    none (the next closure replaces it).
+    The closure is marked cancelled, its effects undone and then removed
+    (only if it is still the one this cancel took); None, and nothing
+    changed, when its deletion is queued already. A cancel that dies
+    half-way leaves a cancelled closure, which counts as none (a new
+    closure replaces it once the cancel's lease is over,
+    `is_cancel_under_way`).
     """
 
     taken: BusinessClosureDocument | None = take_pending_closure(
@@ -31,7 +33,12 @@ def cancel_closure(
         return None
 
     effects.restore(taken, now)
-    closure_repo.remove(business.id)
+    # Only the closure this cancel took (a new one opens only past the
+    # cancel's lease, see `is_cancel_under_way`).
+    current: BusinessClosureDocument | None = closure_repo.get(business.id)
+    if current is not None and current.requested_at == taken.requested_at:
+        closure_repo.remove(business.id)
+
     return taken
 
 
