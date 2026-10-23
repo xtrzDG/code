@@ -54,6 +54,6 @@ class BusinessClosureView(ImmutableDTO):
     reason: BusinessClosureReason | None = None
     requested_at: Microseconds | None = None
     delete_after: Microseconds | None = None
-    requested_by_name: UserDisplayName | None = None
+    actor_name: UserDisplayName | None = None
     can_cancel: IsClosureCancellable = False
     viewer_is_owner: IsViewerBusinessOwner = False

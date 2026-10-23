@@ -17,8 +17,10 @@ def cancel_closure(
     now: Microseconds,
 ) -> BusinessClosureDocument | None:
     """
-    The closure is marked cancelled, removed and its effects undone; None,
-    and nothing changed, when its deletion is queued already.
+    The closure is marked cancelled, its effects undone and then removed;
+    None, and nothing changed, when its deletion is queued already. A
+    cancel that dies half-way leaves a cancelled closure, which counts as
+    none (the next closure replaces it).
     """
 
     taken: BusinessClosureDocument | None = take_pending_closure(
@@ -27,8 +29,8 @@ def cancel_closure(
     if taken is None:
         return None
 
-    closure_repo.remove(business.id)
     effects.restore(taken, now)
+    closure_repo.remove(business.id)
     return taken
 
 

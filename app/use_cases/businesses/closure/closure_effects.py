@@ -21,7 +21,10 @@ from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.business_closures import BusinessClosureDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    ConflictError,
+    ExternalServiceError,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.use_cases.shared.billing_records import find_current_subscription
@@ -39,10 +42,11 @@ class ClosureEffects:
     automatic charges and cancels the subscription (no charge during the
     30 days; the period already paid keeps running); a provider that cannot
     be reached leaves the subscription as it is, and the deletion stops the
-    charges for certain (it retries until the provider answers). Cancelling the
-    closure turns the same channels on again and resumes an assistant that
-    was live (activating its published version anew); billing stays
-    stopped until the owner chooses a plan again.
+    charges for certain (it retries until the provider answers). Cancelling
+    the closure turns the same channels on again and resumes an assistant
+    that was live (activating its published version anew) when it may go
+    live: billing stays stopped until the owner chooses a plan again, so
+    after the period paid for the assistant waits paused for that.
     """
 
     def __init__(
@@ -144,8 +148,19 @@ class ClosureEffects:
 
         business: BusinessDocument | None = self._business_repo.get(closure.business_id)
         if (
-            business is not None
-            and closure.status_before is BusinessStatus.LIVE
-            and business.status is BusinessStatus.PAUSED
+            business is None
+            or closure.status_before is not BusinessStatus.LIVE
+            or business.status is not BusinessStatus.PAUSED
         ):
+            return
+
+        try:
             self._resume_assistant.run(business)
+        except ConflictError as refusal:
+            # Going live has its conditions (a paid subscription among
+            # them): the owner resumes the assistant once they are met.
+            logger.info(
+                "Business %s stays paused after its closure was cancelled: %s",
+                business.id,
+                refusal,
+            )

@@ -48,7 +48,7 @@ class ClosureNotices:
     ) -> int:
         actor_name: UserDisplayName | None = self._name_of(actor_id)
         subject = StaffAlertSubject(
-            f"business_closure:{kind.value}:{int(closure.requested_at)}"
+            f"business_closure:{kind.value}-{int(closure.requested_at)}"
         )
         contacts: list[ManagerContact] = owner_contacts(business, self._user_repo)
         return sum(

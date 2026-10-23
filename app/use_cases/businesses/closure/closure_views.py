@@ -50,7 +50,7 @@ def closure_view(
         reason=closure.reason,
         requested_at=closure.requested_at,
         delete_after=closure.delete_after,
-        requested_by_name=requester_name(closure, user_repo),
+        actor_name=requester_name(closure, user_repo),
         can_cancel=may_cancel,
         viewer_is_owner=viewer_is_owner,
     )
