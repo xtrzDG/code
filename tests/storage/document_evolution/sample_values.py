@@ -9,6 +9,8 @@ document (the generator names the missing one).
 SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
+    "CallCollectedDate": "2026-10-24",
+    "CallCollectedTime": "19:30",
     "AuditChainKey": "business_fd43b272-3035-4a74-a29f-96b1631dd8b5",
     "AuditEntryHash": "a1" * 32,
     "DepositReference": "DK7Q3M9X",

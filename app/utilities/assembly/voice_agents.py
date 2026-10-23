@@ -44,7 +44,9 @@ def find_existing_voice_agent_id(
 # then sets up every live agent of an older revision again.
 # 1 (W20): list_my_bookings and join_waitlist for a version assembled
 #   before them, and decline_recording on every agent.
-VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(1)
+# 2 (W22): the tuning (model, temperature, a voice per language, speech
+#   recognition keywords, turn timeout) and the evaluation of every call.
+VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(2)
 
 
 def needs_voice_agent_resync(version: AssistantVersionDocument) -> bool:

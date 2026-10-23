@@ -84,3 +84,16 @@ class CallTransferOutcome(StrEnum):
     NOT_TRANSFERRED = "not_transferred"
     CONNECTED = "connected"
     UNANSWERED = "unanswered"
+
+
+class CallEvaluationResult(StrEnum):
+    """
+    What the voice platform's own evaluation of a finished call says about
+    one criterion (the booking matches what the caller asked, the AI
+    disclosure was said): SUCCESS, FAILURE, or UNKNOWN when the call gave
+    nothing to judge (no booking was asked for).
+    """
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+    UNKNOWN = "unknown"

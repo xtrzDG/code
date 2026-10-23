@@ -40,6 +40,10 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.voice.call_analysis_findings import (
+    booking_to_check,
+    warn_of_missing_disclosure,
+)
 from app.use_cases.voice.call_audit_evidence import (
     collect_call_evidence,
     split_call_lines,
@@ -64,8 +68,12 @@ class AuditCallRepliesUseCase(UseCaseContract[CallAuditRequest, CallAudit]):
     bookings; the caller's own words back times, dates and counts, never a
     price. The call gets `guard_verdict` and `unverified_values`. When a call
     that made a booking or a lead has findings, staff get a low-urgency
-    handoff to check what was agreed. A repeated webhook is not audited
-    again; a handoff that cannot be opened leaves the call FLAGGED.
+    handoff to check what was agreed. The voice platform's own evaluation
+    counts too (`CallAnalysis`): a booking it found not to match what the
+    caller asked is a finding, listed with the date, time and party size
+    the caller asked for; a call in which it heard no AI disclosure is
+    logged. A repeated webhook is not audited again; a handoff that cannot
+    be opened leaves the call FLAGGED.
     """
 
     def __init__(
@@ -121,10 +129,15 @@ class AuditCallRepliesUseCase(UseCaseContract[CallAuditRequest, CallAudit]):
         values: list[UnverifiedReplyValue] = self._find_values(
             input_data, business, call, conversation, version
         )
+        to_check: list[UnverifiedReplyValue] = [
+            *values,
+            *booking_to_check(recorded, input_data.analysis, values),
+        ]
+        warn_of_missing_disclosure(recorded, input_data.analysis)
         verdict: CallGuardVerdict = CallGuardVerdict.CLEAN
         handoff_id: HandoffId | None = None
-        if values:
-            handoff_id = self._hand_off(recorded, business, conversation, values)
+        if to_check:
+            handoff_id = self._hand_off(recorded, business, conversation, to_check)
             verdict = (
                 CallGuardVerdict.FLAGGED
                 if handoff_id is None

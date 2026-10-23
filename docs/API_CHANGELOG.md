@@ -11,6 +11,18 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-24 — voice agent tuning, voice checks and the call fallback
+
+Spec: `ef38ddba58cf2843`
+
+- **Changed** `CallDocument` (the calls of a contact's data export,
+  `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`) gains
+  `analysis` (`CallAnalysis`, optional): what the voice platform's own
+  evaluation of the call found (`booking_correct`, `disclosure_said`:
+  `success`, `failure` or `unknown`) and read from it (`booking_date`,
+  `booking_time`, `party_size`, `callback_requested`).
+  Calls stored before have none; erasing a contact's data clears it.
+
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 
 Spec: `a9b957c2ee6887dd`

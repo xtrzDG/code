@@ -130,6 +130,42 @@ class TestSilentCallers:
         assert whatsapp_templates(setup) == []
 
 
+def callback_payload(tool_names: tuple[str, ...] = ()) -> dict[str, Any]:
+    """The voice platform's evaluation read that the caller wants a call back."""
+
+    payload = post_call_payload("conv_callback", tool_names=tool_names)
+    payload["data"]["analysis"] = {
+        "call_successful": "success",
+        "transcript_summary": "Wants a call back.",
+        "data_collection_results": {
+            "callback_requested": {
+                "data_collection_id": "callback_requested",
+                "value": True,
+                "rationale": "-",
+            }
+        },
+    }
+    return payload
+
+
+class TestCallbacks:
+    def test_a_callback_nobody_was_asked_for_is_a_missed_call(self) -> None:
+        setup = texting_setup()
+
+        process_call(setup, callback_payload())
+
+        [missed] = missed_calls(setup)
+        assert missed.reason is MissedCallReason.TRANSFER_UNANSWERED
+        assert missed.status is TextBackStatus.SENT
+
+    def test_a_callback_with_a_handoff_is_left_to_the_handoff(self) -> None:
+        setup = texting_setup()
+
+        process_call(setup, callback_payload(tool_names=("handoff_to_human",)))
+
+        assert missed_calls(setup) == []
+
+
 class TestTransfers:
     def test_a_transfer_nobody_answered_is_a_missed_call(self) -> None:
         setup = texting_setup()

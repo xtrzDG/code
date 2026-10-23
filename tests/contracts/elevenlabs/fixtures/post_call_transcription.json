@@ -128,8 +128,40 @@
       "cost_fiat": 0.1523
     },
     "analysis": {
-      "evaluation_criteria_results": {},
-      "data_collection_results": {},
+      "evaluation_criteria_results": {
+        "booking_correct": {
+          "criteria_id": "booking_correct",
+          "result": "success",
+          "rationale": "The agent booked a table for four on Saturday at 19:00 and read it back."
+        },
+        "disclosure_said": {
+          "criteria_id": "disclosure_said",
+          "result": "success",
+          "rationale": "The greeting says that this is the AI assistant of the restaurant."
+        }
+      },
+      "data_collection_results": {
+        "booking_date": {
+          "data_collection_id": "booking_date",
+          "value": "2026-10-03",
+          "rationale": "Saturday."
+        },
+        "booking_time": {
+          "data_collection_id": "booking_time",
+          "value": "19:00",
+          "rationale": "At seven in the evening."
+        },
+        "party_size": {
+          "data_collection_id": "party_size",
+          "value": 4,
+          "rationale": "Four people."
+        },
+        "callback_requested": {
+          "data_collection_id": "callback_requested",
+          "value": false,
+          "rationale": "No callback was asked for."
+        }
+      },
       "call_successful": "success",
       "transcript_summary": "The caller booked a table for four on Saturday at 19:00."
     },

@@ -5,9 +5,10 @@ from typing import Protocol
 
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.registry_contract import RegistryContract
-from app.schemas.dto.voice import VoiceAgentSpec
+from app.schemas.dto.voice import VoiceAgentSpec, VoiceProfile
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 
@@ -48,5 +49,14 @@ class VoiceAgentLockRegistryContract(RegistryContract, Protocol):
 
         Raises:
             ExternalServiceError: the lock was not free within `wait`.
+        """
+        raise NotImplementedError
+
+
+class VoiceProfileRegistryContract(RegistryContract, Protocol):
+    def get(self, language: LanguageTag) -> VoiceProfile:
+        """
+        The tuned voice of a language: its own profile, else its base
+        language's ("pt-BR" -> "pt"), else the multilingual default.
         """
         raise NotImplementedError

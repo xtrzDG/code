@@ -8435,10 +8435,33 @@ export interface components {
          */
         CalendarSyncProblem: "not_connected" | "needs_reconnect" | "not_found" | "access_denied" | "address_refused" | "timeout" | "unreachable" | "not_a_calendar" | "provider_error";
         /**
+         * CallAnalysis
+         * @description What the voice platform's evaluation of a finished call found, as the
+         *     agent asks it to (R16-VOICE-TUNING): whether a booking matches what the
+         *     caller asked (`booking_correct`) and whether the AI disclosure was said
+         *     (`disclosure_said`), and what it read from the conversation: the date,
+         *     time and party size of a booking asked for, and a request to be called
+         *     back. Every field is None when the platform did not report it. No
+         *     rationale text is kept: it would repeat what the caller said.
+         */
+        CallAnalysis: {
+            booking_correct?: components["schemas"]["CallEvaluationResult"] | null;
+            /** Booking Date */
+            booking_date?: string | null;
+            /** Booking Time */
+            booking_time?: string | null;
+            /** Callback Requested */
+            callback_requested?: boolean | null;
+            disclosure_said?: components["schemas"]["CallEvaluationResult"] | null;
+            /** Party Size */
+            party_size?: number | null;
+        };
+        /**
          * CallDocument
          * @description Phone call handled by the voice agent (concept table `calls`).
          */
         CallDocument: {
+            analysis?: components["schemas"]["CallAnalysis"] | null;
             /** Business Id */
             business_id: string;
             /** Conversation Id */
@@ -8475,7 +8498,7 @@ export interface components {
             recording_path?: string | null;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** Started At */
@@ -8496,6 +8519,15 @@ export interface components {
              */
             updated_at?: number;
         };
+        /**
+         * CallEvaluationResult
+         * @description What the voice platform's own evaluation of a finished call says about
+         *     one criterion (the booking matches what the caller asked, the AI
+         *     disclosure was said): SUCCESS, FAILURE, or UNKNOWN when the call gave
+         *     nothing to judge (no booking was asked for).
+         * @enum {string}
+         */
+        CallEvaluationResult: "success" | "failure" | "unknown";
         /**
          * CallForwardingCode
          * @description A ready-to-dial forwarding code.
@@ -10007,8 +10039,7 @@ export interface components {
          *     every write: the conversation needs a person (HANDOFF) or has an open
          *     request. `assigned_by` is None for an automatic assignment.
          *
-         *     Version 2: the team inbox fields (all optional, so version 1 rows read
-         *     as they are).
+         *     Version 2: the team inbox fields (optional: version 1 rows read as is).
          *     Version 3: `acquisition_source`, where the customer came from when the
          *     conversation started (a shared link's tag, an ad, the number dialled;
          *     `app/utilities/sharing/acquisition_sources.py`). Set once, never
@@ -10021,9 +10052,9 @@ export interface components {
          *     only through `ConversationReviewRepoContract.set_review`; a plain save
          *     keeps them as stored. All optional, so version 3 rows read as they are.
          *     Version 5: what the conversation was about (`summary`, at most 300
-         *     characters, written by a cheap model once it was quiet for two hours)
-         *     and when (`summarized_at`), the assistant's memory of a returning
-         *     customer. Optional, so version 4 rows read as they are.
+         *     characters, by a cheap model once it was quiet for two hours) and when
+         *     (`summarized_at`), the assistant's memory of a returning customer.
+         *     Optional, so version 4 rows read as they are.
          *     Version 6: who rated it (`rating_by`: the team, or the customer under the
          *     website chat's answers, whose `rated_by` is None). Rated version 5 rows
          *     were the team's (the upcaster says so).
@@ -13826,8 +13857,7 @@ export interface components {
          *     customer's first unanswered message to the reply being stored; None
          *     when not measured, e.g. test chats and older rows), `llm_round_count`
          *     and `is_fallback_model` (a model of the other provider answered because
-         *     the version's own failed). All optional, so version 2 rows read as they
-         *     are.
+         *     the version's own failed). All optional (version 2 rows read as is).
          *
          *     Version 4: what the reply guard did (R10). On an assistant reply:
          *     `guard_verdict` (clean, rewritten once, handed to staff; None on other
@@ -13835,8 +13865,7 @@ export interface components {
          *     `unverified_values` (values the evidence did not back, as written) and
          *     `claim_findings` (each policy or availability claim the verifier
          *     checked). On a customer message: `injection_flag`, the kind of prompt
-         *     injection it looked like (None: none). All optional, so version 3 rows
-         *     read as they are.
+         *     injection it looked like (None: none). All optional (version 3 as is).
          *
          *     Version 5: `tool_calls` may name the tool list_my_bookings (a new
          *     value; version 4 rows read as they are). Version 6: they may name the

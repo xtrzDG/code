@@ -66,7 +66,9 @@ class PostCallWebhookOrchestrator(
             )
         )
         self._steps.audit_call_replies.run(
-            CallAuditRequest(call=recorded, transcript=report.transcript)
+            CallAuditRequest(
+                call=recorded, transcript=report.transcript, analysis=report.analysis
+            )
         )
         missed_call: MissedCallDocument | None = self._register_missed_caller(
             StoredFinishedCall(report=report, call=recorded)
