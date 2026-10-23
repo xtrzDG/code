@@ -22,7 +22,8 @@ from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIO
 
 MIGRATIONS: Path = Path(__file__).resolve().parents[2] / "migrations"
 CREATED_TABLE: re.Pattern[str] = re.compile(
-    r"^select workshop\.create_document_collection\('(?P<table>[a-z_0-9]+)'\);",
+    r"^select workshop\.create_(?:document|platform)_collection"
+    r"\('(?P<table>[a-z_0-9]+)'\);",
     re.MULTILINE,
 )
 ADDED_COLUMN: re.Pattern[str] = re.compile(

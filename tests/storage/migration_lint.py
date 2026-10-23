@@ -31,7 +31,7 @@ from app.utilities.storage.sql_statements import (
 
 TABLE: str = r"(?:only\s+)?workshop\.([a-z_][a-z0-9_]*)"
 COLLECTION_PATTERN: re.Pattern[str] = re.compile(
-    r"workshop\.create_document_collection\(\s*'([a-z_][a-z0-9_]*)'\s*\)"
+    r"workshop\.create_(?:document|platform)_collection\(\s*'([a-z_][a-z0-9_]*)'\s*\)"
 )
 CREATE_TABLE_PATTERN: re.Pattern[str] = re.compile(
     rf"^create\s+(?:unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?{TABLE}"
@@ -78,7 +78,8 @@ IDEMPOTENT_PATTERNS: tuple[re.Pattern[str], ...] = (
     # changes nothing: privilege statements run again as they ran first.
     re.compile(r"^(?:grant|revoke)\s"),
     re.compile(
-        r"^select\s+workshop\.(?:add_lookup_column|create_document_collection)\("
+        r"^select\s+workshop\."
+        r"(?:add_lookup_column|create_document_collection|create_platform_collection)\("
     ),
 )
 TRANSACTION_CONTROL: re.Pattern[str] = re.compile(

@@ -105,8 +105,10 @@ from tests.storage.builders import (
 from tests.storage.platform_document_types import PLATFORM_DOCUMENT_TYPES
 from tests.storage.storage_testing import MIGRATIONS_DIRECTORY
 
+# A business's collections, and since 1200 the platform's own (no tenant
+# role may read them).
 CREATED_COLLECTION_PATTERN: re.Pattern[str] = re.compile(
-    r"workshop\.create_document_collection\('([a-z][a-z0-9_]*)'\)"
+    r"workshop\.create_(?:document|platform)_collection\('([a-z][a-z0-9_]*)'\)"
 )
 
 

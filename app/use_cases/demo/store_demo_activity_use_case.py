@@ -67,6 +67,7 @@ from app.use_cases.demo.demo_growth_store import DemoGrowthStore
 from app.use_cases.demo.demo_invoice_issuing import issue_demo_invoice_if_paid
 from app.use_cases.demo.demo_media_storing import store_demo_media
 from app.utilities.assembly.autotest_evaluation import build_verdict
+from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
 
 # The owner accepted the DPA this long before the first version went live.
 DPA_LEAD_MICROSECONDS: int = 2 * 60 * 60 * 1_000_000
@@ -196,6 +197,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
             version.published_at = plan.published_at
             version.updated_at = plan.published_at or plan.created_at
             version.voice_agent_id = plan.voice_agent_id
+            if plan.voice_agent_id is not None:  # made up: never re-synced
+                version.voice_agent_revision = VOICE_AGENT_REVISION
             version.test_score = plan.test_score
             if plan.status is AssistantVersionStatus.PUBLISHED:
                 published_id = version.id

@@ -70,6 +70,7 @@ from app.gateways.worker.periodic.refresh_exchange_rates import (
 from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
 )
+from app.gateways.worker.periodic.resync_voice_agents import RESYNC_VOICE_AGENTS_JOB
 from app.gateways.worker.periodic.retention import PURGE_EXPIRED_PERSONAL_DATA_JOB
 from app.gateways.worker.periodic.run_data_tasks import RUN_DATA_TASKS_JOB
 from app.gateways.worker.periodic.send_subprocessor_notices import (
@@ -102,6 +103,7 @@ from app.use_cases.knowledge.website_import.start_website_import_use_case import
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
+    DISCARD_CALL_RECORDING_JOB,
 )
 from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
@@ -176,6 +178,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_WIN_BACK_MESSAGES_JOB, 3_600),
         (RUN_DATA_TASKS_JOB, 300),
         (PURGE_WEBHOOK_DELIVERIES_JOB, 86_400),
+        (RESYNC_VOICE_AGENTS_JOB, 3_600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -189,6 +192,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         PROCESS_PLATFORM_BOT_UPDATE_JOB,
         PROCESS_POST_CALL_JOB,
         ARCHIVE_CALL_RECORDING_JOB,
+        DISCARD_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,
         SEND_TEXT_BACK_JOB,
         BUILD_BUSINESS_EXPORT_JOB,
@@ -202,7 +206,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         DELIVER_WEBHOOK_JOB,
         WRITE_BOOKING_SYSTEM_BOOKING_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (40, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (41, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush, the end of the waitlist's expired holds and the
     # deposits' holds and reminders.
@@ -215,9 +219,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # the end of expired support access, the purge of expired exports, the
     # waitlist's expired holds, the rebooking campaigns, the deposits' holds
     # and reminders, the seasonal pauses, the win-back messages, the
-    # post-deploy data tasks, the calendars' busy times and the purge of
-    # expired idempotency keys.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (27, 0)
+    # post-deploy data tasks, the calendars' busy times, the purge of
+    # expired idempotency keys and the voice agents' re-sync.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (28, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 
