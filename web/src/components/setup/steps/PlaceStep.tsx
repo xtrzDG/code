@@ -16,7 +16,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { ErrorState, Field, Input, LoadingRegion, Select, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import { LanguageChoice } from "../fields/LanguageChoice";
 import { StepScreen } from "../StepScreen";
@@ -57,6 +57,7 @@ export function PlaceStep({
   extra?: ReactNode;
 }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const [checked, setProblems] = useState<PlaceProblems>({});
   const problems = shownProblems ?? checked;
   const isEdit = mode === "edit";
@@ -188,7 +189,7 @@ export function PlaceStep({
                     >
                       {place.zones.map((zone) => (
                         <option key={zone.name} value={zone.name}>
-                          {timeZoneLabel(zone.name, locale)}
+                          {zoneLabel(zone.name)}
                         </option>
                       ))}
                     </Select>

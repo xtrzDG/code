@@ -5,7 +5,7 @@ import { Card, Checkbox, Field, Fieldset, Select } from "@/components/ui";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 import { capitalizeFirst } from "@/lib/format";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import { toggleLanguage } from "../../_lib/general";
 import type { GeneralChoices } from "../../_lib/useGeneralChoices";
@@ -14,6 +14,7 @@ import type { GeneralSettings } from "../../_lib/useGeneralSettings";
 /** Time zone, the customers' languages (and the default one) and the owner's language. */
 export function LanguagesTimeCard({ settings, options }: { settings: GeneralSettings; options: GeneralChoices }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const { isOwner } = useBusiness();
   const { form, disabled, update, errorText, fieldState, retry } = settings;
   const pill = (field: Parameters<typeof fieldState>[0]) => <SavePill state={fieldState(field)} onRetry={retry} />;
@@ -28,19 +29,19 @@ export function LanguagesTimeCard({ settings, options }: { settings: GeneralSett
                 <optgroup label={t("settings.general.countryTimezones")}>
                   {countryZones.map((zone) => (
                     <option key={zone.name} value={zone.name}>
-                      {timeZoneLabel(zone.name, locale)}
+                      {zoneLabel(zone.name)}
                     </option>
                   ))}
                 </optgroup>
               ) : null}
               {!countryZones.some((zone) => zone.name === form.timezone) && !otherZones.includes(form.timezone) ? (
-                <option value={form.timezone}>{timeZoneLabel(form.timezone, locale)}</option>
+                <option value={form.timezone}>{zoneLabel(form.timezone)}</option>
               ) : null}
               {otherZones.length > 0 ? (
                 <optgroup label={t("settings.general.allTimezones")}>
                   {otherZones.map((zone) => (
                     <option key={zone} value={zone}>
-                      {timeZoneLabel(zone, locale)}
+                      {zoneLabel(zone)}
                     </option>
                   ))}
                 </optgroup>

@@ -14,7 +14,7 @@ import { IconArrowRight } from "@/components/icons";
 import { Alert, Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import { SaveProblem } from "../edit/SaveProblem";
 import { SectionQuestions } from "../edit/SectionQuestions";
@@ -28,6 +28,7 @@ const SECTION = "space-y-4 rounded-2xl border border-line bg-surface/85 p-5 back
 
 export function HoursEdit({ ctx }: { ctx: StepContext }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const step = useHoursEdit(ctx);
   const currency = ctx.wizard.currency_code;
 
@@ -39,7 +40,7 @@ export function HoursEdit({ ctx }: { ctx: StepContext }) {
             <h2 id="profile-hours" className="text-lg font-semibold text-ink">
               {t("tunnelOffer.hours.hoursLabel")}
             </h2>
-            <p className="text-sm text-ink-subtle">{t("profileEdit.hours.timezone", { timezone: timeZoneLabel(ctx.wizard.timezone, locale) })}</p>
+            <p className="text-sm text-ink-subtle">{t("profileEdit.hours.timezone", { timezone: zoneLabel(ctx.wizard.timezone) })}</p>
           </div>
           {step.isHoursSuggested ? (
             <Alert
