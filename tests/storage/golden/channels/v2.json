@@ -1,0 +1,26 @@
+{
+  "business_id": "business_50ab2d71-12ac-4488-b758-16d7eab54ed2",
+  "created_at": 1790000000000000,
+  "encrypted_secret": "Sample EncryptedChannelSecret",
+  "external_id": "Sample ChannelExternalId",
+  "id": "channel_943d2763-8669-403c-b51f-6cb6a2ffb8cc",
+  "kind": "phone",
+  "last_error": "Sample ChannelErrorSummary",
+  "last_error_at": 1790000000000000,
+  "public_profile": {
+    "instagram_username": "cafe.batumi",
+    "page_username": "cafebatumi",
+    "whatsapp_number": "995599123456"
+  },
+  "schema_version": "2",
+  "status": "pending",
+  "updated_at": 1790000000000000,
+  "web_chat_appearance": {
+    "accent_color": "#7c5cff",
+    "position": "left"
+  },
+  "whatsapp_staff_template": {
+    "language_code": "en_US",
+    "name": "booking_reminder"
+  }
+}

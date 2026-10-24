@@ -1,0 +1,128 @@
+{
+  "collection": "conversation_quality_scores",
+  "document_type": "ConversationQualityScoreDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "assistant_version_id": {
+        "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "channel": {
+        "enum": [
+          "phone",
+          "whatsapp",
+          "instagram",
+          "messenger",
+          "telegram",
+          "web_chat",
+          "viber",
+          "owner_test"
+        ],
+        "type": "string"
+      },
+      "conversation_id": {
+        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "cost_micro_usd": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^conversation_quality_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "judge_model_id": {
+        "maxLength": 128,
+        "minLength": 3,
+        "pattern": "^[a-z0-9][a-z0-9.\\-:@_]*$",
+        "type": "string"
+      },
+      "judge_notes": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "judged_at": {
+        "type": "integer"
+      },
+      "language": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "score_hundredths": {
+        "maximum": 500,
+        "minimum": 100,
+        "type": "integer"
+      },
+      "scores": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "criterion": {
+              "enum": [
+                "facts_and_prices",
+                "booking_data",
+                "ai_disclosure",
+                "handoff",
+                "language"
+              ],
+              "type": "string"
+            },
+            "score": {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "criterion",
+            "score"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "conversation_id",
+      "assistant_version_id",
+      "channel",
+      "scores",
+      "score_hundredths",
+      "judge_model_id",
+      "cost_micro_usd",
+      "judged_at"
+    ],
+    "type": "object"
+  }
+}

@@ -1,0 +1,7 @@
+# Reviewed Trivy findings that CI may ignore (see SECURITY.md, "Triage").
+# One vulnerability id per line, each with a comment: why it does not
+# affect us, who reviewed it, and the date to look again. Example:
+#
+#   # libfoo in the base image: the vulnerable function is never reached
+#   # (reviewed 2026-10-02, look again by 2026-11-01).
+#   CVE-2026-00000

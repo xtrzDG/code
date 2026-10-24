@@ -1,0 +1,350 @@
+{
+  "collection": "deposit_settings",
+  "document_type": "DepositSettingsDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "default_payment_link_id": {
+        "anyOf": [
+          {
+            "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "enabled_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "hold_minutes": {
+        "default": 60,
+        "maximum": 1440,
+        "minimum": 15,
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^deposit_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_enabled": {
+        "default": false,
+        "type": "boolean"
+      },
+      "payment_links": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "added_at": {
+              "type": "integer"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "maxLength": 2048,
+                  "minLength": 12,
+                  "pattern": "^https://[^\\s/?#]+([/?#][^\\s]*)?$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "host": {
+              "type": "string"
+            },
+            "id": {
+              "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "static",
+                "template"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "preview": {
+              "type": "string"
+            },
+            "sealed_address": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "label",
+            "kind",
+            "host",
+            "preview",
+            "added_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "policies": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "policy": {
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "anyOf": [
+                    {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "currency_code": {
+                  "maxLength": 3,
+                  "minLength": 3,
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                "min_party_size": {
+                  "anyOf": [
+                    {
+                      "maximum": 10000,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "payment_link_id": {
+                  "anyOf": [
+                    {
+                      "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "percent": {
+                  "anyOf": [
+                    {
+                      "maximum": 100,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "rule": {
+                  "enum": [
+                    "fixed",
+                    "per_guest",
+                    "percent_of_value"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule",
+                "currency_code"
+              ],
+              "type": "object"
+            },
+            "resource_id": {
+              "anyOf": [
+                {
+                  "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "service_item_id": {
+              "anyOf": [
+                {
+                  "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "target": {
+              "enum": [
+                "resource",
+                "service",
+                "banquet"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "target",
+            "policy"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "refund_cutoff_hours": {
+        "default": 24,
+        "maximum": 720,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "retired_payment_links": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "link": {
+              "additionalProperties": false,
+              "properties": {
+                "added_at": {
+                  "type": "integer"
+                },
+                "address": {
+                  "anyOf": [
+                    {
+                      "maxLength": 2048,
+                      "minLength": 12,
+                      "pattern": "^https://[^\\s/?#]+([/?#][^\\s]*)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "host": {
+                  "type": "string"
+                },
+                "id": {
+                  "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "static",
+                    "template"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "preview": {
+                  "type": "string"
+                },
+                "sealed_address": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "required": [
+                "label",
+                "kind",
+                "host",
+                "preview",
+                "added_at"
+              ],
+              "type": "object"
+            },
+            "retired_at": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "link",
+            "retired_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "updated_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "id",
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

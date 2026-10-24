@@ -1,0 +1,13 @@
+{
+  "action": "view",
+  "actor_id": "user_b288c96a-e639-46ad-b4fa-764c63afbd10",
+  "business_id": "business_fd43b272-3035-4a74-a29f-96b1631dd8b5",
+  "created_at": 1790000000000000,
+  "entity": "Sample AuditEntityName",
+  "entity_id": "Sample AuditEntityReference",
+  "id": "audit_log_entry_54bed3fb-af95-47ae-bc26-d498c3c62e00",
+  "ip_address": "203.0.113.7",
+  "record_count": 1,
+  "schema_version": "4",
+  "updated_at": 1790000000000000
+}

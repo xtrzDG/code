@@ -1,0 +1,23 @@
+-- 1214_payment_retries_and_card_on_file
+--
+-- Regional payments, the card on file and dunning (R17-PAYMENTS-REGIONAL):
+-- Stripe charges owners in the EU, the US and Israel next to Flitt, a
+-- trial ends with a saved card, and a declined automatic charge is tried
+-- again on days 1, 3 and 6 of the grace period.
+--
+-- payment_retry_attempts (business collection): one row per retry of a
+--   declined automatic charge, keyed by an id derived from the unpaid
+--   invoice and the attempt (1 to 3): a worker claims a retry by
+--   inserting its row only if absent, so a retry is charged once however
+--   many workers run the hourly job. Read by those ids within the
+--   business (the billing page's "next retry"), never across businesses:
+--   the job walks the businesses and their current subscription.
+--
+-- The rows belong to one business and get the usual row-level security.
+-- The card on file (subscriptions version 5: who charges and the card's
+-- brand, last digits and expiry) and the provider references of a payment
+-- order (payment_orders version 2: the Stripe subscription and customer,
+-- the sealed Flitt card token) are optional fields of their documents and
+-- need no change here.
+
+select workshop.create_document_collection('payment_retry_attempts');

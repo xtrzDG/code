@@ -1,0 +1,51 @@
+{
+  "assistant_version_id": "assistant_version_2e354570-6652-443f-bda5-152cb928e685",
+  "average_score": 3.0,
+  "business_id": "business_955232b2-630a-47ea-b6e1-8fd110f5591b",
+  "created_at": 1790000000000000,
+  "id": "autotest_run_81218aca-d542-451b-873d-2ff9297064b6",
+  "is_full_coverage": true,
+  "is_passed": true,
+  "kinds": [
+    "booking"
+  ],
+  "languages": [
+    "ka"
+  ],
+  "pass_rate": 0.5,
+  "planned_scenario_count": 1,
+  "previous_version_status": "draft",
+  "results": [
+    {
+      "check_codes": [
+        "no_booking_created"
+      ],
+      "check_notes": [
+        "Sample AutotestCheckNote"
+      ],
+      "cost_micro_usd": 1,
+      "judge_notes": [
+        "Sample JudgeNote"
+      ],
+      "kind": "booking",
+      "language": "ka",
+      "outcome": "passed",
+      "scenario_key": "booking-happy-path",
+      "scores": [
+        {
+          "criterion": "facts_and_prices",
+          "score": 1
+        }
+      ],
+      "transcript": [
+        {
+          "author": "customer",
+          "text": "Sample MessageText"
+        }
+      ]
+    }
+  ],
+  "schema_version": "2",
+  "status": "running",
+  "updated_at": 1790000000000000
+}

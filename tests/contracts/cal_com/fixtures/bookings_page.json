@@ -1,0 +1,150 @@
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 5101,
+      "uid": "uid-accepted-0001",
+      "title": "Haircut between Nino Beridze and Ana",
+      "description": "",
+      "hosts": [
+        {
+          "id": 10,
+          "name": "Nino Beridze",
+          "email": "nino@example.com",
+          "displayEmail": "nino@example.com",
+          "username": "nino",
+          "timeZone": "Asia/Tbilisi"
+        }
+      ],
+      "status": "accepted",
+      "start": "2026-10-03T07:00:00.000Z",
+      "end": "2026-10-03T07:30:00.000Z",
+      "duration": 30,
+      "eventTypeId": 1203845,
+      "eventType": {
+        "id": 1203845,
+        "slug": "haircut"
+      },
+      "location": "Rustaveli Ave 12, Tbilisi",
+      "absentHost": false,
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T10:00:00.000Z",
+      "attendees": [
+        {
+          "name": "Ana",
+          "email": "guest@example.com",
+          "displayEmail": "guest@example.com",
+          "timeZone": "Asia/Tbilisi",
+          "language": "ru",
+          "absent": false
+        }
+      ],
+      "bookingFieldsResponses": {
+        "name": "Ana",
+        "email": "guest@example.com"
+      },
+      "metadata": {},
+      "guests": []
+    },
+    {
+      "id": 5102,
+      "uid": "uid-pending-0002",
+      "title": "Haircut between Nino Beridze and Giorgi",
+      "description": "",
+      "hosts": [
+        {
+          "id": 10,
+          "name": "Nino Beridze",
+          "email": "nino@example.com",
+          "displayEmail": "nino@example.com",
+          "username": "nino",
+          "timeZone": "Asia/Tbilisi"
+        }
+      ],
+      "status": "pending",
+      "start": "2026-10-03T07:15:00.000Z",
+      "end": "2026-10-03T08:00:00.000Z",
+      "duration": 30,
+      "eventTypeId": 1203845,
+      "eventType": {
+        "id": 1203845,
+        "slug": "haircut"
+      },
+      "location": "Rustaveli Ave 12, Tbilisi",
+      "absentHost": false,
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T10:00:00.000Z",
+      "attendees": [
+        {
+          "name": "Giorgi",
+          "email": "guest@example.com",
+          "displayEmail": "guest@example.com",
+          "timeZone": "Asia/Tbilisi",
+          "language": "ru",
+          "absent": false
+        }
+      ],
+      "bookingFieldsResponses": {
+        "name": "Giorgi",
+        "email": "guest@example.com"
+      },
+      "metadata": {},
+      "guests": []
+    },
+    {
+      "id": 5103,
+      "uid": "uid-cancelled-0003",
+      "title": "Haircut between Nino Beridze and Luka",
+      "description": "",
+      "hosts": [
+        {
+          "id": 10,
+          "name": "Nino Beridze",
+          "email": "nino@example.com",
+          "displayEmail": "nino@example.com",
+          "username": "nino",
+          "timeZone": "Asia/Tbilisi"
+        }
+      ],
+      "status": "cancelled",
+      "start": "2026-10-03T10:00:00.000Z",
+      "end": "2026-10-03T10:30:00.000Z",
+      "duration": 30,
+      "eventTypeId": 1203845,
+      "eventType": {
+        "id": 1203845,
+        "slug": "haircut"
+      },
+      "location": "Rustaveli Ave 12, Tbilisi",
+      "absentHost": false,
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T10:00:00.000Z",
+      "attendees": [
+        {
+          "name": "Luka",
+          "email": "guest@example.com",
+          "displayEmail": "guest@example.com",
+          "timeZone": "Asia/Tbilisi",
+          "language": "ru",
+          "absent": false
+        }
+      ],
+      "bookingFieldsResponses": {
+        "name": "Luka",
+        "email": "guest@example.com"
+      },
+      "metadata": {},
+      "guests": []
+    }
+  ],
+  "pagination": {
+    "totalItems": 3,
+    "remainingItems": 0,
+    "returnedItems": 3,
+    "itemsPerPage": 100,
+    "currentPage": 1,
+    "totalPages": 1,
+    "hasNextPage": false,
+    "hasPreviousPage": false
+  }
+}

@@ -1,0 +1,58 @@
+# ZAP rules of the DAST baseline (.github/workflows/zap.yml), reviewed.
+#
+# ZAP's own format (zap-baseline.py -c), one rule per line, tab separated:
+#   <rule id>	IGNORE|INFO|WARN|FAIL	(<rule name>)	<reviewed reason, for IGNORE>
+#   <rule id>	OUTOFSCOPE	<URL pattern>    (its reason in the comment lines right above)
+# ZAP keys rules by id only: a rule for one variant of a rule, by its alert
+# reference ("10055-6"), follows "#!", which ZAP skips as a comment and the
+# gate reads (scripts/zap_findings.py).
+#
+# scripts/zap_gate.py decides the job, not ZAP's own WARN output: every
+# Medium or High finding fails unless it is IGNOREd here or all its
+# addresses are out of scope by a reviewed pattern, and any finding of a
+# FAIL rule fails at any risk (SECURITY.md, "Dynamic scan").
+#
+# Change this file only with a reason a reviewer can check against the code,
+# and name the review in the commit. The scans run over plain http with
+# COOKIE_SECURE=false (docker compose), so the https-only rules (HSTS, the
+# Secure cookie flag) are left to the header tests
+# (tests/security/test_api_security_headers.py, web/e2e/security.spec.ts).
+
+# The headers every answer of the cabinet (web/next.config.ts, web/src/proxy.ts)
+# and of the API (app/gateways/http/middleware/security_headers_middleware.py)
+# promise: one missing anywhere fails, whatever ZAP's risk.
+10020	FAIL	(Missing Anti-clickjacking Header)
+10021	FAIL	(X-Content-Type-Options Header Missing)
+10038	FAIL	(Content Security Policy (CSP) Header Not Set)
+10036	FAIL	(Server Leaks Version Information via "Server" HTTP Response Header Field)
+10037	FAIL	(Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s))
+90022	FAIL	(Application Error Disclosure)
+
+# CSP variants: only the style-src one is accepted. A script-src
+# 'unsafe-inline', a wildcard or a missing directive (10055 otherwise) fails.
+#!10055-6	IGNORE	(CSP: style-src unsafe-inline)	Reviewed 2026-10-23: React renders style attributes, which a style nonce would block, so styles keep 'unsafe-inline' (web/src/server/contentSecurityPolicy.ts; the widget demo page likewise). Scripts run only with the page's nonce and 'strict-dynamic'.
+
+# Reviewed 2026-10-23: the website widget is embedded on any business's own
+# site, so /widget.js and the widget's routes answer every origin
+# (Access-Control-Allow-Origin: *, app/gateways/http/widget_cors_middleware.py).
+# They take no cookies and no bearer token, only the visitor's own session
+# key, so no credentialed read crosses origins.
+10098	OUTOFSCOPE	^https?://[^/]+/(widget\.js|v1/widget/)
+
+# Reviewed 2026-10-23: the embed code (/widget.js's own example and the
+# owner's snippet route) loads the widget without an integrity hash on
+# purpose: the script is evergreen, a fixed hash would break every installed
+# widget at the next release. Its origin is the platform's own API.
+90003	OUTOFSCOPE	^https?://[^/]+/(widget\.js|widget/demo|v1/businesses/[^/]+/channels/)
+
+# Reviewed 2026-10-23: the owner's own business routes return the business's
+# customers' phone numbers by design (bearer token, business scope, row-level
+# security). The rule reads a seeded number such as 4915112345678
+# (+49 151 1234 5678) as a card number. Cards never reach the platform:
+# payments run on the payment providers' hosted pages.
+10062	OUTOFSCOPE	^https?://[^/]+/v1/businesses/[^/]+/
+
+# Informational: listed in the job summary, never failing.
+10027	INFO	(Information Disclosure - Suspicious Comments)
+10109	INFO	(Modern Web Application)
+10112	INFO	(Session Management Response Identified)

@@ -1,0 +1,98 @@
+/** `tunnelOffer.*`: what the business offers, its hours and bookings, in Russian. */
+
+import type { Translation } from "../../../translate";
+import type { tunnelOfferEn } from "./tunnelOffer.en";
+
+export const tunnelOfferRu: Translation<typeof tunnelOfferEn> = {
+  offer: {
+    title: "Что вы предлагаете?",
+    text: "Добавьте, что вы продаёте, с ценами. Помощник называет только те цены, что есть здесь.",
+    sourcesLabel: "Как добавить",
+    sources: {
+      type: "Вписать самому",
+      website: "С вашего сайта",
+      menu: "С фото меню или файла",
+    },
+    tableLabel: "Ваше предложение",
+    name: "Название",
+    namePlaceholder: "Что клиенты могут заказать или забронировать",
+    price: "Цена, {currency}",
+    pricePlaceholder: "0",
+    suggestion: "Пример",
+    suggestionsHint: "Примеры сохраняются, только когда вы укажете цену. Удалите то, чего у вас нет.",
+    addRow: "Добавить строку",
+    removeRow: "Удалить «{name}»",
+    removeEmpty: "Удалить эту строку",
+    rowMenu: "Ещё для строки «{name}»",
+    rowSaving: "Сохраняем…",
+    rowSaved: "Сохранено",
+    rowFailed: "Не сохранено",
+    priced: {
+      one: "{count} позиция с ценой",
+      few: "{count} позиции с ценой",
+      many: "{count} позиций с ценой",
+      other: "{count} позиции с ценой",
+    },
+    importedTitle: {
+      one: "Добавлена {count} позиция из импорта",
+      few: "Добавлены {count} позиции из импорта",
+      many: "Добавлено {count} позиций из импорта",
+      other: "Добавлено {count} позиции из импорта",
+    },
+    importHint: "Мы прочитаем его и покажем, что нашли. Ничего не сохранится, пока вы не проверите.",
+  },
+  hours: {
+    title: "Когда вы работаете?",
+    text: "Мы предложили обычные часы для вашего вида бизнеса. Измените то, что у вас иначе.",
+    hoursLabel: "Часы работы",
+    bookingsTitle: "Как устроены брони?",
+    slot: "Визит длится",
+    partySize: "Больше всего человек в одной брони",
+    notice: "Бронировать не позже чем",
+    noticeNone: "Можно в любой момент",
+    cancellation: "Правило отмены",
+    cancellationHint: "Клиенты услышат его, когда бронируют или отменяют.",
+    resourceTitle: "Что бронируют клиенты",
+    resourceHint: "Добавить ещё можно позже: Помощник → Знания.",
+    resourceName: "Название",
+    resourceCount: "Сколько их",
+    resourceCapacity: "Человек в каждом",
+    minutes: {
+      one: "{count} минута",
+      few: "{count} минуты",
+      many: "{count} минут",
+      other: "{count} минуты",
+    },
+    hoursCount: {
+      one: "{count} час",
+      few: "{count} часа",
+      many: "{count} часов",
+      other: "{count} часа",
+    },
+    noticeHours: {
+      one: "за {count} час",
+      few: "за {count} часа",
+      many: "за {count} часов",
+      other: "за {count} часа",
+    },
+    noticeDays: {
+      one: "за {count} день",
+      few: "за {count} дня",
+      many: "за {count} дней",
+      other: "за {count} дня",
+    },
+    noticeMinutes: {
+      one: "за {count} минуту",
+      few: "за {count} минуты",
+      many: "за {count} минут",
+      other: "за {count} минуты",
+    },
+    errors: {
+      noHours: "Отметьте хотя бы один рабочий день.",
+      partySize: "Напишите целое число от 1.",
+      resourceName: "Назовите, что бронируют клиенты.",
+      capacity: "Напишите целое число от 1.",
+      unitCount: "Напишите целое число от 1.",
+    },
+  },
+};

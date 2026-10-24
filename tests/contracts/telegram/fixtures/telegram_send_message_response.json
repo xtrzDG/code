@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "result": {
+    "message_id": 205,
+    "from": {
+      "id": 7012345678,
+      "is_bot": true,
+      "first_name": "Funicular VR",
+      "username": "funicular_vr_bot"
+    },
+    "chat": {
+      "id": 555000111,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "type": "private"
+    },
+    "date": 1750276210,
+    "text": "Здравствуйте! На субботу есть столик в 19:00.",
+    "link_preview_options": {
+      "is_disabled": true
+    }
+  }
+}

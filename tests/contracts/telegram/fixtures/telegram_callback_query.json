@@ -1,0 +1,52 @@
+{
+  "update_id": 900105,
+  "callback_query": {
+    "id": "4382bfdwdsb323b2d9",
+    "from": {
+      "id": 555000111,
+      "is_bot": false,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "language_code": "ru"
+    },
+    "message": {
+      "message_id": 204,
+      "from": {
+        "id": 7012345678,
+        "is_bot": true,
+        "first_name": "Funicular VR",
+        "username": "funicular_vr_bot"
+      },
+      "chat": {
+        "id": 555000111,
+        "first_name": "Anna",
+        "last_name": "Kapanadze",
+        "username": "anna_k",
+        "type": "private"
+      },
+      "date": 1750276300,
+      "text": "We have a table for 2 on Saturday.\n\nWhich time suits you?",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "18:00",
+              "callback_data": "18:00"
+            },
+            {
+              "text": "19:30",
+              "callback_data": "19:30"
+            },
+            {
+              "text": "21:00",
+              "callback_data": "21:00"
+            }
+          ]
+        ]
+      }
+    },
+    "chat_instance": "-7392847569283746",
+    "data": "19:30"
+  }
+}

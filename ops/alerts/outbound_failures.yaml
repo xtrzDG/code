@@ -1,0 +1,12 @@
+# The outbox gives up: of the messages queued in the last hour that
+# settled (delivered or dead), more than 10% died, once at least 20 did.
+code: outbound_failures
+severity: sev2
+summary: Replies and staff notifications fail for good.
+measure: dead / (delivered + dead) outbound messages created in the window, in percent
+threshold: 10
+unit: percent
+window_minutes: 60
+volume_floor: 20
+source: outbound_messages (doc_created_at), migration 1020
+runbook: docs/operations/runbooks/delivery-failures.md

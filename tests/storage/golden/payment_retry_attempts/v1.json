@@ -1,0 +1,18 @@
+{
+  "amount_minor": 1500,
+  "attempt": 1,
+  "attempted_at": 1790000000000000,
+  "business_id": "business_d815aef1-e000-4976-b269-cee2b0dd2b40",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "due_at": 1790000000000000,
+  "failure_reason": "Sample PaymentFailureReason",
+  "id": "payment_retry_325ea63d-ec9e-59a2-b19a-8c48305fb6d1",
+  "invoice_id": "invoice_f88da9e1-f70c-4248-9713-171e9b81d0a4",
+  "outcome": "claimed",
+  "payment_reference": "Sample PaymentProviderReference",
+  "provider": "flitt",
+  "schema_version": "1",
+  "subscription_id": "subscription_245775f6-fb0f-42e8-9c18-2dfb066bbb23",
+  "updated_at": 1790000000000000
+}

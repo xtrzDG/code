@@ -22,6 +22,33 @@ class NicheKey(StrEnum):
     B2B_SUPPLY = "b2b_supply"
 
 
+class ExampleExchangeKind(StrEnum):
+    """
+    What a short example exchange of a niche shows the model.
+
+    BOOKING_CONFIRMATION is shown only to versions that book directly;
+    REQUEST_CONFIRMATION (an order or request taken with create_lead) to
+    niches that take requests instead.
+    """
+
+    BOOKING_CONFIRMATION = "booking_confirmation"
+    REQUEST_CONFIRMATION = "request_confirmation"
+    PRICE_NOT_FOUND = "price_not_found"
+    HANDOFF = "handoff"
+
+
+class BookingScenarioVariant(StrEnum):
+    """
+    A niche's own booking autotest beyond the plain booking: booking a
+    service with a master the customer names, or a room type for several
+    nights. Planned as booking scenarios (kind BOOKING) from the business's
+    own services and rooms.
+    """
+
+    SPECIFIC_PERFORMER = "specific_performer"
+    ROOM_TYPE_STAY = "room_type_stay"
+
+
 class LaunchWave(StrEnum):
     """Go-to-market priority of a niche (A first, C last)."""
 
@@ -30,24 +57,8 @@ class LaunchWave(StrEnum):
     C = "c"
 
 
-class BookableResourceKind(StrEnum):
-    """What a niche books for a customer."""
-
-    TABLE = "table"
-    ROOM = "room"
-    TIME_SLOT = "time_slot"
-    SPECIALIST = "specialist"
-    TRIAL_CLASS = "trial_class"
-    VEHICLE = "vehicle"
-    TOUR = "tour"
-    VENUE_DATE = "venue_date"
-    VIEWING = "viewing"
-    SERVICE_VISIT = "service_visit"
-    ORDER = "order"
-
-
 class QuestionAnswerType(StrEnum):
-    """Input shape of one questionnaire question."""
+    """Input shape of one niche-specific profile question."""
 
     SHORT_TEXT = "short_text"
     LONG_TEXT = "long_text"
@@ -59,13 +70,12 @@ class QuestionAnswerType(StrEnum):
     PHONE_NUMBER = "phone_number"
 
 
-class QuestionnaireSection(StrEnum):
-    """Questionnaire section a question belongs to."""
+class ProfileWizardStep(StrEnum):
+    """The six steps of the profile wizard from the concept (section 3)."""
 
-    BASICS = "basics"
-    HOURS = "hours"
-    OFFERING = "offering"
+    NICHE_AND_LANGUAGES = "niche_and_languages"
+    CONTACTS_AND_HOURS = "contacts_and_hours"
+    OFFER = "offer"
     BOOKING_RULES = "booking_rules"
-    FAQ = "faq"
-    HANDOFF = "handoff"
+    FAQ_AND_HANDOFF = "faq_and_handoff"
     CHANNELS = "channels"

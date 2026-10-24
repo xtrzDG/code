@@ -1,0 +1,26 @@
+-- 1212_meta_connection_states
+--
+-- Meta's self-serve connection (R15-META-SIGNUP-NUMBERS): WhatsApp
+-- Embedded Signup and the page picker of Messenger and Instagram.
+--
+-- meta_connection_states (business collection): one row per Facebook
+--   sign-in an owner started on the Channels page, keyed by the hash of
+--   its one-time state (the state itself is never stored), with the owner,
+--   the purpose (whatsapp or pages) and its end fifteen minutes later.
+--   Meta's code is exchanged once (the row is marked consumed first); the
+--   page picker keeps the owner's short-lived token, encrypted, until a
+--   page is connected. Read by its key within the business that started
+--   it; a business's ended rows are deleted when its owner starts the
+--   next sign-in (read by business_id, the table's own column), and the
+--   daily purge deletes every ended row across businesses, the owner's
+--   kept Facebook token with it (indexed lookup column expires_at).
+--
+-- The rows belong to one business and get the usual row-level security.
+-- The channel's new optional fields (the WhatsApp business account, the
+-- registration PIN, Instagram comment-to-DM) live in the channels
+-- document and need no change here.
+
+select workshop.create_document_collection('meta_connection_states');
+select workshop.add_lookup_column('meta_connection_states', 'expires_at', 'bigint');
+create index if not exists meta_connection_states_doc_expires_at_idx
+    on workshop.meta_connection_states (doc_expires_at);

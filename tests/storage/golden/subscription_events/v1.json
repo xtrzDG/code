@@ -1,0 +1,19 @@
+{
+  "actor_id": "user_cb82c92e-0f3b-483a-adcf-c24db9eedffe",
+  "business_id": "business_e5ef99a6-9ba3-4143-b00a-13845a080a13",
+  "cancellation_reason": "too_expensive",
+  "created_at": 1790000000000000,
+  "details": "We close for the winter, back in May.",
+  "id": "subscription_event_bf16625d-baad-4dc9-8daa-ba1a708f8d1e",
+  "kind": "cancelled",
+  "occurred_at": 1790000000000000,
+  "offer_kind": "pause",
+  "pause_months": 1,
+  "pause_starts_at": 1790000000000000,
+  "pause_until": 1790000000000000,
+  "recipient_count": 1,
+  "schema_version": "1",
+  "subscription_id": "subscription_c6c1a88a-3087-4c2d-aff5-e9a4f62053ac",
+  "updated_at": 1790000000000000,
+  "win_back_stage": "day_14"
+}

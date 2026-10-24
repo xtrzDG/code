@@ -9,12 +9,10 @@ from app.schemas.constants.localization import (
     LocalNumberProvisioning,
     OtpDeliveryChannel,
     PhoneNumberKind,
+    RecordingConsentRule,
     TextDirection,
 )
-from app.schemas.typings.localization.booleans import (
-    IsMobilePhoneNumber,
-    RequiresCallRecordingNotice,
-)
+from app.schemas.typings.localization.booleans import IsMobilePhoneNumber
 from app.schemas.typings.localization.constrained_integers import CountryCallingCode
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -62,7 +60,7 @@ class CountryProfile(ImmutableDTO):
     Everything that changes when a business is in another country.
 
     Built for every country from phonenumbers and CLDR data, then refined by
-    curated overrides.
+    curated overrides (emergency numbers, launch languages, recording rules).
     """
 
     country_code: CountryCode
@@ -81,7 +79,7 @@ class CountryProfile(ImmutableDTO):
     onboarding_status: CountryOnboardingStatus
     otp_delivery_channels: list[OtpDeliveryChannel]
     local_number_provisioning: LocalNumberProvisioning
-    requires_call_recording_notice: RequiresCallRecordingNotice = True
+    recording_consent_rule: RecordingConsentRule = RecordingConsentRule.NOTICE
 
 
 class LanguageProfile(ImmutableDTO):

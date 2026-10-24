@@ -1,0 +1,56 @@
+  // The stylesheet of photos, voice messages and the thumbs (applied after
+  // CSS, with the same colour tokens).
+  var MEDIA_CSS = [
+    // The paperclip and the microphone beside the input.
+    ".aw-tool{border:0;background:transparent;color:var(--aw-muted);width:42px;height:42px;",
+    "border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;",
+    "padding:0;flex:none;touch-action:none;-webkit-user-select:none;user-select:none;",
+    "-webkit-touch-callout:none;}",
+    ".aw-tool:hover{color:var(--aw-fg);background:var(--aw-bubble);}",
+    ".aw-tool[hidden]{display:none;}",
+    ".aw-tool:disabled{opacity:.45;cursor:default;}",
+    ".aw-tool svg,.aw-file svg,.aw-rate svg,.aw-remove svg{width:20px;height:20px;fill:none;",
+    "stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;}",
+    ".aw-mic.aw-recording{color:var(--aw-on-accent);background:var(--aw-accent);}",
+    // What the next message carries, above the input.
+    ".aw-tray{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px 0;",
+    "flex:none;background:var(--aw-bg);border-top:1px solid var(--aw-line);}",
+    ".aw-tray[hidden]{display:none;}",
+    ".aw-tray+.aw-composer{border-top:0;}",
+    ".aw-tray-item{position:relative;display:flex;align-items:center;gap:6px;height:56px;",
+    "min-width:56px;border:1px solid var(--aw-line);border-radius:12px;background:var(--aw-bubble);",
+    "padding:0 10px;font-size:13px;color:var(--aw-fg);}",
+    ".aw-tray-item img{width:56px;height:56px;object-fit:cover;border-radius:12px;",
+    "margin-inline:-11px;}",
+    ".aw-tray-item[aria-busy=true]{opacity:.55;}",
+    ".aw-remove{position:absolute;top:-8px;inset-inline-end:-8px;width:24px;height:24px;",
+    "border:2px solid var(--aw-bg);border-radius:50%;background:var(--aw-fg);color:var(--aw-bg);",
+    "cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}",
+    ".aw-remove svg{width:12px;height:12px;stroke-width:3;}",
+    ".aw-recorder{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--aw-fg);",
+    "min-height:32px;}",
+    ".aw-recorder::before{content:'';width:10px;height:10px;border-radius:50%;flex:none;",
+    "background:var(--aw-badge);animation:aw-blink 1.2s infinite ease-in-out;}",
+    ".aw-media-error{flex:1 1 100%;margin:0;font-size:12.5px;color:var(--aw-danger);}",
+    ".aw-media-error:empty{display:none;}",
+    // Photos and voice messages in the conversation.
+    ".aw-files{display:flex;flex-wrap:wrap;gap:6px;}",
+    ".aw-files+div{margin-top:6px;}",
+    ".aw-message>div:empty{display:none;}",
+    ".aw-thumb{display:block;width:140px;max-width:100%;height:140px;object-fit:cover;",
+    "border-radius:10px;background:var(--aw-line);}",
+    ".aw-file{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;}",
+    // The thumbs under an answer, and what went wrong.
+    ".aw-rating{align-self:flex-start;display:flex;flex-wrap:wrap;align-items:center;gap:6px;",
+    "max-width:92%;font-size:13px;color:var(--aw-muted);}",
+    ".aw-rating-text{margin:0;margin-inline-end:2px;}",
+    ".aw-rate{border:1px solid var(--aw-line-strong);background:var(--aw-bg);color:var(--aw-fg);",
+    "border-radius:999px;width:40px;height:32px;cursor:pointer;display:flex;align-items:center;",
+    "justify-content:center;padding:0;}",
+    ".aw-rate:hover{background:var(--aw-bubble);}",
+    ".aw-rate svg{width:18px;height:18px;}",
+    ".aw-rate-bad svg{transform:rotate(180deg);}",
+    ".aw-rating .aw-starter{font-size:13px;}",
+    "@media (prefers-reduced-motion:reduce){.aw-recorder::before{animation:none;}}"
+  ].join("");
+

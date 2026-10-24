@@ -1,0 +1,54 @@
+{
+  "$comment": "Bot API error answers (core.telegram.org/bots/api#making-requests, #responseparameters) and the application error each must become.",
+  "cases": [
+    {
+      "status": 403,
+      "expected": "ProviderRejectedMessageError",
+      "body": {
+        "ok": false,
+        "error_code": 403,
+        "description": "Forbidden: bot was blocked by the user"
+      },
+      "$comment": "A customer who blocked the bot refuses this message; the bot token itself still works."
+    },
+    {
+      "status": 401,
+      "expected": "ChannelCredentialRejectedError",
+      "body": {
+        "ok": false,
+        "error_code": 401,
+        "description": "Unauthorized"
+      }
+    },
+    {
+      "status": 429,
+      "expected": "ProviderRateLimitedError",
+      "body": {
+        "ok": false,
+        "error_code": 429,
+        "description": "Too Many Requests: retry after 7",
+        "parameters": {
+          "retry_after": 7
+        }
+      }
+    },
+    {
+      "status": 400,
+      "expected": "ProviderRejectedMessageError",
+      "body": {
+        "ok": false,
+        "error_code": 400,
+        "description": "Bad Request: chat not found"
+      }
+    },
+    {
+      "status": 502,
+      "expected": "ExternalServiceError",
+      "body": {
+        "ok": false,
+        "error_code": 502,
+        "description": "Bad Gateway"
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+/** `inboxCard.*` texts of a conversation in the team inbox, in Russian. */
+
+import type { Translation } from "../../../translate";
+import type { inboxCardEn } from "./inboxCard.en";
+
+export const inboxCardRu: Translation<typeof inboxCardEn> = {
+  back: "Назад во входящие",
+  openDetails: "Подробности",
+  openDetailsOf: "Подробности разговора с клиентом {name}",
+  openNotes: "Заметки",
+  openNotesCount: {
+    one: "Заметки ({count})",
+    few: "Заметки ({count})",
+    many: "Заметки ({count})",
+    other: "Заметки ({count})",
+  },
+  panelLabel: "О разговоре",
+  panelTabs: "Панель",
+  messageContext: {
+    story_reply: "Ответ на вашу историю",
+    story_mention: "Отметка в истории клиента",
+  },
+  offeredChoices: "Предложенные варианты",
+  actions: {
+    label: "Быстрые действия",
+    resolve: "Решено",
+    resolveHint: "Помощник снова отвечает этому клиенту",
+    call: "Позвонить",
+    callLabel: "Позвонить на {phone}",
+    book: "Забронировать",
+  },
+  work: {
+    needsPerson: "Нужен человек",
+    request: "Заявка",
+    requestStatus: "Статус заявки",
+    since: "с {time}",
+  },
+  details: {
+    customer: "Клиент",
+    channel: "Канал",
+    language: "Язык",
+    started: "Начат",
+    lastMessage: "Последнее сообщение",
+  },
+  technical: {
+    title: "Технические подробности",
+    hint: "Что стоит за ответами: обновление помощника, которое их дало, и его точные запросы к вашим данным.",
+    tokens: "Токены",
+    cost: "Стоимость ИИ",
+    version: "Обновление помощника",
+    message: "Технические подробности сообщения",
+  },
+  notes: {
+    title: "Заметки",
+    hint: "Это видит только ваша команда",
+    description: "Заметки остаются внутри команды: ни клиент, ни помощник их не видят.",
+    placeholder: "Что пообещали, кто перезвонит, что важно помнить…",
+    add: "Добавить заметку",
+    adding: "Сохраняем…",
+    added: "Заметка сохранена. Её видит только ваша команда.",
+    unknownAuthor: "Бывший участник команды",
+    delete: "Удалить заметку",
+    confirmDelete: {
+      title: "Удалить заметку?",
+      description: "Она пропадёт у всей команды.",
+      confirm: "Удалить",
+    },
+    deleted: "Заметка удалена",
+    empty: "Заметок пока нет. Заметка поможет следующему: что пообещали, кто перезвонит.",
+    loading: "Загружаем заметки…",
+    length: "{count} / {max}",
+  },
+  quickReplies: {
+    open: "Быстрые ответы",
+    hint: "Наберите / для быстрых ответов",
+    listLabel: "Быстрые ответы",
+    loading: "Загружаем быстрые ответы…",
+    empty: "Быстрых ответов пока нет.",
+    emptyOwner: "Создайте ответы, которые вы часто отправляете, в разделе «Настройки → Быстрые ответы».",
+    manage: "Настроить быстрые ответы",
+    noMatch: "Нет быстрого ответа «/{query}».",
+    missing: "Заполните перед отправкой:",
+    fillLabel: "Значение: {variable}",
+    fill: "Подставить",
+    placeholdersLeft: "Перед отправкой заполните части в фигурных скобках: {variables}.",
+    variables: {
+      name: "имя клиента",
+      booking_time: "время записи",
+      business_name: "название бизнеса",
+    },
+  },
+  composer: {
+    placeholder: "Напишите клиенту…",
+    sendLabel: "Отправить",
+  },
+  request: {
+    updated: "Заявка: {status}",
+  },
+  resolveConfirm: {
+    title: "Отметить как решённое?",
+    description: "{name}: помощник снова начнёт отвечать этому клиенту.",
+    confirm: "Решено",
+  },
+  resolved: "Отмечено как решённое. Помощник снова отвечает этому клиенту.",
+  reopened: "Передача снова открыта. Помощник молчит, пока её не решат.",
+};

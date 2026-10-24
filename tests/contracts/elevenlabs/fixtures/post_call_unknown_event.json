@@ -1,0 +1,9 @@
+{
+  "type": "post_call_summary",
+  "event_timestamp": 1790855200,
+  "data": {
+    "agent_id": "agent_7101k6contract0000",
+    "conversation_id": "conv_8401k6contract0001",
+    "summary": "A hypothetical event type ElevenLabs may add later."
+  }
+}

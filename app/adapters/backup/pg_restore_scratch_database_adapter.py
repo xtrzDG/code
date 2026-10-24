@@ -1,0 +1,241 @@
+import secrets
+from collections.abc import Generator, Sequence
+from contextlib import contextmanager
+from typing import LiteralString
+
+import psycopg
+from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from psycopg.rows import TupleRow
+
+from app.adapters.backup.database_facts_reader import (
+    APPLICATION_SCHEMA,
+    PLATFORM_GROUP,
+    TENANT_GROUP,
+    bypass_row_security,
+    count_own_rows,
+    probe_isolation,
+    read_database_facts,
+    uses_role_policies,
+)
+from app.adapters.backup.deletion_ledger_application import apply_deletion_ledger
+from app.adapters.backup.postgres_programs import (
+    locate_program,
+    program_connection,
+)
+from app.adapters.backup.restore_script import restore_through_script
+from app.contracts.backups import ScratchDatabaseAdapterContract
+from app.schemas.dto.backups import (
+    DatabaseFacts,
+    DeletionLedgerApplication,
+    IsolationProbe,
+    RestoredDatabase,
+)
+from app.schemas.exceptions.backup_errors import BackupToolError
+from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
+from app.schemas.typings.backups.constrained_strings import ScratchDatabaseName
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.platform.strings import (
+    DatabaseUrl,
+    LocalDirectoryPath,
+    LocalFilePath,
+)
+
+APPLICATION_NAME: str = "assistant-workshop-restore-drill"
+PRIVILEGED_ROLE_SQL: LiteralString = (
+    "select rolsuper or rolbypassrls from pg_roles where rolname = current_user"
+)
+ROLE_EXISTS_SQL: LiteralString = "select 1 from pg_roles where rolname = %s"
+
+type Connection = psycopg.Connection[TupleRow]
+
+
+class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
+    """
+    Restores an archive into a new database of a throwaway server
+    (RESTORE_CHECK_DATABASE_URL names the server and a role allowed to
+    create databases), never into a database the platform uses.
+
+    Its SQL script (`pg_restore --no-owner --no-acl`, without owners or
+    grants: the drill's roles differ from production's) runs through
+    `psql` in one transaction that stops at the first error, so a newer
+    pg_restore also loads into an older server (restore_script). The
+    server gets the group roles of migration 1200 first (the restored
+    policies name them; creating them needs CREATEROLE once). The restored
+    database is counted as the restoring role, then probed as the tenant
+    pool's role would see it: a throwaway NOLOGIN member of
+    workshop_tenant with the old bypass switch on under the 1200 policies;
+    before them the restoring role itself, or a throwaway role when the
+    restoring role is a superuser or has BYPASSRLS (which row-level
+    security never binds). Then the deletion ledger is applied (the
+    restoring role sees every row): the businesses it names lose their rows
+    again (`deletion_ledger_application`). The scratch database and the
+    probe role are dropped afterwards unless the database is kept.
+    """
+
+    def __init__(
+        self,
+        server_url: DatabaseUrl,
+        bin_directory: LocalDirectoryPath | None = None,
+    ) -> None:
+        self._server_url: DatabaseUrl = server_url
+        self._bin_directory: LocalDirectoryPath | None = bin_directory
+
+    def restore_and_inspect(
+        self,
+        archive: LocalFilePath,
+        is_kept: IsScratchDatabaseKept,
+        deleted_business_ids: Sequence[BusinessId] = (),
+    ) -> RestoredDatabase:
+        pg_restore: str = locate_program("pg_restore", self._bin_directory)
+        psql: str = locate_program("psql", self._bin_directory)
+        name = ScratchDatabaseName(f"restore_drill_{secrets.token_hex(6)}")
+        server_version: int = self._create_database(name)
+        try:
+            restore_through_script(
+                pg_restore,
+                psql,
+                archive,
+                program_connection(self._server_url, name),
+                server_version,
+            )
+            facts, probes = self._inspect(name)
+            ledger: DeletionLedgerApplication = self._apply_ledger(
+                name, deleted_business_ids
+            )
+        finally:
+            if not is_kept:
+                self._run_on_server(
+                    sql.SQL("drop database if exists {} with (force)").format(
+                        sql.Identifier(str(name))
+                    )
+                )
+
+        return RestoredDatabase(
+            scratch_database=name,
+            facts=facts,
+            isolation_probes=probes,
+            ledger=ledger,
+        )
+
+    def _inspect(
+        self, name: ScratchDatabaseName
+    ) -> tuple[DatabaseFacts, list[IsolationProbe]]:
+        with self._connect(str(name)) as connection:
+            bypass_row_security(connection, True)
+            facts: DatabaseFacts = read_database_facts(connection)
+            probes: list[IsolationProbe] = []
+            if facts.secured_tables:
+                has_role_policies: bool = uses_role_policies(connection)
+                business_id, expected = count_own_rows(connection, facts.secured_tables)
+                with bound_role(connection, has_role_policies):
+                    probes = probe_isolation(
+                        connection, business_id, expected, has_role_policies
+                    )
+
+        return facts, probes
+
+    def _apply_ledger(
+        self, name: ScratchDatabaseName, deleted_business_ids: Sequence[BusinessId]
+    ) -> DeletionLedgerApplication:
+        """After the counts: the deleted businesses lose their rows again."""
+
+        with self._connect(str(name)) as connection:
+            bypass_row_security(connection, True)
+            return apply_deletion_ledger(connection, deleted_business_ids)
+
+    def _create_database(self, name: ScratchDatabaseName) -> int:
+        """Create the scratch database; the server's `server_version_num`."""
+
+        with self._connect(None) as connection:
+            ensure_role_groups(connection)
+            connection.execute(
+                sql.SQL("create database {} template template0").format(
+                    sql.Identifier(str(name))
+                )
+            )
+            return connection.info.server_version
+
+    def _run_on_server(self, statement: sql.Composed) -> None:
+        with self._connect(None) as connection:
+            connection.execute(statement)
+
+    @contextmanager
+    def _connect(self, database_name: str | None) -> Generator[Connection]:
+        parameters = dict(conninfo_to_dict(str(self._server_url)))
+        if database_name is not None:
+            parameters["dbname"] = database_name
+        try:
+            connection = psycopg.connect(
+                make_conninfo("", **parameters),
+                autocommit=True,
+                application_name=APPLICATION_NAME,
+            )
+        except psycopg.Error as error:
+            raise BackupToolError(
+                f"The restore drill's Postgres server could not be reached "
+                f"({type(error).__name__})."
+            ) from error
+
+        try:
+            with connection:
+                yield connection
+        except psycopg.Error as error:
+            raise BackupToolError(
+                f"The restore drill's database failed ({type(error).__name__}: "
+                f"{error})."
+            ) from error
+
+
+def ensure_role_groups(connection: Connection) -> None:
+    """The group roles of migration 1200 on the drill's server (once)."""
+
+    for group in (TENANT_GROUP, PLATFORM_GROUP):
+        if connection.execute(ROLE_EXISTS_SQL, [group]).fetchone() is None:
+            connection.execute(
+                sql.SQL("create role {} nologin nosuperuser nobypassrls").format(
+                    sql.Identifier(group)
+                )
+            )
+
+
+@contextmanager
+def bound_role(connection: Connection, has_role_policies: bool) -> Generator[None]:
+    """
+    Make the session the tenant pool's kind of role. Under the 1200
+    policies: a throwaway NOLOGIN member of workshop_tenant. Before them:
+    the current role, or a throwaway NOLOGIN role when the current one
+    skips every policy (superuser or BYPASSRLS).
+    """
+
+    row = connection.execute(PRIVILEGED_ROLE_SQL).fetchone()
+    if not has_role_policies and (row is None or not row[0]):
+        yield
+        return
+
+    role = sql.Identifier(f"restore_drill_probe_{secrets.token_hex(6)}")
+    schema = sql.Identifier(APPLICATION_SCHEMA)
+    connection.execute(
+        sql.SQL("create role {} nologin nosuperuser nobypassrls").format(role)
+    )
+    try:
+        if has_role_policies:
+            connection.execute(
+                sql.SQL("grant {} to {}").format(sql.Identifier(TENANT_GROUP), role)
+            )
+        connection.execute(
+            sql.SQL("grant usage on schema {} to {}").format(schema, role)
+        )
+        connection.execute(
+            sql.SQL("grant select on all tables in schema {} to {}").format(
+                schema, role
+            )
+        )
+        connection.execute(sql.SQL("set role {}").format(role))
+        try:
+            yield
+        finally:
+            connection.execute("reset role")
+    finally:
+        connection.execute(sql.SQL("drop owned by {}").format(role))
+        connection.execute(sql.SQL("drop role {}").format(role))

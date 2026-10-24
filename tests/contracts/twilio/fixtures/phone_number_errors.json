@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "operation": "buy",
+      "status": 400,
+      "expected": "unavailable",
+      "body": {
+        "code": 21422,
+        "message": "PhoneNumber Requested is not available",
+        "more_info": "https://www.twilio.com/docs/errors/21422",
+        "status": 400
+      }
+    },
+    {
+      "operation": "buy",
+      "status": 400,
+      "expected": "provider",
+      "body": {
+        "code": 21631,
+        "message": "Phone Number Requires an Address but the 'AddressSid' parameter was empty.",
+        "more_info": "https://www.twilio.com/docs/errors/21631",
+        "status": 400
+      }
+    },
+    {
+      "operation": "buy",
+      "status": 401,
+      "expected": "provider",
+      "body": {
+        "code": 20003,
+        "message": "Authenticate",
+        "more_info": "https://www.twilio.com/docs/errors/20003",
+        "status": 401
+      }
+    },
+    {
+      "operation": "search",
+      "status": 404,
+      "expected": "none",
+      "body": {
+        "code": 20404,
+        "message": "The requested resource /2010-04-01/Accounts/AC00000000000000000000000000000000/AvailablePhoneNumbers/GE/Local.json was not found",
+        "more_info": "https://www.twilio.com/docs/errors/20404",
+        "status": 404
+      }
+    },
+    {
+      "operation": "search",
+      "status": 500,
+      "expected": "provider",
+      "body": {
+        "code": 20500,
+        "message": "Internal Server Error",
+        "more_info": "https://www.twilio.com/docs/errors/20500",
+        "status": 500
+      }
+    },
+    {
+      "operation": "release",
+      "status": 404,
+      "expected": "none",
+      "body": {
+        "code": 20404,
+        "message": "The requested resource was not found",
+        "more_info": "https://www.twilio.com/docs/errors/20404",
+        "status": 404
+      }
+    },
+    {
+      "operation": "release",
+      "status": 503,
+      "expected": "provider",
+      "body": {
+        "code": 20503,
+        "message": "Service unavailable",
+        "more_info": "https://www.twilio.com/docs/errors/20503",
+        "status": 503
+      }
+    }
+  ]
+}

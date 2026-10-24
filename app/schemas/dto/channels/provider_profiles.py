@@ -1,0 +1,61 @@
+"""Profiles of the provider accounts a channel is connected with."""
+
+from base_pydantic_schemas import ImmutableDTO
+
+from app.schemas.typings.channels.booleans import ReceivesButtonTaps
+from app.schemas.typings.channels.constrained_strings import (
+    ChannelWebhookUrl,
+    MetaObjectId,
+    TelegramBotUserId,
+    TelegramBotUsername,
+)
+from app.schemas.typings.channels.strings import (
+    MetaPageName,
+    TelegramBotDisplayName,
+    WhatsAppDisplayPhoneNumber,
+)
+from app.schemas.typings.sharing.constrained_strings import (
+    InstagramUsername,
+    MetaPageUsername,
+)
+
+
+class TelegramBotProfile(ImmutableDTO):
+    """
+    A Telegram bot as getMe describes it: its username, its numeric id and
+    the name customers see (None when getMe left them out).
+    """
+
+    username: TelegramBotUsername
+    bot_user_id: TelegramBotUserId | None = None
+    display_name: TelegramBotDisplayName | None = None
+
+
+class TelegramWebhookInfo(ImmutableDTO):
+    """
+    Where a bot's webhook points (None: no webhook) and whether it is sent
+    the taps of inline buttons (`callback_query` among its allowed updates).
+    """
+
+    url: ChannelWebhookUrl | None = None
+    receives_taps: ReceivesButtonTaps = False
+
+
+class MetaPageProfile(ImmutableDTO):
+    """
+    A Facebook page and its linked Instagram professional account, with
+    their public usernames (None when the page or account has none).
+    """
+
+    page_id: MetaObjectId
+    name: MetaPageName | None = None
+    username: MetaPageUsername | None = None
+    instagram_account_id: MetaObjectId | None = None
+    instagram_username: InstagramUsername | None = None
+
+
+class WhatsAppPhoneNumberProfile(ImmutableDTO):
+    """A WhatsApp Cloud API business phone number."""
+
+    phone_number_id: MetaObjectId
+    display_phone_number: WhatsAppDisplayPhoneNumber | None = None

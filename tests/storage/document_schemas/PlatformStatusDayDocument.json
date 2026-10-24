@@ -1,0 +1,78 @@
+{
+  "collection": "platform_status_days",
+  "document_type": "PlatformStatusDayDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "components": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "check_count": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "component": {
+              "enum": [
+                "chat",
+                "meta",
+                "telegram",
+                "voice",
+                "cabinet"
+              ],
+              "type": "string"
+            },
+            "degraded_count": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "outage_count": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "worst_level": {
+              "enum": [
+                "operational",
+                "maintenance",
+                "degraded",
+                "outage",
+                "no_data"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "component",
+            "worst_level"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "day": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "day"
+    ],
+    "type": "object"
+  }
+}

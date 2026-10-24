@@ -1,0 +1,16 @@
+# One platform admin entered or changed many clients' accounts in a short
+# time: support access, admin access to a cabinet and the admin's account
+# actions (trial, discount, credit, waived fee, payment, plan), each in the
+# client's own audit log. A stolen admin session or a script looks like
+# this; support work rarely does. The figure is the most clients one admin
+# touched in the last hour; the detail names that admin (an id).
+code: tenant_hopping
+severity: sev2
+summary: One platform admin entered or changed more than 10 clients' accounts in an hour.
+measure: distinct businesses one admin entered or changed in the last hour
+threshold: 10
+unit: count
+window_minutes: 60
+volume_floor: 0
+source: audit_log_entries by action and time (audit_log_entries_doc_action_idx), migration 1193
+runbook: docs/operations/runbooks/audit-anomaly.md

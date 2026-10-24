@@ -1,0 +1,35 @@
+{
+  "source": "Amazon S3 API Reference, Error responses (REST error response and the list of error codes).",
+  "cases": [
+    {
+      "status": 404,
+      "code": "NoSuchBucket",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist</Message><BucketName>workshop-backups</BucketName><RequestId>4442587FB7D0A2F9</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    },
+    {
+      "status": 403,
+      "code": "AccessDenied",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>4442587FB7D0A2F9</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    },
+    {
+      "status": 403,
+      "code": "SignatureDoesNotMatch",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided. Check your key and signing method.</Message><RequestId>4442587FB7D0A2F9</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    },
+    {
+      "status": 403,
+      "code": "RequestTimeTooSkewed",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>RequestTimeTooSkewed</Code><Message>The difference between the request time and the current time is too large.</Message><RequestTime>20261006T120000Z</RequestTime><ServerTime>2026-10-06T12:20:00Z</ServerTime><MaxAllowedSkewMilliseconds>900000</MaxAllowedSkewMilliseconds><RequestId>4442587FB7D0A2F9</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    },
+    {
+      "status": 503,
+      "code": "SlowDown",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>SlowDown</Code><Message>Please reduce your request rate.</Message><RequestId>4442587FB7D0A2F9</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    },
+    {
+      "status": 200,
+      "code": "InternalError",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>InternalError</Code><Message>We encountered an internal error. Please try again.</Message><RequestId>656c76696e6727732072657175657374</RequestId><HostId>test-host-id-0000</HostId></Error>"
+    }
+  ]
+}

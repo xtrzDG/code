@@ -1,0 +1,16 @@
+{
+  "business_id": "business_d7cbb9a0-904a-41b0-8418-c8c5680595dc",
+  "created_at": 1790000000000000,
+  "delivered_at": 1790000000000000,
+  "endpoint": "https://push.example.com/send/c1d2e3",
+  "id": "push_subscription_55f6af18-13f1-562a-a1be-50045e348eee",
+  "keys": {
+    "auth": "BTBZMqHH6r4Tts7J_aSIgg",
+    "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
+  },
+  "language": "ka",
+  "last_error": "Sample DeliveryErrorText",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "user_id": "user_dcb18619-2ee8-4273-bec3-5f12c7509a75"
+}

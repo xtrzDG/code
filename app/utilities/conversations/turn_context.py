@@ -1,0 +1,197 @@
+"""
+The server-written context placed before each customer message.
+
+What changes from turn to turn (local date and time, the next days, the
+channel, the known phone, notes) lives in the user turn, never in the frozen
+instruction, so the provider's prompt cache keeps the instruction. The text
+is English: it is read by the model, not by the customer.
+"""
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+
+from app.schemas.constants.channels import ChannelKind
+from app.utilities.conversations.customer_text_fencing import (
+    describe_fence,
+    fence_customer_text,
+)
+
+WEEKDAY_NAMES: tuple[str, ...] = (
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+)
+UPCOMING_DAY_COUNT: int = 7
+CONTEXT_HEADER: str = "[Context from the platform, not written by the customer]"
+CUSTOMER_HEADER: str = "[Customer message]"
+UNANSWERED_HEADER: str = (
+    "(Messages since your last reply, written while a colleague handled the "
+    "conversation or the assistant stayed silent. Lines marked Staff were "
+    "written by the business's staff and already reached the customer; stay "
+    "consistent with them:)"
+)
+CUSTOMER_LINE_LABEL: str = "Customer"
+STAFF_LINE_LABEL: str = "Staff"
+LATEST_MESSAGE_HEADER: str = "(The latest message:)"
+LEADS_ONLY_NOTE: str = (
+    "Bookings are paused for this business: do not check availability or "
+    "book. Take the request with create_lead, or pass the conversation to a "
+    "colleague with handoff_to_human."
+)
+FIRST_REPLY_NOTE: str = (
+    "This is your first reply in this conversation. The platform starts it "
+    "with the disclosure that you are the AI assistant of the business, so do "
+    "not introduce yourself again."
+)
+AFTER_HOURS_NOTE: str = "The business is closed right now (outside opening hours)."
+
+
+@dataclass(frozen=True)
+class EarlierMessage:
+    """A message since the assistant's last reply (technical record)."""
+
+    text: str
+    is_from_staff: bool
+
+
+@dataclass(frozen=True)
+class TurnContext:
+    """Facts of one turn known to the server (technical record)."""
+
+    business_name: str
+    timezone_name: str
+    local_now: datetime
+    channel: ChannelKind
+    reply_language_note: str
+    customer_name: str | None
+    customer_phone_number: str | None
+    is_after_hours: bool | None
+    is_leads_only: bool
+    is_first_reply: bool
+    # What the assistant remembers of a returning customer (first reply only).
+    memory_lines: tuple[str, ...] = ()
+
+
+def build_context_line(context: TurnContext) -> str:
+    """
+    Context lines, e.g.:
+
+        [Context from the platform, not written by the customer]
+        Business: Sakhli.
+        Local time at the business: Thursday 2026-10-01 14:05 (Asia/Tbilisi).
+        Next days: Fri 2026-10-02, Sat 2026-10-03, ...
+        Channel: whatsapp.
+        Reply language: Georgian (ka).
+        Customer: Giorgi, phone +995555123456.
+    """
+
+    lines: list[str] = [
+        CONTEXT_HEADER,
+        f"Business: {context.business_name}.",
+        "Local time at the business: "
+        f"{describe_local_now(context.local_now)} ({context.timezone_name}).",
+        f"Next days: {describe_next_days(context.local_now)}.",
+    ]
+    if context.is_after_hours:
+        lines.append(AFTER_HOURS_NOTE)
+
+    lines.append(f"Channel: {context.channel.value}.")
+    lines.append(context.reply_language_note)
+    customer_details: list[str] = []
+    if context.customer_name is not None:
+        customer_details.append(context.customer_name)
+
+    if context.customer_phone_number is not None:
+        customer_details.append(f"phone {context.customer_phone_number}")
+
+    if customer_details:
+        lines.append(f"Customer: {', '.join(customer_details)}.")
+
+    if context.is_leads_only:
+        lines.append(LEADS_ONLY_NOTE)
+
+    if context.is_first_reply:
+        lines.append(FIRST_REPLY_NOTE)
+
+    lines.extend(context.memory_lines)
+    return "\n".join(lines)
+
+
+def describe_local_now(local_now: datetime) -> str:
+    """ "Thursday 2026-10-01 14:05" (chat context and phone call variables)."""
+
+    return f"{WEEKDAY_NAMES[local_now.weekday()]} {local_now:%Y-%m-%d %H:%M}"
+
+
+def describe_next_days(local_now: datetime) -> str:
+    """ "Fri 2026-10-02, Sat 2026-10-03, ..." for the next UPCOMING_DAY_COUNT days."""
+
+    return ", ".join(
+        f"{WEEKDAY_NAMES[day.weekday()][:3]} {day:%Y-%m-%d}"
+        for day in (
+            local_now + timedelta(days=offset)
+            for offset in range(1, UPCOMING_DAY_COUNT + 1)
+        )
+    )
+
+
+def build_user_turn_text(context_line: str, message_text: str, fence_key: str) -> str:
+    """
+    The user turn: the context, where the customer's words are fenced (the
+    fence key is new for every turn), then the message text built by
+    `build_text_with_unanswered_messages`.
+    """
+
+    return (
+        f"{context_line}\n{describe_fence(fence_key)}\n{CUSTOMER_HEADER}\n"
+        f"{message_text}"
+    )
+
+
+def build_text_with_unanswered_messages(
+    earlier_messages: list[EarlierMessage],
+    customer_text: str,
+    fence_key: str,
+) -> str:
+    """
+    The customer's message after what was written while the assistant
+    stayed silent (a colleague handled the conversation, or the hourly limit
+    was reached), in time order: the customer's messages and the staff
+    replies, so the model knows everything said and does not contradict the
+    business's own staff. Every text a customer wrote is fenced and cannot
+    imitate the platform (`fence_customer_text`); staff speak for the
+    business and are quoted as they wrote.
+    """
+
+    latest: str = fence_customer_text(customer_text, fence_key)
+    if not earlier_messages:
+        return latest
+
+    earlier: str = "\n".join(
+        f"- {STAFF_LINE_LABEL}: {message.text}"
+        if message.is_from_staff
+        else f"- {CUSTOMER_LINE_LABEL}:\n{fence_customer_text(message.text, fence_key)}"
+        for message in earlier_messages
+    )
+    return f"{UNANSWERED_HEADER}\n{earlier}\n{LATEST_MESSAGE_HEADER}\n{latest}"
+
+
+def build_rewrite_note(unverified_values: list[str]) -> str:
+    """
+    The one request to rewrite a reply whose values the guard could not
+    find in the facts, the tool results or the customer's messages.
+    """
+
+    return (
+        "[Check by the platform, not written by the customer]\n"
+        "Your last reply mentions values that are not in the fact table, the "
+        "tool results or the customer's messages: "
+        + "; ".join(unverified_values)
+        + ". Write the reply again in the customer's language without these "
+        "values: use only values from the facts or tool results, call a tool "
+        "to check them, or offer to pass the question to a colleague."
+    )

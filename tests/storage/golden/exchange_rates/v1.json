@@ -1,0 +1,14 @@
+{
+  "base_currency_code": "GEL",
+  "created_at": 1790000000000000,
+  "fetched_at": 1790000000000000,
+  "is_derived": true,
+  "pair": "EUR/GEL",
+  "quote_currency_code": "GEL",
+  "rate": "2.9563",
+  "rate_date": "2026-10-02",
+  "rate_day": 20261002,
+  "schema_version": "1",
+  "source": "nbg",
+  "updated_at": 1790000000000000
+}

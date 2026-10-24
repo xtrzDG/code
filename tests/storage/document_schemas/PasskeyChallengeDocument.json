@@ -1,0 +1,69 @@
+{
+  "collection": "passkey_challenges",
+  "document_type": "PasskeyChallengeDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "challenge": {
+        "maxLength": 128,
+        "minLength": 22,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "expires_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^passkey_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_consumed": {
+        "default": false,
+        "type": "boolean"
+      },
+      "mfa_challenge_id": {
+        "anyOf": [
+          {
+            "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "purpose": {
+        "enum": [
+          "registration",
+          "sign_in_enrollment",
+          "sign_in",
+          "step_up"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user_id",
+      "purpose",
+      "challenge",
+      "expires_at"
+    ],
+    "type": "object"
+  }
+}

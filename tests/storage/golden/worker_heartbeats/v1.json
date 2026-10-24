@@ -1,0 +1,18 @@
+{
+  "beat_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "host_name": "srv-workshop-worker-1",
+  "id": "worker_514a89fe-688f-48bc-b5fb-ed437d189da4",
+  "periodic_results": [
+    {
+      "finished_at": 1790000000000000,
+      "job_name": "send_booking_reminders",
+      "outcome": "succeeded",
+      "processed_count": 1
+    }
+  ],
+  "release": "4718714c0f2e9a1b",
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "updated_at": 1790000000000000
+}
