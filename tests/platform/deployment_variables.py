@@ -100,6 +100,9 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # workshop-worker) when no name is set.
         "PROMETHEUS_MULTIPROC_DIR",
         "OTEL_SERVICE_NAME",
+        # Empty keeps Python's garbage collector thresholds, which measured
+        # best (docs/operations/capacity.md, "Garbage collection").
+        "GC_THRESHOLDS",
     }
 )
 

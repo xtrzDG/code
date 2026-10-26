@@ -19,6 +19,9 @@ from app.schemas.dto.telemetry import JobQueueMeasurement, JobQueueQuery
 from app.utilities.observability.metrics.metrics_exposition import (
     build_metrics_registry,
 )
+from app.utilities.observability.metrics.prometheus_gc_metrics import (
+    PrometheusGcMetrics,
+)
 from app.utilities.observability.metrics.prometheus_service_metrics import (
     ANSWER_BUCKETS,
     HTTP_BUCKETS,
@@ -60,6 +63,7 @@ def exposed_sample_names() -> set[str]:
 
     registry = build_metrics_registry(None)
     PrometheusServiceMetrics(registry)
+    PrometheusGcMetrics(registry)
     registry.register(JobQueueCollector(EmptyQueue()))
     names: set[str] = set()
     for family in registry.collect():

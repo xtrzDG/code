@@ -14,7 +14,7 @@ variable, so one file serves every environment.
 | Webhooks and the job queue | messages received, queued and duplicate; pickup delay, due jobs and the oldest wait per lane; dead letters |
 | Answers and language models | answer latency per channel; model latency, errors and tokens per provider and model |
 | Outbound sends | attempts and failures per provider |
-| Database pool and resilience | connections in use, waits for one, circuit breaker states, process memory |
+| Database pool and resilience | connections in use, waits for one, circuit breaker states, process memory, garbage collection pauses by generation and the share of time in them |
 
 The figures of record for the SLOs are the rows `record_sli` writes
 (`service_level_slots`, `service_level_hours`): the error budget card on

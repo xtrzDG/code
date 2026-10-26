@@ -30,7 +30,9 @@ MAX_PENDING_PAUSES: int = 100_000
 GC_START_PHASE: str = "start"
 # `gc.callbacks` names the generation by its number.
 GENERATIONS_BY_NUMBER: dict[int, GcGeneration] = {
-    int(generation.value): generation for generation in GcGeneration
+    0: GcGeneration.YOUNG,
+    1: GcGeneration.MIDDLE,
+    2: GcGeneration.OLDEST,
 }
 
 

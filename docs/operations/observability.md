@@ -40,6 +40,8 @@ The series:
 | `workshop_llm_tokens_total` | `provider`, `model`, `direction` | tokens of successful calls |
 | `workshop_db_pool_connections_in_use`, `workshop_db_pool_wait_seconds` | | pool saturation and the waits for a connection |
 | `workshop_circuit_breaker_state` | `circuit` | 0 closed, 1 half-open, 2 open |
+| `workshop_gc_pause_seconds` | `generation` (`0`, `1`, `2`) | every garbage collection of the process after warm-up and how long it stopped every thread; generation 2 walks the whole heap |
+| `workshop_gc_frozen_objects` | | objects of the startup heap frozen after warm-up (`GC_FREEZE_AFTER_WARMUP`); 0 while not frozen, and across the processes of an instance the lowest (`docs/operations/capacity.md`, "Garbage collection") |
 
 The API also reports its process (CPU, memory, file descriptors) when it
 runs one uvicorn process.
