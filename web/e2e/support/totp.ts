@@ -7,6 +7,8 @@
 
 import { createHmac } from "node:crypto";
 
+import { apiNow } from "./apiClock";
+
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 export const TOTP_STEP_MS = 30_000;
 
@@ -27,8 +29,8 @@ function base32Bytes(secret: string): Buffer {
   return Buffer.from(bytes);
 }
 
-/** The step a moment falls in (Unix time / 30 s). */
-export function totpStep(atMs: number = Date.now()): number {
+/** The step a moment falls in (Unix time / 30 s); by default now on the API's clock (support/apiClock.ts). */
+export function totpStep(atMs: number = apiNow()): number {
   return Math.floor(atMs / TOTP_STEP_MS);
 }
 
@@ -50,7 +52,7 @@ export async function freshTotpCode(secret: string, usedStep: number | null): Pr
   let step = totpStep();
   if (usedStep !== null && step <= usedStep) {
     const nextStepAt = (usedStep + 1) * TOTP_STEP_MS;
-    await new Promise((resolve) => setTimeout(resolve, nextStepAt - Date.now() + 250));
+    await new Promise((resolve) => setTimeout(resolve, nextStepAt - apiNow() + 250));
     step = totpStep();
   }
   return { code: totpCode(secret, step), step };
