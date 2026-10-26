@@ -11,6 +11,7 @@ import { customersSectionEn } from "./sections/customers";
 import { brandsSectionEn } from "./sections/brands";
 import { referralsSectionEn } from "./sections/referrals";
 import { growthSectionEn } from "./sections/growth";
+import { nichesSectionEn } from "./sections/niches";
 import { onboardingEn } from "./onboarding/en";
 import { landingEn } from "./landing/en";
 
@@ -203,6 +204,7 @@ export const en = {
   ...referralsSectionEn,
   ...brandsSectionEn,
   ...growthSectionEn,
+  ...nichesSectionEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

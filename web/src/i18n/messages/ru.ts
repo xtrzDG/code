@@ -12,6 +12,7 @@ import { customersSectionRu } from "./sections/customers";
 import { brandsSectionRu } from "./sections/brands";
 import { referralsSectionRu } from "./sections/referrals";
 import { growthSectionRu } from "./sections/growth";
+import { nichesSectionRu } from "./sections/niches";
 import { onboardingRu } from "./onboarding/ru";
 import { landingRu } from "./landing/ru";
 
@@ -196,4 +197,5 @@ export const ru: Messages = {
   ...referralsSectionRu,
   ...brandsSectionRu,
   ...growthSectionRu,
+  ...nichesSectionRu,
 };

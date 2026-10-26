@@ -62,6 +62,8 @@ export const ADMIN_TEAM_PATH = "/admin/team";
 export const ADMIN_PARTNERS_PATH = "/admin/partners";
 /** The daily tamper check of every audit log and the platform's own audit log. */
 export const ADMIN_AUDIT_PATH = "/admin/audit";
+/** The niche template editor: the words new owners read in the tunnel and the wizard. */
+export const ADMIN_NICHES_PATH = "/admin/niches";
 /** A partner's own portal: their links, businesses and commissions. */
 export const PARTNER_PATH = "/partner";
 /** Brands: chains of locations run as one (overview, team, shared answers). */
@@ -71,6 +73,12 @@ export const BRANDS_PATH = "/brands";
 export function brandPath(brandId: string, page?: "team" | "knowledge"): string {
   const base = `${BRANDS_PATH}/${encodeURIComponent(brandId)}`;
   return page ? `${base}/${page}` : base;
+}
+
+/** One niche's editor in the admin area, in one language of its texts. */
+export function adminNichePath(nicheKey: string, language?: string): string {
+  const base = `${ADMIN_NICHES_PATH}/${encodeURIComponent(nicheKey)}`;
+  return language ? `${base}?language=${encodeURIComponent(language)}` : base;
 }
 
 /** A client's page in the admin area (where an admin opens their cabinet with a reason). */

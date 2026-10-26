@@ -12,6 +12,7 @@ import { customersSectionHe } from "./sections/customers";
 import { brandsSectionHe } from "./sections/brands";
 import { referralsSectionHe } from "./sections/referrals";
 import { growthSectionHe } from "./sections/growth";
+import { nichesSectionHe } from "./sections/niches";
 import { onboardingHe } from "./onboarding/he";
 import { landingHe } from "./landing/he";
 
@@ -199,4 +200,5 @@ export const he: Messages = {
   ...referralsSectionHe,
   ...brandsSectionHe,
   ...growthSectionHe,
+  ...nichesSectionHe,
 };
