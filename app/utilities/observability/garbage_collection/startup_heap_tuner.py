@@ -3,12 +3,12 @@ Garbage collection pauses out of the request path: one process's collector
 over its lifetime (docs/operations/capacity.md, "Garbage collection").
 
 A full collection walks every object the process tracks; an API process
-tracks about a million after startup (the container's providers, the
+tracks about 1.4 million after startup (the container's providers, the
 pydantic and FastAPI schemas), and under load such a walk stopped every
-thread for one to five seconds. Those objects live as long as the process,
-so once it has warmed up (its container built, its startup steps done,
-before it serves) they are collected once and frozen: later collections
-skip them.
+thread for half a second to five seconds. Those objects live as long as
+the process, so once it has warmed up (its container built, its startup
+steps done, before it serves) they are collected once and frozen: later
+collections skip them.
 """
 
 import logging

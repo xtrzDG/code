@@ -27,7 +27,7 @@ class GarbageCollectionSettings(ImmutableDTO):
     GC_FREEZE_AFTER_WARMUP (default true): once a process has built its
     container and served its startup steps, it collects once and freezes
     every object alive then (`gc.collect()`, `gc.freeze()`), so later full
-    collections no longer walk the startup heap (about a million objects).
+    collections no longer walk the startup heap (about 1.4 million objects).
     GC_THRESHOLDS ("young,middle,full", e.g. "2000,10,10"; empty: Python's
     own) sets the collector's thresholds for the process's lifetime.
     """

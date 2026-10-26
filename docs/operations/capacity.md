@@ -721,6 +721,126 @@ collection pauses are the next lever on this scenario's tail; whether
 they weigh on the CI runner's p95 (its maxima were 3–3.7 s) these local
 runs cannot tell.
 
+### Garbage collection: the startup heap frozen after warm-up (2026-10-26)
+
+**What changed.** Every API process and every worker collects once and
+freezes what is alive (`gc.collect()`, `gc.freeze()`) after it has warmed
+up and before its first request or job (`StartupHeapTuner`,
+`settle_startup_heap`): the API at the end of its lifespan's startup (the
+container and its routers, the catalogs, the role checks, the platform
+bot, the trace flush, the watchdog and an embedded worker started), the
+worker after its container, the reply guard's CLDR data and its metrics
+server. Frozen objects stay where they are, but no collection walks them
+again; a process that stops gives them back. `GC_FREEZE_AFTER_WARMUP=false`
+turns it off; `GC_THRESHOLDS` sets the collector's thresholds (empty:
+Python's 2000, 10, 10; see below). Each process times its collections with
+`gc.callbacks` into `workshop_gc_pause_seconds` by generation and reports
+`workshop_gc_frozen_objects` (`docs/operations/observability.md`; the
+dashboard graphs both). The callback only queues the pause: a collection
+can start while a thread holds a metric's lock, so a thread of its own
+observes the queued pauses every 5 s.
+
+**The startup heap.** An API process froze 1,406,476–1,406,502 objects, a
+worker 1,317,814–1,317,843 (1.06 million were counted on 2026-10-20; the
+code has grown since). Collecting and freezing them took 0.8–1.8 s of an API
+process's startup and 0.7–1.4 s of the worker's, before either serves (a
+process uvicorn replaces pays it again). Resident memory after a run was
+the same with and without the freeze (0.50–0.52 GB per API process).
+
+**How it was measured.** On 2026-10-26, on a 4 vCPU, 16 GB machine shared
+with other jobs (load average 3.8–21 during the runs, noted per run).
+Postgres 16 with its defaults on the same machine, the migrations and
+`seed-load --businesses 50 --messages 200000 --bookings 20000 --visitors
+1000` (93 s) into a template database; every run started from a fresh copy
+of it. The API ran as `workshop api` runs it in
+`perf/docker-compose.perf.yml` (uvicorn, four processes, 40 threads and
+10 + 4 connections each), the worker as that file sets it (20 threads,
+14 + 4 connections, 12 model calls), both on the host with the scripted
+model at 800 ms and no route to the providers; k6 1.3.0 (that file's
+`grafana/k6:1.3.0` image, on the host's network) ran `widget_polling.js`
+unchanged: 1,000 visitors for 5 minutes. Freeze off and on alternated,
+five pairs. The collections are the difference of
+`workshop_gc_pause_seconds` scraped just before and after each k6 run (the
+API's `/metrics` sums its four processes); the histogram's buckets bound
+the longest pause.
+
+Collections per run (mean of five runs) and their pauses, Python's
+thresholds:
+
+| Process, generation | Off: per run | mean pause | longest | On: per run | mean pause | longest |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| API (four processes), 0 | 3,311 | 2.3 ms | 100–250 ms | 3,275 | 2.6 ms | 100–250 ms |
+| API, 1 | 302 | 8.8 ms | 100–250 ms | 296 | 9.3 ms | 100–250 ms |
+| API, 2 (full) | 5.4 | 1,130 ms | 2.5–5 s | 12.6 | 29 ms | 100–250 ms |
+| Worker, 0 | 806 | 1.3 ms | 100–250 ms | 811 | 1.4 ms | 100–250 ms |
+| Worker, 1 | 73 | 3.2 ms | 50–100 ms | 73 | 3.5 ms | 25–50 ms |
+| Worker, 2 (full) | 1.2 | 837 ms | 1–2.5 s | 3.8 | 6.3 ms | 10–25 ms |
+| API time in collections per run | 16.3 s | | | 11.7 s | | |
+| Worker time in collections per run | 2.3 s | | | 1.4 s | | |
+
+Off, every one of the API's 27 full collections stopped its process for
+more than 250 ms (13 for more than a second, up to 2.5–5 s when the
+machine was busiest), and so did the worker's 6. On, none of the 63 full
+collections of the API passed 250 ms (one passed 100 ms) and none of the
+worker's 19 passed 25 ms. They came more often (12.6 per run against 5.4),
+each walking only what the process kept since it warmed up. The younger
+generations did not change: their pauses follow the machine's load.
+
+The k6 runs (milliseconds; load average at the run's start and end; p99
+was recorded from the third pair's second run on):
+
+| Pair | Freeze | Load | Poll p50 | Poll p95 | Poll p99 | Poll max | Message p50 | Message p95 |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | off | 3.8 → 6.1 | 7.1 | 24.6 | — | 981 | 22.5 | 66 |
+| 1 | on | 5.7 → 6.4 | 10.8 | 76.3 | — | 582 | 32.2 | 158 |
+| 2 | off | 6.0 → 4.9 | 7.3 | 31.5 | — | 1,040 | 25.6 | 168 |
+| 2 | on | 4.5 → 4.8 | 7.4 | 47.5 | — | 724 | 23.0 | 127 |
+| 3 | off | 4.5 → 6.6 | 8.9 | 82.4 | — | 1,914 | 26.6 | 175 |
+| 3 | on | 6.2 → 5.1 | 9.8 | 49.0 | 123 | 618 | 29.0 | 107 |
+| 4 | off | 3.9 → 10.6 | 13.2 | 221.3 | 704 | 2,837 | 36.8 | 326 |
+| 4 | on | 9.8 → 12.4 | 24.1 | 266.7 | 488 | 931 | 52.9 | 447 |
+| 5 | off | 11.7 → 14.4 | 16.4 | 365.2 | 899 | 3,263 | 42.4 | 560 |
+| 5 | on | 13.4 → 8.5 | 9.3 | 50.8 | 129 | 375 | 27.1 | 108 |
+
+Every run answered every request (75,900–77,200; none failed) and no API
+process was restarted: this machine is much faster for the scenario than
+the one of 2026-10-20 (poll median 7–24 ms against 0.2–0.9 s). Medians of
+the five runs, off against on: poll p50 8.9 and 9.8 ms, p95 82 and 51 ms,
+maximum 1,914 and 618 ms, message p95 175 and 127 ms. The longest poll of
+each run without the freeze (0.98–3.3 s) was about as long as that run's
+longest full collection; with it, the longest of the five runs was
+0.93 s. The p50 and p95 moved with the machine's load and with how the
+1,000 kept-alive connections fell on the four processes (the busiest took
+27–34% of the API's CPU) more than with the freeze: in pairs 1 and 2 the
+run without it had the better p95, in pairs 3 and 5 the run with it. The
+scenario's own thresholds failed in three runs, all with the load above
+10 (pair 4 both, pair 5 off); the fourth such run (pair 5 on) met them.
+
+**Thresholds.** Two more pairs, both with the freeze, alternated Python's
+thresholds with `GC_THRESHOLDS=10000,10,10`:
+
+| Run | Load | Poll p50 / p95 / max | API collections (0 / 1 / 2) | Young pause mean (longest) | API time in collections |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1, Python's | 7.9 → 17.4 | 68 / 546 / 1,784 ms | 3,672 / 332 / 19 | 6.8 ms (100–250 ms) | 34.0 s |
+| 1, 10000,10,10 | 16.1 → 9.3 | 9.9 / 82 / 561 ms | 578 / 51 / 0 | 14.7 ms (100–250 ms) | 9.4 s |
+| 2, Python's | 8.2 → 11.1 | 8.3 / 75 / 634 ms | 3,237 / 293 / 11 | 2.1 ms (50–100 ms) | 9.4 s |
+| 2, 10000,10,10 | 10.3 → 21.0 | 12.4 / 287 / 1,346 ms | 582 / 51 / 0 | 20.3 ms (250–500 ms) | 13.1 s |
+
+A young threshold of 10,000 cut the API's collections by five sixths and
+the worker's by 96% (33 and 29 young ones a run instead of 680–800), and
+no full collection ran within five minutes; but a young collection then
+took 15–20 ms on average instead of 2–7 ms (up to 250–500 ms), and the
+time spent in collections did not fall (9.4 and 13.1 s against 9.4 s in
+the second pair and 11.7 s in the five runs above). The latencies followed
+the machine's load: in each pair the run whose load rose to 17–21 was the
+slow one. Not clearly better: `GC_THRESHOLDS` stays empty, Python's
+thresholds.
+
+**What remains.** The weekly run on GitHub's runner shows whether the
+CI's poll maxima of 3–3.7 s were these collections; its p95 is set by
+the runner's load as much as here. The freeze costs about a second of
+each process's startup.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by
@@ -1085,6 +1205,12 @@ Blueprint and the test together:
   fifth is left (migration 1215): with N API processes those two limits
   may refuse up to 1.2 × N % early, never late. Messages, uploads,
   handoffs and ratings still count every request in all four counters.
+- The startup heap each API and worker process freezes after warm-up
+  (`GC_FREEZE_AFTER_WARMUP`) is never searched for cycles again: frozen
+  objects freed by their reference counts go as before, but a cycle among
+  them that turns into garbage stays until the process stops. They are
+  the container, the schemas and the routes, kept for the process's
+  lifetime anyway.
 - Seeding the full dataset took 21 minutes locally (the demo part of each
   business dominates); the weekly budgets job allows two hours.
 - The scripted model answers every message with one sentence; a
