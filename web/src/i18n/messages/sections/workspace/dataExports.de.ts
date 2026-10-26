@@ -31,7 +31,7 @@ export const dataExportsDe: Translation<typeof dataExportsEn> = {
     requested: "Angefordert {date}",
     readyUntil: "Aufbewahrt bis {date}",
     download: "ZIP herunterladen",
-    downloadLabel: "Den am {date} angeforderten Export herunterladen",
+    downloadLabel: "ZIP herunterladen: am {date} angeforderter Export",
     downloadStarted: "Der Download hat begonnen",
     downloadsLeft: { one: "Noch {count} von {total} Downloads", other: "Noch {count} von {total} Downloads" },
     usedUp: "Dieser Export wurde dreimal heruntergeladen. Bereiten Sie für eine weitere Kopie einen neuen vor.",

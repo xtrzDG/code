@@ -147,7 +147,7 @@ export const channelsKa: Translation<typeof channelsEn> = {
       cancel_all: "გათიშვა",
     },
     dial: "აკრეფა",
-    dialLabel: "აკრიფეთ {code}",
+    dialLabel: "აკრეფა: {code}",
   },
   calendar: {
     title: "Google Calendar",

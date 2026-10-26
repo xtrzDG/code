@@ -50,7 +50,7 @@ test("a booking dragged to another master moves there, and Undo puts it back", a
 
   await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
   await expect(page.getByRole("radio", { name: calendar.views.day, exact: true })).toBeChecked();
-  const block = page.getByRole("button", { name: /^Anna Schmidt, / });
+  const block = page.getByRole("button", { name: /, Anna Schmidt, / });
   await expect(block).toBeVisible();
   expect(await seriousViolations(page), "the day").toEqual([]);
 
@@ -68,7 +68,7 @@ test("a booking dragged to another master moves there, and Undo puts it back", a
 
   const toast = page.getByRole("status").filter({ hasText: "Moved to Lena" });
   await expect(toast).toBeVisible();
-  await expect(lenaColumn.getByRole("button", { name: /^Anna Schmidt, 11:00/ })).toBeVisible();
+  await expect(lenaColumn.getByRole("button", { name: /^11:00 .*, Anna Schmidt, / })).toBeVisible();
   await expect.poll(where).toEqual([lena, "11:00"]);
   await expect(offerFor(page, "Anna Schmidt")).toBeVisible();
 
@@ -76,7 +76,7 @@ test("a booking dragged to another master moves there, and Undo puts it back", a
   await expect(page.getByText(calendar.move.undone)).toBeVisible();
   // Back where the customer knows it: nothing to tell them.
   await expect(offerFor(page, "Anna Schmidt")).toBeHidden();
-  await expect(page.locator(`[data-calendar-column="${nino}"]`).getByRole("button", { name: /^Anna Schmidt, 10:00/ })).toBeVisible();
+  await expect(page.locator(`[data-calendar-column="${nino}"]`).getByRole("button", { name: /^10:00 .*, Anna Schmidt, / })).toBeVisible();
   await expect.poll(where).toEqual([nino, "10:00"]);
 });
 
@@ -87,7 +87,7 @@ test("the keyboard moves a booking a quarter of an hour at a time and to the nex
   const booking = await bookByHand(request, owner, { name: "Lukas Weber", date: day, time: "12:00", resourceId: nino });
 
   await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
-  const block = page.getByRole("button", { name: /^Lukas Weber, / });
+  const block = page.getByRole("button", { name: /, Lukas Weber, / });
   await block.focus();
   const announcement = page.locator('[role="status"][aria-live="polite"]').filter({ hasText: /Enter/ });
 
@@ -106,7 +106,7 @@ test("the keyboard moves a booking a quarter of an hour at a time and to the nex
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("status").filter({ hasText: "Moved to Lena" })).toBeVisible();
-  await expect(page.locator(`[data-calendar-column="${lena}"]`).getByRole("button", { name: /^Lukas Weber, 1:00/ })).toBeFocused();
+  await expect(page.locator(`[data-calendar-column="${lena}"]`).getByRole("button", { name: /^1:00 .*, Lukas Weber, / })).toBeFocused();
   await expect.poll(async () => (await bookingNow(request, owner, booking.id, day))?.time).toBe("13:00");
 
   // The same message the list's reschedule form shows, from the offer above the grid.
@@ -127,7 +127,7 @@ test("a booking dragged near the grid's bottom edge scrolls the day down", async
 
   await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
   const grid = page.locator(`[data-calendar-day="${day}"]`);
-  const block = page.getByRole("button", { name: /^Mia Wagner, / });
+  const block = page.getByRole("button", { name: /, Mia Wagner, / });
   await expect(block).toBeVisible();
   const box = await grid.boundingBox();
   const from = await block.boundingBox();
@@ -144,7 +144,7 @@ test("a booking dragged near the grid's bottom edge scrolls the day down", async
   await page.keyboard.press("Escape");
   await page.mouse.up();
   await expect(page.locator("[data-calendar-ghost]")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^Mia Wagner, 10:00/ })).toBeAttached();
+  await expect(page.getByRole("button", { name: /^10:00 .*, Mia Wagner, / })).toBeAttached();
 });
 
 test("a guest house sees its rooms by night, moves a stay with the keys and opens nights from the week", async ({
@@ -209,7 +209,7 @@ test.describe("on a phone", () => {
 
     await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
     await expect(page.getByRole("radio", { name: calendar.views.day, exact: true })).toBeChecked();
-    const block = page.getByRole("button", { name: /^Sofia Klein, / });
+    const block = page.getByRole("button", { name: /, Sofia Klein, / });
     await expect(block).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
     await block.click();
@@ -225,7 +225,7 @@ test.describe("on a phone", () => {
 
     await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
     const grid = page.locator(`[data-calendar-day="${day}"]`);
-    const block = page.getByRole("button", { name: /^Elif Kaya, / });
+    const block = page.getByRole("button", { name: /, Elif Kaya, / });
     await expect(block).toBeVisible();
     const box = await grid.boundingBox();
     const from = await block.boundingBox();

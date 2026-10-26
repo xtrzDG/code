@@ -29,19 +29,35 @@ function blockStyle(laned: Pick<Laned<unknown>, "span" | "lane" | "lanes">, axis
 function useBlockTexts(booking: BookingView, party: PartyWording | null) {
   const { t, locale } = useI18n();
   const times = [booking.time, booking.end_time].filter(Boolean).map((time) => formatLocalTime(time ?? "", locale));
-  const name = booking.contact_name ?? t("insights.unknownCustomer");
   const partyText = party ? party.count(booking.party_size, booking.resource_id) : null;
   return {
-    name,
+    name: booking.contact_name ?? t("insights.unknownCustomer"),
+    start: times[0] ?? "",
+    end: times[1] ?? null,
     times: times.join("–"),
     details: [partyText, booking.service_title].filter(Boolean).join(" · "),
-    label: t("bookingCalendar.block.label", {
-      name,
-      time: times.join("–"),
-      place: booking.resource_name,
-      status: t(BOOKING_STATUS[booking.status].label),
-    }),
   };
+}
+
+/**
+ * What the block shows, in the order it shows it, then what it leaves out:
+ * its name starts with its visible words, so saying what is on screen
+ * reaches it (WCAG 2.5.3, Label in Name).
+ */
+function useBlockLabel(booking: BookingView, texts: ReturnType<typeof useBlockTexts>, shows: { sideBySide: boolean; nameInline: boolean; details: boolean }) {
+  const { t } = useI18n();
+  const test = booking.is_sandbox ? [t("bookingCalendar.block.test")] : [];
+  const shown = [
+    shows.sideBySide ? texts.start : texts.times,
+    ...(shows.nameInline ? [texts.name, ...test] : [...test, texts.name]),
+    ...(shows.details ? [texts.details] : []),
+    ...(shows.sideBySide && texts.end ? [t("bookingCalendar.block.until", { time: texts.end })] : []),
+  ];
+  return t("bookingCalendar.block.label", {
+    shown: shown.join(", "),
+    place: booking.resource_name,
+    status: t(BOOKING_STATUS[booking.status].label),
+  });
 }
 
 /**
@@ -72,13 +88,14 @@ export function BookingBlock({
   const texts = useBlockTexts(booking, party);
   const minutes = laned.span.end - laned.span.start;
   // Side by side with others, a block shows when it starts; its end is in its label and on the grid.
-  const shownTimes = laned.lanes > 1 ? texts.times.split("–")[0] : texts.times;
+  const shows = { sideBySide: laned.lanes > 1, nameInline: minutes < 45, details: minutes >= 75 && texts.details !== "" };
+  const label = useBlockLabel(booking, texts, shows);
   return (
     <button
       type="button"
       {...movable}
       onClick={() => onOpen(booking)}
-      aria-label={texts.label}
+      aria-label={label}
       aria-describedby={hintId}
       style={blockStyle(laned, axisStart)}
       className={cn(
@@ -90,17 +107,18 @@ export function BookingBlock({
       )}
     >
       <span aria-hidden className={cn("absolute inset-y-1 start-1 w-1 rounded-full", STATUS_STYLE[booking.status].mark)} />
+      {/* The spaces keep the shown words apart in the text the name is checked against (they take no room in a flex line). */}
       <span className="flex min-w-0 items-baseline gap-1.5">
-        <span className="shrink-0 font-medium text-ink-muted tabular-nums">{shownTimes}</span>
-        {minutes < 45 ? <UserContent className="truncate font-semibold text-ink">{texts.name}</UserContent> : null}
+        <span className="shrink-0 font-medium text-ink-muted tabular-nums">{shows.sideBySide ? texts.start : texts.times}</span>{" "}
+        {shows.nameInline ? <UserContent className="truncate font-semibold text-ink">{texts.name}</UserContent> : null}{" "}
         {booking.is_sandbox ? (
           <span className="ms-auto shrink-0 rounded bg-surface px-1 text-[10px] font-semibold text-ink-subtle uppercase">
             {t("bookingCalendar.block.test")}
           </span>
         ) : null}
-      </span>
-      {minutes >= 45 ? <UserContent className="truncate font-semibold text-ink">{texts.name}</UserContent> : null}
-      {minutes >= 75 && texts.details ? <span className="truncate text-ink-muted">{texts.details}</span> : null}
+      </span>{" "}
+      {shows.nameInline ? null : <UserContent className="truncate font-semibold text-ink">{texts.name}</UserContent>}{" "}
+      {shows.details ? <span className="truncate text-ink-muted">{texts.details}</span> : null}
     </button>
   );
 }

@@ -35,7 +35,8 @@ export const bookingCalendarEn = {
     toPlaces: "Add places",
   },
   block: {
-    label: "{name}, {time}, {place}, {status}",
+    label: "{shown}, {place}, {status}",
+    until: "until {time}",
     test: "Test",
   },
   move: {

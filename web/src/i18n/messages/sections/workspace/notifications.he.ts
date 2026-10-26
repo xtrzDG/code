@@ -73,7 +73,7 @@ export const notificationsHe: Translation<typeof notificationsEn> = {
   },
   contacts: {
     test: "שליחת ניסיון",
-    testLabel: "שליחת התראת ניסיון אל {name}",
+    testLabel: "שליחת ניסיון אל {name}",
     testDelivered: "הניסיון הגיע אל {name}",
     testSimulated: "אין כאן ספק: הניסיון אל {name} נכתב ביומן השרת",
     testFailed: "הניסיון אל {name} לא הגיע: {error}",

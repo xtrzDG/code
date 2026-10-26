@@ -34,7 +34,7 @@ export const conversationMediaEn = {
   },
   place: {
     openMap: "Open in maps",
-    openMapLabel: "Open {place} in maps (opens in a new tab)",
+    openMapLabel: "Open in maps: {place} (opens in a new tab)",
     unnamed: "Shared location",
   },
   deleted: "The file was deleted after the retention period.",

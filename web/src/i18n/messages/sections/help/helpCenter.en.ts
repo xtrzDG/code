@@ -7,7 +7,7 @@
 export const helpCenterEn = {
   title: "Help",
   description: "Short guides to every part of the cabinet.",
-  searchLabel: "Search the help",
+  searchFieldLabel: "Search the help",
   searchPlaceholder: "Telegram, booking, invoice…",
   search: "Search",
   clearSearch: "Clear the search",

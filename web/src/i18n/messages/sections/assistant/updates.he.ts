@@ -33,7 +33,7 @@ export const updatesHe: Translation<typeof updatesEn> = {
     draft: "טיוטה מ-{date}",
     open: "פתיחה",
     discard: "מחיקה",
-    discardLabel: "מחיקת הטיוטה מ-{date}",
+    discardLabel: "מחיקה: הטיוטה מ-{date}",
     discardTitle: "למחוק את הטיוטה הזו?",
     discardDescription: "הלקוחות מעולם לא קיבלו אותה. השינויים שלכם נשארים: „החלת שינויים” הבאה תיבנה מהם.",
     discarded: "הטיוטה נמחקה",

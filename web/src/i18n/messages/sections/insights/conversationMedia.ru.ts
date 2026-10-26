@@ -16,7 +16,7 @@ export const conversationMediaRu: Translation<typeof conversationMediaEn> = {
   voice: {
     transcript: "Расшифровка",
     play: "Слушать",
-    playLabel: "Прослушать голосовое сообщение",
+    playLabel: "Слушать голосовое сообщение",
     playerLabel: "Голосовое сообщение клиента",
     playerUnsupported: "Ваш браузер не может воспроизвести здесь аудио.",
     loading: "Загрузка…",
@@ -33,7 +33,7 @@ export const conversationMediaRu: Translation<typeof conversationMediaEn> = {
   },
   place: {
     openMap: "Открыть на карте",
-    openMapLabel: "Открыть {place} на карте (в новой вкладке)",
+    openMapLabel: "Открыть на карте: {place} (в новой вкладке)",
     unnamed: "Отправленное место",
   },
   deleted: "Файл удалён по истечении срока хранения.",

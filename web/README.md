@@ -978,6 +978,16 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
+- Label in Name (WCAG 2.5.3, axe's `label-content-name-mismatch` since
+  axe-core 4.14): a control with a name of its own (`aria-label`) says the
+  words it shows first, in their order ("Open in maps: Freedom Square"), so
+  saying what is on screen reaches it. In the dictionaries `remove` is what a
+  button shows and `removeLabel` its name; `src/i18n/labelInName.test.ts`
+  checks every such pair in every language, and a field's own label is a
+  `…FieldLabel`, which pairs with nothing. Words beside each other in
+  separate elements need a space between them (`{" "}`), or the check reads
+  them as one word. Figures drawn on a control that are not its label (the
+  heatmap's "20%", a night's "1/2") sit over it, outside the button.
 - Landmarks: one `<h1>` per page (the section's, inside a section frame),
   the main navigation, the tab bar and the section tabs are named `<nav>`s,
   `aria-current="page"` marks where you are everywhere, badges read as "3

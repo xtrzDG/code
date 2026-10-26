@@ -31,7 +31,7 @@ export const dataExportsKa: Translation<typeof dataExportsEn> = {
     requested: "მოთხოვნილია {date}",
     readyUntil: "ინახება {date}-მდე",
     download: "ZIP-ის ჩამოტვირთვა",
-    downloadLabel: "{date}-ს მოთხოვნილი ექსპორტის ჩამოტვირთვა",
+    downloadLabel: "ZIP-ის ჩამოტვირთვა: {date}-ს მოთხოვნილი ექსპორტი",
     downloadStarted: "ჩამოტვირთვა დაიწყო",
     downloadsLeft: { one: "დარჩა {count} ჩამოტვირთვა {total}-დან", other: "დარჩა {count} ჩამოტვირთვა {total}-დან" },
     usedUp: "ეს ექსპორტი უკვე სამჯერ ჩამოიტვირთა. კიდევ ერთი ასლისთვის მოამზადეთ ახალი.",

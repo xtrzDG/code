@@ -81,7 +81,7 @@ export const inboxCardEn = {
     manage: "Manage quick replies",
     noMatch: "No quick reply matches “/{query}”.",
     missing: "Fill in before sending:",
-    fillLabel: "Value for {variable}",
+    fillFieldLabel: "Value for {variable}",
     fill: "Fill in",
     placeholdersLeft: "Fill in the parts in braces before sending: {variables}.",
     variables: {

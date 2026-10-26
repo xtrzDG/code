@@ -24,7 +24,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
     exportLabel: "Daten von {name} exportieren",
     exported: "Die Datei mit den Daten wurde heruntergeladen",
     delete: "Daten löschen",
-    deleteLabel: "Daten von {name} löschen",
+    deleteLabel: "Daten löschen: {name}",
     deleteTitle: "Alle Daten von {name} löschen?",
     deleteDescription: "Nachrichten, Anruftranskripte und Aufnahmen dieses Kunden werden endgültig gelöscht; Gespräche, Buchungen, Anfragen und Übergaben bleiben ohne personenbezogene Daten. Das lässt sich nicht rückgängig machen.",
     deleteConfirm: "Endgültig löschen",

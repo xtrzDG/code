@@ -26,7 +26,7 @@ export const adminTeamHe: Translation<typeof adminTeamEn> = {
   roleFor: "התפקיד של {name}",
   changed: "התפקיד שונה",
   remove: "הסרה",
-  removeLabel: "הסרת {name} מהצוות",
+  removeLabel: "הסרה של {name} מהצוות",
   removeTitle: "להסיר את {name} מצוות הניהול?",
   removeDescription: "הגישה לעמודי הניהול תיחסם בבקשה הבאה שלו.",
   removed: "הוסר מהצוות",

@@ -127,7 +127,7 @@ export const billingDe: Translation<typeof billingEn> = {
   },
   documents: {
     invoice: "Rechnung herunterladen",
-    invoiceLabel: "Rechnung {name} herunterladen (PDF)",
+    invoiceLabel: "Rechnung herunterladen: {name} (PDF)",
     receipt: "Beleg",
     receiptLabel: "Beleg zur Rechnung {name} (PDF)",
     downloading: "Wird heruntergeladen…",

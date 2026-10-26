@@ -31,7 +31,7 @@ export const dataExportsRu: Translation<typeof dataExportsEn> = {
     requested: "Запрошена {date}",
     readyUntil: "Хранится до {date}",
     download: "Скачать ZIP",
-    downloadLabel: "Скачать выгрузку, запрошенную {date}",
+    downloadLabel: "Скачать ZIP: выгрузка, запрошенная {date}",
     downloadStarted: "Скачивание началось",
     downloadsLeft: {
       one: "Осталось {count} скачивание из {total}",

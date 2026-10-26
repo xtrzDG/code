@@ -101,7 +101,7 @@ export function AllowedSitesEditor({
       {canManage ? (
         <form noValidate onSubmit={add} className="space-y-2">
           <Field
-            label={t("widgetSites.addLabel")}
+            label={t("widgetSites.addFieldLabel")}
             hint={isFull ? tp("widgetSites.full", MAX_ALLOWED_SITES, { count: MAX_ALLOWED_SITES }) : t("widgetSites.addHint")}
             error={addError ? t(addError === "invalid" ? "widgetSites.invalid" : "widgetSites.duplicate") : undefined}
           >

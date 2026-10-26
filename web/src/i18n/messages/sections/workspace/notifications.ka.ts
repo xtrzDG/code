@@ -76,7 +76,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
   },
   contacts: {
     test: "სატესტოს გაგზავნა",
-    testLabel: "სატესტო შეტყობინების გაგზავნა: {name}",
+    testLabel: "სატესტოს გაგზავნა: {name}",
     testDelivered: "სატესტო მივიდა: {name}",
     testSimulated: "აქ პროვაიდერი არ არის: სატესტო {name}-სთვის სერვერის ჟურნალში ჩაიწერა",
     testFailed: "სატესტო {name}-სთვის ვერ მივიდა: {error}",

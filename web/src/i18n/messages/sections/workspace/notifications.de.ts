@@ -74,7 +74,7 @@ export const notificationsDe: Translation<typeof notificationsEn> = {
   },
   contacts: {
     test: "Test senden",
-    testLabel: "Testbenachrichtigung an {name} senden",
+    testLabel: "Test senden an {name}",
     testDelivered: "Der Test hat {name} erreicht",
     testSimulated: "Hier gibt es keinen Anbieter: Der Test an {name} wurde ins Server-Log geschrieben",
     testFailed: "Der Test an {name} ist nicht angekommen: {error}",

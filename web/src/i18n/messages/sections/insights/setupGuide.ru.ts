@@ -50,7 +50,7 @@ export const setupGuideRu: Translation<typeof setupGuideEn> = {
   },
   ring: {
     title: "Настройка",
-    label: "Настройка выполнена на {percent}%",
+    label: "Настройка: {percent}% выполнено",
     short: "{percent}%",
   },
   celebrations: {

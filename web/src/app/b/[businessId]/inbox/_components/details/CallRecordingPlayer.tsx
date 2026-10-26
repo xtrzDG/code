@@ -97,7 +97,8 @@ export function CallRecordingPlayer({ callId, label, playLabel }: { callId: stri
         <Button
           variant="secondary"
           size="sm"
-          aria-label={playLabel}
+          // While it loads, the button is named by what it shows ("Loading…").
+          aria-label={isLoading ? undefined : playLabel}
           aria-busy={isLoading || undefined}
           aria-disabled={isLoading || undefined}
           leadingIcon={busyIcon ?? <IconPlay className="size-4" aria-hidden />}

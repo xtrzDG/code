@@ -14,9 +14,9 @@ export const quickRepliesHe: Translation<typeof quickRepliesEn> = {
   languages: "שפות",
   variablesUsed: "ממלאת",
   edit: "עריכה",
-  editLabel: "עריכת התשובה המהירה „{title}”",
+  editLabel: "עריכה: התשובה המהירה „{title}”",
   delete: "מחיקה",
-  deleteLabel: "מחיקת התשובה המהירה „{title}”",
+  deleteLabel: "מחיקה: התשובה המהירה „{title}”",
   confirmDelete: {
     title: "למחוק את התשובה המהירה הזו?",
     description: "„{title}” תיעלם מהבורר לכל הצוות.",
@@ -38,7 +38,7 @@ export const quickRepliesHe: Translation<typeof quickRepliesEn> = {
     textHint: "השאירו שפה ריקה אם אין בה צורך. נדרש לפחות טקסט אחד.",
     needOneText: "כתבו את הטקסט בשפה אחת לפחות.",
     insert: "הוספה",
-    insertLabel: "הוספת {variable} לטקסט ב{language}",
+    insertLabel: "הוספה של {variable} לטקסט ב{language}",
     preview: "תצוגה מקדימה",
     sample: {
       name: "נועה",

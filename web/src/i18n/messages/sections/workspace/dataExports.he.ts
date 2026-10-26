@@ -31,7 +31,7 @@ export const dataExportsHe: Translation<typeof dataExportsEn> = {
     requested: "התבקש {date}",
     readyUntil: "נשמר עד {date}",
     download: "הורדת ZIP",
-    downloadLabel: "הורדת הייצוא שהתבקש {date}",
+    downloadLabel: "הורדת ZIP: הייצוא שהתבקש {date}",
     downloadStarted: "ההורדה התחילה",
     downloadsLeft: { one: "נשארה הורדה {count} מתוך {total}", other: "נשארו {count} הורדות מתוך {total}" },
     usedUp: "הייצוא הזה הורד שלוש פעמים. הכינו חדש לעותק נוסף.",

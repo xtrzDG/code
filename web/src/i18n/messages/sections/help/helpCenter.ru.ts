@@ -6,7 +6,7 @@ import type { helpCenterEn } from "./helpCenter.en";
 export const helpCenterRu: Translation<typeof helpCenterEn> = {
   title: "Помощь",
   description: "Короткие инструкции ко всем разделам кабинета.",
-  searchLabel: "Поиск по справке",
+  searchFieldLabel: "Поиск по справке",
   searchPlaceholder: "Telegram, запись, счёт…",
   search: "Найти",
   clearSearch: "Очистить поиск",

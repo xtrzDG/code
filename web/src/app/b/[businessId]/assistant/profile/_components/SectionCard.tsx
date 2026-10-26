@@ -3,11 +3,13 @@
 /**
  * One card of Assistant → Business profile: the section's name and icon,
  * a line of what it holds now, and how much is left to add (or that it is
- * complete). The whole card opens the section's editor.
+ * complete). The whole card opens the section's editor; its name is what it
+ * shows ("Edit" is said, not shown), so saying what is on the card reaches
+ * it (WCAG 2.5.3, Label in Name).
  */
 
 import Link from "next/link";
-import { useId, type ComponentType, type SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react";
 
 import { IconAlert, IconBook, IconBuilding, IconCheck, IconChevronRight, IconClock, IconMapPin, IconTag, IconUsers } from "@/components/icons";
 import { Badge, Skeleton, UserSentence } from "@/components/ui";
@@ -60,14 +62,13 @@ export function SectionCard({
   gaps: SectionGaps | undefined;
 }) {
   const { t } = useI18n();
-  const describedBy = useId();
   const Icon = ICONS[section];
   const title = t(`profileEdit.sections.${section}.title`);
+  // "Edit {section}": the words around the section's name are said, not shown.
+  const [before = "", after = ""] = t("profileEdit.open").split("{section}").map((words) => words.trim());
   return (
     <Link
       href={href}
-      aria-label={t("profileEdit.open", { section: title })}
-      aria-describedby={describedBy}
       className="group motion-lift flex h-full min-w-0 flex-col gap-4 rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
     >
       <div className="flex items-start gap-3">
@@ -75,12 +76,14 @@ export function SectionCard({
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
+          {before ? <span className="sr-only">{before}</span> : null}
           <h3 className="text-[0.9375rem] font-semibold tracking-tight text-ink">{title}</h3>
-          <div id={describedBy} className="text-sm text-ink-muted">
+          {after ? <span className="sr-only">{after}</span> : null}
+          <div className="text-sm text-ink-muted">
             {summary === null ? (
               <Skeleton className="mt-1.5 h-3.5 w-40" />
             ) : (
-              // A preview of what the section holds: two lines at most, the whole of it in the tooltip and for screen readers.
+              // A preview of what the section holds: two lines at most, the whole of it in the tooltip and in the card's name.
               <p data-clip="content" title={interpolate(summary.text, summary.values)} className="line-clamp-2 break-words">
                 <UserSentence {...summary} />
               </p>

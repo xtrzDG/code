@@ -11,7 +11,7 @@ export const widgetSitesKa: Translation<typeof widgetSitesEn> = {
   sites: { one: "{count} საიტი", other: "{count} საიტი" },
   listLabel: "დაშვებული საიტები",
   empty: "სია ჯერ არ არის: ჩატი ნებისმიერ საიტზე მუშაობს.",
-  addLabel: "საიტის მისამართი",
+  addFieldLabel: "საიტის მისამართი",
   addHint: "როგორც ბრაუზერის მისამართის ზოლში. მისამართი www.-ით და მის გარეშე, http და https ერთ საიტად ითვლება.",
   placeholder: "https://cafe-batumi.ge",
   add: "დამატება",

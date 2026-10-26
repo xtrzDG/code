@@ -56,31 +56,42 @@ export function HeatCell({
         : t("bookingCalendar.week.share", { percent });
   const countText = tp("bookings.count", count);
   return (
-    <button
-      type="button"
-      data-heat-cell={id}
-      tabIndex={isActive ? 0 : -1}
-      onFocus={onFocus}
-      onClick={onOpen}
-      aria-label={t("bookingCalendar.week.cell", {
-        place: placeName,
-        date: formatLocalDate(date, locale, { weekday: "long", day: "numeric", month: "long" }),
-        load: loadText,
-        count: countText,
-      })}
-      style={isClosed ? CLOSED_STYLE : { backgroundColor: levelBackground(level) }}
-      className={cn(
-        "flex h-14 w-full cursor-pointer flex-col items-center justify-center rounded-lg border text-ink transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-md",
-        isClosed ? "border-line bg-surface-muted text-ink-subtle" : "border-line/70",
-        isTotal && "font-semibold",
-      )}
-    >
-      <span className="text-sm font-semibold tabular-nums">{isClosed ? t("bookingCalendar.week.closed") : rooms ? `${rooms.booked}/${rooms.open}` : percent}</span>
-      {isClosed ? null : (
-        // The muted ink keeps AA on the lighter steps only; the deeper ones take the full ink.
-        <span className={cn("text-[11px] tabular-nums", level >= 3 ? "text-ink" : "text-ink-muted")}>{countText}</span>
-      )}
-    </button>
+    // What the cell shows is drawn over its button, not inside it: the numbers are the day's figures, and the
+    // button's name says them in words (a button's visible words belong in its name, WCAG 2.5.3).
+    <div className="group relative h-14 w-full">
+      <button
+        type="button"
+        data-heat-cell={id}
+        tabIndex={isActive ? 0 : -1}
+        onFocus={onFocus}
+        onClick={onOpen}
+        aria-label={t("bookingCalendar.week.cell", {
+          place: placeName,
+          date: formatLocalDate(date, locale, { weekday: "long", day: "numeric", month: "long" }),
+          load: loadText,
+          count: countText,
+        })}
+        style={isClosed ? CLOSED_STYLE : { backgroundColor: levelBackground(level) }}
+        className={cn(
+          "absolute inset-0 cursor-pointer rounded-lg border transition-[transform,box-shadow] duration-150 group-hover:-translate-y-px group-hover:shadow-md",
+          isClosed ? "border-line bg-surface-muted" : "border-line/70",
+        )}
+      />
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-0 flex flex-col items-center justify-center transition-transform duration-150 group-hover:-translate-y-px",
+          isClosed ? "text-ink-subtle" : "text-ink",
+          isTotal && "font-semibold",
+        )}
+      >
+        <span className="text-sm font-semibold tabular-nums">{isClosed ? t("bookingCalendar.week.closed") : rooms ? `${rooms.booked}/${rooms.open}` : percent}</span>
+        {isClosed ? null : (
+          // The muted ink keeps AA on the lighter steps only; the deeper ones take the full ink.
+          <span className={cn("text-[11px] tabular-nums", level >= 3 ? "text-ink" : "text-ink-muted")}>{countText}</span>
+        )}
+      </span>
+    </div>
   );
 }
 

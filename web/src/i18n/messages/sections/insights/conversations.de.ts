@@ -23,7 +23,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     playerLabel: "Aufnahme des Anrufs vom {date}",
     playerUnsupported: "Ihr Browser kann hier kein Audio abspielen.",
     play: "Aufnahme abspielen",
-    playLabel: "Aufnahme des Anrufs vom {date} abspielen",
+    playLabel: "Aufnahme abspielen: Anruf vom {date}",
     loading: "Die Aufnahme wird geladen…",
     playMissing: "Diese Aufnahme ist nicht mehr verfügbar: Sie wurde nach der Aufbewahrungsfrist oder mit den Daten des Kunden gelöscht.",
     playError: "Die Aufnahme konnte nicht geladen werden: Der Sprachdienst antwortet nicht. Versuchen Sie es in einer Minute erneut.",

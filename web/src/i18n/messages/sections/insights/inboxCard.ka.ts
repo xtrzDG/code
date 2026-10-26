@@ -78,7 +78,7 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
     manage: "სწრაფი პასუხების მართვა",
     noMatch: "სწრაფი პასუხი „/{query}“ არ მოიძებნა.",
     missing: "გაგზავნამდე შეავსეთ:",
-    fillLabel: "მნიშვნელობა: {variable}",
+    fillFieldLabel: "მნიშვნელობა: {variable}",
     fill: "ჩასმა",
     placeholdersLeft: "გაგზავნამდე შეავსეთ ფიგურულ ფრჩხილებში მოცემული ნაწილები: {variables}.",
     variables: {

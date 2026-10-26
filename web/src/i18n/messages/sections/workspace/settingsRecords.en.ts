@@ -25,7 +25,7 @@ export const settingsRecordsEn = {
     exportLabel: "Export the data of {name}",
     exported: "The file with the data is downloaded",
     delete: "Delete data",
-    deleteLabel: "Delete the data of {name}",
+    deleteLabel: "Delete data of {name}",
     deleteTitle: "Delete all data of {name}?",
     deleteDescription: "Messages, call transcripts and recordings of this customer are deleted for good; conversations, bookings, leads and handoffs stay without personal data. This cannot be undone.",
     deleteConfirm: "Delete for good",
