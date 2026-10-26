@@ -103,7 +103,8 @@ Rules and decisions (English):
   [`docs/API_CHANGELOG.md`](docs/API_CHANGELOG.md): the API's compatibility
   rules and its changes;
 - [`docs/operations/`](docs/operations/): deploys, CI, capacity, SLOs,
-  observability, backups and the runbooks;
+  observability, backups and the runbooks, and the owner's go-live
+  checklist ([`go-live.md`](docs/operations/go-live.md));
 - [`docs/security/`](docs/security/) and [`SECURITY.md`](SECURITY.md): the
   threat model and how to report a vulnerability;
 - [`docs/glossary.md`](docs/glossary.md): the product's terms;

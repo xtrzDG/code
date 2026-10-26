@@ -2,7 +2,7 @@
 The scheduled guards CI cannot replace (the restore drill, the perf
 budgets, the nightly evals, the DAST baseline, the repository settings)
 are themselves watched: every day a workflow
-opens an issue for each one without a successful run in 8 days.
+opens an issue for each one without a successful scheduled run in 8 days.
 """
 
 import re
@@ -58,10 +58,18 @@ def test_it_watches_every_scheduled_guard_for_eight_days() -> None:
         assert triggers.get("schedule"), f"{name} has no schedule to watch"
 
 
-def test_it_asks_for_successful_runs_and_opens_each_issue_once() -> None:
+def test_it_asks_for_successful_scheduled_runs_and_opens_each_issue_once() -> None:
     script = str(watch_step()["run"])
 
     assert "gh run list --workflow" in script and "--status success" in script
+    # A run by hand, a pull request's or automerge's says nothing about the
+    # schedule: only scheduled runs count.
+    assert "--event schedule" in script
+    # The title stays the same so that the issues already open still match.
+    assert (
+        'title="Schedule watch: ${workflow} has no successful run in '
+        '${MAX_AGE_DAYS} days"' in script
+    )
     assert re.search(r'gh issue list --state open --search "in:title', script)
     assert "grep -Fxq" in script
     assert "gh issue create" in script

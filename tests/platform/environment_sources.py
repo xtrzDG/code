@@ -8,7 +8,9 @@ Sources of truth:
 - `web/src` (the cabinet's server code) for the cabinet; `web/.env.example`
   and the "Environment" table of `web/README.md` for people;
 - `docker-compose.yml` and `render.yaml` for the deployments;
-- the workflows' repository variables (`vars.NAME`) for CI and promotion.
+- the workflows' repository variables (`vars.NAME`) for CI and promotion,
+  and their secrets (`secrets.NAME`);
+- the k6 scenarios (`__ENV.NAME`) and the image's entrypoint for load tests.
 
 The owner's launch guide (`docs/LAUNCH.md`) may name only variables, API
 routes and files that exist.
@@ -116,13 +118,48 @@ def workflow_variables() -> set[str]:
     environment, so the guides may name them too.
     """
 
+    return workflow_references("vars")
+
+
+def workflow_secrets() -> set[str]:
+    """
+    GitHub secrets the workflows read (`secrets.NAME`), of the repository or
+    of an environment: they exist only in GitHub, so the guides name them
+    with the workflow that reads them.
+    """
+
+    return workflow_references("secrets")
+
+
+def workflow_references(context: str) -> set[str]:
     return {
         name
         for path in sorted((ROOT / ".github" / "workflows").glob("*.yml"))
         for name in re.findall(
-            r"\bvars\.([A-Z][A-Z0-9_]*)", path.read_text(encoding="utf-8")
+            rf"\b{context}\.([A-Z][A-Z0-9_]*)", path.read_text(encoding="utf-8")
         )
     }
+
+
+def load_test_options() -> set[str]:
+    """Options of the k6 scenarios (`__ENV.NAME` in perf/k6)."""
+
+    return {
+        name
+        for path in sorted((ROOT / "perf" / "k6").rglob("*.js"))
+        for name in re.findall(
+            r"__ENV\.([A-Z][A-Z0-9_]*)", path.read_text(encoding="utf-8")
+        )
+    }
+
+
+def entrypoint_variables() -> set[str]:
+    """
+    What the image's entrypoint reads itself (`${NAME` in
+    docker/entrypoint.sh), e.g. the number of uvicorn processes.
+    """
+
+    return set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)", read("docker/entrypoint.sh")))
 
 
 README: str = "README.md"

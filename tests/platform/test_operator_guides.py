@@ -23,6 +23,7 @@ from tests.platform.environment_sources import (
     backend_variables,
     cabinet_variables,
     read,
+    workflow_secrets,
     workflow_variables,
 )
 
@@ -52,6 +53,7 @@ def test_the_launch_guide_names_only_what_exists() -> None:
         | COMPOSE_VARIABLES
         | cabinet_variables()
         | workflow_variables()
+        | workflow_secrets()
     )
     described: set[str] = {
         re.sub(r"\{[^}]*\}", "{}", path)

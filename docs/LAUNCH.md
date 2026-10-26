@@ -1945,3 +1945,103 @@ Read-only» (имя секрета — в SECURITY.md).
    Messenger (сообщение доходит и получает ответ), звонок на номер помощника
    (после звонка в разговоре есть расшифровка), Google Calendar, тестовая оплата
    через Flitt, появление событий в Langfuse и Sentry.
+
+## 8. Перед пилотом: эксплуатация с доказательствами
+
+Всё, что держит продукт на ногах, в репозитории уже есть: деплой только после
+проверок, зашифрованные копии вне Render и учения восстановления, оповещения,
+страница статуса, нагрузочные тесты и уровни обслуживания. Но доказывают они
+что-то, только когда работают как настоящие сервисы: развёрнуты, копируют
+базу, восстанавливают её по расписанию, видны снаружи и измерены на тарифе
+продакшена. Для этого нужны аккаунты, которые заводит только владелец. Порядок,
+команды и проверка каждого шага — в `docs/operations/go-live.md`
+(по-английски), здесь — тот же список коротко. Значения в угловых скобках
+(`<адрес API>`) — ваши: в репозиторий их не кладите. Доказательства (номер
+запуска, строка лога, снимок экрана) соберите в pull request или задачу,
+которая закрывает пункт 17.22.3 `docs/PLAN.md`.
+
+1. **Ветка `main` по умолчанию и ветка `release`.** На 2026-10-26 веткой по
+   умолчанию была рабочая ветка, а `main` оставалась первым коммитом; всё
+   остальное (CI, подписанные образы, staging, перенос в `release`) рассчитано
+   на `main`, а расписания GitHub запускает на ветке по умолчанию. Влейте
+   рабочую ветку в `main`, сделайте `main` веткой по умолчанию (Settings →
+   General → Default branch), защитите её, как требует
+   `.github/repository-settings.json` (SECURITY.md, «Repository settings»),
+   положите секрет `REPO_SETTINGS_TOKEN` и создайте `release`:
+   `git push origin main:release`. Проверка:
+   `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` печатает
+   `main`, ручной запуск `.github/workflows/repo-settings.yml` зелёный.
+2. **Staging** (`render.staging.yaml`, раздел 3): свои адреса, вход по почте,
+   `SENTRY_DSN`, роли базы (пункт 3), бизнес для проверки с включённым чатом.
+   Проверка: `scripts/smoke.sh <адрес staging API> <адрес staging кабинета>`
+   с `SMOKE_WIDGET_BUSINESS_ID` и `SMOKE_EXPECT_REPLY` проходит целиком.
+3. **Роли базы и pgvector** — на каждом сервере базы, как в подразделе «Роли
+   базы данных» раздела 3: группы `workshop_tenant` и `workshop_platform`
+   (миграция 1200), логины `workshop_tenant_app` и `workshop_platform_app`,
+   адреса `DATABASE_URL_TENANT` и `DATABASE_URL_PLATFORM` у API; затем
+   `select workshop.enable_knowledge_embeddings();` от роли миграций
+   (раздел 4.2). Проверка: запрос к `pg_roles` из шага 3
+   `docs/operations/go-live.md` — ни одной роли с `rolsuper` или
+   `rolbypassrls`, каждый логин в своей группе; функция отвечает `t`;
+   `GET /readyz` отвечает `ready`.
+4. **Продакшен** (`render.yaml`, раздел 3) и переменные волны 21 у
+   `workshop-api` (оба воркера копируют их сами): `EMBEDDINGS_API_KEY` (не
+   раньше 2026-11-22, раздел 4.2), `META_APP_ID`, `META_APP_SECRET`,
+   `META_VERIFY_TOKEN`, `META_EMBEDDED_SIGNUP_CONFIG_ID` (4.5),
+   `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`,
+   `TWILIO_MESSAGING_SERVICE_SID` и `PHONE_NUMBER_PROVIDER` (4.3 и 4.6),
+   `STRIPE_SECRET_KEY` и `STRIPE_WEBHOOK_SECRET` (4.7.2). Пустые — то, чем
+   пока не пользуетесь. Проверка: `scripts/smoke.sh <адрес API> <адрес
+   кабинета>` и раздел 7.
+5. **Окружения GitHub.** `staging` и `production` с переменными `API_URL` и
+   `CABINET_URL` (у staging ещё `SMOKE_WIDGET_BUSINESS_ID` и
+   `SMOKE_EXPECT_REPLY`); `backup-drill` с секретами
+   `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` (ключ учений),
+   `BACKUP_AGE_IDENTITY` и `SENTRY_DSN`. Переменные репозитория
+   `PRODUCTION_API_URL`, `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`,
+   `BACKUP_S3_BUCKET`, `SENTRY_ORG`, `SENTRY_PROJECT`; секреты репозитория
+   `SENTRY_AUTH_TOKEN`, `REPO_SETTINGS_TOKEN`, ключи ночной оценки ответов
+   `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` и `ANTHROPIC_API_KEY` (без них
+   оценка пропускается, а запуск всё равно зелёный) и ключи песочниц для
+   `.github/workflows/contracts-live.yml`. Полный список — шаг 5
+   `docs/operations/go-live.md`. Проверка: `gh secret list --env backup-drill`
+   и `gh variable list` показывают имена; ручной запуск «Deploy smoke test»
+   для staging зелёный во всех трёх заданиях.
+6. **Бакет копий в ЕС и ключи age** (раздел 4.11): бакет с версиями у
+   другого провайдера, три ключа доступа (копии, учения, журнал удалений),
+   ключ учений и ключ на хранении (в сейфе, доступ у двоих). Проверка: ручной
+   запуск `workshop-backup` (Trigger Run) кладёт архив; ручной запуск учений
+   с галочкой production зелёный; в Sentry Crons отметились
+   `database-backup` и `restore-drill`; держатели ключа на хранении один раз
+   открывают им архив (`age --decrypt`, затем `pg_restore --list`).
+7. **Sentry**: проекты для бэкенда и для кабинета (и отдельные для staging),
+   `SENTRY_DSN` у `workshop-api` (воркеры и `workshop-backup` копируют его) и
+   у `workshop-cabinet`; карты исходников кабинета — `SENTRY_AUTH_TOKEN`,
+   `SENTRY_ORG`, `SENTRY_PROJECT` в GitHub. Проверка: тестовое сообщение из
+   Shell `workshop-api` и ошибка из консоли браузера в кабинете доходят до
+   своих проектов; монитор `platform-alerts` отмечается каждые пять минут.
+8. **Внешний монитор в ЕС**: раз в минуту `GET /readyz` и
+   `GET /healthz/pipeline` API и страница `/status` кабинета, тревога после
+   двух неудач подряд. Проверка: сутки всё зелёное; учение — приостановить
+   `workshop-staging-worker` (Suspend): через несколько минут проверка
+   конвейера staging падает и дежурный получает вызов; после Resume она
+   снова зелёная.
+9. **Дежурства**: еженедельная смена (основной и запасной) хранится в
+   сервисе оповещений, не в репозитории; туда же ведут монитор, Sentry, чат
+   дежурных (`PLATFORM_ALERT_TELEGRAM_CHAT_IDS`) и почта
+   (`PLATFORM_ALERT_EMAILS`), а задачи о молчащих расписаниях приходят из
+   GitHub. Сроки реакции — `docs/operations/incident.md`. Проверка: тестовый
+   вызов доходит до телефона основного, а без подтверждения — до запасного.
+10. **Ёмкость на тарифе продакшена** (`starter`: половина CPU и 512 МБ):
+    базовая линия `.github/workflows/perf.yml` (ручной запуск с
+    `update_baseline`, новый `perf/baseline.json` — в pull request) и
+    сценарии k6 на стенде, урезанном до одного экземпляра `starter` (команды
+    — шаг 10 `docs/operations/go-live.md`). Проверка: цифры с датой и
+    коммитом — в `docs/operations/capacity.md`, следующий плановый запуск
+    сравнивается с новой базовой линией и зелёный.
+11. **Две недели пилота, затем пороги оповещений**: бюджеты ошибок
+    (`/admin/system`, `GET /v1/admin/system/error-budget`) и все сработавшие
+    оповещения — настоящий сбой или шум. Правило, которое дважды подняло
+    тревогу зря или пропустило сбой, меняется в `ops/alerts/` вместе с
+    `app/use_cases/admin/alerts/alert_rules.py` (`docs/operations/slo.md`,
+    «Changing a rule»). Проверка: pull request с цифрами двух недель влит.
