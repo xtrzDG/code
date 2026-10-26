@@ -1112,6 +1112,52 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
   and iOS Safari) after changing the frame.
 
+#### Screen reader pass on the staff phone loop
+
+What axe and the visual tests cannot hear: the front desk's loop on a phone
+read by VoiceOver and by TalkBack. Run it on a real iPhone (VoiceOver,
+Safari or the installed app) and a real Android phone (TalkBack, Chrome or
+the installed app) before a release that changes the phone chrome, the
+Inbox, a conversation, Bookings' Today or the toasts, as part of the
+[real-device runbook](#real-device-runbook) (same setup: a deployment, a
+live assistant, a staff member signed in, a second device as the
+customer). Note the devices, OS, browser and screen reader versions and
+each step's result (pass, or what was read instead) in the release's PR.
+Move with a swipe right or left, activate with a double tap; never use the
+screen's picture to pass a step.
+
+1. **Overview.** The page's name is read as a level-1 heading from the top
+   bar; the (i) button and the "?" say what they open; the live dot says
+   the live status. The tab bar is read as navigation, the current tab as
+   the current page, the Inbox badge as "N waiting".
+2. **Today.** Each row is one item with its label and its number ("Waiting
+   for a person, 2"); a folded row says its name, its summary and that it
+   is collapsed, and says "expanded" after a double tap.
+3. **Inbox.** The views are read as a group with the selected one; each
+   conversation is read as one item: the customer's name, the last
+   message, its time and channel, and "needs a person" where it does; a
+   Hebrew or Arabic name and message are read in their own language where
+   the voice has it.
+4. **A conversation from a notification** (runbook step 4). Focus starts at
+   the top of the conversation, not at the end of the page; each message is
+   read with who wrote it and when; the reply box is read by its label
+   while the keyboard is open, and the sent reply can be reached right
+   after it.
+5. **Resolve and Undo.** The confirmation is read as a dialog with its
+   title and keeps focus inside until it closes; the toast is announced
+   when it appears, and its Undo can be reached and activated before it
+   goes; after Undo the conversation is read under Needs a person.
+6. **Bookings, Today.** Each card is read in time order with the time, the
+   name and the party; Arrived and No-show say whose booking they mark and,
+   before the start time, that they wait for it; Undo is announced as in
+   step 5. The floating "New booking" comes after the cards and before the
+   tab bar.
+7. **More.** The sheet is read as a dialog, focus moves into it and back to
+   "More" when it closes.
+8. **Both themes, large text.** Repeat steps 3 and 6 in the dark and the
+   light theme and with the system's largest text size: nothing is read
+   twice, skipped or cut off.
+
 ### Polish sweep (wave 7): before and after
 
 What the screenshot tour of wave 6 showed, and what the cabinet does now.
