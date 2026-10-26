@@ -535,13 +535,6 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      # The invoice and receipt downloads render PDFs (WeasyPrint, Pango).
-      - name: Install the PDF engine's libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
-
       - name: Install API dependencies
         working-directory: .
         run: uv sync --frozen
@@ -556,36 +549,58 @@ jobs:
       - name: Install cabinet dependencies
         run: npm ci --no-audit --no-fund
 
-      # The browser's system libraries and fonts (--with-deps) come from
-      # Ubuntu's mirror, which some runners reach at 30 kB/s: their 22 MB took
-      # 9-13 minutes of a shard's 15. They are kept in the Actions cache per
-      # runner image and lockfile; apt takes a cached package only when it
-      # matches the size and hash of its signed index, and fetches the rest.
+      # The PDF engine's libraries (the invoice and receipt downloads render
+      # PDFs with WeasyPrint and Pango) and the browser's system libraries and
+      # fonts (--with-deps) come from Ubuntu's mirror, which some runners reach
+      # at 30 kB/s or not at all: on 23 October 2026 the browser's 22 MB took
+      # 9-13 minutes of a shard's 15, on 26 October `apt-get update` stalled
+      # for all of them. The packages are kept in the Actions cache per runner
+      # image and lockfile. On a hit dpkg installs them without apt: they are
+      # the packages an earlier run of this workflow fetched and apt checked
+      # against its signed index, and only this repository's own runs write
+      # the cache. On a miss apt fetches them (with timeouts and retries) and
+      # the cache keeps them.
       - name: Name the runner image
         id: runner-image
         run: echo "name=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
 
-      - name: Restore the browser's system packages
-        id: browser-packages
+      - name: Restore the system packages
+        id: system-packages
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/browser-packages
-          key: browser-packages-${{ steps.runner-image.outputs.name }}-${{ hashFiles('web/package-lock.json') }}
+          path: ~/system-packages
+          key: system-packages-${{ steps.runner-image.outputs.name }}-${{ hashFiles('web/package-lock.json') }}
 
-      - name: Install Chromium for Playwright
+      - name: Install the PDF engine's and the browser's system packages
+        env:
+          CACHE_HIT: ${{ steps.system-packages.outputs.cache-hit }}
+          PDF_PACKAGES: libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
         run: |
-          echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99keep-downloaded-packages
-          mkdir -p ~/browser-packages
-          find ~/browser-packages -maxdepth 1 -name '*.deb' -exec sudo cp -t /var/cache/apt/archives {} +
+          # Every PDF package installed (dpkg-query prints nothing for an unknown one).
+          installed() {
+            # shellcheck disable=SC2086 # one word per package
+            [[ "$(dpkg-query --show --showformat='${db:Status-Status}\n' $PDF_PACKAGES 2>/dev/null | grep -cx installed)" == "$(wc -w <<< "$PDF_PACKAGES")" ]]
+          }
+          if [[ "$CACHE_HIT" == "true" ]] && sudo dpkg --install ~/system-packages/*.deb && installed; then
+            npx playwright install chromium
+            exit 0
+          fi
+          printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Acquire::Retries "5";' 'Acquire::http::Timeout "30";' \
+            | sudo tee /etc/apt/apt.conf.d/99ci-packages
+          mkdir -p ~/system-packages
+          find ~/system-packages -maxdepth 1 -name '*.deb' -exec sudo cp -t /var/cache/apt/archives {} +
+          sudo apt-get update
+          # shellcheck disable=SC2086 # one word per package
+          sudo apt-get install --yes --no-install-recommends --fix-broken $PDF_PACKAGES
           npx playwright install --with-deps chromium
-          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp -t ~/browser-packages {} +
+          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp -t ~/system-packages {} +
 
-      - name: Keep the browser's system packages
-        if: steps.browser-packages.outputs.cache-hit != 'true'
+      - name: Keep the system packages
+        if: steps.system-packages.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/browser-packages
-          key: ${{ steps.browser-packages.outputs.cache-primary-key }}
+          path: ~/system-packages
+          key: ${{ steps.system-packages.outputs.cache-primary-key }}
 
       - name: Download the cabinet build
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2

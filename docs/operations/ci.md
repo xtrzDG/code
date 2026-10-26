@@ -136,12 +136,17 @@ reuses an admin's sign-in for a few minutes: a second sign-in of the same
 address would wait out the 30-second code cooldown, and a spec's duration
 would depend on its neighbours.
 
-The browser's system libraries and fonts (`playwright install --with-deps`,
-about 22 MB from Ubuntu's mirror) come from the Actions cache, keyed by the
-runner image and `web/package-lock.json`: some runners reach the mirror at
-30 kB/s, and on 23 October 2026 that took 9 to 13 minutes of three shards'
-15. apt installs a cached package only when its size and hash match the
-signed index after `apt-get update`, and downloads whatever changed since.
+The PDF engine's libraries (WeasyPrint's Pango) and the browser's system
+libraries and fonts (`playwright install --with-deps`, about 22 MB from
+Ubuntu's mirror) come from the Actions cache, keyed by the runner image and
+`web/package-lock.json`: some runners reach the mirror at 30 kB/s or not at
+all. On 23 October 2026 the browser's packages took 9 to 13 minutes of
+three shards' 15; on 26 October `apt-get update` itself stalled until a
+shard's timeout. On a hit, dpkg installs the cached packages without apt
+(no `apt-get update`): they are what an earlier run of this workflow
+fetched and apt checked against the signed index, and only this
+repository's own runs write the cache. On a miss, apt fetches them with
+timeouts and retries and the cache keeps what it downloaded.
 
 `web/e2e/support/shards.test.ts` (part of `npm test`) fails while a spec
 has no duration, an entry names a spec that is gone, or a shard of the plan
