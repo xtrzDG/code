@@ -5,6 +5,7 @@
  *   E2E_SKIP_BUILD=1 npm run e2e     # reuse the last `next build`
  *   E2E_SHARD=2/8 npm run e2e        # one CI shard's spec files (support/shards.ts)
  *   npm run e2e:durations            # measure every spec again (e2e/durations.json)
+ *   npm run e2e:visual               # the visual tests (e2e/visual/project.ts), never in the shards
  *
  * The API runs in development mode with in-memory storage, so each run starts
  * with only the demo businesses (SEED_DEMO_DATA, used by live.spec.ts; every
@@ -34,12 +35,16 @@ import {
   WEB_URL,
 } from "./support/env";
 import { matchSpecs, parseShard, readDurations, readSpecNames, specsOfShard, weighSpecs } from "./support/shards";
+import { VISUAL_CLOCK_START, VISUAL_VIEW_TIME } from "./visual/clock";
+import { VISUAL_FILES, VISUAL_NEXT, VISUAL_WORKERS, visualProjects } from "./visual/project";
 
 mkdirSync(ARTIFACTS_DIRECTORY, { recursive: true });
 
 const isCI = Boolean(process.env.CI);
 const skipBuild = process.env.E2E_SKIP_BUILD === "1";
 const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
+/** `npm run e2e:visual`: the visual project, its browser and an API whose clock starts at a fixed moment. */
+const isVisual = process.env.E2E_VISUAL === "1";
 
 const E2E_DIRECTORY = path.join(WEB_DIRECTORY, "e2e");
 /** The route tour's spec files run in the Tbilisi project (support/tour.ts). */
@@ -96,8 +101,9 @@ const UNSET_FOR_API = Object.fromEntries(
 export default defineConfig({
   testDir: ".",
   outputDir: path.join(ARTIFACTS_DIRECTORY, "results"),
-  // One worker: the servers are shared and each test is a short user journey.
-  workers: 1,
+  // One worker: the servers are shared and each test is a short user journey
+  // (the visual tests' read-only pages go side by side, e2e/visual/project.ts).
+  workers: isVisual ? VISUAL_WORKERS : 1,
   fullyParallel: false,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
@@ -138,7 +144,7 @@ export default defineConfig({
       name: "chromium",
       // Spec files only: e2e/**/*.test.ts are the suite's own unit tests (Vitest).
       testMatch: shardSpecs ? matchSpecs(shardSpecs) : /\.spec\.ts$/,
-      testIgnore: matchSpecs(allTourSpecs),
+      testIgnore: [matchSpecs(allTourSpecs), VISUAL_FILES],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
     },
     ...(tourSpecs.length > 0
@@ -154,12 +160,14 @@ export default defineConfig({
           },
         ]
       : []),
+    ...(isVisual ? visualProjects(process.env.VISUAL_BROWSER_WS) : []),
   ],
   webServer: [
     {
       name: "api",
-      // stdout and stderr go to a file the tests read login codes from.
-      command: `uv run uvicorn app.main:create_application --factory --host 127.0.0.1 --port ${API_PORT} > "${API_LOG_PATH}" 2>&1`,
+      // stdout and stderr go to a file the tests read login codes from. The
+      // visual run's API starts its wall clock at VISUAL_CLOCK_START.
+      command: `${isVisual ? "uv run python -m scripts.visual_api" : "uv run uvicorn app.main:create_application --factory"} --host 127.0.0.1 --port ${API_PORT} > "${API_LOG_PATH}" 2>&1`,
       cwd: REPOSITORY_ROOT,
       url: `${API_URL}/healthz`,
       env: {
@@ -202,13 +210,16 @@ export default defineConfig({
         SUPPORT_TELEGRAM,
         SUPPORT_EMAIL: "help@workshop.example",
         PYTHONUNBUFFERED: "1",
+        // The visual run: the widget's code on Channels needs the API's address.
+        ...(isVisual ? { VISUAL_CLOCK_START, APP_BASE_URL: API_URL } : {}),
       },
       reuseExistingServer: false,
       timeout: 120_000,
     },
     {
       name: "cabinet",
-      command: `${skipBuild ? "" : "npm run build && "}npx next start --port ${WEB_PORT}`,
+      // The visual run's server reads the browser's standing clock (e2e/visual/server-clock.mjs).
+      command: `${skipBuild ? "" : "npm run build && "}${isVisual ? VISUAL_NEXT : "npx next"} start --port ${WEB_PORT}`,
       cwd: WEB_DIRECTORY,
       url: `${WEB_URL}/login`,
       env: {
@@ -220,6 +231,7 @@ export default defineConfig({
         NEXT_TELEMETRY_DISABLED: "1",
         // The aw_locale cookie en-XA turns the texts long and accented (pseudo-locale-*.spec.ts).
         PSEUDO_LOCALE: "true",
+        ...(isVisual ? { VISUAL_SERVER_TIME_MS: String(VISUAL_VIEW_TIME.getTime()) } : {}),
       },
       stdout: isCI ? "pipe" : "ignore",
       reuseExistingServer: false,

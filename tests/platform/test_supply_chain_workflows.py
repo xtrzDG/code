@@ -1,7 +1,8 @@
 """
 The supply-chain and settings guards exist and stay pinned: CI publishes,
 attests and signs both images on main; deploy smoke verifies them before a
-promotion; the ZAP baseline scans the running stack with a pinned image;
+promotion; the ZAP baseline scans the running stack with a pinned image,
+the visual tests run in Playwright's image pinned to the runner's version;
 the repository settings check runs daily and expects exactly the checks
 the workflows define.
 """
@@ -27,6 +28,7 @@ GATES: set[str] = {
     "security",
     "images",
     "e2e",
+    "visual",
 }
 
 
@@ -137,6 +139,22 @@ def test_the_dast_baseline_scans_the_running_stack_with_a_pinned_image() -> None
     assert "--rules .zap/rules.tsv" in str(gate["run"])
     assert "steps.seed.outcome == 'success'" in str(gate["if"])
     assert job["timeout-minutes"] <= 45
+
+
+def test_the_visual_tests_browser_is_pinned_to_the_runners_playwright() -> None:
+    script = (ROOT / "web" / "scripts" / "visual-browser.mjs").read_text(
+        encoding="utf-8"
+    )
+    package = json.loads((ROOT / "web" / "package.json").read_text(encoding="utf-8"))
+    found = re.search(r'VISUAL_BROWSER_IMAGE =\s*"([^"]+)"', script)
+    assert found is not None
+    image = found.group(1)
+
+    assert PINNED_IMAGE.match(image), image
+    version = package["devDependencies"]["@playwright/test"]
+    assert image.startswith(f"mcr.microsoft.com/playwright:v{version}-noble@"), (
+        "Update the image (tag and digest) with @playwright/test, then the baselines."
+    )
 
 
 def test_the_settings_check_runs_daily_with_a_read_only_token() -> None:

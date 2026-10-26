@@ -68,6 +68,7 @@ Behind a reverse proxy, run the API with
 | `npm test` | Vitest: the `unit` project (`src/**/*.test.ts` and the e2e suite's own helpers `e2e/**/*.test.ts`, in Node) and the `components` project (`src/**/*.test.tsx`: React components in jsdom with Testing Library and user-event; helpers in `src/test/`). Property tests (`*.property.test.ts`, fast-check) run with a fixed seed; `FC_SEED=<n>` replays another |
 | `npm run knip` | Unused files, exports and dependencies (`knip.config.ts`); CI fails on any |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
+| `npm run e2e:visual` / `e2e:visual:update` | Screenshots of every page compared with their baselines, and the review gate, in the browser of Playwright's image (Docker); `:update` writes the baselines that changed (see [Visual tests and the review gate](#visual-tests-and-the-review-gate)) |
 | `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
 | `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file. With `--check` it measures the pages of `first-load-budget.json` and fails when one of them, or the 3D chunk, is over its budget (CI job "web-build", after the build) |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
@@ -77,7 +78,8 @@ Behind a reverse proxy, run the API with
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
 (CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
 next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
-ten shards that start that build (`docs/operations/ci.md`).
+ten shards that start that build, and the job "visual" `npm run e2e:visual`
+beside them (`docs/operations/ci.md`).
 
 ## End-to-end tests
 
@@ -220,6 +222,7 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
 | `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: spec files go, longest first, to the shard with the least measured work, by `e2e/durations.json`) |
 | `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
+| `E2E_VISUAL` / `VISUAL_BROWSER_WS` | — | Set by `npm run e2e:visual`: the visual projects, the API with its started clock, and the browser server of Playwright's image (see [Visual tests and the review gate](#visual-tests-and-the-review-gate)) |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
@@ -249,12 +252,124 @@ A test that passes only on a retry (CI retries once) is flaky: the reporter
 summary. On `main` a flaky test that `e2e/flaky-known.json` does not list fails
 the job: open an issue and add `{"file", "title", "issue"}` there, or fix it.
 
+## Visual tests and the review gate
+
+`e2e/visual/` takes a screenshot of every page and compares it with its
+baseline in `e2e/visual/__screenshots__/<spec>/`, and runs the review gate
+on every page it opens. It is a Playwright project of its own (`visual`,
+after `visual-platform`, `e2e/visual/project.ts`), never part of
+`npm run e2e` or of its shards; CI runs it in one job (`visual`,
+`docs/operations/ci.md`).
+
+```bash
+cd web
+E2E_SKIP_BUILD=1 npm run e2e:visual          # compare every screen with its baseline
+E2E_SKIP_BUILD=1 npm run e2e:visual:update   # write the baselines that changed
+npm run e2e:visual -- new-business           # one spec file (arguments go to Playwright)
+```
+
+**Same pixels on every machine.** The browser is Chromium of Playwright's
+own image, `mcr.microsoft.com/playwright:v<version>-noble` pinned by digest in
+`scripts/visual-browser.mjs` (its tag must be the `@playwright/test` version,
+`e2e/visual/visualBrowser.test.ts` and `tests/platform/test_supply_chain_workflows.py`
+fail otherwise). The script starts `playwright run-server` in that image
+with this checkout's `node_modules` mounted read-only (the server is
+exactly the runner's version), runs the project against it
+(`VISUAL_BROWSER_WS`; the runner carries the browser's requests to the
+cabinet on this machine's loopback, `exposeNetwork`) and removes the
+container; it needs Docker. The project refuses to run on any other
+browser: the host's Chromium draws other pixels than CI's. Then:
+
+- **One moment.** The API runs as `scripts/visual_api.py`: its wall clock
+  stands at `VISUAL_CLOCK_START` (`e2e/visual/clock.ts`, Wednesday 14 October
+  2026, 11:30 in Tbilisi) while it starts, so the demo businesses
+  (`SEED_DEMO_DATA`) are seeded at that very moment in every run, and runs on
+  from there. The browser's clock stands still a minute and a half later
+  (`page.clock.setFixedTime`), and so does the cabinet server's `Date`
+  (`e2e/visual/server-clock.mjs`, so a page rendered on the server
+  hydrates without a mismatch). The browser reads in Asia/Tbilisi, the
+  restaurant's zone. Authenticator codes follow the API's clock
+  (`e2e/support/apiClock.ts`).
+- **No model, no motion, one typeface.** The rehearsal model plays the
+  assistant (`LLM_PROVIDER=scripted`); reduced motion, `animations:
+  "disabled"`, the caret hidden. The brand faces are `font-display:
+  optional`, which keeps the fallback when a file comes late on a busy
+  machine: every context loads them first and declares them again with
+  `font-display: block` (`e2e/visual/fonts.ts`), so text always waits for
+  the cabinet's own files.
+- **Masks** paint over what a run makes itself: the audit log's entries (the
+  run's own visits), the admin's reply time of the last hour, and the new
+  business's clock times. No ratio of differing pixels is allowed.
+- The demo owner signs in once per run and the tips are put away for them
+  (a phone counts a tip as seen after a moment on screen, so whether the
+  next page shows it would depend on timing). The platform admin's pages
+  are taken first, before other tests add accounts to the platform.
+
+Every picture is the viewport at one device pixel per CSS pixel: 1440×900,
+or the suite's phone, 390×844 with touch. **Coverage:**
+
+- every page of the route tour (`e2e/support/tour.ts`: the public pages, the
+  platform admin's, an owner's business, settings and account pages, over
+  the demo restaurant), with the pages the tour does not walk (a
+  conversation, customers, a customer's card, segments, integrations,
+  deposits), at 1440 px dark and 390 px light, in Russian
+  (`restaurant-pages.spec.ts`, `public.spec.ts`, `platform.spec.ts`);
+- the main screens in the full matrix {1440, 390} × {dark, light} × {ru,
+  en, ka}: Overview, the Inbox with a conversation, Bookings by day and by
+  week, Customers, the business profile, Knowledge, Channels, Settings,
+  Plan and billing (`matrix.spec.ts`) and the tunnel's finale
+  (`new-business.spec.ts`);
+- a Hebrew conversation right to left at 1440 px dark and 390 px light
+  (`rtl.spec.ts`).
+
+That is 222 pictures, about 25 MB. The baselines may take at most 30 MB:
+take a new screen at the widths and themes above, not in more of them.
+
+**The review gate** (`e2e/visual/gate.ts`) fails a page, softly so that one
+run lists every finding, on:
+
+- any console error or uncaught exception while it loaded (hydration
+  failures included; nothing is accepted);
+- a colour outside the palette (`e2e/visual/palette.ts`): the computed text,
+  background, border, outline, fill and stroke colours of every element
+  shown, user content (`data-user-content`), pictures and canvases left out.
+  Green, cyan, indigo and purple are refused as in
+  `tests/platform/test_palette_guard.py`; the allow-list is the "done" sage
+  (`--success`, `--success-soft`) and the chart series (`--chart-1..3`) as
+  the theme resolves them, and the WhatsApp mark's two colours;
+- Cyrillic on an English, Georgian or Hebrew page outside user content
+  (`strayCyrillic`, as the console-clean gate);
+- a cabinet page taller than four phone screens at 390 px. The public
+  site's reading pages are exempt, and the pages that were already longer
+  when the gate came have their own budget in `e2e/visual/heights.ts`: a
+  ratchet (lower a budget when a page gets shorter, never raise one or add a
+  page; fold the page instead, as the Overview folds its statistics and its
+  invitation).
+
+A brand-new business is part of the gate (`new-business.spec.ts`): an owner
+signs up, walks "Create an AI assistant" and launches for real; the
+rehearsal model's checks find answers to improve, so the platform admin
+publishes the checked version anyway (the owner allows it for an hour),
+and the finale, the day-0 Overview and the first Inbox are taken.
+
+**When a picture changes.** A change that moves pixels on purpose updates
+its baselines in the same commit: run `npm run e2e:visual:update`, look at
+every changed PNG (`git diff --stat`, then the images themselves) for broken
+layouts, colours outside the palette and untranslated texts, and commit
+them. A failed CI run keeps the expected, actual and diff PNGs of each
+differing screen with the HTML report (`visual-report` artifact,
+`npx playwright show-report`). Updating `@playwright/test` changes the
+browser: update the image's tag and digest in `scripts/visual-browser.mjs`
+(`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints the
+digest) and regenerate every baseline.
+
 ## Structure
 
 ```text
 web/
   openapi.json                 API description exported from the backend (generated)
   e2e/                         Playwright end-to-end tests (playwright.config.ts, *.spec.ts, support/)
+                               and the visual tests with their baselines (visual/, visual/__screenshots__/)
   public/                      sw.js (the service worker: offline page, build files, push), icons/
                                (the installed app's PNG icons, `npm run gen:icons`)
   scripts/                     measure-first-load.mjs, render-app-icons.mjs, check-intl.mjs,
@@ -996,6 +1111,52 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 - What axe cannot check needs a person: a screen reader pass of the
   sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
   and iOS Safari) after changing the frame.
+
+#### Screen reader pass on the staff phone loop
+
+What axe and the visual tests cannot hear: the front desk's loop on a phone
+read by VoiceOver and by TalkBack. Run it on a real iPhone (VoiceOver,
+Safari or the installed app) and a real Android phone (TalkBack, Chrome or
+the installed app) before a release that changes the phone chrome, the
+Inbox, a conversation, Bookings' Today or the toasts, as part of the
+[real-device runbook](#real-device-runbook) (same setup: a deployment, a
+live assistant, a staff member signed in, a second device as the
+customer). Note the devices, OS, browser and screen reader versions and
+each step's result (pass, or what was read instead) in the release's PR.
+Move with a swipe right or left, activate with a double tap; never use the
+screen's picture to pass a step.
+
+1. **Overview.** The page's name is read as a level-1 heading from the top
+   bar; the (i) button and the "?" say what they open; the live dot says
+   the live status. The tab bar is read as navigation, the current tab as
+   the current page, the Inbox badge as "N waiting".
+2. **Today.** Each row is one item with its label and its number ("Waiting
+   for a person, 2"); a folded row says its name, its summary and that it
+   is collapsed, and says "expanded" after a double tap.
+3. **Inbox.** The views are read as a group with the selected one; each
+   conversation is read as one item: the customer's name, the last
+   message, its time and channel, and "needs a person" where it does; a
+   Hebrew or Arabic name and message are read in their own language where
+   the voice has it.
+4. **A conversation from a notification** (runbook step 4). Focus starts at
+   the top of the conversation, not at the end of the page; each message is
+   read with who wrote it and when; the reply box is read by its label
+   while the keyboard is open, and the sent reply can be reached right
+   after it.
+5. **Resolve and Undo.** The confirmation is read as a dialog with its
+   title and keeps focus inside until it closes; the toast is announced
+   when it appears, and its Undo can be reached and activated before it
+   goes; after Undo the conversation is read under Needs a person.
+6. **Bookings, Today.** Each card is read in time order with the time, the
+   name and the party; Arrived and No-show say whose booking they mark and,
+   before the start time, that they wait for it; Undo is announced as in
+   step 5. The floating "New booking" comes after the cards and before the
+   tab bar.
+7. **More.** The sheet is read as a dialog, focus moves into it and back to
+   "More" when it closes.
+8. **Both themes, large text.** Repeat steps 3 and 6 in the dark and the
+   light theme and with the system's largest text size: nothing is read
+   twice, skipped or cut off.
 
 ### Polish sweep (wave 7): before and after
 

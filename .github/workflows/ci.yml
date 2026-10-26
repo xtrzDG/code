@@ -21,8 +21,9 @@ concurrency:
 # (docs/operations/ci.md): the backend tests in parts balanced by measured
 # duration (tests/durations.json) whose coverage is combined; the cabinet's
 # checks next to its build; the end-to-end suite in shards balanced by
-# measured duration (web/e2e/durations.json) that start that build. The last
-# job writes every job's duration to the run summary and warns above 8 minutes.
+# measured duration (web/e2e/durations.json) that start that build, next to
+# the visual tests in one job of their own. The last job writes every job's
+# duration to the run summary and warns above 8 minutes.
 env:
   GITLEAKS_VERSION: "8.30.1"
   GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
@@ -651,6 +652,104 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # Screenshots of every page compared with web/e2e/visual/__screenshots__
+  # and the review gate (console errors, palette, Cyrillic, phone height,
+  # a new business through the tunnel): web/README.md "Visual tests and the
+  # review gate". The browser runs in Playwright's own image, pinned by
+  # digest in web/scripts/visual-browser.mjs, so CI renders the pixels the
+  # baselines were made with; it pulls while the job installs the rest.
+  visual:
+    name: Visual tests and review gate
+    needs: web-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Pull the browser's image in the background
+        run: |
+          image="$(node scripts/visual-browser.mjs --image)"
+          (docker pull --quiet "$image" > "$RUNNER_TEMP/browser-pull.log" 2>&1; echo $? > "$RUNNER_TEMP/browser-pull.status") &
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # No PDF engine and no browser on the runner: the pages are only
+      # looked at (no invoice is downloaded) and the browser is the image's.
+      - name: Install API dependencies
+        working-directory: .
+        run: uv sync --frozen
+
+      - name: Install Node 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install cabinet dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Download the cabinet build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cabinet-build
+          path: web/.next
+
+      - name: Wait for the browser's image
+        run: |
+          while [ ! -f "$RUNNER_TEMP/browser-pull.status" ]; do sleep 1; done
+          cat "$RUNNER_TEMP/browser-pull.log"
+          [ "$(cat "$RUNNER_TEMP/browser-pull.status")" = "0" ]
+
+      # Starts the downloaded build and an API whose clock starts at a fixed
+      # moment (scripts/visual_api.py, demo data, the rehearsal model), the
+      # browser in the image, and compares every screenshot.
+      - name: Visual tests and review gate
+        env:
+          E2E_SKIP_BUILD: "1"
+        run: npm run e2e:visual
+
+      - name: Show the failed tests' page snapshots and the API log's end
+        if: ${{ failure() }}
+        run: |
+          find e2e/.artifacts/results -name error-context.md -print0 2>/dev/null |
+            while IFS= read -r -d '' context; do
+              echo "::group::${context}"
+              head -c 20000 "${context}"
+              echo "::endgroup::"
+            done
+          echo "::group::api.log, last 300 lines"
+          tail -n 300 e2e/.artifacts/api.log 2>/dev/null || true
+          echo "::endgroup::"
+
+      # Each differing screen as expected, actual and diff PNGs, with the
+      # HTML report that shows them side by side.
+      - name: Keep the differences, the report and the API log
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-report
+          path: |
+            web/e2e/.artifacts/report
+            web/e2e/.artifacts/results
+            web/e2e/.artifacts/api.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+
   # The one check of this workflow that branch protection requires
   # (.github/repository-settings.json). GitHub counts a required check whose
   # job was skipped as passed, and a job is skipped when a job it needs
@@ -659,7 +758,7 @@ jobs:
   # succeeded, skipped or cancelled ones included.
   ci-passed:
     name: CI passed (every gate)
-    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e]
+    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, visual]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -683,7 +782,7 @@ jobs:
   # scripts/verify_images.sh, docs/operations/deploys.md).
   publish-images:
     name: Images (publish, provenance, signature)
-    needs: [backend-checks, coverage, web-checks, security, images, e2e]
+    needs: [backend-checks, coverage, web-checks, security, images, e2e, visual]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -772,7 +871,7 @@ jobs:
 
   durations:
     name: CI job durations
-    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, ci-passed, publish-images]
+    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, visual, ci-passed, publish-images]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -6,7 +6,7 @@ HTTP entry point (uvicorn factory):
 
 import logging
 import threading
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 
 import anyio.to_thread
@@ -66,18 +66,19 @@ __all__ = [
 ]
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+type ContainerPreparation = Callable[[AppContainer], AppContainer]
 
 
-def create_application() -> FastAPI:
+def create_application(prepare: ContainerPreparation | None = None) -> FastAPI:
     """
-    The API with settings from the environment (uvicorn factory). Log lines
-    of the application and of uvicorn go out in LOG_FORMAT with their
-    request, business and job.
+    The API with settings from the environment (uvicorn factory; `prepare` may
+    override providers first). Log lines of the application and of uvicorn go
+    out in LOG_FORMAT with their request, business and job.
     """
 
     install_access_log_redaction()
     name_service(API_SERVICE_NAME)
-    app_container = AppContainer()
+    app_container = AppContainer() if prepare is None else prepare(AppContainer())
     configure_logging(app_container.config.app_settings().log_format)
     start_telemetry(app_container, is_api=True)
     return build_application(app_container)

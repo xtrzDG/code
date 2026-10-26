@@ -2,7 +2,8 @@
 
 The backend tests run in parts balanced by measured duration whose coverage
 is combined, the cabinet's checks run next to its build, the end-to-end
-suite in shards that start that build, a last job reports every duration
+suite in shards that start that build and the visual tests in one job of
+their own beside them, a last job reports every duration
 (docs/operations/ci.md); Dependabot's toolchain majors wait for a quarterly
 issue and only grouped patch or minor updates merge themselves.
 """
@@ -183,6 +184,35 @@ def test_the_end_to_end_shards_follow_the_shard_plan() -> None:
     }
     # web/e2e/support/shards.test.ts reads the same count to check the budget.
     assert (PROJECT_ROOT / "web" / "e2e" / "durations.json").exists()
+
+
+def test_the_visual_tests_run_in_one_job_beside_the_shards() -> None:
+    visual = JOBS["visual"]
+    steps: list[dict[str, Any]] = visual["steps"]
+    names: list[str] = [str(step.get("name", "")) for step in steps]
+    run = steps_text(visual)
+    tests = steps[names.index("Visual tests and review gate")]
+
+    assert visual["needs"] == "web-build"
+    assert visual["timeout-minutes"] <= 15
+    assert "strategy" not in visual
+    assert tests["run"] == "npm run e2e:visual"
+    assert tests["env"] == {"E2E_SKIP_BUILD": "1"}
+    assert "name: cabinet-build" in run
+    # The browser is the pinned image's (web/scripts/visual-browser.mjs),
+    # pulled while the job installs the rest; none is installed on the runner.
+    assert "node scripts/visual-browser.mjs --image" in run
+    assert names.index("Pull the browser's image in the background") < names.index(
+        "Install API dependencies"
+    )
+    assert names.index("Wait for the browser's image") < names.index(
+        "Visual tests and review gate"
+    )
+    assert "playwright install" not in run
+    report = steps[names.index("Keep the differences, the report and the API log")]
+    assert report["if"] == "${{ failure() }}"
+    assert "web/e2e/.artifacts/results" in str(report["with"]["path"])
+    assert "visual" in JOBS["ci-passed"]["needs"]
 
 
 def test_the_last_job_reports_every_jobs_duration() -> None:
