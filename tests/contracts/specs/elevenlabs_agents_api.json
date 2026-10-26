@@ -813,7 +813,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -823,6 +825,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -838,6 +841,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -1197,6 +1201,17 @@
      ],
      "default": null
     },
+    "branch_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "condition": {
      "type": "string"
     },
@@ -1286,6 +1301,17 @@
   "AgentTransferOutput": {
    "properties": {
     "agent_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "branch_id": {
      "anyOf": [
       {
        "type": "string"
@@ -1420,6 +1446,12 @@
          },
          {
           "$ref": "#/$defs/AgentWorkflowRequestModelNodesValue_Tool"
+         },
+         {
+          "$ref": "#/$defs/AgentWorkflowRequestModelNodesValue_Say"
+         },
+         {
+          "$ref": "#/$defs/AgentWorkflowRequestModelNodesValue_UpdateState"
          }
         ]
        },
@@ -1455,6 +1487,22 @@
        },
        "type": "array"
       },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "outcome": {
+     "anyOf": [
+      {
+       "enum": [
+        "success",
+        "failure"
+       ],
+       "type": "string"
+      },
+      {},
       {
        "type": "null"
       }
@@ -1716,9 +1764,144 @@
    ],
    "type": "object"
   },
+  "AgentWorkflowRequestModelNodesValue_Say": {
+   "properties": {
+    "additional_knowledge_base": {
+     "anyOf": [
+      {
+       "items": {
+        "$ref": "#/$defs/KnowledgeBaseLocator"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "additional_prompt": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "additional_tool_ids": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "conversation_config": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/ConversationalConfigApiModelWorkflowOverrideInput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "edge_order": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "label": {
+     "type": "string"
+    },
+    "message": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/WorkflowSayNodeModelInputMessage_Literal"
+      },
+      {
+       "$ref": "#/$defs/WorkflowSayNodeModelInputMessage_Prompt"
+      }
+     ]
+    },
+    "position": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/PositionInput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "type": {
+     "const": "say",
+     "default": "say",
+     "type": "string"
+    },
+    "wait_for_speech_completion": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "wait_for_user_response": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "required": [
+    "label",
+    "message"
+   ],
+   "type": "object"
+  },
   "AgentWorkflowRequestModelNodesValue_StandaloneAgent": {
    "properties": {
     "agent_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "branch_id": {
      "anyOf": [
       {
        "type": "string"
@@ -1910,6 +2093,54 @@
      "type": "string"
     }
    },
+   "type": "object"
+  },
+  "AgentWorkflowRequestModelNodesValue_UpdateState": {
+   "properties": {
+    "edge_order": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "label": {
+     "type": "string"
+    },
+    "position": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/PositionInput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "type": {
+     "const": "update_state",
+     "default": "update_state",
+     "type": "string"
+    },
+    "updates": {
+     "items": {
+      "$ref": "#/$defs/WorkflowStateUpdateInput"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "label",
+    "updates"
+   ],
    "type": "object"
   },
   "AgentWorkspaceOverridesInput": {
@@ -2326,7 +2557,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -2336,6 +2569,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -2351,6 +2585,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -5280,7 +5515,9 @@
          "gemini-3.6-flash",
          "gemini-3.7-flash",
          "gemini-3.8-flash",
+         "gemini-4-argon",
          "claude-sonnet-4-5",
+         "claude-opus-4-6",
          "claude-opus-4-7",
          "claude-opus-4-8",
          "claude-opus-5",
@@ -5290,6 +5527,7 @@
          "claude-sonnet-5-5",
          "claude-sonnet-4",
          "claude-haiku-4-5",
+         "claude-haiku-5-5",
          "claude-3-7-sonnet",
          "claude-3-5-sonnet",
          "claude-3-5-sonnet-v1",
@@ -5305,6 +5543,7 @@
          "glm-45-air-fp8",
          "glm-52",
          "deepseek-v41-flash",
+         "nemotron-35-super-vl-nvfp4",
          "gemini-2.5-flash-preview-09-2025",
          "gemini-2.5-flash-lite-preview-09-2025",
          "gemini-2.5-flash-preview-05-20",
@@ -5379,6 +5618,35 @@
     },
     "campaign_lead_id": {
      "type": "string"
+    },
+    "cold_attempt": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "conversation_type": {
+     "anyOf": [
+      {
+       "enum": [
+        "initial",
+        "retry",
+        "callback",
+        "redirect"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "required": [
@@ -7727,6 +7995,25 @@
     "agent_number": {
      "type": "string"
     },
+    "call_result": {
+     "anyOf": [
+      {
+       "enum": [
+        "answered",
+        "voicemail",
+        "busy",
+        "no_answer",
+        "failed"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "call_sid": {
      "type": "string"
     },
@@ -7777,6 +8064,25 @@
       {
        "type": "string"
       },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "call_result": {
+     "anyOf": [
+      {
+       "enum": [
+        "answered",
+        "voicemail",
+        "busy",
+        "no_answer",
+        "failed"
+       ],
+       "type": "string"
+      },
+      {},
       {
        "type": "null"
       }
@@ -7837,6 +8143,25 @@
    "properties": {
     "agent_number": {
      "type": "string"
+    },
+    "call_result": {
+     "anyOf": [
+      {
+       "enum": [
+        "answered",
+        "voicemail",
+        "busy",
+        "no_answer",
+        "failed"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "call_sid": {
      "type": "string"
@@ -10030,6 +10355,28 @@
       }
      ],
      "default": null
+    },
+    "to_agent": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "to_node": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "type": "object"
@@ -10070,6 +10417,9 @@
    "properties": {
     "branch_info": {
      "anyOf": [
+      {
+       "$ref": "#/$defs/TransferToAgentToolResultSuccessModelInputBranchInfo_Configured"
+      },
       {
        "$ref": "#/$defs/TransferToAgentToolResultSuccessModelInputBranchInfo_DefaultingToMain"
       },
@@ -11211,6 +11561,28 @@
       }
      ],
      "default": null
+    },
+    "to_agent": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "to_node": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "type": "object"
@@ -11251,6 +11623,9 @@
    "properties": {
     "branch_info": {
      "anyOf": [
+      {
+       "$ref": "#/$defs/TransferToAgentToolResultSuccessModelOutputBranchInfo_Configured"
+      },
       {
        "$ref": "#/$defs/TransferToAgentToolResultSuccessModelOutputBranchInfo_DefaultingToMain"
       },
@@ -11723,6 +12098,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_name": {
      "type": "string"
     },
@@ -11736,7 +12122,6 @@
         "mcp",
         "workflow",
         "api_integration_webhook",
-        "api_integration_mcp",
         "smb"
        ],
        "type": "string"
@@ -12001,6 +12386,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_name": {
      "type": "string"
     },
@@ -12014,7 +12410,6 @@
         "mcp",
         "workflow",
         "api_integration_webhook",
-        "api_integration_mcp",
         "smb"
        ],
        "type": "string"
@@ -12999,6 +13394,17 @@
       }
      ],
      "default": null
+    },
+    "voice_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "type": "object"
@@ -13739,10 +14145,10 @@
      ],
      "default": null
     },
-    "seed": {
+    "pan": {
      "anyOf": [
       {
-       "type": "integer"
+       "type": "number"
       },
       {
        "type": "null"
@@ -13802,16 +14208,8 @@
      ],
      "default": null
     },
-    "seed": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
+    "pan": {
+     "type": "number"
     },
     "send_level": {
      "type": "number"
@@ -13819,7 +14217,8 @@
    },
    "required": [
     "distance",
-    "send_level"
+    "send_level",
+    "pan"
    ],
    "type": "object"
   },
@@ -15582,7 +15981,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -15592,6 +15993,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -15607,6 +16009,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -15787,6 +16190,17 @@
      ],
      "default": null
     },
+    "tool_ids_strict": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tools": {
      "anyOf": [
       {
@@ -15891,7 +16305,9 @@
          "gemini-3.6-flash",
          "gemini-3.7-flash",
          "gemini-3.8-flash",
+         "gemini-4-argon",
          "claude-sonnet-4-5",
+         "claude-opus-4-6",
          "claude-opus-4-7",
          "claude-opus-4-8",
          "claude-opus-5",
@@ -15901,6 +16317,7 @@
          "claude-sonnet-5-5",
          "claude-sonnet-4",
          "claude-haiku-4-5",
+         "claude-haiku-5-5",
          "claude-3-7-sonnet",
          "claude-3-5-sonnet",
          "claude-3-5-sonnet-v1",
@@ -15916,6 +16333,7 @@
          "glm-45-air-fp8",
          "glm-52",
          "deepseek-v41-flash",
+         "nemotron-35-super-vl-nvfp4",
          "gemini-2.5-flash-preview-09-2025",
          "gemini-2.5-flash-lite-preview-09-2025",
          "gemini-2.5-flash-preview-05-20",
@@ -16829,6 +17247,17 @@
       }
      ],
      "default": null
+    },
+    "tool_ids_strict": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "type": "object"
@@ -16894,7 +17323,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -16904,6 +17335,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -16919,6 +17351,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -17002,6 +17435,17 @@
         "type": "string"
        },
        "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "tool_ids_strict": {
+     "anyOf": [
+      {
+       "type": "boolean"
       },
       {
        "type": "null"
@@ -17073,7 +17517,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -17083,6 +17529,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -17098,6 +17545,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -17181,6 +17629,17 @@
         "type": "string"
        },
        "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "tool_ids_strict": {
+     "anyOf": [
+      {
+       "type": "boolean"
       },
       {
        "type": "null"
@@ -17335,7 +17794,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -17345,6 +17806,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -17360,6 +17822,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -17533,6 +17996,17 @@
         "type": "string"
        },
        "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "tool_ids_strict": {
+     "anyOf": [
+      {
+       "type": "boolean"
       },
       {
        "type": "null"
@@ -18483,7 +18957,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -18493,6 +18969,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -18508,6 +18985,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -21426,7 +21904,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -21436,6 +21916,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -21451,6 +21932,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -21572,7 +22054,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -21582,6 +22066,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -21597,6 +22082,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -23275,6 +23761,22 @@
    "properties": {},
    "type": "object"
   },
+  "TransferToAgentToolResultSuccessModelInputBranchInfo_Configured": {
+   "properties": {
+    "branch_id": {
+     "type": "string"
+    },
+    "branch_reason": {
+     "const": "configured",
+     "default": "configured",
+     "type": "string"
+    }
+   },
+   "required": [
+    "branch_id"
+   ],
+   "type": "object"
+  },
   "TransferToAgentToolResultSuccessModelInputBranchInfo_DefaultingToMain": {
    "properties": {
     "branch_id": {
@@ -23311,6 +23813,22 @@
    ],
    "type": "object"
   },
+  "TransferToAgentToolResultSuccessModelOutputBranchInfo_Configured": {
+   "properties": {
+    "branch_id": {
+     "type": "string"
+    },
+    "branch_reason": {
+     "const": "configured",
+     "default": "configured",
+     "type": "string"
+    }
+   },
+   "required": [
+    "branch_id"
+   ],
+   "type": "object"
+  },
   "TransferToAgentToolResultSuccessModelOutputBranchInfo_DefaultingToMain": {
    "properties": {
     "branch_id": {
@@ -23344,6 +23862,17 @@
    "required": [
     "branch_id",
     "traffic_percentage"
+   ],
+   "type": "object"
+  },
+  "TranslatedString": {
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
    ],
    "type": "object"
   },
@@ -24809,7 +25338,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -24819,6 +25350,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -24834,6 +25366,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -24941,7 +25474,9 @@
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
+        "gemini-4-argon",
         "claude-sonnet-4-5",
+        "claude-opus-4-6",
         "claude-opus-4-7",
         "claude-opus-4-8",
         "claude-opus-5",
@@ -24951,6 +25486,7 @@
         "claude-sonnet-5-5",
         "claude-sonnet-4",
         "claude-haiku-4-5",
+        "claude-haiku-5-5",
         "claude-3-7-sonnet",
         "claude-3-5-sonnet",
         "claude-3-5-sonnet-v1",
@@ -24966,6 +25502,7 @@
         "glm-45-air-fp8",
         "glm-52",
         "deepseek-v41-flash",
+        "nemotron-35-super-vl-nvfp4",
         "gemini-2.5-flash-preview-09-2025",
         "gemini-2.5-flash-lite-preview-09-2025",
         "gemini-2.5-flash-preview-05-20",
@@ -25859,12 +26396,56 @@
    ],
    "type": "object"
   },
+  "WhatsAppCallPermissionRequest": {
+   "properties": {
+    "requested_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "state": {
+     "anyOf": [
+      {
+       "enum": [
+        "blocked",
+        "sent",
+        "accepted",
+        "declined"
+       ],
+       "type": "string"
+      },
+      {}
+     ]
+    }
+   },
+   "required": [
+    "state"
+   ],
+   "type": "object"
+  },
   "WhatsAppConversationInfo": {
    "properties": {
     "awaiting_first_user_message": {
      "anyOf": [
       {
        "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "call_permission_request": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/WhatsAppCallPermissionRequest"
       },
       {
        "type": "null"
@@ -25889,6 +26470,17 @@
      ],
      "default": null
     },
+    "recipient": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/WhatsAppRecipient"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "whatsapp_phone_number_id": {
      "anyOf": [
       {
@@ -25907,6 +26499,33 @@
    "required": [
     "whatsapp_user_id"
    ],
+   "type": "object"
+  },
+  "WhatsAppRecipient": {
+   "properties": {
+    "bsuid": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "phone": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
    "type": "object"
   },
   "WidgetConfig": {
@@ -26075,6 +26694,17 @@
      "anyOf": [
       {
        "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "end_confirmation_enabled": {
+     "anyOf": [
+      {
+       "type": "boolean"
       },
       {
        "type": "null"
@@ -28115,6 +28745,148 @@
    ],
    "type": "object"
   },
+  "WorkflowSayNodeModelInputMessage_Literal": {
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "text_translations": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "$ref": "#/$defs/TranslatedString"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "type": {
+     "const": "literal",
+     "default": "literal",
+     "type": "string"
+    }
+   },
+   "required": [
+    "text"
+   ],
+   "type": "object"
+  },
+  "WorkflowSayNodeModelInputMessage_Prompt": {
+   "properties": {
+    "prompt": {
+     "type": "string"
+    },
+    "type": {
+     "const": "prompt",
+     "default": "prompt",
+     "type": "string"
+    }
+   },
+   "required": [
+    "prompt"
+   ],
+   "type": "object"
+  },
+  "WorkflowStateUpdateInput": {
+   "properties": {
+    "expression": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/AstNodeInput_AddOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_AndOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_BooleanLiteral"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_ConditionalOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_DivOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_DynamicVariable"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_EqOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_GtOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_GteOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_Llm"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_LtOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_LteOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_MulOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_NeqOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_NullLiteral"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_NumberLiteral"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_OrOperator"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_StringLiteral"
+      },
+      {
+       "$ref": "#/$defs/AstNodeInput_SubOperator"
+      }
+     ]
+    },
+    "required": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "type": {
+     "anyOf": [
+      {
+       "const": "dynamic_variable",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "variable_name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "variable_name",
+    "expression"
+   ],
+   "type": "object"
+  },
   "WorkflowToolLocator": {
    "properties": {
     "schema_overrides": {
@@ -28905,6 +29677,6 @@
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only elevenlabs",
   "source": "https://github.com/elevenlabs/elevenlabs-python",
   "title": "ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
-  "version": "elevenlabs 2.71.0"
+  "version": "elevenlabs 2.74.1"
  }
 }
