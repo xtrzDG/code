@@ -59,7 +59,16 @@ export function chatPageRoutes(slug: string): string[] {
 
 /** The platform admin's pages, with one client's card. */
 export function adminRoutes(clientBusinessId: string): string[] {
-  return ["/admin", "/admin/system", "/admin/metrics", "/admin/team", "/admin/security", `/admin/clients/${clientBusinessId}`];
+  return [
+    "/admin",
+    "/admin/system",
+    "/admin/metrics",
+    "/admin/team",
+    "/admin/security",
+    "/admin/niches",
+    "/admin/niches/restaurant",
+    `/admin/clients/${clientBusinessId}`,
+  ];
 }
 
 /** An owner's business pages (the businesses first). */

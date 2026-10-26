@@ -3,14 +3,17 @@
 /**
  * The texts of one niche in one language: each part of the template in
  * its own card (the niche, each profile question, the default rules, the
- * starter answers), the preview beside them, and the draft's actions.
+ * starter answers), folded to its title until opened (a part with
+ * reworded texts opens by itself), the preview beside them, and the
+ * draft's actions.
  * Saving keeps the draft (owners read nothing of it); publishing saves the
  * language's changes first, then makes the draft the next version.
  */
 
 import { useState } from "react";
 
-import { Badge, Button, Card, ConfirmDialog, Fieldset, useToast } from "@/components/ui";
+import { IconChevronRight } from "@/components/icons";
+import { Badge, Button, Card, ConfirmDialog, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
@@ -32,7 +35,7 @@ type NicheEditing = ReturnType<typeof useNicheEditor>;
 type Confirming = "publish" | "discard" | null;
 
 export function NicheTextsForm({ editor, niche, nicheName }: { editor: NicheTextEditor; niche: NicheEditing; nicheName: string }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const start = startingValues(editor);
   const [values, setValues] = useState<FormValues>(start);
@@ -98,19 +101,31 @@ export function NicheTextsForm({ editor, niche, nicheName }: { editor: NicheText
         </div>
         {fieldGroups(editor).map((group) => {
           const title = groupTitle(group);
+          const reworded = group.fields.filter((field) => (start[field.field_key] ?? "") !== "").length;
           return (
-            <Card key={`${group.section}:${group.questionKey ?? ""}`} aria-label={title}>
-              <Fieldset legend={title}>
-                {group.fields.map((field) => (
-                  <NicheFieldRow
-                    key={field.field_key}
-                    field={field}
-                    language={editor.language}
-                    value={values[field.field_key] ?? ""}
-                    onChange={onChange}
+            <Card key={`${group.section}:${group.questionKey ?? ""}`} aria-label={title} padded={false}>
+              <details open={reworded > 0 || undefined} className="group/part">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-2xl px-5 py-3 focus-visible:outline-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+                  <IconChevronRight
+                    className="size-4 shrink-0 text-ink-subtle transition-transform group-open/part:rotate-90 rtl:-scale-x-100 rtl:group-open/part:-rotate-90"
+                    aria-hidden
                   />
-                ))}
-              </Fieldset>
+                  <span className="min-w-0 flex-1 text-sm font-medium text-ink">{title}</span>
+                  {reworded > 0 ? <Badge>{tp("adminNiches.reworded", reworded)}</Badge> : null}
+                </summary>
+                <fieldset className="space-y-3 border-t border-line px-5 py-4">
+                  <legend className="sr-only">{title}</legend>
+                  {group.fields.map((field) => (
+                    <NicheFieldRow
+                      key={field.field_key}
+                      field={field}
+                      language={editor.language}
+                      value={values[field.field_key] ?? ""}
+                      onChange={onChange}
+                    />
+                  ))}
+                </fieldset>
+              </details>
             </Card>
           );
         })}

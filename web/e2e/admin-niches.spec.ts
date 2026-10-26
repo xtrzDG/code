@@ -61,7 +61,10 @@ test("an admin rewords a question in Russian, new owners read it, and the code t
 
   await admin.getByRole("tab", { name: "Русский" }).click();
   await expect(admin).toHaveURL(/language=ru$/);
-  const question = admin.getByRole("group", { name: `${texts.editor.question.replace("{position}", "1")} · ${CODE_LABEL}` });
+  // Every part of the template is folded to its title until opened.
+  const questionTitle = `${texts.editor.question.replace("{position}", "1")} · ${CODE_LABEL}`;
+  await admin.locator("summary", { hasText: questionTitle }).click();
+  const question = admin.getByRole("group", { name: questionTitle });
   await expect(question.getByText(texts.editor.code.replace("{text}", CODE_LABEL))).toBeVisible();
   await question.getByLabel(texts.editor.fields.label).fill(`<b>${NEW_LABEL}</b>`);
   await expect(question.getByText(texts.editor.errors.html)).toBeVisible();
