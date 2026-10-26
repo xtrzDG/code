@@ -30,7 +30,7 @@ concurrency:
 jobs:
   drift:
     name: Vendor specifications against tests/contracts/specs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       UV_FROZEN: "1"
@@ -71,7 +71,7 @@ jobs:
 
   smoke:
     name: Sandbox calls against the vendored specifications
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       UV_FROZEN: "1"
@@ -111,7 +111,7 @@ jobs:
     name: Open or update the provider drift issue
     needs: [drift, smoke]
     if: failure() && github.event_name == 'schedule'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       issues: write

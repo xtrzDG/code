@@ -35,7 +35,7 @@ concurrency:
 jobs:
   budgets:
     name: Latency budgets and the baseline (tests/perf)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # The full scale took 106 minutes on 2026-10-05 and outgrew 120 a week
     # later (seeding wrote about 12% longer after waves 17 and 18); the
     # budgets and the baseline decide, not the clock.
@@ -113,7 +113,7 @@ jobs:
   load:
     name: Load scenarios (k6 against docker compose)
     if: ${{ github.event_name == 'schedule' || inputs.load_test }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
       SCRIPTED_LLM_LATENCY_MS: "800"

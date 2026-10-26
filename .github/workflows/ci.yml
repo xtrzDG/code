@@ -35,7 +35,7 @@ env:
 jobs:
   backend-checks:
     name: Backend checks (ruff, mypy, pyright, legal texts, duplication)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       UV_FROZEN: "1"
@@ -90,7 +90,7 @@ jobs:
 
   backend-tests:
     name: Backend tests (${{ matrix.group }} ${{ matrix.part }}/${{ matrix.parts }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -181,7 +181,7 @@ jobs:
   coverage:
     name: Backend coverage (every part, at least 95 %)
     needs: backend-tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -225,7 +225,7 @@ jobs:
 
   web-build:
     name: Cabinet build (for the end-to-end shards)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
@@ -281,7 +281,7 @@ jobs:
 
   web-checks:
     name: Cabinet checks (lint, knip, typecheck, tests with coverage, generated client)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -353,7 +353,7 @@ jobs:
 
   security:
     name: Security (dependencies, secrets, static analysis)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -399,7 +399,7 @@ jobs:
 
   images:
     name: Docker images (build, smoke test, Trivy, SBOM)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -509,7 +509,7 @@ jobs:
   e2e:
     name: End-to-end (${{ matrix.shard }}/10)
     needs: web-build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -661,7 +661,7 @@ jobs:
   visual:
     name: Visual tests and review gate
     needs: web-build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -760,7 +760,7 @@ jobs:
     name: CI passed (every gate)
     needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, visual]
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
     steps:
@@ -784,7 +784,7 @@ jobs:
     name: Images (publish, provenance, signature)
     needs: [backend-checks, coverage, web-checks, security, images, e2e, visual]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -873,7 +873,7 @@ jobs:
     name: CI job durations
     needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, visual, ci-passed, publish-images]
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: read

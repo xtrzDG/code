@@ -25,7 +25,7 @@ permissions:
 jobs:
   watch:
     name: Each guard succeeded within 8 days
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: read

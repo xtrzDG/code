@@ -40,7 +40,7 @@ jobs:
     if: >-
       github.event_name != 'deployment_status'
       || github.event.deployment_status.state == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     outputs:
       environment: ${{ steps.pick.outputs.environment }}
@@ -77,7 +77,7 @@ jobs:
     name: Smoke test (${{ needs.target.outputs.environment }})
     needs: target
     if: needs.target.outputs.environment != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: ${{ needs.target.outputs.environment }}
     concurrency:
@@ -110,7 +110,7 @@ jobs:
     name: Signed images (${{ needs.target.outputs.environment }})
     needs: target
     if: needs.target.outputs.environment != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -139,7 +139,7 @@ jobs:
     if: >-
       needs.target.outputs.environment == 'staging'
       && vars.PROMOTE_AFTER_STAGING_SMOKE != 'false'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: write

@@ -17,7 +17,7 @@ PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 PERF_WORKFLOW: Path = PROJECT_ROOT / ".github" / "workflows" / "perf.yml"
 PERF_RUNNER: Path = PROJECT_ROOT / "scripts" / "perf_runner.py"
 DRAIN_SCRIPT: str = "perf/wait-for-drain.sh"
-# The python3 of ubuntu-latest (Ubuntu 24.04), the runner image.
+# The python3 of ubuntu-24.04, the runner image every job runs on.
 RUNNER_IMAGE_PYTHON: tuple[int, int] = (3, 12)
 SETUP_UV: str = "astral-sh/setup-uv@"
 PROJECT_PYTHON: str = "3.14"

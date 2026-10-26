@@ -1,6 +1,6 @@
 """
 Repository Python in the workflows runs on uv's Python 3.14, never on the
-runner image's own python3 (3.12 on ubuntu-latest): the code is written
+runner image's own python3 (3.12 on ubuntu-24.04): the code is written
 for 3.14 (ruff's target), and the formatter writes syntax older
 interpreters refuse (`except A, B:`). The weekly load run once stopped
 there, before its scenarios (scripts/perf_runner.py).

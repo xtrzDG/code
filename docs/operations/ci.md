@@ -13,6 +13,13 @@ describes the layout that replaced it and how to keep it balanced.
 Everything starts at once except `coverage` (after every backend part),
 `e2e` and `visual` (after `web-build`) and `durations` (after everything).
 
+Every job of every workflow runs on `ubuntu-24.04`, never `ubuntu-latest`
+(`tests/platform/test_runner_images.py`): on 26 October 2026
+`ubuntu-latest` became Ubuntu 26.04, which has no `postgresql-16`, and the
+Postgres tests stopped before their first test. Moving to a newer release
+is a change of its own: Postgres, the PDF engine's packages, Playwright's
+system dependencies and the cached packages all follow the image.
+
 | Job | What it does | Waits for | Expected |
 | --- | --- | --- | ---: |
 | `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
