@@ -2,13 +2,11 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.assistant_assembly import AssistantToolCatalogContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
 from app.contracts.repositories.business_repositories import (
-    BusinessProfileRepoContract,
     BusinessRepoContract,
     ChannelRepoContract,
 )
@@ -17,11 +15,9 @@ from app.contracts.voice_platform import (
     VoiceAgentLockRegistryContract,
     VoiceAgentProvisionerAdapterContract,
 )
-from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
@@ -30,6 +26,7 @@ from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.use_cases.shared.business_walk import walk_businesses
 from app.use_cases.shared.voice_agent_setup import VoiceAgentSetup
+from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
 from app.utilities.assembly.voice_agents import (
     VOICE_AGENT_REVISION,
     needs_voice_agent_resync,
@@ -76,14 +73,11 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
         self,
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
-        business_profile_repo: BusinessProfileRepoContract,
         channel_repo: ChannelRepoContract,
         plan_registry: PlanRegistryContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
-        build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
-        assistant_tool_catalog: AssistantToolCatalogContract,
+        voice_agent_sources: VoiceAgentSources,
         voice_agent_locks: VoiceAgentLockRegistryContract,
-        app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -91,11 +85,7 @@ class ResyncVoiceAgentsUseCase(UseCaseContract[JobTick, JobReport]):
         self._channel_repo: ChannelRepoContract = channel_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._setup: VoiceAgentSetup = VoiceAgentSetup(
-            business_profile_repo,
-            voice_agent_provisioner,
-            build_call_greeting,
-            assistant_tool_catalog,
-            app_settings,
+            voice_agent_sources, voice_agent_provisioner
         )
         self._locks: VoiceAgentLockRegistryContract = voice_agent_locks
         self._wall_clock: WallClock[Microseconds] = wall_clock

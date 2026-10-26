@@ -17,6 +17,9 @@ from base_pydantic_schemas import PersistentDocument
 from base_typed_string import BaseTypedStringConstraintViolationError
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.storage.in_memory_collection_registry import (
+    InMemoryCollectionRegistry,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -46,6 +49,7 @@ def build_document_collection[StoredDocument: PersistentDocument](
     storage_scope: StorageScopeContract | None = None,
     wall_clock: WallClock[Microseconds] | None = None,
     isolation: CollectionIsolation | None = None,
+    in_memory_registry: InMemoryCollectionRegistry | None = None,
 ) -> DocumentCollectionAdapterContract[StoredDocument]:
     """
     A Postgres collection when `settings.database_url` is set, else in-memory.
@@ -58,7 +62,8 @@ def build_document_collection[StoredDocument: PersistentDocument](
     Postgres-only arguments fall back to: one pool of its own on
     DATABASE_URL (pass the process's shared pools instead), the system
     clock, and the isolation inferred from the document type
-    (`infer_collection_isolation`).
+    (`infer_collection_isolation`). An in-memory collection joins
+    `in_memory_registry`, the process's list a business's deletion walks.
     """
 
     validated_collection_name: DocumentCollectionName = validate_collection_name(
@@ -70,7 +75,7 @@ def build_document_collection[StoredDocument: PersistentDocument](
         else infer_collection_isolation(document_type)
     )
     if settings.database_url is None:
-        return InMemoryDocumentCollectionAdapter[StoredDocument](
+        collection = InMemoryDocumentCollectionAdapter[StoredDocument](
             document_type,
             declared_lookup_fields(validated_collection_name, document_type),
             tenant_scope=(
@@ -79,6 +84,9 @@ def build_document_collection[StoredDocument: PersistentDocument](
                 else None
             ),
         )
+        if in_memory_registry is not None:
+            in_memory_registry.register(validated_collection_name, collection)
+        return collection
 
     return PostgresDocumentCollectionAdapter[StoredDocument](
         document_type=document_type,

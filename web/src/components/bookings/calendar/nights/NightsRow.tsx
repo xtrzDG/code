@@ -87,35 +87,33 @@ export function NightsRow({
             style={{ ...position, ...CLOSED_STYLE }}
           />
         ) : (
-          <button
-            key={date}
-            type="button"
-            onClick={() => onCreate(date)}
-            aria-label={`${t("bookingCalendar.nights.newStay", { place: room.name, date: longDate(date) })}. ${taken}`}
-            className={cn(
-              "flex cursor-cell items-end justify-end border-e border-line px-1 pb-0.5 text-[10px] text-ink-subtle tabular-nums transition-colors last:border-e-0 hover:bg-surface-muted",
-              booked >= open && "bg-surface-muted/60",
-            )}
-            style={position}
-          >
-            <span aria-hidden>
+          <div key={date} className="relative border-e border-line last:border-e-0" style={position}>
+            <button
+              type="button"
+              onClick={() => onCreate(date)}
+              aria-label={`${t("bookingCalendar.nights.newStay", { place: room.name, date: longDate(date) })}. ${taken}`}
+              className={cn("absolute inset-0 cursor-cell transition-colors hover:bg-surface-muted", booked >= open && "bg-surface-muted/60")}
+            />
+            {/* The count is drawn over the night, outside its button: a button's visible words belong in its name (WCAG 2.5.3), and its name says the count in words. */}
+            <span aria-hidden className="pointer-events-none absolute end-1 bottom-0.5 text-[10px] text-ink-subtle tabular-nums">
               {booked}/{open}
             </span>
-          </button>
+          </div>
         );
       })}
       {stays.map(({ laned, nights }) => {
         const booking = laned.item;
         const name = booking.contact_name ?? t("insights.unknownCustomer");
+        const nightCount = tp("bookings.nights", daysBetween(booking.date, booking.end_date));
         return (
           <button
             key={booking.id}
             type="button"
             {...movable(booking, locator(booking))}
             onClick={() => onOpen(booking)}
+            // What the bar shows first, then its dates (WCAG 2.5.3, Label in Name).
             aria-label={t("bookingCalendar.block.label", {
-              name,
-              time: formatDateSpan(booking.date, booking.end_date, locale),
+              shown: [name, nightCount, formatDateSpan(booking.date, booking.end_date, locale)].join(", "),
               place: booking.resource_name,
               status: t(BOOKING_STATUS[booking.status].label),
             })}
@@ -132,8 +130,8 @@ export function NightsRow({
             )}
           >
             <span aria-hidden className={cn("absolute inset-y-1 start-1 w-1 rounded-full", STATUS_STYLE[booking.status].mark)} />
-            <UserContent className="truncate font-semibold text-ink">{name}</UserContent>
-            <span className="shrink-0 text-ink-muted tabular-nums">{tp("bookings.nights", daysBetween(booking.date, booking.end_date))}</span>
+            <UserContent className="truncate font-semibold text-ink">{name}</UserContent>{" "}
+            <span className="shrink-0 text-ink-muted tabular-nums">{nightCount}</span>
           </button>
         );
       })}

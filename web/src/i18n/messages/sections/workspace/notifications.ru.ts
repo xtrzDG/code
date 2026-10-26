@@ -76,7 +76,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
   },
   contacts: {
     test: "Отправить проверку",
-    testLabel: "Отправить проверочное уведомление: {name}",
+    testLabel: "Отправить проверку: {name}",
     testDelivered: "Проверка дошла: {name}",
     testSimulated: "Здесь нет провайдера: проверка для {name} записана в журнал сервера",
     testFailed: "Проверка для {name} не дошла: {error}",

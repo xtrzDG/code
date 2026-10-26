@@ -12,7 +12,7 @@ export const widgetSitesEn = {
   sites: { one: "{count} website", other: "{count} websites" },
   listLabel: "Allowed websites",
   empty: "No list yet: the chat works on any website.",
-  addLabel: "Website address",
+  addFieldLabel: "Website address",
   addHint: "As in the browser's address bar. The www. address and http or https count as the same site.",
   placeholder: "https://cafe-batumi.ge",
   add: "Add",

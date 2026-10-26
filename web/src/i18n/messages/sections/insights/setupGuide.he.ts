@@ -16,7 +16,7 @@ export const setupGuideHe: Translation<typeof setupGuideEn> = {
   skip: "דילוג",
   unskip: "החזרה",
   skipLabel: "דילוג על „{step}”",
-  unskipLabel: "החזרת „{step}”",
+  unskipLabel: "החזרה של „{step}”",
   status: {
     next: "הבא",
     skipped: "דולג",
@@ -45,7 +45,7 @@ export const setupGuideHe: Translation<typeof setupGuideEn> = {
   },
   ring: {
     title: "הגדרה",
-    label: "ההגדרה הושלמה ב-{percent}%",
+    label: "הגדרה: {percent}% הושלמו",
     short: "{percent}%",
   },
   celebrations: {

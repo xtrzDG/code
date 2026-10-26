@@ -6,7 +6,7 @@ import type { helpCenterEn } from "./helpCenter.en";
 export const helpCenterDe: Translation<typeof helpCenterEn> = {
   title: "Hilfe",
   description: "Kurze Anleitungen zu jedem Teil des Dashboards.",
-  searchLabel: "Hilfe durchsuchen",
+  searchFieldLabel: "Hilfe durchsuchen",
   searchPlaceholder: "Telegram, Buchung, Rechnung…",
   search: "Suchen",
   clearSearch: "Suche löschen",

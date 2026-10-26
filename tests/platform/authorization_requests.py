@@ -79,6 +79,9 @@ REQUEST_BODIES: dict[str, JsonObject] = {
     f"PUT {B}/public-slug": {"slug": "matrix-cafe"},
     f"PUT {B}/referrals/powered-by": {"is_hidden": False},
     f"PUT {B}/security": {"require_mfa_for_members": False},
+    # A name that is not the business's: the closure is refused after the
+    # access checks (422), so the matrix never closes business B.
+    f"POST {B}/closure": {"confirmation_name": "Not this business"},
     f"POST {B}/resources": {"name": "Terrace", "capacity": 4},
     f"POST {B}/schedule-exceptions": {"date": "2026-12-31", "is_closed_all_day": True},
     f"POST {B}/test-chat": {"text": "Hello"},

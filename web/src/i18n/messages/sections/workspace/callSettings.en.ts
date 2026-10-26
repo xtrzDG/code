@@ -73,6 +73,7 @@ export const callSettingsEn = {
       not_started: "Assistant could not take the call",
       no_speech: "Hung up without speaking",
       transfer_unanswered: "Transfer not answered",
+      callback_requested: "Asked for a callback",
     },
     skipReasons: {
       turned_off: "text-backs were off",

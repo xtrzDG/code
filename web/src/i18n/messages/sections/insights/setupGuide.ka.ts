@@ -45,7 +45,7 @@ export const setupGuideKa: Translation<typeof setupGuideEn> = {
   },
   ring: {
     title: "მორგება",
-    label: "მორგება შესრულებულია {percent}%-ით",
+    label: "მორგება: {percent}% შესრულებულია",
     short: "{percent}%",
   },
   celebrations: {

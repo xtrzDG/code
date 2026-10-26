@@ -119,6 +119,9 @@ from app.utilities.config_helpers.app_settings.support_settings_section import (
 from app.utilities.config_helpers.app_settings.telemetry_settings_section import (
     read_telemetry_settings,
 )
+from app.utilities.config_helpers.app_settings.voice_agent_settings_section import (
+    read_voice_agent_settings,
+)
 from app.utilities.config_helpers.app_settings.voice_settings_section import (
     read_voice_settings,
 )
@@ -201,6 +204,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_privacy_settings(environment_variables),
         **read_seller_settings(environment_variables),
         **read_quality_settings(environment_variables),
+        **read_voice_agent_settings(environment_variables),
         **read_public_site_settings(environment_variables),
         **read_spend_guard_settings(environment_variables),
         **read_growth_settings(environment_variables),

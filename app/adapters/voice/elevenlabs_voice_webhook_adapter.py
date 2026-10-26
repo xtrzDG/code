@@ -3,6 +3,7 @@ import logging
 
 from typed_time_provider import Microseconds
 
+from app.adapters.voice.elevenlabs_call_analysis import read_call_analysis
 from app.adapters.voice.elevenlabs_post_call_reading import (
     read_call_language,
     read_called_tools,
@@ -70,7 +71,8 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
       (more than 30 minutes) are rejected. Only "post_call_transcription"
       events describe a finished call; cost comes from `cost_fiat` (USD).
       "call_initiation_failure" events describe a call the platform could
-      not start (its caller did not get through).
+      not start (its caller did not get through). A finished call's
+      `analysis` carries the platform's evaluation (`read_call_analysis`).
     - Tool calls: the body the agent's webhook tools send ("arguments",
       "conversation_id", "caller_id", "language").
     - Call initiation: {"caller_id", "agent_id", "called_number", "call_sid"}.
@@ -143,6 +145,7 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
             has_recording=data.get("has_audio") is not False,
             transfer_offset_seconds=read_transfer_offset(transcript_items),
             transfer_outcome=read_transfer_outcome(transcript_items),
+            analysis=read_call_analysis(data),
         )
 
     def parse_call_start_failure(self, body: bytes) -> MissedCallReport | None:

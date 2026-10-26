@@ -1844,3 +1844,7 @@ e5f518dabade7ed1229794d3d09ccc0e0ab739a1:tests/integrations/test_public_api_writ
 # member in the step-up use case. Neither is a secret.
 5444c468d43961c3b0237592c693229308d146cf:tests/storage/document_evolution/sample_values.py:generic-api-key:130
 53253c30d193f4f2a145e94787917eecacd6349a:app/use_cases/users/mfa/start_step_up_use_case.py:generic-api-key:63
+# Reviewed 2026-10-23 (R15-ACCOUNT-DELETION): a made-up Idempotency-Key (a
+# UUID) of the test that a closing business rents no number; replaced by a
+# low-entropy value since. Not a secret.
+43ef1972bb65baacb387134132be9c36ae06cf2b:tests/business_closures/test_closing_connects_nothing.py:generic-api-key:104

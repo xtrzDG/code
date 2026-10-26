@@ -9,7 +9,7 @@ import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from 
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import { BookingDialogs } from "./_components/BookingDialogs";
 import { BookingFiltersBar } from "./_components/BookingFiltersBar";
@@ -31,6 +31,7 @@ import { useBookingsPage } from "./_lib/useBookingsPage";
  */
 export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilters }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const { business, isOwner } = useBusiness();
   const page = useBookingsPage(initialFilters);
   const { filters, setFilters, rangeValid, bookings, agenda, resources, setDialog, isStay } = page;
@@ -89,7 +90,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
           rangeError={rangeValid ? null : t("bookings.rangeInvalid")}
           onChange={setFilters}
         />
-        <p className="text-xs text-ink-subtle">{t("bookings.timeZoneNote", { timezone: timeZoneLabel(business.timezone, locale) })}</p>
+        <p className="text-xs text-ink-subtle">{t("bookings.timeZoneNote", { timezone: zoneLabel(business.timezone) })}</p>
         {bookings.error && bookings.items ? <RefreshFailed error={bookings.error} onRetry={bookings.reload} /> : null}
 
         {!rangeValid ? null : bookings.items === undefined ? (

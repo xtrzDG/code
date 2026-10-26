@@ -6,7 +6,7 @@ import type { teachingEn } from "./teaching.en";
 export const teachingDe: Translation<typeof teachingEn> = {
   fix: {
     action: "Antwort korrigieren",
-    actionLabel: "Antwort des Assistenten korrigieren",
+    actionLabel: "Antwort korrigieren, die der Assistent gegeben hat",
     title: "Die Antwort korrigieren",
     description:
       "Schreiben Sie, wie der Assistent hätte antworten sollen. Das wird Teil dessen, was Ihr Assistent weiß, und erreicht Kunden nach „Änderungen übernehmen“.",

@@ -33,7 +33,7 @@ export const dataExportsEn = {
     requested: "Asked {date}",
     readyUntil: "Kept until {date}",
     download: "Download ZIP",
-    downloadLabel: "Download the export asked {date}",
+    downloadLabel: "Download ZIP of the export asked {date}",
     downloadStarted: "The download has started",
     downloadsLeft: { one: "{count} of {total} downloads left", other: "{count} of {total} downloads left" },
     usedUp: "This export was downloaded three times. Prepare a new one for another copy.",

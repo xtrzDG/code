@@ -47,6 +47,8 @@ export type BusinessView = Schema<"BusinessView">;
 export type BusinessStatus = Schema<"BusinessStatus">;
 export type BusinessMemberRole = Schema<"BusinessMemberRole">;
 export type NicheKey = Schema<"NicheKey">;
+export type BusinessClosureView = Schema<"BusinessClosureView">;
+export type BusinessDeletionView = Schema<"BusinessDeletionView">;
 
 // Profile wizard
 export type ProfileWizardView = Schema<"ProfileWizardView">;

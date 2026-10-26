@@ -33,7 +33,7 @@ export const conversationMediaDe: Translation<typeof conversationMediaEn> = {
   },
   place: {
     openMap: "In Karten öffnen",
-    openMapLabel: "{place} in Karten öffnen (öffnet sich in einem neuen Tab)",
+    openMapLabel: "In Karten öffnen: {place} (öffnet sich in einem neuen Tab)",
     unnamed: "Geteilter Standort",
   },
   deleted: "Die Datei wurde nach der Aufbewahrungsfrist gelöscht.",

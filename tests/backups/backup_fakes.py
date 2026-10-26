@@ -1,5 +1,6 @@
 """Fakes of the backup contracts and builders of facts for the tests."""
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -30,6 +31,7 @@ from app.schemas.typings.backups.constrained_strings import (
     DatabaseTableName,
     ScratchDatabaseName,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import LocalFilePath
 from app.schemas.typings.storage.constrained_strings import (
     SchemaMigrationChecksum,
@@ -145,14 +147,17 @@ class FakeScratchDatabase(ScratchDatabaseAdapterContract):
         self.facts: DatabaseFacts = facts
         self.restored_dumps: list[bytes] = []
         self.kept: list[bool] = []
+        self.ledgers: list[list[BusinessId]] = []
 
     def restore_and_inspect(
         self,
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
+        deleted_business_ids: Sequence[BusinessId] = (),
     ) -> RestoredDatabase:
         self.restored_dumps.append(Path(str(archive)).read_bytes())
         self.kept.append(is_kept)
+        self.ledgers.append(list(deleted_business_ids))
         return RestoredDatabase(
             scratch_database=ScratchDatabaseName("restore_drill_test"),
             facts=self.facts,

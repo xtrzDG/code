@@ -16,7 +16,7 @@ export const conversationMediaHe: Translation<typeof conversationMediaEn> = {
   voice: {
     transcript: "תמלול",
     play: "השמעה",
-    playLabel: "השמעת ההודעה הקולית",
+    playLabel: "השמעה של ההודעה הקולית",
     playerLabel: "הודעה קולית מהלקוח",
     playerUnsupported: "הדפדפן שלכם לא יכול להשמיע כאן אודיו.",
     loading: "טוענים…",
@@ -33,7 +33,7 @@ export const conversationMediaHe: Translation<typeof conversationMediaEn> = {
   },
   place: {
     openMap: "פתיחה במפות",
-    openMapLabel: "פתיחת {place} במפות (נפתח בלשונית חדשה)",
+    openMapLabel: "פתיחה במפות: {place} (נפתח בלשונית חדשה)",
     unnamed: "מיקום ששותף",
   },
   deleted: "הקובץ נמחק אחרי תקופת השמירה.",

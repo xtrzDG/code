@@ -122,6 +122,35 @@ def test_the_cabinet_checks_run_next_to_the_build_the_shards_start() -> None:
     assert "web/e2e/.artifacts/report.json" in run
 
 
+def test_the_shards_take_the_browsers_system_packages_from_the_cache() -> None:
+    steps: list[dict[str, Any]] = JOBS["e2e"]["steps"]
+    names: list[str] = [str(step.get("name", "")) for step in steps]
+    restore = steps[names.index("Restore the browser's system packages")]
+    install = steps[names.index("Install Chromium for Playwright")]
+    keep = steps[names.index("Keep the browser's system packages")]
+
+    # Restored before apt runs, saved after it, only when the key missed.
+    assert names.index("Restore the browser's system packages") < names.index(
+        "Install Chromium for Playwright"
+    )
+    assert names.index("Install Chromium for Playwright") < names.index(
+        "Keep the browser's system packages"
+    )
+    assert str(restore["uses"]).startswith("actions/cache/restore@")
+    assert str(keep["uses"]).startswith("actions/cache/save@")
+    key = str(restore["with"]["key"])
+    assert "steps.runner-image.outputs.name" in key
+    assert "hashFiles('web/package-lock.json')" in key
+    assert keep["if"] == "steps.browser-packages.outputs.cache-hit != 'true'"
+    primary_key = "${{ steps.browser-packages.outputs.cache-primary-key }}"
+    assert keep["with"]["key"] == primary_key
+    run = str(install["run"])
+    assert run.index("/var/cache/apt/archives") < run.index(
+        "npx playwright install --with-deps chromium"
+    )
+    assert "Keep-Downloaded-Packages" in run
+
+
 def test_the_end_to_end_shards_follow_the_shard_plan() -> None:
     e2e = JOBS["e2e"]
     shards: list[int] = e2e["strategy"]["matrix"]["shard"]

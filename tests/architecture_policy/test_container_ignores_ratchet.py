@@ -20,6 +20,7 @@ CONTAINERS: Path = PROJECT_ROOT / "app" / "containers"
 CONTAINER_TYPE_IGNORES: int = 1090
 # Typed composition roots: plain Python, no provider graph, nothing silenced.
 TYPED_ROOTS: tuple[Path, ...] = (
+    CONTAINERS / "account_deletion",
     CONTAINERS / "feedback",
     CONTAINERS / "meta_connection",
     CONTAINERS / "passkeys",

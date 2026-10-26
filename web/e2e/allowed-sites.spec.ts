@@ -50,7 +50,7 @@ test("an owner keeps the website chat to their own website", async ({
     card.getByText(en.widgetSites.anySite, { exact: true }),
   ).toBeVisible();
 
-  const address = card.getByLabel(en.widgetSites.addLabel);
+  const address = card.getByLabel(en.widgetSites.addFieldLabel);
   await address.fill("not a site");
   await card
     .getByRole("button", { name: en.widgetSites.add, exact: true })

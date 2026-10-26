@@ -1,12 +1,21 @@
 """
 The ElevenLabs agent of a business: languages, greetings, built-in tools,
-the "Current call" block the call-initiation webhook fills in per call, and
-the call caps (the longest call, the silence that ends one).
+the "Current call" block the call-initiation webhook fills in per call, its
+tuning (model, voices, speech recognition, turn timeout), the evaluation of
+every call, and the call caps (the longest call, the silence that ends one).
 """
 
+from app.adapters.voice.elevenlabs_agent_tuning import (
+    asr_config,
+    build_language_presets,
+    find_profile,
+    tts_config,
+    turn_config,
+)
+from app.adapters.voice.elevenlabs_call_analysis import build_analysis_settings
 from app.contracts.channel_clients import JsonObject
 from app.schemas.dto.spend_guard import VoiceCallLimits
-from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
+from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting, VoiceProfile
 from app.schemas.typings.channels.strings import VoicePlatformToolId
 from app.utilities.channels.channel_endpoints import (
     VOICE_CALL_INITIATION_PATH,
@@ -82,16 +91,81 @@ def build_agent_config(
     call_limits: VoiceCallLimits | None = None,
 ) -> JsonObject:
     """
-    Create / update body of the business's agent. Every call ends at
-    `call_limits.max_duration_seconds` and after
+    Create / update body of the business's agent: its instruction and
+    tools, the language model and temperature, the voice of the default
+    language (the other languages' voices and greetings in their presets),
+    the speech recognition's keywords, the turn timeout, the evaluation of
+    every call (`build_analysis_settings`) and the call caps: every call
+    ends at `call_limits.max_duration_seconds` and after
     `call_limits.silence_end_seconds` of silence (the defaults: 10 minutes
     and 30 seconds).
     """
 
     limits: VoiceCallLimits = call_limits or VoiceCallLimits()
-
-    default_code: str = to_voice_platform_language(spec.default_language)
     default_greeting: VoiceGreeting | None = find_greeting(spec)
+    agent: JsonObject = {
+        "language": to_voice_platform_language(spec.default_language),
+        "prompt": {
+            "prompt": f"{spec.prompt_text}\n\n{CURRENT_CALL_SECTION}",
+            "llm": str(spec.llm_model),
+            "temperature": float(spec.temperature),
+            "tool_ids": [str(tool_id) for tool_id in tool_ids],
+            "built_in_tools": build_built_in_tools(spec),
+        },
+        # Set per call by the call-initiation webhook; closed and unknown
+        # until then.
+        "dynamic_variables": {
+            "dynamic_variable_placeholders": dict(CALL_VARIABLE_PLACEHOLDERS)
+        },
+    }
+    if default_greeting is not None:
+        agent["first_message"] = str(default_greeting.text)
+
+    conversation_config: JsonObject = {
+        "agent": agent,
+        "asr": asr_config(spec),
+        "conversation": {"max_duration_seconds": int(limits.max_duration_seconds)},
+        "turn": turn_config(spec, limits),
+    }
+    default_profile: VoiceProfile | None = find_profile(spec, spec.default_language)
+    if default_profile is not None:
+        conversation_config["tts"] = tts_config(default_profile)
+
+    language_presets: JsonObject = build_language_presets(spec)
+    if language_presets:
+        conversation_config["language_presets"] = language_presets
+
+    return {
+        "name": f"{spec.business_name} ({spec.business_id})"[:MAX_AGENT_NAME_LENGTH],
+        "tags": [AGENT_TAG, str(spec.business_id)],
+        "conversation_config": conversation_config,
+        "platform_settings": {
+            **build_analysis_settings(),
+            "overrides": {
+                "enable_conversation_initiation_client_data_from_webhook": True,
+                "conversation_config_override": {
+                    "agent": {"first_message": True, "language": True}
+                },
+            },
+            "workspace_overrides": {
+                "conversation_initiation_client_data_webhook": {
+                    "url": join_public_url(
+                        str(spec.tool_webhook_base_url),
+                        VOICE_CALL_INITIATION_PATH,
+                    ),
+                    "request_headers": dict(request_headers),
+                }
+            },
+        },
+    }
+
+
+def build_built_in_tools(spec: VoiceAgentSpec) -> JsonObject:
+    """
+    Ending the call; the transfer to the staff mobile when there is one;
+    language detection when the agent speaks more than one language.
+    """
+
     built_in_tools: JsonObject = {
         "end_call": {
             "type": "system",
@@ -99,21 +173,6 @@ def build_agent_config(
             "params": {"system_tool_type": "end_call"},
         }
     }
-    language_presets: JsonObject = {}
-    for greeting in spec.greetings:
-        language_code: str = to_voice_platform_language(greeting.language)
-        if language_code == default_code or language_code in language_presets:
-            continue
-
-        language_presets[language_code] = {
-            "overrides": {
-                "agent": {
-                    "first_message": str(greeting.text),
-                    "language": language_code,
-                }
-            }
-        }
-
     if spec.transfer_phone_number is not None:
         built_in_tools[TRANSFER_TOOL_NAME] = {
             "type": "system",
@@ -141,52 +200,7 @@ def build_agent_config(
             "params": {"system_tool_type": "language_detection"},
         }
 
-    agent: JsonObject = {
-        "language": default_code,
-        "prompt": {
-            "prompt": f"{spec.prompt_text}\n\n{CURRENT_CALL_SECTION}",
-            "tool_ids": [str(tool_id) for tool_id in tool_ids],
-            "built_in_tools": built_in_tools,
-        },
-        # Set per call by the call-initiation webhook; closed and unknown
-        # until then.
-        "dynamic_variables": {
-            "dynamic_variable_placeholders": dict(CALL_VARIABLE_PLACEHOLDERS)
-        },
-    }
-    if default_greeting is not None:
-        agent["first_message"] = str(default_greeting.text)
-
-    conversation_config: JsonObject = {
-        "agent": agent,
-        "conversation": {"max_duration_seconds": int(limits.max_duration_seconds)},
-        "turn": {"silence_end_call_timeout": int(limits.silence_end_seconds)},
-    }
-    if language_presets:
-        conversation_config["language_presets"] = language_presets
-
-    return {
-        "name": f"{spec.business_name} ({spec.business_id})"[:MAX_AGENT_NAME_LENGTH],
-        "tags": [AGENT_TAG, str(spec.business_id)],
-        "conversation_config": conversation_config,
-        "platform_settings": {
-            "overrides": {
-                "enable_conversation_initiation_client_data_from_webhook": True,
-                "conversation_config_override": {
-                    "agent": {"first_message": True, "language": True}
-                },
-            },
-            "workspace_overrides": {
-                "conversation_initiation_client_data_webhook": {
-                    "url": join_public_url(
-                        str(spec.tool_webhook_base_url),
-                        VOICE_CALL_INITIATION_PATH,
-                    ),
-                    "request_headers": dict(request_headers),
-                }
-            },
-        },
-    }
+    return built_in_tools
 
 
 def find_greeting(spec: VoiceAgentSpec) -> VoiceGreeting | None:

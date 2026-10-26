@@ -29,6 +29,7 @@ export const providerCircuitsEn = {
     smtp: "E-mail (SMTP)",
     flitt: "Payments (Flitt)",
     stripe: "Payments (Stripe)",
+    elevenlabs: "Voice (ElevenLabs)",
     web_push: "Web push",
   },
 } as const;

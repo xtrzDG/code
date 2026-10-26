@@ -23,7 +23,7 @@ export const devicesHe: Translation<typeof devicesEn> = {
   twoFactor: "עם גורם שני",
   oneFactor: "עם קוד כניסה",
   ends: "יסתיים מעצמו {date}",
-  end: "התנתקות",
+  end: "ניתוק",
   endLabel: "ניתוק {device}",
   endTitle: "לנתק את המכשיר הזה?",
   endDescription: "מי שמשתמש בו יצטרך להתחבר מחדש.",

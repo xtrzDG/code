@@ -6,7 +6,7 @@ import type { calendarSyncEn } from "./calendarSync.en";
 export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
   row: {
     button: "לוחות שנה",
-    buttonLabel: "לוחות השנה של {name}",
+    buttonLabel: "לוחות שנה של {name}",
     sources: { one: "לוח שנה אחד חוסם את הזמנים שלו", other: "{count} לוחות שנה חוסמים את הזמנים שלו" },
     problems: { one: "לוח שנה אחד דורש תשומת לב", other: "{count} לוחות שנה דורשים תשומת לב" },
     shared: "ההזמנות שלו משותפות כלוח שנה",
@@ -59,7 +59,7 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
     import: "ייבוא",
     imported: "לוח השנה יובא",
     remove: "הסרה",
-    removeLabel: "הסרת לוח השנה של {host}",
+    removeLabel: "הסרה: לוח השנה של {host}",
     removed: "לוח השנה הוסר",
     empty: "עדיין לא יובא לוח שנה.",
     limit: "עד 5 לוחות שנה לכל משאב.",

@@ -114,7 +114,7 @@ export const teachingHe: Translation<typeof teachingEn> = {
     edit: "שינוי",
     editLabel: "שינוי הבדיקה „{question}”",
     delete: "מחיקה",
-    deleteLabel: "מחיקת הבדיקה „{question}”",
+    deleteLabel: "מחיקה: הבדיקה „{question}”",
     deleteTitle: "למחוק את הבדיקה הזו?",
     deleteDescription: "עדכונים לא ייבדקו יותר עם „{question}”.",
     created: "הבדיקה נשמרה. היא תרוץ ב„החלת שינויים” הבאה.",

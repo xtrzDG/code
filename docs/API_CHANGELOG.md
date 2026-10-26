@@ -11,6 +11,105 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-23 — wave 22 together: closing a business and deleting an account, voice tuning and the call fallback
+
+Spec: `ddd24979e0eaea8b`
+
+The API description with the two wave-22 entries further down merged
+together, on top of wave 21 (closing a business, deleting it for good and
+deleting an account, with the deletion certificates; voice agent tuning,
+voice checks and the call fallback of rented numbers). Each of those
+entries names the description of its own change alone; nothing else
+changed for clients.
+
+## 2026-10-23 — voice agent tuning, voice checks and the call fallback
+
+Spec: `147ffdf07e1b1a6e`
+
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}`, the
+  call fallback of the business's rented numbers (each number's Twilio
+  VoiceFallbackUrl, set by the platform): Twilio asks it what to do with a
+  call the voice platform refused or did not answer in time. The form is
+  Twilio's (`CallSid`, `From`, `To`, `ForwardedFrom`, ...), signed in
+  `X-Twilio-Signature` (HMAC-SHA1 of the address and the fields with the
+  platform's `TWILIO_AUTH_TOKEN`; 401 otherwise). It answers TwiML
+  (`text/xml`): a `<Dial>` to the staff mobile on duty (the profile's
+  handoff phone, else the first manager reachable by phone), or
+  `<Hangup/>` when nobody can take the call (then a missed call with its
+  text-back). The owner hears of it at most once an hour.
+- **Added** `POST /v1/telephony/twilio/voice-fallback/{business_id}/dial-status`,
+  the `<Dial>`'s action: a staff mobile that was busy, rang out or failed
+  leaves a missed call with its text-back; it answers `<Hangup/>`.
+- **Changed** `CallDocument` (the calls of a contact's data export,
+  `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`) gains
+  `analysis` (`CallAnalysis`, optional): what the voice platform's own
+  evaluation of the call found (`booking_correct`, `disclosure_said`:
+  `success`, `failure` or `unknown`) and read from it (`booking_date`,
+  `booking_time`, `party_size`, `callback_requested`).
+  Calls stored before have none; erasing a contact's data clears it.
+- **Changed** `AutotestScenarioResultView` (the results of
+  `GET /v1/businesses/{business_id}/assistant-versions/{version_id}/autotest-run`
+  and of `POST .../autotests`) gains `channel` (`ChannelKind`, optional): `phone` for
+  a voice check, a simulated call to the version's voice agent in one of its
+  languages, played by the voice platform; `null` for a test chat. A version
+  with voice is checked by such calls (one per tested language, kind
+  `booking`, or `unknown_question` for a version that takes no bookings)
+  while `VOICE_CHECKS_ENABLED` is on and the voice platform is configured; a
+  voice check of either kind that failed or erred keeps the version from
+  going live (`autotests` reason of the go-live checklist).
+- **Changed** `AutotestOutcomeChangeView` and `AutotestScoreChangeView` (the
+  `comparison` of an autotest run) gain `channel` (`ChannelKind`, optional):
+  `phone` when the change is a voice check's, so it is not mistaken for the
+  chat scenario of the same kind and language.
+- **Changed** `MissedCallReason` (the recent missed calls of
+  `GET /v1/businesses/{business_id}/call-settings`) gains `callback_requested`: the caller asked to be called back
+  and the call left staff nothing to act on. Clients must read it now; the
+  platform writes it only from the next release (until then such a call
+  says `transfer_unanswered`). A caller put through to staff is no longer a
+  missed call even when they asked for a callback.
+
+## 2026-10-23 — closing a business, deleting it for good, deleting an account
+
+Spec: `c2911998130fe426`
+
+- **Added** `GET /v1/businesses/{business_id}/closure` (`BusinessClosureView`):
+  where the business stands on its way out — `active`, `pending_deletion`
+  (with `reason`, `requested_at`, `delete_after`, `actor_name` and
+  `can_cancel`) or `deleting`. Any member may read it; `viewer_is_owner`
+  says whether the danger zone is theirs.
+- **Added** `POST /v1/businesses/{business_id}/closure` (owner only, a sign-in
+  within the last 10 minutes, body `{"confirmation_name": "<the business's
+  name>"}`): the business is paused, its channels disconnected, its
+  automatic charges stopped, and it is deleted for good 30 days later.
+  Closing again answers the same closure. `422` for a name that does not
+  match; `401` with the reason `step_up_required` for an old sign-in.
+- **Added** `DELETE /v1/businesses/{business_id}/closure` (owner only, `204`):
+  cancels the closure within its 30 days and brings the channels back; a
+  closure for non-payment is cancelled only once the subscription is paid
+  (`409`), and a deletion that has begun cannot be cancelled (`409`).
+- **Added** `DELETE /v1/me` (`204`, a recent sign-in): deletes the signed-in
+  account — its sessions, second factors, passkeys, push subscriptions and
+  notification preferences, and its memberships. Refused with `409` while
+  the person is the last owner of a business that is not closing (reason
+  `last_business_owner`, its `details` the businesses' ids) or the only
+  owner of a brand (`last_brand_owner`, the brands' ids), and for members
+  of the platform team (`platform_team`).
+- **Added** `GET /v1/me/business-deletions` (`BusinessDeletionList`): the
+  businesses this person owned that are deleted or being deleted, and
+  `GET /v1/me/business-deletions/{deletion_id}/certificate?language=` the
+  deletion certificate (`application/pdf`; `409` while the deletion runs,
+  `404` for anyone who was not an owner).
+- **Changed** while a business is closing (a closure not cancelled), the
+  routes that would bring it back answer `409` until the closure is
+  cancelled: publishing or rolling back an assistant version,
+  `PATCH /v1/businesses/{business_id}` with `status: live`, connecting a
+  channel (`PUT …/channels/{channel}`), the Facebook sign-in
+  (`POST …/channels/meta/sign-in`, `POST …/channels/whatsapp/embedded-signup`,
+  `PUT …/channels/{channel}/page`) and renting a number
+  (`POST …/phone-line/number`). `POST …/closure` answers `409` while a
+  cancel of the same business is still bringing it back (try again in a
+  few minutes).
+
 ## 2026-10-23 — wave 21 together: knowledge across languages, regional payments, phone numbers, Meta sign-in
 
 Spec: `a9b957c2ee6887dd`

@@ -5,11 +5,16 @@ by queued jobs, so a processor's outage never fails the erasure.
 """
 
 from app.schemas.constants.privacy import ProcessorErasureReason, SubProcessor
+from app.schemas.domain.call_analysis import CallAnalysis
 from app.schemas.domain.call_summaries import CallSummary
 from app.schemas.dto.compliance import ContactDataCommand
 from app.schemas.dto.jobs import QueuedJobInput
 from app.schemas.dto.processor_erasure import ProcessorErasureJobPayload
-from app.schemas.typings.calls.constrained_strings import CallSummaryText
+from app.schemas.typings.calls.constrained_integers import CallCollectedPartySize
+from app.schemas.typings.calls.constrained_strings import (
+    CallCollectedDate,
+    CallSummaryText,
+)
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.use_cases.compliance.erase_processor_copies_use_case import (
@@ -85,7 +90,7 @@ def test_the_erasure_queues_the_deletion_of_every_conversation_and_call() -> Non
     assert copies == {"langfuse_copies": 3, "elevenlabs_copies": 2}
 
 
-def test_an_erased_call_loses_its_summaries_for_staff_too() -> None:
+def test_an_erased_call_loses_its_summaries_and_evaluation_too() -> None:
     testbed = build_accounts_testbed()
     owner = testbed.sign_in_with_phone(GEORGIA_MOBILE)
     business = testbed.create_restaurant(owner.user.id)
@@ -97,7 +102,11 @@ def test_an_erased_call_loses_its_summaries_for_staff_too() -> None:
                     language=LanguageTag("en"),
                     text=CallSummaryText("Nino wants a table for four"),
                 )
-            ]
+            ],
+            "analysis": CallAnalysis(
+                booking_date=CallCollectedDate("2026-10-03"),
+                party_size=CallCollectedPartySize(4),
+            ),
         }
     )
     testbed.call_repo.save(summarized)
@@ -113,3 +122,4 @@ def test_an_erased_call_loses_its_summaries_for_staff_too() -> None:
     call = testbed.call_repo.get(business.id, visitor.conversation_call.id)
     assert call is not None
     assert (call.transcript, call.summaries, call.from_phone_number) == (None, [], None)
+    assert call.analysis is None

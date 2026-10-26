@@ -11,7 +11,9 @@ and a throwaway Postgres server with a role that may create databases
 (RESTORE_CHECK_DATABASE_URL), never production's. The checks: the archive
 matches its manifest; every table has the dumped number of rows; the
 migrations are this checkout's; row-level security isolates businesses;
-the newest backup is at most BACKUP_MAX_AGE_HOURS old. With DATABASE_URL
+the newest backup is at most BACKUP_MAX_AGE_HOURS old; after the deletion
+ledger (its copy in the bucket and the restored database's own) is applied,
+no row of a deleted business is left. With DATABASE_URL
 (the weekly Render cron) the drill is recorded for the admin system page.
 Exit codes: 0 the backup restores, 1 a check failed or the restore failed,
 2 not configured.
@@ -29,6 +31,9 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.backup.age_backup_cipher_adapter import AgeBackupCipherAdapter
 from app.adapters.backup.pg_restore_scratch_database_adapter import (
     PgRestoreScratchDatabaseAdapter,
+)
+from app.adapters.business_closures.bucket_deletion_ledger_mirror_adapter import (
+    BucketDeletionLedgerMirrorAdapter,
 )
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     SqlFileMigrationSourceAdapter,
@@ -106,11 +111,12 @@ def main(
         )
         return EXIT_NOT_CONFIGURED
 
+    bucket = build_bucket(backup.bucket)
     operator = PipelineOperator(
         OrchestratorPipeline(
             UseCaseOrchestrator(
                 CheckBackupRestoreUseCase(
-                    backup_bucket=build_bucket(backup.bucket),
+                    backup_bucket=bucket,
                     backup_cipher=AgeBackupCipherAdapter(
                         backup.recipients, backup.identity
                     ),
@@ -124,6 +130,9 @@ def main(
                     wall_clock=WallClock(preferred_time_unit_type=Microseconds),
                     prefix=backup.prefix,
                     max_age=backup.max_age_hours,
+                    ledger_mirror=BucketDeletionLedgerMirrorAdapter(
+                        bucket, backup.prefix
+                    ),
                 )
             )
         )
@@ -251,6 +260,13 @@ def describe_drill(report: RestoreCheckReport, is_kept: bool) -> str:
         f"{len(facts.applied_migrations)} migrations; row-level security "
         f"probed on {len(report.restored.isolation_probes)} tables.",
     ]
+    ledger = report.restored.ledger
+    if ledger is not None:
+        lines.append(
+            f"Deletion ledger: {int(ledger.deleted_businesses)} deleted businesses, "
+            f"{int(ledger.erased_rows)} of their rows deleted again, "
+            f"{int(ledger.remaining_rows)} left."
+        )
     if report.pending_migrations:
         lines.append(
             f"{len(report.pending_migrations)} migrations of this checkout are "

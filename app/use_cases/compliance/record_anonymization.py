@@ -88,7 +88,8 @@ def erased_call(
 ) -> CallDocument | None:
     """
     The call without its recording, transcript, summaries for staff, the
-    caller's number and the values its audit flagged. The number called
+    caller's number, the values its audit flagged and what the voice
+    platform's evaluation read from it (the booking asked for). The number called
     goes when it is the customer's (`customer_phone`), or whenever no
     customer is named (the purge keeps no numbers at all). The recording
     file is deleted by the caller first.
@@ -103,6 +104,7 @@ def erased_call(
         or call.from_phone_number is not None
         or bool(call.summaries)
         or bool(call.unverified_values)
+        or call.analysis is not None
         or is_called_number_personal
     )
     if not has_content:
@@ -112,6 +114,7 @@ def erased_call(
     call.transcript = None
     call.summaries = []
     call.unverified_values = []
+    call.analysis = None
     call.from_phone_number = None
     if is_called_number_personal:
         call.to_phone_number = None

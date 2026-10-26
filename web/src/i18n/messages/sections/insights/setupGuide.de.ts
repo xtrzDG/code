@@ -45,7 +45,7 @@ export const setupGuideDe: Translation<typeof setupGuideEn> = {
   },
   ring: {
     title: "Einrichtung",
-    label: "Einrichtung zu {percent} % erledigt",
+    label: "Einrichtung: {percent} % erledigt",
     short: "{percent} %",
   },
   celebrations: {

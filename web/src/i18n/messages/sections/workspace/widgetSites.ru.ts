@@ -11,7 +11,7 @@ export const widgetSitesRu: Translation<typeof widgetSitesEn> = {
   sites: { one: "{count} сайт", few: "{count} сайта", many: "{count} сайтов", other: "{count} сайта" },
   listLabel: "Разрешённые сайты",
   empty: "Списка пока нет: чат работает на любом сайте.",
-  addLabel: "Адрес сайта",
+  addFieldLabel: "Адрес сайта",
   addHint: "Как в адресной строке браузера. Адрес с www. и без, http и https считаются одним сайтом.",
   placeholder: "https://cafe-batumi.ge",
   add: "Добавить",

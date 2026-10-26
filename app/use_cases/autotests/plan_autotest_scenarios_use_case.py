@@ -14,6 +14,8 @@ from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.contracts.voice_platform import VoiceCheckAdapterContract
+from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -39,6 +41,9 @@ from app.use_cases.autotests.scenario_planning_parts import (
     ScenarioPlanningParts,
     collect_item_prices,
 )
+from app.use_cases.autotests.voice_checks.voice_check_readiness import (
+    are_voice_checks_ready,
+)
 from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.assembly.autotest_scenarios import (
     DEFAULT_PARTY_SIZE,
@@ -62,6 +67,11 @@ DEFAULT_PRICE_QUESTION_LIMIT: PriceQuestionScenarioLimit = PriceQuestionScenario
 )
 KNOWLEDGE_KIND_ORDER: list[KnowledgeItemKind] = list(KnowledgeItemKind)
 SINGLE_PLAY: AutotestSampleCount = AutotestSampleCount(1)
+# The kinds a voice check plays (`plan_voice_scenarios`): a narrowed run
+# that selects one of them plays the voice checks of its languages too.
+VOICE_CHECK_KINDS: frozenset[AutotestScenarioKind] = frozenset(
+    {AutotestScenarioKind.BOOKING, AutotestScenarioKind.UNKNOWN_QUESTION}
+)
 OWN_LANGUAGE_KINDS: frozenset[AutotestScenarioKind] = frozenset(
     {*LANGUAGE_SCENARIO_KINDS, *RED_TEAM_SCENARIO_KINDS}
 )
@@ -91,7 +101,10 @@ class PlanAutotestScenariosUseCase(
     checks"), so a corrected answer is checked in every apply: all of them
     in a quick check, those in the selected languages otherwise (none when
     the selected kinds leave out `owner_check`). Every launch-critical
-    scenario is played `critical_samples` times (pass^k).
+    scenario is played `critical_samples` times (pass^k). A version with
+    voice adds one voice check (a simulated call) per selected language,
+    or in its default language for the quick check, while the voice checks
+    can run (`are_voice_checks_ready`); each is played once.
     """
 
     def __init__(
@@ -105,6 +118,8 @@ class PlanAutotestScenariosUseCase(
         language_registry: LanguageRegistryContract,
         price_question_limit: PriceQuestionScenarioLimit = DEFAULT_PRICE_QUESTION_LIMIT,
         critical_samples: AutotestSampleCount = SINGLE_PLAY,
+        voice_check_adapter: VoiceCheckAdapterContract | None = None,
+        app_settings: AppSettings | None = None,
     ) -> None:
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
@@ -117,7 +132,12 @@ class PlanAutotestScenariosUseCase(
         )
         self._price_question_limit: PriceQuestionScenarioLimit = price_question_limit
         self._parts: ScenarioPlanningParts = ScenarioPlanningParts(
-            autotest_case_repo, language_registry, critical_samples
+            autotest_case_repo,
+            language_registry,
+            critical_samples,
+            is_voice_checked=lambda: are_voice_checks_ready(
+                voice_check_adapter, app_settings
+            ),
         )
 
     def run(self, input_data: AutotestPlanningRequest) -> AutotestScenarioPlanning:
@@ -151,6 +171,9 @@ class PlanAutotestScenariosUseCase(
                         item_prices,
                     )
                     + self._parts.owner_checks(business, None)
+                )
+                + self._parts.voice_scenarios(
+                    version, [version.default_language], resource_noun, party_size
                 ),
                 is_full_coverage=False,
             )
@@ -214,6 +237,13 @@ class PlanAutotestScenariosUseCase(
                     if plays_owner_checks
                     else []
                 )
+            )
+            + (
+                self._parts.voice_scenarios(
+                    version, languages, resource_noun, party_size
+                )
+                if input_data.kinds is None or set(kinds) & VOICE_CHECK_KINDS
+                else []
             ),
             is_full_coverage=(
                 set(languages) >= set(version.languages)

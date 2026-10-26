@@ -71,6 +71,7 @@ export const callSettingsDe: Translation<typeof callSettingsEn> = {
       not_started: "Der Assistent konnte den Anruf nicht annehmen",
       no_speech: "Ohne zu sprechen aufgelegt",
       transfer_unanswered: "Weiterleitung nicht angenommen",
+      callback_requested: "Rückruf erbeten",
     },
     skipReasons: {
       turned_off: "Rückmeldungen waren aus",

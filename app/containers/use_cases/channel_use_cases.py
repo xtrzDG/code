@@ -157,6 +157,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         product_events=facilitators.product_events,
         step_up=utilities.step_up_guard,
         phone_number_repo=repositories.phone_number_repo,
+        closure_repo=repositories.business_closure_repo,
     )
     set_whatsapp_staff_template_use_case: Factory[
         UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]

@@ -15,6 +15,7 @@ from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.telephony.constrained_strings import VoiceFallbackUrl
 from app.schemas.typings.telephony.strings import (
     ProviderPhoneNumberId,
     VoicePlatformPhoneNumberId,
@@ -22,7 +23,10 @@ from app.schemas.typings.telephony.strings import (
 
 
 class TwilioPhoneNumbersClientContract(ClientContract, Protocol):
-    """Twilio's phone numbers: what is on offer, its price, renting, returning."""
+    """
+    Twilio's phone numbers: what is on offer, its price, renting, the call
+    fallback of a rented number, returning.
+    """
 
     def list_available_numbers(
         self, query: PhoneNumberSearchQuery
@@ -51,6 +55,16 @@ class TwilioPhoneNumbersClientContract(ClientContract, Protocol):
 
     def release_number(self, provider_number_id: ProviderPhoneNumberId) -> None:
         """Return a rented number; one Twilio no longer has is not an error."""
+        raise NotImplementedError
+
+    def set_voice_fallback(
+        self, provider_number_id: ProviderPhoneNumberId, url: VoiceFallbackUrl
+    ) -> None:
+        """
+        Where Twilio asks what to do with a call to the number when its voice
+        webhook (the voice platform) fails or does not answer in time.
+        Raises ExternalServiceError.
+        """
         raise NotImplementedError
 
 

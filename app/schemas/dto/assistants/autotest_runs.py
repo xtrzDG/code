@@ -13,6 +13,7 @@ from app.schemas.constants.assistants import (
     AutotestExpectation,
     AutotestScenarioKind,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
@@ -47,6 +48,7 @@ from app.schemas.typings.assistants.strings import (
     JudgeNote,
 )
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.localization.constrained_strings import (
@@ -88,6 +90,8 @@ class AutotestScenario(ImmutableDTO):
     customer goes on pressing for its goal. `expected_prices` are the prices
     a price question's answer must name (the item asked about);
     `sample_count` is how many times the scenario is played (pass^k).
+    A voice check (`channel` PHONE) is one simulated call to the voice
+    agent, played once.
     """
 
     key: AutotestScenarioKey
@@ -100,6 +104,11 @@ class AutotestScenario(ImmutableDTO):
     opening_message: AutotestOpeningMessage | None = None
     expected_prices: list[Money] = Field(default_factory=list[Money])
     sample_count: AutotestSampleCount = AutotestSampleCount(1)
+    # A voice check (PHONE: a simulated call to the version's voice agent,
+    # played by the voice platform); None for a test chat. Its booking must
+    # be for `expected_party_size` people.
+    channel: ChannelKind | None = None
+    expected_party_size: PartySize | None = None
 
 
 class AutotestRunPlan(ImmutableDTO):

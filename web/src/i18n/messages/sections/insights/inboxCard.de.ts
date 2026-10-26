@@ -78,7 +78,7 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
     manage: "Schnellantworten verwalten",
     noMatch: "Keine Schnellantwort passt zu „/{query}“.",
     missing: "Vor dem Senden ausfüllen:",
-    fillLabel: "Wert für {variable}",
+    fillFieldLabel: "Wert für {variable}",
     fill: "Ausfüllen",
     placeholdersLeft: "Füllen Sie vor dem Senden die Teile in geschweiften Klammern aus: {variables}.",
     variables: {

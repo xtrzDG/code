@@ -24,6 +24,13 @@ class ProviderPhoneNumberId(BaseTypedString):
     """
 
 
+class TwimlDocument(BaseTypedString):
+    """
+    The instructions a carrier's call webhook answers with (Twilio's TwiML,
+    an XML document): put the caller through to a number, or hang up.
+    """
+
+
 class VoicePlatformPhoneNumberId(BaseTypedString):
     """
     The voice platform's identifier of an imported number (ElevenLabs'

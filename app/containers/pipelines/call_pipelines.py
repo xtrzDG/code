@@ -9,7 +9,8 @@ from app.containers.provider_chains import orchestrator_pipeline
 
 class CallPipelinesContainer(containers.DeclarativeContainer):
     """
-    Pipelines of the telephony line's webhook, text-backs, Settings → Calls
+    Pipelines of the telephony line's webhook, the call fallback of rented
+    numbers, text-backs, Settings → Calls
     and the phone line's rented number (1213).
     """
 
@@ -18,6 +19,8 @@ class CallPipelinesContainer(containers.DeclarativeContainer):
     pbx_call_webhook_pipeline = orchestrator_pipeline(
         calls.pbx_call_webhook_orchestrator
     )
+    call_fallback_pipeline = orchestrator_pipeline(calls.call_fallback_orchestrator)
+    fallback_dial_pipeline = orchestrator_pipeline(calls.fallback_dial_orchestrator)
     send_text_back_pipeline = orchestrator_pipeline(calls.send_text_back_orchestrator)
     get_call_settings_pipeline = orchestrator_pipeline(
         calls.get_call_settings_orchestrator

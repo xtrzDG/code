@@ -30,7 +30,7 @@ function VariableField({ variable, onFill }: { variable: QuickReplyVariable; onF
   return (
     <form onSubmit={submit} className="flex min-w-0 items-center gap-2">
       <label htmlFor={id} className="sr-only">
-        {t("inboxCard.quickReplies.fillLabel", { variable: label })}
+        {t("inboxCard.quickReplies.fillFieldLabel", { variable: label })}
       </label>
       <Input
         id={id}

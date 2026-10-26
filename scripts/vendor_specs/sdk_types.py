@@ -22,7 +22,7 @@ import inspect
 import textwrap
 import typing
 from collections.abc import Callable, Mapping
-from typing import cast
+from typing import Any, cast
 
 from pydantic import TypeAdapter
 
@@ -71,7 +71,9 @@ def sdk_schema(root: SchemaRoot) -> JsonObject:
 
 
 def type_schema(sdk_type: object) -> JsonObject:
-    return TypeAdapter(sdk_type).json_schema(ref_template=REFERENCE_TEMPLATE)
+    # A type read from the SDK at run time, which no checker can see as a type.
+    adapter: TypeAdapter[object] = TypeAdapter(cast(Any, sdk_type))
+    return adapter.json_schema(ref_template=REFERENCE_TEMPLATE)
 
 
 def request_body_schema(method: Callable[..., object]) -> JsonObject:

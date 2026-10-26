@@ -57,7 +57,7 @@ test("the help center finds articles for anyone, signed in or not", async ({ pag
   await expect(page.getByRole("heading", { level: 1, name: help.title })).toBeVisible();
   await expect(page.getByRole("heading", { name: help.topics.channels })).toBeVisible();
 
-  await page.getByRole("searchbox", { name: help.searchLabel }).fill("BotFather token");
+  await page.getByRole("searchbox", { name: help.searchFieldLabel }).fill("BotFather token");
   const results = page.getByRole("region", { name: /found/ });
   await expect(results.getByRole("link").first()).toContainText("Telegram");
   await results.getByRole("link").first().click();

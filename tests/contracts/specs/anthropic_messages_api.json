@@ -27,6 +27,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -259,6 +260,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -374,6 +376,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -6836,6 +6839,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -6875,6 +6879,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -6934,6 +6939,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -6995,6 +7001,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -7828,6 +7835,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -15125,6 +15133,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -15460,6 +15469,7 @@
      "anyOf": [
       {
        "enum": [
+        "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-fable-5-1",
         "claude-opus-5-5",
@@ -15568,6 +15578,6 @@
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only anthropic",
   "source": "https://github.com/anthropics/anthropic-sdk-python",
   "title": "Anthropic Messages API (beta surface of the Python SDK)",
-  "version": "anthropic 1.11.0"
+  "version": "anthropic 1.17.0"
  }
 }

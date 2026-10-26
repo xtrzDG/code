@@ -66,6 +66,12 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "POST /v1/payments/stripe/webhook": "Stripe's signature",
     "GET /v1/telephony/zadarma/notifications": "Zadarma's echo handshake",
     "POST /v1/telephony/zadarma/notifications": "Zadarma's signature",
+    "POST /v1/telephony/twilio/voice-fallback/{business_id}": (
+        "Twilio's signature over the business's address"
+    ),
+    "POST /v1/telephony/twilio/voice-fallback/{business_id}/dial-status": (
+        "Twilio's signature over the business's address"
+    ),
     "GET /v1/integrations/google-calendar/callback": "a signed OAuth state",
 }
 # Routes left out of the API description, and what protects each.

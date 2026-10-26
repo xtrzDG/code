@@ -50,7 +50,7 @@ def test_the_default_call_caps_reach_the_agent_config() -> None:
     config = created_agent(ChannelsTestbed())
 
     assert config["conversation"] == {"max_duration_seconds": 600}
-    assert config["turn"] == {"silence_end_call_timeout": 30}
+    assert config["turn"] == {"turn_timeout": 8, "silence_end_call_timeout": 30}
 
 
 def test_the_configured_call_caps_reach_the_agent_config() -> None:

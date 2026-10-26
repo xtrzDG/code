@@ -1,15 +1,20 @@
 """An ElevenLabs API client whose calls succeed or fail by script."""
 
-from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
+from app.contracts.channel_clients import JsonObject
+from app.contracts.voice_check_clients import ElevenLabsPlatformClientContract
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.strings import VoicePlatformToolId
 from app.schemas.typings.conversations.strings import ProviderCallId
+from app.schemas.typings.voice.constrained_strings import (
+    VoiceCheckInvocationId,
+    VoiceCheckTestId,
+)
 
 
-class ScriptedElevenLabsClient(ElevenLabsApiClientContract):
+class ScriptedElevenLabsClient(ElevenLabsPlatformClientContract):
     """Each call takes the next outcome: None succeeds, an error is raised."""
 
     def __init__(self, outcomes: list[ApplicationError | None]) -> None:
@@ -59,4 +64,26 @@ class ScriptedElevenLabsClient(ElevenLabsApiClientContract):
         return None
 
     def delete_conversation(self, conversation_id: ProviderCallId) -> None:
+        self._next()
+
+    def create_test(self, test_config: JsonObject) -> VoiceCheckTestId:
+        self._next()
+        return VoiceCheckTestId("test_1")
+
+    def run_tests(
+        self,
+        agent_id: VoiceAgentId,
+        test_ids: list[VoiceCheckTestId],
+        agent_config_override: JsonObject | None,
+    ) -> VoiceCheckInvocationId:
+        self._next()
+        return VoiceCheckInvocationId("run_1")
+
+    def get_test_invocation(
+        self, invocation_id: VoiceCheckInvocationId
+    ) -> JsonObject | None:
+        self._next()
+        return None
+
+    def delete_test(self, test_id: VoiceCheckTestId) -> None:
         self._next()

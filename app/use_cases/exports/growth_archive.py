@@ -9,7 +9,8 @@ from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoCo
 from app.schemas.domain.campaigns import CampaignMessageDocument
 from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.use_cases.exports.archive_pages import DocumentPages, pages_in_write_order
+from app.use_cases.exports.archive_pages import DocumentPages
+from app.use_cases.shared.document_pages import pages_in_write_order
 
 
 def growth_pages(

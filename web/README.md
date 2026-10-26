@@ -77,7 +77,7 @@ Behind a reverse proxy, run the API with
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
 (CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
 next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
-nine shards that start that build (`docs/operations/ci.md`).
+ten shards that start that build (`docs/operations/ci.md`).
 
 ## End-to-end tests
 
@@ -226,7 +226,7 @@ Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
 and the API log as the `e2e-report-<shard>` artifact.
 
-CI runs the suite in nine shards, each with its own API, balanced by the
+CI runs the suite in ten shards, each with its own API, balanced by the
 seconds each spec file takes on CI's runners (`e2e/durations.json`, written
 by Playwright's JSON reporter; an idle four-core machine measures about
 the same); a spec without a measurement counts as the mean, and
@@ -978,6 +978,16 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
+- Label in Name (WCAG 2.5.3, axe's `label-content-name-mismatch` since
+  axe-core 4.14): a control with a name of its own (`aria-label`) says the
+  words it shows first, in their order ("Open in maps: Freedom Square"), so
+  saying what is on screen reaches it. In the dictionaries `remove` is what a
+  button shows and `removeLabel` its name; `src/i18n/labelInName.test.ts`
+  checks every such pair in every language, and a field's own label is a
+  `…FieldLabel`, which pairs with nothing. Words beside each other in
+  separate elements need a space between them (`{" "}`), or the check reads
+  them as one word. Figures drawn on a control that are not its label (the
+  heatmap's "20%", a night's "1/2") sit over it, outside the button.
 - Landmarks: one `<h1>` per page (the section's, inside a section frame),
   the main navigation, the tab bar and the section tabs are named `<nav>`s,
   `aria-current="page"` marks where you are everywhere, badges read as "3

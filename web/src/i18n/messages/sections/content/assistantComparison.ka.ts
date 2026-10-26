@@ -21,6 +21,7 @@ export const assistantComparisonKa: Translation<typeof assistantComparisonEn> = 
     scoreRises: "შეფასებები გაიზარდა",
     criteria: "კრიტერიუმების მიხედვით",
     scenario: "{name} · {language}",
+    phoneScenario: "{name} · {channel} · {language}",
     scoreMove: "{from} → {to}",
     outcomeMove: "იყო: {from}, ახლა: {to}",
     noChanges: "მოქმედ განახლებასთან შედარებით არაფერი შეცვლილა: ახალი პრობლემები არ არის და არც ერთი შეფასება ნახევარი ქულით ან მეტით არ შეცვლილა.",

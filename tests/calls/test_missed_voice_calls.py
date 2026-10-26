@@ -14,6 +14,16 @@ from app.schemas.constants.calls import (
 )
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.dto.release_gates import ReleaseGate
+from app.schemas.typings.maintenance.constrained_strings import (
+    GatedEnumValue,
+    StoredEnumPath,
+)
+from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.use_cases.voice.missed_calls.find_missed_voice_call_use_case import (
+    callback_reason,
+)
+from app.utilities.storage.release_gates import CALLBACK_REQUESTED_GATE
 from tests.calls.call_steps import (
     TEMPLATE_NAME,
     add_staff_chat,
@@ -128,6 +138,65 @@ class TestSilentCallers:
         assert missed.status is TextBackStatus.SKIPPED
         assert str(missed.skip_reason) == "too_late"
         assert whatsapp_templates(setup) == []
+
+
+def callback_payload(tool_names: tuple[str, ...] = ()) -> dict[str, Any]:
+    """The voice platform's evaluation read that the caller wants a call back."""
+
+    payload = post_call_payload("conv_callback", tool_names=tool_names)
+    payload["data"]["analysis"] = {
+        "call_successful": "success",
+        "transcript_summary": "Wants a call back.",
+        "data_collection_results": {
+            "callback_requested": {
+                "data_collection_id": "callback_requested",
+                "value": True,
+                "rationale": "-",
+            }
+        },
+    }
+    return payload
+
+
+class TestCallbacks:
+    def test_a_callback_nobody_was_asked_for_is_a_missed_call(self) -> None:
+        setup = texting_setup()
+
+        process_call(setup, callback_payload())
+
+        [missed] = missed_calls(setup)
+        assert missed.reason is MissedCallReason.TRANSFER_UNANSWERED
+        assert missed.status is TextBackStatus.SENT
+
+    def test_a_callback_with_a_handoff_is_left_to_the_handoff(self) -> None:
+        setup = texting_setup()
+
+        process_call(setup, callback_payload(tool_names=("handoff_to_human",)))
+
+        assert missed_calls(setup) == []
+
+    def test_a_callback_after_a_connected_transfer_is_no_missed_call(self) -> None:
+        setup = texting_setup()
+        payload = transfer_payload("Transferred to +995 32 2 00 00 01")
+        payload["data"]["transcript"].reverse()
+        payload["data"]["analysis"] = callback_payload()["data"]["analysis"]
+
+        process_call(setup, payload)
+
+        assert missed_calls(setup) == []
+        assert whatsapp_templates(setup) == []
+
+    def test_a_callback_keeps_the_old_reason_until_its_gate_opens(self) -> None:
+        open_gate = ReleaseGate(
+            name=CALLBACK_REQUESTED_GATE,
+            collection_name=DocumentCollectionName("missed_calls"),
+            path=StoredEnumPath("reason"),
+            values=[GatedEnumValue("callback_requested")],
+            is_open=True,
+        )
+
+        assert callback_reason() is MissedCallReason.TRANSFER_UNANSWERED
+        assert callback_reason([open_gate]) is MissedCallReason.CALLBACK_REQUESTED
 
 
 class TestTransfers:

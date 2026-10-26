@@ -49,6 +49,7 @@ def meta_connection_root_provider(
             meta_client=clients.meta_graph_client,
             instagram_adapter=adapters.instagram_channel_adapter,
             channel_repo=repositories.channel_repo,
+            closure_repo=repositories.business_closure_repo,
             contact_repo=repositories.contact_repo,
             inbound_event_repo=repositories.inbound_event_repo,
             outbound_message_repo=repositories.outbound_message_repo,

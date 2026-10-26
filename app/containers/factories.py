@@ -20,7 +20,6 @@ from app.clients.turnstile.turnstile_verification_client import (
     TurnstileVerificationClient,
 )
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
-from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.facilitators import OtpDeliveryFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.messaging_clients import (
@@ -30,6 +29,7 @@ from app.contracts.messaging_clients import (
     WhatsAppAuthenticationClientContract,
 )
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.contracts.voice_check_clients import ElevenLabsPlatformClientContract
 from app.facilitators.observability.langfuse_trace_facilitator import (
     LangfuseTraceFacilitator,
 )
@@ -64,7 +64,7 @@ from app.utilities.conversations.llm_models import resolve_llm_provider
 DEFAULT_MENU_EXTRACTION_MODEL_ID: LlmModelId = LlmModelId("gpt-5-mini")
 
 
-def build_elevenlabs_client(settings: AppSettings) -> ElevenLabsApiClientContract:
+def build_elevenlabs_client(settings: AppSettings) -> ElevenLabsPlatformClientContract:
     """The ElevenLabs API client, or a stand-in that reports the missing key."""
 
     if settings.elevenlabs_api_key is None:

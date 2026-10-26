@@ -35,7 +35,8 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
     toPlaces: "הוספת מקומות",
   },
   block: {
-    label: "{name}, {time}, {place}, {status}",
+    label: "{shown}, {place}, {status}",
+    until: "עד {time}",
     test: "בדיקה",
   },
   move: {

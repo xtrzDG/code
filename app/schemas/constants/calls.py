@@ -10,7 +10,9 @@ class MissedCallReason(StrEnum):
     line could not put the call through). From the voice platform:
     NOT_STARTED (the assistant could not start the call), NO_SPEECH (the
     assistant answered, the caller hung up without a word) and
-    TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).
+    TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)
+    and CALLBACK_REQUESTED (the caller asked to be called back and the call
+    left staff nothing to act on; written once its release gate opens).
     """
 
     NO_ANSWER = "no_answer"
@@ -20,6 +22,7 @@ class MissedCallReason(StrEnum):
     NOT_STARTED = "not_started"
     NO_SPEECH = "no_speech"
     TRANSFER_UNANSWERED = "transfer_unanswered"
+    CALLBACK_REQUESTED = "callback_requested"
 
 
 class MissedCallSource(StrEnum):
@@ -84,3 +87,16 @@ class CallTransferOutcome(StrEnum):
     NOT_TRANSFERRED = "not_transferred"
     CONNECTED = "connected"
     UNANSWERED = "unanswered"
+
+
+class CallEvaluationResult(StrEnum):
+    """
+    What the voice platform's own evaluation of a finished call says about
+    one criterion (the booking matches what the caller asked, the AI
+    disclosure was said): SUCCESS, FAILURE, or UNKNOWN when the call gave
+    nothing to judge (no booking was asked for).
+    """
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+    UNKNOWN = "unknown"

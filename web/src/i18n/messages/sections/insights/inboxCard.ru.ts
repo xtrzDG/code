@@ -80,7 +80,7 @@ export const inboxCardRu: Translation<typeof inboxCardEn> = {
     manage: "Настроить быстрые ответы",
     noMatch: "Нет быстрого ответа «/{query}».",
     missing: "Заполните перед отправкой:",
-    fillLabel: "Значение: {variable}",
+    fillFieldLabel: "Значение: {variable}",
     fill: "Подставить",
     placeholdersLeft: "Перед отправкой заполните части в фигурных скобках: {variables}.",
     variables: {

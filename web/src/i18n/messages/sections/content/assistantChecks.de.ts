@@ -48,6 +48,8 @@ export const assistantChecksDe: Translation<typeof assistantChecksEn> = {
     notes: "Notizen",
     transcript: "Gespräch",
     noTranscript: "Das Gespräch hat nicht begonnen.",
+    phoneCall: "Anruf",
+    phoneCallHint: "Ein simulierter Anruf beim Telefonassistenten in dieser Sprache, geführt von der Sprachplattform.",
     outcomes: {
       passed: "Bestanden",
       failed: "Nicht bestanden",

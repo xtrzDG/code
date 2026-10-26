@@ -88,9 +88,12 @@ Exit codes: 0 done, 1 failed, 2 not configured.
 (AWS `eu-central-1`, Hetzner, Scaleway, Cloudflare R2 with the EU
 jurisdiction). Versioning on, with a lifecycle rule that expires noncurrent
 versions after 14 days (a leaked writer key cannot erase the history at
-once) and aborts incomplete multipart uploads after 2 days. Two keys:
+once) and aborts incomplete multipart uploads after 2 days. Three keys:
 the cron's (put, list, delete under the prefix; set on `workshop-backup`
-only, never on the API or the worker) and the drill's (get and list only).
+only, never on the API or a worker), the drill's (get and list only), and
+the deletion ledger's (put, get and list under
+`<BACKUP_S3_PREFIX>deletion-ledger/` only, no delete; set on
+`workshop-batch-worker`, which deletes businesses on its default lane).
 
 ## Keys and custody
 
@@ -191,6 +194,14 @@ everything new; the others only open and verify what they sealed.
      NOLOGIN role when the restoring role is a superuser), without the
      switch;
    - the newest backup is at most `BACKUP_MAX_AGE_HOURS` (26) old.
+   Then the deletion ledger is applied to the restored database (its copy
+   in the bucket, `<BACKUP_S3_PREFIX>deletion-ledger/<business id>.json`,
+   one object per deleted business written when the deletion began, and
+   the database's own `business_deletions`): every row of those
+   businesses is deleted again, but the audit log and issued invoices,
+   and the report says "Deletion ledger: N deleted businesses, M of their
+   rows deleted again, K left." A row left fails the drill. Retention
+   never removes the ledger's objects (they are no archives).
 4. The scratch database and the probe role are dropped (`--keep-database`
    keeps the database: that is a real restore, below).
 
@@ -285,6 +296,14 @@ them, and the restore stops without them) and grant `workshop_platform`
 to the migration role; `pg_restore` 17 or newer. The `sed` leaves out the one setting of pg_restore 17's preamble
 that a Postgres 16 server refuses (`unrecognized configuration parameter
 "transaction_timeout"`); on Postgres 17 it may stay.
+
+**Deleted businesses after either path.** A backup older than a
+business's deletion brings that business back. The worker's daily
+`reapply_deletion_ledger` deletes it again within a day of the restore
+(the ledger's copy in the bucket names every deletion since;
+`workshop-batch-worker` holds the bucket settings and the ledger's key);
+a restore through
+`restore-check --keep-database` has already applied the ledger.
 
 **Checks after either path.** `GET /readyz` answers 200 (database reached,
 every migration applied); `scripts/smoke.sh` against the API passes; an

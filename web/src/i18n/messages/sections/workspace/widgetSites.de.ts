@@ -11,7 +11,7 @@ export const widgetSitesDe: Translation<typeof widgetSitesEn> = {
   sites: { one: "{count} Website", other: "{count} Websites" },
   listLabel: "Erlaubte Websites",
   empty: "Noch keine Liste: Der Chat funktioniert auf jeder Website.",
-  addLabel: "Adresse der Website",
+  addFieldLabel: "Adresse der Website",
   addHint: "Wie in der Adressleiste des Browsers. Die www.-Adresse und http oder https zählen als dieselbe Website.",
   placeholder: "https://cafe-batumi.ge",
   add: "Hinzufügen",

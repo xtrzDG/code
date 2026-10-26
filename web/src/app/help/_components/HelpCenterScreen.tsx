@@ -34,7 +34,7 @@ export function HelpCenterScreen({ initial, signedIn }: { initial: HelpCenter | 
 
       <form role="search" onSubmit={(event) => { event.preventDefault(); setQuery(text.trim()); }} className="relative">
         <label htmlFor={searchId} className="sr-only">
-          {t("helpCenter.searchLabel")}
+          {t("helpCenter.searchFieldLabel")}
         </label>
         <IconSearch className="pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2 text-ink-subtle" aria-hidden />
         <Input

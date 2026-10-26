@@ -154,17 +154,16 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         ActivateAssistantVersionUseCase,
         check_go_live_readiness=check_go_live_readiness_use_case,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
-        business_profile_repo=repositories.business_profile_repo,
         business_repo=repositories.business_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         voice_agent_provisioner=adapters.voice_agent_provisioner,
-        build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
-        assistant_tool_catalog=registries.assistant_tool_registry,
+        voice_agent_sources=voice_use_cases.voice_agent_sources,
         start_trial_at_go_live=launch_use_cases.start_trial_at_go_live_use_case,
         record_activation_event=launch_use_cases.record_activation_event_use_case,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         voice_agent_locks=registries.voice_agent_lock_registry,
+        closure_repo=repositories.business_closure_repo,
     )
     resume_assistant_use_case: Factory[UseCaseContract[BusinessDocument, None]] = (
         Factory(
@@ -189,6 +188,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
         resume_assistant=resume_assistant_use_case,
+        closure_repo=repositories.business_closure_repo,
     )
     publish_assistant_version_use_case: Factory[
         UseCaseContract[PublishAssistantVersionCommand, AssistantVersionDetails]
@@ -202,6 +202,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        closure_repo=repositories.business_closure_repo,
     )
     rollback_assistant_version_use_case: Factory[
         UseCaseContract[RollbackAssistantVersionCommand, AssistantVersionDetails]

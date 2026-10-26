@@ -4,18 +4,24 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.conversations import CallGuardVerdict
+from app.schemas.domain.call_analysis import CallAnalysis
 from app.schemas.dto.voice_webhooks import FinishedCallTranscriptLine, RecordedCall
 from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 
 
 class CallAuditRequest(ImmutableDTO):
-    """A call just stored, with the transcript the voice platform reported."""
+    """
+    A call just stored, with the transcript the voice platform reported and
+    its evaluation of the call.
+    """
 
     call: RecordedCall
     transcript: list[FinishedCallTranscriptLine] = Field(
         default_factory=list[FinishedCallTranscriptLine]
     )
+    # The voice platform's evaluation of the call, when it sent one.
+    analysis: CallAnalysis | None = None
 
 
 class CallAudit(ImmutableDTO):

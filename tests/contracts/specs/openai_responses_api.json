@@ -3397,7 +3397,7 @@
        "type": "string"
       },
       {
-       "default": "gpt-image-1",
+       "default": "gpt-image-2",
        "enum": [
         "gpt-image-1",
         "gpt-image-1-mini",

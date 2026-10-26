@@ -3,7 +3,7 @@ Where owner-facing catalog texts live, for the policy test and the catalog
 tests: the plan catalog, the niche templates, the call forwarding guides,
 the staff notification texts, the billing texts and the guided setup's
 steps, and apart from them the wording of issued invoices and receipts
-(reviewed languages only).
+(reviewed languages only), and of deletion certificates.
 
 Customer-facing texts (the confirmations, reminders and replies customers
 read, in any of the widget's languages) are not owner texts: they live
@@ -49,8 +49,10 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.utilities.billing.win_back_texts",
     "app.utilities.deposits.deposit_refund_texts",
     "app.utilities.integrations.webhook_disabled_texts",
+    "app.utilities.calls.voice_fallback_texts",
     "app.utilities.calendar_sync.booking_system_writes",
     "app.utilities.setup.setup_texts",
+    "app.transformers.business_closures.closure_texts",
 )
 # Modules whose texts are printed on issued invoices and receipts: they
 # carry reviewed languages only (a draft would stay on a kept document).
@@ -58,6 +60,8 @@ ISSUED_DOCUMENT_MODULES: tuple[str, ...] = (
     "app.transformers.billing.invoice_wording_texts",
     "app.transformers.invoicing.billing_document_texts",
     "app.transformers.invoicing.invoice_line_texts_transformer",
+    # The deletion certificate is kept as printed (1220).
+    "app.transformers.business_closures.deletion_certificate_texts",
 )
 # Texts in owner modules that customers read (in their own language).
 CUSTOMER_TEXT_NAMES: dict[str, str] = {

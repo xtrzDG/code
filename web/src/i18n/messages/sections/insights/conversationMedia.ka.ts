@@ -33,7 +33,7 @@ export const conversationMediaKa: Translation<typeof conversationMediaEn> = {
   },
   place: {
     openMap: "რუკაზე გახსნა",
-    openMapLabel: "{place} რუკაზე გახსნა (ახალ ჩანართში)",
+    openMapLabel: "რუკაზე გახსნა: {place} (ახალ ჩანართში)",
     unnamed: "გაზიარებული მდებარეობა",
   },
   deleted: "ფაილი წაიშალა შენახვის ვადის გასვლის შემდეგ.",

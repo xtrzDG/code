@@ -4,6 +4,10 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters.privacy_collections_container import (
     PrivacyCollectionsContainer,
 )
+from app.repositories.business_closure_repositories import (
+    BusinessClosureRepository,
+    BusinessDeletionRepository,
+)
 from app.repositories.privacy_repositories import (
     BusinessExportRepository,
     ExportDownloadLinkRepository,
@@ -20,7 +24,8 @@ class PrivacyRepositoriesContainer(containers.DeclarativeContainer):
     The repositories of data-subject rights (migration 1113): the
     suppression list, the full business exports and their one-time
     download links (1134); and of retention
-    (1123): each business's privacy settings and purge state.
+    (1123): each business's privacy settings and purge state; closures and
+    the deletion ledger (1220).
     `RepositoriesContainer`
     extends it, so they are read as `repositories.suppression_entry_repo`
     like every other repository.
@@ -47,4 +52,12 @@ class PrivacyRepositoriesContainer(containers.DeclarativeContainer):
     retention_purge_state_repo: Singleton[RetentionPurgeStateRepository] = Singleton(
         RetentionPurgeStateRepository,
         collection=privacy_collections.retention_purge_state_collection,
+    )
+    business_closure_repo: Singleton[BusinessClosureRepository] = Singleton(
+        BusinessClosureRepository,
+        collection=privacy_collections.business_closure_collection,
+    )
+    business_deletion_repo: Singleton[BusinessDeletionRepository] = Singleton(
+        BusinessDeletionRepository,
+        collection=privacy_collections.business_deletion_collection,
     )

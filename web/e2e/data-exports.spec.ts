@@ -46,7 +46,7 @@ test("the owner downloads tables as CSV and the full export as a ZIP", async ({ 
 
   await page.getByRole("button", { name: texts.full.start }).click();
   await expect(page.getByText(texts.full.started)).toBeVisible();
-  const button = page.getByRole("button", { name: /^Download the export asked / });
+  const button = page.getByRole("button", { name: /^Download ZIP of the export asked / });
   await expect(button).toBeVisible({ timeout: 60_000 });
   const row = page.getByRole("listitem").filter({ has: button });
   await expect(row.getByText(texts.full.status.ready, { exact: true })).toBeVisible();

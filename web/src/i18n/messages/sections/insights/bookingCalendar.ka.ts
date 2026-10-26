@@ -35,7 +35,8 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
     toPlaces: "ადგილების დამატება",
   },
   block: {
-    label: "{name}, {time}, {place}, {status}",
+    label: "{shown}, {place}, {status}",
+    until: "{time}-მდე",
     test: "ტესტი",
   },
   move: {

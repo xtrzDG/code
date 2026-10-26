@@ -93,4 +93,5 @@ class AutotestRunViewTransformer(
             ),
             conversation_id=result.conversation_id,
             answer_message_id=result.answer_message_id,
+            channel=result.channel,
         )

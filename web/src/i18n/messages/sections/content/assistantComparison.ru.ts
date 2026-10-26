@@ -21,6 +21,7 @@ export const assistantComparisonRu: Translation<typeof assistantComparisonEn> = 
     scoreRises: "Оценки выросли",
     criteria: "По критериям",
     scenario: "{name} · {language}",
+    phoneScenario: "{name} · {channel} · {language}",
     scoreMove: "{from} → {to}",
     outcomeMove: "Было: {from}, сейчас: {to}",
     noChanges: "По сравнению с обновлением в работе ничего не изменилось: новых проблем нет, ни одна оценка не сдвинулась на полбалла и больше.",

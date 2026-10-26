@@ -190,6 +190,7 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             )
         call.cost_micro_usd = input_data.cost_micro_usd
         call.outcome = outcome
+        call.analysis = input_data.analysis
         call.updated_at = now
         self._call_repo.save(call)
         if existing_call is None:

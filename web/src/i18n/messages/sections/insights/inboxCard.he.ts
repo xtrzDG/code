@@ -78,7 +78,7 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
     manage: "ניהול תשובות מהירות",
     noMatch: "אין תשובה מהירה שמתאימה ל„/{query}”.",
     missing: "מלאו לפני השליחה:",
-    fillLabel: "ערך עבור {variable}",
+    fillFieldLabel: "ערך עבור {variable}",
     fill: "מילוי",
     placeholdersLeft: "מלאו את החלקים שבסוגריים המסולסלים לפני השליחה: {variables}.",
     variables: {

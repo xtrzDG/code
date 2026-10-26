@@ -11,7 +11,7 @@ export const widgetSitesHe: Translation<typeof widgetSitesEn> = {
   sites: { one: "אתר אחד", other: "{count} אתרים" },
   listLabel: "אתרים מורשים",
   empty: "עדיין אין רשימה: הצ׳אט עובד בכל אתר.",
-  addLabel: "כתובת האתר",
+  addFieldLabel: "כתובת האתר",
   addHint: "כמו בשורת הכתובת של הדפדפן. כתובת עם www. ו-http או https נחשבות לאותו אתר.",
   placeholder: "https://cafe-batumi.ge",
   add: "הוספה",

@@ -14,9 +14,16 @@ from app.utilities.calendar_sync.calendar_sync_keys import hash_export_token
 from tests.calendar_sync.calendar_shop import FEED_URL, calendar_ics, open_calendar_shop
 from tests.calendar_sync.fake_google_calendars import TEAM_CALENDAR
 
+GUEST_PHONE_DIGITS: str = "555112233"
 IMPORTED_STAY: str = (
     "UID:stay-1\r\nDTSTART;VALUE=DATE:20261008\r\nDTEND;VALUE=DATE:20261010"
 )
+
+
+def digits_of(text: str) -> str:
+    """The feed unfolded, without the spaces and dashes a phone may carry."""
+
+    return text.replace("\r\n ", "").replace(" ", "").replace("-", "")
 
 
 def feed_path(url: str) -> str:
@@ -58,7 +65,10 @@ def test_the_feed_lists_bookings_and_google_busy_times_without_guests() -> None:
     assert starts == ["2026-10-06 09:00:00+00:00", "2026-10-07 10:00:00+00:00"]
     # The business's language (a Georgian restaurant), never a guest's name.
     assert {str(event.get("summary")) for event in events} == {"დაჯავშნილია"}
-    assert "Nino" not in feed.text and "555" not in feed.text
+    assert "Nino" not in feed.text
+    # The guest's phone (+995 555 11 22 33) in any spacing; its digits, not
+    # a bare "555", which the events' random UIDs contain now and then.
+    assert GUEST_PHONE_DIGITS not in digits_of(feed.text)
     assert "2026-10-08" not in starts[0] and "20261008" not in feed.text
     assert view["ical_export"]["is_on"] is True
     assert view["ical_export"]["last_read_at"] is not None

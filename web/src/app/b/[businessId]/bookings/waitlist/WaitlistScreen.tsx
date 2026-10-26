@@ -11,7 +11,7 @@ import { AnimatedPresenceList } from "@/components/motion";
 import { ConfirmDialog, EmptyState, ErrorState, PageHeader, SkeletonCard, SkeletonCardList, useToast } from "@/components/ui";
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import { WaitlistEntryCard } from "./_components/WaitlistEntryCard";
 import { WaitlistSettingsCard } from "./_components/WaitlistSettingsCard";
@@ -32,6 +32,7 @@ const FILTER_LABELS = {
  */
 export function WaitlistScreen({ initialFilter }: { initialFilter: WaitlistFilter }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const toast = useToast();
   const { business, isOwner } = useBusiness();
   const [filter, setFilter] = useState<WaitlistFilter>(initialFilter);
@@ -73,7 +74,7 @@ export function WaitlistScreen({ initialFilter }: { initialFilter: WaitlistFilte
             onChange={choose}
             options={WAITLIST_FILTERS.map((value) => ({ value, label: t(FILTER_LABELS[value]), count: counts?.[value] }))}
           />
-          <p className="text-xs text-ink-subtle">{t("waitlist.timeZone", { timezone: timeZoneLabel(business.timezone, locale) })}</p>
+          <p className="text-xs text-ink-subtle">{t("waitlist.timeZone", { timezone: zoneLabel(business.timezone) })}</p>
           {entries.error && entries.items ? <RefreshFailed error={entries.error} onRetry={entries.reload} /> : null}
           {entries.error && !entries.items ? (
             <ErrorState error={entries.error} onRetry={entries.reload} className="py-6" />

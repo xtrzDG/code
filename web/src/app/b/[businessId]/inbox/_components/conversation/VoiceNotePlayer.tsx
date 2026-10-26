@@ -98,7 +98,8 @@ export function VoiceNotePlayer({ mediaId }: { mediaId: string }) {
         <Button
           variant="secondary"
           size="sm"
-          aria-label={t("conversationMedia.voice.playLabel")}
+          // While it loads, the button is named by what it shows ("Loading…").
+          aria-label={isLoading ? undefined : t("conversationMedia.voice.playLabel")}
           aria-busy={isLoading || undefined}
           aria-disabled={isLoading || undefined}
           leadingIcon={busyIcon ?? <IconPlay className="size-4" aria-hidden />}

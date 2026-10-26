@@ -99,6 +99,26 @@ def test_a_failing_monitor_never_fails_the_job(
     assert caplog.text.count("Sentry check-in of send_booking_reminders failed") == 2
 
 
+def test_a_dropped_check_in_has_no_end() -> None:
+    capture = RecordingCapture()
+    monitor = SentryJobMonitorFacilitator(dropping_capture)
+
+    check_in = monitor.job_started(JOB, JobIntervalSeconds(3600))
+    monitor.job_finished(check_in, PeriodicJobOutcome.SUCCEEDED)
+    SentryJobMonitorFacilitator(capture).job_finished(
+        check_in, PeriodicJobOutcome.SUCCEEDED
+    )
+
+    assert check_in.check_in_id is None
+    assert capture.calls == []
+
+
+def dropping_capture(**options: Any) -> None:
+    """Sentry's answer when it did not send the check-in."""
+
+    del options
+
+
 def ignore_options(**options: Any) -> None:
     del options
 

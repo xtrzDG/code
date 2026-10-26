@@ -76,6 +76,27 @@ ELEVENLABS_SPEC = VendorSpec(
             f"{ELEVENLABS_TYPES}.get_conversation_response_model:"
             "GetConversationResponseModel",
         ),
+        # The voice checks of autotests: a simulated call (an agent test),
+        # its run against the agent with the version's configuration, and
+        # the run as GET /v1/convai/test-invocations/{id} answers it.
+        SchemaRoot(
+            "request:agent_testing.create",
+            "python:elevenlabs.conversational_ai.tests.types."
+            "tests_create_request_body:TestsCreateRequestBody",
+        ),
+        SchemaRoot(
+            "response:agent_testing.create",
+            f"{ELEVENLABS_TYPES}.create_agent_test_response_model:"
+            "CreateAgentTestResponseModel",
+        ),
+        SchemaRoot(
+            "request:agents.run_tests", f"{ELEVENLABS_AGENTS}:RawAgentsClient.run_tests"
+        ),
+        SchemaRoot(
+            "TestInvocation",
+            f"{ELEVENLABS_TYPES}.get_test_suite_invocation_response_model:"
+            "GetTestSuiteInvocationResponseModel",
+        ),
     ),
     patches=(
         AddProperty(

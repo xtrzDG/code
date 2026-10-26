@@ -33,6 +33,10 @@ E2E_ENVIRONMENT: dict[str, str] = {
     # process (about a second); tests/platform/test_startup_heap_wiring.py
     # proves the freeze itself.
     "GC_FREEZE_AFTER_WARMUP": "false",
+    # The workshop's ElevenLabs answers agents and tools only; the voice
+    # checks of autotests (simulated calls) have suites of their own
+    # (tests/assembly/test_voice_checks.py, tests/e2e/test_voice_checks_e2e.py).
+    "VOICE_CHECKS_ENABLED": "false",
 }
 
 type JsonObject = dict[str, Any]

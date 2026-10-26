@@ -14,6 +14,7 @@ from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
     RunQueuedAutotestsOrchestrator,
 )
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.registries.localization.voice_profile_registry import VoiceProfileRegistry
 from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
 from app.schemas.dto.setup.apply_changes import AppliedVersion
 from app.schemas.typings.assistants.constrained_integers import (
@@ -76,11 +77,16 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
     RunAutotestScenarioUseCase,
 )
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
+from app.use_cases.autotests.voice_checks.run_voice_checks_use_case import (
+    RunVoiceChecksUseCase,
+)
+from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 from tests.assembly.deferred_use_case import DeferredUseCase
+from tests.assembly.fake_voice_checks import FakeVoiceCheckAdapter
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
@@ -110,6 +116,21 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
         )
         run_view_transformer = AutotestRunViewTransformer()
         self.brand_knowledge_repo = in_memory_brand_knowledge_repo()
+        # What voice agents are built from: publishing and the voice checks.
+        self.voice_agent_sources = VoiceAgentSources(
+            business_profile_repo=self.profile_repo,
+            knowledge_item_repo=self.knowledge_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
+            resource_repo=self.resource_repo,
+            build_call_greeting=self.call_greeting,
+            assistant_tool_catalog=self.tool_catalog,
+            voice_profile_registry=VoiceProfileRegistry(),
+            app_settings=self.settings,
+        )
+        self.voice_checks = FakeVoiceCheckAdapter()
+        self.run_voice_checks_use_case = RunVoiceChecksUseCase(
+            self.voice_agent_sources, self.voice_checks, self.wall_clock
+        )
         self.build_draft_use_case = BuildAssistantDraftUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
@@ -154,7 +175,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.version_repo,
             details_transformer,
         )
-        plan_scenarios = PlanAutotestScenariosUseCase(
+        plan_scenarios = self.plan_scenarios_use_case = PlanAutotestScenariosUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
             brand_knowledge_item_repo=self.brand_knowledge_repo,
@@ -164,6 +185,8 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             language_registry=self.language_registry,
             price_question_limit=price_question_limit,
             critical_samples=self.settings.quality.autotest_critical_samples,
+            voice_check_adapter=self.voice_checks,
+            app_settings=self.settings,
         )
         self.autotest_events = RecordingEventPublisher()
         self.start_autotest_run_use_case = StartAutotestRunUseCase(
@@ -200,6 +223,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.start_autotest_run_use_case,
             self.run_scenario_use_case,
             self.finish_autotest_run_use_case,
+            self.run_voice_checks_use_case,
         )
         # The production path: the request starts a run, the worker plays it.
         self.enqueue_autotest_run_use_case = EnqueueAutotestRunUseCase(
@@ -241,6 +265,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.abandon_autotest_run_use_case,
             self.record_autotest_progress_use_case,
             self.publish_applied_later,
+            self.run_voice_checks_use_case,
         )
         self.worker = self.background_worker(
             {

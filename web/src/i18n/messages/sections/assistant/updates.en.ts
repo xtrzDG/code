@@ -46,7 +46,7 @@ export const updatesEn = {
   checkNow: {
     savedTitle: "Check saved",
     action: "Check now",
-    actionLabel: "Check “{question}” now",
+    actionLabel: "Check now: “{question}”",
     checking: "Checking…",
     hint: "One test conversation with what customers get now.",
     passed: "Passed with what customers get now.",

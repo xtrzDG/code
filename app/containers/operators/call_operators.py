@@ -13,6 +13,8 @@ class CallOperatorsContainer(containers.DeclarativeContainer):
     """
     Operators of what follows a phone call: the telephony line's webhook
     (platform-wide: its business is known only from the called number),
+    the call fallback of rented numbers (in the scope of the business its
+    signed address names),
     the text-back job (in its business's scope) and Settings → Calls; the
     phone line's rented number (1213) in its business's scope, and the
     numbers' two jobs platform-wide (they walk every business's numbers).
@@ -24,6 +26,12 @@ class CallOperatorsContainer(containers.DeclarativeContainer):
 
     pbx_call_webhook_operator = platform_pipeline_operator(
         call_pipelines.pbx_call_webhook_pipeline, storage_scope
+    )
+    call_fallback_operator = pipeline_operator(
+        call_pipelines.call_fallback_pipeline, storage_scope
+    )
+    fallback_dial_operator = pipeline_operator(
+        call_pipelines.fallback_dial_pipeline, storage_scope
     )
     send_text_back_operator = pipeline_operator(
         call_pipelines.send_text_back_pipeline, storage_scope

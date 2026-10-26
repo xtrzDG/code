@@ -23,7 +23,7 @@ export const conversationsEn = {
     playerLabel: "Recording of the call on {date}",
     playerUnsupported: "Your browser cannot play audio here.",
     play: "Play recording",
-    playLabel: "Play the recording of the call on {date}",
+    playLabel: "Play recording of the call on {date}",
     loading: "Loading the recording…",
     playMissing: "This recording is no longer available: it was deleted after the retention period or with the customer's data.",
     playError: "The recording could not be loaded: the voice service is not responding. Try again in a minute.",

@@ -1,10 +1,11 @@
 """
 The parts of an autotest plan beyond languages x kinds: the language
-scenarios, the attacks, the owner's own checks, the prices price questions
-must name, and how often each scenario is played (pass^k).
+scenarios, the attacks, the owner's own checks, the voice checks, the
+prices price questions must name, and how often each scenario is played
+(pass^k).
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.autotest_case_repositories import (
@@ -36,6 +37,7 @@ from app.utilities.assembly.red_team_scenarios import (
     RED_TEAM_LANGUAGE,
     plan_red_team_scenarios,
 )
+from app.utilities.assembly.voice_check_scenarios import plan_voice_scenarios
 
 
 class ScenarioPlanningParts:
@@ -46,10 +48,12 @@ class ScenarioPlanningParts:
         autotest_case_repo: AutotestCaseRepoContract,
         language_registry: LanguageRegistryContract,
         critical_samples: AutotestSampleCount,
+        is_voice_checked: Callable[[], bool] = lambda: False,
     ) -> None:
         self._autotest_case_repo: AutotestCaseRepoContract = autotest_case_repo
         self._language_registry: LanguageRegistryContract = language_registry
         self._critical_samples: AutotestSampleCount = critical_samples
+        self._is_voice_checked: Callable[[], bool] = is_voice_checked
 
     def languages(self, tags: Sequence[LanguageTag]) -> list[AutotestLanguage]:
         """Scenario languages with their English names and scripts."""
@@ -116,6 +120,25 @@ class ScenarioPlanningParts:
             dict.fromkeys(case.language for case in cases)
         )
         return plan_owner_check_scenarios(cases, self.languages(case_languages))
+
+    def voice_scenarios(
+        self,
+        version: AssistantVersionDocument,
+        languages: Sequence[LanguageTag],
+        resource_noun: str,
+        party_size: int,
+    ) -> list[AutotestScenario]:
+        """
+        One simulated call per language when the version has voice and the
+        voice checks can run on this server (`is_voice_checked`), else none.
+        """
+
+        if not version.is_voice_enabled or not self._is_voice_checked():
+            return []
+
+        return plan_voice_scenarios(
+            self.languages(languages), version, resource_noun, party_size
+        )
 
     def sampled(self, scenarios: Sequence[AutotestScenario]) -> list[AutotestScenario]:
         """Launch-critical scenarios played AUTOTEST_CRITICAL_SAMPLES times."""

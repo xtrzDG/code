@@ -50,9 +50,9 @@ describe("the brand font files a cabinet page preloads", () => {
 describe("the public site's fonts", () => {
   it("are the system's: the root layout gives the brand class and preloads to cabinet pages only", () => {
     const layout = readFileSync(path.resolve(__dirname, "..", "app", "layout.tsx"), "utf8");
-    expect(layout).toMatch(/const brandTypeface = clientTexts\.scope === "full";/);
-    expect(layout).toMatch(/if \(brandTypeface\) \{\s*preloadBrandFonts\(locale\);\s*\}/);
-    expect(layout).toContain('className={cn("h-full", brandTypeface && BRAND_TYPEFACE_CLASS)}');
+    expect(layout).toMatch(/const isCabinetPage = clientTexts\.scope === "full";/);
+    expect(layout).toMatch(/if \(isCabinetPage\) \{\s*preloadBrandFonts\(locale\);\s*\}/);
+    expect(layout).toContain('className={cn("h-full", isCabinetPage && BRAND_TYPEFACE_CLASS)}');
     const typeface = readFileSync(path.resolve(__dirname, "..", "styles", "typeface.css"), "utf8");
     expect(typeface).toContain(`.${BRAND_TYPEFACE_CLASS} {`);
   });

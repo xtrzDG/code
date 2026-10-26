@@ -6,7 +6,7 @@ import { SavePill } from "@/components/forms/SavePill";
 import { useAutosaveForm } from "@/components/forms/useAutosaveForm";
 import { Card, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { timeZoneLabel } from "@/lib/timeZones";
+import { useTimeZoneLabel } from "@/lib/useTimeZoneLabel";
 
 import {
   EVENT_LABELS,
@@ -26,13 +26,14 @@ type MyNotifications = ReturnType<typeof useMyNotifications>;
 /** "What reaches me": my events and quiet hours for my devices in this business. */
 export function MyEventsCard({ mine }: { mine: MyNotifications }) {
   const { t, locale } = useI18n();
+  const zoneLabel = useTimeZoneLabel(locale);
   const { business } = useBusiness();
   const stored = mine.settings.data;
   return (
     <Card
       aria-label={t("notifications.mine.title")}
       title={t("notifications.mine.title")}
-      description={t("notifications.mine.description", { timeZone: timeZoneLabel(business.timezone, locale) })}
+      description={t("notifications.mine.description", { timeZone: zoneLabel(business.timezone) })}
     >
       {stored ? <MyEventsForm key={stored.business_id} stored={stored} mine={mine} /> : <SkeletonText lines={4} />}
     </Card>

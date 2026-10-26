@@ -104,6 +104,47 @@ def test_dockerfile_copies_what_the_image_needs() -> None:
     assert "!docs/help" in ignored
 
 
+def next_config_modules() -> set[Path]:
+    """The cabinet's files `next start` loads with next.config.ts (not types)."""
+
+    web = ROOT / "web"
+    pending, found = [web / "next.config.ts"], set[Path]()
+    while pending:
+        module = pending.pop()
+        found.add(module)
+        for specifier in re.findall(
+            r'^(?:import|export) (?!type )[^;]*? from "(\.[^"]+|@/[^"]+)"',
+            module.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        ):
+            base = (
+                web / "src" / specifier[2:]
+                if specifier.startswith("@/")
+                else module.parent / specifier
+            )
+            candidates = [Path(f"{base}.ts"), Path(f"{base}.tsx"), base / "index.ts"]
+            resolved = next(path for path in candidates if path.is_file())
+            if resolved.resolve() not in found:
+                pending.append(resolved.resolve())
+
+    return {module.relative_to(web) for module in found}
+
+
+def test_the_cabinet_image_holds_what_its_config_imports() -> None:
+    runtime = read("web/Dockerfile").split("AS runtime", 1)[1]
+    copied = re.findall(
+        r"^COPY --from=build \S+ (\S+(?: \S+)*) \S+$", runtime, re.MULTILINE
+    )
+    sources = {
+        Path(source).relative_to("/web") for line in copied for source in line.split()
+    }
+
+    modules = next_config_modules()
+    assert Path("src/lib/legacyRoutes.ts") in modules
+    for module in modules:
+        assert any(module.is_relative_to(source) for source in sources), module
+
+
 def test_every_documented_variable_is_read() -> None:
     assembler = "".join(
         module_path.read_text(encoding="utf-8")

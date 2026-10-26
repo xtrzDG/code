@@ -52,6 +52,7 @@ def phone_number_root_provider(
             phone_number_repo=repositories.phone_number_repo,
             phone_number_request_repo=repositories.phone_number_request_repo,
             channel_repo=repositories.channel_repo,
+            closure_repo=repositories.business_closure_repo,
             assistant_version_repo=repositories.assistant_version_repo,
             audit_log_repo=repositories.audit_log_repo,
             business_repo=repositories.business_repo,

@@ -807,6 +807,26 @@ services:
         value: "default,autotests"
       - key: WORKER_LANE_CONCURRENCY
         value: "default=4,autotests=2"
+      # The deletion ledger's copy outside the database
+      # (<BACKUP_S3_PREFIX>deletion-ledger/): the default lane runs the
+      # business deletions, which write it, and the daily
+      # reapply_deletion_ledger, which reads it, so a restored database never
+      # brings a deleted business back. The bucket and public keys of
+      # workshop-backup, with a key of its own: put, get and list under
+      # <prefix>deletion-ledger/ only (docs/operations/backup-restore.md).
+      # Without them the copy lives only in the database.
+      - key: BACKUP_S3_ENDPOINT_URL
+        sync: false
+      - key: BACKUP_S3_REGION
+        sync: false
+      - key: BACKUP_S3_BUCKET
+        sync: false
+      - key: BACKUP_S3_ACCESS_KEY_ID
+        sync: false
+      - key: BACKUP_S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: BACKUP_AGE_PUBLIC_KEY
+        sync: false
       # 6 jobs at once: 8 tenant connections; the queue's claims, the
       # periodic thread and the heartbeat: 4 platform connections
       # (connection budget: see workshop-api).
