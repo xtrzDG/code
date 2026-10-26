@@ -46,6 +46,12 @@ from app.registries.locks.platform_alert_lock_registry import (
 from app.registries.locks.reply_lock_registry import ReplyLockRegistry
 from app.registries.locks.voice_agent_lock_registry import VoiceAgentLockRegistry
 from app.registries.maintenance.data_task_registry import DataTaskRegistry
+from app.registries.niches.effective_niche_template_registry import (
+    EffectiveNicheTemplateRegistry,
+)
+from app.registries.niches.effective_starter_answer_registry import (
+    EffectiveStarterAnswerRegistry,
+)
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.registries.niches.rebooking_rule_registry import RebookingRuleRegistry
@@ -102,6 +108,23 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     starter_answer_registry: Singleton[StarterAnswerRegistry] = Singleton(
         StarterAnswerRegistry
+    )
+    # The templates and starter answers as new owners read them: the code's
+    # with the niche's newest published text overrides (the tunnel and the
+    # profile wizard; 1221). Assembly and autotests read the code's.
+    effective_niche_template_registry: Singleton[EffectiveNicheTemplateRegistry] = (
+        Singleton(
+            EffectiveNicheTemplateRegistry,
+            code_templates=niche_template_registry,
+            niche_text_repo=repositories.niche_text_repo,
+        )
+    )
+    effective_starter_answer_registry: Singleton[EffectiveStarterAnswerRegistry] = (
+        Singleton(
+            EffectiveStarterAnswerRegistry,
+            code_starters=starter_answer_registry,
+            niche_text_repo=repositories.niche_text_repo,
+        )
     )
     # What a booking of each niche typically brings and the staff time a
     # reply or a call takes (the value estimates).

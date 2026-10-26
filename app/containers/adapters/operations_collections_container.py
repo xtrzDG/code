@@ -12,6 +12,10 @@ from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.idempotency_keys import IdempotencyKeyDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
+from app.schemas.domain.niche_texts import (
+    NicheTextDraftDocument,
+    NicheTextReleaseDocument,
+)
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.platform_status import (
@@ -136,6 +140,23 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     idempotency_key_collection = document_collection(
         IdempotencyKeyDocument,
         "idempotency_keys",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The niche template editor: drafts and published versions (1221).
+    niche_text_draft_collection = document_collection(
+        NicheTextDraftDocument,
+        "niche_text_drafts",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    niche_text_release_collection = document_collection(
+        NicheTextReleaseDocument,
+        "niche_text_releases",
         config,
         clients,
         utilities,

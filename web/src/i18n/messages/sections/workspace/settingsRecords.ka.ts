@@ -145,6 +145,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       otp_challenge: "შესვლის კოდი",
       support_access: "პლატფორმის მხარდაჭერის წვდომა",
       support_write_access: "პლატფორმის მხარდაჭერის ცვლილებები",
+      niche_template: "ნიშის შაბლონი",
       platform_admin: "პლატფორმის ადმინისტრატორი",
       platform_announcement: "პლატფორმის განცხადება",
       encryption_keys: "დაშიფვრის გასაღებები",

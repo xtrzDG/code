@@ -84,8 +84,8 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
-        niche_template_registry=registries.niche_template_registry,
-        starter_answer_registry=registries.starter_answer_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
+        starter_answer_registry=registries.effective_starter_answer_registry,
         localized_text_resolver=utilities.localized_text_resolver,
     )
     apply_starter_answers_use_case: Factory[
@@ -97,8 +97,8 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         audit_log_repo=repositories.audit_log_repo,
-        niche_template_registry=registries.niche_template_registry,
-        starter_answer_registry=registries.starter_answer_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
+        starter_answer_registry=registries.effective_starter_answer_registry,
         localized_text_resolver=utilities.localized_text_resolver,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -163,7 +163,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
             subscription_repo=repositories.subscription_repo,
             dpa_acceptance_repo=repositories.dpa_acceptance_repo,
             activation_event_repo=repositories.activation_event_repo,
-            niche_template_registry=registries.niche_template_registry,
+            niche_template_registry=registries.effective_niche_template_registry,
             plan_registry=registries.plan_registry,
             localized_text_resolver=utilities.localized_text_resolver,
             app_settings=config.app_settings,

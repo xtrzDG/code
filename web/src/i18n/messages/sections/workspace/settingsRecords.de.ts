@@ -142,6 +142,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       otp_challenge: "Anmeldecode",
       support_access: "Zugriff des Plattform-Supports",
       support_write_access: "Änderungen durch den Plattform-Support",
+      niche_template: "Branchenvorlage",
       platform_admin: "Plattform-Admin",
       platform_announcement: "Plattform-Ankündigung",
       encryption_keys: "Verschlüsselungsschlüssel",

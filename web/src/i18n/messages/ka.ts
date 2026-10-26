@@ -12,6 +12,7 @@ import { customersSectionKa } from "./sections/customers";
 import { brandsSectionKa } from "./sections/brands";
 import { referralsSectionKa } from "./sections/referrals";
 import { growthSectionKa } from "./sections/growth";
+import { nichesSectionKa } from "./sections/niches";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -196,4 +197,5 @@ export const ka: Messages = {
   ...referralsSectionKa,
   ...brandsSectionKa,
   ...growthSectionKa,
+  ...nichesSectionKa,
 };

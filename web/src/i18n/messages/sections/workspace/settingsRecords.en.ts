@@ -143,6 +143,7 @@ export const settingsRecordsEn = {
       otp_challenge: "Sign-in code",
       support_access: "Platform support access",
       support_write_access: "Platform support changes",
+      niche_template: "Niche template",
       platform_admin: "Platform admin",
       platform_announcement: "Platform announcement",
       encryption_keys: "Encryption keys",

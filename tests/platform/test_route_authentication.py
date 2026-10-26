@@ -51,6 +51,7 @@ WELL_FORMED_IDS: dict[str, str] = {
     "announcement_id": str(AnnouncementId()),
     "invoice_id": str(InvoiceId()),
     "job_id": str(QueuedJobId()),
+    "niche_key": "restaurant",
     "note_id": str(ClientNoteId()),
     "partner_id": str(PartnerId()),
     "task_key": "backfill_lookup:contacts.last_seen_at",

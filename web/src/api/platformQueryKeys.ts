@@ -64,6 +64,12 @@ export const platformQueryKeys = {
     auditChains: () => ["admin", "audit", "chains"] as const,
     /** The platform's own audit log for one event filter, newest first. */
     auditLog: (filters: string) => ["admin", "audit", "log", filters] as const,
+    /** Every niche's override state (the niche template editor). */
+    niches: (locale: Locale) => ["admin", "niches", locale] as const,
+    /** One niche's editor in one language of its texts. */
+    niche: (nicheKey: string, language: Locale) => ["admin", "niche", nicheKey, language] as const,
+    /** One niche's published versions, newest first. */
+    nicheVersions: (nicheKey: string) => ["admin", "niche", nicheKey, "versions"] as const,
   },
 
   help: {

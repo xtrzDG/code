@@ -32,7 +32,6 @@ from app.schemas.dto.niches import (
     QuestionDefinition,
 )
 from app.schemas.typings.assistants.strings import PromptRuleText
-from app.schemas.typings.localization.strings import LocalizedTextValue
 from app.schemas.typings.niches.booleans import IsQuestionRequired
 from app.schemas.typings.niches.strings import (
     ExampleAssistantLine,
@@ -43,17 +42,22 @@ from app.schemas.typings.profiles.constrained_strings import (
     QuestionChoiceKey,
     QuestionKey,
 )
-from app.utilities.knowledge.localized_texts import RULE_LINE_SEPARATOR
+from app.utilities.knowledge.localized_texts import join_rule_lists
 from app.utilities.localization.owner_texts import (
     has_owner_text,
     owner_rule_lines,
     owner_text,
 )
+from app.utilities.niches.niche_text_keys import (
+    CHOICES,
+    COMMON_FORBIDDEN_RULES,
+    FORBIDDEN_RULES,
+    HANDOFF_RULES,
+    QUESTIONS,
+    niche_text_key,
+)
 
-NICHE_TEXT_AREA: str = "niches"
 COMMON_TEXTS: str = "niches.common"
-QUESTIONS: str = "questions"
-CHOICES: str = "choices"
 
 BASE_AUTOTEST_KINDS: tuple[AutotestScenarioKind, ...] = (
     AutotestScenarioKind.BOOKING,
@@ -72,12 +76,6 @@ LANGUAGE_AUTOTEST_KINDS: tuple[AutotestScenarioKind, ...] = (
     AutotestScenarioKind.FOREIGN_LANGUAGE,
     AutotestScenarioKind.TRANSLITERATED,
 )
-
-
-def niche_text_key(niche: NicheKey, *path: str) -> str:
-    """The catalog key of a niche text: `niches.<niche>.<path...>`."""
-
-    return ".".join((NICHE_TEXT_AREA, niche.value, *path))
 
 
 def text(niche: NicheKey, *path: str) -> LocalizedText:
@@ -185,22 +183,15 @@ def example(
 def handoff_rules(niche: NicheKey) -> LocalizedText:
     """Default handoff rules of a niche, one rule per line."""
 
-    return owner_rule_lines(niche_text_key(niche, "handoff_rules"))
+    return owner_rule_lines(niche_text_key(niche, HANDOFF_RULES))
 
 
 def forbidden_rules(niche: NicheKey) -> LocalizedText:
     """Platform forbidden rules followed by the niche's own, one rule per line."""
 
-    common: LocalizedText = owner_rule_lines(f"{COMMON_TEXTS}.forbidden_rules")
-    own: LocalizedText = owner_rule_lines(niche_text_key(niche, "forbidden_rules"))
-    return LocalizedText(
-        values={
-            language: LocalizedTextValue(
-                f"{value}{RULE_LINE_SEPARATOR}{own.values[language]}"
-            )
-            for language, value in common.values.items()
-            if language in own.values
-        }
+    return join_rule_lists(
+        owner_rule_lines(COMMON_FORBIDDEN_RULES),
+        owner_rule_lines(niche_text_key(niche, FORBIDDEN_RULES)),
     )
 
 

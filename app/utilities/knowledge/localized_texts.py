@@ -1,5 +1,7 @@
 """Build and split localized texts of the niche catalog and owner-facing messages."""
 
+from collections.abc import Sequence
+
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LocalizedTextValue
@@ -38,3 +40,38 @@ def split_rule_lines(text: LocalizedTextValue) -> list[str]:
             lines.append(line)
 
     return lines
+
+
+def join_rule_lines(
+    lines: Sequence[LocalizedText],
+    languages: Sequence[LanguageTag],
+) -> LocalizedText:
+    """
+    The lines as one rule per line, in each of `languages` (in that order)
+    that has every line: a list never mixes languages, so a language
+    missing one line reads the English list.
+    """
+
+    return LocalizedText(
+        values={
+            language: LocalizedTextValue(
+                RULE_LINE_SEPARATOR.join(str(line.values[language]) for line in lines)
+            )
+            for language in languages
+            if all(language in line.values for line in lines)
+        }
+    )
+
+
+def join_rule_lists(first: LocalizedText, second: LocalizedText) -> LocalizedText:
+    """The rules of `first` followed by those of `second`, where both exist."""
+
+    return LocalizedText(
+        values={
+            language: LocalizedTextValue(
+                f"{value}{RULE_LINE_SEPARATOR}{second.values[language]}"
+            )
+            for language, value in first.values.items()
+            if language in second.values
+        }
+    )

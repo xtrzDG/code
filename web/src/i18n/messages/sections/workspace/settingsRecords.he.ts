@@ -142,6 +142,7 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       otp_challenge: "קוד כניסה",
       support_access: "גישת התמיכה של הפלטפורמה",
       support_write_access: "שינויים של התמיכה בפלטפורמה",
+      niche_template: "תבנית נישה",
       platform_admin: "מנהל פלטפורמה",
       platform_announcement: "הודעת פלטפורמה",
       encryption_keys: "מפתחות הצפנה",

@@ -21894,6 +21894,443 @@
         "title": "NicheSummaryView",
         "type": "object"
       },
+      "NicheTextChoiceView": {
+        "additionalProperties": false,
+        "description": "A choice of a question: its editable field, or a fixed platform label.",
+        "properties": {
+          "field_key": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 2,
+                "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Key"
+          },
+          "fixed_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Label"
+          },
+          "key": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "NicheTextChoiceView",
+        "type": "object"
+      },
+      "NicheTextEditorView": {
+        "additionalProperties": false,
+        "description": "The editor of one niche in one of the cabinet's languages.",
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/NicheTextFieldView"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/NicheTextQuestionView"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/NicheTextStatusView"
+          }
+        },
+        "required": [
+          "niche_key",
+          "language",
+          "languages",
+          "status",
+          "fields",
+          "questions"
+        ],
+        "title": "NicheTextEditorView",
+        "type": "object"
+      },
+      "NicheTextFieldView": {
+        "additionalProperties": false,
+        "description": "One editable text in the editor's language: the code's text (None when\nthe code has none in this language, so owners read English), the\nEnglish code text, the published and the draft wording (None: no\noverride) and the longest wording allowed.",
+        "properties": {
+          "code_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Text"
+          },
+          "draft_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "pattern": "^(?![\\s\\S]*<\\s*[A-Za-z/!?])[^\\s<][^\\r\\n]*(?<=\\S)\\Z",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Text"
+          },
+          "english_text": {
+            "title": "English Text",
+            "type": "string"
+          },
+          "field_key": {
+            "maxLength": 160,
+            "minLength": 2,
+            "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+            "title": "Field Key",
+            "type": "string"
+          },
+          "max_length": {
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Length",
+            "type": "integer"
+          },
+          "published_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "pattern": "^(?![\\s\\S]*<\\s*[A-Za-z/!?])[^\\s<][^\\r\\n]*(?<=\\S)\\Z",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Text"
+          },
+          "question_key": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 2,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Key"
+          },
+          "section": {
+            "$ref": "#/components/schemas/NicheTextSection"
+          }
+        },
+        "required": [
+          "field_key",
+          "section",
+          "english_text",
+          "max_length"
+        ],
+        "title": "NicheTextFieldView",
+        "type": "object"
+      },
+      "NicheTextHistoryView": {
+        "additionalProperties": false,
+        "description": "A niche's published versions, newest first (version 0 is the code).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NicheTextReleaseView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          }
+        },
+        "required": [
+          "niche_key"
+        ],
+        "title": "NicheTextHistoryView",
+        "type": "object"
+      },
+      "NicheTextQuestionView": {
+        "additionalProperties": false,
+        "description": "A profile question as the preview lays it out (structure from code).",
+        "properties": {
+          "answer_type": {
+            "$ref": "#/components/schemas/QuestionAnswerType"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/NicheTextChoiceView"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "hint_field": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 2,
+                "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Field"
+          },
+          "is_required": {
+            "title": "Is Required",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "label_field": {
+            "maxLength": 160,
+            "minLength": 2,
+            "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+            "title": "Label Field",
+            "type": "string"
+          },
+          "step": {
+            "$ref": "#/components/schemas/ProfileWizardStep"
+          }
+        },
+        "required": [
+          "key",
+          "step",
+          "answer_type",
+          "is_required",
+          "label_field"
+        ],
+        "title": "NicheTextQuestionView",
+        "type": "object"
+      },
+      "NicheTextReleaseKind": {
+        "description": "How a version of a niche's text overrides came to be: an admin\npublished the draft (PUBLISH), went back to the texts of an earlier\nversion (REVERT), or back to the code template's own texts (RESET).",
+        "enum": [
+          "publish",
+          "revert",
+          "reset"
+        ],
+        "title": "NicheTextReleaseKind",
+        "type": "string"
+      },
+      "NicheTextReleaseView": {
+        "additionalProperties": false,
+        "description": "A published version: what made it (publish, revert, reset), how many\ntexts it replaces, the version a revert went back to, when and by whom.",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/NicheTextReleaseKind"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          },
+          "override_count": {
+            "minimum": 0.0,
+            "title": "Override Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "title": "Published At",
+            "type": "integer"
+          },
+          "published_by": {
+            "title": "Published By",
+            "type": "string"
+          },
+          "published_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Name"
+          },
+          "restored_version": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restored Version"
+          },
+          "version": {
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "niche_key",
+          "version",
+          "kind",
+          "override_count",
+          "published_at",
+          "published_by"
+        ],
+        "title": "NicheTextReleaseView",
+        "type": "object"
+      },
+      "NicheTextSection": {
+        "description": "Where an editable text of a niche template belongs: the niche itself\n(name, description, what is booked), one profile question (its label,\nhint and choices), the default handoff and forbidden rules, or the\nstarter answers offered to a new owner.",
+        "enum": [
+          "niche",
+          "question",
+          "rules",
+          "starters"
+        ],
+        "title": "NicheTextSection",
+        "type": "string"
+      },
+      "NicheTextStatusList": {
+        "additionalProperties": false,
+        "description": "Every niche, in the order of the concept's niche table.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NicheTextStatusView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language"
+        ],
+        "title": "NicheTextStatusList",
+        "type": "object"
+      },
+      "NicheTextStatusView": {
+        "additionalProperties": false,
+        "description": "A niche's override state: the published version (0: the code template,\nnothing overridden) with how many texts it replaces, when and by whom\nit was published, and whether a draft waits to be published.",
+        "properties": {
+          "draft_override_count": {
+            "minimum": 0.0,
+            "title": "Draft Override Count",
+            "type": "integer"
+          },
+          "has_draft": {
+            "title": "Has Draft",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          },
+          "override_count": {
+            "minimum": 0.0,
+            "title": "Override Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Name"
+          },
+          "published_version": {
+            "minimum": 0.0,
+            "title": "Published Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "niche_key",
+          "name",
+          "published_version",
+          "override_count",
+          "has_draft",
+          "draft_override_count"
+        ],
+        "title": "NicheTextStatusView",
+        "type": "object"
+      },
       "NoShowRate": {
         "additionalProperties": false,
         "description": "Finished bookings of one group (the guest came or did not), how many did\nnot come, and their share once the group reaches the sample the report\ntrusts (`has_enough_data`; below it `no_show_percent` is None).",
@@ -25039,7 +25476,7 @@
         "type": "object"
       },
       "PlatformAdminPermission": {
-        "description": "One thing an admin page or action needs; each role holds a fixed set\n(`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG\nreads the platform's own audit log: every person's sign-ins, failed\ncodes, lockouts and sign-outs with their addresses.",
+        "description": "One thing an admin page or action needs; each role holds a fixed set\n(`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG\nreads the platform's own audit log: every person's sign-ins, failed\ncodes, lockouts and sign-outs with their addresses.\nMANAGE_NICHE_TEMPLATES rewords and publishes the owner-facing texts of\nthe niche templates every new owner reads (SUPER only).",
         "enum": [
           "view_clients",
           "open_client_cabinet",
@@ -25050,7 +25487,8 @@
           "manage_operations",
           "manage_admins",
           "manage_client_billing",
-          "write_client_notes"
+          "write_client_notes",
+          "manage_niche_templates"
         ],
         "title": "PlatformAdminPermission",
         "type": "string"
@@ -39527,6 +39965,925 @@
         "summary": "Get Admin Metrics",
         "tags": [
           "analytics"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates": {
+      "get": {
+        "operationId": "admin_list_niche_templates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextStatusList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Niche Templates",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates/{niche_key}": {
+      "get": {
+        "operationId": "admin_get_niche_template_editor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextEditorView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Niche Template Editor",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates/{niche_key}/draft": {
+      "delete": {
+        "operationId": "admin_discard_niche_template_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Discard Niche Template Draft",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_save_niche_template_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The draft's texts in one language: they replace the draft's texts of\nthat language; a field left out keeps the code's text.",
+                "properties": {
+                  "language": {
+                    "maxLength": 16,
+                    "minLength": 2,
+                    "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                    "title": "Language",
+                    "type": "string"
+                  },
+                  "texts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "The admin's wording of one field.",
+                      "properties": {
+                        "field_key": {
+                          "maxLength": 160,
+                          "minLength": 2,
+                          "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+                          "title": "Field Key",
+                          "type": "string"
+                        },
+                        "text": {
+                          "maxLength": 1000,
+                          "minLength": 1,
+                          "pattern": "^(?![\\s\\S]*<\\s*[A-Za-z/!?])[^\\s<][^\\r\\n]*(?<=\\S)\\Z",
+                          "title": "Text",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "field_key",
+                        "text"
+                      ],
+                      "title": "NicheTextInput",
+                      "type": "object"
+                    },
+                    "maxItems": 300,
+                    "title": "Texts",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "language"
+                ],
+                "title": "SaveNicheTextDraftRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextEditorView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Save Niche Template Draft",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates/{niche_key}/publish": {
+      "post": {
+        "operationId": "admin_publish_niche_template",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextReleaseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Publish Niche Template",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates/{niche_key}/revert": {
+      "post": {
+        "operationId": "admin_revert_niche_template",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Publish again the texts of `version` (0: the code template's own).",
+                "properties": {
+                  "version": {
+                    "minimum": 0,
+                    "title": "Version",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "title": "RevertNicheTextsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextReleaseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Revert Niche Template",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/niche-templates/{niche_key}/versions": {
+      "get": {
+        "operationId": "admin_list_niche_template_versions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "niche_key",
+            "required": true,
+            "schema": {
+              "title": "Niche Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheTextHistoryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Niche Template Versions",
+        "tags": [
+          "admin"
         ]
       }
     },

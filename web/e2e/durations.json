@@ -4,6 +4,7 @@
   "a11y.spec.ts": 73,
   "admin-actions.spec.ts": 4.6,
   "admin-metrics.spec.ts": 10.9,
+  "admin-niches.spec.ts": 14.2,
   "admin-system.spec.ts": 11.4,
   "allowed-sites.spec.ts": 3,
   "apply-changes.spec.ts": 36.6,

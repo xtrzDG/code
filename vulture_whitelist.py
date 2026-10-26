@@ -678,3 +678,17 @@ _.setup_fee_due  # app/schemas/dto/payment_methods.py
 # Meta's window with; filled by keyword, read only by the cabinet.
 _.graph_api_version  # app/schemas/dto/channels/meta_connection.py
 _.permissions  # app/schemas/dto/channels/meta_connection.py
+
+# The niche template editor (1221): response fields the admin's Niche
+# templates page reads (each niche's state, the code's wording beside the
+# published and the draft one, the preview's fixed choices, the history);
+# no Python code reads them.
+_.override_count  # app/schemas/dto/niche_texts/niche_text_views.py
+_.published_by_name  # app/schemas/dto/niche_texts/niche_text_views.py
+_.has_draft  # app/schemas/dto/niche_texts/niche_text_views.py
+_.draft_override_count  # app/schemas/dto/niche_texts/niche_text_views.py
+_.code_text  # app/schemas/dto/niche_texts/niche_text_views.py
+_.english_text  # app/schemas/dto/niche_texts/niche_text_views.py
+_.published_text  # app/schemas/dto/niche_texts/niche_text_views.py
+_.draft_text  # app/schemas/dto/niche_texts/niche_text_views.py
+_.fixed_label  # app/schemas/dto/niche_texts/niche_text_views.py

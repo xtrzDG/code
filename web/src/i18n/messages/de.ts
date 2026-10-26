@@ -12,6 +12,7 @@ import { customersSectionDe } from "./sections/customers";
 import { brandsSectionDe } from "./sections/brands";
 import { referralsSectionDe } from "./sections/referrals";
 import { growthSectionDe } from "./sections/growth";
+import { nichesSectionDe } from "./sections/niches";
 import { onboardingDe } from "./onboarding/de";
 import { landingDe } from "./landing/de";
 
@@ -199,4 +200,5 @@ export const de: Messages = {
   ...referralsSectionDe,
   ...brandsSectionDe,
   ...growthSectionDe,
+  ...nichesSectionDe,
 };

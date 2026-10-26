@@ -160,6 +160,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       otp_challenge: "Код для входа",
       support_access: "Доступ поддержки платформы",
       support_write_access: "Изменения поддержкой платформы",
+      niche_template: "Шаблон ниши",
       platform_admin: "Администратор платформы",
       platform_announcement: "Объявление платформы",
       encryption_keys: "Ключи шифрования",

@@ -37,6 +37,7 @@ from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.memory_router_assembly import build_memory_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
+from app.gateways.http.niche_text_router_assembly import build_niche_text_routers
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_router_assembly import build_operations_routers
 from app.gateways.http.privacy_router_assembly import build_privacy_routers
@@ -279,4 +280,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_integration_routers(operators, current_user),
         *build_brand_routers(operators, current_user),
         *build_account_deletion_routers(app_container, current_user),
+        *build_niche_text_routers(app_container, current_user),
     ]

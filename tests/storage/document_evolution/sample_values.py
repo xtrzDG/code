@@ -40,6 +40,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CommentReplyText": "Hi! Here is our menu and how to book a table.",
     "AdminActionReason": "Slow onboarding: menu photos arrive next week",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
+    "NicheTextFieldKey": "questions.cuisine.label",
+    "NicheOverrideText": "Какая у вас кухня?",
     "AutotestCaseQuestion": "Do you have a vegetarian menu?",
     "CancellationDetails": "We close for the winter, back in May.",
     "AutotestExpectedText": "vegetarian",

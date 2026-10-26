@@ -125,7 +125,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[NicheCatalogQuery, NicheCatalogView]
     ] = Factory(
         ListNicheTemplatesUseCase,
-        niche_template_registry=registries.niche_template_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
         niche_value_registry=registries.niche_value_registry,
     )
@@ -133,7 +133,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[NicheTemplateQuery, NicheDetailsView]
     ] = Factory(
         GetNicheTemplateUseCase,
-        niche_template_registry=registries.niche_template_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
     )
     get_profile_wizard_use_case: Factory[
@@ -145,7 +145,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
         brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
-        niche_template_registry=registries.niche_template_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
     )
     get_business_profile_use_case: Factory[
@@ -188,7 +188,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
-        niche_template_registry=registries.niche_template_registry,
+        niche_template_registry=registries.effective_niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
     )
 

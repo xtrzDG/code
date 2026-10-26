@@ -1,0 +1,82 @@
+{
+  "collection": "niche_text_drafts",
+  "document_type": "NicheTextDraftDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "created_at": {
+        "type": "integer"
+      },
+      "entries": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "field_key": {
+              "maxLength": 160,
+              "minLength": 2,
+              "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+){0,5}$",
+              "type": "string"
+            },
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "text": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "^(?![\\s\\S]*<\\s*[A-Za-z/!?])[^\\s<][^\\r\\n]*(?<=\\S)\\Z",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field_key",
+            "language",
+            "text"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "updated_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "niche_key",
+      "updated_by"
+    ],
+    "type": "object"
+  }
+}

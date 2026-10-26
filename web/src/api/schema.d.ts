@@ -433,6 +433,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/niche-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Niche Templates */
+        get: operations["admin_list_niche_templates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/niche-templates/{niche_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Niche Template Editor */
+        get: operations["admin_get_niche_template_editor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/niche-templates/{niche_key}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Niche Template Draft */
+        put: operations["admin_save_niche_template_draft"];
+        post?: never;
+        /** Discard Niche Template Draft */
+        delete: operations["admin_discard_niche_template_draft"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/niche-templates/{niche_key}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Niche Template */
+        post: operations["admin_publish_niche_template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/niche-templates/{niche_key}/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revert Niche Template */
+        post: operations["admin_revert_niche_template"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/niche-templates/{niche_key}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Niche Template Versions */
+        get: operations["admin_list_niche_template_versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/partners": {
         parameters: {
             query?: never;
@@ -14537,6 +14640,156 @@ export interface components {
             wave: components["schemas"]["LaunchWave"];
         };
         /**
+         * NicheTextChoiceView
+         * @description A choice of a question: its editable field, or a fixed platform label.
+         */
+        NicheTextChoiceView: {
+            /** Field Key */
+            field_key?: string | null;
+            /** Fixed Label */
+            fixed_label?: string | null;
+            /** Key */
+            key: string;
+        };
+        /**
+         * NicheTextEditorView
+         * @description The editor of one niche in one of the cabinet's languages.
+         */
+        NicheTextEditorView: {
+            /** Fields */
+            fields: components["schemas"]["NicheTextFieldView"][];
+            /** Language */
+            language: string;
+            /** Languages */
+            languages: string[];
+            niche_key: components["schemas"]["NicheKey"];
+            /** Questions */
+            questions: components["schemas"]["NicheTextQuestionView"][];
+            status: components["schemas"]["NicheTextStatusView"];
+        };
+        /**
+         * NicheTextFieldView
+         * @description One editable text in the editor's language: the code's text (None when
+         *     the code has none in this language, so owners read English), the
+         *     English code text, the published and the draft wording (None: no
+         *     override) and the longest wording allowed.
+         */
+        NicheTextFieldView: {
+            /** Code Text */
+            code_text?: string | null;
+            /** Draft Text */
+            draft_text?: string | null;
+            /** English Text */
+            english_text: string;
+            /** Field Key */
+            field_key: string;
+            /** Max Length */
+            max_length: number;
+            /** Published Text */
+            published_text?: string | null;
+            /** Question Key */
+            question_key?: string | null;
+            section: components["schemas"]["NicheTextSection"];
+        };
+        /**
+         * NicheTextHistoryView
+         * @description A niche's published versions, newest first (version 0 is the code).
+         */
+        NicheTextHistoryView: {
+            /** Items */
+            items?: components["schemas"]["NicheTextReleaseView"][];
+            niche_key: components["schemas"]["NicheKey"];
+        };
+        /**
+         * NicheTextQuestionView
+         * @description A profile question as the preview lays it out (structure from code).
+         */
+        NicheTextQuestionView: {
+            answer_type: components["schemas"]["QuestionAnswerType"];
+            /** Choices */
+            choices?: components["schemas"]["NicheTextChoiceView"][];
+            /** Hint Field */
+            hint_field?: string | null;
+            /** Is Required */
+            is_required: boolean;
+            /** Key */
+            key: string;
+            /** Label Field */
+            label_field: string;
+            step: components["schemas"]["ProfileWizardStep"];
+        };
+        /**
+         * NicheTextReleaseKind
+         * @description How a version of a niche's text overrides came to be: an admin
+         *     published the draft (PUBLISH), went back to the texts of an earlier
+         *     version (REVERT), or back to the code template's own texts (RESET).
+         * @enum {string}
+         */
+        NicheTextReleaseKind: "publish" | "revert" | "reset";
+        /**
+         * NicheTextReleaseView
+         * @description A published version: what made it (publish, revert, reset), how many
+         *     texts it replaces, the version a revert went back to, when and by whom.
+         */
+        NicheTextReleaseView: {
+            kind: components["schemas"]["NicheTextReleaseKind"];
+            niche_key: components["schemas"]["NicheKey"];
+            /** Override Count */
+            override_count: number;
+            /** Published At */
+            published_at: number;
+            /** Published By */
+            published_by: string;
+            /** Published By Name */
+            published_by_name?: string | null;
+            /** Restored Version */
+            restored_version?: number | null;
+            /** Version */
+            version: number;
+        };
+        /**
+         * NicheTextSection
+         * @description Where an editable text of a niche template belongs: the niche itself
+         *     (name, description, what is booked), one profile question (its label,
+         *     hint and choices), the default handoff and forbidden rules, or the
+         *     starter answers offered to a new owner.
+         * @enum {string}
+         */
+        NicheTextSection: "niche" | "question" | "rules" | "starters";
+        /**
+         * NicheTextStatusList
+         * @description Every niche, in the order of the concept's niche table.
+         */
+        NicheTextStatusList: {
+            /** Items */
+            items?: components["schemas"]["NicheTextStatusView"][];
+            /** Language */
+            language: string;
+        };
+        /**
+         * NicheTextStatusView
+         * @description A niche's override state: the published version (0: the code template,
+         *     nothing overridden) with how many texts it replaces, when and by whom
+         *     it was published, and whether a draft waits to be published.
+         */
+        NicheTextStatusView: {
+            /** Draft Override Count */
+            draft_override_count: number;
+            /** Has Draft */
+            has_draft: boolean;
+            /** Name */
+            name: string;
+            niche_key: components["schemas"]["NicheKey"];
+            /** Override Count */
+            override_count: number;
+            /** Published At */
+            published_at?: number | null;
+            /** Published By Name */
+            published_by_name?: string | null;
+            /** Published Version */
+            published_version: number;
+        };
+        /**
          * NoShowRate
          * @description Finished bookings of one group (the guest came or did not), how many did
          *     not come, and their share once the group reaches the sample the report
@@ -15768,9 +16021,11 @@ export interface components {
          *     (`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG
          *     reads the platform's own audit log: every person's sign-ins, failed
          *     codes, lockouts and sign-outs with their addresses.
+         *     MANAGE_NICHE_TEMPLATES rewords and publishes the owner-facing texts of
+         *     the niche templates every new owner reads (SUPER only).
          * @enum {string}
          */
-        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "view_security_log" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes";
+        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "view_security_log" | "manage_operations" | "manage_admins" | "manage_client_billing" | "write_client_notes" | "manage_niche_templates";
         /**
          * PlatformAdminRole
          * @description What a platform admin is for. SUPER runs the platform: every admin
@@ -22381,6 +22636,636 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminMetricsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_list_niche_templates: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextStatusList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_get_niche_template_editor: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextEditorView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_save_niche_template_draft: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Language */
+                    language: string;
+                    /** Texts */
+                    texts?: {
+                        /** Field Key */
+                        field_key: string;
+                        /** Text */
+                        text: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextEditorView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_discard_niche_template_draft: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_publish_niche_template: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextReleaseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_revert_niche_template: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Version */
+                    version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextReleaseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_list_niche_template_versions: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                niche_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheTextHistoryView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
