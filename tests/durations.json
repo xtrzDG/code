@@ -951,6 +951,7 @@
     "tests/platform/test_forwarded_client_address.py": 0.01,
     "tests/platform/test_framework_errors.py": 0.07,
     "tests/platform/test_gated_lanes.py": 0.01,
+    "tests/platform/test_go_live_checklist.py": 0.16,
     "tests/platform/test_grafana_dashboards.py": 0.01,
     "tests/platform/test_health_endpoints.py": 18.03,
     "tests/platform/test_http_application.py": 0.03,
