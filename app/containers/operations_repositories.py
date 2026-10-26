@@ -13,6 +13,7 @@ from app.repositories.help_progress_repository import HelpProgressRepository
 from app.repositories.idempotency_key_repository import IdempotencyKeyRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
+from app.repositories.niche_text_repository import NicheTextRepository
 from app.repositories.platform_activity_repository import PlatformActivityRepository
 from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
@@ -120,4 +121,10 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     idempotency_key_repo: Singleton[IdempotencyKeyRepository] = Singleton(
         IdempotencyKeyRepository,
         collection=operations_collections.idempotency_key_collection,
+    )
+    # The niche template editor's drafts and published versions (1221).
+    niche_text_repo: Singleton[NicheTextRepository] = Singleton(
+        NicheTextRepository,
+        draft_collection=operations_collections.niche_text_draft_collection,
+        release_collection=operations_collections.niche_text_release_collection,
     )

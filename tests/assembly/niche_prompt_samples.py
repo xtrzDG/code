@@ -9,6 +9,7 @@ so a snapshot changes only when a template, a section or the fact table
 changes, and the change is reviewed as a diff.
 """
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from typed_time_provider import Microseconds, WallClock
@@ -246,11 +247,16 @@ def build_sample_source(niche: NicheTemplate) -> AssistantInstructionSource:
     )
 
 
-def render_sample_prompts() -> dict[str, str]:
-    """Snapshot file name -> instruction text, for every real niche."""
+def render_sample_prompts(
+    templates: Sequence[NicheTemplate] | None = None,
+) -> dict[str, str]:
+    """
+    Snapshot file name -> instruction text, for every real niche (the code
+    templates unless others are given).
+    """
 
     prompts: dict[str, str] = {}
-    for niche in NicheTemplateRegistry().list_all():
+    for niche in NicheTemplateRegistry().list_all() if templates is None else templates:
         source = build_sample_source(niche)
         chat = str(AssistantInstructionTransformer().transform(source))
         phone = str(PhoneInstructionTransformer().transform(source))

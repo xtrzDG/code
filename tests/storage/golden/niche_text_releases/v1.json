@@ -1,0 +1,18 @@
+{
+  "created_at": 1790000000000000,
+  "entries": [
+    {
+      "field_key": "questions.cuisine.label",
+      "language": "ka",
+      "text": "Какая у вас кухня?"
+    }
+  ],
+  "id": "niche_text_release_32bafb64-b22f-545e-989a-fba899510ce9",
+  "kind": "publish",
+  "niche_key": "restaurant",
+  "published_by": "user_add67aab-53a5-4a78-941b-e833216b59ed",
+  "restored_version": 1,
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "version": 1
+}

@@ -1,8 +1,9 @@
 """
 The declared lookup fields of the platform's own collections: the worker's
 pulse and queue, incidents and maintenance runs, the status page, exchange
-rates, growth analytics, platform access, passkeys, and the closures and
-deletion ledger that decide when a business's data leaves (1220). Part of
+rates, growth analytics, platform access, passkeys, the closures and
+deletion ledger that decide when a business's data leaves (1220), and the
+published versions of the niche templates' texts (1221). Part of
 DOCUMENT_LOOKUP_FIELDS (`document_lookup_catalog`), which explains the
 columns and triggers.
 """
@@ -19,6 +20,7 @@ from app.utilities.storage.lookup_field_builders import (
     integer_field,
     text_field,
 )
+from app.utilities.storage.niche_text_collections import NICHE_TEXT_LOOKUP_FIELDS
 from app.utilities.storage.passkey_collections import PASSKEY_LOOKUP_FIELDS
 
 PLATFORM_LOOKUP_FIELDS: Mapping[
@@ -108,4 +110,5 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("audit_chain_statuses"): (text_field("status"),),
     **PASSKEY_LOOKUP_FIELDS,  # Passkeys and their ceremonies (1201).
     **BUSINESS_CLOSURE_LOOKUP_FIELDS,  # Closures and the deletion ledger (1220).
+    **NICHE_TEXT_LOOKUP_FIELDS,  # The niche templates' published texts (1221).
 }

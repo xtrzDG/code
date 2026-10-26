@@ -79,3 +79,29 @@ class ProfileWizardStep(StrEnum):
     BOOKING_RULES = "booking_rules"
     FAQ_AND_HANDOFF = "faq_and_handoff"
     CHANNELS = "channels"
+
+
+class NicheTextReleaseKind(StrEnum):
+    """
+    How a version of a niche's text overrides came to be: an admin
+    published the draft (PUBLISH), went back to the texts of an earlier
+    version (REVERT), or back to the code template's own texts (RESET).
+    """
+
+    PUBLISH = "publish"
+    REVERT = "revert"
+    RESET = "reset"
+
+
+class NicheTextSection(StrEnum):
+    """
+    Where an editable text of a niche template belongs: the niche itself
+    (name, description, what is booked), one profile question (its label,
+    hint and choices), the default handoff and forbidden rules, or the
+    starter answers offered to a new owner.
+    """
+
+    NICHE = "niche"
+    QUESTION = "question"
+    RULES = "rules"
+    STARTERS = "starters"

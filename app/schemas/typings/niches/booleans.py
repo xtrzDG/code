@@ -4,6 +4,7 @@ Example:
     is_required: IsQuestionRequired = True
 """
 
+HasUnpublishedNicheTexts = bool
 IsQuestionRequired = bool
 RequiresLegalReview = bool
 TakesBookings = bool

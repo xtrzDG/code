@@ -21,7 +21,7 @@ from app.schemas.typings.localization.constrained_strings import (
     OwnerTextKey,
 )
 from app.schemas.typings.localization.strings import LocalizedTextValue
-from app.utilities.knowledge.localized_texts import RULE_LINE_SEPARATOR
+from app.utilities.knowledge.localized_texts import join_rule_lines
 from app.utilities.localization.text_catalog_files import (
     SOURCE_LANGUAGE,
     TextCatalogError,
@@ -110,15 +110,10 @@ def owner_rule_lines(
     if keys == []:
         raise TextCatalogError(f"en.json has no numbered texts under {prefix}.")
 
-    values: dict[LanguageTag, LocalizedTextValue] = {}
-    for language in VALUE_ORDER:
-        texts: dict[OwnerTextKey, LocalizedTextValue] = catalog.files[language].texts
-        if all(key in texts for key in keys):
-            values[LanguageTag(language.value)] = LocalizedTextValue(
-                RULE_LINE_SEPARATOR.join(str(texts[key]) for key in keys)
-            )
-
-    return LocalizedText(values=values)
+    return join_rule_lines(
+        [owner_text(str(key), catalog) for key in keys],
+        [LanguageTag(language.value) for language in VALUE_ORDER],
+    )
 
 
 def owner_text_list(

@@ -37,6 +37,10 @@ from app.schemas.domain.mfa import (
     RecoveryCodeDocument,
     TotpFactorDocument,
 )
+from app.schemas.domain.niche_texts import (
+    NicheTextDraftDocument,
+    NicheTextReleaseDocument,
+)
 from app.schemas.domain.partners import PartnerDocument
 from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
@@ -122,5 +126,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         BrandKnowledgeItemDocument,
         # The deletion ledger outlives the business it records (1220).
         BusinessDeletionDocument,
+        # The niche templates' texts are the same for every business (1221).
+        NicheTextDraftDocument,
+        NicheTextReleaseDocument,
     }
 )
