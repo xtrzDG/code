@@ -11,7 +11,7 @@ describes the layout that replaced it and how to keep it balanced.
 ## The jobs
 
 Everything starts at once except `coverage` (after every backend part),
-`e2e` (after `web-build`) and `durations` (after everything).
+`e2e` and `visual` (after `web-build`) and `durations` (after everything).
 
 | Job | What it does | Waits for | Expected |
 | --- | --- | --- | ---: |
@@ -23,14 +23,19 @@ Everything starts at once except `coverage` (after every backend part),
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 222 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
 | `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
-The critical path is `web-build` → the slowest `e2e` shard → `durations`:
-about 1:45 + 4:40 + 0:20, under seven minutes. The backend path
-(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 19
-jobs run at the same time (ten shards, six backend parts and three
-others), within the 20 that GitHub runs at once for a free account.
+The critical path is `web-build` → `visual` → `durations`: about 1:45 +
+5:00 + 0:20, about seven minutes (the slowest `e2e` shard ends some
+twenty seconds before `visual`). The backend path
+(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 20
+jobs run at the same time (ten shards, `visual`, six backend parts and
+three others: `backend-checks`, `web-checks` and `images` are still running
+when `web-build` ends), the 20 that GitHub runs at once for a free
+account: a new job that overlaps them would queue, so it goes after one of
+them or replaces one.
 Wave 22's closing of a business brought the suite to about 2037 seconds,
 more than nine shards hold within their budget (9 × 225), so a tenth
 shard was added; branch protection requires only "CI passed (every
@@ -122,6 +127,18 @@ The e2e shards need only this job. `web-checks` runs everything else at
 the same time and holds the Sentry token on `main`, so the shards' build
 never sees it. npm's download cache comes from `setup-node`, uv's from
 `setup-uv` (`enable-cache`).
+
+## Visual tests
+
+`visual` runs `npm run e2e:visual` once, not in shards: its 222 pictures
+take about three minutes on three workers (`web/e2e/visual/project.ts`), and
+its first project (the demo owner's sign-in, the platform admin's pages)
+must run before the rest. It installs neither a browser nor the PDF
+engine's libraries: the browser is the one of Playwright's image, pinned by
+digest in `web/scripts/visual-browser.mjs`, which the job pulls (about 1 GB)
+in the background while uv and npm install, and the pages are only looked
+at. On failure it keeps the expected, actual and diff PNG of every
+differing screen with the HTML report (`visual-report`).
 
 ## End-to-end shards
 
