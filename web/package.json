@@ -21,6 +21,8 @@
     "knip": "knip --no-progress",
     "e2e": "playwright test --config e2e/playwright.config.ts",
     "e2e:durations": "node scripts/e2e-durations.mjs",
+    "e2e:visual": "node scripts/visual-browser.mjs",
+    "e2e:visual:update": "node scripts/visual-browser.mjs --update",
     "check:intl": "node scripts/check-intl.mjs",
     "measure:first-load": "node scripts/measure-first-load.mjs",
     "gen:icons": "node scripts/render-app-icons.mjs",

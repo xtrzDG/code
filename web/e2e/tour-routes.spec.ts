@@ -10,7 +10,7 @@ import { signInAsDemoOwner } from "./support/demo";
 import { TOUR_ADMIN_EMAIL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { openChatBusiness } from "./support/hosted-chat";
-import { expectReaderZone, TOUR_TIMEOUT_MS, visitTwice } from "./support/tour";
+import { adminRoutes, chatPageRoutes, expectReaderZone, PUBLIC_ROUTES, TOUR_TIMEOUT_MS, visitTwice } from "./support/tour";
 
 test.describe.configure({ timeout: TOUR_TIMEOUT_MS });
 
@@ -18,16 +18,7 @@ test("the public pages", async ({ page, request, account }) => {
   // Its own business with the chat on, for the hosted chat page and its notice.
   const chat = await openChatBusiness(request, account.token);
   await page.context().clearCookies({ name: "aw_session" });
-  for (const path of [
-    "/",
-    "/login",
-    "/help",
-    "/help/inbox",
-    "/help/whats-new",
-    "/status",
-    `/c/${chat.slug}`,
-    `/c/${chat.slug}/privacy`,
-  ]) {
+  for (const path of [...PUBLIC_ROUTES, ...chatPageRoutes(chat.slug)]) {
     await visitTwice(page, path);
   }
   await expectReaderZone(page);
@@ -55,14 +46,7 @@ test("the demo restaurant's conversations, bookings and value", async ({ page, r
 test("the platform admin's pages", async ({ page, request, context, owner }) => {
   await ensureOnAdminTeam(request, TOUR_ADMIN_EMAIL);
   await signInContext(context, await signInAsPlatformAdmin(request, TOUR_ADMIN_EMAIL));
-  for (const path of [
-    "/admin",
-    "/admin/system",
-    "/admin/metrics",
-    "/admin/team",
-    "/admin/security",
-    `/admin/clients/${owner.businessId}`,
-  ]) {
+  for (const path of adminRoutes(owner.businessId)) {
     await visitTwice(page, path);
   }
   await expectReaderZone(page);

@@ -12,6 +12,8 @@
  *
  * The tour is split into several spec files so that CI can spread it over
  * its shards (support/shards.ts); every file runs in the Tbilisi project.
+ * Its routes (below) are every page of the cabinet; the visual tests
+ * (e2e/visual) take a picture of each of them.
  */
 
 import type { Page } from "@playwright/test";
@@ -45,6 +47,63 @@ export async function visitTwice(page: Page, path: string): Promise<void> {
   }
   const cookie = (await page.context().cookies(WEB_URL)).find((item) => item.name === "aw_tz");
   expect(decodeURIComponent(cookie?.value ?? ""), `the browser remembered its zone on ${path}`).toBe(TBILISI);
+}
+
+/** The public pages (the hosted chat page and its notice come from `chatPageRoutes`). */
+export const PUBLIC_ROUTES = ["/", "/login", "/help", "/help/inbox", "/help/whats-new", "/status"] as const;
+
+/** A business's hosted chat page and its privacy notice. */
+export function chatPageRoutes(slug: string): string[] {
+  return [`/c/${slug}`, `/c/${slug}/privacy`];
+}
+
+/** The platform admin's pages, with one client's card. */
+export function adminRoutes(clientBusinessId: string): string[] {
+  return ["/admin", "/admin/system", "/admin/metrics", "/admin/team", "/admin/security", `/admin/clients/${clientBusinessId}`];
+}
+
+/** An owner's business pages (the businesses first). */
+export function businessRoutes(businessId: string): string[] {
+  const business = `/b/${businessId}`;
+  return [
+    "/businesses",
+    `${business}/overview`,
+    `${business}/overview/reports`,
+    `${business}/inbox`,
+    `${business}/inbox?view=all`,
+    `${business}/bookings`,
+    `${business}/bookings/waitlist`,
+    `${business}/bookings/return-visits`,
+    `${business}/assistant`,
+    `${business}/assistant/versions`,
+    `${business}/assistant/checks`,
+    `${business}/assistant/knowledge`,
+    `${business}/assistant/knowledge/questions`,
+    `${business}/assistant/knowledge/resources`,
+    `${business}/assistant/knowledge/import`,
+    `${business}/assistant/profile`,
+    `${business}/assistant/channels`,
+    `${business}/assistant/channels/website`,
+    `${business}/assistant/channels/calls`,
+    `${business}/assistant/channels/share`,
+  ];
+}
+
+/** An owner's settings and account pages. */
+export function settingsRoutes(businessId: string): string[] {
+  const settings = `/b/${businessId}/settings`;
+  return [
+    settings,
+    `${settings}/team`,
+    `${settings}/billing`,
+    `${settings}/privacy`,
+    `${settings}/notifications`,
+    `${settings}/calls`,
+    `${settings}/reviews`,
+    `${settings}/quick-replies`,
+    `${settings}/audit`,
+    "/account/security",
+  ];
 }
 
 /** Times on a page without a business are in the reader's zone once it is known: never labelled "UTC". */
