@@ -13,7 +13,8 @@ from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobCheckInId
 
-type CheckInCapture = Callable[..., str]
+# Sentry answers None when it dropped the check-in (not sent, rate limited).
+type CheckInCapture = Callable[..., str | None]
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 SECONDS_PER_MINUTE: int = 60
@@ -52,13 +53,16 @@ class SentryJobMonitorFacilitator(JobMonitorFacilitatorContract):
     ) -> JobCheckIn:
         check_in = JobCheckIn(job_name=job_name, interval_seconds=interval_seconds)
         try:
-            check_in_id: str = self._capture(
+            check_in_id: str | None = self._capture(
                 monitor_slug=monitor_slug(job_name),
                 status=MonitorStatus.IN_PROGRESS,
                 monitor_config=build_monitor_config(interval_seconds),
             )
         except Exception:  # noqa: BLE001 - monitoring must never fail a job
             LOGGER.exception("Sentry check-in of %s failed", job_name)
+            return check_in
+
+        if check_in_id is None:
             return check_in
 
         return check_in.model_copy(update={"check_in_id": JobCheckInId(check_in_id)})
