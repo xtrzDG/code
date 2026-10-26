@@ -4,7 +4,6 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.domain.niche_texts import (
     NicheTextDraftDocument,
     NicheTextEntry,
@@ -13,9 +12,9 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.dto.niche_texts.niche_text_commands import SaveNicheTextDraftCommand
 from app.schemas.dto.niche_texts.niche_text_fields import NicheTextCatalog
 from app.schemas.dto.niche_texts.niche_text_views import NicheTextEditorView
-from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.use_cases.admin.niche_texts.niche_text_editing import (
     NicheTextSources,
+    authorize_editor,
     ordered_entries,
     published_entries,
     same_entries,
@@ -56,11 +55,8 @@ class SaveNicheTextDraftUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: SaveNicheTextDraftCommand) -> NicheTextEditorView:
-        admin: UserDocument = self._authorize_platform_admin.run(
-            PlatformAdminAccessRequest(
-                user_id=input_data.user_id,
-                permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES,
-            )
+        admin: UserDocument = authorize_editor(
+            self._authorize_platform_admin, input_data.user_id
         )
         niche_key = input_data.niche_key
         catalog: NicheTextCatalog = self._sources.catalog(niche_key)

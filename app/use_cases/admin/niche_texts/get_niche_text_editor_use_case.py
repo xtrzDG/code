@@ -2,11 +2,12 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.dto.niche_texts.niche_text_commands import NicheTextEditorQuery
 from app.schemas.dto.niche_texts.niche_text_views import NicheTextEditorView
-from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
-from app.use_cases.admin.niche_texts.niche_text_editing import NicheTextSources
+from app.use_cases.admin.niche_texts.niche_text_editing import (
+    NicheTextSources,
+    authorize_editor,
+)
 from app.use_cases.admin.niche_texts.niche_text_views import load_editor_view
 from app.utilities.knowledge.localized_texts import FALLBACK_LANGUAGE_TAG
 from app.utilities.niches.niche_text_checks import check_language
@@ -38,12 +39,7 @@ class GetNicheTextEditorUseCase(
         self._resolver: LocalizedTextResolverContract = localized_text_resolver
 
     def run(self, input_data: NicheTextEditorQuery) -> NicheTextEditorView:
-        self._authorize_platform_admin.run(
-            PlatformAdminAccessRequest(
-                user_id=input_data.user_id,
-                permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES,
-            )
-        )
+        authorize_editor(self._authorize_platform_admin, input_data.user_id)
         return load_editor_view(
             self._sources,
             self._user_repo,

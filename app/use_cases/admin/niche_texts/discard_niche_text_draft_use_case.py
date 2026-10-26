@@ -1,9 +1,8 @@
 from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.repositories.niche_text_repositories import NicheTextRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.dto.niche_texts.niche_text_commands import NicheTextCommand
-from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
+from app.use_cases.admin.niche_texts.niche_text_editing import authorize_editor
 
 
 class DiscardNicheTextDraftUseCase(UseCaseContract[NicheTextCommand, None]):
@@ -21,10 +20,5 @@ class DiscardNicheTextDraftUseCase(UseCaseContract[NicheTextCommand, None]):
         self._niche_text_repo: NicheTextRepoContract = niche_text_repo
 
     def run(self, input_data: NicheTextCommand) -> None:
-        self._authorize_platform_admin.run(
-            PlatformAdminAccessRequest(
-                user_id=input_data.user_id,
-                permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES,
-            )
-        )
+        authorize_editor(self._authorize_platform_admin, input_data.user_id)
         self._niche_text_repo.delete_draft(input_data.niche_key)

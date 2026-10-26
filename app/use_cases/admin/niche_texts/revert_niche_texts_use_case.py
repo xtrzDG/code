@@ -4,15 +4,16 @@ from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.niches import NicheTextReleaseKind
 from app.schemas.domain.niche_texts import NicheTextEntry, NicheTextReleaseDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.niche_texts.niche_text_commands import RevertNicheTextsCommand
 from app.schemas.dto.niche_texts.niche_text_views import NicheTextReleaseView
-from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
-from app.use_cases.admin.niche_texts.niche_text_editing import NicheTextSources
+from app.use_cases.admin.niche_texts.niche_text_editing import (
+    NicheTextSources,
+    authorize_editor,
+)
 from app.use_cases.admin.niche_texts.niche_text_releases import (
     NicheTextPublication,
     publish_release,
@@ -53,11 +54,8 @@ class RevertNicheTextsUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: RevertNicheTextsCommand) -> NicheTextReleaseView:
-        admin: UserDocument = self._authorize_platform_admin.run(
-            PlatformAdminAccessRequest(
-                user_id=input_data.user_id,
-                permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES,
-            )
+        admin: UserDocument = authorize_editor(
+            self._authorize_platform_admin, input_data.user_id
         )
         self._step_up.require_recent_authentication()
         niche_key = input_data.niche_key

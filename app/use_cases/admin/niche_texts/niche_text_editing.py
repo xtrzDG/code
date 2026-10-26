@@ -7,17 +7,21 @@ and ordered, and the names of the admins who published.
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
+from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.niche_text_repositories import NicheTextRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.starter_registries import StarterAnswerRegistryContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.niche_texts import (
     NicheTextDraftDocument,
     NicheTextEntry,
     NicheTextReleaseDocument,
 )
+from app.schemas.domain.users import UserDocument
 from app.schemas.dto.niche_texts.niche_text_fields import NicheTextCatalog
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     LanguageTag,
@@ -123,3 +127,13 @@ def display_names(
         for user in user_repo.get_many(wanted)
         if user.display_name is not None
     }
+
+
+def authorize_editor(check: PlatformAdminCheck, user_id: UserId) -> UserDocument:
+    """The admin, when their role may manage the niche templates (SUPER)."""
+
+    return check.run(
+        PlatformAdminAccessRequest(
+            user_id=user_id, permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES
+        )
+    )

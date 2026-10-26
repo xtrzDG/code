@@ -2,7 +2,6 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.niche_texts import (
     NicheTextDraftDocument,
@@ -11,10 +10,10 @@ from app.schemas.domain.niche_texts import (
 from app.schemas.dto.niche_texts.niche_text_commands import NicheTextOverviewQuery
 from app.schemas.dto.niche_texts.niche_text_views import NicheTextStatusList
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.admin.niche_texts.niche_text_editing import (
     NicheTextSources,
+    authorize_editor,
     display_names,
 )
 from app.use_cases.admin.niche_texts.niche_text_views import status_view
@@ -44,12 +43,7 @@ class ListNicheTextsUseCase(
         self._resolver: LocalizedTextResolverContract = localized_text_resolver
 
     def run(self, input_data: NicheTextOverviewQuery) -> NicheTextStatusList:
-        self._authorize_platform_admin.run(
-            PlatformAdminAccessRequest(
-                user_id=input_data.user_id,
-                permission=PlatformAdminPermission.MANAGE_NICHE_TEMPLATES,
-            )
-        )
+        authorize_editor(self._authorize_platform_admin, input_data.user_id)
         language: LanguageTag = input_data.language or FALLBACK_LANGUAGE_TAG
         templates: list[NicheTemplate] = self._sources.niche_templates.list_all()
         niche_keys: list[NicheKey] = [template.key for template in templates]
