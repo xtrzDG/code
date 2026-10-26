@@ -126,6 +126,7 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | общие входящие команды | поля назначения в `ConversationDocument`, `ConversationNoteDocument`, `QuickReplyLibraryDocument`, `InboxSettingsDocument` |
 | адреса страницы чата | `PublicSlugClaimDocument` (коллекция `public_slug_claims`, ключ — сам адрес); текущий адрес — `BusinessDocument.public_slug` |
 | импорт знаний с сайта | `WebsiteImportDocument` (текущий импорт бизнеса: ход, итог, причина отказа; черновики — обычные `KnowledgeItemDocument`) |
+| тексты шаблонов ниш (редактор админа) | `NicheTextDraftDocument` (черновик ниши), `NicheTextReleaseDocument` (опубликованные версии); платформенные коллекции, миграция 1221 |
 
 ## Пошаговый запуск
 
@@ -139,6 +140,23 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 - готовые ответы ниш (`app/registries/niches/starters/`) — подсказки, не
   факты: в анкету попадают только по согласию владельца и только в пустые
   разделы, цен в них нет;
+- шаблоны ниш остаются кодом (`app/registries/niches/`), а админ платформы
+  с правом `manage_niche_templates` (SUPER) переписывает их тексты для
+  владельцев в редакторе (`/admin/niches`, `GET·PUT·POST
+  /v1/admin/niche-templates/…`, `app/use_cases/admin/niche_texts/`): только
+  слова — название, описание, вопросы анкеты (подпись, подсказка, свои
+  варианты), правила передачи и запреты по умолчанию построчно, готовые
+  ответы; ключи, типы ответов, обязательность, правила для модели и числа
+  не меняются (`app/utilities/niches/niche_text_catalog.py`). Черновик
+  по языкам публикуется после step-up как следующая версия с записью в
+  платформенном журнале аудита; откат к версии N и сброс к коду — тоже
+  новая версия. Туннель, анкета, пробелы профиля и готовые ответы новых
+  владельцев читают действующий шаблон — шаблон кода с последней версией
+  поверх текстов (`EffectiveNicheTemplateRegistry`,
+  `EffectiveStarterAnswerRegistry`); сохранённые анкеты не переписываются,
+  а сборка помощника и автотесты читают шаблон кода, поэтому промпт от
+  публикации не меняется (снимки `tests/assembly/snapshots/` совпадают
+  байт в байт, `test_niche_prompt_snapshots_with_overrides.py`);
 - «Применить изменения» — оркестратор `ApplyChangesOrchestrator`: регистрация
   (атомарно, одна на бизнес), сборка, проверка условий запуска, постановка
   автотестов в очередь; публикует версию воркер, когда прогон закончился

@@ -378,7 +378,9 @@ web/
       admin/                   platform admin (System also holds the status page's announcements:
                                AnnouncementsCard, AnnouncementDialog, _lib/announcementForm);
                                clients (filters, sorts) and clients/[businessId]/;
-                               security/ (encryption keys: the key ring and re-encryption runs)
+                               security/ (encryption keys: the key ring and re-encryption runs);
+                               niches/ and niches/[nicheKey]/ (the niche template editor:
+                               _lib/nicheTexts for its checks and preview, _lib/useNicheTexts)
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling);
                                auth/mfa/verify|enroll: the second step (server/sessionOpening.ts)
@@ -635,6 +637,7 @@ section tabs, page titles and the e2e suite read it):
 | Invitations (owners) | "Invite a business — a month free" (`GET …/referrals`): the owner's link with `?ref=` (copy, share, QR) and how many businesses signed up, paid and how many months were earned; a card on the Overview from the business's tenth booking (`overview/_components/InviteCard.tsx`) and "Invite a business" in the account menu at any time (`components/referrals/`). The "Powered by" link with the business's code on the widget, the chat page and the A6 table card; Channels → Share has the switch that hides it, on Plus only (`PUT …/referrals/powered-by`) |
 | Partner portal (`/partner`) | Partners only (everyone else gets a 404 from the layout): the commission rate, businesses brought and paying, commissions to be paid and paid out per currency, a link per place the partner shares it (`&src=`, Latin letters, digits, dots, dashes, underscores; copy and QR), the businesses brought and the commission of every invoice (cursor pages); the contract and payout method are agreed outside the cabinet |
 | Admin → Partners (`/admin/partners`) | Platform admins who see clients: partners with codes, rates, businesses and totals; those who manage client billing add a partner (phone or e-mail, rate, first code), change the rate, pause or resume one, add a code, and mark a month paid with the transfer's reference from the month's payout report (UTC months) |
+| Admin → Niche templates (`/admin/niches`, `/admin/niches/{niche}?language=`) | SUPER admins (`manage_niche_templates`): every niche with the version of its texts in force (or the code template), how many texts it rewords and whether a draft waits; a niche's editor per cabinet language (tabs): the niche's name, description and what it books, each profile question's label, hint and choices, the default handoff and forbidden rules line by line and the starter answers, each beside the code's wording (English where the code has none), checked as typed (one line, no HTML, the field's length, the code's `{placeholders}`), with a live preview of the profile questions as an owner sees them; **Save draft** (owners read nothing of it), **Publish** after a confirmation (step-up; audited), **Discard draft**, and the versions with **Restore** and **Reset to the code template** (each a new version). New owners read the newest version in the tunnel and the profile wizard; saved profiles and assistants' prompts do not change (`e2e/admin-niches.spec.ts`) |
 
 ### Inbox
 
