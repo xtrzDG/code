@@ -6,9 +6,13 @@ name: Schedule watch
 # stack; repo-settings.yml: branch protection and private vulnerability
 # reporting stay on) fail silently when GitHub stops scheduling
 # them (60 days without a push), a secret expires or every run is red.
-# Every morning this checks that each had a successful run in the last
-# 8 days and otherwise opens one issue per workflow (once: an open issue
-# is not opened again; docs/operations/runbooks/README.md, "Game days").
+# Every morning this checks that each had a successful scheduled run in the
+# last 8 days and otherwise opens one issue per workflow (once: an open
+# issue is not opened again; docs/operations/runbooks/README.md, "Game
+# days"). Only scheduled runs count: a run started by hand, by a pull
+# request or by automerge.yml proves nothing about the schedule (on
+# 2026-10-26 zap.yml's last success was automerge's run while its weekly
+# schedule had never fired).
 on:
   schedule:
     # 06:37 UTC every day.
@@ -38,8 +42,8 @@ jobs:
           cutoff="$(date -u -d "${MAX_AGE_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)"
           silent=0
           for workflow in $WATCHED; do
-            last="$(gh run list --workflow "$workflow" --status success --limit 1 \
-              --json createdAt --jq '.[0].createdAt // ""')"
+            last="$(gh run list --workflow "$workflow" --event schedule --status success \
+              --limit 1 --json createdAt --jq '.[0].createdAt // ""')"
             if [[ -n "$last" && ! "$last" < "$cutoff" ]]; then
               echo "${workflow}: last success ${last}"
               continue
@@ -54,7 +58,7 @@ jobs:
             fi
 
             cat > "$RUNNER_TEMP/body.md" <<BODY
-          The scheduled workflow \`${workflow}\` has had no successful run since ${last:-its first run} (checked ${cutoff} onwards).
+          The scheduled workflow \`${workflow}\` has had no successful scheduled run since ${last:-its first run} (checked ${cutoff} onwards); runs by hand or by a pull request do not count.
 
           - [ ] Open its runs: Actions → \`${workflow}\`; is it red, or not running at all?
           - [ ] Not running: GitHub disables schedules after 60 days without a push; enable it again (Actions → the workflow → Enable) and run it by hand.

@@ -43,4 +43,6 @@ guards CI cannot replace run on a schedule instead: the restore drill
 evals (`evals-nightly.yml`), the dynamic scan of the running stack
 (`zap.yml`) and the repository settings check (`repo-settings.yml`). A silent schedule is a failure too: every
 morning `schedule-watch.yml` opens an issue for each of them without a
-successful run in the last 8 days (once per workflow while it is open).
+successful scheduled run in the last 8 days (once per workflow while it is
+open; a run by hand or by a pull request does not count). Close the issue
+yourself once a scheduled run succeeded again: the watch never closes one.
