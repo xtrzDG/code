@@ -11,6 +11,56 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-26 — the niche template editor of the platform admin
+
+Spec: `5c71b97e956c0e49`
+
+- **Added** `GET /v1/admin/niche-templates?language=` (`NicheTextStatusList`):
+  every niche with the version of its owner-facing texts in force
+  (`published_version`, 0 for the code template), how many texts it
+  rewords (`override_count`), who published it and when, and whether an
+  unpublished draft waits (`has_draft`, `draft_override_count`). Platform
+  admins with the new permission `manage_niche_templates` (SUPER only);
+  `PlatformAdminPermission` gains that value.
+- **Added** `GET /v1/admin/niche-templates/{niche_key}?language=`
+  (`NicheTextEditorView`): every text of the niche an admin may reword in
+  one cabinet language (`ka`, `ru`, `en`, `he`, `de`; others 422): the
+  niche's name, description and what it books; each profile question's
+  label, hint and own choices; its default handoff and forbidden rules,
+  line by line; its starter answers (tone, cancellation rule, first
+  resource, frequent questions and answers, offer examples). Each field
+  (`NicheTextFieldView`) carries the code's text in the language (`null`:
+  owners read English), the English one, the published and the draft
+  wording and its `max_length`; `questions` give the structure of the
+  profile questions for a preview. Keys, answer types, required flags,
+  choices themselves, prompt rules and every number stay in code.
+- **Added** `PUT /v1/admin/niche-templates/{niche_key}/draft`
+  (`SaveNicheTextDraftRequest`: `language`, `texts: [{field_key, text}]`)
+  answering the editor: that language's texts of the niche's draft
+  (owners read nothing of it). A text is one line without spaces around it
+  and without HTML (`NicheOverrideText`, 422 at parsing), and must name a
+  field of the code template, fit the field and keep the code text's
+  `{placeholders}` (422 `validation_failed`); a text equal to the code's
+  is dropped. `DELETE …/draft` (204) discards the draft.
+- **Added** `POST /v1/admin/niche-templates/{niche_key}/publish` and
+  `POST …/revert` (`RevertNicheTextsRequest`: `version`, 0 the code
+  template) answering `NicheTextReleaseView`: the draft, or an earlier
+  version's texts, becomes the niche's next version (`kind` `publish`,
+  `revert` or `reset`); both need a fresh confirmation (step-up) and write
+  a platform audit entry (action `update`, entity `niche_template`,
+  `<niche>:v<version>:<kind>`). 409 when there is nothing to publish, the
+  version is in force already or another admin published the same version
+  a moment ago; 404 for an unknown version. `GET …/versions`
+  (`NicheTextHistoryView`) lists the versions, newest first.
+- **Changed** (additive, values only) `GET /v1/catalog/niches`,
+  `GET /v1/catalog/niches/{niche_key}`, the profile wizard
+  (`GET /v1/businesses/{business_id}/profile/wizard`), the profile gaps,
+  the setup progress and the starter answers (`GET …/starter-answers`,
+  `POST …/starter-answers/apply`) read the code templates with the niche's
+  newest published version laid over their texts. Saved profiles keep
+  their texts; assembled prompts and autotests keep reading the code
+  templates.
+
 ## 2026-10-23 — wave 22 together: closing a business and deleting an account, voice tuning and the call fallback
 
 Spec: `ddd24979e0eaea8b`

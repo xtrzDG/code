@@ -117,6 +117,8 @@ ADMIN_BODIES: dict[str, dict[str, object]] = {
     },
     "PATCH /v1/admin/partners/{partner_id}": {"status": "paused"},
     "POST /v1/admin/partners/{partner_id}/codes": {"code": "AGENCY2"},
+    "PUT /v1/admin/niche-templates/{niche_key}/draft": {"language": "ru", "texts": []},
+    "POST /v1/admin/niche-templates/{niche_key}/revert": {"version": 0},
     "POST /v1/admin/partners/{partner_id}/payouts": {
         "month": "2026-09",
         "reference": "Transfer 1",

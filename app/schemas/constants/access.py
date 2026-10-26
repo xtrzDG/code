@@ -22,6 +22,8 @@ class PlatformAdminPermission(StrEnum):
     (`app/utilities/security/admin_permissions.py`). VIEW_SECURITY_LOG
     reads the platform's own audit log: every person's sign-ins, failed
     codes, lockouts and sign-outs with their addresses.
+    MANAGE_NICHE_TEMPLATES rewords and publishes the owner-facing texts of
+    the niche templates every new owner reads (SUPER only).
     """
 
     VIEW_CLIENTS = "view_clients"
@@ -34,6 +36,7 @@ class PlatformAdminPermission(StrEnum):
     MANAGE_ADMINS = "manage_admins"
     MANAGE_CLIENT_BILLING = "manage_client_billing"
     WRITE_CLIENT_NOTES = "write_client_notes"
+    MANAGE_NICHE_TEMPLATES = "manage_niche_templates"
 
 
 class SupportAccessKind(StrEnum):
