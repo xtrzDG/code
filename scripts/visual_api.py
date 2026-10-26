@@ -25,7 +25,7 @@ import time
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import cast
+from typing import Protocol, cast
 
 import uvicorn
 from dependency_injector import providers
@@ -113,8 +113,12 @@ def read_clock_start(environment: Mapping[str, str]) -> int:
     return round(moment.timestamp()) * NANOSECONDS_PER_SECOND
 
 
+class OverridableProvider(Protocol):
+    def override(self, provider: object) -> object: ...
+
+
 def replace_provider[Provided](provider: Provider[Provided], value: Provided) -> None:
-    cast(providers.Singleton[Provided], provider).override(providers.Object(value))
+    cast(OverridableProvider, provider).override(providers.Object(value))
 
 
 def start_wall_clocks(app_container: AppContainer, clock: StartedClock) -> AppContainer:
@@ -148,7 +152,7 @@ def create_visual_application() -> FastAPI:
 
 
 def main(arguments: Sequence[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n\n")[0])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     options = parser.parse_args(arguments)
