@@ -633,6 +633,21 @@
    ],
    "type": "string"
   },
+  "CachedUsageDetails": {
+   "properties": {
+    "cached_image_tokens": {
+     "type": "integer"
+    },
+    "cached_text_tokens": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "cached_text_tokens",
+    "cached_image_tokens"
+   ],
+   "type": "object"
+  },
   "CallableToolAllowedCaller": {
    "enum": [
     "direct",
@@ -3354,6 +3369,36 @@
    ],
    "type": "string"
   },
+  "ImageGenInputUsageDetails": {
+   "properties": {
+    "image_tokens": {
+     "type": "integer"
+    },
+    "text_tokens": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "text_tokens",
+    "image_tokens"
+   ],
+   "type": "object"
+  },
+  "ImageGenOutputTokensDetails": {
+   "properties": {
+    "image_tokens": {
+     "type": "integer"
+    },
+    "text_tokens": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "image_tokens",
+    "text_tokens"
+   ],
+   "type": "object"
+  },
   "ImageGenTool": {
    "properties": {
     "action": {
@@ -3665,6 +3710,38 @@
    "required": [
     "moderation_stage",
     "categories"
+   ],
+   "type": "object"
+  },
+  "ImageGenToolUsage": {
+   "properties": {
+    "cached_tokens": {
+     "type": "integer"
+    },
+    "cached_tokens_details": {
+     "$ref": "#/$defs/CachedUsageDetails"
+    },
+    "input_tokens": {
+     "type": "integer"
+    },
+    "input_tokens_details": {
+     "$ref": "#/$defs/ImageGenInputUsageDetails"
+    },
+    "output_tokens": {
+     "type": "integer"
+    },
+    "output_tokens_details": {
+     "$ref": "#/$defs/ImageGenOutputTokensDetails"
+    },
+    "total_tokens": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "input_tokens",
+    "total_tokens",
+    "output_tokens",
+    "input_tokens_details"
    ],
    "type": "object"
   },
@@ -6417,6 +6494,9 @@
        ],
        "type": "string"
       },
+      "tool_usage": {
+       "$ref": "#/$defs/ResponseToolUsage"
+      },
       "truncation": {
        "anyOf": [
         {
@@ -6737,6 +6817,21 @@
      "$ref": "#/$defs/Verbosity"
     }
    },
+   "type": "object"
+  },
+  "ResponseToolUsage": {
+   "properties": {
+    "image_gen": {
+     "$ref": "#/$defs/ImageGenToolUsage"
+    },
+    "web_search": {
+     "$ref": "#/$defs/WebSearchUsage"
+    }
+   },
+   "required": [
+    "image_gen",
+    "web_search"
+   ],
    "type": "object"
   },
   "ResponseUsage": {
@@ -8097,6 +8192,17 @@
     "id",
     "type",
     "status"
+   ],
+   "type": "object"
+  },
+  "WebSearchUsage": {
+   "properties": {
+    "num_requests": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "num_requests"
    ],
    "type": "object"
   },
