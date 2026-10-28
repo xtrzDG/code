@@ -20,7 +20,7 @@ const CORRIDOR = [
 /** How it works: profile, test and publish, connect; the steps come out of the depth one by one. */
 export function Steps({ t }: { t: Translator["t"] }) {
   return (
-    <Section id="how" title={t("landing.steps.title")} subtitle={t("landing.steps.subtitle")} glow="left">
+    <Section id="how" isLinkTarget title={t("landing.steps.title")} subtitle={t("landing.steps.subtitle")} glow="left">
       <Stagger as="ol" step={0.14} className="grid gap-4 md:grid-cols-3">
         {STEPS.map(([title, text], index) => (
           <StaggerItem as="li" key={title} depth={1}>

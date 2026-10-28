@@ -16,7 +16,7 @@ export const FAQ_QUESTIONS: [MessageKey, MessageKey][] = [
 /** Frequent questions as native disclosure widgets (keyboard and screen reader friendly, no script). */
 export function Faq({ t }: { t: Translator["t"] }) {
   return (
-    <Section id="faq" title={t("landing.faq.title")}>
+    <Section id="faq" isLinkTarget title={t("landing.faq.title")}>
       {/* landing-faq: answers open smoothly where the browser can animate to auto height. */}
       <Reveal depth={1} amount={0.15} className="landing-faq divide-y divide-line rounded-2xl border border-line bg-surface">
         {FAQ_QUESTIONS.map(([question, answer]) => (

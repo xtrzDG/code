@@ -7,7 +7,10 @@
 import type { ApiError } from "@/api/errors";
 import type { CountryListItem } from "@/api/types";
 
+import { countryFlag, isCountryAvailable } from "./countryBasics";
 import { REGION_NAMES } from "./displayNames.generated";
+
+export { countryFlag, isCountryAvailable } from "./countryBasics";
 
 /** The first market: the default when nothing hints at the user's country. */
 const FALLBACK_COUNTRY_CODE = "GE";
@@ -29,15 +32,6 @@ const COUNTRY_OF_LANGUAGE: Record<string, string> = {
   es: "ES",
   ja: "JP",
 };
-
-/** "GE" -> 🇬🇪 (regional indicator symbols). */
-export function countryFlag(countryCode: string): string {
-  const code = countryCode.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(code)) {
-    return "";
-  }
-  return String.fromCodePoint(...[...code].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65));
-}
 
 /**
  * A country's name in the interface language: countryName("GE", "ka") ->
@@ -66,10 +60,6 @@ function baseLanguage(locale: string): string {
 /** 995 -> "+995". */
 export function formatCallingCode(callingCode: number): string {
   return `+${callingCode}`;
-}
-
-export function isCountryAvailable(country: Pick<CountryListItem, "onboarding_status">): boolean {
-  return country.onboarding_status !== "restricted";
 }
 
 /** "🇬🇪 Georgia (+995)" for a country picker. */

@@ -3,7 +3,7 @@
 import Form from "next/form";
 import { useEffect, useId, useState } from "react";
 
-import { useCountries } from "@/api/catalog";
+import { api } from "@/api/client";
 import { Button, Select } from "@/components/ui";
 import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
@@ -62,10 +62,31 @@ export function CountryPicker({
   );
 }
 
-/** Every country of the catalog, asked for once the page has loaded and the browser is idle (null until then). */
+/**
+ * Every country of the catalog, asked for once the page has loaded and the
+ * browser is idle (null until then, or if it cannot be read: the page's own
+ * countries stay). A plain request, not the cabinet's query cache, which
+ * would bring every query key into the landing's first load.
+ */
 function useAllCountries(): CountryChoice[] | null {
-  const [isWanted, setIsWanted] = useState(false);
-  useEffect(() => inSequence([afterPageLoad, whenIdle], () => setIsWanted(true)), []);
-  const countries = useCountries({ enabled: isWanted });
-  return countries.data ? countryChoices(countries.data.countries) : null;
+  const { locale } = useI18n();
+  const [choices, setChoices] = useState<CountryChoice[] | null>(null);
+  useEffect(() => {
+    let isCurrent = true;
+    const cancel = inSequence([afterPageLoad, whenIdle], () => {
+      api
+        .GET("/v1/catalog/countries", { params: { query: { language: locale } } })
+        .then(({ data }) => {
+          if (isCurrent && data) {
+            setChoices(countryChoices(data.countries));
+          }
+        })
+        .catch(() => undefined);
+    });
+    return () => {
+      isCurrent = false;
+      cancel();
+    };
+  }, [locale]);
+  return choices;
 }

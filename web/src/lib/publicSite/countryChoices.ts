@@ -6,7 +6,7 @@
  */
 
 import type { CountryListItem } from "@/api/types";
-import { countryFlag, isCountryAvailable } from "@/lib/countries";
+import { countryFlag, isCountryAvailable } from "@/lib/countryBasics";
 
 export interface CountryChoice {
   code: string;

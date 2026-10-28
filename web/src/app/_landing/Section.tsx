@@ -8,7 +8,9 @@ import { cn } from "@/lib/cn";
  * lead that rise in when the block scrolls into view, and optionally a
  * coloured glow drifting behind it slower than the page (a depth layer).
  * Rendered by the browser only near the screen (`landing-deferred`), so the
- * first frame is the hero's alone.
+ * first frame is the hero's alone, except a block the header links to
+ * (`isLinkTarget`): a jump to a block not laid out yet would land before its
+ * real height is known.
  */
 export function Section({
   id,
@@ -16,6 +18,7 @@ export function Section({
   subtitle,
   glow,
   layout = "stacked",
+  isLinkTarget = false,
   children,
   className,
 }: {
@@ -26,6 +29,8 @@ export function Section({
   glow?: "left" | "right";
   /** "split": the heading beside the content on wide screens (a showcase). */
   layout?: "stacked" | "split";
+  /** The header links here (#how, #pricing, #faq): rendered at once. */
+  isLinkTarget?: boolean;
   children: ReactNode;
   className?: string;
 }) {
@@ -34,7 +39,11 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className={cn("landing-deferred relative isolate scroll-mt-16 overflow-x-clip border-t border-line py-16 sm:py-24", className)}
+      className={cn(
+        !isLinkTarget && "landing-deferred",
+        "relative isolate scroll-mt-16 overflow-x-clip border-t border-line py-16 sm:py-24",
+        className,
+      )}
     >
       {glow ? (
         <Parallax

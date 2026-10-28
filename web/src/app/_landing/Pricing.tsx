@@ -34,7 +34,7 @@ export function Pricing({
   const quotes = plans?.quotes ?? null;
   const rate = plans?.exchange_rate ?? null;
   return (
-    <Section id="pricing" title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")} glow="right">
+    <Section id="pricing" isLinkTarget title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")} glow="right">
       {countries.length > 0 ? (
         <div className="mb-8">
           <CountryPicker countries={pricedCountryChoices(countries, countryCode)} value={countryCode} action={formAction} />
