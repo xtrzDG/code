@@ -2,6 +2,7 @@ from babel import Locale
 
 from app.contracts.registries import CountryRegistryContract, PlanRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.catalog.countries import (
     CountryList,
     CountryListItem,
@@ -34,6 +35,8 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
 
     def run(self, input_data: CountryListRequest) -> CountryList:
         display_locale: Locale = require_babel_locale(input_data.display_language)
+        plans: list[PlanDefinition] = self._plan_registry.list_all()
+        price_books: dict[CurrencyCode, HasLocalPriceBook] = {}
         countries: list[CountryListItem] = [
             CountryListItem(
                 country_code=profile.country_code,
@@ -47,7 +50,9 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
                 default_timezone=profile.default_timezone,
                 default_owner_language=profile.default_owner_language,
                 onboarding_status=profile.onboarding_status,
-                has_price_book=self._has_price_book(profile.currency_code),
+                has_price_book=self._has_price_book(
+                    profile.currency_code, plans, price_books
+                ),
             )
             for profile in self._country_registry.list_all()
         ]
@@ -62,16 +67,25 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
             ),
         )
 
-    def _has_price_book(self, currency_code: CurrencyCode) -> HasLocalPriceBook:
+    def _has_price_book(
+        self,
+        currency_code: CurrencyCode,
+        plans: list[PlanDefinition],
+        known: dict[CurrencyCode, HasLocalPriceBook],
+    ) -> HasLocalPriceBook:
         """
         Every plan is billed in this currency (the same rule subscriptions
         follow: the monthly price and the setup fee are both in the price
-        book, or it is the plans' own currency).
+        book, or it is the plans' own currency). Worked out once per
+        currency (`known`): many countries share theirs.
         """
 
-        plans = self._plan_registry.list_all()
-        return plans != [] and all(
-            select_subscription_currency(self._plan_registry, plan.key, currency_code)
-            == currency_code
-            for plan in plans
-        )
+        if currency_code not in known:
+            known[currency_code] = plans != [] and all(
+                select_subscription_currency(
+                    self._plan_registry, plan.key, currency_code
+                )
+                == currency_code
+                for plan in plans
+            )
+        return known[currency_code]

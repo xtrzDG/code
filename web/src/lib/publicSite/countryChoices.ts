@@ -23,3 +23,15 @@ export function countryChoices(countries: readonly CountryListItem[]): CountryCh
     isAvailable: isCountryAvailable(country),
   }));
 }
+
+/**
+ * The choices the page itself carries: the countries with prices of their
+ * own and the one shown. The browser adds the rest once the page has loaded
+ * (CountryPicker): every country twice, in the HTML and in the RSC payload,
+ * made the landing's document a network round trip longer.
+ */
+export function pricedCountryChoices(countries: readonly CountryListItem[], shown: string | null): CountryChoice[] {
+  return countryChoices(
+    countries.filter((country) => (country.has_price_book && isCountryAvailable(country)) || country.country_code === shown),
+  );
+}

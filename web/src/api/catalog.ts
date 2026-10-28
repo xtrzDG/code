@@ -11,13 +11,13 @@ import { useQuery } from "./useQuery";
 /** The catalog changes with a deploy, not while a page is open. */
 export const CATALOG_STALE_MS = 60 * 60_000;
 
-/** Every country with names in the interface language and calling codes. */
-export function useCountries() {
+/** Every country with names in the interface language and calling codes (`enabled`: false waits). */
+export function useCountries({ enabled = true }: { enabled?: boolean } = {}) {
   const { locale } = useI18n();
   return useQuery(
     queryKeys.catalog.countries(locale),
     () => api.GET("/v1/catalog/countries", { params: { query: { language: locale } } }),
-    { staleMs: CATALOG_STALE_MS },
+    { staleMs: CATALOG_STALE_MS, enabled },
   );
 }
 

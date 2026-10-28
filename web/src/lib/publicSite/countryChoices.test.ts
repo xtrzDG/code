@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CountryListItem } from "@/api/types";
 
-import { countryChoices } from "./countryChoices";
+import { countryChoices, pricedCountryChoices } from "./countryChoices";
 
 const COUNTRY: CountryListItem = {
   country_code: "GE",
@@ -30,5 +30,18 @@ describe("the price picker's countries", () => {
     const choices = countryChoices([{ ...COUNTRY, country_code: "AM", display_name: "Armenia" }, COUNTRY]);
     expect(choices.map((choice) => choice.code)).toEqual(["AM", "GE"]);
     expect(Object.keys(choices[0] ?? {}).sort()).toEqual(["code", "isAvailable", "label"]);
+  });
+});
+
+describe("the price picker's countries in the page itself", () => {
+  const japan = { ...COUNTRY, country_code: "JP", display_name: "Japan", has_price_book: false };
+  const restricted = { ...COUNTRY, country_code: "XK", display_name: "Kosovo", onboarding_status: "restricted" as const };
+
+  it("are those with prices of their own that can be chosen", () => {
+    expect(pricedCountryChoices([COUNTRY, japan, restricted], null).map((choice) => choice.code)).toEqual(["GE"]);
+  });
+
+  it("keep the country shown, priced or not", () => {
+    expect(pricedCountryChoices([COUNTRY, japan, restricted], "JP").map((choice) => choice.code)).toEqual(["GE", "JP"]);
   });
 });

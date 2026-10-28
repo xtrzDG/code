@@ -5,6 +5,7 @@
 
 import AxeBuilder from "@axe-core/playwright";
 
+import { renderDeferredBlocks } from "./support/deferredBlocks";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
@@ -18,6 +19,7 @@ for (const theme of ["dark", "light"] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
       await waitForNetworkQuiet(page);
+      await renderDeferredBlocks(page);
       const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
       const serious = results.violations
         .filter((violation) => violation.impact === "serious" || violation.impact === "critical")

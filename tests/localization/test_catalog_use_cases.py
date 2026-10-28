@@ -3,7 +3,9 @@
 import pytest
 
 from app.registries.billing.plan_registry import PlanRegistry
+from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.localization import CountryOnboardingStatus, TextDirection
+from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.catalog.countries import (
     CountryListRequest,
     CountryProfileRequest,
@@ -223,3 +225,37 @@ def test_country_list_says_which_countries_have_explicit_prices() -> None:
     assert price_books["PL"] is True
     assert price_books["JP"] is False
     assert price_books["RU"] is False
+
+
+class CountingPlanRegistry(PlanRegistry):
+    """The plan registry, counting the plans it hands out."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.lists: int = 0
+        self.gets: int = 0
+
+    def get(self, plan_key: PlanKey) -> PlanDefinition:
+        self.gets += 1
+        return super().get(plan_key)
+
+    def list_all(self) -> list[PlanDefinition]:
+        self.lists += 1
+        return super().list_all()
+
+
+def test_country_list_works_out_each_currency_once() -> None:
+    plans = CountingPlanRegistry()
+    use_case = ListCountriesUseCase(
+        country_registry=get_country_registry(), plan_registry=plans
+    )
+
+    countries = use_case.run(
+        CountryListRequest(display_language=LanguageTag("en"))
+    ).countries
+
+    # One list of plans per request and at most one plan copied per currency:
+    # asking the registry per country copied plans 1898 times (a third of a
+    # second of every landing page's render).
+    assert plans.lists == 1
+    assert plans.gets <= len({country.currency_code for country in countries})

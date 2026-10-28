@@ -19,7 +19,9 @@ class PlanRegistry(PlanRegistryContract):
 
     A plan's own currency counts as a price-book currency, so EUR lookups
     return the EUR price. Other currencies return None unless the price book
-    has them: prices are never converted here.
+    has them: prices are never converted here. A plan handed out is a copy;
+    the price lookups read the stored plan, since a price is an immutable
+    value (the country list asks hundreds of them per request).
     """
 
     def __init__(self) -> None:
@@ -28,11 +30,14 @@ class PlanRegistry(PlanRegistryContract):
         }
 
     def get(self, plan_key: PlanKey) -> PlanDefinition:
+        return self._stored_plan(plan_key).model_copy(deep=True)
+
+    def _stored_plan(self, plan_key: PlanKey) -> PlanDefinition:
         plan: PlanDefinition | None = self._plans_by_key.get(plan_key)
         if plan is None:
             raise NotFoundError(f"Plan {plan_key} is not offered.")
 
-        return plan.model_copy(deep=True)
+        return plan
 
     def list_all(self) -> list[PlanDefinition]:
         return [
@@ -47,7 +52,7 @@ class PlanRegistry(PlanRegistryContract):
         currency_code: CurrencyCode,
     ) -> Money | None:
         return find_price_book_price(
-            self.get(plan_key).monthly_price,
+            self._stored_plan(plan_key).monthly_price,
             LOCAL_MONTHLY_PRICE_BOOK.get(plan_key, ()),
             currency_code,
         )
@@ -58,7 +63,7 @@ class PlanRegistry(PlanRegistryContract):
         currency_code: CurrencyCode,
     ) -> Money | None:
         return find_price_book_price(
-            self.get(plan_key).setup_fee,
+            self._stored_plan(plan_key).setup_fee,
             LOCAL_SETUP_FEE_BOOK.get(plan_key, ()),
             currency_code,
         )
@@ -69,7 +74,7 @@ class PlanRegistry(PlanRegistryContract):
         currency_code: CurrencyCode,
     ) -> Money | None:
         return find_price_book_price(
-            self.get(plan_key).additional_location_monthly_price,
+            self._stored_plan(plan_key).additional_location_monthly_price,
             LOCAL_ADDITIONAL_LOCATION_PRICE_BOOK.get(plan_key, ()),
             currency_code,
         )

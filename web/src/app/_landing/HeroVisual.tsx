@@ -15,8 +15,7 @@
  * `data-scene-reason` why the poster stays (see PosterReason).
  */
 
-import dynamic from "next/dynamic";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { Suspense, lazy, useEffect, useRef, useState, type RefObject } from "react";
 
 import { heroPlan, type PosterReason } from "@/lib/heroDevice";
 import { inSequence } from "@/lib/waits";
@@ -34,7 +33,10 @@ import {
   whenOnScreen,
 } from "./heroWaits";
 
-const HeroScene = dynamic(() => import("./scene/HeroScene"), { ssr: false });
+// React.lazy, not next/dynamic: the scene never renders on the server, and
+// next/dynamic would add its loader to the page's first scripts, one more
+// request before the first paint (the LCP budget, lighthouserc.json).
+const HeroScene = lazy(() => import("./scene/HeroScene"));
 
 type Stage =
   | { kind: "waiting" }
@@ -113,14 +115,16 @@ export function HeroVisual({ label, className }: { label: string; className?: st
     >
       <HeroFallback className={cn("transition-[opacity,visibility] duration-700 ease-out", isLive && "invisible opacity-0")} />
       {stage.kind === "loading" || isLive ? (
-        <HeroScene
-          className={cn(
-            "pointer-events-none absolute -inset-[30%] transition-opacity duration-1000 ease-out",
-            isLive ? "opacity-100" : "opacity-0",
-          )}
-          onReady={onReady}
-          onFallback={onFallback}
-        />
+        <Suspense fallback={null}>
+          <HeroScene
+            className={cn(
+              "pointer-events-none absolute -inset-[30%] transition-opacity duration-1000 ease-out",
+              isLive ? "opacity-100" : "opacity-0",
+            )}
+            onReady={onReady}
+            onFallback={onFallback}
+          />
+        </Suspense>
       ) : null}
     </div>
   );

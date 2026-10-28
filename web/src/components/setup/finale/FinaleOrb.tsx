@@ -16,8 +16,7 @@
  * why the drawing stays.
  */
 
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 
 import { afterNextPaint, hasWebGl, readDeviceSignals, whenIdle } from "@/app/_landing/heroWaits";
 import { AssistantOrbIllustration } from "@/components/illustrations";
@@ -26,7 +25,8 @@ import { cn } from "@/lib/cn";
 import { finaleOrbPlan, type PosterReason } from "@/lib/heroDevice";
 import { inSequence } from "@/lib/waits";
 
-const FinaleOrbScene = dynamic(() => import("@/app/_landing/scene/FinaleOrbScene"), { ssr: false });
+// React.lazy, not next/dynamic: the scene renders only in the browser (HeroVisual.tsx).
+const FinaleOrbScene = lazy(() => import("@/app/_landing/scene/FinaleOrbScene"));
 
 type Stage = { kind: "waiting" } | { kind: "static"; reason: PosterReason } | { kind: "loading" } | { kind: "live" };
 
@@ -78,14 +78,16 @@ export function FinaleOrb({ className }: { className?: string }) {
         className={cn("transition-[opacity,visibility] duration-700 ease-out", isLive && "invisible opacity-0")}
       />
       {stage.kind === "loading" || isLive ? (
-        <FinaleOrbScene
-          className={cn(
-            "pointer-events-none absolute -inset-[25%] transition-opacity duration-1000 ease-out",
-            isLive ? "opacity-100" : "opacity-0",
-          )}
-          onReady={onReady}
-          onFallback={onFallback}
-        />
+        <Suspense fallback={null}>
+          <FinaleOrbScene
+            className={cn(
+              "pointer-events-none absolute -inset-[25%] transition-opacity duration-1000 ease-out",
+              isLive ? "opacity-100" : "opacity-0",
+            )}
+            onReady={onReady}
+            onFallback={onFallback}
+          />
+        </Suspense>
       ) : null}
     </div>
   );

@@ -18,6 +18,7 @@
 import type { ConsoleMessage, Page } from "@playwright/test";
 
 import { strayCyrillic } from "../support/consoleClean";
+import { renderDeferredBlocks } from "../support/deferredBlocks";
 import { expect } from "../support/fixtures";
 import { phoneScreensAllowed } from "./heights";
 import { ALLOWED_TOKENS, offPalette, type Rgba, type SeenColour } from "./palette";
@@ -134,6 +135,7 @@ async function pageColours(page: Page): Promise<{ seen: SeenColour[]; allowed: R
 /** The gate's checks of the page as it is now; each finding fails the test softly, with `label`. */
 export async function reviewPage(page: Page, { label, isDocument }: { label: string; isDocument: boolean }): Promise<void> {
   expect.soft(takeConsoleErrors(page), `${label}: console errors`).toEqual([]);
+  await renderDeferredBlocks(page);
   const { seen, allowed } = await pageColours(page);
   expect(seen.length, `${label}: the palette scan read the page's colours`).toBeGreaterThan(0);
   expect(allowed, `${label}: the allowed tokens resolved`).toHaveLength(ALLOWED_TOKENS.length);
