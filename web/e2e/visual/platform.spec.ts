@@ -7,11 +7,18 @@
  * metrics page lists the web vitals of the pages visited so far, so its
  * height on a phone (the review gate's rule) counts only the two pages
  * before it, however many admin pages there are.
+ *
+ * They are taken after the API's worker has caught up on its periodic jobs
+ * once (afterTheWorkersFirstPass): what the alerts, the status history and
+ * the service levels record shows on these pages, and the system page lists
+ * the open data tasks in full.
  */
 
+import type { APIRequestContext } from "@playwright/test";
+
 import { ensureOnAdminTeam, signInAsPlatformAdmin } from "../support/admin";
-import { TOUR_ADMIN_EMAIL } from "../support/env";
-import { signInContext } from "../support/fixtures";
+import { API_URL, TOUR_ADMIN_EMAIL } from "../support/env";
+import { expect, signInContext } from "../support/fixtures";
 import { ru } from "../support/messages";
 import { adminRoutes } from "../support/tour";
 import { DESKTOP, PHONE } from "./clock";
@@ -31,6 +38,27 @@ const lastHourReplies: Shot["mask"] = (page) => [
   page.getByRole("region", { name: ru.adminSystem.errorBudget.latency.title }),
 ];
 
+/**
+ * The worker's first pass runs the post-deploy data tasks after the jobs
+ * these pages show (app/containers/periodic_jobs.py), so it is over once no
+ * data task is open, however long the jobs before them took (the exchange
+ * rates wait on their outside sources).
+ */
+async function afterTheWorkersFirstPass(request: APIRequestContext, token: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const tasks = await request.get(`${API_URL}/v1/admin/system/data-tasks`, {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        expect(tasks.ok(), await tasks.text()).toBe(true);
+        return ((await tasks.json()) as { open_count: number }).open_count;
+      },
+      { message: "the worker's first pass ran every data task", timeout: 60_000 },
+    )
+    .toBe(0);
+}
+
 /** "/admin/niches/restaurant" → "admin-niches-restaurant"; "/admin/clients/business_…" → "admin-clients". */
 function screenOf(path: string): string {
   const parts = path.replace(/^\//, "").split("/");
@@ -48,7 +76,9 @@ for (const [screen, theme] of [
       test.setTimeout(150_000);
       const restaurant = await signInRestaurantOwner(request);
       await ensureOnAdminTeam(request, TOUR_ADMIN_EMAIL);
-      await signInContext(context, await signInAsPlatformAdmin(request, TOUR_ADMIN_EMAIL));
+      const admin = await signInAsPlatformAdmin(request, TOUR_ADMIN_EMAIL);
+      await afterTheWorkersFirstPass(request, admin);
+      await signInContext(context, admin);
       for (const path of adminRoutes(restaurant.businessId)) {
         const mask = path === "/admin/system" ? lastHourReplies : undefined;
         await shoot(page, { name: screenOf(path), path, theme, locale: "ru", mask });
