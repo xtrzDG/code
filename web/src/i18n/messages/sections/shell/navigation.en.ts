@@ -16,6 +16,7 @@ export const navigationEn = {
   tabLabels: {
     overview: "Overview",
     inbox: "Inbox",
+    bookings: "Bookings",
   },
   descriptions: {
     overview: "How your assistant is doing and what needs you today.",

@@ -15,6 +15,7 @@ export const navigationIt: Translation<typeof navigationEn> = {
   tabLabels: {
     overview: "Panoramica",
     inbox: "Chat",
+    bookings: "Agenda",
   },
   descriptions: {
     overview: "Come sta andando il tuo assistente e cosa richiede la tua attenzione oggi.",

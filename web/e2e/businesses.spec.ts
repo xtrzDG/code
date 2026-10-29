@@ -60,6 +60,7 @@ test("a business in a country with several time zones starts in the one chosen",
   const zone = page.getByLabel(en.tunnelBusiness.place.timezone);
   await expect(zone).toHaveValue("Europe/Madrid");
   await zone.selectOption("Atlantic/Canary");
+  await page.getByLabel(en.tunnelBusiness.place.city).fill("Santa Cruz de Tenerife");
   await page.getByLabel(en.tunnelBusiness.place.address).fill("Calle La Marina 1, Santa Cruz");
   await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
 
@@ -83,12 +84,14 @@ test("a failed creation says why and keeps every answer", async ({ page, account
   );
   await describeSalon(page, "Panadería Sol");
   await page.getByLabel(en.tunnelBusiness.place.country).selectOption("ES");
+  await page.getByLabel(en.tunnelBusiness.place.city).fill("Madrid");
   await page.getByLabel(en.tunnelBusiness.place.address).fill("Calle Mayor 5, Madrid");
   await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
 
   const toast = page.getByRole("alert").filter({ hasText: en.errors.codes.backend_unavailable });
   await expect(toast).toBeVisible();
   await expect(page).toHaveURL(/\/create\?step=place$/);
+  await expect(page.getByLabel(en.tunnelBusiness.place.city)).toHaveValue("Madrid");
   await expect(page.getByLabel(en.tunnelBusiness.place.address)).toHaveValue("Calle Mayor 5, Madrid");
   // The first screen kept its answers too (they live in this browser until the business exists).
   await page.reload();
