@@ -1,0 +1,10 @@
+{
+  "business_id": "business_7215bfd7-a6bb-4210-833a-6fcf10410c03",
+  "conversation_retention_days": 30,
+  "created_at": 1790000000000000,
+  "id": "privacy_settings_56725ff6-9511-595d-a214-d4d9a500cebb",
+  "llm_turn_retention_days": 1,
+  "quality_sampling_allowed": true,
+  "schema_version": "2",
+  "updated_at": 1790000000000000
+}

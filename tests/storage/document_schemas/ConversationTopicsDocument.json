@@ -1,0 +1,139 @@
+{
+  "collection": "conversation_topics",
+  "document_type": "ConversationTopicsDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "groups": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "conversation_count": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "language": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "minLength": 2,
+                  "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "topics": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "conversation_count": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "default": "named",
+                    "enum": [
+                      "named",
+                      "other"
+                    ],
+                    "type": "string"
+                  },
+                  "label": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "labels": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "maxLength": 60,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "unanswered_count": {
+                    "default": 0,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "label",
+                  "conversation_count"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "conversation_count"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^conversation_topics_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "label_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "window_from": {
+        "type": "integer"
+      },
+      "window_to": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "label_language",
+      "window_from",
+      "window_to"
+    ],
+    "type": "object"
+  }
+}

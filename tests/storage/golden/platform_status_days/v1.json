@@ -1,0 +1,15 @@
+{
+  "components": [
+    {
+      "check_count": 1,
+      "component": "chat",
+      "degraded_count": 1,
+      "outage_count": 1,
+      "worst_level": "operational"
+    }
+  ],
+  "created_at": 1790000000000000,
+  "day": "2026-09-21",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

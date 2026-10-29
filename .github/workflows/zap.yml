@@ -1,0 +1,174 @@
+name: ZAP baseline
+
+# A dynamic scan of the running stack for every release candidate: each push
+# to main (Render deploys a commit only once all of its checks passed, and
+# `release` only ever moves to commits of main, so a red scan holds the
+# release back), weekly for ZAP's newer rules, and on pull requests that
+# change the scan itself.
+#
+# docker compose starts Postgres, the migrations, the API and the cabinet
+# (.zap/docker-compose.zap.yml: scripted model, providers offline) and
+# `workshop seed-load` stores one business whose owner's bearer token is the
+# seeded token of the API scan. ZAP's packaged baseline scans read and never
+# attack:
+#   - the cabinet's public site and sign-in (http://localhost:3000/);
+#   - the business's hosted chat page (/c/{slug}), with the AJAX spider;
+#   - the website widget on the API's demo page (/widget/demo), likewise;
+#   - every read-only operation of /v1 (scripts/zap_api_definition.py) with
+#     the owner's token.
+# scripts/zap_gate.py then fails the job on any Medium or High finding that
+# .zap/rules.tsv has not reviewed (SECURITY.md, "Dynamic scan"), and
+# scripts/zap_auth_check.py when the /v1 scan was not signed in. A commit
+# that automerge.yml merges pushes no event: automerge starts this workflow
+# on main itself.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - .zap/**
+      - .github/workflows/zap.yml
+      - scripts/zap_*.py
+  schedule:
+    - cron: "41 3 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zap-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release);
+# the ZAP image is pinned by digest (2.17.0, the `stable` of 2026-10).
+env:
+  ZAP_IMAGE: ghcr.io/zaproxy/zaproxy:2.17.0@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6
+  COMPOSE_FILE: docker-compose.yml:.zap/docker-compose.zap.yml
+  UV_FROZEN: "1"
+
+jobs:
+  baseline:
+    name: ZAP baseline (cabinet, hosted chat, widget, API)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.14"
+
+      - name: Start Postgres, the migrations, the API and the cabinet
+        run: |
+          docker compose up --detach --build --wait api web
+          timeout 120 bash -c 'until curl --silent --fail --output /dev/null http://localhost:3000/login; do sleep 2; done'
+
+      # The owner's token never reaches the log (masked) or an output: it
+      # stays in a file of this runner that only the API scan reads.
+      - name: Seed a business and its owner
+        id: seed
+        run: |
+          umask 077
+          docker compose run --rm --no-deps -T api seed-load \
+            --businesses 1 --messages 300 --bookings 30 --visitors 2 \
+            --manifest - > "$RUNNER_TEMP/seed-manifest.json"
+          token="$(jq -r '.businesses[0].owner_access_token' "$RUNNER_TEMP/seed-manifest.json")"
+          echo "::add-mask::$token"
+          printf '%s' "$token" > "$RUNNER_TEMP/owner-token"
+          business_id="$(jq -r '.businesses[0].business_id' "$RUNNER_TEMP/seed-manifest.json")"
+          slug="$(curl --silent --show-error --fail \
+            --header "Authorization: Bearer $token" \
+            "http://localhost:8000/v1/businesses/$business_id/share-links" | jq -r '.slug')"
+          if [ -z "$business_id" ] || [ "$business_id" = null ] || [ -z "$slug" ] || [ "$slug" = null ]; then
+            echo "::error::Seeding gave no business or no chat page address."
+            exit 1
+          fi
+          echo "business_id=$business_id" >> "$GITHUB_OUTPUT"
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
+      # ZAP runs as its own user (uid 1000) and writes its reports here.
+      - name: Prepare the scans' folder
+        env:
+          BUSINESS_ID: ${{ steps.seed.outputs.business_id }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/zap"
+          cp .zap/rules.tsv "$RUNNER_TEMP/zap/rules.tsv"
+          cp scripts/zap_status_hook.py "$RUNNER_TEMP/zap/zap_status_hook.py"
+          uv run --no-project python -m scripts.zap_api_definition web/openapi.json \
+            --server http://localhost:8000 --business-id "$BUSINESS_ID" \
+            > "$RUNNER_TEMP/zap/api-definition.json"
+          chmod -R a+rwX "$RUNNER_TEMP/zap"
+
+      # Exit codes 0-2 of a packaged scan (passed, FAIL rules, warnings)
+      # leave the verdict to the gate; above 2 the scan did not finish.
+      - name: Baseline scans
+        env:
+          BUSINESS_ID: ${{ steps.seed.outputs.business_id }}
+          SLUG: ${{ steps.seed.outputs.slug }}
+        run: |
+          scan() {
+            local name="$1"
+            shift
+            local status=0
+            docker run --rm --network host \
+              --volume "$RUNNER_TEMP/zap:/zap/wrk:rw" \
+              --env ZAP_AUTH_HEADER_VALUE --env ZAP_AUTH_HEADER_SITE \
+              "$ZAP_IMAGE" "$@" -c rules.tsv -J "$name.json" -r "$name.html" -I || status=$?
+            if [ "$status" -gt 2 ] || [ ! -s "$RUNNER_TEMP/zap/$name.json" ]; then
+              echo "::error::The $name scan did not finish (ZAP exit code $status)."
+              return 1
+            fi
+          }
+          failed=0
+          scan cabinet zap-baseline.py -t http://localhost:3000/ -m 3 || failed=1
+          scan hosted-chat zap-baseline.py -t "http://localhost:3000/c/$SLUG" -j -m 2 || failed=1
+          scan widget zap-baseline.py -t "http://localhost:8000/widget/demo?business_id=$BUSINESS_ID" -j -m 2 || failed=1
+          # ZAP adds the header to requests whose host name contains the site;
+          # the hook records every answer's status (api-statuses.json).
+          ZAP_AUTH_HEADER_VALUE="Bearer $(cat "$RUNNER_TEMP/owner-token")" ZAP_AUTH_HEADER_SITE=localhost \
+            scan api zap-api-scan.py -t api-definition.json -f openapi -S \
+            --hook=/zap/wrk/zap_status_hook.py || failed=1
+          exit "$failed"
+
+      - name: New Medium or High findings fail (reviewed rules in .zap/rules.tsv)
+        if: ${{ !cancelled() && steps.seed.outcome == 'success' }}
+        run: >-
+          uv run --no-project python -m scripts.zap_gate
+          --rules .zap/rules.tsv --summary "$GITHUB_STEP_SUMMARY"
+          "$RUNNER_TEMP/zap/cabinet.json" "$RUNNER_TEMP/zap/hosted-chat.json"
+          "$RUNNER_TEMP/zap/widget.json" "$RUNNER_TEMP/zap/api.json"
+
+      # A scan whose bearer header never reached the API would pass on 401
+      # answers alone: the seeded business's routes must have answered 2xx.
+      - name: The /v1 scan was signed in as the seeded owner
+        if: ${{ !cancelled() && steps.seed.outcome == 'success' }}
+        run: >-
+          uv run --no-project python -m scripts.zap_auth_check
+          --summary "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/zap/api-statuses.json"
+
+      - name: Keep the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: zap-reports
+          path: |
+            ${{ runner.temp }}/zap/*.html
+            ${{ runner.temp }}/zap/cabinet.json
+            ${{ runner.temp }}/zap/hosted-chat.json
+            ${{ runner.temp }}/zap/widget.json
+            ${{ runner.temp }}/zap/api.json
+            ${{ runner.temp }}/zap/api-statuses.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Service logs
+        if: ${{ failure() }}
+        run: docker compose logs --no-color --tail 300 api web
+
+      - name: Stop
+        if: ${{ always() }}
+        run: docker compose down --volumes

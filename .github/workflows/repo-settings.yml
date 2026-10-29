@@ -1,0 +1,77 @@
+name: Repository settings
+
+# The settings the project's security relies on but no file holds: the
+# default branch's protection (pull requests only, the required checks, no
+# force push, no deletion), private vulnerability reporting and Dependabot
+# security updates. Every day this reads them with `gh api` and fails when
+# one is off or weaker than .github/repository-settings.json
+# (scripts/check_repository_settings.py; SECURITY.md, "Repository
+# settings"). A missing, expired or too weak token fails as well: a check
+# that cannot read the settings proves nothing. schedule-watch.yml opens an
+# issue when this has not succeeded for 8 days.
+on:
+  schedule:
+    # 05:23 UTC every day.
+    - cron: "23 5 * * *"
+  push:
+    branches: [main]
+    paths:
+      - .github/repository-settings.json
+      - .github/workflows/repo-settings.yml
+      - scripts/check_repository_settings.py
+      - scripts/repository_settings.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-settings
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Branch protection, private vulnerability reporting, Dependabot security updates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.14"
+
+      # The workflow's own token cannot read these settings: a fine-grained
+      # token of this repository only, with "Administration: Read-only"
+      # (nothing it can change), kept as the secret REPO_SETTINGS_TOKEN.
+      - name: Read the settings
+        env:
+          GH_TOKEN: ${{ secrets.REPO_SETTINGS_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::The secret REPO_SETTINGS_TOKEN is not set: the settings cannot be read (SECURITY.md, \"Repository settings\")."
+            exit 1
+          fi
+          responses="$RUNNER_TEMP/settings"
+          mkdir -p "$responses"
+          # --include keeps the HTTP status: gh exits non-zero on a 404, the
+          # answer of a branch without protection; the checker reads it.
+          fetch() {
+            gh api --include "repos/${GITHUB_REPOSITORY}/$2" > "$responses/$1.http" || true
+          }
+          for branch in $(jq -r '.branches | keys[]' .github/repository-settings.json); do
+            fetch "protection-$branch" "branches/$branch/protection"
+            fetch "rules-$branch" "rules/branches/$branch"
+          done
+          fetch reporting private-vulnerability-reporting
+          fetch security-fixes automated-security-fixes
+
+      - name: Every setting as expected (.github/repository-settings.json)
+        run: >-
+          uv run --no-project python -m scripts.check_repository_settings
+          --expected .github/repository-settings.json
+          --responses "$RUNNER_TEMP/settings"
+          --summary "$GITHUB_STEP_SUMMARY"

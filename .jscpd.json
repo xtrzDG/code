@@ -1,0 +1,15 @@
+{
+  "minLines": 8,
+  "format": ["python", "javascript", "typescript", "tsx"],
+  "path": ["."],
+  "pattern": "{app,scripts,web/src}/**/*.{py,js,ts,tsx}",
+  "ignore": [
+    "app/containers/**",
+    "web/src/api/schema.d.ts",
+    "web/src/**/*.generated.ts",
+    "web/src/i18n/messages/**"
+  ],
+  "reporters": ["console", "json"],
+  "output": ".jscpd-report",
+  "threshold": 1.36
+}

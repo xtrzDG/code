@@ -1,0 +1,11 @@
+{
+  "business_id": "business_8d6ce3dc-3747-4a47-af6e-f69fb62703f9",
+  "created_at": 1790000000000000,
+  "id": "call_settings_947eaa5b-1aca-5db4-83a7-ef13e522b84e",
+  "is_sms_fallback_enabled": true,
+  "is_summary_enabled": true,
+  "is_text_back_enabled": true,
+  "schema_version": "1",
+  "text_back_template_name": "booking_reminder",
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,43 @@
+{
+  "autotest_run_id": "autotest_run_b7758b79-2ad1-46ce-998d-a3be92dc8513",
+  "autotest_verdict": {
+    "average_score": 3.0,
+    "finished_at": 1790000000000000,
+    "is_full_coverage": true,
+    "is_passed": true,
+    "passed_count": 1,
+    "run_id": "autotest_run_1d4dc70e-9b81-4bc0-8654-45d01f20321f",
+    "scenario_count": 1
+  },
+  "business_id": "business_1dccafab-d6f2-44f3-bb37-a4ccdffd13ae",
+  "created_at": 1790000000000000,
+  "default_language": "ka",
+  "discarded_at": 1790000000000000,
+  "facts": [
+    {
+      "key": "opening_hours",
+      "label": "Sample FactLabel",
+      "value": "Sample FactValue"
+    }
+  ],
+  "id": "assistant_version_dc6ea763-cfea-4d6f-a568-6080d8d547d4",
+  "is_voice_enabled": true,
+  "languages": [
+    "ka"
+  ],
+  "model_id": "gpt-5-mini",
+  "niche_key": "restaurant",
+  "phone_prompt_text": "Sample SystemPromptText",
+  "profile_revision": 1790000000000000,
+  "prompt_text": "Sample SystemPromptText",
+  "published_at": 1790000000000000,
+  "schema_version": "4",
+  "status": "draft",
+  "test_score": 3.0,
+  "tools": [
+    "search_knowledge"
+  ],
+  "updated_at": 1790000000000000,
+  "version_number": 1,
+  "voice_agent_id": "Sample VoiceAgentId"
+}

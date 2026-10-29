@@ -1,0 +1,48 @@
+{
+  "collection": "invoice_counters",
+  "document_type": "InvoiceCounterDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "maxLength": 15,
+        "minLength": 6,
+        "pattern": "^[A-Z0-9]{1,10}:[0-9]{4}$",
+        "type": "string"
+      },
+      "last_number": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "series": {
+        "maxLength": 10,
+        "minLength": 1,
+        "pattern": "^[A-Z0-9]{1,10}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "year": {
+        "maximum": 9999,
+        "minimum": 2000,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "series",
+      "year",
+      "last_number"
+    ],
+    "type": "object"
+  }
+}

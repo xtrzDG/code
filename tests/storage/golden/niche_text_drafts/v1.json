@@ -1,0 +1,14 @@
+{
+  "created_at": 1790000000000000,
+  "entries": [
+    {
+      "field_key": "questions.cuisine.label",
+      "language": "ka",
+      "text": "Какая у вас кухня?"
+    }
+  ],
+  "niche_key": "restaurant",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "updated_by": "user_d8c8fb39-1ec7-4f47-8377-6db3f9656e76"
+}

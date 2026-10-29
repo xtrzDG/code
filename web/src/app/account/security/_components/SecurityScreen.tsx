@@ -1,0 +1,109 @@
+"use client";
+
+/**
+ * Account → Security: passkeys, the authenticator app, recovery codes,
+ * this session and every signed-in device; the certificates of deleted
+ * businesses and deleting the account (the danger zone). The page keeps the latest `GET /v1/me/security` and
+ * reads it again after every change; each card does its own requests
+ * (sensitive ones may first ask to confirm with a code: the step-up dialog
+ * is global).
+ */
+
+import Link from "next/link";
+import { useState } from "react";
+
+import { api } from "@/api/client";
+import { unwrap } from "@/api/result";
+import type {
+  AccountSecurityView,
+  CurrentUserView,
+  PasskeyListView,
+} from "@/api/types";
+import { IconArrowLeft } from "@/components/icons";
+import { Alert, ButtonLink, PageHeader } from "@/components/ui";
+import { useI18n } from "@/i18n/client";
+import { HOME_PATH, type SecurityReason } from "@/lib/navigation";
+
+import { AuthenticatorCard } from "./AuthenticatorCard";
+import { DeleteAccountCard } from "./DeleteAccountCard";
+import { DeletedBusinessesCard } from "./DeletedBusinessesCard";
+import { DevicesCard } from "./DevicesCard";
+import { PasskeysCard } from "./PasskeysCard";
+import { RecoveryCodesCard } from "./RecoveryCodesCard";
+import { SessionCard } from "./SessionCard";
+
+export function SecurityScreen({
+  me,
+  initial,
+  passkeys,
+  reason,
+  next,
+}: {
+  me: CurrentUserView;
+  initial: AccountSecurityView;
+  passkeys: PasskeyListView;
+  reason: SecurityReason | null;
+  next: string | null;
+}) {
+  const { t } = useI18n();
+  const [security, setSecurity] = useState(initial);
+  const account = me.user.email ?? me.user.phone_number ?? "";
+
+  const refresh = async () => {
+    setSecurity(await unwrap(api.GET("/v1/me/security")));
+  };
+
+  const isTwoFactor = security.auth_level === "two_factor";
+  // Recovery codes stand in for any second factor: the app or a passkey.
+  const hasSecondFactor =
+    security.totp_status === "active" || security.passkey_count > 0;
+
+  return (
+    <div className="space-y-6">
+      <Link
+        href={HOME_PATH}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink"
+      >
+        <IconArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
+        {t("security.back")}
+      </Link>
+      <PageHeader
+        title={t("security.title")}
+        description={t("security.description")}
+      />
+      {reason ? (
+        <Alert tone={isTwoFactor ? "success" : "warning"}>
+          <p>
+            {t(
+              reason === "admin"
+                ? "security.required.admin"
+                : "security.required.business",
+            )}
+          </p>
+          {isTwoFactor && next ? (
+            <ButtonLink href={next} size="sm" className="mt-3">
+              {t("security.required.continue")}
+            </ButtonLink>
+          ) : null}
+        </Alert>
+      ) : null}
+      <PasskeysCard initial={passkeys} account={account} onChanged={refresh} />
+      <AuthenticatorCard
+        security={security}
+        account={account}
+        onChanged={refresh}
+      />
+      {hasSecondFactor ? (
+        <RecoveryCodesCard
+          left={security.recovery_codes_left ?? 0}
+          account={account}
+          onChanged={refresh}
+        />
+      ) : null}
+      <SessionCard security={security} onChanged={refresh} />
+      <DevicesCard isPlatformAdmin={me.user.is_platform_admin} />
+      <DeletedBusinessesCard />
+      <DeleteAccountCard me={me} account={account} />
+    </div>
+  );
+}

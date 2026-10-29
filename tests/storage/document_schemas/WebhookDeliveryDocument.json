@@ -1,0 +1,181 @@
+{
+  "collection": "webhook_deliveries",
+  "document_type": "WebhookDeliveryDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "attempts": {
+        "default": 0,
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "contact_id": {
+        "anyOf": [
+          {
+            "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "delivered_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "endpoint_id": {
+        "pattern": "^webhook_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "event_id": {
+        "pattern": "^event_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "event_type": {
+        "enum": [
+          "booking.created",
+          "booking.updated",
+          "booking.cancelled",
+          "lead.created",
+          "lead.updated",
+          "handoff.created",
+          "handoff.resolved",
+          "conversation.started",
+          "call.finished",
+          "webhook.test"
+        ],
+        "type": "string"
+      },
+      "expires_at": {
+        "type": "integer"
+      },
+      "give_up_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^webhook_delivery_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_test": {
+        "default": false,
+        "type": "boolean"
+      },
+      "last_attempt_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_error": {
+        "anyOf": [
+          {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_problem": {
+        "anyOf": [
+          {
+            "enum": [
+              "not_public",
+              "unknown_host",
+              "connection_failed",
+              "timeout",
+              "request_failed",
+              "http_status",
+              "gone",
+              "endpoint_off"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_status_code": {
+        "anyOf": [
+          {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "next_attempt_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "payload": {
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "default": "pending",
+        "enum": [
+          "pending",
+          "delivered",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "endpoint_id",
+      "event_id",
+      "event_type",
+      "payload",
+      "give_up_at",
+      "expires_at"
+    ],
+    "type": "object"
+  }
+}

@@ -4,8 +4,26 @@ Example:
     is_sandbox: IsSandboxConversation = False
 """
 
+AwaitsImprovement = bool
+CanTextCaller = bool
+# The turn's user message carries the customer memory (the first reply).
+CarriesCustomerMemory = bool
+IncludeSandboxConversations = bool
+IsAfterHours = bool
+IsAnswerCorrected = bool
+# The caller declined the call's recording (all-party consent countries).
+IsCallRecordingDeclined = bool
 IsConversationHandedOff = bool
+IsFallbackModel = bool
+IsFirstAssistantReply = bool
 IsLlmToolError = bool
+IsNewConversation = bool
+IsRecordingArchiveEnabled = bool
+IsRecordingArchiveScheduled = bool
+IsReplyDeferred = bool
 IsSandboxConversation = bool
+IsStaffReplyAvailable = bool
+SendAsTemplate = bool
 ShouldEndCall = bool
+StartsRecordingPlayback = bool
 # Keep abc order for all non example types, if possible.

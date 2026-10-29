@@ -1,0 +1,48 @@
+{
+  "collection": "client_notes",
+  "document_type": "ClientNoteDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "author_user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^client_note_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_pinned": {
+        "default": false,
+        "type": "boolean"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "text": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "pattern": "^\\S[\\s\\S]*$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "author_user_id",
+      "text"
+    ],
+    "type": "object"
+  }
+}

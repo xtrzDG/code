@@ -1,0 +1,18 @@
+{
+  "business_id": "business_50024b87-e376-47ab-96d7-41ff7402a57d",
+  "channel_identities": [
+    {
+      "channel": "phone",
+      "channel_user_id": "Sample ChannelUserId"
+    }
+  ],
+  "created_at": 1790000000000000,
+  "erased_at": 1790000000000000,
+  "id": "contact_9504a7a8-3010-4e4f-9528-a18ff0a0ea1e",
+  "language": "ka",
+  "name": "Sample ContactName",
+  "phone_number": "+995599123456",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "verified_phone_number": "+995599123456"
+}

@@ -1,7 +1,15 @@
 # AGENTS.md instructions
 
 To work in this local environment, first call `uv run prompt_forge agent_help`
-and follow its loading rules.
+and follow its loading rules. If `prompt_forge` is not installed (for example in
+a cloud session), skip this step.
+
+Project documents to read before changing code:
+
+- `docs/concept.md` — the product (AI front-line assistant for businesses).
+- `docs/architecture.md` — roles, bounded contexts, flows, i18n approach.
+- `docs/conventions.md` — implementation rules every module follows.
+- `docs/PLAN.md` — the working checklist.
 
 ## Domain primitives
 

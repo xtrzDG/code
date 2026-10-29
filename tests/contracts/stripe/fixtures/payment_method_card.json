@@ -1,0 +1,16 @@
+{
+  "id": "pm_test_0002",
+  "object": "payment_method",
+  "type": "card",
+  "card": {
+    "brand": "mastercard",
+    "country": "IT",
+    "exp_month": 4,
+    "exp_year": 2031,
+    "funding": "credit",
+    "last4": "4444",
+    "networks": {"available": ["mastercard"], "preferred": null}
+  },
+  "customer": "cus_test_0001",
+  "livemode": false
+}

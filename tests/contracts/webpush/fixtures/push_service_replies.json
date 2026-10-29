@@ -1,0 +1,171 @@
+{
+  "source": "RFC 8030 sections 5, 7.2 and 8.4; Mozilla autopush error table; Apple's web push page. Expected is the error the delivery flow receives (null: delivered).",
+  "cases": [
+    {
+      "id": "rfc8030-created",
+      "status": 201,
+      "headers": {
+        "Location": "https://push.example.net/message/qDIYHNcfAIPP_5ITvURr-d6BGtYnTRnk",
+        "TTL": "86400"
+      },
+      "body": null,
+      "expected": null,
+      "retry_after": null
+    },
+    {
+      "id": "apple-created",
+      "status": 201,
+      "headers": {
+        "apns-id": "eabeae54-14a8-11e5-b60b-1697f925ec7b"
+      },
+      "body": null,
+      "expected": null,
+      "retry_after": null
+    },
+    {
+      "id": "autopush-expired-subscription",
+      "status": 410,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "code": 410,
+        "errno": 103,
+        "error": "Gone",
+        "message": "Request did not validate Subscription is no longer valid",
+        "more_info": "http://autopush.readthedocs.io/en/latest/http.html#error-codes"
+      },
+      "expected": "PushSubscriptionGoneError",
+      "retry_after": null
+    },
+    {
+      "id": "autopush-invalid-endpoint",
+      "status": 404,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "code": 404,
+        "errno": 102,
+        "error": "Not Found",
+        "message": "Request did not validate invalid token",
+        "more_info": "http://autopush.readthedocs.io/en/latest/http.html#error-codes"
+      },
+      "expected": "PushSubscriptionGoneError",
+      "retry_after": null
+    },
+    {
+      "id": "autopush-payload-too-large",
+      "status": 413,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "code": 413,
+        "errno": 104,
+        "error": "Payload Too Large",
+        "message": "This message is intended for a constrained device and is limited to 3070 bytes. Converted buffer too long by 18 bytes",
+        "more_info": "http://autopush.readthedocs.io/en/latest/http.html#error-codes"
+      },
+      "expected": "ProviderRejectedMessageError",
+      "retry_after": null
+    },
+    {
+      "id": "autopush-back-off",
+      "status": 503,
+      "headers": {
+        "Content-Type": "application/json",
+        "Retry-After": "60"
+      },
+      "body": {
+        "code": 503,
+        "errno": 201,
+        "error": "Service Unavailable",
+        "message": "Please slow message send rate",
+        "more_info": "http://autopush.readthedocs.io/en/latest/http.html#error-codes"
+      },
+      "expected": "ExternalServiceError",
+      "retry_after": null
+    },
+    {
+      "id": "fcm-credentials-of-another-key",
+      "status": 403,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8"
+      },
+      "body": "the key in the authorization header does not correspond to the sender ID used to subscribe this user. Please ensure you are using the correct sender ID and server key from the Firebase console.\n",
+      "expected": "PushSubscriptionGoneError",
+      "retry_after": null
+    },
+    {
+      "id": "fcm-unsubscribed",
+      "status": 410,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8"
+      },
+      "body": "push subscription has unsubscribed or expired.\n",
+      "expected": "PushSubscriptionGoneError",
+      "retry_after": null
+    },
+    {
+      "id": "apple-unregistered",
+      "status": 410,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "reason": "Unregistered",
+        "timestamp": 1790000000000
+      },
+      "expected": "PushSubscriptionGoneError",
+      "retry_after": null
+    },
+    {
+      "id": "apple-bad-topic",
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "reason": "BadWebPushTopic"
+      },
+      "expected": "ProviderRejectedMessageError",
+      "retry_after": null
+    },
+    {
+      "id": "apple-too-many-requests",
+      "status": 429,
+      "headers": {
+        "Content-Type": "application/json",
+        "Retry-After": "120"
+      },
+      "body": {
+        "reason": "TooManyRequests"
+      },
+      "expected": "ProviderRateLimitedError",
+      "retry_after": 120
+    },
+    {
+      "id": "rfc8030-too-many-requests-date",
+      "status": 429,
+      "headers": {
+        "Retry-After": "Wed, 07 Oct 2026 07:28:00 GMT"
+      },
+      "body": null,
+      "expected": "ProviderRateLimitedError",
+      "retry_after": null
+    },
+    {
+      "id": "apple-internal-error",
+      "status": 500,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "reason": "InternalServerError"
+      },
+      "expected": "ExternalServiceError",
+      "retry_after": null
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "collection": "platform_monitors",
+  "document_type": "PlatformMonitorDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "checked_at": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "holder": {
+        "anyOf": [
+          {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]*\\Z",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "lease_until": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "monitor": {
+        "enum": [
+          "alert_checks",
+          "pipeline_watchdog"
+        ],
+        "type": "string"
+      },
+      "release": {
+        "anyOf": [
+          {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "monitor",
+      "checked_at"
+    ],
+    "type": "object"
+  }
+}

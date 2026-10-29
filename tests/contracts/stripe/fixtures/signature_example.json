@@ -1,0 +1,6 @@
+{
+  "secret": "whsec_test_0000",
+  "timestamp": 1792479600,
+  "payload": "{\"id\":\"evt_test_sig_0001\",\"type\":\"invoice.paid\",\"created\":1792479600,\"data\":{\"object\":{\"id\":\"in_test_sig\"}}}",
+  "header": "t=1792479600,v1=098dcdd9477d465d5736874ea87a081242ae3fa953da01dec3877b180941c527,v0=0000"
+}

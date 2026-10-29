@@ -1,0 +1,273 @@
+/*
+ * A guest's booking page (/r/{token}): a page for a business's customers,
+ * not the cabinet. Like the hosted chat page it follows the visitor's
+ * system colours, not the cabinet's theme cookie (data-color-scheme=
+ * "system" declares the design tokens of globals.css again on the page).
+ * Phones: a card with the page's 16px gutter; wider screens: the same
+ * card, centred.
+ */
+
+.bp-page {
+  min-height: 100dvh;
+  padding: 16px 16px 40px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Noto Sans",
+    "Noto Sans Georgian",
+    "Noto Sans Armenian",
+    "Noto Sans Hebrew",
+    "Noto Sans Arabic",
+    sans-serif;
+  line-height: 1.45;
+}
+
+.bp-card {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 22px 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.bp-head {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.bp-business {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bp-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.bp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bp-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bp-status[data-status="confirmed"] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-status[data-status="pending"] {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+/* Empty, the live region stays in place for screen readers but takes no room. */
+.bp-messages:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.bp-messages {
+  display: grid;
+  gap: 8px;
+  outline: none;
+}
+
+.bp-notice,
+.bp-problem {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  animation: bp-appear 0.24s ease-out;
+}
+
+.bp-notice {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-notice-quiet {
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+}
+
+.bp-problem {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@keyframes bp-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.bp-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin: 0;
+}
+
+.bp-fact {
+  min-width: 0;
+}
+
+.bp-fact-when,
+.bp-fact-wide {
+  grid-column: 1 / -1;
+}
+
+.bp-fact dt {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.bp-fact dd {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bp-fact-when dd {
+  font-size: 19px;
+  line-height: 1.3;
+}
+
+.bp-time {
+  color: var(--accent-ink);
+}
+
+.bp-link {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.bp-section,
+.bp-panel {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.bp-section h2,
+.bp-panel h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.bp-section p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.bp-problem-page {
+  justify-items: center;
+  text-align: center;
+}
+
+.bp-problem-page .bp-title {
+  font-size: 22px;
+}
+
+.bp-problem-page p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15.5px;
+}
+
+.bp-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-mark svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (min-width: 640px) {
+  .bp-page {
+    padding: 48px 24px 64px;
+  }
+
+  .bp-card {
+    gap: 24px;
+    padding: 32px 32px 30px;
+    border-radius: 24px;
+  }
+
+  .bp-title {
+    font-size: 30px;
+  }
+
+  .bp-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-notice,
+  .bp-problem {
+    animation: none;
+  }
+}

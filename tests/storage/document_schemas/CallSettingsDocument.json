@@ -1,0 +1,59 @@
+{
+  "collection": "call_settings",
+  "document_type": "CallSettingsDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^call_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_sms_fallback_enabled": {
+        "default": true,
+        "type": "boolean"
+      },
+      "is_summary_enabled": {
+        "default": true,
+        "type": "boolean"
+      },
+      "is_text_back_enabled": {
+        "default": false,
+        "type": "boolean"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "text_back_template_name": {
+        "anyOf": [
+          {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]{1,512}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

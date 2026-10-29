@@ -1,0 +1,70 @@
+/*
+ * The spot illustrations' gentle life (src/components/illustrations):
+ * a part floats, a conversation drifts, a glint twinkles, a lit slot
+ * breathes. Transforms and opacity only (composited, no repaint), each on
+ * its own box. Imported by src/app/globals.css; reduced motion (the
+ * device's or the cabinet's own) ends every animation at once, so the
+ * pictures simply stand still.
+ */
+
+.aw-illustration {
+  overflow: visible;
+}
+
+.aw-illustration .aw-float,
+.aw-illustration .aw-drift,
+.aw-illustration .aw-twinkle,
+.aw-illustration .aw-beat {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.aw-illustration .aw-float {
+  animation: aw-illustration-float 5.6s var(--ease-standard) infinite alternate;
+}
+
+.aw-illustration .aw-drift {
+  animation: aw-illustration-drift 7.2s ease-in-out infinite alternate;
+}
+
+.aw-illustration .aw-twinkle {
+  animation: aw-illustration-twinkle 3.2s ease-in-out infinite;
+}
+
+.aw-illustration .aw-beat {
+  animation: aw-illustration-beat 2.8s ease-in-out infinite;
+}
+
+@keyframes aw-illustration-float {
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes aw-illustration-drift {
+  to {
+    transform: translate(3px, -2px);
+  }
+}
+
+@keyframes aw-illustration-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes aw-illustration-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}

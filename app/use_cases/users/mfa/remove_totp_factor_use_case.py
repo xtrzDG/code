@@ -1,0 +1,73 @@
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.mfa_repositories import (
+    RecoveryCodeRepoContract,
+    TotpFactorRepoContract,
+)
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
+from app.contracts.repositories.user_repositories import UserSessionRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.domain.mfa import TotpFactorDocument
+from app.schemas.dto.mfa import MfaChangeCommand
+from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.users.mfa.factor_removal import settle_factor_removal
+from app.use_cases.users.mfa.mfa_records import TOTP_FACTOR_ENTITY
+
+
+class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
+    """
+    The person removes their authenticator (a new phone, a lost app),
+    after confirming it is them (step-up). While a passkey of theirs is
+    left, it remains their second factor and nothing else changes.
+    Otherwise its recovery codes go with it, and every session of theirs
+    (this one and those on other devices) counts as one factor again, so
+    no session keeps two-factor rights the person can no longer prove. The
+    change is audited as MFA_CHANGED with how many sessions were lowered. A
+    platform admin left without a second factor is asked to set one up at
+    their next sign-in; until then the admin pages refuse all their
+    sessions.
+    """
+
+    def __init__(
+        self,
+        totp_factor_repo: TotpFactorRepoContract,
+        recovery_code_repo: RecoveryCodeRepoContract,
+        user_session_repo: UserSessionRepoContract,
+        step_up: StepUpGuardContract,
+        audit_log_repo: AuditLogRepoContract,
+        wall_clock: WallClock[Microseconds],
+        passkey_repo: PasskeyRepoContract,
+    ) -> None:
+        self._passkey_repo: PasskeyRepoContract = passkey_repo
+        self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
+        self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
+        self._user_session_repo: UserSessionRepoContract = user_session_repo
+        self._step_up: StepUpGuardContract = step_up
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: MfaChangeCommand) -> None:
+        factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(
+            input_data.user_id
+        )
+        if factor is None:
+            raise NotFoundError("No authenticator is set up.")
+
+        self._step_up.require_recent_authentication()
+        now: Microseconds = self._wall_clock.now_unix()
+        self._totp_factor_repo.delete_for_user(input_data.user_id)
+        has_passkey: bool = (
+            int(self._passkey_repo.count_for_user(input_data.user_id)) > 0
+        )
+        settle_factor_removal(
+            recovery_code_repo=self._recovery_code_repo,
+            user_session_repo=self._user_session_repo,
+            audit_log_repo=self._audit_log_repo,
+            user_id=input_data.user_id,
+            entity=TOTP_FACTOR_ENTITY,
+            client_ip_address=input_data.client_ip_address,
+            now=now,
+            has_factor_left=has_passkey,
+        )

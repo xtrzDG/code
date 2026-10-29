@@ -1,0 +1,8 @@
+{
+  "response": {
+    "response_status": "failure",
+    "error_message": "Parameter `amount` is incorrect",
+    "error_code": 1013,
+    "request_id": "flitt-request-0000"
+  }
+}

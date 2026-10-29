@@ -1,0 +1,20 @@
+# The phone assistant's voice platform (ElevenLabs) fails. Two signals,
+# either fires the alert:
+# - more than 2 calls of its API failed in the last 15 to 30 minutes
+#   (setting up agents, playing, archiving and deleting recordings,
+#   erasures), counted by every process in the shared rate-limit buckets
+#   (platform signals voice_api_call, voice_api_error);
+# - no finished-call report arrived in the last 3 hours, while each of the
+#   7 days before had at least 3 in the same hours (the post-call webhook
+#   stopped, or calls stopped reaching the agents). Asking every one of the
+#   7 days keeps a quiet weekday or a closed Sunday from paging.
+code: voice_health
+severity: sev2
+summary: The phone assistant's voice platform fails its API calls, or its finished calls stopped while the week before expects them.
+measure: failed voice platform API calls; finished-call reports of the last 3 hours against the same hours of each of the 7 days before
+threshold: 2
+unit: count
+window_minutes: 15
+volume_floor: 3
+source: rate_limit_buckets (platform-signal:voice_api_call, platform-signal:voice_api_error); inbound_events (doc_created_at), migration 1020, phone channel
+runbook: docs/operations/runbooks/voice-outage.md

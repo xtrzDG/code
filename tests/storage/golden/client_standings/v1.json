@@ -1,0 +1,19 @@
+{
+  "business_id": "business_9e874bf0-2fe9-4f31-8eb6-f3bb707a9c92",
+  "business_status": "onboarding",
+  "cost_position": 1,
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "health_position": 1,
+  "health_status": "healthy",
+  "is_losing_money": true,
+  "margin_position": 1,
+  "name": "Sample BusinessName",
+  "name_position": 1,
+  "niche_key": "restaurant",
+  "revenue_position": 1,
+  "schema_version": "1",
+  "summary": "Sample ClientSummarySnapshot",
+  "updated_at": 1790000000000000,
+  "usage_position": 1
+}

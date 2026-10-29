@@ -1,0 +1,12 @@
+{
+  "address": "12 Rustaveli Ave, 0108 Tbilisi",
+  "billing_email": "owner@example.com",
+  "business_id": "business_b1264c21-4c15-49c9-a151-ff6e3d223dec",
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "id": "billing_profile_9444b1b2-3e59-5ae1-9854-8ca97db25665",
+  "legal_name": "Mtsvane Ezo LLC",
+  "schema_version": "1",
+  "tax_id": "405123456",
+  "updated_at": 1790000000000000
+}

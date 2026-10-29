@@ -1,0 +1,63 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer
+
+from app.containers.orchestrators.platform_orchestrators import (
+    PlatformOrchestratorsContainer,
+)
+from app.containers.provider_chains import orchestrator_pipeline
+
+
+class PlatformPipelinesContainer(containers.DeclarativeContainer):
+    """
+    Pipelines of the platform admin's client views and the LLM trace
+    flush job.
+    """
+
+    platform_orchestrators: PlatformOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    # --- Platform admin.
+    list_clients_pipeline = orchestrator_pipeline(
+        platform_orchestrators.list_clients_orchestrator
+    )
+    get_client_health_pipeline = orchestrator_pipeline(
+        platform_orchestrators.get_client_health_orchestrator
+    )
+    open_client_cabinet_pipeline = orchestrator_pipeline(
+        platform_orchestrators.open_client_cabinet_orchestrator
+    )
+
+    # --- Periodic job of the background worker.
+    flush_llm_traces_pipeline = orchestrator_pipeline(
+        platform_orchestrators.flush_llm_traces_orchestrator
+    )
+    purge_stale_rows_pipeline = orchestrator_pipeline(
+        platform_orchestrators.purge_stale_rows_orchestrator
+    )
+    refresh_client_standings_pipeline = orchestrator_pipeline(
+        platform_orchestrators.refresh_client_standings_orchestrator
+    )
+    sweep_rate_limit_buckets_pipeline = orchestrator_pipeline(
+        platform_orchestrators.sweep_rate_limit_buckets_orchestrator
+    )
+
+    # --- The job queue: the admin's dead letters and the purge job.
+    list_queued_jobs_pipeline = orchestrator_pipeline(
+        platform_orchestrators.list_queued_jobs_orchestrator
+    )
+    retry_queued_job_pipeline = orchestrator_pipeline(
+        platform_orchestrators.retry_queued_job_orchestrator
+    )
+    discard_queued_job_pipeline = orchestrator_pipeline(
+        platform_orchestrators.discard_queued_job_orchestrator
+    )
+    purge_finished_jobs_pipeline = orchestrator_pipeline(
+        platform_orchestrators.purge_finished_jobs_orchestrator
+    )
+
+    # --- Health and client errors.
+    check_readiness_pipeline = orchestrator_pipeline(
+        platform_orchestrators.check_readiness_orchestrator
+    )
+    report_widget_error_pipeline = orchestrator_pipeline(
+        platform_orchestrators.report_widget_error_orchestrator
+    )

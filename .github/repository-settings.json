@@ -1,0 +1,18 @@
+{
+  "branches": {
+    "main": {
+      "pull_request_required": true,
+      "required_approving_review_count": 0,
+      "required_status_checks": [
+        "CI passed (every gate)",
+        "Analyze (python)",
+        "Analyze (javascript-typescript)",
+        "OpenAPI breaking changes (oasdiff)"
+      ],
+      "force_pushes_blocked": true,
+      "deletions_blocked": true
+    }
+  },
+  "private_vulnerability_reporting": true,
+  "dependabot_security_updates": true
+}

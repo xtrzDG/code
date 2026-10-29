@@ -1,0 +1,34 @@
+{
+  "id": "msg_01contract0001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-5-5",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "",
+      "signature": "signature-0000"
+    },
+    {
+      "type": "text",
+      "text": "בודק..."
+    },
+    {
+      "type": "tool_use",
+      "id": "toolu_01contract0001",
+      "name": "check_availability",
+      "input": {
+        "date": "2026-10-05"
+      }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 120,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 880,
+    "output_tokens": 35,
+    "service_tier": "standard"
+  }
+}

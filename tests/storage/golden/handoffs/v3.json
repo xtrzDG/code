@@ -1,0 +1,22 @@
+{
+  "business_id": "business_00a15ac5-3543-4a55-aa6a-0b9860eaebef",
+  "contact_id": "contact_06a1dd72-1fdf-4d85-a59e-3e796bbde926",
+  "conversation_id": "conversation_d6754ff4-daf3-41f9-a80a-49e483d58a0c",
+  "created_at": 1790000000000000,
+  "flagged_values": [
+    "Sample UnverifiedReplyValue"
+  ],
+  "id": "handoff_c6b5da00-6557-443c-a74c-8e8a91e36b0d",
+  "is_sandbox": true,
+  "quoted_text": "Sample HandoffQuotedText",
+  "reason": "customer_request",
+  "resolved_at": 1790000000000000,
+  "resolved_by": "user_4923fc3a-8d4a-47b7-bad3-7e207d8ee6cf",
+  "schema_version": "3",
+  "status": "pending",
+  "status_before_resolve": "pending",
+  "summary": "Sample HandoffSummary",
+  "summary_code": "model_declined",
+  "updated_at": 1790000000000000,
+  "urgency": "low"
+}

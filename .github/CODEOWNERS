@@ -1,0 +1,31 @@
+# Reviewers requested automatically for changes to these paths. The last
+# matching line wins. With branch protection's "Require review from Code
+# Owners", these paths cannot merge without the owner's approval.
+#
+# One owner today; split the lines by team as the team grows.
+
+*                                   @xtrzDG
+
+# Security-sensitive: supply chain, CI, secrets handling, access control.
+/.github/                           @xtrzDG
+/SECURITY.md                        @xtrzDG
+/bandit-baseline.json               @xtrzDG
+/.gitleaksignore                    @xtrzDG
+/.trivyignore                       @xtrzDG
+/.importlinter                      @xtrzDG
+/vulture_whitelist.py               @xtrzDG
+/Dockerfile                         @xtrzDG
+/web/Dockerfile                     @xtrzDG
+/docker/                            @xtrzDG
+/render.yaml                        @xtrzDG
+/app/adapters/security/             @xtrzDG
+/app/gateways/http/user_authentication.py @xtrzDG
+/app/use_cases/authorize_business_access_use_case.py @xtrzDG
+/web/src/server/                    @xtrzDG
+
+# Data and contracts that other deployables depend on.
+/migrations/                        @xtrzDG
+/web/openapi.json                   @xtrzDG
+/docs/API_CHANGELOG.md              @xtrzDG
+/docs/api-versioning.md             @xtrzDG
+/docs/legal/                        @xtrzDG

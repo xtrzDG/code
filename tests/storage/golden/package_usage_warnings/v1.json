@@ -1,0 +1,11 @@
+{
+  "business_id": "business_31da1522-9139-485b-8aba-f36cbc21300a",
+  "created_at": 1790000000000000,
+  "id": "package_usage_warning_007585fd-cca9-4554-a070-c5729b0f46b7",
+  "metric": "voice_minutes",
+  "period_start": 1790000000000000,
+  "schema_version": "1",
+  "subscription_id": "subscription_64989bcb-0c91-4fe2-bcf7-8dd484dc6301",
+  "updated_at": 1790000000000000,
+  "usage_percent": 1
+}

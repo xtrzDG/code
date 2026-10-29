@@ -1,0 +1,46 @@
+import { describe, expect, it } from "vitest";
+
+import { dataTaskPercent, dataTaskTarget, dataTaskTone, splitDataTasks, type DataTask } from "./dataTasks";
+
+function task(key: string, status: DataTask["status"]): DataTask {
+  return { key, status } as DataTask;
+}
+
+describe("data tasks: what a task fills and how far it is", () => {
+  it("names the column of a backfill and the collection of a migration", () => {
+    expect(dataTaskTarget({ collection_name: "contacts", field: "last_seen_at" })).toBe("contacts.last_seen_at");
+    expect(dataTaskTarget({ collection_name: "contacts", field: null })).toBe("contacts");
+  });
+
+  it("measures the walk against the estimated rows, never 100 before the end", () => {
+    expect(dataTaskPercent({ status: "running", scanned_count: 2_500, row_estimate: 10_000 })).toBe(25);
+    expect(dataTaskPercent({ status: "running", scanned_count: 12_000, row_estimate: 10_000 })).toBe(99);
+    expect(dataTaskPercent({ status: "done", scanned_count: 0, row_estimate: null })).toBe(100);
+    expect(dataTaskPercent({ status: "pending", scanned_count: 0, row_estimate: null })).toBeNull();
+    expect(dataTaskPercent({ status: "pending", scanned_count: 0, row_estimate: 0 })).toBeNull();
+  });
+
+  it("colours failed red, open amber and done green", () => {
+    expect(dataTaskTone("failed")).toBe("danger");
+    expect(dataTaskTone("pending")).toBe("warning");
+    expect(dataTaskTone("running")).toBe("warning");
+    expect(dataTaskTone("done")).toBe("success");
+  });
+
+  it("lists the failed tasks first, then the running and the waiting ones, and folds the done ones apart", () => {
+    const tasks = [
+      task("a", "pending"),
+      task("b", "done"),
+      task("c", "running"),
+      task("d", "failed"),
+      task("e", "pending"),
+      task("f", "done"),
+    ];
+
+    const { open, done } = splitDataTasks(tasks);
+
+    expect(open.map((item) => item.key)).toEqual(["d", "c", "a", "e"]);
+    expect(done.map((item) => item.key)).toEqual(["b", "f"]);
+    expect(tasks.map((item) => item.key)).toEqual(["a", "b", "c", "d", "e", "f"]);
+  });
+});

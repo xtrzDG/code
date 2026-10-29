@@ -1,0 +1,29 @@
+from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.transformer_contract import TransformerContract
+from app.schemas.dto.localization import LocalizedText
+from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
+from app.schemas.typings.conversations.strings import MessageText
+from app.transformers.notifications.message_rendering import (
+    render_booking_staff_notification,
+)
+from app.utilities.localization.owner_texts import owner_text
+
+NEW_BOOKING_TITLE: LocalizedText = owner_text(
+    "notifications.new_booking.new_booking_title"
+)
+
+
+class NewBookingNotificationTransformer(
+    TransformerContract[BookingStaffNotificationInput, MessageText]
+):
+    """Staff notification about a new booking, in the staff member's language."""
+
+    def __init__(self, text_resolver: LocalizedTextResolverContract) -> None:
+        self._text_resolver: LocalizedTextResolverContract = text_resolver
+
+    def transform(self, input_data: BookingStaffNotificationInput) -> MessageText:
+        return MessageText(
+            render_booking_staff_notification(
+                self._text_resolver, NEW_BOOKING_TITLE, input_data
+            )
+        )
