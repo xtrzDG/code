@@ -41,7 +41,7 @@ def test_plans_follow_the_concept() -> None:
         assert plan.annual_discount_percent == 15
         assert plan.trial_days == 14
         assert plan.grace_period_days == 7
-        for language in ("en", "ru", "ka"):
+        for language in ("en", "it"):
             assert LanguageTag(language) in plan.names.values
             assert LanguageTag(language) in plan.descriptions.values
 

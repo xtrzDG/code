@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 
 import { channelHealth, channelProblem, problemFix, type ChannelProblem, type DeliveryFailureReason } from "./channelHealth";
 import type { ChannelView } from "./channels";
@@ -82,7 +81,7 @@ describe("a channel's health", () => {
 
   it("has a plain-word text for every problem in every language, naming no internals", () => {
     const problems: ChannelProblem[] = [...REASONS, "unknown", "missing_public_address"];
-    for (const messages of [en, ru, ka]) {
+    for (const messages of [en, italian]) {
       for (const problem of problems) {
         const text = messages.channelSetup.health.problems[problem];
         expect(text, problem).toBeTruthy();

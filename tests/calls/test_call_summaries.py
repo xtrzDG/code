@@ -24,7 +24,7 @@ from tests.channels.voice_setup import build_voice_setup
 SUMMARIES: str = json.dumps(
     {
         "ka": "სტუმარს ოთხი ადგილი სურს შაბათს.",
-        "ru": "Гость хочет столик на четверых в субботу.",
+        "it": "L'ospite vuole un tavolo per quattro sabato.",
         "en": "Not requested.",
     },
     ensure_ascii=False,
@@ -34,7 +34,7 @@ SUMMARIES: str = json.dumps(
 class TestCallSummary:
     def test_staff_get_the_summary_in_their_language(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
         setup.testbed.summary_answers.append(f"Here you go: {SUMMARIES}")
 
         process_call(setup, post_call_payload())
@@ -45,21 +45,21 @@ class TestCallSummary:
             str(summary.language): str(summary.text) for summary in call.summaries
         } == {
             "ka": "სტუმარს ოთხი ადგილი სურს შაბათს.",
-            "ru": "Гость хочет столик на четверых в субботу.",
+            "it": "L'ospite vuole un tavolo per quattro sabato.",
         }
         [request] = setup.testbed.summary_requests
         assert request.effort is LlmEffort.LOW
         assert request.model_id == setup.testbed.settings.llm_model_id
-        assert "Languages: ka, ru" in str(request.transcript)
+        assert "Languages: ka, it" in str(request.transcript)
         [text] = staff_texts(setup)
         assert text.staff_contact is not None
         assert str(text.staff_contact.address) == "-100555"
         lines = str(text.text).split("\n")
-        assert lines[0] == "Итог звонка · Funicular VR"
-        assert lines[1].startswith("Звонил: +995 599 12 34 56 · ")
-        assert lines[1].endswith("1 мин 35 с")
-        assert lines[2] == "Гость хочет столик на четверых в субботу."
-        assert lines[3] == "Итог: дана информация"
+        assert lines[0] == "Riepilogo della chiamata · Funicular VR"
+        assert lines[1].startswith("Chiamante: +995 599 12 34 56 · ")
+        assert lines[1].endswith("1 min 35 s")
+        assert lines[2] == "L'ospite vuole un tavolo per quattro sabato."
+        assert lines[3] == "Esito: informazioni fornite"
 
     def test_a_booking_call_names_the_booking(self) -> None:
         setup = build_voice_setup()
@@ -76,7 +76,7 @@ class TestCallSummary:
 
     def test_the_summary_is_written_and_sent_once(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
         setup.testbed.summary_answers.extend([SUMMARIES, SUMMARIES])
         process_call(setup, post_call_payload())
         [call] = stored_calls(setup)
@@ -120,7 +120,7 @@ class TestCallSummary:
 
     def test_a_model_failure_still_sends_the_facts(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
 
         process_call(setup, post_call_payload())
 
@@ -128,11 +128,11 @@ class TestCallSummary:
         assert call.summaries == []
         assert call.summarized_at is not None
         [text] = staff_texts(setup)
-        assert str(text.text).split("\n")[2] == "Итог: дана информация"
+        assert str(text.text).split("\n")[2] == "Esito: informazioni fornite"
 
     def test_an_unreadable_answer_leaves_no_summary(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
         setup.testbed.summary_answers.append("I cannot summarize this call.")
 
         process_call(setup, post_call_payload())
@@ -157,7 +157,7 @@ class TestCallSummary:
 
     def test_summaries_reach_linked_chats_only(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
         add_staff_chat(
             setup,
             language="en",
@@ -174,7 +174,7 @@ class TestCallSummary:
 
     def test_a_silent_caller_is_reported_as_missed(self) -> None:
         setup = build_voice_setup()
-        add_staff_chat(setup, language="ru")
+        add_staff_chat(setup, language="it")
         add_staff_chat(
             setup,
             language="en",
@@ -195,6 +195,6 @@ class TestCallSummary:
             and text.staff_contact.channel is ManagerContactChannel.TELEGRAM
         )
         lines = str(telegram.text).split("\n")
-        assert lines[0] == "Пропущенный звонок · Funicular VR"
-        assert lines[2] == "Причина: положил трубку, ничего не сказав"
-        assert lines[3].startswith("Звонившему мы не написали (")
+        assert lines[0] == "Chiamata persa · Funicular VR"
+        assert lines[2] == "Motivo: ha riattaccato senza dire nulla"
+        assert lines[3].startswith("Non abbiamo scritto al chiamante (")

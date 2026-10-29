@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { privacyNoticeEn } from "./privacyNotice.en";
-import { privacyNoticeKa } from "./privacyNotice.ka";
-import { privacyNoticeRu } from "./privacyNotice.ru";
+import { privacyNoticeIt } from "./privacyNotice.it";
 
 /** Headings and labels: short names, not sentences. */
 const LABEL_KEYS = /(^title$|^subtitle$|Title$|^backToChat$)/;
@@ -13,11 +12,10 @@ const LABEL_KEYS = /(^title$|^subtitle$|Title$|^backToChat$)/;
  */
 const DANGLING_WORDS: Record<string, ReadonlySet<string>> = {
   en: new Set(["your", "the", "a", "an", "and", "or", "of", "to", "for", "with", "by", "in", "on", "at", "from"]),
-  ru: new Set(["ваш", "ваша", "ваше", "ваши", "вашего", "и", "или", "в", "во", "на", "с", "со", "для", "по", "к", "о", "об", "от", "за", "из", "у", "а", "но"]),
-  ka: new Set(["თქვენი", "და", "ან", "მისი", "ეს", "ის"]),
+  it: new Set(["il", "lo", "la", "i", "gli", "le", "un", "una", "e", "o", "di", "a", "da", "in", "con", "su", "per", "tra", "fra", "suo", "sua", "suoi", "sue", "del", "della", "dei", "delle", "al", "alla", "nel", "nella"]),
 };
 
-const NOTICES = { en: privacyNoticeEn, ru: privacyNoticeRu, ka: privacyNoticeKa } as const;
+const NOTICES = { en: privacyNoticeEn, it: privacyNoticeIt } as const;
 
 function sentences(notice: Record<string, string>): [string, string][] {
   return Object.entries(notice).filter(([key]) => !LABEL_KEYS.test(key));
@@ -36,7 +34,6 @@ describe("the hosted chat's privacy notice", () => {
   }
 
   it("has the same texts in every language", () => {
-    expect(Object.keys(privacyNoticeRu).sort()).toEqual(Object.keys(privacyNoticeEn).sort());
-    expect(Object.keys(privacyNoticeKa).sort()).toEqual(Object.keys(privacyNoticeEn).sort());
+    expect(Object.keys(privacyNoticeIt).sort()).toEqual(Object.keys(privacyNoticeEn).sort());
   });
 });

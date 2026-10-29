@@ -2,7 +2,7 @@
  * `waitlist.*` texts: Bookings → Waitlist, the customers waiting for a
  * full day to free up, the place held for one of them, and the owner's
  * choices (keep a waitlist, how long a freed place is held), in English:
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const waitlistEn = {

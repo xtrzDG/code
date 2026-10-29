@@ -2,7 +2,7 @@
  * `profileEdit.*`: Assistant → Business profile for a live business. Six
  * section cards and their editors, which are the screens of "Create an
  * AI assistant" saving every change by themselves. English is the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const profileEditEn = {

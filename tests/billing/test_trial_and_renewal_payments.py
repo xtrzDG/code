@@ -75,7 +75,8 @@ def test_declined_first_payment_keeps_the_trial_and_tells_the_owner() -> None:
     assert contact.channel is ManagerContactChannel.WHATSAPP
     assert str(contact.address) == "+995599123456"
     assert str(contact.language) == "ka"
-    assert "960,00\xa0₾" in str(text)
+    # Georgian is no longer an owner language: the notice reads English.
+    assert "GEL960.00" in str(text)
 
     retry = checkout(world)
 
@@ -132,8 +133,9 @@ def test_declined_renewal_starts_the_grace_period() -> None:
     assert failed.period_start == period_end
     assert world.testbed.business(world.business.id).service_mode is ServiceMode.FULL
     [(_, text)] = world.testbed.notifier.sent
-    assert "517,00\xa0₾" in str(text)
-    assert "ამ თარიღამდე" in str(text)
+    # The Georgian owner reads the English notice, with the grace deadline.
+    assert "GEL517.00" in str(text)
+    assert "keeps full service until November 22, 2026" in str(text)
 
 
 def test_late_retry_pays_the_bill_of_the_missed_renewal() -> None:

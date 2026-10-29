@@ -27,9 +27,7 @@ WEB_LIST_PATTERN: re.Pattern[str] = re.compile(
 # Texts the code fills before it shows them, so their English never appears
 # as it is written in the catalog.
 FILLED_TEMPLATES: frozenset[str] = frozenset({"forwarding.carrier_unconfirmed"})
-DRAFT_LANGUAGES: frozenset[CabinetLanguage] = frozenset(
-    {CabinetLanguage.HEBREW, CabinetLanguage.GERMAN}
-)
+DRAFT_LANGUAGES: frozenset[CabinetLanguage] = frozenset({CabinetLanguage.ITALIAN})
 
 
 def test_every_cabinet_language_has_every_text() -> None:
@@ -43,7 +41,7 @@ def test_every_cabinet_language_has_every_text() -> None:
     assert missing == {language.value: [] for language in CABINET_LANGUAGES}
 
 
-def test_hebrew_and_german_are_drafts_and_the_rest_reviewed() -> None:
+def test_italian_is_a_draft_and_english_reviewed() -> None:
     statuses = {
         language: catalog_file.review_status
         for language, catalog_file in OWNER_TEXT_CATALOG.files.items()

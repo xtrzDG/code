@@ -54,7 +54,9 @@ def test_georgian_quotes_come_from_the_lari_price_book() -> None:
     voice = find_quote(quote_list.quotes, PlanKey.VOICE_AND_CHAT)
 
     assert quote_list.local_currency_code == "GEL"
-    assert voice.name == "ხმა + ჩატი"
+    # Georgian is not a cabinet language: the names read English, the money
+    # still formats for the ka locale.
+    assert voice.name == "Voice + chat"
     assert voice.monthly_price.money.amount_minor == 17500
     assert voice.monthly_price.text == "175,00\xa0€"
     assert voice.local_monthly_price is not None
@@ -85,10 +87,10 @@ def test_georgian_quotes_come_from_the_lari_price_book() -> None:
 @pytest.mark.parametrize(
     ("language", "expected_name", "expected_monthly_text"),
     [
-        ("ru", "Голос + чат", "175,00\xa0€"),
+        ("it", "Voce + chat", "175,00\xa0€"),
         ("en", "Voice + chat", "€175.00"),
-        ("de", "Sprache + Chat", "175,00\xa0€"),
-        ("he", "קול + צ'אט", "\u200f175.00\xa0\u200f€"),
+        # Languages the cabinet lacks: English names, money in their locale.
+        ("ru", "Voice + chat", "175,00\xa0€"),
         ("fr", "Voice + chat", "175,00\xa0€"),
     ],
 )
@@ -108,21 +110,21 @@ def test_quotes_are_rendered_in_the_display_language(
     assert voice.monthly_price.text == expected_monthly_text
 
 
-def test_the_plan_catalog_renders_in_hebrew() -> None:
+def test_the_plan_catalog_renders_in_italian() -> None:
     quote_list = build_quote_plans_use_case().run(
         PlanQuoteRequest(
-            country_code=CountryCode("IL"), display_language=LanguageTag("he")
+            country_code=CountryCode("IT"), display_language=LanguageTag("it")
         )
     )
 
     assert [str(quote.name) for quote in quote_list.quotes] == [
-        "צ'אט",
-        "קול + צ'אט",
-        "פלוס",
+        "Chat",
+        "Voce + chat",
+        "Plus",
     ]
     for quote in quote_list.quotes:
-        assert any("\u0590" <= letter <= "\u05ff" for letter in str(quote.description))
-        assert "Voice" not in str(quote.description)
+        assert "al mese" in str(quote.description)
+        assert "a month" not in str(quote.description)
 
 
 def test_without_a_rate_quotes_never_invent_a_local_price() -> None:

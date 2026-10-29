@@ -1,7 +1,7 @@
 /**
  * `overviewPhone.*` texts of the Overview on a phone: the Today block that
  * comes first, and the statistics folded into rows that open on a tap, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const overviewPhoneEn = {

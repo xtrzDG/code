@@ -53,7 +53,8 @@ describe("Georgian numbers", () => {
       { signDisplay: "always" },
     ] as Intl.NumberFormatOptions[]) {
       expect(georgianNumberFormat(options), JSON.stringify(options)).toBeNull();
-      expect(numberFormat("ka", options).format(-1234.5)).toBe(new Intl.NumberFormat("ka", options).format(-1234.5));
+      const platform = new Intl.NumberFormat("ka", { useGrouping: "always", ...options });
+      expect(numberFormat("ka", options).format(-1234.5)).toBe(platform.format(-1234.5));
     }
   });
 

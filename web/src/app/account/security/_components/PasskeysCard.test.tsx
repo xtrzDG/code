@@ -76,8 +76,8 @@ afterEach(() => {
 describe("PasskeysCard", () => {
   it("lists the passkeys with their state", () => {
     withWebAuthn();
-    renderInLocale(<Card />, { locale: "ru" });
-    const t = textsIn("ru").t;
+    renderInLocale(<Card />, { locale: "it" });
+    const t = textsIn("it").t;
 
     expect(screen.getByText("MacBook Touch ID")).toBeTruthy();
     expect(screen.getByText(t("passkeys.synced"))).toBeTruthy();

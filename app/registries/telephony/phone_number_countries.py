@@ -47,6 +47,7 @@ PHONE_NUMBER_COUNTRY_RULES: Mapping[
     CountryCode("IL"): {kind: DOCUMENTS for kind in PhoneNumberType},
     # The EU and the UK: a regulatory bundle (an address in the country and
     # the business's registration) for every kind.
+    CountryCode("IT"): {kind: DOCUMENTS for kind in PhoneNumberType},
     CountryCode("DE"): {kind: DOCUMENTS for kind in PhoneNumberType},
     CountryCode("GB"): {kind: DOCUMENTS for kind in PhoneNumberType},
     CountryCode("PL"): {kind: DOCUMENTS for kind in PhoneNumberType},

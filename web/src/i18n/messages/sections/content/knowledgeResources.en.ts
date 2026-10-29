@@ -1,6 +1,6 @@
 /**
  * `knowledge.*` texts of bookable resources and special days, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const knowledgeResourcesEn = {

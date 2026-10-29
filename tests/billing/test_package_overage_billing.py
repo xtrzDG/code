@@ -114,7 +114,8 @@ def test_minutes_above_the_package_are_billed_once_per_month() -> None:
         overage.description
     ).replace("\xa0", " ")
     [(_, text)] = testbed.notifier.sent
-    assert "704,00\xa0₾" in str(text)
+    # Georgian is not an owner language any more: the notice reads English.
+    assert "The bill for the extra minutes is GEL704.00" in str(text)
 
 
 def test_usage_within_the_package_is_not_billed() -> None:

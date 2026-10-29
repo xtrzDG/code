@@ -9,7 +9,7 @@
 import { BERLIN_SALON, expect, test } from "./support/fixtures";
 import { WEB_URL } from "./support/env";
 import { openChatBusiness } from "./support/hosted-chat";
-import { en, ka } from "./support/messages";
+import { en, it } from "./support/messages";
 
 /** A stand-in with a real key's shape and no secret in it. */
 const BOT_TOKEN = `123456789:${"a".repeat(35)}`;
@@ -86,8 +86,8 @@ test("an owner connects Telegram step by step and sees the bot before connecting
   expect(connected).toEqual([{ bot_token: BOT_TOKEN }]);
 });
 
-test.describe("for an owner who reads Georgian", () => {
-  test("the live preview speaks Georgian and follows the chosen corner at once", async ({
+test.describe("for an owner who reads Italian", () => {
+  test("the live preview speaks Italian and follows the chosen corner at once", async ({
     page,
     context,
     request,
@@ -96,22 +96,23 @@ test.describe("for an owner who reads Georgian", () => {
   }) => {
     // The website chat's embed code needs APP_BASE_URL, which the suite's API does not set.
     consoleErrors.allow(/status of 502 \(Bad Gateway\).*\/channels\/web\/snippet/);
-    const business = await openChatBusiness(request, account.token);
-    await context.addCookies([{ name: "aw_locale", value: "ka", url: WEB_URL, sameSite: "Lax" }]);
+    // The assistant speaks the owner's language among its customers', so the preview starts in it.
+    const business = await openChatBusiness(request, account.token, ["en", "it", "he"]);
+    await context.addCookies([{ name: "aw_locale", value: "it", url: WEB_URL, sameSite: "Lax" }]);
 
     await page.goto(`/b/${business.id}/assistant/channels`);
-    const preview = page.frameLocator(`iframe[title="${ka.channelSetup.preview.frameTitle}"]`);
+    const preview = page.frameLocator(`iframe[title="${it.channelSetup.preview.frameTitle}"]`);
 
     // The guide (docs/LAUNCH.md) sends the owner to the preview by its heading.
-    await expect(page.getByRole("region", { name: ka.channelSetup.preview.title })).toBeVisible();
-    await expect(page.getByRole("button", { name: "ქართული" })).toHaveAttribute("aria-pressed", "true");
-    await expect(preview.getByRole("textbox")).toHaveAttribute("placeholder", "დაწერეთ შეტყობინება…");
-    await expect(preview.locator(".aw")).toHaveAttribute("lang", "ka");
+    await expect(page.getByRole("region", { name: it.channelSetup.preview.title })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Italiano" })).toHaveAttribute("aria-pressed", "true");
+    await expect(preview.getByRole("textbox")).toHaveAttribute("placeholder", "Scriva un messaggio…");
+    await expect(preview.locator(".aw")).toHaveAttribute("lang", "it");
 
     // Before anything is saved, the corner moves and the language changes in the frame.
-    await page.getByRole("radio", { name: ka.channels.widget.positionLeft }).check();
+    await page.getByRole("radio", { name: it.channels.widget.positionLeft }).check();
     await expect(preview.locator(".aw")).toHaveClass(/aw-left/);
-    await page.getByRole("button", { name: "ინგლისური" }).click();
+    await page.getByRole("button", { name: "Inglese" }).click();
     await expect(preview.getByRole("textbox")).toHaveAttribute("placeholder", "Type a message…");
   });
 

@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { en, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 
 test.describe("the public landing page", () => {
   test("shows the product and the prices of a chosen country", async ({ page }) => {
@@ -28,15 +28,15 @@ test.describe("the public landing page", () => {
     await expect(themes.getByRole("radio", { name: en.theme.light })).toBeChecked();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
-    await page.getByRole("combobox", { name: en.language.label }).selectOption("ru");
-    await expect(page.locator("html")).toHaveAttribute("lang", "ru");
-    await expect(page.getByRole("heading", { level: 1, name: ru.landing.hero.title })).toBeVisible();
+    await page.getByRole("combobox", { name: en.language.label }).selectOption("it");
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
+    await expect(page.getByRole("heading", { level: 1, name: it.landing.hero.title })).toBeVisible();
 
     // Both choices are cookies, so the server renders them after a reload.
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await expect(page.locator("html")).toHaveAttribute("lang", "ru");
-    await page.getByRole("group", { name: ru.theme.label }).getByTitle(ru.theme.system).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
+    await page.getByRole("group", { name: it.theme.label }).getByTitle(it.theme.system).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
   });
 

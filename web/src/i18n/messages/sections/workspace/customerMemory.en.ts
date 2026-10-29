@@ -1,7 +1,7 @@
 /**
  * `customerMemory.*` texts of Settings → General's customer memory card
  * (the assistant recognises returning customers), in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const customerMemoryEn = {

@@ -13,9 +13,10 @@ from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.dto.incidents import CreateIncidentBody, CreateIncidentCommand
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.mfa_errors import StepUpRequiredError
-from tests.platform_ops.incident_world import IncidentWorld, breach
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from tests.platform_ops.incident_world import RU_OWNER, IncidentWorld, breach
 from tests.platform_ops.ops_documents import DAY, HOUR, at, business
-from tests.platform_ops.ops_world import ADMIN
+from tests.platform_ops.ops_world import ADMIN, put
 
 
 def test_a_breach_tells_every_owner_of_the_affected_business_only() -> None:
@@ -34,12 +35,33 @@ def test_a_breach_tells_every_owner_of_the_affected_business_only() -> None:
     assert str(sms.contact.address) == "+995555123456"
     assert {sent.business_id for sent in world.notifier.sent} == {world.salon.id}
     assert str(email.subject) == f"incident:{view.id}"
-    # Russian has a frame but no texts of the team: the frame is Russian,
-    # the texts English; Georgian has both.
-    assert str(email.text).startswith("Уведомление о нарушении")
+    # Neither Russian nor Georgian is a cabinet language any more: both
+    # owners read the English frame with the team's English texts.
+    assert str(email.text).startswith("Personal data breach notice: Salon Ia")
     assert "An export was e-mailed wrongly." in str(email.text)
-    assert "ექსპორტი შეცდომით გაიგზავნა." in str(sms.text)
+    assert str(sms.text).startswith("Personal data breach notice: Salon Ia")
+    assert "An export was e-mailed wrongly." in str(sms.text)
     assert "(Asia/Tbilisi)" in str(sms.text)
+
+
+def test_an_italian_owner_reads_the_italian_frame_with_the_english_texts() -> None:
+    world = IncidentWorld()
+    italian = RU_OWNER.model_copy(update={"locale": LanguageTag("it-IT")})
+    put(world.users, italian)
+
+    world.use_case.run(breach(world.salon))
+
+    [email] = [
+        sent
+        for sent in world.notifier.sent
+        if sent.contact.channel is ManagerContactChannel.EMAIL
+    ]
+    text = str(email.text)
+    assert text.startswith("Avviso di violazione dei dati personali: Salon Ia")
+    # The team wrote English and Georgian texts: Italian reads the English ones.
+    assert "Cosa è successo: An export was e-mailed wrongly." in text
+    assert "Persone interessate: Customers, circa 40" in text
+    assert "(punto 12.2)" in text and "{" not in text
 
 
 def test_each_affected_business_gets_an_audit_entry_naming_the_incident() -> None:

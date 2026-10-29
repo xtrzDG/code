@@ -36,16 +36,19 @@ def write_catalog_file(
 def write_catalog(
     directory: Path,
     texts_by_language: dict[str, dict[str, str]] | None = None,
+    *,
+    italian_status: TextReviewStatus = TextReviewStatus.NEEDS_REVIEW,
 ) -> Path:
-    """English plus every other cabinet language (copies of English unless given)."""
+    """
+    English plus every other cabinet language (copies of English unless
+    given); Italian is a file of drafts unless told otherwise.
+    """
 
     given: dict[str, dict[str, str]] = texts_by_language or {}
     for language in CABINET_LANGUAGES:
         texts: dict[str, str] = given.get(language.value, dict(ENGLISH_TEXTS))
         status: TextReviewStatus = (
-            TextReviewStatus.NEEDS_REVIEW
-            if language.value in {"he", "de"}
-            else TextReviewStatus.REVIEWED
+            italian_status if language.value == "it" else TextReviewStatus.REVIEWED
         )
         write_catalog_file(directory, language.value, texts, review_status=status)
 

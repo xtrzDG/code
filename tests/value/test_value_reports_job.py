@@ -62,7 +62,7 @@ def choose(scene: ValueScene, daily: bool, weekly: bool, monthly: bool) -> None:
 
 def test_on_monday_the_week_and_the_month_go_out_once() -> None:
     scene = active_scene()
-    scene.device(scene.owner, "ka")
+    scene.device(scene.owner, "it")
 
     stored = run_job(scene)
     again = run_job(scene)
@@ -88,7 +88,9 @@ def test_on_monday_the_week_and_the_month_go_out_once() -> None:
         f"value_report:{monthly.id}",
     }
     assert len(scene.world.push_queue.queued) == 2
-    assert scene.world.push_queue.queued[0].brief.title.startswith("თქვენი")
+    assert str(scene.world.push_queue.queued[0].brief.title) == (
+        "Il tuo assistente la settimana scorsa · Salobie Bia"
+    )
     assert scene.world.notifier.notifications[0].contact.language == "ru"
 
 

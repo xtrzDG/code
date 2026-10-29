@@ -1,6 +1,6 @@
 /**
  * `coachMarks.*` texts: the one-time tips on the Inbox, the Assistant's test
- * page and Channels, in English: the reference that ru and ka are typed
+ * page and Channels, in English: the reference that it is typed
  * against.
  */
 

@@ -13,6 +13,13 @@ country sets the languages, currency, time zone, emergency number, how
 login codes are delivered and the call recording rules. Prices are kept in
 the business's currency and bookings are computed in its time zone.
 
+The first market is Italy (the pilot country; plans are priced in EUR). The
+owner's cabinet, the public site, the help center, the owner-facing texts
+and the legal texts come in English and Italian; the Italian texts are a
+team draft awaiting a native speaker's review. The assistant itself speaks
+the customers' languages (the website chat alone has 30), whatever the
+owner's interface language.
+
 This repository holds the whole product:
 
 - **the backend** (`app/`): a Python 3.14 FastAPI API and a background

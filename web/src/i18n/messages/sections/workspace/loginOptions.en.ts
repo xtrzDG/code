@@ -1,6 +1,6 @@
 /**
  * `loginOptions.*` texts of the sign-in code channels, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const loginOptionsEn = {

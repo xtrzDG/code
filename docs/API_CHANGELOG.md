@@ -11,6 +11,47 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## Values only, 2026-10-29 — the interface languages are English and Italian; Italy is the pilot country
+
+No `Spec:` line of its own: the committed description is still the
+`5c71b97e956c0e49` of the entry below (every `language` parameter is a plain
+string, so `uv run python -m scripts.export_openapi` writes the same
+document), and the changelog names each description once. What changed are
+the values the API accepts and the texts it serves. The product's first
+market moved from Georgia to Italy; what the assistant says to customers
+(its languages, the widget's 30 languages, the hosted chat and booking
+pages, language detection, the WhatsApp templates of staff and guests) is
+unchanged.
+
+- **Breaking** (`api-breaking`; the cabinet changes in the same pull
+  request) `CabinetLanguage` is now `it` or `en`: `ka`, `ru`, `he` and `de`
+  are no longer interface languages. Everything that takes a cabinet
+  language — a person's language, `GET /v1/catalog/plans?language=`,
+  `GET /v1/catalog/countries?language=`, the niche catalog and the profile
+  wizard, the niche template editor (`GET /v1/admin/niche-templates/…
+  ?language=`: `it` or `en`, others 422), the owner-facing texts of
+  notifications, the setup guide and billing — accepts `en` and `it`; a
+  removed language reads English, the fallback, as an unknown one did
+  before. Migration: a client that stored `ka`, `ru`, `he` or `de` as a
+  person's language sends `en` or `it`. Italian texts are a team draft
+  (`needs_review`) until a native speaker has read them.
+- **Changed** `GET /v1/help/{language}`, `…/{slug}` and `…/search?q=` serve
+  the help articles in English and Italian (`docs/help/{en,it}`; the
+  Italian ones carry `status: needs_review`). The `ka`, `ru`, `he` and `de`
+  articles were removed; those languages read English.
+- **Changed** `GET /v1/legal/terms|privacy|cookies?language=` and the DPA
+  are published in English only (`available_languages` names `en`); the
+  Russian and Georgian texts were removed, and an Italian DPA draft waits
+  in `docs/legal/drafts/` for a lawyer's review. Sub-processor change
+  notices and the incident notices of `/status` and the announcement
+  banner come in English and Italian.
+- **Changed** `GET /v1/catalog/countries`: Italy (`IT`) is the pilot country
+  (`onboarding_status` `pilot`; Georgia is `supported`), WhatsApp comes
+  first among its login code channels and an assistant number there needs
+  the regulatory documents. The call-forwarding guide names the Italian
+  carriers TIM, Vodafone, WindTre and Iliad (their codes marked as not yet
+  confirmed with the carrier). Voice agents get an Italian voice profile.
+
 ## 2026-10-26 — the niche template editor of the platform admin
 
 Spec: `5c71b97e956c0e49`

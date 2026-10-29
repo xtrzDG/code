@@ -6,6 +6,7 @@ import { api } from "@/api/client";
 import { queryCache } from "@/api/queryCache";
 import type { CurrentUserView } from "@/api/types";
 import { BusinessProvider } from "@/components/business/BusinessContext";
+import type { Locale } from "@/i18n/config";
 import { answerGet, failure, ok, pending } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
@@ -39,7 +40,7 @@ const deposit: BookingDepositView = {
   hold_expires_at: 1_790_000_000_000_000,
 };
 
-function withBusiness(ui: React.ReactElement, locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function withBusiness(ui: React.ReactElement, locale: Locale = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       {ui}
@@ -54,7 +55,7 @@ describe("deposit panels when their data does not load", () => {
     vi.mocked(api.GET).mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)(
+  it.each(["en", "it"] as const)(
     "the policy panel offers a retry instead of a skeleton forever (%s)",
     async (locale) => {
       const { t } = textsIn(locale);

@@ -1,6 +1,6 @@
 /**
  * `adminReplyGuard.*` texts of the reply-guard card on the platform admin's
- * client page, in English: the reference that ru and ka are typed against.
+ * client page, in English: the reference that it is typed against.
  */
 
 export const adminReplyGuardEn = {

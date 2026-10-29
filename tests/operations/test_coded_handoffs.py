@@ -1,6 +1,6 @@
 """
 Handoffs the platform creates itself: staff read them in their own
-language (the stored summary in the staff language, notifications in each
+language (the stored summary in the owner language, notifications in each
 contact's, and the code, quote and values for the cabinet).
 """
 
@@ -16,13 +16,18 @@ from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.strings import HandoffQuotedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.scheduling.localized_formatting import (
-    FIRST_STRONG_ISOLATE,
-    POP_DIRECTIONAL_ISOLATE,
-)
 from tests.operations.handoff_fixture import HandoffFixture
 
 QUESTION: str = "Сколько стоит пломба?"
+ENGLISH_SUMMARY: str = (
+    "The assistant held back an answer with figures or statements that are not "
+    f"in your business details (250 ₪, 19:30). The customer's message: “{QUESTION}”"
+)
+ITALIAN_SUMMARY: str = (
+    "L'assistente non ha inviato una risposta con cifre o affermazioni che non "
+    "risultano nei dati della tua attività (250 ₪, 19:30). "
+    f"Il messaggio del cliente: “{QUESTION}”"
+)
 
 
 def hand_off_coded(fixture: HandoffFixture) -> None:
@@ -64,27 +69,30 @@ def test_the_cabinet_gets_the_code_the_quote_and_the_values() -> None:
     assert item.summary_code is HandoffSummaryCode.UNVERIFIED_VALUES
     assert item.quoted_text == QUESTION
     assert item.flagged_values == ["250 ₪", "19:30"]
-    # The owner writes in Hebrew: the values and the quote stay isolated
-    # inside the right-to-left sentence.
-    assert str(item.summary) == (
-        "העוזר עצר תשובה עם נתונים או טענות שלא מופיעים בפרטי העסק שלכם "
-        f"({FIRST_STRONG_ISOLATE}250 ₪, 19:30{POP_DIRECTIONAL_ISOLATE}). "
-        f"ההודעה של הלקוח: „{FIRST_STRONG_ISOLATE}{QUESTION}{POP_DIRECTIONAL_ISOLATE}”"
-    )
+    # The owner writes in Hebrew, which the catalog lacks: the summary is
+    # stored in English, with the values and the quote in their place.
+    assert str(item.summary) == ENGLISH_SUMMARY
 
 
 def test_the_stored_summary_is_written_in_the_staff_language() -> None:
     fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
-    fixture.business.owner_language = LanguageTag("ka")
+    fixture.business.owner_language = LanguageTag("it")
     fixture.world.business_repo.save(fixture.business)
 
     hand_off_coded(fixture)
 
-    assert str(only_item(fixture).summary).startswith("ასისტენტმა პასუხი არ გაგზავნა")
+    assert str(only_item(fixture).summary) == ITALIAN_SUMMARY
 
 
 def test_every_staff_contact_reads_it_in_their_own_language() -> None:
     fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
+    nino, daniel, anna = fixture.business.manager_contacts
+    fixture.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        daniel,
+        anna,
+    ]
+    fixture.world.business_repo.save(fixture.business)
 
     hand_off_coded(fixture)
 
@@ -92,12 +100,10 @@ def test_every_staff_contact_reads_it_in_their_own_language() -> None:
         str(contact.language): str(text)
         for contact, text in fixture.world.notifier.sent
     }
-    assert (
-        "Помощник не отправил ответ: в нём были цифры или утверждения, которых "
-        f"нет в данных бизнеса (250 ₪, 19:30). Сообщение клиента: «{QUESTION}»"
-    ) in texts["ru"].splitlines()
-    assert "ასისტენტმა პასუხი არ გაგზავნა" in texts["ka"]
-    assert "The AI model" not in texts["ru"] + texts["ka"]
+    assert ITALIAN_SUMMARY in texts["it"].splitlines()
+    # Russian is not in the catalog: that contact reads the English summary.
+    assert ENGLISH_SUMMARY in texts["ru"].splitlines()
+    assert "The AI model" not in texts["ru"] + texts["it"]
 
 
 def test_the_models_own_summary_is_kept_as_written() -> None:

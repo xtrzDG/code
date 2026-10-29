@@ -30,7 +30,7 @@ function instagram(replies: ChannelView["comment_replies"]): ChannelView {
   } as ChannelView;
 }
 
-function show(channel: ChannelView, canManage = true, locale: "en" | "he" = "en") {
+function show(channel: ChannelView, canManage = true, locale: "en" | "it" = "en") {
   renderInLocale(
     <BusinessProvider business={business} me={me}>
       <CommentRepliesEditor channel={channel} canManage={canManage} />
@@ -84,9 +84,9 @@ describe("replies to comments on the Instagram card", () => {
     expect(screen.getByText(t("metaConnect.commentReplies.errors.keyword"))).toBeTruthy();
   });
 
-  it("say they wait for the next update, and staff only read them (in Hebrew too)", () => {
-    const t = textsIn("he").t;
-    show(instagram({ is_on: true, is_available: false, keywords: ["תפריט"], reply_text: "שלום" }), false, "he");
+  it("say they wait for the next update, and staff only read them (in Italian too)", () => {
+    const t = textsIn("it").t;
+    show(instagram({ is_on: true, is_available: false, keywords: ["תפריט"], reply_text: "שלום" }), false, "it");
 
     expect(screen.getByText(t("metaConnect.commentReplies.unavailable"))).toBeTruthy();
     expect(screen.getByText(t("metaConnect.commentReplies.summaryOn", { keywords: "תפריט" }))).toBeTruthy();

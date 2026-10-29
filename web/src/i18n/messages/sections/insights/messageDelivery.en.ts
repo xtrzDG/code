@@ -1,7 +1,7 @@
 /**
  * `messageDelivery.*` texts of how a staff reply travels to the customer
  * (the chip under it in the conversation), in English: the reference that
- * ru and ka are typed against.
+ * it is typed against.
  */
 
 export const messageDeliveryEn = {

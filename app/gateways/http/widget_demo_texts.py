@@ -53,52 +53,31 @@ WIDGET_DEMO_TEXTS: dict[str, WidgetDemoTexts] = {
         business_id_label="Business id",
         show_button="Show the widget",
     ),
-    "ru": WidgetDemoTexts(
-        title="Демо чата на сайте — Мастерская ассистентов",
-        heading="Демо чата на сайте",
+    "it": WidgetDemoTexts(
+        title="Demo della chat sul sito — Assistant Workshop",
+        heading="Demo della chat sul sito",
         intro=(
-            "Здесь виджет чата выглядит так же, как его видят посетители на "
-            "сайте бизнеса. Язык виджет выбирает по браузеру посетителя среди "
-            "языков бизнеса."
+            "Questa pagina mostra il widget della chat esattamente come lo "
+            "vedono i visitatori sul sito di un'attività. Il widget sceglie la "
+            "lingua del visitatore dal browser tra le lingue dell'attività."
         ),
-        embed_title="Код для сайта",
+        embed_title="Codice da incorporare",
         embed_body=(
-            "Вставьте его перед закрывающим тегом </body> на каждой странице "
-            "сайта. В кабинете (Каналы → Чат на сайте) он показан с правильным "
-            "адресом."
+            "Incollalo prima del tag di chiusura </body> in ogni pagina del "
+            "sito. Il pannello (Canali → Chat sul sito) lo mostra con "
+            "l'indirizzo corretto."
         ),
-        api_address="<адрес вашего API>",
-        options_title="Настройки",
-        option_color="цвет акцента",
-        option_position="кнопка чата слева",
-        option_language="язык интерфейса",
-        option_open="открыть чат на первой странице визита",
-        option_mode="чат на всю страницу (так работает страница чата по ссылке)",
-        business_id_label="Идентификатор бизнеса",
-        show_button="Показать виджет",
-    ),
-    "ka": WidgetDemoTexts(
-        title="ჩატი საიტზე: დემო — ასისტენტების სახელოსნო",
-        heading="ჩატი საიტზე: დემო",
-        intro=(
-            "ეს გვერდი გაჩვენებთ ჩატის ვიჯეტს ზუსტად ისე, როგორც მას "
-            "ვიზიტორები ბიზნესის საიტზე ხედავენ. ვიჯეტი ვიზიტორის ენას "
-            "ბრაუზერის მიხედვით ირჩევს ბიზნესის ენებს შორის."
+        api_address="<indirizzo della tua API>",
+        options_title="Opzioni",
+        option_color="colore d'accento",
+        option_position="pulsante della chat a sinistra",
+        option_language="lingua dell'interfaccia",
+        option_open="apre la chat sulla prima pagina della visita",
+        option_mode=(
+            "la chat occupa tutta la pagina (così funziona la pagina della chat "
+            "ospitata)"
         ),
-        embed_title="კოდი საიტისთვის",
-        embed_body=(
-            "ჩასვით ის დამხურავი </body> ტეგის წინ საიტის ყველა გვერდზე. "
-            "კაბინეტში (არხები → ჩატი საიტზე) ის სწორი მისამართით არის "
-            "ნაჩვენები."
-        ),
-        api_address="<თქვენი API-ის მისამართი>",
-        options_title="პარამეტრები",
-        option_color="აქცენტის ფერი",
-        option_position="ჩატის ღილაკი მარცხნივ",
-        option_language="ინტერფეისის ენა",
-        option_open="ჩატის გახსნა ვიზიტის პირველივე გვერდზე",
-        option_mode="ჩატი მთელ გვერდზე (ასე მუშაობს ბმულით გასახსნელი ჩატის გვერდი)",
-        business_id_label="ბიზნესის იდენტიფიკატორი",
-        show_button="ვიჯეტის ჩვენება",
+        business_id_label="ID dell'attività",
+        show_button="Mostra il widget",
     ),
 }

@@ -42,9 +42,9 @@ def test_missed_renewal_becomes_past_due_after_a_day() -> None:
     assert str(contact.name) == "Giulia"
     assert str(contact.language) == "it"
     assert str(text) == (
-        "Trattoria: the payment of €175.00 for the new period has not arrived. "
-        "Please pay in Billing. The assistant keeps full service until "
-        "November 23, 2026; after that it will only take requests."
+        "Trattoria: il pagamento di 175,00\xa0€ per il nuovo periodo non è "
+        "arrivato. Paga in Fatturazione. L'assistente mantiene il servizio "
+        "completo fino al 23 novembre 2026; dopo, raccoglierà solo le richieste."
     )
 
 

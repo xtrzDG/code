@@ -1,6 +1,6 @@
 """
 The breach notice an owner gets (DPA section 12.1), in the owner's cabinet
-language (Georgian, Russian or English; others read English). The frame is
+language (Italian or English; others read English). The frame is
 the platform's; the five texts are what the team wrote for the incident in
 that language, else in English. Times are in the business's time zone.
 """
@@ -56,47 +56,23 @@ NOTICE_FRAMES: dict[str, NoticeFrame] = {
             "the supervisory authority and the people concerned (section 12.2)."
         ),
     ),
-    "ru": NoticeFrame(
-        subject="Уведомление о нарушении безопасности персональных данных: {business}",
+    "it": NoticeFrame(
+        subject="Avviso di violazione dei dati personali: {business}",
         intro=(
-            "По пункту 12.1 соглашения об обработке данных сообщаем вам о "
-            "нарушении безопасности персональных данных, затронувшем данные "
-            "вашего бизнеса в «Мастерской ассистентов»."
+            "Ai sensi del punto 12.1 dell'accordo sul trattamento dei dati (DPA) "
+            "ti informiamo di una violazione dei dati personali che riguarda i "
+            "dati della tua attività in Assistant Workshop."
         ),
-        incident="Инцидент: {title} (номер {reference})",
-        timeline="Начало: {started}; мы узнали о нём: {detected}.",
-        nature="Что произошло: {text}",
-        subjects="Затронутые люди: {text}, примерно {count}",
-        records="Затронутые записи: {text}, примерно {count}",
-        consequences="Вероятные последствия: {text}",
-        measures="Принятые или предлагаемые меры: {text}",
+        incident="Incidente: {title} (riferimento {reference})",
+        timeline="È iniziato {started}; ne siamo venuti a conoscenza {detected}.",
+        nature="Cosa è successo: {text}",
+        subjects="Persone interessate: {text}, circa {count}",
+        records="Record interessati: {text}, circa {count}",
+        consequences="Probabili conseguenze: {text}",
+        measures="Misure adottate o proposte: {text}",
         closing=(
-            "Мы будем сообщать вам новые сведения и, если это требуется, "
-            "поможем уведомить надзорный орган и затронутых людей (пункт 12.2)."
-        ),
-    ),
-    "ka": NoticeFrame(
-        subject=(
-            "შეტყობინება პერსონალურ მონაცემთა უსაფრთხოების ინციდენტის შესახებ: "
-            "{business}"
-        ),
-        intro=(
-            "მონაცემთა დამუშავების შეთანხმების 12.1 პუნქტის შესაბამისად "
-            "გაცნობებთ პერსონალურ მონაცემთა უსაფრთხოების ინციდენტის შესახებ, "
-            "რომელიც ეხება თქვენი ბიზნესის მონაცემებს „ასისტენტების "
-            "სახელოსნოში“."
-        ),
-        incident="ინციდენტი: {title} (ნომერი {reference})",
-        timeline="დაიწყო: {started}; ჩვენთვის ცნობილი გახდა: {detected}.",
-        nature="რა მოხდა: {text}",
-        subjects="შეხებული პირები: {text}, დაახლოებით {count}",
-        records="შეხებული ჩანაწერები: {text}, დაახლოებით {count}",
-        consequences="შესაძლო შედეგები: {text}",
-        measures="მიღებული ან შემოთავაზებული ზომები: {text}",
-        closing=(
-            "გაცნობებთ ახალ ინფორმაციას და, საჭიროების შემთხვევაში, "
-            "დაგეხმარებით საზედამხედველო ორგანოსა და შეხებული პირების "
-            "ინფორმირებაში (პუნქტი 12.2)."
+            "Ti terremo informato e, dove richiesto, ti aiuteremo a notificare "
+            "l'autorità di controllo e le persone interessate (punto 12.2)."
         ),
     ),
 }

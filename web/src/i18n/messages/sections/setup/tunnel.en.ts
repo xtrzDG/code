@@ -1,8 +1,7 @@
 /**
  * `tunnel.*`: the frame of "Create an AI assistant" (/create and
  * /b/{id}/setup): the steps' names on the progress rail, moving between
- * them, saving, and what screen readers hear. English is the reference
- * that ru and ka are typed against.
+ * them, saving, and what screen readers hear. English is the reference that it is typed against.
  */
 
 export const tunnelEn = {

@@ -10,32 +10,11 @@ export const businessProfile: ChangelogEntry = {
         "Account → Security lists the devices you are signed in on, and you can sign out of any of them.",
       ],
     },
-    ru: {
-      title: "Профиль бизнеса в шести разделах",
+    it: {
+      title: "Il profilo della tua attività in sei sezioni",
       body: [
-        "В разделе «Помощник → Профиль бизнеса» теперь шесть карточек: что в каждой заполнено и что осталось добавить. Откройте карточку, чтобы изменить её, — всё сохраняется само.",
-        "В «Аккаунт → Безопасность» видно устройства, на которых вы вошли, и из любого можно выйти.",
-      ],
-    },
-    ka: {
-      title: "ბიზნესის პროფილი ექვს ნაწილად",
-      body: [
-        "„ასისტენტი → ბიზნესის პროფილში“ ახლა ექვსი ბარათია: რა არის თითოეულში და რა დარჩა დასამატებელი. გახსენით ბარათი შესაცვლელად — ყველაფერი თავისით ინახება.",
-        "„ანგარიში → უსაფრთხოებაში“ ჩანს მოწყობილობები, სადაც შესული ხართ, და ნებისმიერიდან შეგიძლიათ გამოსვლა.",
-      ],
-    },
-    he: {
-      title: "פרופיל העסק שלכם בשישה חלקים",
-      body: [
-        "עוזר → פרופיל העסק מציג עכשיו שישה כרטיסים: מה כל אחד מכיל ומה עוד נשאר להוסיף. פתחו אחד כדי לערוך אותו; כל שינוי נשמר מעצמו.",
-        "חשבון → אבטחה מציג את המכשירים שבהם אתם מחוברים, ואפשר להתנתק מכל אחד מהם.",
-      ],
-    },
-    de: {
-      title: "Ihr Unternehmensprofil in sechs Bereichen",
-      body: [
-        "Assistent → Unternehmensprofil zeigt jetzt sechs Karten: was jede enthält und was noch fehlt. Öffnen Sie eine, um sie zu bearbeiten; jede Änderung speichert sich selbst.",
-        "Konto → Sicherheit listet die Geräte, auf denen Sie angemeldet sind, und Sie können sich von jedem davon abmelden.",
+        "Assistente → Profilo dell'attività ora mostra sei schede: cosa contiene ciascuna e cosa manca ancora. Aprine una per modificarla; ogni modifica si salva da sola.",
+        "Account → Sicurezza elenca i dispositivi da cui hai effettuato l'accesso e puoi disconnetterne uno qualsiasi.",
       ],
     },
   },

@@ -13,55 +13,54 @@ function leafKeys(tree: MessageTree, prefix = ""): string[] {
 
 describe("locale negotiation", () => {
   it("matches tags to the supported languages", () => {
-    expect(matchLocale("ru-RU")).toBe("ru");
-    expect(matchLocale("ka")).toBe("ka");
+    expect(matchLocale("it-IT")).toBe("it");
+    expect(matchLocale("it")).toBe("it");
     expect(matchLocale("EN_us")).toBe("en");
-    expect(matchLocale("de-DE")).toBe("de");
-    expect(matchLocale("he-IL")).toBe("he");
-    expect(matchLocale("iw")).toBe("he");
+    expect(matchLocale("IT_ch")).toBe("it");
+    expect(matchLocale("ru-RU")).toBeNull();
     expect(matchLocale("fr-FR")).toBeNull();
     expect(matchLocale(undefined)).toBeNull();
   });
 
   it("honours Accept-Language quality values", () => {
-    expect(negotiateLocale("fr-FR,ru;q=0.8,en;q=0.5")).toBe("ru");
-    expect(negotiateLocale("en;q=0.4, ka;q=0.9")).toBe("ka");
-    expect(negotiateLocale("fr, de;q=0.7")).toBe("de");
-    expect(negotiateLocale("fr, it")).toBeNull();
+    expect(negotiateLocale("fr-FR,it;q=0.8,en;q=0.5")).toBe("it");
+    expect(negotiateLocale("en;q=0.4, it;q=0.9")).toBe("it");
+    expect(negotiateLocale("fr, en;q=0.7")).toBe("en");
+    expect(negotiateLocale("fr, de")).toBeNull();
     expect(negotiateLocale("*")).toBeNull();
   });
 
-  it("reads Hebrew right to left and every other language left to right", () => {
-    expect(LOCALE_DIRECTION).toEqual({ ka: "ltr", ru: "ltr", en: "ltr", he: "rtl", de: "ltr" });
-    expect(LOCALES.map(localeDirection)).toEqual(["ltr", "ltr", "ltr", "rtl", "ltr"]);
+  it("reads every language left to right (the layout keeps logical classes for a right-to-left one)", () => {
+    expect(LOCALE_DIRECTION).toEqual({ en: "ltr", it: "ltr" });
+    expect(LOCALES.map(localeDirection)).toEqual(["ltr", "ltr"]);
   });
 
   it("prefers the cookie, then the browser, then English", () => {
-    expect(resolveLocale({ cookieValue: "ka", acceptLanguage: "ru" })).toBe("ka");
-    expect(resolveLocale({ cookieValue: "xx", acceptLanguage: "ru-RU" })).toBe("ru");
+    expect(resolveLocale({ cookieValue: "it", acceptLanguage: "en" })).toBe("it");
+    expect(resolveLocale({ cookieValue: "xx", acceptLanguage: "it-IT" })).toBe("it");
     expect(resolveLocale({})).toBe("en");
   });
 });
 
 describe("translator", () => {
-  const partialGeorgian: MessageTree = { common: { save: "შენახვა" } };
+  const partialItalian: MessageTree = { common: { save: "Salva" } };
 
   it("falls back to English for a missing text, then to the key", () => {
-    const { t, has } = createTranslator("ka", partialGeorgian, en);
-    expect(t("common.save")).toBe("შენახვა");
+    const { t, has } = createTranslator("it", partialItalian, en);
+    expect(t("common.save")).toBe("Salva");
     expect(t("common.cancel")).toBe(en.common.cancel);
     expect(has("common.cancel")).toBe(true);
     expect(has("no.such.key")).toBe(false);
   });
 
   it("returns the key itself when no dictionary has the text", () => {
-    const { tDynamic } = createTranslator("ka", partialGeorgian);
+    const { tDynamic } = createTranslator("it", partialItalian);
     expect(tDynamic("errors.codes.unknown", "fallback")).toBe("fallback");
   });
 
   it("merges a partial dictionary over English", () => {
-    const merged = mergeMessages(en, partialGeorgian);
-    expect(lookupMessage(merged, "common.save")).toBe("შენახვა");
+    const merged = mergeMessages(en, partialItalian);
+    expect(lookupMessage(merged, "common.save")).toBe("Salva");
     expect(lookupMessage(merged, "common.cancel")).toBe(en.common.cancel);
   });
 
@@ -78,10 +77,11 @@ describe("translator", () => {
   });
 
   it("picks plural forms by language rules", () => {
-    const { tp } = createTranslator("ru", getMessages("ru"), en);
-    expect(tp("onboarding.gaps.times", 1)).toBe("1 раз");
-    expect(tp("onboarding.gaps.times", 3)).toBe("3 раза");
-    expect(tp("onboarding.gaps.times", 5)).toBe("5 раз");
+    const { tp } = createTranslator("it", getMessages("it"), en);
+    expect(tp("onboarding.gaps.times", 1)).toBe("1 volta");
+    expect(tp("onboarding.gaps.times", 3)).toBe("3 volte");
+    // Italian counts a million as "many"; a dictionary without that form reads "other".
+    expect(tp("onboarding.gaps.times", 1_000_000)).toBe("1.000.000 volte");
     const english = createTranslator("en", en);
     expect(english.tp("onboarding.gaps.times", 1)).toBe("1 time");
     expect(english.tp("onboarding.gaps.times", 2)).toBe("2 times");
@@ -110,7 +110,7 @@ describe("dictionaries", () => {
     }
   });
 
-  it("never end a sentence on a formatted date (a Russian one ends with “г.”)", () => {
+  it("never end a sentence on a formatted date (a formatted date may end with a full stop)", () => {
     const endsOnDate = /\{(date|when|until|time|start|end|from|to|day)\}\./;
     for (const locale of LOCALES) {
       const offending = leafKeys(DICTIONARIES[locale]).filter((key) => {

@@ -21,16 +21,16 @@ def test_owner_starts_the_trial_and_reads_the_billing_page() -> None:
     page = world.client.get(
         world.billing_path(),
         headers=bearer(world.owner),
-        params={"language": "RU"},
+        params={"language": "IT"},
     )
 
     assert created.status_code == 201
     assert created.json()["subscription"]["status"] == "trialing"
     assert page.status_code == 200
     body: dict[str, Any] = page.json()
-    assert body["display_language"] == "ru"
+    assert body["display_language"] == "it"
     assert body["currency_code"] == "GEL"
-    assert body["subscription"]["plan_name"] == "Голос + чат"
+    assert body["subscription"]["plan_name"] == "Voce + chat"
     assert body["subscription"]["price"]["text"] == "517,00\xa0GEL"
     assert body["usage"]["included_voice_minutes"] == 400
     assert body["is_trial_available"] is False

@@ -46,7 +46,9 @@ def test_trial_in_georgia_is_priced_in_lari_from_the_price_book() -> None:
     assert subscription is not None
     assert subscription.status is SubscriptionStatus.TRIALING
     assert subscription.plan_key is PlanKey.VOICE_AND_CHAT
-    assert subscription.plan_name == "ხმა + ჩატი"
+    # Georgian is no longer an owner language: the plan name falls back to
+    # English while the price keeps the Georgian number format.
+    assert subscription.plan_name == "Voice + chat"
     assert int(subscription.price.money.amount_minor) == 51700
     assert subscription.price.text == "517,00\xa0₾"
     assert subscription.has_auto_debit is False
@@ -141,12 +143,14 @@ def test_annual_trial_is_priced_with_the_annual_discount() -> None:
         business,
         plan_key=PlanKey.CHAT,
         billing_period=BillingPeriod.ANNUAL,
-        language="ru",
+        language="it",
     )
 
     assert overview.subscription is not None
-    assert overview.subscription.plan_name == "Чат"
-    assert overview.subscription.price.text == "2\xa0988,60\xa0GEL"
+    assert overview.display_language == "it"
+    # The Italian plan name is also "Chat"; the price reads in Italian format.
+    assert overview.subscription.plan_name == "Chat"
+    assert overview.subscription.price.text == "2.988,60\xa0GEL"
 
 
 def test_the_trial_is_available_once_per_business() -> None:

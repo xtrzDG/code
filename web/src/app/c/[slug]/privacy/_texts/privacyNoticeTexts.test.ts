@@ -5,7 +5,8 @@ import { HOSTED_CHAT_LANGUAGES } from "@/lib/hostedChat/texts";
 
 import { PRIVACY_NOTICE_DRAFTS, privacyNoticeFor } from "./privacyNoticeTexts";
 
-const REVIEWED = ["en", "ru", "ka"];
+/** The cabinet languages whose notice a native reviewer read (CABINET_LANGUAGES minus NEEDS_REVIEW_LOCALES). */
+const REVIEWED = ["en"];
 const placeholders = (text: string) => new Set(text.match(/\{\w+\}/g) ?? []);
 
 describe("privacy notice languages", () => {
@@ -17,8 +18,10 @@ describe("privacy notice languages", () => {
   });
 
   it("marks every draft for review until a translator and a lawyer checked it", () => {
+    // Russian and Georgian were the cabinet's reviewed texts before the cabinet spoke English and Italian only.
+    const reviewedTexts = ["ru", "ka"];
     for (const [language, draft] of Object.entries(PRIVACY_NOTICE_DRAFTS)) {
-      expect([language, draft.status]).toEqual([language, "needs_review"]);
+      expect([language, draft.status]).toEqual([language, reviewedTexts.includes(language) ? "reviewed" : "needs_review"]);
     }
   });
 
@@ -44,12 +47,16 @@ describe("privacy notice languages", () => {
 });
 
 describe("privacyNoticeFor", () => {
-  it("reads the reviewed cabinet texts in English, Russian and Georgian", () => {
-    const russian = privacyNoticeFor("ru-RU");
-    expect(russian.language).toBe("ru");
-    expect(russian.needsReview).toBe(false);
-    expect(russian.text("title")).toBe("Политика конфиденциальности");
-    expect(privacyNoticeFor("ka").text("subtitle", { business: "ია" })).toContain("ია");
+  it("reads the reviewed cabinet texts in English, and Italian's draft while its cabinet texts await review", () => {
+    const english = privacyNoticeFor("en-GB");
+    expect(english.language).toBe("en");
+    expect(english.needsReview).toBe(false);
+    expect(english.text("title")).toBe(en.privacyNotice.title);
+    expect(english.text("subtitle", { business: "Ia" })).toContain("Ia");
+    const italian = privacyNoticeFor("it-IT");
+    expect(italian.language).toBe("it");
+    expect(italian.needsReview).toBe(true);
+    expect(italian.text("title")).toBe(PRIVACY_NOTICE_DRAFTS.it?.texts.title);
   });
 
   it("reads a draft, marked for review, in the other widget languages", () => {

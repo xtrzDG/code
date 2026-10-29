@@ -1,7 +1,6 @@
 /**
  * `reports.*` texts: Overview → Reports (the month so far, stored monthly
- * reports and digests, the owner's summaries), in English: the reference
- * that ru and ka are typed against.
+ * reports and digests, the owner's summaries), in English: the reference that it is typed against.
  */
 
 export const reportsEn = {

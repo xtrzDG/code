@@ -83,10 +83,10 @@ def monthly_report(business: BusinessDocument) -> ValueReportView:
 def digest_setup(
     testbed: ChannelsTestbed,
 ) -> tuple[OwnerDigestFacilitator, BusinessDocument, DigestPreferencesRepository]:
-    owner_id: UserId = testbed.add_user("owner-token", "ru")
+    owner_id: UserId = testbed.add_user("owner-token", "it")
     business = testbed.add_business(owner_id, name="Cafe Batumi")
     business.manager_contacts.append(
-        manager("Owner chat", ManagerContactChannel.TELEGRAM, CHAT, "ru")
+        manager("Owner chat", ManagerContactChannel.TELEGRAM, CHAT, "it")
     )
     testbed.business_repo.save(business)
     choices = DigestPreferencesRepository(
@@ -148,10 +148,10 @@ def test_telegram_and_whatsapp_get_the_report_once_each() -> None:
     body = whatsapp.json()
     assert body["to"] == OWNER_NUMBER.lstrip("+")
     assert body["template"]["name"] == "owner_report"
-    assert body["template"]["language"] == {"code": "ru"}
+    assert body["template"]["language"] == {"code": "it"}
     business_name, summary, link = body["template"]["components"][0]["parameters"]
     assert business_name == {"type": "text", "text": "Cafe Batumi"}
-    assert "≈ 8,2× тарифа" in summary["text"] and "\n" not in summary["text"]
+    assert "≈ 8,2× il tuo piano" in summary["text"] and "\n" not in summary["text"]
     assert link["text"].startswith("https://cabinet.example.com/n/")
 
 

@@ -22,11 +22,8 @@ class CabinetLanguage(StrEnum):
     catalog text exists in each of them; English is the only fallback.
     """
 
-    GEORGIAN = "ka"
-    RUSSIAN = "ru"
+    ITALIAN = "it"
     ENGLISH = "en"
-    HEBREW = "he"
-    GERMAN = "de"
 
 
 CABINET_LANGUAGES: tuple[CabinetLanguage, ...] = tuple(CabinetLanguage)

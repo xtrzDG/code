@@ -1,7 +1,7 @@
 /**
  * `dataTasks.*` texts: the post-deploy data tasks card of the admin system
  * page and the lists' "still indexing" note, in English: the reference that
- * ru and ka are typed against.
+ * it is typed against.
  */
 
 export const dataTasksEn = {

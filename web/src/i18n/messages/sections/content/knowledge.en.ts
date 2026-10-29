@@ -1,6 +1,6 @@
 /**
  * `knowledge.*` texts of knowledge items, search, the item form, questions and
- * the menu import, in English: the reference that ru and ka are typed against.
+ * the menu import, in English: the reference that it is typed against.
  */
 
 export const knowledgeEn = {
@@ -68,7 +68,7 @@ export const knowledgeEn = {
     title: "Check what the assistant finds",
     description: "Type a question the way a customer would. The assistant searches the knowledge base the same way.",
     query: "Customer question",
-    placeholder: "For example: how much is the khachapuri?",
+    placeholder: "For example: how much is the carbonara?",
     language: "Language",
     resultsFor: "The assistant finds for “{query}”:",
     nothingFor: "Nothing found for “{query}”",

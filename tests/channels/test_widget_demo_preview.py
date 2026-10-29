@@ -31,7 +31,7 @@ def demo(params: dict[str, str]) -> tuple[str, dict[str, str | None]]:
     return response.text, widget_tag
 
 
-@pytest.mark.parametrize(("lang", "page"), [("ka", "ka"), ("he", "en"), ("ru", "ru")])
+@pytest.mark.parametrize(("lang", "page"), [("it", "it"), ("ka", "en"), ("ru", "en")])
 def test_lang_forces_the_widget_language_and_the_page_follows_when_it_can(
     lang: str, page: str
 ) -> None:

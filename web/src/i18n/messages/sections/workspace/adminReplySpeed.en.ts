@@ -1,6 +1,6 @@
 /**
  * `adminReplySpeed.*` texts of the reply-speed card on the platform admin's
- * client page, in English: the reference that ru and ka are typed against.
+ * client page, in English: the reference that it is typed against.
  */
 
 export const adminReplySpeedEn = {

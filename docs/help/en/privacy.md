@@ -11,7 +11,7 @@ You decide why customer data is collected; we process it for you under the data 
 
 ## The agreement
 
-Read and accept the DPA in **Settings → [Privacy](cabinet:settings/privacy)**. The assistant goes live only after an owner accepts it. The text is in Georgian, Russian and English.
+Read and accept the DPA in **Settings → [Privacy](cabinet:settings/privacy)**. The assistant goes live only after an owner accepts it. The text is in English; the Italian version follows once a lawyer has reviewed it.
 
 ## A customer asks for their data
 

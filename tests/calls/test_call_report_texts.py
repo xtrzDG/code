@@ -1,4 +1,4 @@
-"""The staff texts about a call, in English, Russian and Georgian."""
+"""The staff texts about a call, in English and Italian."""
 
 import pytest
 from typed_time_provider import Microseconds
@@ -82,18 +82,13 @@ class TestSummaryText:
     @pytest.mark.parametrize(
         ("language", "title", "result"),
         [
-            ("ru", "Итог звонка · Funicular VR", "Итог: принята заявка"),
-            ("ka", "ზარის შეჯამება · Funicular VR", "შედეგი: მოთხოვნა მიღებულია"),
             (
-                "de",
-                "Anrufzusammenfassung · Funicular VR",
-                "Ergebnis: Anfrage aufgenommen",
+                "it",
+                "Riepilogo della chiamata · Funicular VR",
+                "Esito: richiesta raccolta",
             ),
-            (
-                "he",
-                "סיכום שיחה · \u2068Funicular VR\u2069",
-                "תוצאה: \u2068התקבלה פנייה\u2069",
-            ),
+            # A language the owner catalog lacks reads English.
+            ("ru", "Call summary · Funicular VR", "Result: request taken"),
             ("fr", "Call summary · Funicular VR", "Result: request taken"),
         ],
     )
@@ -111,10 +106,10 @@ class TestSummaryText:
 
     def test_a_long_call_in_minutes(self, detailed: CallReportTextTransformer) -> None:
         text = detailed.transform(
-            facts("ru", duration_seconds=CallDurationSeconds(185))
+            facts("it", duration_seconds=CallDurationSeconds(185))
         )
 
-        assert str(text).split("\n")[1].endswith(" · 3 мин 5 с")
+        assert str(text).split("\n")[1].endswith(" · 3 min 5 s")
 
 
 class TestMissedCallText:
@@ -148,11 +143,11 @@ class TestMissedCallText:
                     status=TextBackStatus.SKIPPED,
                     skip_reason=TextBackSkipReason.OPTED_OUT,
                 ),
-                "клиент просил не присылать сообщения",
+                "ha chiesto di non ricevere messaggi",
             ),
             (
                 TextBackNote(status=TextBackStatus.FAILED),
-                "сообщение не удалось отправить",
+                "non è stato possibile inviare il messaggio",
             ),
         ],
     )
@@ -163,17 +158,17 @@ class TestMissedCallText:
         why: str,
     ) -> None:
         text = detailed.transform(
-            facts("ru", missed_reason=MissedCallReason.NO_ANSWER, text_back=note)
+            facts("it", missed_reason=MissedCallReason.NO_ANSWER, text_back=note)
         )
 
         assert str(text).split("\n")[-1] == (
-            f"Звонившему мы не написали ({why}). Перезвоните, если можете."
+            f"Non abbiamo scritto al chiamante ({why}). Se puoi, richiamalo."
         )
 
-    def test_georgian(self, detailed: CallReportTextTransformer) -> None:
+    def test_italian(self, detailed: CallReportTextTransformer) -> None:
         text = detailed.transform(
             facts(
-                "ka",
+                "it",
                 missed_reason=MissedCallReason.TRANSFER_UNANSWERED,
                 text_back=TextBackNote(
                     status=TextBackStatus.SENT, channel=TextBackChannel.WHATSAPP
@@ -182,18 +177,20 @@ class TestMissedCallText:
         )
 
         lines = str(text).split("\n")
-        assert lines[0] == "გამოტოვებული ზარი · Funicular VR"
+        assert lines[0] == "Chiamata persa · Funicular VR"
+        assert lines[1] == "Chiamante: +995 599 12 34 56 · 3 ott 2026, 19:00"
         assert lines[-1] == (
-            "დამრეკს WhatsApp-ში მივწერეთ — მისი პასუხი შემოსულებში მოვა."
+            "Abbiamo scritto al chiamante su WhatsApp; la sua risposta arriverà "
+            "in Conversazioni."
         )
 
 
 class TestBrief:
     def test_an_answered_call(self, brief: CallReportBriefTransformer) -> None:
-        result = brief.transform(facts("ru"))
+        result = brief.transform(facts("it"))
 
-        assert str(result.title) == "Итог звонка · Funicular VR"
-        assert str(result.detail) == "принята заявка · 42 с"
+        assert str(result.title) == "Riepilogo della chiamata · Funicular VR"
+        assert str(result.detail) == "richiesta raccolta · 42 s"
 
     def test_a_missed_call_says_why_and_nothing_about_the_caller(
         self, brief: CallReportBriefTransformer

@@ -2,7 +2,7 @@
  * `setupGuide.*`: the Overview's setup guide (the steps of the setup, then
  * a test from the owner's phone, a second channel and the link for
  * customers), the progress ring in the bar and the milestone toasts.
- * English is the reference that ru and ka are typed against.
+ * English is the reference that it is typed against.
  */
 
 export const setupGuideEn = {

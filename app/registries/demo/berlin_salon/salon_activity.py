@@ -30,9 +30,6 @@ PHONE = ChannelKind.PHONE
 # words a monthly Chat period (InvoiceLineTextsTransformer).
 SALON_INVOICE_LINES: dict[str, str] = {
     "en": "Call and message handling service — Chat, monthly",
-    "ru": "Услуга приёма и обработки обращений — Чат, помесячно",
-    "ka": "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
-    "ჩატი, ყოველთვიური",
 }
 
 

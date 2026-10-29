@@ -11,25 +11,28 @@ import { PhoneTabBar } from "./PhoneTabBar";
 
 describe("the phone tab bar", () => {
   it("names a section by its short tab name and marks the open one", () => {
-    const { t } = textsIn("de");
-    // The German inbox ("Posteingang") is too long for a fifth of a phone.
-    expect(t("navigation.tabLabels.inbox")).toBe("Eingang");
+    const { t } = textsIn("it");
+    // The Italian inbox ("Conversazioni") is too long for a fifth of a phone.
+    const inbox = t("navigation.sections.inbox");
+    const inboxTab = t("navigation.tabLabels.inbox");
+    const bookings = t("navigation.sections.bookings");
+    expect(inboxTab).toBe("Chat");
     renderInLocale(
       <PhoneTabBar
         items={[
-          { key: "inbox", href: "/b/business_1/inbox", label: "Posteingang", tabLabel: "Eingang", icon: IconInbox, isActive: true },
-          { key: "bookings", href: "/b/business_1/bookings", label: "Buchungen", icon: IconCalendar, isActive: false },
+          { key: "inbox", href: "/b/business_1/inbox", label: inbox, tabLabel: inboxTab, icon: IconInbox, isActive: true },
+          { key: "bookings", href: "/b/business_1/bookings", label: bookings, icon: IconCalendar, isActive: false },
         ]}
         isMoreActive={false}
         isMoreOpen={false}
         onOpenMore={() => undefined}
       />,
-      { locale: "de" },
+      { locale: "it" },
     );
     const bar = screen.getByRole("navigation", { name: t("navigation.tabBar") });
-    expect(within(bar).getByRole("link", { name: "Eingang" }).getAttribute("aria-current")).toBe("page");
-    expect(within(bar).queryByText("Posteingang")).toBeNull();
-    expect(within(bar).getByRole("link", { name: "Buchungen" })).toBeTruthy();
+    expect(within(bar).getByRole("link", { name: inboxTab }).getAttribute("aria-current")).toBe("page");
+    expect(within(bar).queryByText(inbox)).toBeNull();
+    expect(within(bar).getByRole("link", { name: bookings })).toBeTruthy();
     // A word never breaks between letters: it is hyphenated or ends with "…".
     for (const label of bar.querySelectorAll("[data-tab-label]")) {
       expect(label.className).toContain("break-normal");

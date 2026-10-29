@@ -1,7 +1,7 @@
 /**
  * `helpCenter.*` texts: the help center (/help), the article drawer behind a
  * page's "?", and "Help and support" in the account panel, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const helpCenterEn = {

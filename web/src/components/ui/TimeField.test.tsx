@@ -41,7 +41,7 @@ function renderOpens(locale: Locale, props: Parameters<typeof Opens>[0] = {}) {
 }
 
 describe("TimeField", () => {
-  it.each<Locale>(["ru", "ka"])("shows 08:00 with no AM/PM in %s", (locale) => {
+  it.each<Locale>(["it"])("shows 08:00 with no AM/PM in %s", (locale) => {
     const { hours, minutes } = renderOpens(locale, { initial: "08:00" });
     expect(hours).toHaveProperty("value", "08");
     expect(minutes).toHaveProperty("value", "00");
@@ -60,16 +60,16 @@ describe("TimeField", () => {
 
   it("is named by its label and focuses the hours from it", async () => {
     const user = userEvent.setup();
-    renderOpens("ru");
+    renderOpens("it");
     expect(screen.getByRole("group", { name: "Opens" })).toBeTruthy();
     await user.click(screen.getByText("Opens"));
-    expect(document.activeElement).toBe(segment(/Opens Часы/));
+    expect(document.activeElement).toBe(segment(new RegExp(`Opens ${textsIn("it").t("formFields.time.hours")}`)));
   });
 
   it("takes 0830 typed in one go", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    const { hours, minutes } = renderOpens("ru", { onValue });
+    const { hours, minutes } = renderOpens("it", { onValue });
     await user.click(hours);
     await user.keyboard("0830");
     expect(hours).toHaveProperty("value", "08");
@@ -93,7 +93,7 @@ describe("TimeField", () => {
   it("steps the minutes by 15 or 30 with the arrows", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    const { minutes } = renderOpens("ru", { initial: "08:10", onValue });
+    const { minutes } = renderOpens("it", { initial: "08:10", onValue });
     await user.click(minutes);
     await user.keyboard("{ArrowUp}");
     expect(onValue).toHaveBeenLastCalledWith("08:15");
@@ -106,7 +106,7 @@ describe("TimeField", () => {
   it("steps by half an hour when asked", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    const { minutes } = renderOpens("ru", { initial: "09:30", onValue, step: 30 });
+    const { minutes } = renderOpens("it", { initial: "09:30", onValue, step: 30 });
     await user.click(minutes);
     await user.keyboard("{ArrowUp}");
     expect(onValue).toHaveBeenLastCalledWith("10:00");
@@ -115,7 +115,7 @@ describe("TimeField", () => {
   it("starts an empty field at 09:00 and steps hours by one", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    const { hours } = renderOpens("ka", { onValue });
+    const { hours } = renderOpens("it", { onValue });
     await user.click(hours);
     await user.keyboard("{ArrowUp}");
     expect(onValue).toHaveBeenLastCalledWith("09:00");
@@ -126,7 +126,7 @@ describe("TimeField", () => {
   it("empties a segment with Backspace and goes back from an empty one", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    const { hours, minutes } = renderOpens("ru", { initial: "08:30", onValue });
+    const { hours, minutes } = renderOpens("it", { initial: "08:30", onValue });
     await user.click(minutes);
     await user.keyboard("{Backspace}");
     expect(onValue).toHaveBeenLastCalledWith("");
@@ -139,7 +139,7 @@ describe("TimeField", () => {
 
   it("takes a pasted time and text a phone keyboard put in", () => {
     const onValue = vi.fn();
-    const { hours } = renderOpens("ru", { onValue });
+    const { hours } = renderOpens("it", { onValue });
     fireEvent.paste(hours, { clipboardData: { getData: () => "9:45" } });
     expect(onValue).toHaveBeenLastCalledWith("09:45");
     fireEvent.change(hours, { target: { value: "17:20" } });
@@ -158,10 +158,10 @@ describe("TimeField", () => {
         </>
       );
     }
-    renderInLocale(<Outside />, { locale: "ru" });
+    renderInLocale(<Outside />, { locale: "it" });
     const group = screen.getByRole("group", { name: "Closes" });
     fireEvent.click(screen.getByText("later"));
     expect(within(group).getAllByRole("spinbutton").map((input) => (input as HTMLInputElement).value)).toEqual(["22", "15"]);
-    expect(within(group).getAllByRole("spinbutton")[0]?.getAttribute("aria-label")).toBe("Часы");
+    expect(within(group).getAllByRole("spinbutton")[0]?.getAttribute("aria-label")).toBe(textsIn("it").t("formFields.time.hours"));
   });
 });

@@ -59,9 +59,9 @@ def test_call_forwarding_route_requires_a_member(
     owner_response = client.get(
         path, headers={"Authorization": f"Bearer {OWNER_TOKEN}"}
     )
-    russian_response = client.get(
+    italian_response = client.get(
         path,
-        params={"language": "ru"},
+        params={"language": "it"},
         headers={"Authorization": f"Bearer {OWNER_TOKEN}"},
     )
     anonymous_response = client.get(path)
@@ -75,18 +75,20 @@ def test_call_forwarding_route_requires_a_member(
 
     assert owner_response.status_code == 200
     body = read_json(owner_response)
+    # The owner's Georgian is kept as asked; the texts the cabinet lacks in
+    # it read English.
     assert body["display_language"] == "ka"
     assert body["codes"][0] == {
         "condition": "no_answer",
         "dial_code": "**61*+995322123456#",
-        "description": "იმ ზარების გადამისამართება, რომლებსაც არ უპასუხეთ.",
+        "description": "Forward calls you do not answer.",
     }
     assert [carrier["carrier_name"] for carrier in body["carriers"]] == [
         "Magti",
         "Silknet",
         "Cellfie",
     ]
-    assert read_json(russian_response)["steps"][1].startswith("Наберите **61*")
+    assert read_json(italian_response)["steps"][1].startswith("Componi **61*")
     assert anonymous_response.status_code == 401
     assert stranger_response.status_code == 404
     assert malformed_id_response.status_code == 404

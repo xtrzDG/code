@@ -13,6 +13,7 @@ from app.schemas.dto.invoicing import BillingEmailsQueued
 from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.schemas.typings.billing.strings import PaymentWebhookBody
 from app.schemas.typings.invoicing.constrained_integers import BillingEmailCount
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.invoicing.billing_document_email_transformer import (
     BillingDocumentEmailTransformer,
 )
@@ -51,6 +52,8 @@ def paid_receipt(world: PaidWorld) -> PaymentWebhookReceipt:
 
 def test_the_paid_invoice_and_its_receipt_go_to_the_billing_email() -> None:
     world = build_seller_trial(is_vat_registered=True)
+    world.business.owner_language = LanguageTag("it")
+    world.testbed.business_repo.save(world.business)
     save_billing_profile(world, "GE", billing_email="accounts@mtsvane-ezo.ge")
     receipt = paid_receipt(world)
     notifier = RecordingStaffNotifier()
@@ -69,10 +72,13 @@ def test_the_paid_invoice_and_its_receipt_go_to_the_billing_email() -> None:
         BillingDocumentKind.INVOICE,
         BillingDocumentKind.RECEIPT,
     ]
-    assert str(notification.billing_documents.language) == "ka"
+    # The documents are kept as issued, so their e-mail and PDFs read a
+    # reviewed language: English for an Italian owner until the Italian
+    # catalog is reviewed (a draft never reaches a billing document).
+    assert str(notification.billing_documents.language) == "it"
     lines = str(notification.text).split("\n")
-    assert lines[0] == "გადახდის ქვითარი, ინვოისი № AW-2026-000001"
-    assert lines[1].startswith("Mtsvane Ezo: 610,06")
+    assert lines[0] == "Payment receipt for invoice AW-2026-000001"
+    assert lines[1].startswith("Mtsvane Ezo: we received ")
     assert "PDF" in lines[1]
 
 

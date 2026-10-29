@@ -2,7 +2,7 @@
  * `adminStory.*` texts of the admin client page's story: the platform
  * team's notes about the client and the timeline that merges the audit
  * log, billing, health changes, the setup's milestones and the
- * done-for-you request, in English: the reference that ru and ka are typed
+ * done-for-you request, in English: the reference that it is typed
  * against.
  */
 

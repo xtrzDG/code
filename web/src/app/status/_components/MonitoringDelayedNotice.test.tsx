@@ -19,13 +19,13 @@ describe("MonitoringDelayedNotice: the platform's checks are late", () => {
   });
 
   it("says how long ago the last check was, in the reader's language", () => {
-    renderInLocale(<MonitoringDelayedNotice checkedAt={CHECKED_AT} />, { locale: "ru" });
+    renderInLocale(<MonitoringDelayedNotice checkedAt={CHECKED_AT} />, { locale: "it" });
 
-    const texts = textsIn("ru");
+    const texts = textsIn("it");
     const notice = screen.getByRole("status").textContent;
     expect(notice).toContain(texts.t("platformStatus.monitoringDelayed.title"));
     expect(notice).toContain(texts.tp("platformStatus.monitoringDelayed.minutesAgo", 17));
-    expect(notice).toContain("Последняя проверка 17 мин назад.");
+    expect(notice).toContain("L'ultima verifica risale a 17 minuti fa.");
   });
 
   it("counts whole minutes in English too", () => {

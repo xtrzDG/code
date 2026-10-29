@@ -6,7 +6,7 @@ import { renderInLocale, textsIn } from "@/test/render";
 import { StillIndexingNote } from "./StillIndexingNote";
 
 describe("StillIndexingNote: a list while a data task still fills it", () => {
-  it.each(["en", "ru", "ka"] as const)("says the list may be incomplete in %s", (locale) => {
+  it.each(["en", "it"] as const)("says the list may be incomplete in %s", (locale) => {
     const { t } = textsIn(locale);
     renderInLocale(<StillIndexingNote isIndexing />, { locale });
 

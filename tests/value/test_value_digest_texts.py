@@ -1,4 +1,4 @@
-"""The digest and monthly report as owners read them, in en, ru and ka."""
+"""The digest and monthly report as owners read them, in en and it."""
 
 import json
 
@@ -86,7 +86,7 @@ def test_the_weekly_digest_in_english() -> None:
     )
 
 
-def test_the_monthly_report_in_russian_and_georgian() -> None:
+def test_the_monthly_report_in_italian() -> None:
     monthly = report(
         kind="monthly",
         period_key="2026-09",
@@ -95,20 +95,21 @@ def test_the_monthly_report_in_russian_and_georgian() -> None:
         average_check_source="niche_default",
     )
 
-    russian = str(digest("ru", monthly).message).split("\n")
+    italian = str(digest("it", monthly).message).split("\n")
     georgian = str(digest("ka", monthly).message).split("\n")
 
-    assert russian[0] == "Отчёт за месяц: сентябрь 2026\u202fг. · Café Rustaveli"
-    assert russian[1] == (
-        "Брони через помощника: 22 ≈ 2\xa0640\xa0GEL (▲ 16% к предыдущему месяцу)"
+    assert italian[0] == "Report mensile, settembre 2026 · Café Rustaveli"
+    assert italian[1] == (
+        "Prenotazioni fatte dall'assistente: 22 ≈ 2.640\xa0GEL "
+        "(▲ 16% rispetto al mese prima)"
     )
     assert (
-        "Сумма посчитана по типичному чеку 120\xa0GEL; укажите свой в кабинете."
-        in russian
-    )
-    assert georgian[0] == "თვის ანგარიში: სექტემბერი, 2026 · Café Rustaveli"
-    assert georgian[1].startswith("ასისტენტის ჯავშნები: 22 ≈ 2\xa0640\xa0₾")
-    assert "საუბრები არასამუშაო საათებში: 18 (134-დან)" in georgian
+        "L'importo si basa su una spesa media tipica di 120\xa0GEL; imposta la tua "
+        "nell'area riservata."
+    ) in italian
+    assert "Conversazioni fuori orario: 18 (su 134)" in italian
+    # Georgian is not in the catalog: that owner reads English.
+    assert georgian[0] == "Monthly report, September 2026 · Café Rustaveli"
 
 
 def test_without_a_check_or_a_link_the_counts_stay_and_a_hint_follows() -> None:

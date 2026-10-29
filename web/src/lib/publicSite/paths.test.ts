@@ -14,8 +14,8 @@ import {
 
 describe("public site paths", () => {
   it("puts every public page under its language", () => {
-    expect(localeHomePath("ka")).toBe("/ka");
-    expect(nichePath("ru", "beauty_salon")).toBe("/ru/for/beauty_salon");
+    expect(localeHomePath("it")).toBe("/it");
+    expect(nichePath("it", "beauty_salon")).toBe("/it/for/beauty_salon");
     expect(nichePath("en", "a b")).toBe("/en/for/a%20b");
     expect(legalPath("en", "privacy")).toBe("/en/privacy");
     expect(LEGAL_PAGES).toContain("contact");
@@ -24,30 +24,29 @@ describe("public site paths", () => {
   });
 
   it("reads the language of a path and swaps it", () => {
-    expect(pathLocale("/ru/for/hotel")).toBe("ru");
-    expect(pathLocale("/ka")).toBe("ka");
+    expect(pathLocale("/it/for/hotel")).toBe("it");
+    expect(pathLocale("/en")).toBe("en");
     expect(pathLocale("/login")).toBeNull();
     expect(pathLocale("/")).toBeNull();
-    expect(switchPathLocale("/ru/for/hotel", "ka")).toBe("/ka/for/hotel");
-    expect(switchPathLocale("/en", "ru")).toBe("/ru");
-    expect(switchPathLocale("/businesses", "ru")).toBe("/businesses");
+    // A language the site no longer has is not a public path.
+    expect(pathLocale("/ru/for/hotel")).toBeNull();
+    expect(switchPathLocale("/it/for/hotel", "en")).toBe("/en/for/hotel");
+    expect(switchPathLocale("/en", "it")).toBe("/it");
+    expect(switchPathLocale("/businesses", "it")).toBe("/businesses");
   });
 
   it("sends a legal page without a language to the reader's", () => {
-    expect(localizedRedirectPath("/privacy", "ru")).toBe("/ru/privacy");
-    expect(localizedRedirectPath("/terms/", "ka")).toBe("/ka/terms");
+    expect(localizedRedirectPath("/privacy", "it")).toBe("/it/privacy");
+    expect(localizedRedirectPath("/terms/", "it")).toBe("/it/terms");
     expect(localizedRedirectPath("/login", "en")).toBeNull();
     expect(localizedRedirectPath("/", "en")).toBeNull();
   });
 
   it("links every language of a page with an x-default", () => {
-    expect(languageAlternates("")).toEqual({ ka: "/ka", ru: "/ru", en: "/en", he: "/he", de: "/de", "x-default": "/" });
+    expect(languageAlternates("")).toEqual({ en: "/en", it: "/it", "x-default": "/" });
     expect(languageAlternates("/for/hotel")).toEqual({
-      ka: "/ka/for/hotel",
-      ru: "/ru/for/hotel",
       en: "/en/for/hotel",
-      he: "/he/for/hotel",
-      de: "/de/for/hotel",
+      it: "/it/for/hotel",
       "x-default": "/en/for/hotel",
     });
   });

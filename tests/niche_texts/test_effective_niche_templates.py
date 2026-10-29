@@ -6,7 +6,7 @@ texts; niches without a version read exactly as the code writes them.
 
 from app.schemas.constants.niches import NicheKey
 from app.schemas.typings.localization.constrained_strings import CountryCode
-from tests.niche_texts.niche_text_world import EN, RESTAURANT, RU, NicheTextWorld
+from tests.niche_texts.niche_text_world import EN, IT, RESTAURANT, NicheTextWorld
 
 GE = CountryCode("GE")
 IL = CountryCode("IL")
@@ -14,13 +14,13 @@ IL = CountryCode("IL")
 
 def test_the_niche_list_carries_the_published_names_only() -> None:
     world = NicheTextWorld()
-    world.save(RU, name="Рестораны, кафе и бары")
+    world.save(IT, name="Ristoranti, caffè e bar")
     world.publish()
 
     templates = world.effective_templates.list_all()
 
     assert [template.key for template in templates] == list(NicheKey)
-    assert str(templates[0].names.values[RU]) == "Рестораны, кафе и бары"
+    assert str(templates[0].names.values[IT]) == "Ristoranti, caffè e bar"
     assert (
         templates[0].names.values[EN]
         == world.code_templates.get(RESTAURANT).names.values[EN]
@@ -31,18 +31,18 @@ def test_the_niche_list_carries_the_published_names_only() -> None:
 def test_starter_answers_carry_the_published_texts_over_the_countrys_week() -> None:
     world = NicheTextWorld()
     world.save(
-        RU,
-        starters__tone="Тепло, по-домашнему, коротко",
-        starters__faq__parking__question="Где оставить машину?",
+        IT,
+        starters__tone="Caldo, familiare, breve",
+        starters__faq__parking__question="Dove si lascia la macchina?",
     )
     world.publish()
 
     starters = world.effective_starters.get(RESTAURANT, IL)
     code = world.code_starters.get(RESTAURANT, IL)
 
-    assert str(starters.tones.values[RU]) == "Тепло, по-домашнему, коротко"
+    assert str(starters.tones.values[IT]) == "Caldo, familiare, breve"
     parking = next(faq for faq in starters.faq if str(faq.key) == "parking")
-    assert str(parking.questions.values[RU]) == "Где оставить машину?"
+    assert str(parking.questions.values[IT]) == "Dove si lascia la macchina?"
     assert starters.hours == code.hours
     assert world.effective_starters.get(NicheKey.HOTEL, GE) == world.code_starters.get(
         NicheKey.HOTEL, GE
@@ -51,7 +51,7 @@ def test_starter_answers_carry_the_published_texts_over_the_countrys_week() -> N
 
 def test_a_reset_brings_the_code_wording_back_for_new_owners() -> None:
     world = NicheTextWorld()
-    world.save(RU, starters__tone="Тепло и коротко")
+    world.save(IT, starters__tone="Caldo e breve")
     world.publish()
     world.revert(0)
 

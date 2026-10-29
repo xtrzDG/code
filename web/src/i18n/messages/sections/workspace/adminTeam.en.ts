@@ -1,7 +1,7 @@
 /**
  * `adminTeam.*` texts of the platform admin team page (/admin/team): who
  * may open the admin pages, with which role, adding and removing people,
- * in English: the reference that ru and ka are typed against.
+ * in English: the reference that it is typed against.
  */
 
 export const adminTeamEn = {

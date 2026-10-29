@@ -2,7 +2,7 @@
  * Texts of the cabinet sections: Knowledge base and the assistant (test chat, versions, autotests, publishing).
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
- * spread into en.ts, ru.ts, ka.ts, he.ts and de.ts, so they must not clash
+ * spread into en.ts and it.ts, so they must not clash
  * with the namespaces of the other dictionaries. The other languages are
  * type-checked against `en`.
  *
@@ -12,72 +12,30 @@
 
 import type { Translation } from "../../translate";
 import { assistantEn } from "./content/assistant.en";
-import { assistantKa } from "./content/assistant.ka";
-import { assistantRu } from "./content/assistant.ru";
 import { assistantChatEn } from "./content/assistantChat.en";
-import { assistantChatKa } from "./content/assistantChat.ka";
-import { assistantChatRu } from "./content/assistantChat.ru";
 import { assistantChecksEn } from "./content/assistantChecks.en";
-import { assistantChecksKa } from "./content/assistantChecks.ka";
-import { assistantChecksRu } from "./content/assistantChecks.ru";
 import { assistantComparisonEn } from "./content/assistantComparison.en";
-import { assistantComparisonKa } from "./content/assistantComparison.ka";
-import { assistantComparisonRu } from "./content/assistantComparison.ru";
 import { knowledgeAliasesEn } from "./content/knowledgeAliases.en";
-import { knowledgeAliasesRu } from "./content/knowledgeAliases.ru";
-import { knowledgeAliasesKa } from "./content/knowledgeAliases.ka";
-import { knowledgeAliasesHe } from "./content/knowledgeAliases.he";
-import { knowledgeAliasesDe } from "./content/knowledgeAliases.de";
+import { knowledgeAliasesIt } from "./content/knowledgeAliases.it";
 import { knowledgeEn } from "./content/knowledge.en";
-import { knowledgeKa } from "./content/knowledge.ka";
-import { knowledgeRu } from "./content/knowledge.ru";
 import { knowledgeOfferEn } from "./content/knowledgeOffer.en";
-import { knowledgeOfferKa } from "./content/knowledgeOffer.ka";
-import { knowledgeOfferRu } from "./content/knowledgeOffer.ru";
 import { knowledgeResourcesEn } from "./content/knowledgeResources.en";
-import { knowledgeResourcesKa } from "./content/knowledgeResources.ka";
-import { knowledgeResourcesRu } from "./content/knowledgeResources.ru";
 import { knowledgeWebsiteEn } from "./content/knowledgeWebsite.en";
-import { knowledgeWebsiteKa } from "./content/knowledgeWebsite.ka";
-import { knowledgeWebsiteRu } from "./content/knowledgeWebsite.ru";
-import { assistantHe } from "./content/assistant.he";
-import { assistantDe } from "./content/assistant.de";
-import { assistantChatHe } from "./content/assistantChat.he";
-import { assistantChatDe } from "./content/assistantChat.de";
-import { assistantChecksHe } from "./content/assistantChecks.he";
-import { assistantChecksDe } from "./content/assistantChecks.de";
-import { assistantComparisonHe } from "./content/assistantComparison.he";
-import { assistantComparisonDe } from "./content/assistantComparison.de";
-import { knowledgeHe } from "./content/knowledge.he";
-import { knowledgeDe } from "./content/knowledge.de";
-import { knowledgeOfferHe } from "./content/knowledgeOffer.he";
-import { knowledgeOfferDe } from "./content/knowledgeOffer.de";
-import { knowledgeResourcesHe } from "./content/knowledgeResources.he";
-import { knowledgeResourcesDe } from "./content/knowledgeResources.de";
-import { knowledgeWebsiteHe } from "./content/knowledgeWebsite.he";
-import { knowledgeWebsiteDe } from "./content/knowledgeWebsite.de";
+import { assistantIt } from "./content/assistant.it";
+import { assistantChatIt } from "./content/assistantChat.it";
+import { assistantChecksIt } from "./content/assistantChecks.it";
+import { assistantComparisonIt } from "./content/assistantComparison.it";
+import { knowledgeIt } from "./content/knowledge.it";
+import { knowledgeOfferIt } from "./content/knowledgeOffer.it";
+import { knowledgeResourcesIt } from "./content/knowledgeResources.it";
+import { knowledgeWebsiteIt } from "./content/knowledgeWebsite.it";
 
 export const contentEn = {
   knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn, ...knowledgeOfferEn, ...knowledgeAliasesEn },
   assistant: { ...assistantEn, ...assistantChecksEn, ...assistantComparisonEn, ...assistantChatEn },
 } as const;
 
-export const contentRu: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu, ...knowledgeOfferRu, ...knowledgeAliasesRu },
-  assistant: { ...assistantRu, ...assistantChecksRu, ...assistantComparisonRu, ...assistantChatRu },
-};
-
-export const contentKa: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa, ...knowledgeOfferKa, ...knowledgeAliasesKa },
-  assistant: { ...assistantKa, ...assistantChecksKa, ...assistantComparisonKa, ...assistantChatKa },
-};
-
-export const contentHe: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeHe, ...knowledgeResourcesHe, ...knowledgeWebsiteHe, ...knowledgeOfferHe, ...knowledgeAliasesHe },
-  assistant: { ...assistantHe, ...assistantChecksHe, ...assistantComparisonHe, ...assistantChatHe },
-};
-
-export const contentDe: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeDe, ...knowledgeResourcesDe, ...knowledgeWebsiteDe, ...knowledgeOfferDe, ...knowledgeAliasesDe },
-  assistant: { ...assistantDe, ...assistantChecksDe, ...assistantComparisonDe, ...assistantChatDe },
+export const contentIt: Translation<typeof contentEn> = {
+  knowledge: { ...knowledgeIt, ...knowledgeResourcesIt, ...knowledgeWebsiteIt, ...knowledgeOfferIt, ...knowledgeAliasesIt },
+  assistant: { ...assistantIt, ...assistantChecksIt, ...assistantComparisonIt, ...assistantChatIt },
 };

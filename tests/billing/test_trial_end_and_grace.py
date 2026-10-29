@@ -43,14 +43,15 @@ def test_unpaid_trial_becomes_past_due_with_a_bill_and_a_notice() -> None:
     assert {setup_fee.status, first_period.status} == {InvoiceStatus.ISSUED}
     [(contact, text)] = testbed.notifier.sent
     assert contact.channel is ManagerContactChannel.WHATSAPP
-    assert str(text).startswith("Trattoria: უფასო საცდელი პერიოდი დასრულდა.")
-    assert "960,00\xa0₾" in str(text)
+    # Georgian is not an owner language any more: the notice reads English.
+    assert str(text).startswith("Trattoria: the free trial has ended.")
+    assert "Pay GEL960.00 in Billing" in str(text)
     assert testbed.business(business.id).service_mode is ServiceMode.FULL
 
 
 def test_grace_period_ends_in_leads_only_and_payment_restores_full_service() -> None:
     testbed = BillingTestbed()
-    owner, business = start_trial(testbed)
+    owner, business = start_trial(testbed, ITALY)
     testbed.clock.advance(days=14, hours=1)
     end_trial(testbed)
 
@@ -63,7 +64,11 @@ def test_grace_period_ends_in_leads_only_and_payment_restores_full_service() -> 
     assert enforce(testbed) == 0
     assert testbed.business(business.id).service_mode is ServiceMode.LEADS_ONLY
     assert len(testbed.notifier.sent) == 2
-    assert "მხოლოდ მოთხოვნებს იღებს" in str(testbed.notifier.sent[-1][1])
+    assert str(testbed.notifier.sent[-1][1]) == (
+        "Trattoria: l'abbonamento non è pagato, quindi ora l'assistente raccoglie "
+        "solo le richieste e le passa al tuo team. Paga in Fatturazione per "
+        "ripristinare il servizio completo."
+    )
 
     pay_open_invoices(testbed, owner, business)
 
@@ -92,7 +97,11 @@ def test_cancelled_subscription_takes_requests_only_after_its_period() -> None:
     assert enforce(testbed) == 0
     assert testbed.business(business.id).service_mode is ServiceMode.LEADS_ONLY
     [(_, text)] = testbed.notifier.sent
-    assert "the subscription has ended" in str(text)
+    assert str(text) == (
+        "Trattoria: l'abbonamento è terminato, quindi ora l'assistente raccoglie "
+        "solo le richieste e le passa al tuo team. Riattiva l'abbonamento in "
+        "Fatturazione per ripristinare il servizio completo."
+    )
 
 
 def test_paid_subscription_still_in_leads_only_returns_to_full_service() -> None:

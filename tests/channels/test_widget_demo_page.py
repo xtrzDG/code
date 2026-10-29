@@ -1,5 +1,6 @@
 """The website chat demo page speaks the cabinet's languages and its palette."""
 
+import html
 import re
 
 import pytest
@@ -29,12 +30,17 @@ def page_language(markup: str) -> str:
 
 
 class TestPageLanguage:
-    @pytest.mark.parametrize("language", ["en", "ru", "ka"])
-    def test_the_browser_language_picks_the_page_texts(self, language: str) -> None:
+    @pytest.mark.parametrize(
+        ("language", "accept_language"),
+        [("en", "en-GB,en;q=0.9"), ("it", "it-IT,it;q=0.9,en;q=0.5")],
+    )
+    def test_the_browser_language_picks_the_page_texts(
+        self, language: str, accept_language: str
+    ) -> None:
         response = build_client().get(
             WIDGET_DEMO_PATH,
             params={"business_id": BUSINESS_ID},
-            headers={"Accept-Language": f"{language}-GE,{language};q=0.9,en;q=0.5"},
+            headers={"Accept-Language": accept_language},
         )
 
         texts = WIDGET_DEMO_TEXTS[language]
@@ -51,29 +57,31 @@ class TestPageLanguage:
     def test_a_forced_widget_language_also_sets_the_page_language(self) -> None:
         response = build_client().get(
             WIDGET_DEMO_PATH,
-            params={"business_id": BUSINESS_ID, "language": "ka"},
-            headers={"Accept-Language": "ru"},
+            params={"business_id": BUSINESS_ID, "language": "it"},
+            headers={"Accept-Language": "en"},
         )
 
-        assert page_language(response.text) == "ka"
+        assert page_language(response.text) == "it"
         [widget_tag] = parse_script_tags(response.text)
-        assert widget_tag["data-language"] == "ka"
+        assert widget_tag["data-language"] == "it"
 
     def test_other_languages_read_the_page_in_the_browser_language(self) -> None:
-        assert demo_page_language(LanguageTag("he"), "ru-RU,ru;q=0.9") == "ru"
+        assert demo_page_language(LanguageTag("he"), "it-IT,it;q=0.9") == "it"
         assert demo_page_language(LanguageTag("he"), None) == "en"
         assert demo_page_language(None, "de-DE,fr;q=0.8") == "en"
+        assert demo_page_language(None, "ru-RU,ka;q=0.8") == "en"
         assert demo_page_language(None, "not a header;;") == "en"
-        assert demo_page_language(LanguageTag("ru-RU"), None) == "ru"
+        assert demo_page_language(LanguageTag("it-CH"), None) == "it"
 
     def test_the_form_asks_for_the_business_in_the_page_language(self) -> None:
         response = build_client().get(
-            WIDGET_DEMO_PATH, headers={"Accept-Language": "ru"}
+            WIDGET_DEMO_PATH, headers={"Accept-Language": "it"}
         )
 
-        texts = WIDGET_DEMO_TEXTS["ru"]
-        assert page_language(response.text) == "ru"
-        assert texts.business_id_label in response.text
+        texts = WIDGET_DEMO_TEXTS["it"]
+        assert page_language(response.text) == "it"
+        # The label's apostrophe ("dell'attività") is escaped in the markup.
+        assert html.escape(texts.business_id_label) in response.text
         assert texts.show_button in response.text
         assert 'name="language"' not in response.text
 

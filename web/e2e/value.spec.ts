@@ -16,7 +16,7 @@ import { signInAsPlatformAdmin } from "./support/admin";
 import { DEMO_OWNER_EMAIL, signInAsDemoOwner } from "./support/demo";
 import { waitingConversationOf } from "./support/inbox";
 import { apiLogSize, waitForLoginCode } from "./support/login-codes";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import {
   answerBusiness,
   answerChannels,
@@ -175,12 +175,12 @@ test("the demo's guard verdicts are the stored ones: Lukas Weber's reply was hel
 test("topics read in the cabinet's language, the catch-all from its dictionary", async ({ page, context, request }) => {
   const owner = await signInDemo(request, "demo@example.com");
   await signInContext(context, owner.token);
-  for (const [locale, messages] of [["en", en], ["ka", ka]] as const) {
+  for (const [locale, messages] of [["en", en], ["it", it]] as const) {
     await context.addCookies([{ name: "aw_locale", value: locale, url: WEB_URL, sameSite: "Lax" }]);
     await page.goto(`/b/${owner.businessId}/overview`);
     const card = page.getByRole("region", { name: messages.topics.title });
     await expect(card.locator("[data-topic-kind]").first()).toBeVisible();
-    // The Russian owner's restaurant: no Russian label on an English or Georgian cabinet.
+    // The Russian owner's restaurant: no Russian label on an English or Italian cabinet.
     expect(await card.locator("[data-topic-kind]").allInnerTexts()).not.toContainEqual(expect.stringMatching(/[А-Яа-яЁё]/));
     await expect(card.locator('[data-topic-kind="other"]').first()).toHaveText(messages.topics.otherTopic);
   }
@@ -221,7 +221,7 @@ async function goLive(request: APIRequestContext, ownerToken: string, businessId
   expect(published.ok(), await published.text()).toBe(true);
 }
 
-test("a business launched minutes ago reads 'ready', counted since its launch, in ru, en and ka", async ({ page, account, request }) => {
+test("a business launched minutes ago reads 'ready', counted since its launch, in en and it", async ({ page, account, request }) => {
   test.setTimeout(240_000);
   await page.goto("/create");
   await answerBusiness(page, "Salon Erste Stunde");
@@ -234,8 +234,7 @@ test("a business launched minutes ago reads 'ready', counted since its launch, i
   await expectStep(page, en.tunnelLaunch.launch.title);
   await goLive(request, account.token, businessId);
 
-  for (const messages of [ru, en, ka]) {
-    const locale = messages === ru ? "ru" : messages === en ? "en" : "ka";
+  for (const [locale, messages] of [["en", en], ["it", it]] as const) {
     await page.context().addCookies([{ name: "aw_locale", value: locale, url: WEB_URL, sameSite: "Lax" }]);
     await page.goto(`/b/${businessId}/overview`);
     const ready = page.getByRole("region", { name: new RegExp(messages.value.ready.title) });

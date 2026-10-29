@@ -56,6 +56,7 @@ def test_visitors_see_the_seeded_demos_in_their_language() -> None:
     workshop = start_workshop(DEMO_ENVIRONMENT)
     with workshop.client as client:
         english = list_demos(client)
+        italian = list_demos(client, "it")
         russian = list_demos(client, "ru")
 
     assert english["messages_per_hour"] == 20
@@ -68,10 +69,15 @@ def test_visitors_see_the_seeded_demos_in_their_language() -> None:
     assert set(restaurant["languages"]) >= {"ka", "ru", "en"}
     assert restaurant["starters"] != []
     assert "owner" not in restaurant and "phone" not in str(restaurant).lower()
+    italian_restaurant = next(
+        demo for demo in italian["demos"] if demo["business_name"] == RESTAURANT
+    )
+    assert italian_restaurant["niche_name"] == "Ristoranti e bar"
+    # A language the catalog lacks reads English.
     russian_restaurant = next(
         demo for demo in russian["demos"] if demo["business_name"] == RESTAURANT
     )
-    assert russian_restaurant["niche_name"] == "Рестораны и кафе"
+    assert russian_restaurant["niche_name"] == "Restaurants and cafes"
 
 
 def test_a_demo_booking_is_a_sandbox_record_the_owner_never_sees() -> None:

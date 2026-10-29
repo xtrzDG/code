@@ -5,8 +5,8 @@
  *     test's context may throw, log a console error the test did not
  *     accept (`consoleErrors.allow(/…/)`) or fail hydration (React #418,
  *     #423: never acceptable); and, with `cyrillicCheck` (on by default,
- *     E2E_CYRILLIC_CHECK=0 turns it off), no English or Georgian page may
- *     show interface text in Cyrillic at the end of a test;
+ *     E2E_CYRILLIC_CHECK=0 turns it off), no cabinet page may show
+ *     interface text in Cyrillic, Georgian or Hebrew at the end of a test;
  *   - requests counted on every page, for `waitForNetworkQuiet` (support/network.ts);
  *   - `account`: a new account created through the API, with the browser
  *     context signed in as it (interface in English);
@@ -19,7 +19,7 @@
 import { test as base, expect, type BrowserContext } from "@playwright/test";
 
 import { createAssistant, createBusiness, signInByEmail, uniqueEmail, type NewBusiness } from "./api";
-import { strayCyrillic, unexpectedErrors, watchContext, type ConsoleRecord } from "./consoleClean";
+import { strayScripts, unexpectedErrors, watchContext, type ConsoleRecord } from "./consoleClean";
 import { WEB_URL } from "./env";
 import { trackRequests } from "./network";
 
@@ -57,7 +57,7 @@ export interface ConsoleErrors {
 }
 
 export const test = base.extend<{
-  /** Fail on Cyrillic interface text of en/ka pages (support/consoleClean.ts); on by default. */
+  /** Fail on interface text in Cyrillic, Georgian or Hebrew (support/consoleClean.ts); on by default. */
   cyrillicCheck: boolean;
   consoleErrors: ConsoleErrors;
   requestTracking: void;
@@ -74,9 +74,9 @@ export const test = base.extend<{
       const allowed: RegExp[] = [];
       watchContext(context, record);
       await use({ allow: (pattern) => allowed.push(pattern) });
-      const stray = cyrillicCheck ? await strayCyrillic(page) : [];
+      const stray = cyrillicCheck ? await strayScripts(page) : [];
       expect(unexpectedErrors(record, allowed), "the page logged errors").toEqual([]);
-      expect(stray, "interface text in Cyrillic on an English or Georgian page").toEqual([]);
+      expect(stray, "interface text in Cyrillic, Georgian or Hebrew on a cabinet page").toEqual([]);
     },
     { auto: true },
   ],

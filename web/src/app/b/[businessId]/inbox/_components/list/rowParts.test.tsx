@@ -29,14 +29,15 @@ function row(overrides: Partial<InboxRow> = {}): InboxRow {
 }
 
 describe("RowPreview", () => {
-  it("clips the message on its own, in its own direction, in the Hebrew cabinet", () => {
-    const { container } = renderInLocale(<RowPreview row={row()} />, { locale: "he" });
+  it("clips the message on its own, in its own direction, whatever the cabinet's direction", () => {
+    const { container } = renderInLocale(<RowPreview row={row()} />, { locale: "it" });
     const preview = container.querySelector<HTMLElement>("[data-clip='content']");
     const message = container.querySelector<HTMLElement>("bdi[data-user-content]");
 
-    expect(preview?.textContent).toBe(`${textsIn("he").t("conversations.author.assistant")}: We'll get back to you soon.`);
-    // The English text is isolated and truncated by itself, so its first
-    // words stay visible and the ellipsis lands at its own end.
+    expect(preview?.textContent).toBe(`${textsIn("it").t("conversations.author.assistant")}: We'll get back to you soon.`);
+    // The English text is isolated (bdi) and truncated by itself, so its first
+    // words stay visible and the ellipsis lands at its own end, in a
+    // right-to-left cabinet too.
     expect(message?.textContent).toBe("We'll get back to you soon.");
     expect(message?.className).toContain("truncate");
     expect(preview?.firstElementChild?.className).toContain("shrink-0");

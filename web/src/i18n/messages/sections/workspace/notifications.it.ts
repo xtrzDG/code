@@ -1,0 +1,103 @@
+/** `notifications.*` texts of Settings → Notifications and of the notification link page, in Italian (draft awaiting a native speaker's review). */
+
+import type { Translation } from "../../../translate";
+import type { notificationsEn } from "./notifications.en";
+
+export const notificationsIt: Translation<typeof notificationsEn> = {
+  device: {
+    title: "Su questo dispositivo",
+    description: "Passaggi a una persona, richieste e prenotazioni arrivano come notifiche su questo telefono o computer, anche quando il pannello è chiuso.",
+    on: "Attive",
+    off: "Disattivate",
+    enable: "Attiva le notifiche su questo dispositivo",
+    disable: "Disattiva su questo dispositivo",
+    test: "Invia una prova",
+    enabled: "Le notifiche sono attive su questo dispositivo",
+    disabled: "Le notifiche sono disattivate su questo dispositivo",
+    unsupported: "Questo browser non può mostrare notifiche. Su iPhone o iPad, aggiungi il pannello alla schermata Home (Condividi → Aggiungi alla schermata Home) e aprilo da lì.",
+    denied: "Le notifiche sono bloccate per questo sito. Consentile nelle impostazioni del sito del browser e riprova.",
+    notConfigured: "Le notifiche sui dispositivi non sono ancora configurate su questo server.",
+    dismissed: "Le notifiche non sono state consentite. Premi di nuovo il pulsante quando vuoi.",
+    failed: "Non è stato possibile attivare le notifiche in questo browser. Riprova.",
+    lastDelivered: "Ultima notifica: {time}",
+    neverDelivered: "Ancora nessuna notifica",
+    lastError: "L'ultima non è arrivata: {error}",
+    otherDevices: "I miei altri dispositivi",
+    otherDevice: "Dispositivo aggiunto il {date}",
+    removeOther: "Disattiva",
+    removeOtherLabel: "Disattiva le notifiche sul dispositivo aggiunto il {date}",
+    removed: "Le notifiche sono disattivate su quel dispositivo",
+    testDelivered: "La notifica di prova sta arrivando su questo dispositivo",
+    testFailed: "La prova non è arrivata su questo dispositivo: {error}",
+    testPending: "Riproveremo a inviare la prova a questo dispositivo: {error}",
+  },
+  setupReminders: {
+    title: "Promemoria di configurazione",
+    label: "Promemoria di configurazione",
+    description:
+      "Qualche breve promemoria nei primi giorni, su Telegram, via e-mail e sui tuoi dispositivi: quando l'assistente non è ancora online, ha un solo canale o non ha ancora clienti. Si fermano da soli quando è tutto pronto.",
+  },
+  mine: {
+    title: "Cosa ricevo",
+    description: "La tua scelta per i tuoi dispositivi in questa attività. Gli orari sono nel fuso orario dell'attività, {timeZone}.",
+    eventOff: "Non ricevi più notifiche su: {event}",
+  },
+  preferences: {
+    events: "Avvisami per",
+    noEvents: "Nulla selezionato: non arriva alcuna notifica.",
+    event: {
+      handoff: "Clienti che hanno bisogno di una persona",
+      lead: "Nuove richieste",
+      booking: "Prenotazioni: nuove, spostate e annullate",
+    },
+    quietHours: "Ore di silenzio",
+    quietHoursHint: "Le notifiche attendono la fine delle ore di silenzio. I passaggi a una persona urgenti arrivano comunque.",
+    quietHoursToggle: "Trattieni le notifiche in queste ore",
+    quietFrom: "Dalle",
+    quietUntil: "Alle",
+    errors: {
+      format: "Inserisci un orario come 22:00",
+      same: "Inizio e fine devono essere diversi",
+    },
+    summary: {
+      everything: "Tutto, a qualsiasi ora",
+      events: "Solo: {events}",
+      nothing: "Niente",
+      quiet: "silenzio {from}–{until}",
+    },
+    short: {
+      handoff: "passaggi a una persona",
+      lead: "richieste",
+      booking: "prenotazioni",
+    },
+  },
+  contacts: {
+    test: "Invia una prova",
+    testLabel: "Invia una prova a {name}",
+    testDelivered: "La prova è arrivata a {name}",
+    testSimulated: "Nessun provider qui: la prova a {name} è stata scritta nel log del server",
+    testFailed: "La prova a {name} non è arrivata: {error}",
+    testPending: "Riproveremo a inviare la prova a {name}: {error}",
+    providerMissing: "Non configurato sul server",
+    providerMissingHint: "Con questo canale non si invia nulla finché il provider {channel} della piattaforma non è configurato.",
+    testUnavailable: "Impossibile inviare una prova: {channel} non è configurato sul server della piattaforma.",
+    status: {
+      delivered: "Consegnata",
+      pending: "In attesa",
+      dead: "Non consegnata",
+    },
+    deliveredAt: "Consegnata: {time}",
+    attemptedAt: "Tentativo: {time}",
+    never: "Ancora nulla di inviato",
+    telegramLinked: "Collegato come @{username}",
+    telegramChat: "Chat di Telegram",
+  },
+  link: {
+    expiredTitle: "Questo link è scaduto",
+    expiredDescription: "I link delle notifiche funzionano per 7 giorni. Apri l'attività per trovare a cosa si riferiva la notifica.",
+    invalidTitle: "Questo link non funziona",
+    invalidDescription: "Potrebbe essere incompleto o destinato a un altro account. Accedi con l'account a cui è stata inviata la notifica.",
+    openBusiness: "Apri l'attività",
+    toBusinesses: "Le mie attività",
+  },
+};

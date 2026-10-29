@@ -45,7 +45,7 @@ describe("DeletedBusinessesCard: the certificates of deleted businesses", () => 
     saved.mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("lists each deletion with why and when, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("lists each deletion with why and when, in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet(() => ok({ items: [completed, running] }));
     renderInLocale(<DeletedBusinessesCard />, { locale });
@@ -61,7 +61,7 @@ describe("DeletedBusinessesCard: the certificates of deleted businesses", () => 
   });
 
   it("downloads the certificate in the reader's language under the API's name", async () => {
-    const { t } = textsIn("ru");
+    const { t } = textsIn("it");
     const pdf = new Blob(["%PDF-1.7"], { type: "application/pdf" });
     answerGet((path) =>
       path === LIST
@@ -74,13 +74,13 @@ describe("DeletedBusinessesCard: the certificates of deleted businesses", () => 
             }),
           }),
     );
-    renderInLocale(<DeletedBusinessesCard />, { locale: "ru" });
+    renderInLocale(<DeletedBusinessesCard />, { locale: "it" });
 
     await userEvent.click(await screen.findByRole("button", { name: t("closure.deletions.certificate") }));
 
     await waitFor(() => expect(saved).toHaveBeenCalledWith(pdf, "deletion-certificate-1a2b3c4d.pdf"));
     expect(vi.mocked(api.GET)).toHaveBeenCalledWith(CERTIFICATE, {
-      params: { path: { deletion_id: "business_deletion_1" }, query: { language: "ru" } },
+      params: { path: { deletion_id: "business_deletion_1" }, query: { language: "it" } },
       headers: { Accept: "application/pdf" },
       parseAs: "blob",
     });

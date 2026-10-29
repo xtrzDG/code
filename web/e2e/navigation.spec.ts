@@ -11,7 +11,7 @@ import { SECTION_PAGES, visibleSections, type BusinessSection } from "../src/lib
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { de, en, he, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 
 type MessagePath = string;
@@ -121,7 +121,7 @@ test.describe("on a phone", () => {
   });
 
   test("the tab bar's names keep their words whole in every language", async ({ page, context, owner }) => {
-    const languages = { en, ru, ka, he, de };
+    const languages = { en, it };
     for (const [locale, messages] of Object.entries(languages)) {
       await test.step(locale, async () => {
         await context.addCookies([{ name: "aw_locale", value: locale, url: WEB_URL, sameSite: "Lax" }]);

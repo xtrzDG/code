@@ -15,45 +15,21 @@
 
 import type { Translation } from "../../translate";
 import { accountEn } from "./shell/account.en";
-import { accountKa } from "./shell/account.ka";
-import { accountRu } from "./shell/account.ru";
 import { appEn } from "./shell/app.en";
-import { appKa } from "./shell/app.ka";
-import { appRu } from "./shell/app.ru";
 import { chromeEn } from "./shell/chrome.en";
-import { chromeKa } from "./shell/chrome.ka";
-import { chromeRu } from "./shell/chrome.ru";
-import { closureDe } from "./shell/closure.de";
+import { closureIt } from "./shell/closure.it";
 import { closureEn } from "./shell/closure.en";
-import { closureHe } from "./shell/closure.he";
-import { closureKa } from "./shell/closure.ka";
-import { closureRu } from "./shell/closure.ru";
 import { dpaNoticeEn } from "./shell/dpaNotice.en";
-import { dpaNoticeKa } from "./shell/dpaNotice.ka";
-import { dpaNoticeRu } from "./shell/dpaNotice.ru";
 import { liveEn } from "./shell/live.en";
-import { liveKa } from "./shell/live.ka";
-import { liveRu } from "./shell/live.ru";
 import { navigationEn } from "./shell/navigation.en";
-import { navigationKa } from "./shell/navigation.ka";
-import { navigationRu } from "./shell/navigation.ru";
 import { setupEn } from "./shell/setup.en";
-import { setupKa } from "./shell/setup.ka";
-import { setupRu } from "./shell/setup.ru";
-import { accountHe } from "./shell/account.he";
-import { accountDe } from "./shell/account.de";
-import { appHe } from "./shell/app.he";
-import { appDe } from "./shell/app.de";
-import { chromeHe } from "./shell/chrome.he";
-import { chromeDe } from "./shell/chrome.de";
-import { dpaNoticeHe } from "./shell/dpaNotice.he";
-import { dpaNoticeDe } from "./shell/dpaNotice.de";
-import { liveHe } from "./shell/live.he";
-import { liveDe } from "./shell/live.de";
-import { navigationHe } from "./shell/navigation.he";
-import { navigationDe } from "./shell/navigation.de";
-import { setupHe } from "./shell/setup.he";
-import { setupDe } from "./shell/setup.de";
+import { accountIt } from "./shell/account.it";
+import { appIt } from "./shell/app.it";
+import { chromeIt } from "./shell/chrome.it";
+import { dpaNoticeIt } from "./shell/dpaNotice.it";
+import { liveIt } from "./shell/live.it";
+import { navigationIt } from "./shell/navigation.it";
+import { setupIt } from "./shell/setup.it";
 
 export const shellEn = {
   navigation: navigationEn,
@@ -66,46 +42,13 @@ export const shellEn = {
   closure: closureEn,
 } as const;
 
-export const shellRu: Translation<typeof shellEn> = {
-  navigation: navigationRu,
-  account: accountRu,
-  setup: setupRu,
-  app: appRu,
-  live: liveRu,
-  chrome: chromeRu,
-  dpaNotice: dpaNoticeRu,
-  closure: closureRu,
-};
-
-export const shellKa: Translation<typeof shellEn> = {
-  navigation: navigationKa,
-  account: accountKa,
-  setup: setupKa,
-  app: appKa,
-  live: liveKa,
-  chrome: chromeKa,
-  dpaNotice: dpaNoticeKa,
-  closure: closureKa,
-};
-
-export const shellHe: Translation<typeof shellEn> = {
-  navigation: navigationHe,
-  account: accountHe,
-  setup: setupHe,
-  app: appHe,
-  live: liveHe,
-  chrome: chromeHe,
-  dpaNotice: dpaNoticeHe,
-  closure: closureHe,
-};
-
-export const shellDe: Translation<typeof shellEn> = {
-  navigation: navigationDe,
-  account: accountDe,
-  setup: setupDe,
-  app: appDe,
-  live: liveDe,
-  chrome: chromeDe,
-  dpaNotice: dpaNoticeDe,
-  closure: closureDe,
+export const shellIt: Translation<typeof shellEn> = {
+  navigation: navigationIt,
+  account: accountIt,
+  setup: setupIt,
+  app: appIt,
+  live: liveIt,
+  chrome: chromeIt,
+  dpaNotice: dpaNoticeIt,
+  closure: closureIt,
 };

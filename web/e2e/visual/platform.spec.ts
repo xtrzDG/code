@@ -3,7 +3,7 @@
  * owner signs in for the whole run (restaurant.ts), and the platform
  * admin's pages are taken before any other test adds accounts and
  * businesses to the platform they count, at 390 px in the light theme and
- * then at 1440 px in the dark one, in Russian. The phone goes first: the
+ * then at 1440 px in the dark one, in Italian. The phone goes first: the
  * metrics page lists the web vitals of the pages visited so far, so its
  * height on a phone (the review gate's rule) counts only the two pages
  * before it, however many admin pages there are.
@@ -19,7 +19,7 @@ import type { APIRequestContext } from "@playwright/test";
 import { ensureOnAdminTeam, signInAsPlatformAdmin } from "../support/admin";
 import { API_URL, TOUR_ADMIN_EMAIL } from "../support/env";
 import { expect, signInContext } from "../support/fixtures";
-import { ru } from "../support/messages";
+import { it } from "../support/messages";
 import { adminRoutes } from "../support/tour";
 import { DESKTOP, PHONE } from "./clock";
 import { signInRestaurantOwner } from "./restaurant";
@@ -35,7 +35,7 @@ test("the demo owner signs in for the run", async ({ request }) => {
  * long the run took to get here.
  */
 const lastHourReplies: Shot["mask"] = (page) => [
-  page.getByRole("region", { name: ru.adminSystem.errorBudget.latency.title }),
+  page.getByRole("region", { name: it.adminSystem.errorBudget.latency.title }),
 ];
 
 /**
@@ -72,7 +72,7 @@ for (const [screen, theme] of [
   test.describe(`at ${screen.viewport.width} px`, () => {
     test.use(screen);
 
-    test(`the platform admin's pages (${theme}, ru)`, async ({ page, request, context }) => {
+    test(`the platform admin's pages (${theme}, it)`, async ({ page, request, context }) => {
       test.setTimeout(150_000);
       const restaurant = await signInRestaurantOwner(request);
       await ensureOnAdminTeam(request, TOUR_ADMIN_EMAIL);
@@ -81,7 +81,7 @@ for (const [screen, theme] of [
       await signInContext(context, admin);
       for (const path of adminRoutes(restaurant.businessId)) {
         const mask = path === "/admin/system" ? lastHourReplies : undefined;
-        await shoot(page, { name: screenOf(path), path, theme, locale: "ru", mask });
+        await shoot(page, { name: screenOf(path), path, theme, locale: "it", mask });
       }
     });
   });

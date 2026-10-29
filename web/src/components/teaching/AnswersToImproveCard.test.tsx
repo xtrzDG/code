@@ -70,8 +70,8 @@ describe("AnswersToImproveCard: whose bad rating it is", () => {
   });
 
   it("says so in the cabinet's language", async () => {
-    const { t } = textsIn("ka");
-    renderCard([byCustomer], "ka");
+    const { t } = textsIn("it");
+    renderCard([byCustomer], "it");
 
     expect(await screen.findByText(t("teaching.improve.byCustomer"))).toBeTruthy();
     expect(screen.queryByText(textsIn("en").t("teaching.improve.byCustomer"))).toBeNull();

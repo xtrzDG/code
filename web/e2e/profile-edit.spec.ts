@@ -1,5 +1,5 @@
 /**
- * Everyday editing of a live business, in Russian, English and Georgian:
+ * Everyday editing of a live business, in English and Italian:
  * Assistant → Business profile shows six section cards, each opening the
  * tunnel's screen in its edit mode (no step counter, no time estimate, no
  * Save or Continue). The demo restaurant's owner moves Monday's closing
@@ -12,7 +12,7 @@
 import { signInAsDemoOwner } from "./support/demo";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import {
   cardName,
   firstClosingTime,
@@ -25,7 +25,7 @@ import {
 } from "./support/profile";
 import { expectTime, timeValue, typeTime } from "./support/timeField";
 
-const LANGUAGES: Record<string, Messages> = { ru, en, ka };
+const LANGUAGES: Record<string, Messages> = { en, it };
 
 for (const [locale, messages] of Object.entries(LANGUAGES)) {
   test(`a new closing time saves itself and waits in the banner (${locale})`, async ({ page, context, request }) => {

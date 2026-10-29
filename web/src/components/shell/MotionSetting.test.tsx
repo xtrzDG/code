@@ -3,12 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MotionPreferenceProvider, useMotionPreference } from "@/components/motion/MotionPreference";
+import { LOCALES, type Locale } from "@/i18n/config";
 import { renderInLocale, textsIn } from "@/test/render";
 
 import { MotionSetting } from "./MotionSetting";
 
 /** The checkbox by its label (its accessible name goes on with the hint). */
-function motionBox(locale: "en" | "ru" | "ka" | "he" | "de" = "en"): HTMLInputElement {
+function motionBox(locale: Locale = "en"): HTMLInputElement {
   const label = textsIn(locale).t("account.motion");
   return screen.getByRole<HTMLInputElement>("checkbox", { name: (name) => name.startsWith(label) });
 }
@@ -77,7 +78,7 @@ describe("Reduce motion in the account menu", () => {
       <MotionPreferenceProvider initialPreference="system">
         <Calm />
       </MotionPreferenceProvider>,
-      { locale: "ka" },
+      { locale: "it" },
     );
     expect(calmText()).toBe("false");
     setDevice(true);
@@ -88,7 +89,7 @@ describe("Reduce motion in the account menu", () => {
 
   it("is labelled in every cabinet language", () => {
     stubDevice(false);
-    for (const locale of ["ru", "ka", "he", "de"] as const) {
+    for (const locale of LOCALES) {
       const view = renderInLocale(
         <MotionPreferenceProvider initialPreference="reduce">
           <MotionSetting />

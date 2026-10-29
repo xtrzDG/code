@@ -38,7 +38,7 @@ describe("DeadLettersCard: why each dead job died", () => {
     queryCache.clear();
   });
 
-  it.each(["en", "ru", "ka"] as const)("names the reason next to the error in %s", async (locale) => {
+  it.each(["en", "it"] as const)("names the reason next to the error in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet(() => ok({ items: [died, failed], next_cursor: null }));
     renderInLocale(<DeadLettersCard tallies={[]} />, { locale });

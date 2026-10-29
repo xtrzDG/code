@@ -43,6 +43,7 @@ KEYWORDS: dict[RehearsalTopic, tuple[str, ...]] = {
     ),
     RehearsalTopic.BOOKING: (
         "book", "reserv", "table", "appointment", "termin", "adults",
+        "prenot", "tavolo", "appuntamento", "disdir", "annull",
         "people", "guests", "cancel", "free on", "absag", "zeit für", "брон",
         "столик", "стол на", "запис", "прийти", "на двоих", "на троих",
         "отмен", "დაჯავშ", "ჯავშ", "მაგიდ", "ჩაწერ", "კაცზე", "კაცისთვის",
@@ -50,12 +51,14 @@ KEYWORDS: dict[RehearsalTopic, tuple[str, ...]] = {
     ),
     RehearsalTopic.HOURS: (
         "open", "hour", "close", "what time", "öffnungs", "geöffnet",
+        "orari", "a che ora", "apert", "chius",
         "работа", "часы", "во сколько", "открыт", "открыва", "закрыт",
         "საათ", "ღია", "იხსნებ", "დაკეტ",
     ),
     RehearsalTopic.PRICES: (
         "price", "cost", "how much", "discount", "corkage", "fee", "preis",
-        "kostet", "rabatt", "цен", "стоит", "почём", "скидк", "ფას", "ღირ",
+        "kostet", "rabatt", "prezz", "quanto costa", "scont", "цен", "стоит",
+        "почём", "скидк", "ფას", "ღირ",
     ),
     RehearsalTopic.PLACE: (
         "where", "address", "parking", "adresse", "parken", "адрес", "где",
@@ -80,6 +83,16 @@ LABELS: dict[str, dict[RehearsalTopic, str]] = {
         RehearsalTopic.OFFER: "Menu and services",
         RehearsalTopic.COMPLAINT: "Complaints",
         RehearsalTopic.OTHER: "Other questions",
+    },
+    "it": {
+        RehearsalTopic.EVENTS: "Feste ed eventi",
+        RehearsalTopic.BOOKING: "Prenotazioni",
+        RehearsalTopic.PRICES: "Prezzi",
+        RehearsalTopic.HOURS: "Orari di apertura",
+        RehearsalTopic.PLACE: "Indirizzo e parcheggio",
+        RehearsalTopic.OFFER: "Menù e servizi",
+        RehearsalTopic.COMPLAINT: "Reclami",
+        RehearsalTopic.OTHER: "Altre domande",
     },
     "ru": {
         RehearsalTopic.EVENTS: "Праздники и банкеты",

@@ -1,6 +1,6 @@
 /**
  * `widgetSites.*` texts: Channels → Website chat → the websites allowed to
- * show the chat, in English: the reference that ru and ka are typed
+ * show the chat, in English: the reference that it is typed
  * against.
  */
 
@@ -14,10 +14,10 @@ export const widgetSitesEn = {
   empty: "No list yet: the chat works on any website.",
   addFieldLabel: "Website address",
   addHint: "As in the browser's address bar. The www. address and http or https count as the same site.",
-  placeholder: "https://cafe-batumi.ge",
+  placeholder: "https://trattoria-milano.it",
   add: "Add",
   remove: "Remove {site}",
-  invalid: "This is not a website address. Type it as in the browser's address bar, for example cafe-batumi.ge.",
+  invalid: "This is not a website address. Type it as in the browser's address bar, for example trattoria-milano.it.",
   duplicate: "This website is already on the list.",
   full: { one: "The list holds up to {count} website.", other: "The list holds up to {count} websites." },
   alwaysAllowed: "Your chat page and the preview in this cabinet always work.",

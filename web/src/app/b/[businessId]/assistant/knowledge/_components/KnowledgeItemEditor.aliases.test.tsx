@@ -232,19 +232,19 @@ describe("KnowledgeItemEditor: the item's names in the business's other language
     expect(screen.getByText(t("knowledge.aliases.saveTitleFirst"))).toBeTruthy();
   });
 
-  it("reads in Russian, the language names in Russian too", () => {
-    const russian = textsIn("ru");
-    renderEditor({ locale: "ru" });
+  it("reads in Italian, the language names in Italian too", () => {
+    const italian = textsIn("it");
+    renderEditor({ locale: "it" });
 
     expect(
       screen.getByRole("heading", {
-        name: russian.t("knowledge.aliases.title"),
+        name: italian.t("knowledge.aliases.title"),
       }),
     ).toBeTruthy();
-    expect(within(group("ka")).getByText(languageName("ka", "ru"))).toBeTruthy();
+    expect(within(group("ka")).getByText(languageName("ka", "it"))).toBeTruthy();
     expect(
       screen.getByRole("button", {
-        name: russian.t("knowledge.aliases.suggest"),
+        name: italian.t("knowledge.aliases.suggest"),
       }),
     ).toBeTruthy();
   });

@@ -60,7 +60,15 @@ function MessageRow({ item }: { item: CampaignMessage }) {
   return (
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-6">
       <div className="min-w-0 space-y-0.5">
-        <p className="text-sm font-medium text-ink [overflow-wrap:anywhere]">{item.contact_name ?? t("returnVisits.messages.customer")}</p>
+        <p className="text-sm font-medium text-ink [overflow-wrap:anywhere]">
+          {item.contact_name ? (
+            <span data-user-content dir="auto">
+              {item.contact_name}
+            </span>
+          ) : (
+            t("returnVisits.messages.customer")
+          )}
+        </p>
         <p className="text-sm text-ink-muted">{t(RULE_LABELS[item.rule_kind])}</p>
         {item.status === "skipped" && item.skip_reason ? (
           <p className="text-sm text-ink-muted">

@@ -21,6 +21,7 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.notifications import StaffLinkTarget
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import StaffLinkToken
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 from tests.integrations.webhook_notice_world import (
@@ -35,6 +36,13 @@ CONTACTS: int = 3
 
 def test_the_switch_off_is_announced_once_on_every_contact() -> None:
     world = NoticeWorld()
+    nino, anna, gio = world.business.manager_contacts
+    world.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        anna,
+        gio,
+    ]
+    world.business_repo.save(world.business)
     endpoint = world.add_endpoint(label="CRM")
 
     world.fail(endpoint, times=FAILURES_BEFORE_DISABLE - 1)
@@ -55,8 +63,9 @@ def test_the_switch_off_is_announced_once_on_every_contact() -> None:
     english = messages[ManagerContactChannel.EMAIL]
     assert "A webhook was switched off · Salobie Bia" in english
     assert "The address CRM gets no more events after 3 failed attempts" in english
-    assert "ვებჰუკი გამოირთო" in messages[ManagerContactChannel.TELEGRAM]
-    assert "Вебхук отключён" in messages[ManagerContactChannel.SMS]
+    assert "Un webhook è stato disattivato" in messages[ManagerContactChannel.TELEGRAM]
+    # Russian is not in the catalog: that contact reads English.
+    assert "A webhook was switched off" in messages[ManagerContactChannel.SMS]
     assert len(set(world.subjects())) == 1
 
 
@@ -80,7 +89,7 @@ def test_the_audit_log_and_the_open_cabinets_hear_of_it() -> None:
 
 def test_only_the_owners_devices_hear_it_with_a_link_to_integrations() -> None:
     world = NoticeWorld()
-    owner_device = world.alerts.add_device(world.alerts.owner, "de")
+    owner_device = world.alerts.add_device(world.alerts.owner, "it")
     world.alerts.add_device(world.alerts.staff, "en")
     endpoint = world.add_endpoint()
 
@@ -88,7 +97,7 @@ def test_only_the_owners_devices_hear_it_with_a_link_to_integrations() -> None:
 
     [push] = world.alerts.push_queue.queued
     assert push.subscription_id == owner_device.id
-    assert "Ein Webhook wurde abgeschaltet" in str(push.brief.title)
+    assert str(push.brief.title) == "Un webhook è stato disattivato · Salobie Bia"
     # No label: the host names the address, never its path (a secret).
     assert "hooks.example.com" in str(push.brief.detail)
     assert "secret-hook-id" not in str(push.brief.detail)

@@ -37,21 +37,21 @@ def brief(language: str, **facts: object) -> StaffAlertBrief:
 
 def test_handoffs_say_how_urgent_they_are_without_customer_details() -> None:
     urgent = brief(
-        "ka",
+        "it",
         handoff=HandoffBrief(
             reason=HandoffReason.COMPLAINT, urgency=HandoffUrgency.CRITICAL
         ),
     )
     normal = brief(
-        "ru",
+        "it",
         handoff=HandoffBrief(
             reason=HandoffReason.CUSTOMER_REQUEST, urgency=HandoffUrgency.NORMAL
         ),
     )
 
-    assert str(urgent.title).startswith("სასწრაფო")
-    assert str(urgent.detail).startswith("Salobie Bia · ")
-    assert not str(normal.title).startswith("Срочно")
+    assert str(urgent.title) == "Urgente: un cliente ha bisogno di una persona"
+    assert str(urgent.detail) == "Salobie Bia · Reclamo"
+    assert str(normal.title) == "Un cliente ha bisogno di una persona"
     assert str(normal.detail).startswith("Salobie Bia · ")
 
 
@@ -63,13 +63,15 @@ def test_requests_name_their_kind_and_date_and_tests_say_what_comes() -> None:
         ),
     )
     undated = brief("en", lead=LeadBrief(lead_type=LeadType.ORDER))
-    check = brief("ru")
+    check = brief("it")
 
     assert "Salobie Bia" in str(dated.title)
     assert "10" in str(dated.detail)
     assert undated.detail is not None and "·" not in str(undated.detail)
-    assert str(check.title) == "Проверка уведомлений · Salobie Bia"
-    assert str(check.detail) == "Сюда будут приходить передачи, заявки и брони."
+    assert str(check.title) == "Notifica di prova · Salobie Bia"
+    assert str(check.detail) == (
+        "Qui arriveranno i passaggi a una persona, le richieste e le prenotazioni."
+    )
 
 
 def text(style: StaffTextStyle, language: str, link: CabinetDeepLink | None) -> str:
@@ -87,16 +89,20 @@ def text(style: StaffTextStyle, language: str, link: CabinetDeepLink | None) -> 
 
 
 def test_each_text_ends_with_the_link_in_the_recipients_language() -> None:
-    assert text(StaffTextStyle.DETAILED, "ka", LINK) == (
-        f"Nino: tooth hurts, +995 555 12 34 56\nგახსნა: {LINK}"
+    assert text(StaffTextStyle.DETAILED, "it", LINK) == (
+        f"Nino: tooth hurts, +995 555 12 34 56\nApri: {LINK}"
     )
     assert text(StaffTextStyle.BRIEF, "en", LINK) == (
         "Test notification · Salobie Bia\n"
         "Handoffs, requests and bookings will arrive here.\n"
         f"Open: {LINK}"
     )
-    assert text(StaffTextStyle.BRIEF, "de", None).startswith(
-        "Testbenachrichtigung · Salobie Bia"
+    assert text(StaffTextStyle.BRIEF, "it", None).startswith(
+        "Notifica di prova · Salobie Bia"
     )
     assert text(StaffTextStyle.BRIEF, "fr", None).startswith("Test notification")
+    # Georgian is not in the catalog: that recipient reads the English link line.
+    assert text(StaffTextStyle.DETAILED, "ka", LINK) == (
+        f"Nino: tooth hurts, +995 555 12 34 56\nOpen: {LINK}"
+    )
     assert "+995" not in text(StaffTextStyle.BRIEF, "ru", LINK)

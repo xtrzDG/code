@@ -13,7 +13,7 @@ import { REGION_NAMES } from "./displayNames.generated";
 export { countryFlag, isCountryAvailable } from "./countryBasics";
 
 /** The first market: the default when nothing hints at the user's country. */
-const FALLBACK_COUNTRY_CODE = "GE";
+const FALLBACK_COUNTRY_CODE = "IT";
 
 /** Countries whose people usually set a region-less browser language. */
 const COUNTRY_OF_LANGUAGE: Record<string, string> = {

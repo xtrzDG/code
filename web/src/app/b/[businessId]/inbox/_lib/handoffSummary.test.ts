@@ -9,7 +9,7 @@ import { handoffSummary } from "./handoffSummary";
 
 const base = { summary: "Помощник был временно недоступен", summary_code: null, quoted_text: null, flagged_values: [] };
 
-function inLocale(locale: "en" | "ru" | "ka") {
+function inLocale(locale: "en" | "it") {
   return createTranslator(locale, getMessages(locale), en).t;
 }
 
@@ -25,7 +25,7 @@ function userWords(sentence: SentenceWithUserValues): string[] {
 
 describe("handoff summary", () => {
   it("shows the model's own summary as it was written, as user content", () => {
-    const view = handoffSummary({ ...base, summary: "Wants a window table" }, inLocale("ka"));
+    const view = handoffSummary({ ...base, summary: "Wants a window table" }, inLocale("it"));
     expect(said(view.text)).toBe("Wants a window table");
     expect(userWords(view.text)).toEqual(["Wants a window table"]);
     expect(view.quote).toBeNull();
@@ -45,24 +45,24 @@ describe("handoff summary", () => {
   it("lists the flagged values where the sentence has room for them", () => {
     const flagged = { ...base, summary_code: "unverified_values" as const, flagged_values: ["20 GEL", "19:30"] };
 
-    expect(said(handoffSummary(flagged, inLocale("ru")).text)).toBe(
-      "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса (20 GEL, 19:30).",
+    expect(said(handoffSummary(flagged, inLocale("it")).text)).toBe(
+      "L'assistente non ha inviato una risposta con cifre o affermazioni che non risultano nei dati della tua attività (20 GEL, 19:30).",
     );
     expect(userWords(handoffSummary(flagged, inLocale("en")).text)).toEqual(["20 GEL, 19:30"]);
-    expect(said(handoffSummary({ ...flagged, flagged_values: [] }, inLocale("ru")).text)).toBe(
-      "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса.",
+    expect(said(handoffSummary({ ...flagged, flagged_values: [] }, inLocale("it")).text)).toBe(
+      "L'assistente non ha inviato una risposta con cifre o affermazioni che non risultano nei dati della tua attività.",
     );
   });
 
   it("labels an undelivered reply as the reply, and erased data without a quote", () => {
     const undelivered = handoffSummary(
       { ...base, summary_code: "reply_undelivered", quoted_text: "Столик свободен" },
-      inLocale("ka"),
+      inLocale("it"),
     );
-    expect(undelivered.quote?.label).toBe("პასუხი, რომელიც ვერ მივიდა");
+    expect(undelivered.quote?.label).toBe("La risposta non arrivata");
 
-    const erased = handoffSummary({ ...base, summary_code: "data_erased" }, inLocale("ru"));
-    expect(said(erased.text)).toBe("Данные удалены по просьбе клиента.");
+    const erased = handoffSummary({ ...base, summary_code: "data_erased" }, inLocale("it"));
+    expect(said(erased.text)).toBe("Dati cancellati su richiesta del cliente.");
     expect(erased.quote).toBeNull();
   });
 });

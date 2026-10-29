@@ -1,6 +1,6 @@
 /**
  * The route tour, part two: an owner's business pages, read from Tbilisi in
- * English and again in Hebrew (support/tour.ts explains the double visit).
+ * English and again in Italian (support/tour.ts explains the double visit).
  */
 
 import { test } from "./support/fixtures";

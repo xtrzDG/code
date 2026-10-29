@@ -1,16 +1,16 @@
 /**
  * Automated accessibility audit (axe-core, WCAG 2.1 A and AA rules) of the
  * setup, the businesses, sign-in, the offline page, the account menu (its
- * Reduce motion setting) and the phone layout in both themes and in Hebrew
- * (right to left): no serious or critical violation is allowed. Every
- * section of a business is audited in a11y-sections-en.spec.ts and
- * a11y-sections-he.spec.ts (support/axe.ts).
+ * Reduce motion setting) and the phone layout in both themes and in Italian:
+ * no serious or critical violation is allowed. Every section of a business
+ * is audited in a11y-sections-en.spec.ts and a11y-sections-it.spec.ts
+ * (support/axe.ts).
  */
 
 import { audit, seriousViolations } from "./support/axe";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, he } from "./support/messages";
+import { en, it } from "./support/messages";
 
 test("the setup invitation, the tunnel, the businesses, sign-in and the offline page pass the audit", async ({
   page,
@@ -72,13 +72,13 @@ test.describe("on a phone", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
-  test("the main pages and the More sheet pass the audit in Hebrew", async ({
+  test("the main pages and the More sheet pass the audit in Italian", async ({
     page,
     owner,
   }) => {
     await page
       .context()
-      .addCookies([{ name: "aw_locale", value: "he", url: WEB_URL }]);
+      .addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
     for (const path of [
       "overview",
       "inbox",
@@ -90,9 +90,11 @@ test.describe("on a phone", () => {
         audit(page, `/b/${owner.businessId}/${path}`),
       );
     }
-    await page.getByRole("button", { name: he.navigation.more }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
+    await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+    await page.getByRole("button", { name: it.navigation.more }).click();
     await expect(
-      page.getByRole("dialog", { name: he.navigation.more }),
+      page.getByRole("dialog", { name: it.navigation.more }),
     ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });

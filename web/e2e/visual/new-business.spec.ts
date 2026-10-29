@@ -3,7 +3,7 @@
  * "Create an AI assistant" (support/tunnel.ts walks it in English) and
  * launches for real; then the tunnel's finale in every theme and language at
  * 1440 and 390 px, and the day-0 Overview and the first Inbox at 1440 px
- * dark and 390 px light, in Russian.
+ * dark and 390 px light, in Italian.
  *
  * The launch runs every automatic check on the rehearsal model
  * (LLM_PROVIDER=scripted), whose judge finds answers to improve: the launch
@@ -51,8 +51,8 @@ function shotsOf(businessId: string, theme: Theme): Shot[] {
   const business = `/b/${businessId}`;
   return [
     ...matrix({ name: "new-business-finale", path: `${business}/setup?step=done`, mask: runTimes }),
-    { name: "new-business-overview", path: `${business}/overview`, theme, locale: "ru", mask: runTimes },
-    { name: "new-business-inbox", path: `${business}/inbox`, theme, locale: "ru", mask: runTimes },
+    { name: "new-business-overview", path: `${business}/overview`, theme, locale: "it", mask: runTimes },
+    { name: "new-business-inbox", path: `${business}/inbox`, theme, locale: "it", mask: runTimes },
   ];
 }
 

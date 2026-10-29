@@ -1,7 +1,7 @@
 /**
- * One "Apply changes" in the daily cabinet, in Russian, English and
- * Georgian: the owner of the demo restaurant edits a price, the banner over
- * the page says one change is not with customers yet, its sheet names the
+ * One "Apply changes" in the daily cabinet, in English and Italian: the
+ * owner of the demo restaurant edits a price, the banner over the page says
+ * one change is not with customers yet, its sheet names the
  * new price in the owner's words, and "Apply changes" runs the launch's
  * three stages with a quick check on the rehearsal model
  * (LLM_PROVIDER=scripted). Once customers get the new price the banner is
@@ -15,12 +15,12 @@ import type { Page } from "@playwright/test";
 import { signInAsDemoOwner } from "./support/demo";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 
 /** The quick check talks a few test conversations through before customers get the change. */
 test.describe.configure({ timeout: 240_000 });
 
-const LANGUAGES = { ru, en, ka } as const;
+const LANGUAGES = { en, it } as const;
 
 type Messages = (typeof LANGUAGES)[keyof typeof LANGUAGES];
 
@@ -90,47 +90,47 @@ test("a check that fails is named in the sheet, its answer fixed, and the update
   const owner = await signInAsDemoOwner(request);
   await context.addCookies([
     { name: "aw_session", value: owner.token, url: WEB_URL, httpOnly: true, sameSite: "Lax" },
-    { name: "aw_locale", value: "ru", url: WEB_URL, sameSite: "Lax" },
+    { name: "aw_locale", value: "it", url: WEB_URL, sameSite: "Lax" },
   ]);
   await page.setViewportSize({ width: 1440, height: 900 });
 
-  // "Мои проверки": a new check takes the language of its question.
+  // "My checks": a new check takes the language of its question.
   await page.goto(`/b/${owner.businessId}/assistant/checks`);
-  await page.getByRole("button", { name: ru.teaching.checks.add }).first().click();
-  const editor = page.getByRole("dialog", { name: ru.teaching.checks.newTitle });
-  await expect(editor.getByLabel(ru.teaching.checks.language)).toHaveValue("");
-  await editor.getByLabel(ru.teaching.checks.question).fill(DOG_QUESTION);
-  await editor.getByLabel(ru.teaching.checks.expectedText).fill(DOG_WORDS);
-  await editor.getByRole("button", { name: ru.common.save, exact: true }).click();
-  const saved = page.getByRole("dialog", { name: ru.updates.checkNow.savedTitle });
-  await saved.getByRole("button", { name: ru.teaching.fix.done }).click();
+  await page.getByRole("button", { name: it.teaching.checks.add }).first().click();
+  const editor = page.getByRole("dialog", { name: it.teaching.checks.newTitle });
+  await expect(editor.getByLabel(it.teaching.checks.language)).toHaveValue("");
+  await editor.getByLabel(it.teaching.checks.question).fill(DOG_QUESTION);
+  await editor.getByLabel(it.teaching.checks.expectedText).fill(DOG_WORDS);
+  await editor.getByRole("button", { name: it.common.save, exact: true }).click();
+  const saved = page.getByRole("dialog", { name: it.updates.checkNow.savedTitle });
+  await saved.getByRole("button", { name: it.teaching.fix.done }).click();
   await expect(saved).toBeHidden();
 
   // The sheet counts the new check: it is not "everything is with customers".
   const banner = page.getByTestId("pending-changes-banner");
-  await banner.getByRole("button", { name: ru.applyChanges.banner.review }).click();
-  const sheet = page.getByRole("dialog", { name: ru.applyChanges.sheet.title });
-  await expect(sheet.getByText(ru.updates.pending.added.replace("{question}", DOG_QUESTION))).toBeVisible();
-  await expect(sheet.getByText(ru.applyChanges.sheet.nothing)).toHaveCount(0);
+  await banner.getByRole("button", { name: it.applyChanges.banner.review }).click();
+  const sheet = page.getByRole("dialog", { name: it.applyChanges.sheet.title });
+  await expect(sheet.getByText(it.updates.pending.added.replace("{question}", DOG_QUESTION))).toBeVisible();
+  await expect(sheet.getByText(it.applyChanges.sheet.nothing)).toHaveCount(0);
 
   // The update stops on the check, named by its question and what the answer must do.
-  await sheet.getByRole("button", { name: ru.applyChanges.sheet.apply }).click();
-  const named = ru.updates.failed.one
+  await sheet.getByRole("button", { name: it.applyChanges.sheet.apply }).click();
+  const named = it.updates.failed.one
     .replace("{question}", DOG_QUESTION)
-    .replace("{expectation}", ru.updates.expectation.must_mention.replace("{text}", DOG_WORDS));
+    .replace("{expectation}", it.updates.expectation.must_mention.replace("{text}", DOG_WORDS));
   await expect(sheet.getByText(named)).toBeVisible({ timeout: 180_000 });
-  await expect(sheet.getByRole("link", { name: ru.updates.failed.openCheck })).toBeVisible();
+  await expect(sheet.getByRole("link", { name: it.updates.failed.openCheck })).toBeVisible();
 
-  // "Исправить ответ" on the test answer, then back to "Применить изменения".
-  await sheet.getByRole("button", { name: ru.updates.failed.fixAnswer }).click();
-  const fix = page.getByRole("dialog", { name: ru.teaching.fix.title });
-  await expect(fix.getByLabel(ru.teaching.fix.question)).toHaveValue(DOG_QUESTION);
-  await fix.getByLabel(ru.teaching.fix.answer).fill(DOG_ANSWER);
-  await fix.getByRole("button", { name: ru.teaching.fix.save }).click();
-  const fixed = page.getByRole("dialog", { name: ru.teaching.fix.savedTitle });
-  await fixed.getByRole("button", { name: ru.updates.failed.applyAfterFix }).click();
+  // "Fix the answer" on the test answer, then back to "Apply changes".
+  await sheet.getByRole("button", { name: it.updates.failed.fixAnswer }).click();
+  const fix = page.getByRole("dialog", { name: it.teaching.fix.title });
+  await expect(fix.getByLabel(it.teaching.fix.question)).toHaveValue(DOG_QUESTION);
+  await fix.getByLabel(it.teaching.fix.answer).fill(DOG_ANSWER);
+  await fix.getByRole("button", { name: it.teaching.fix.save }).click();
+  const fixed = page.getByRole("dialog", { name: it.teaching.fix.savedTitle });
+  await fixed.getByRole("button", { name: it.updates.failed.applyAfterFix }).click();
   await expect(sheet).toBeVisible();
-  await sheet.getByRole("button", { name: ru.applyChanges.sheet.tryAgain }).click();
+  await sheet.getByRole("button", { name: it.applyChanges.sheet.tryAgain }).click();
 
   // Customers get the fixed answer: the banner goes and the check passed.
   await expect(banner).toBeHidden({ timeout: 180_000 });
@@ -140,12 +140,12 @@ test("a check that fails is named in the sheet, its answer fixed, and the update
   await expect(check).toContainText(DOG_WORDS);
 
   // The check goes, so the demo stays as it was.
-  await check.getByRole("button", { name: ru.teaching.checks.deleteLabel.replace("{question}", DOG_QUESTION) }).click();
-  const confirm = page.getByRole("dialog", { name: ru.teaching.checks.deleteTitle });
-  await confirm.getByRole("button", { name: ru.teaching.checks.delete, exact: true }).click();
+  await check.getByRole("button", { name: it.teaching.checks.deleteLabel.replace("{question}", DOG_QUESTION) }).click();
+  const confirm = page.getByRole("dialog", { name: it.teaching.checks.deleteTitle });
+  await confirm.getByRole("button", { name: it.teaching.checks.delete, exact: true }).click();
   await expect(check).toHaveCount(0);
 
   // The test chat talks to what customers get now or with your changes: no version numbers.
   await page.goto(`/b/${owner.businessId}/assistant`);
-  await expect(page.getByLabel(ru.updates.chat.target).locator("option")).toHaveText([ru.updates.chat.live, ru.updates.chat.changes]);
+  await expect(page.getByLabel(it.updates.chat.target).locator("option")).toHaveText([it.updates.chat.live, it.updates.chat.changes]);
 });

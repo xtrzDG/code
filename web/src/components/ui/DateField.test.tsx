@@ -53,8 +53,7 @@ function openCalendar(locale: Locale) {
 
 describe("DateField", () => {
   it.each<[Locale, string]>([
-    ["ru", "6 окт. 2026 г."],
-    ["ka", "6 ოქტ. 2026"],
+    ["it", "6 ott 2026"],
     ["en", "Oct 6, 2026"],
   ])("shows the date in %s, not mm/dd/yyyy", (locale, text) => {
     renderInLocale(<Day initial={TODAY} />, { locale });
@@ -62,7 +61,7 @@ describe("DateField", () => {
   });
 
   it.each<[Locale, string[]]>([
-    ["ru", ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]],
+    ["it", ["lun", "mar", "mer", "gio", "ven", "sab", "dom"]],
     ["en", ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]],
   ])("starts the week where %s starts it", (locale, weekdays) => {
     renderInLocale(<Day initial={TODAY} />, { locale });
@@ -72,9 +71,9 @@ describe("DateField", () => {
   });
 
   it("titles the month in the cabinet's language and marks today and the chosen day", () => {
-    renderInLocale(<Day initial="2026-10-20" />, { locale: "ka" });
-    const calendar = openCalendar("ka");
-    expect(within(calendar).getByText("ოქტომბერი, 2026")).toBeTruthy();
+    renderInLocale(<Day initial="2026-10-20" />, { locale: "it" });
+    const calendar = openCalendar("it");
+    expect(within(calendar).getByText("Ottobre 2026")).toBeTruthy();
     const today = within(calendar).getByRole("button", { current: "date" });
     expect(today.textContent).toBe("6");
     expect(within(calendar).getByRole("gridcell", { selected: true }).textContent).toBe("20");
@@ -83,7 +82,7 @@ describe("DateField", () => {
   it("picks a day with the keyboard and stores ISO", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "ru" });
+    renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "it" });
     const input = screen.getByRole("combobox", { name: "Day" });
     await user.click(input);
     await user.keyboard("{ArrowDown}");
@@ -92,7 +91,7 @@ describe("DateField", () => {
     expect(onValue).toHaveBeenLastCalledWith("2026-10-14");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(input);
-    expect(input).toHaveProperty("value", "14 окт. 2026 г.");
+    expect(input).toHaveProperty("value", "14 ott 2026");
   });
 
   it("moves by months and closes on Escape without a change", async () => {
@@ -127,29 +126,40 @@ describe("DateField", () => {
   it("clears a filter's date", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    renderInLocale(<Day initial={TODAY} clearable onValue={onValue} />, { locale: "ru" });
-    const calendar = openCalendar("ru");
-    await user.click(within(calendar).getByRole("button", { name: "Очистить" }));
+    renderInLocale(<Day initial={TODAY} clearable onValue={onValue} />, { locale: "it" });
+    const calendar = openCalendar("it");
+    await user.click(within(calendar).getByRole("button", { name: textsIn("it").t("formFields.date.clear") }));
     expect(onValue).toHaveBeenLastCalledWith("");
   });
 
   it("takes a typed date once it is whole, and goes back on nonsense", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "ru" });
+    renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "it" });
     const input = screen.getByRole("combobox", { name: "Day" });
     await user.clear(input);
     expect(onValue).toHaveBeenLastCalledWith("");
-    await user.type(input, "07.10.20");
+    await user.type(input, "07/10/20");
     expect(onValue).toHaveBeenCalledTimes(1);
     await user.type(input, "26");
     expect(onValue).toHaveBeenLastCalledWith("2026-10-07");
     await user.tab();
-    expect(input).toHaveProperty("value", "7 окт. 2026 г.");
+    expect(input).toHaveProperty("value", "7 ott 2026");
     await user.clear(input);
-    await user.type(input, "завтра");
+    await user.type(input, "domani");
     await user.tab();
     expect(input).toHaveProperty("value", "");
+  });
+
+  it.each<[string, string]>([
+    ["7 ott 2026", "2026-10-07"],
+    ["07/10/2026", "2026-10-07"],
+  ])("takes %s typed in Italian (day first, the month by its name or number) as %s", async (typed, iso) => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    renderInLocale(<Day onValue={onValue} />, { locale: "it" });
+    await user.type(screen.getByRole("combobox", { name: "Day" }), typed);
+    expect(onValue).toHaveBeenLastCalledWith(iso);
   });
 
   it("opens the month instead of the keyboard on a touch", () => {
@@ -181,9 +191,9 @@ describe("DateTimeField", () => {
   it("keeps the date and the time under one label, and says when one is missing", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
-    renderInLocale(<Starts onValue={onValue} />, { locale: "ru" });
-    expect(screen.getByRole("combobox", { name: "Starts" })).toHaveProperty("value", "6 окт. 2026 г.");
-    const minutes = screen.getByRole("spinbutton", { name: "Starts Минуты" });
+    renderInLocale(<Starts onValue={onValue} />, { locale: "it" });
+    expect(screen.getByRole("combobox", { name: "Starts" })).toHaveProperty("value", "6 ott 2026");
+    const minutes = screen.getByRole("spinbutton", { name: `Starts ${textsIn("it").t("formFields.time.minutes")}` });
     await user.click(minutes);
     await user.keyboard("{ArrowUp}");
     expect(onValue).toHaveBeenLastCalledWith("2026-10-06T09:45");

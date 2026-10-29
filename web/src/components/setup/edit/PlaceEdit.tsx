@@ -58,7 +58,7 @@ export function PlaceEdit({ ctx }: { ctx: StepContext }) {
       ...(value.defaultLanguage ? { default_language: value.defaultLanguage } : {}),
       ...(value.timezone ? { timezone: value.timezone } : {}),
     }),
-    { enabled: Boolean(place.defaults), isValid: (value) => value.languages.length > 0 },
+    { enabled: Boolean(place.defaults), isValid: (value) => value.languages.length > 0 && value.city !== "" },
   );
 
   const address = form.address.trim();
@@ -85,7 +85,7 @@ export function PlaceEdit({ ctx }: { ctx: StepContext }) {
       isAddressRequired={takesBookings}
       onBack={() => undefined}
       onSubmit={() => undefined}
-      problems={{ languages: place.languages.length === 0, address: addressMissing }}
+      problems={{ city: form.city.trim() === "", languages: place.languages.length === 0, address: addressMissing }}
       extra={
         <div className="space-y-6">
           <Field label={t("profileEdit.place.mapsUrl")} hint={t("profileEdit.place.mapsUrlHint")} optionalLabel={t("common.optional")} error={mapsProblem ?? undefined}>

@@ -68,17 +68,14 @@ def read_file(directory: Path, language: str) -> dict[str, object]:
 def test_check_lists_each_language_and_fails_on_a_missing_text(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    write_catalog(tmp_path, {"ka": WITHOUT_PLAN_AND_NOTICE})
+    write_catalog(tmp_path, {"it": WITHOUT_PLAN_AND_NOTICE})
 
     assert main(["backend", "check"], tmp_path, never_called) == 1
 
     lines: list[str] = capsys.readouterr().out.splitlines()
     assert lines == [
-        "ka: 2/4 texts, 2 missing, 0 waiting for review",
-        "ru: 4/4 texts, 0 missing, 0 waiting for review",
+        "it: 2/4 texts, 2 missing, 2 waiting for review",
         "en: 4/4 texts, 0 missing, 0 waiting for review",
-        "he: 4/4 texts, 0 missing, 4 waiting for review",
-        "de: 4/4 texts, 0 missing, 4 waiting for review",
     ]
 
 
@@ -89,63 +86,71 @@ def test_check_passes_a_complete_catalog(tmp_path: Path) -> None:
 
 
 def test_drafts_in_a_reviewed_file_are_named_for_review(tmp_path: Path) -> None:
-    write_catalog(tmp_path, {"ka": WITHOUT_PLAN_AND_NOTICE})
-    model = model_answering(lambda english: f"KA {english}")
+    write_catalog(
+        tmp_path,
+        {"it": WITHOUT_PLAN_AND_NOTICE},
+        italian_status=TextReviewStatus.REVIEWED,
+    )
+    model = model_answering(lambda english: f"IT {english}")
 
-    assert main(["backend", "draft", "--language", "ka"], tmp_path, factory(model)) == 0
+    assert main(["backend", "draft", "--language", "it"], tmp_path, factory(model)) == 0
 
-    written = read_file(tmp_path, "ka")
+    written = read_file(tmp_path, "it")
     assert written["review_status"] == "reviewed"
     assert list(written["texts"]) == list(ENGLISH_TEXTS)  # type: ignore[call-overload]
     assert written["draft_keys"] == ["plans.chat.name", "billing.notice"]
     catalog = load_catalog(tmp_path)
     registry = TextCatalogRegistry(catalog)
-    assert registry.list_missing_keys(CabinetLanguage.GEORGIAN) == []
+    assert registry.list_missing_keys(CabinetLanguage.ITALIAN) == []
     assert (
-        registry.review_status(OwnerTextKey("billing.notice"), CabinetLanguage.GEORGIAN)
+        registry.review_status(OwnerTextKey("billing.notice"), CabinetLanguage.ITALIAN)
         is TextReviewStatus.NEEDS_REVIEW
     )
     assert (
         registry.review_status(
-            OwnerTextKey("niches.cafe.handoff_rules.1"), CabinetLanguage.GEORGIAN
+            OwnerTextKey("niches.cafe.handoff_rules.1"), CabinetLanguage.ITALIAN
         )
         is TextReviewStatus.REVIEWED
     )
-    assert catalog.files[CabinetLanguage.GEORGIAN].texts[
+    assert catalog.files[CabinetLanguage.ITALIAN].texts[
         OwnerTextKey("billing.notice")
-    ] == ("KA {business}: pay {amount}.")
+    ] == ("IT {business}: pay {amount}.")
 
 
 def test_the_request_names_the_language_and_sends_only_missing_texts(
     tmp_path: Path,
 ) -> None:
-    write_catalog(tmp_path, {"de": WITHOUT_PLAN_AND_NOTICE})
-    model = model_answering(lambda english: f"DE {english}")
+    write_catalog(tmp_path, {"it": WITHOUT_PLAN_AND_NOTICE})
+    model = model_answering(lambda english: f"IT {english}")
 
-    main(["backend", "draft", "--language", "de"], tmp_path, factory(model))
+    main(["backend", "draft", "--language", "it"], tmp_path, factory(model))
 
     [request] = model.requests
     assert request.model_id == MODEL
     assert request.tools == []
-    assert "into German" in str(request.system_prompt)
-    assert "formally (Sie)" in str(request.system_prompt)
+    assert "into Italian" in str(request.system_prompt)
+    assert "informally (tu)" in str(request.system_prompt)
     assert asked_texts(request) == {
         "plans.chat.name": "Chat",
         "billing.notice": "{business}: pay {amount}.",
     }
     # A file of drafts is needs_review as a whole: no single draft keys.
-    assert read_file(tmp_path, "de")["draft_keys"] == []
+    assert read_file(tmp_path, "it")["draft_keys"] == []
 
 
 def test_a_draft_with_other_placeholders_is_refused(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    write_catalog(tmp_path, {"ru": WITHOUT_PLAN_AND_NOTICE})
+    write_catalog(
+        tmp_path,
+        {"it": WITHOUT_PLAN_AND_NOTICE},
+        italian_status=TextReviewStatus.REVIEWED,
+    )
     model = model_answering(lambda english: english.replace("{amount}", "{sum}"))
 
-    assert main(["backend", "draft", "--language", "ru"], tmp_path, factory(model)) == 1
+    assert main(["backend", "draft", "--language", "it"], tmp_path, factory(model)) == 1
 
-    written = read_file(tmp_path, "ru")
+    written = read_file(tmp_path, "it")
     assert written["draft_keys"] == ["plans.chat.name"]
     assert "billing.notice" not in written["texts"]  # type: ignore[operator]
     assert "billing.notice: the draft was refused" in capsys.readouterr().out
@@ -158,41 +163,41 @@ def test_a_draft_with_other_placeholders_is_refused(
 def test_an_unusable_answer_leaves_the_texts_missing(
     tmp_path: Path, answer: str
 ) -> None:
-    write_catalog(tmp_path, {"ka": WITHOUT_PLAN_AND_NOTICE})
+    write_catalog(tmp_path, {"it": WITHOUT_PLAN_AND_NOTICE})
     model = ScriptedLlmAdapter.from_turns([ScriptedLlmTurn(text=MessageText(answer))])
 
-    assert main(["backend", "draft", "--language", "ka"], tmp_path, factory(model)) == 1
+    assert main(["backend", "draft", "--language", "it"], tmp_path, factory(model)) == 1
 
-    assert read_file(tmp_path, "ka")["draft_keys"] == []
+    assert read_file(tmp_path, "it")["draft_keys"] == []
 
 
 def test_an_answer_in_a_code_fence_is_read(tmp_path: Path) -> None:
-    write_catalog(tmp_path, {"ka": WITHOUT_PLAN_AND_NOTICE})
+    write_catalog(tmp_path, {"it": WITHOUT_PLAN_AND_NOTICE})
     fenced = (
-        '```json\n{"plans.chat.name": "ჩატი", "billing.notice": '
-        '"{business}: გადაიხადეთ {amount}."}\n```'
+        '```json\n{"plans.chat.name": "Chat", "billing.notice": '
+        '"{business}: paga {amount}."}\n```'
     )
     model = ScriptedLlmAdapter.from_turns([ScriptedLlmTurn(text=MessageText(fenced))])
 
-    assert main(["backend", "draft", "--language", "ka"], tmp_path, factory(model)) == 0
+    assert main(["backend", "draft", "--language", "it"], tmp_path, factory(model)) == 0
 
-    assert read_file(tmp_path, "ka")["texts"] == {
+    assert read_file(tmp_path, "it")["texts"] == {
         **WITHOUT_PLAN_AND_NOTICE,
-        "plans.chat.name": "ჩატი",
-        "billing.notice": "{business}: გადაიხადეთ {amount}.",
+        "plans.chat.name": "Chat",
+        "billing.notice": "{business}: paga {amount}.",
     }
 
 
 def test_a_new_language_without_a_file_starts_as_drafts(tmp_path: Path) -> None:
     write_catalog(tmp_path)
-    (tmp_path / "he.json").unlink()
-    model = model_answering(lambda english: f"HE {english}")
+    (tmp_path / "it.json").unlink()
+    model = model_answering(lambda english: f"IT {english}")
 
     assert main(["backend", "check"], tmp_path, never_called) == 1
-    assert main(["backend", "draft", "--language", "he"], tmp_path, factory(model)) == 0
+    assert main(["backend", "draft", "--language", "it"], tmp_path, factory(model)) == 0
 
-    written = read_file(tmp_path, "he")
-    assert written["language"] == "he"
+    written = read_file(tmp_path, "it")
+    assert written["language"] == "it"
     assert written["review_status"] == "needs_review"
     assert len(written["texts"]) == len(ENGLISH_TEXTS)  # type: ignore[arg-type]
 
@@ -202,21 +207,26 @@ def test_nothing_missing_needs_no_model(
 ) -> None:
     write_catalog(tmp_path)
 
-    assert main(["backend", "draft", "--language", "de"], tmp_path, never_called) == 0
-    assert "de.json: nothing to draft" in capsys.readouterr().out
+    assert main(["backend", "draft", "--language", "it"], tmp_path, never_called) == 0
+    assert "it.json: nothing to draft" in capsys.readouterr().out
 
 
 def test_reviewed_clears_named_drafts_or_the_whole_file(tmp_path: Path) -> None:
-    write_catalog(tmp_path, {"ka": WITHOUT_PLAN_AND_NOTICE})
-    model = model_answering(lambda english: f"KA {english}")
-    main(["backend", "draft", "--language", "ka"], tmp_path, factory(model))
+    write_catalog(
+        tmp_path,
+        {"it": WITHOUT_PLAN_AND_NOTICE},
+        italian_status=TextReviewStatus.REVIEWED,
+    )
+    model = model_answering(lambda english: f"IT {english}")
+    main(["backend", "draft", "--language", "it"], tmp_path, factory(model))
 
     reviewed = ["backend", "reviewed", "--language"]
-    assert main([*reviewed, "ka", "--key", "billing.notice"], tmp_path) == 0
-    assert read_file(tmp_path, "ka")["draft_keys"] == ["plans.chat.name"]
+    assert main([*reviewed, "it", "--key", "billing.notice"], tmp_path) == 0
+    assert read_file(tmp_path, "it")["draft_keys"] == ["plans.chat.name"]
 
-    assert main([*reviewed, "de"], tmp_path) == 0
-    assert read_file(tmp_path, "de")["review_status"] == "reviewed"
+    write_catalog(tmp_path)
+    assert main([*reviewed, "it"], tmp_path) == 0
+    assert read_file(tmp_path, "it")["review_status"] == "reviewed"
 
 
 def test_the_configured_drafter_uses_the_summary_model() -> None:
@@ -225,13 +235,13 @@ def test_the_configured_drafter_uses_the_summary_model() -> None:
         container.config.app_settings,
         assemble_app_settings({"LLM_SUMMARY_MODEL_ID": "gpt-5-mini"}),
     )
-    model = model_answering(lambda english: f"KA {english}")
+    model = model_answering(lambda english: f"IT {english}")
     replace_provider(container.adapters.routing_llm_adapter, model)
 
     drafted = configured_drafter(container).draft(
-        CabinetLanguage.GEORGIAN,
+        CabinetLanguage.ITALIAN,
         {OwnerTextKey("plans.chat.name"): LocalizedTextValue("Chat")},
     )
 
-    assert drafted.drafts == {OwnerTextKey("plans.chat.name"): "KA Chat"}
+    assert drafted.drafts == {OwnerTextKey("plans.chat.name"): "IT Chat"}
     assert model.requests[0].model_id == "gpt-5-mini"

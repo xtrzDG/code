@@ -2,7 +2,7 @@
  * `mfa.*` texts: the second step of signing in (an authenticator code or a
  * recovery code), setting up an authenticator app, recovery codes shown
  * once, and the "confirm it is you" dialog of sensitive actions, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const mfaEn = {

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 import { createTranslator } from "@/i18n/translate";
 import { daysLabel, periodLabel, periodParts } from "@/lib/retentionPeriods";
 
@@ -86,10 +85,11 @@ describe("periods as people say them", () => {
 
   it("names them in every language of the cabinet", () => {
     expect(periodLabel(createTranslator("en", en).tp, 730)).toBe("2 years");
-    expect(periodLabel(createTranslator("ru", ru).tp, 730)).toBe("2 года");
-    expect(periodLabel(createTranslator("ru", ru).tp, 1825)).toBe("5 лет");
-    expect(periodLabel(createTranslator("ka", ka).tp, 90)).toBe("3 თვე");
-    expect(daysLabel(createTranslator("ru", ru).tp, 30)).toBe("30 дней");
+    expect(periodLabel(createTranslator("it", italian).tp, 730)).toBe("2 anni");
+    expect(periodLabel(createTranslator("it", italian).tp, 1825)).toBe("5 anni");
+    expect(periodLabel(createTranslator("it", italian).tp, 90)).toBe("3 mesi");
+    expect(periodLabel(createTranslator("it", italian).tp, 30)).toBe("1 mese");
+    expect(daysLabel(createTranslator("it", italian).tp, 30)).toBe("30 giorni");
     expect(daysLabel(createTranslator("en", en).tp, 1)).toBe("1 day");
   });
 });
@@ -103,8 +103,8 @@ describe("the latest cleanup", () => {
     expect(purgeSummary(NO_COUNTS)).toEqual({ total: 0, parts: [] });
   });
 
-  it("has a label for every count and every named sub-processor in en, ru and ka", () => {
-    for (const messages of [en, ru, ka]) {
+  it("has a label for every count and every named sub-processor in en and it", () => {
+    for (const messages of [en, italian]) {
       for (const field of PURGE_COUNT_FIELDS) {
         expect(messages.privacyRetention.counts[field]).toBeTruthy();
       }

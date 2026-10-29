@@ -21,18 +21,18 @@ SELLER: dict[str, str] = {
 }
 
 
-def test_the_security_overview_is_published_in_three_languages() -> None:
+def test_the_security_overview_is_published_in_english() -> None:
     client = build_legal_client(Clock("2026-10-05"))
 
     english = client.get("/v1/legal/security").json()
-    georgian = client.get("/v1/legal/security", params={"language": "ka"}).json()
+    for_georgian = client.get("/v1/legal/security", params={"language": "ka"}).json()
 
     assert english["kind"] == "security"
     assert english["version"] == "2026-10-05"
-    assert english["available_languages"] == ["en", "ka", "ru"]
+    assert english["available_languages"] == ["en"]
     assert english["title"] == "Security at Assistant Workshop"
     assert english["has_placeholders"] is False
-    assert georgian["language"] == "ka"
+    assert for_georgian["language"] == "en"
 
 
 def test_every_text_is_a_draft_until_the_operator_declares_them_final(

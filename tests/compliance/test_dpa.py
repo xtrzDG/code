@@ -113,13 +113,12 @@ def test_a_version_without_a_text_cannot_be_accepted() -> None:
     assert testbed.dpa_acceptance_repo.list_by_business(business.id) == []
 
 
-@pytest.mark.parametrize(
-    ("requested", "served"),
-    [("ka", "ka"), ("ru-RU", "ru"), ("en", "en"), ("de", "en"), (None, "en")],
-)
-def test_the_agreement_text_is_served_in_the_language_or_english(
+# The agreement is published in English only; its Italian text is a draft in
+# docs/legal/drafts that the API does not serve, so every language (the other
+# cabinet language, a base language, one the catalog never had) reads English.
+@pytest.mark.parametrize("requested", ["it", "it-IT", "ru-RU", "ka", "en", None])
+def test_the_agreement_text_is_served_in_english_for_every_language(
     requested: str | None,
-    served: str,
 ) -> None:
     testbed = build_accounts_testbed()
 
@@ -130,32 +129,33 @@ def test_the_agreement_text_is_served_in_the_language_or_english(
         )
     )
 
-    assert document.language == served
-    assert document.available_languages == ["en", "ka", "ru"]
+    assert document.language == "en"
+    assert document.available_languages == ["en"]
     assert document.version == "2026-10-01"
     assert str(document.text).startswith(f"# {document.title}")
     assert "90" in str(document.text)
 
 
-def test_every_translation_of_the_agreement_has_the_same_sections() -> None:
+def test_every_language_reads_the_same_english_text_with_all_sections() -> None:
     testbed = build_accounts_testbed()
     version = DpaDocumentVersion("2026-10-01")
 
-    outlines = {
-        language: [
-            line.split(".")[0]
-            for line in str(
-                testbed.get_dpa_document.run(
-                    DpaDocumentQuery(version=version, language=LanguageTag(language))
-                ).text
-            ).splitlines()
-            if line.startswith("## ")
-        ]
-        for language in ("en", "ru", "ka")
+    texts = {
+        language: str(
+            testbed.get_dpa_document.run(
+                DpaDocumentQuery(version=version, language=LanguageTag(language))
+            ).text
+        )
+        for language in ("en", "it", "ru", "ka")
     }
+    sections = [
+        line.split(".")[0]
+        for line in texts["en"].splitlines()
+        if line.startswith("## ")
+    ]
 
-    assert outlines["en"] == outlines["ru"] == outlines["ka"]
-    assert len(outlines["en"]) == 15
+    assert texts["it"] == texts["ru"] == texts["ka"] == texts["en"]
+    assert sections == [f"## {number}" for number in range(1, 16)]
 
 
 def test_an_unknown_agreement_version_is_not_found() -> None:

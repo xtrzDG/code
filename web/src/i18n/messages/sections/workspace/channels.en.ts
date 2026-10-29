@@ -1,6 +1,6 @@
 /**
  * `channels.*` texts of chat channels, the website chat, calls, Google
- * Calendar and staff Telegram, in English: the reference that ru and ka are
+ * Calendar and staff Telegram, in English: the reference that it is
  * typed against.
  */
 

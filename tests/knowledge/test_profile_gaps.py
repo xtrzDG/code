@@ -18,11 +18,11 @@ from tests.knowledge.profile_gaps_helpers import complete_restaurant, kinds
 
 def test_empty_profile_lists_blocking_gaps_first_in_wizard_order() -> None:
     harness = KnowledgeHarness()
-    business = harness.add_business()
+    business = harness.add_business(owner_language="it")
 
     view = harness.compute_profile_gaps.run(ProfileGapsQuery(business_id=business.id))
 
-    assert view.language == "ka"
+    assert view.language == "it"
     assert kinds(view) == [
         ProfileGapKind.MISSING_REQUIRED_ANSWER,
         ProfileGapKind.NO_OPENING_HOURS,
@@ -35,8 +35,10 @@ def test_empty_profile_lists_blocking_gaps_first_in_wizard_order() -> None:
     ]
     assert [gap.is_blocking for gap in view.gaps] == [True] * 6 + [False] * 2
     assert view.gaps[0].question_key == "cuisine"
-    assert view.gaps[0].description == "უპასუხეთ კითხვას „რა სამზარეულო გაქვთ?“."
-    assert view.gaps[5].description == "დაამატეთ, რას ჯავშნიან კლიენტები (მაგიდა)."
+    # The gap sentences are still a code table (en, ru, ka; PLAN 18.4): an
+    # Italian owner reads the English frame around the catalog's Italian words.
+    assert view.gaps[0].description == "Answer the question “Che cucina proponi?”."
+    assert view.gaps[5].description == "Add what customers book (tavolo)."
     assert view.is_ready_for_assembly is False
 
 
@@ -44,16 +46,15 @@ def test_gap_texts_follow_the_requested_language_with_english_fallback() -> None
     harness = KnowledgeHarness()
     business = harness.add_business(niche_key=NicheKey.HOTEL)
 
-    russian = harness.compute_profile_gaps.run(
-        ProfileGapsQuery(business_id=business.id, language=LanguageTag("ru"))
+    italian = harness.compute_profile_gaps.run(
+        ProfileGapsQuery(business_id=business.id, language=LanguageTag("it"))
     )
     arabic = harness.compute_profile_gaps.run(
         ProfileGapsQuery(business_id=business.id, language=LanguageTag("ar"))
     )
 
-    assert (
-        russian.gaps[0].description
-        == "Ответьте на вопрос «Какой у вас тип размещения?»."
+    assert italian.gaps[0].description == (
+        "Answer the question “Che tipo di struttura è?”."
     )
     assert arabic.gaps[0].description == (
         "Answer the question “What kind of property is it?”."

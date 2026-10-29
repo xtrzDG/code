@@ -75,7 +75,7 @@ from tests.platform_ops.incident_world import StepUp
 from tests.platform_ops.ops_world import ADMIN, AdminsOnly, OpsClock
 
 IP: ClientIpAddress = ClientIpAddress("203.0.113.9")
-RU: LanguageTag = LanguageTag("ru")
+IT: LanguageTag = LanguageTag("it")
 EN: LanguageTag = LanguageTag("en")
 RESTAURANT: NicheKey = NicheKey.RESTAURANT
 CUISINE_LABEL: NicheTextFieldKey = NicheTextFieldKey("questions.cuisine.label")
@@ -183,7 +183,7 @@ class NicheTextWorld:
 
     # --- Steps as an admin takes them.
     def editor(
-        self, niche: NicheKey = RESTAURANT, language: LanguageTag = RU
+        self, niche: NicheKey = RESTAURANT, language: LanguageTag = IT
     ) -> NicheTextEditorView:
         return self.editor_use_case().run(
             NicheTextEditorQuery(user_id=ADMIN, niche_key=niche, language=language)

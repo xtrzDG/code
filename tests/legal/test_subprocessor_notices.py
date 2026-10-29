@@ -12,6 +12,7 @@ from app.schemas.constants.legal import SubprocessorChangeKind
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.legal import SubprocessorNoticeDocument
 from app.schemas.dto.jobs import JobTick
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import JobName
 from tests.legal.legal_world import (
     ORIGINAL_ENTRIES,
@@ -51,19 +52,23 @@ def test_nothing_goes_out_before_the_notice_period_opens() -> None:
 
 def test_owners_hear_thirty_days_ahead_once_in_their_language() -> None:
     world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-11-01")
+    # The salon's first owner reads the cabinet in Italian (it-IT).
+    put(world.users, world.ru_owner.model_copy(update={"locale": LanguageTag("it-IT")}))
 
     assert tick(world) == 2
 
     sent = {str(item.contact.address): item for item in world.notifier.sent}
     assert set(sent) == {"nino@salon.example", "+995555123456", "owner@cafe.example"}
     assert sent["+995555123456"].contact.channel is ManagerContactChannel.SMS
-    russian = str(sent["nino@salon.example"].text)
-    assert russian.startswith("Новый субобработчик с 2026-12-01: Почта ЕС")
-    assert "Salon Ia" in russian and "возразить" in russian
+    italian = str(sent["nino@salon.example"].text)
+    # The frame is Italian; the entry's texts have no Italian yet, so English.
+    assert italian.startswith("Nuovo sub-responsabile dal 2026-12-01: Mailbox EU")
+    assert "Salon Ia" in italian and "Puoi opporti" in italian
+    assert "Impostazioni, Protezione dei dati" in italian
+    # A language without a frame (Georgian) and en-GB read English.
     assert str(sent["+995555123456"].text).startswith(
-        "ახალი ქვე-უფლებამოსილი პირი 2026-12-01-დან: ფოსტა ევროკავშირი"
+        "New sub-processor from 2026-12-01: Mailbox EU"
     )
-    # en-GB reads English.
     assert str(sent["owner@cafe.example"].text).startswith(
         "New sub-processor from 2026-12-01: Mailbox EU"
     )

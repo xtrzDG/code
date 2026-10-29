@@ -26,7 +26,7 @@ describe("the dictionary of a public page", () => {
   });
 
   it("serves the public site's pages", () => {
-    navigation.pathname = "/ka/for/hotel";
+    navigation.pathname = "/it/for/hotel";
     render(
       <I18nProvider locale="en" messages={{ common: { save: "Save" } }} scope="public">
         <Greeting />

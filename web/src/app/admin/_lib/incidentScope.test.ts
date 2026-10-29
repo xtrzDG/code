@@ -58,7 +58,7 @@ describe("the status announcement", () => {
   });
 
   it("keeps a text already written when offered again", () => {
-    const written = { ...outage(), announcement: { ...outage().announcement, texts: { en: "Our own words", ka: "", ru: "" } } };
+    const written = { ...outage(), announcement: { ...outage().announcement, texts: { en: "Our own words", it: "" } } };
 
     expect(withAnnouncement(written, true).announcement.texts.en).toBe("Our own words");
   });

@@ -63,7 +63,7 @@ describe("InboxViewTabs in the 360 px list column", () => {
   });
 
   it("scrolls the chosen tab into sight and fades the side that is cut", () => {
-    renderInLocale(<Tabs initial="mine" />, { locale: "ru" });
+    renderInLocale(<Tabs initial="mine" />, { locale: "it" });
 
     expect(scrolled.at(-1)).toBe(chosenTab("mine"));
     const row = document.querySelector("[data-scroll-row]")!;
@@ -74,8 +74,8 @@ describe("InboxViewTabs in the 360 px list column", () => {
 
   it("follows the choice: each newly chosen tab is scrolled into sight", async () => {
     const user = userEvent.setup();
-    const { t } = textsIn("ru");
-    renderInLocale(<Tabs initial="mine" />, { locale: "ru" });
+    const { t } = textsIn("it");
+    renderInLocale(<Tabs initial="mine" />, { locale: "it" });
 
     await user.click(screen.getByRole("radio", { name: new RegExp(t("inbox.views.needs_person")) }));
 
@@ -84,8 +84,8 @@ describe("InboxViewTabs in the 360 px list column", () => {
   });
 
   it.each(["unassigned", "all"] as const)("shows a view chosen under More (%s) in full on the More button", (view) => {
-    const { t } = textsIn("ru");
-    renderInLocale(<Tabs initial={view} />, { locale: "ru" });
+    const { t } = textsIn("it");
+    renderInLocale(<Tabs initial={view} />, { locale: "it" });
 
     const more = document.querySelector<HTMLElement>("[data-more-views]")!;
     expect(more.getAttribute("data-chosen")).toBe(view);

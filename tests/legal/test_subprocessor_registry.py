@@ -72,13 +72,13 @@ def test_the_served_agreement_shows_the_live_list_without_markers() -> None:
         subprocessor_registry=SubprocessorRegistry(entries=(*SUBPROCESSORS, added))
     )
 
-    russian = registry.find_dpa(DpaDocumentVersion("2026-10-01"), LanguageTag("ru"))
+    english = registry.find_dpa(DpaDocumentVersion("2026-10-01"), LanguageTag("en"))
 
-    assert russian is not None
-    assert "subprocessors:start" not in russian.text
-    assert TABLE_END_MARKER not in russian.text
-    assert "| Почта ЕС (с 2026-12-01) | Отправка писем |" in russian.text
-    assert "| Субобработчик | Цель | Персональные данные | Где |" in russian.text
+    assert english is not None
+    assert "subprocessors:start" not in english.text
+    assert TABLE_END_MARKER not in english.text
+    assert "| Mailbox EU (from 2026-12-01) | E-mail delivery |" in english.text
+    assert "| Sub-processor | Purpose | Personal data | Location |" in english.text
 
 
 def test_announced_changes_are_marked_in_every_language() -> None:
@@ -88,13 +88,15 @@ def test_announced_changes_are_marked_in_every_language() -> None:
     ]
 
     english = render_subprocessor_table(entries, LanguageTag("en"))
-    georgian = render_subprocessor_table(entries, LanguageTag("ka"))
+    italian = render_subprocessor_table(entries, LanguageTag("it"))
     german = render_subprocessor_table(entries, LanguageTag("de"))
 
     assert "Mailbox EU (from 2026-12-01)" in english
     assert "(until 2026-12-31)" in english
-    assert "ფოსტა ევროკავშირი (2026-12-01-დან)" in georgian
-    assert "(2026-12-31-მდე)" in georgian
+    # The Italian header and labels; the entries' own texts have no Italian yet.
+    assert "| Sub-responsabile | Finalità | Dati personali | Luogo |" in italian
+    assert "Mailbox EU (dal 2026-12-01)" in italian
+    assert "(fino al 2026-12-31)" in italian
     # Languages without a DPA read the English table.
     assert german == english
 

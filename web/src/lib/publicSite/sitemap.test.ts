@@ -12,25 +12,16 @@ describe("sitemap", () => {
     const entries = sitemapEntries("https://app.example.com/", ["", "/for/hotel"]);
 
     expect(entries.map((entry) => entry.url)).toEqual([
-      "https://app.example.com/ka",
-      "https://app.example.com/ru",
       "https://app.example.com/en",
-      "https://app.example.com/he",
-      "https://app.example.com/de",
-      "https://app.example.com/ka/for/hotel",
-      "https://app.example.com/ru/for/hotel",
+      "https://app.example.com/it",
       "https://app.example.com/en/for/hotel",
-      "https://app.example.com/he/for/hotel",
-      "https://app.example.com/de/for/hotel",
+      "https://app.example.com/it/for/hotel",
     ]);
-    expect(entries[6]?.alternates.languages).toEqual({
-      ka: "https://app.example.com/ka/for/hotel",
-      ru: "https://app.example.com/ru/for/hotel",
+    expect(entries[3]?.alternates.languages).toEqual({
       en: "https://app.example.com/en/for/hotel",
-      he: "https://app.example.com/he/for/hotel",
-      de: "https://app.example.com/de/for/hotel",
+      it: "https://app.example.com/it/for/hotel",
     });
     expect(entries[0]?.priority).toBe(1);
-    expect(entries[5]?.priority).toBe(0.8);
+    expect(entries[2]?.priority).toBe(0.8);
   });
 });

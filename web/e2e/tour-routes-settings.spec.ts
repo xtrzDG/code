@@ -1,7 +1,7 @@
 /**
  * The route tour, part three: an owner's settings and account pages, read
- * from Tbilisi in English and again in Hebrew (support/tour.ts explains the
- * double visit).
+ * from Tbilisi in English and again in Italian (support/tour.ts explains
+ * the double visit).
  */
 
 import { test } from "./support/fixtures";

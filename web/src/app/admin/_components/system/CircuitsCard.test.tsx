@@ -24,7 +24,7 @@ const model: CircuitSummary = {
 };
 
 describe("CircuitsCard: the providers' circuit breakers", () => {
-  it.each(["en", "ru", "ka", "he", "de"] as const)("names providers and states in %s", async (locale) => {
+  it.each(["en", "it"] as const)("names providers and states in %s", async (locale) => {
     const { t } = textsIn(locale);
     renderInLocale(<CircuitsCard circuits={[meta, model]} />, { locale });
 

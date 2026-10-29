@@ -1,5 +1,6 @@
 """The owners' notices and the deletion certificate's page."""
 
+import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.business_closures import (
@@ -79,15 +80,17 @@ def entry(name: str) -> BusinessDeletionDocument:
 
 def test_the_notice_names_who_closed_and_the_local_deletion_day() -> None:
     english = notice(ClosureNoticeKind.OPENED_BY_OWNER, "en")
-    russian = notice(ClosureNoticeKind.OPENED_BY_OWNER, "ru")
+    italian = notice(ClosureNoticeKind.OPENED_BY_OWNER, "it")
 
     assert english.startswith("Nino closed Mtsvane Ezo.")
     assert "November 4, 2026" in english
-    assert "4 ноября 2026" in russian
+    assert italian.startswith("Nino ha chiuso Mtsvane Ezo.")
+    assert "Il 4 novembre 2026" in italian
 
 
-def test_a_language_the_catalog_lacks_reads_english() -> None:
-    assert notice(ClosureNoticeKind.REOPENED_PAID, "pt").startswith(
+@pytest.mark.parametrize("language", ["ru", "pt"])
+def test_a_language_the_catalog_lacks_reads_english(language: str) -> None:
+    assert notice(ClosureNoticeKind.REOPENED_PAID, language).startswith(
         "Mtsvane Ezo is open again"
     )
 

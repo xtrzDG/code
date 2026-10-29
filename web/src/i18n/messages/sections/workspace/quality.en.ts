@@ -1,7 +1,7 @@
 /**
  * `quality.*` texts of production quality: the nightly judge's scores of
  * real conversations on the admin client page and on a conversation's
- * card, in English: the reference that ru and ka are typed against.
+ * card, in English: the reference that it is typed against.
  */
 
 export const qualityEn = {

@@ -1,7 +1,7 @@
 /**
  * `privacyRetention.*` texts: Settings → Privacy → "How long data is
  * kept" (the retention periods, the nightly cleanup, the copies at the
- * sub-processors), in English: the reference that ru and ka are typed
+ * sub-processors), in English: the reference that it is typed
  * against.
  */
 

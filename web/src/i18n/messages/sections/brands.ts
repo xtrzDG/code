@@ -8,18 +8,9 @@
  */
 
 import type { Translation } from "../../translate";
-import { brandsDe } from "./brands/brands.de";
+import { brandsIt } from "./brands/brands.it";
 import { brandsEn } from "./brands/brands.en";
-import { brandsHe } from "./brands/brands.he";
-import { brandsKa } from "./brands/brands.ka";
-import { brandsRu } from "./brands/brands.ru";
 
 export const brandsSectionEn = { brands: brandsEn } as const;
 
-export const brandsSectionRu: Translation<typeof brandsSectionEn> = { brands: brandsRu };
-
-export const brandsSectionKa: Translation<typeof brandsSectionEn> = { brands: brandsKa };
-
-export const brandsSectionHe: Translation<typeof brandsSectionEn> = { brands: brandsHe };
-
-export const brandsSectionDe: Translation<typeof brandsSectionEn> = { brands: brandsDe };
+export const brandsSectionIt: Translation<typeof brandsSectionEn> = { brands: brandsIt };

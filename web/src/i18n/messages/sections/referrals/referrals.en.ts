@@ -2,7 +2,7 @@
  * `referrals.*` texts: an owner's invitation ("Invite a business: a month
  * free for both"), on the Overview card and in the account menu, and the
  * "Powered by" link on the chat, the chat page and the printed card, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const referralsEn = {

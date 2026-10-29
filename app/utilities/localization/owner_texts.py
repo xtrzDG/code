@@ -7,8 +7,8 @@ API and the worker at startup, never at the first message. Catalog texts
 are built into module constants and registries at import, so an unknown key
 fails at startup too.
 
-Values come in a fixed order (English, Russian, Georgian, then the newer
-cabinet languages) so a LocalizedText reads the same in every process.
+Values come in a fixed order (English, then Italian) so a LocalizedText
+reads the same in every process.
 """
 
 from pathlib import Path
@@ -33,10 +33,7 @@ OWNER_TEXTS_DIRECTORY: Path = (
 )
 VALUE_ORDER: tuple[CabinetLanguage, ...] = (
     CabinetLanguage.ENGLISH,
-    CabinetLanguage.RUSSIAN,
-    CabinetLanguage.GEORGIAN,
-    CabinetLanguage.HEBREW,
-    CabinetLanguage.GERMAN,
+    CabinetLanguage.ITALIAN,
 )
 
 OWNER_TEXT_CATALOG: TextCatalog = read_text_catalog(OWNER_TEXTS_DIRECTORY)

@@ -120,8 +120,8 @@ export async function expectReaderZone(page: Page): Promise<void> {
   await expect(page.getByText(/\d{1,2}:\d{2}[^\n]*\bUTC\b/)).toHaveCount(0);
 }
 
-/** An owner's pages are read in English and again in Hebrew (right to left, the platform's Intl on both sides). */
-export const TOUR_LOCALES = ["en", "he"] as const;
+/** An owner's pages are read in English and again in Italian (the platform's Intl on both sides). */
+export const TOUR_LOCALES = ["en", "it"] as const;
 
 /** Reads the cabinet in this language from now on. */
 export async function readIn(page: Page, locale: (typeof TOUR_LOCALES)[number]): Promise<void> {

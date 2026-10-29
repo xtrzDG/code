@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italianTexts } from "@/i18n/messages/it";
 import { createTranslator, interpolate } from "@/i18n/translate";
 import { splitUserValues, type SentenceWithUserValues } from "@/i18n/userValues";
 
@@ -17,8 +16,7 @@ import {
 import { failedChecksPath, fixPath } from "./applyFixes";
 
 const english = createTranslator("en", en);
-const russian = createTranslator("ru", ru, en);
-const georgian = createTranslator("ka", ka, en);
+const italian = createTranslator("it", italianTexts, en);
 
 /** The sentence as the owner reads it (null: none). */
 function said(sentence: SentenceWithUserValues | null): string | null {
@@ -38,7 +36,7 @@ const priceChange: PendingChange = {
 describe("pending changes in the owner's words", () => {
   it("write prices the way the locale writes money", () => {
     expect(formatPrice("18.00 GEL", "en")).toContain("18.00");
-    expect(formatPrice("18.00 GEL", "ru")).toContain("18,00");
+    expect(formatPrice("18.00 GEL", "it")).toContain("18,00");
     expect(formatPrice("from 18 GEL", "en")).toBe("from 18 GEL");
     expect(formatPrice(null, "en")).toBe("");
   });
@@ -46,7 +44,7 @@ describe("pending changes in the owner's words", () => {
   it("name a new price with its item, before and after", () => {
     const line = said(describeChange(priceChange, english));
     expect(line).toMatch(/^Price of “Khachapuri”: .*18\.00.* → .*20\.00/);
-    expect(said(describeChange(priceChange, russian))).toMatch(/^Цена «Khachapuri»: /);
+    expect(said(describeChange(priceChange, italian))).toMatch(/^Prezzo di “Khachapuri”: /);
     expect(said(describeChange({ ...priceChange, before: null }, english))).toMatch(/^Price of “Khachapuri”: .*20\.00/);
     expect(said(describeChange({ ...priceChange, after: null }, english))).toBe("Price of “Khachapuri” removed");
     expect(said(describeChange({ ...priceChange, detail: "details" }, english))).toBe("Details of “Khachapuri” changed");
@@ -74,11 +72,10 @@ describe("pending changes in the owner's words", () => {
     );
   });
 
-  it("have every text in Russian and Georgian", () => {
+  it("have every text in Italian", () => {
     const change: PendingChange = { area: "profile", action: "changed", field: "public_phone" };
-    expect(said(describeChange(change, russian))).toBe("Изменено: телефон для клиентов");
-    expect(said(describeChange(change, georgian))).not.toContain("applyChanges");
-    expect(said(describeChange({ area: "links", action: "removed", link_kind: "google_review" }, georgian))).not.toContain("applyChanges");
+    expect(said(describeChange(change, italian))).toBe("Modificato: numero di telefono per i clienti");
+    expect(said(describeChange({ area: "links", action: "removed", link_kind: "google_review" }, italian))).not.toContain("applyChanges");
   });
 
   it("group the changes by area in a fixed order", () => {
@@ -93,7 +90,7 @@ describe("pending changes in the owner's words", () => {
 
   it("sum up what the assistant now knows for the toast", () => {
     expect(said(summarizeChanges([priceChange], english))).toMatch(/^Your assistant now knows: “Khachapuri”, .*20\.00/);
-    expect(said(summarizeChanges([priceChange], russian))).toMatch(/^Теперь помощник знает: «Khachapuri» — .*20,00/);
+    expect(said(summarizeChanges([priceChange], italian))).toMatch(/^Ora il tuo assistente sa: “Khachapuri”, .*20,00/);
     const many: PendingChange[] = ["A", "B", "C", "D", "E"].map((subject) => ({ area: "offer", action: "added", subject }));
     expect(said(summarizeChanges(many, english))).toBe("Your assistant now knows: “A”, “B”, “C” and 2 more changes");
     // The items' names are the owner's words, each apart from the interface's (user content on the page).

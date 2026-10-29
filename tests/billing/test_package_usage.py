@@ -81,9 +81,10 @@ def test_warning_at_eighty_percent_is_sent_once_per_period() -> None:
     assert check_usage(testbed) == 0
 
     [(_, text)] = testbed.notifier.sent
+    # Georgian is not an owner language any more: the warning reads English.
     assert str(text) == (
-        "Funicular VR: ამ პერიოდში გამოყენებულია ტარიფის ზარის წუთების 80% "
-        "(320 / 400). პაკეტს ზემოთ ყოველი წუთი ღირს 0,44\xa0₾."
+        "Funicular VR: 80% of the call minutes in your plan are used this period "
+        "(320 of 400). Minutes above the package cost GEL0.44 each."
     )
     subscription = testbed.subscription(business.id)
     warning = testbed.warning_repo.find(
@@ -117,7 +118,11 @@ def test_dialogs_are_warned_separately_and_again_in_the_next_period() -> None:
     assert check_usage(testbed) == 0
     testbed.record_usage(business.id, UsageKind.DIALOG, 1_300)
     assert check_usage(testbed) == 1
-    assert "86% of the dialogs" in testbed.notifier.texts()[-1]
+    assert testbed.notifier.texts()[-1] == (
+        "Funicular VR: in questo periodo hai usato il 86% delle conversazioni "
+        "del tuo piano (1.300 su 1.500). Se non bastano, scegli un piano più "
+        "grande in Fatturazione."
+    )
 
 
 def test_undelivered_warning_is_retried() -> None:

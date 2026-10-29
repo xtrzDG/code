@@ -3,7 +3,7 @@
  * Nino in the knowledge base, books it by hand (its length filled in, only
  * Nino offered, its value shown) and sees the service and its value in the
  * bookings list; Nino's resource lists the service. The demo salon's
- * bookings read "1 клиент", never "1 гость".
+ * bookings read "1 cliente", never "1 ospite".
  */
 
 import type { APIRequestContext } from "@playwright/test";
@@ -11,7 +11,7 @@ import type { APIRequestContext } from "@playwright/test";
 import { API_URL, WEB_URL } from "./support/env";
 import { signInAsDemoOwner } from "./support/demo";
 import { expect, signInContext, test } from "./support/fixtures";
-import { en, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 import { timeField, typeTime } from "./support/timeField";
 
@@ -102,12 +102,12 @@ test("the demo salon counts clients, not guests", async ({ page, context, reques
   const salon = ((await listed.json()) as { id: string; niche_key: string }[]).find((business) => business.niche_key === "beauty_salon");
   expect(salon, "the demo salon is seeded").toBeDefined();
   await signInContext(context, demo.token);
-  await context.addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL, sameSite: "Lax" }]);
+  await context.addCookies([{ name: "aw_locale", value: "it", url: WEB_URL, sameSite: "Lax" }]);
 
   await page.goto(`/b/${salon!.id}/bookings?range=upcoming`);
   await waitForNetworkQuiet(page);
   const list = page.getByRole("main");
-  const oneClient = (ru.bookings.party.clients.one ?? ru.bookings.party.clients.other).replace("{count}", "1");
+  const oneClient = (it.bookings.party.clients.one ?? it.bookings.party.clients.other).replace("{count}", "1");
   await expect(list.getByText(new RegExp(oneClient)).first()).toBeVisible();
-  await expect(list.getByText(/гост(ь|я|ей)/)).toHaveCount(0);
+  await expect(list.getByText(/\bospit[ei]\b/)).toHaveCount(0);
 });

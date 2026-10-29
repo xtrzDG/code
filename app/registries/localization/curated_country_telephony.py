@@ -100,9 +100,10 @@ CURATED_EMERGENCY_NUMBERS: dict[CountryCode, EmergencyNumber] = {
 
 # One-time login codes go first through the channel people actually read.
 # WhatsApp dominates personal messaging in these countries (concept: Israel
-# and Kazakhstan "live in WhatsApp"); elsewhere SMS comes first.
+# and Kazakhstan "live in WhatsApp"; Italy, the first market, too);
+# elsewhere SMS comes first.
 WHATSAPP_FIRST_COUNTRIES: frozenset[CountryCode] = build_country_codes(
-    "AR", "BR", "CO", "ID", "IL", "IN", "KZ", "MX", "NG", "ZA"
+    "AR", "BR", "CO", "ID", "IL", "IN", "IT", "KZ", "MX", "NG", "ZA"
 )
 # Telegram is a mainstream messenger here and can deliver login codes
 # through its verification gateway.
@@ -132,5 +133,6 @@ ALL_PARTY_CONSENT_COUNTRIES: frozenset[CountryCode] = build_country_codes(
     "AU", "CH", "DE", "FR", "US"
 )
 
-# Countries where the product is still in its pilot (concept: Georgia first).
-PILOT_COUNTRIES: frozenset[CountryCode] = build_country_codes("GE")
+# Countries where the product is still in its pilot: Italy, the first
+# European market.
+PILOT_COUNTRIES: frozenset[CountryCode] = build_country_codes("IT")

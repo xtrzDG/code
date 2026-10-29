@@ -1,5 +1,5 @@
 /**
- * `bookings.*` texts of bookings, in English: the reference that ru and ka are
+ * `bookings.*` texts of bookings, in English: the reference that it is
  * typed against.
  */
 

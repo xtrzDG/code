@@ -8,18 +8,21 @@ from tests.knowledge.routes_fixture import OWNER, STAFF, STRANGER, RoutesFixture
 
 
 def test_catalog_is_public_and_localized(fixture: RoutesFixture) -> None:
-    russian = fixture.client.get("/v1/catalog/niches", params={"language": "ru"})
-    georgian = fixture.client.get(
+    italian = fixture.client.get("/v1/catalog/niches", params={"language": "it"})
+    by_header = fixture.client.get(
         "/v1/catalog/niches",
-        headers={"Accept-Language": "ka-GE,ka;q=0.9,en;q=0.5"},
+        headers={"Accept-Language": "it-IT,it;q=0.9,en;q=0.5"},
     )
+    georgian = fixture.client.get("/v1/catalog/niches", params={"language": "ka"})
     english = fixture.client.get("/v1/catalog/niches")
 
-    assert russian.status_code == 200
-    assert len(russian.json()["niches"]) == 16
-    assert russian.json()["niches"][0]["name"] == "Рестораны и кафе"
-    assert georgian.json()["language"] == "ka-GE"
-    assert georgian.json()["niches"][0]["name"] == "რესტორნები და კაფეები"
+    assert italian.status_code == 200
+    assert len(italian.json()["niches"]) == 16
+    assert italian.json()["niches"][0]["name"] == "Ristoranti e bar"
+    assert by_header.json()["language"] == "it-IT"
+    assert by_header.json()["niches"][0]["name"] == "Ristoranti e bar"
+    # Georgian is no cabinet language any more: its catalog reads English.
+    assert georgian.json()["niches"][0]["name"] == "Restaurants and cafes"
     assert english.json()["language"] == "en"
 
 

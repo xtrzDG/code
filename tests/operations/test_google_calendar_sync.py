@@ -26,6 +26,8 @@ from tests.operations.calendar_world import CalendarWorld
 class TestSync:
     def test_event_follows_the_booking_in_the_owner_language(self) -> None:
         calendar = CalendarWorld()
+        calendar.business.owner_language = LanguageTag("it")
+        calendar.world.business_repo.save(calendar.business)
         calendar.complete(calendar.start())
         booking = calendar.booking()
 
@@ -34,12 +36,12 @@ class TestSync:
         link = calendar.link_repo.find_by_booking(calendar.business.id, booking.id)
         assert link is not None
         event = calendar.google.events[str(link.event_id)]
-        assert event["summary"] == "Бронь: Nino, гостей: 2"
+        assert event["summary"] == "Prenotazione: Nino, persone: 2"
         assert event["start"] == {
             "dateTime": "2026-10-06T15:00:00Z",
             "timeZone": "Asia/Tbilisi",
         }
-        assert "Телефон: +995 555 12 34 56" in str(event["description"])
+        assert "Telefono: +995 555 12 34 56" in str(event["description"])
 
         booking.starts_at = BookingStartsAtUnixSeconds(int(booking.starts_at) + 3600)
         booking.ends_at = BookingEndsAtUnixSeconds(int(booking.ends_at) + 3600)

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 import { lookupMessage, type MessageTree } from "@/i18n/translate";
 
 import {
@@ -76,8 +75,8 @@ describe("customer media in the cabinet", () => {
     expect(messageAttachments({ attachments: [voice] })).toEqual([voice]);
   });
 
-  it("names every kind and every problem in English, Russian and Georgian", () => {
-    for (const messages of [en, ru, ka] as unknown as MessageTree[]) {
+  it("names every kind and every problem in English and Italian", () => {
+    for (const messages of [en, italian] as unknown as MessageTree[]) {
       for (const key of [...Object.values(ATTACHMENT_KIND_LABELS), ...Object.values(ATTACHMENT_PROBLEMS)]) {
         const text = lookupMessage(messages, key);
         expect(typeof text).toBe("string");

@@ -34,7 +34,7 @@ export const landingEn = {
       title: "A message at midnight, answered in seconds",
       subtitle:
         "What your customer sees, and what lands in your cabinet: the table is booked and the special request goes to the manager.",
-      business: "Café Rustaveli",
+      business: "Trattoria da Gino",
       time: "23:47",
       customer: "Hi! Do you have a table for four tomorrow at eight?",
       assistant: "Good evening! Yes, a table for four tomorrow at 20:00 is free. Shall I book it in your name?",

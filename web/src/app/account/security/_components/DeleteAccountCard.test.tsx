@@ -37,7 +37,7 @@ describe("DeleteAccountCard: Account → Security, the danger zone", () => {
     vi.mocked(api.DELETE).mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("says what deleting the account does, in %s", (locale) => {
+  it.each(["en", "it"] as const)("says what deleting the account does, in %s", (locale) => {
     const { t } = textsIn(locale);
     renderInLocale(<DeleteAccountCard me={me} account={ACCOUNT} />, { locale });
 

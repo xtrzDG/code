@@ -51,7 +51,7 @@ describe("ErrorBudgetCard: what is left of each SLO's budget", () => {
     vi.stubGlobal("IntersectionObserver", NeverSeen);
   });
 
-  it.each(["en", "ru", "ka"] as const)("shows both budgets and the answer p95 in %s", async (locale) => {
+  it.each(["en", "it"] as const)("shows both budgets and the answer p95 in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet(() => ok(budget));
     renderInLocale(<ErrorBudgetCard />, { locale });

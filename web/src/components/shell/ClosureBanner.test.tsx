@@ -6,6 +6,7 @@ import { api } from "@/api/client";
 import { queryCache } from "@/api/queryCache";
 import type { BusinessClosureView, BusinessView, CurrentUserView } from "@/api/types";
 import { BusinessProvider } from "@/components/business/BusinessContext";
+import type { Locale } from "@/i18n/config";
 import { formatDate } from "@/lib/format";
 import { answerGet, ok } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
@@ -45,7 +46,7 @@ function closing(days: number, changes: Partial<BusinessClosureView> = {}): Busi
   };
 }
 
-function renderBanner(role: "owner" | "staff" = "owner", locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function renderBanner(role: "owner" | "staff" = "owner", locale: Locale = "en") {
   return renderInLocale(
     <BusinessProvider business={{ ...business, viewer_role: role }} me={me}>
       <ClosureBanner />
@@ -63,7 +64,7 @@ describe("ClosureBanner: a closing business counts down to its deletion", () => 
     refresh.mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("says when everything is deleted, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("says when everything is deleted, in %s", async (locale) => {
     const { t, tp } = textsIn(locale);
     const view = closing(12);
     answerGet((path) => {

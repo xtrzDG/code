@@ -23,7 +23,7 @@ function result(channel: AutotestScenarioResult["channel"]): AutotestScenarioRes
 }
 
 describe("ScenarioResult: a voice check says it was a phone call", () => {
-  it.each(["en", "ru", "ka", "he", "de"] as const)("labels the simulated call in %s", (locale) => {
+  it.each(["en", "it"] as const)("labels the simulated call in %s", (locale) => {
     const { t } = textsIn(locale);
     renderInLocale(
       <ul>

@@ -1,7 +1,6 @@
 /**
  * `knowledge.offer.*` texts of bookable offers (services, packages, room
- * types) and the resources that perform them, in English: the reference
- * that ru and ka are typed against.
+ * types) and the resources that perform them, in English: the reference that it is typed against.
  */
 
 export const knowledgeOfferEn = {

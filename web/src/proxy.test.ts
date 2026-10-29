@@ -51,33 +51,33 @@ describe("proxy", () => {
 describe("proxy on the public site", () => {
   it("sends a legal page without a language to the reader's", async () => {
     const response = await proxy(
-      new NextRequest("https://app.example.com/privacy?from=footer", { headers: { "accept-language": "ru-RU,ru;q=0.9" } }),
+      new NextRequest("https://app.example.com/privacy?from=footer", { headers: { "accept-language": "it-IT,it;q=0.9" } }),
     );
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://app.example.com/ru/privacy?from=footer");
+    expect(response.headers.get("location")).toBe("https://app.example.com/it/privacy?from=footer");
   });
 
   it("prefers the language cookie for that redirect", async () => {
     const response = await proxy(
-      new NextRequest("https://app.example.com/terms", { headers: { cookie: "aw_locale=ka", "accept-language": "en" } }),
+      new NextRequest("https://app.example.com/terms", { headers: { cookie: "aw_locale=it", "accept-language": "en" } }),
     );
 
-    expect(response.headers.get("location")).toBe("https://app.example.com/ka/terms");
+    expect(response.headers.get("location")).toBe("https://app.example.com/it/terms");
   });
 
   it("renders a public page in its own language and starts a new visitor's cabinet in it", async () => {
-    const response = await proxy(new NextRequest("https://app.example.com/ka/for/hotel", { headers: { "accept-language": "en" } }));
+    const response = await proxy(new NextRequest("https://app.example.com/it/for/hotel", { headers: { "accept-language": "en" } }));
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("x-middleware-request-x-aw-path-locale")).toBe("ka");
-    expect(response.cookies.get("aw_locale")?.value).toBe("ka");
+    expect(response.headers.get("x-middleware-request-x-aw-path-locale")).toBe("it");
+    expect(response.cookies.get("aw_locale")?.value).toBe("it");
   });
 
   it("keeps a returning visitor's language and lets no browser name the page's", async () => {
     const response = await proxy(
       new NextRequest("https://app.example.com/login", {
-        headers: { cookie: "aw_locale=ru", "x-aw-path-locale": "ka" },
+        headers: { cookie: "aw_locale=en", "x-aw-path-locale": "it" },
       }),
     );
 

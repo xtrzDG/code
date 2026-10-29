@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Field, Input, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { languageName } from "@/lib/format";
 
 import {
   NOTICE_FIELDS,
@@ -41,7 +42,7 @@ export function BreachNoticeFields({
   errorText: (problem: IncidentProblem) => string;
   onChange: (patch: Partial<IncidentForm>) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [language, setLanguage] = useState<NoticeLanguage>("en");
   const notice = form.notices[language];
   const problem = errors.notices[language];
@@ -102,7 +103,7 @@ export function BreachNoticeFields({
                 hasProblem && "border-danger text-danger",
               )}
             >
-              {t(`adminIncident.breach.languages.${code}`)}
+              {languageName(code, locale)}
               {code === "en" ? <span aria-hidden> *</span> : null}
               {fill !== "empty" ? (
                 <span className="ms-1.5 text-xs opacity-80">

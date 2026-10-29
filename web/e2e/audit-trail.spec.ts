@@ -12,7 +12,7 @@ import { signInAsPlatformAdmin } from "./support/admin";
 import { uniqueEmail } from "./support/api";
 import { API_URL, PLATFORM_ADMIN_EMAIL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
-import { en, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 
 const texts = en.adminAudit;
@@ -49,11 +49,11 @@ test("the owner sees the tamper check above the audit log", async ({ page, owner
   ).toBeVisible();
 });
 
-test("the owner reads the tamper check in Russian", async ({ page, owner }) => {
-  await page.context().addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL }]);
+test("the owner reads the tamper check in Italian", async ({ page, owner }) => {
+  await page.context().addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
   await page.goto(`/b/${owner.businessId}/settings/audit`);
 
-  await expect(page.getByText(ru.auditChain.title, { exact: true })).toBeVisible();
+  await expect(page.getByText(it.auditChain.title, { exact: true })).toBeVisible();
 });
 
 test("the platform admin finds a failed sign-in in the platform's log", async ({ browser, request }) => {

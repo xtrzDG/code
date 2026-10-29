@@ -1,7 +1,7 @@
 /**
  * `dataExports.*` texts: Settings → Privacy → "Export your data" (the full
  * export of the business and its tables as CSV) and the CSV buttons of
- * Bookings and the Inbox, in English: the reference that ru and ka are
+ * Bookings and the Inbox, in English: the reference that it is
  * typed against.
  */
 

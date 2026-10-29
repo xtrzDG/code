@@ -19,6 +19,7 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
     client = build_legal_client(Clock("2026-10-06"))
 
     english = client.get("/v1/legal/subprocessors")
+    italian = client.get("/v1/legal/subprocessors", params={"language": "it-IT"})
     russian = client.get("/v1/legal/subprocessors", params={"language": "ru-RU"})
     georgian = client.get(
         "/v1/legal/subprocessors", headers={"Accept-Language": "ka,en;q=0.5"}
@@ -62,9 +63,13 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
         ("openai_knowledge_search-added-2026-11-22", "2026-10-23"),
         ("stripe-added-2026-11-22", "2026-10-23"),
     ]
-    assert russian.json()["language"] == "ru"
-    assert russian.json()["subprocessors"][0]["purpose"].startswith("Языковая модель")
-    assert georgian.json()["language"] == "ka"
+    # Italian is a list language, but the entries carry no Italian text
+    # yet, so each cell reads English; Russian and Georgian are no longer
+    # cabinet languages and read the English list.
+    assert italian.json()["language"] == "it"
+    assert italian.json()["subprocessors"][0]["purpose"].startswith("Language model")
+    assert russian.json()["language"] == "en"
+    assert georgian.json()["language"] == "en"
 
 
 def test_announced_changes_show_when_owners_hear_of_them() -> None:
@@ -107,24 +112,26 @@ def test_a_sub_processor_that_left_is_gone_from_the_list() -> None:
     assert body["upcoming_changes"] == []
 
 
-def test_the_terms_in_force_in_three_languages() -> None:
+def test_the_terms_in_force_are_english_whatever_language_is_asked_for() -> None:
     client = build_legal_client(Clock("2026-10-05"))
 
-    terms = client.get("/v1/legal/terms", params={"language": "ru"})
+    terms = client.get("/v1/legal/terms", params={"language": "it"})
     privacy = client.get("/v1/legal/privacy", headers={"Accept-Language": "ka"})
-    cookies = client.get("/v1/legal/cookies", params={"language": "fr"})
+    cookies = client.get("/v1/legal/cookies", params={"language": "ru-RU"})
 
     assert terms.status_code == 200
     body = terms.json()
     assert body["kind"] == "terms"
     assert body["version"] == "2026-10-05"
-    assert body["language"] == "ru"
-    assert body["available_languages"] == ["en", "ka", "ru"]
-    assert body["title"] == "Условия использования"
-    assert body["text"].startswith("# Условия использования")
+    # Italian is a cabinet language, but its DPA is still a draft: English.
+    assert body["language"] == "en"
+    assert body["available_languages"] == ["en"]
+    assert body["title"] == "Terms of Service"
+    assert body["text"].startswith("# Terms of Service")
     assert body["has_placeholders"] is True
     assert body["upcoming_version"] is None
-    assert privacy.json()["title"] == "კონფიდენციალურობის პოლიტიკა"
+    assert privacy.json()["language"] == "en"
+    assert privacy.json()["title"] == "Privacy Policy"
     assert cookies.json()["language"] == "en"
     assert cookies.json()["title"] == "Cookie Statement"
 

@@ -13,15 +13,14 @@ def test_cabinet_zone_cities_match_the_backend() -> None:
     )
 
 
-def test_cities_are_exported_in_georgian_and_russian() -> None:
-    # Browsers have no Georgian exemplar cities; the table must.
+def test_cities_are_exported_in_italian() -> None:
+    # The server and every browser name a zone's city alike (no hydration error).
     module: str = export_zone_cities()
 
-    assert '    "Asia/Tbilisi": "თბილისი",\n' in module
-    assert '    "Asia/Tbilisi": "Тбилиси",\n' in module
-    assert '    "Europe/Berlin": "Берлин",\n' in module
+    assert '    "Europe/Berlin": "Berlino",\n' in module
+    assert '    "Europe/Moscow": "Mosca",\n' in module
     # A zone CLDR keys by an older name is found under its alias.
-    assert '    "Asia/Kolkata": "Калькутта",\n' in module
+    assert '    "Asia/Kolkata": "Calcutta",\n' in module
 
 
 def test_english_keeps_only_cities_spelled_differently() -> None:

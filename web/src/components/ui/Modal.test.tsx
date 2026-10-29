@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { renderInLocale } from "@/test/render";
+import { renderInLocale, textsIn } from "@/test/render";
 
 import { Button } from "./Button";
 import { Modal } from "./Modal";
@@ -81,9 +81,9 @@ describe("Modal", () => {
   it("closes from its close button, labelled in the interface language", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderInLocale(<Page onClose={onClose} initiallyOpen />, { locale: "ru" });
+    renderInLocale(<Page onClose={onClose} initiallyOpen />, { locale: "it" });
 
-    await user.click(screen.getByRole("button", { name: "Закрыть" }));
+    await user.click(screen.getByRole("button", { name: textsIn("it").t("common.close") }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("dialog")).toBeNull();

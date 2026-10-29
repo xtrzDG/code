@@ -24,9 +24,7 @@ from app.utilities.setup.setup_texts import (
     STEP_TITLES,
 )
 
-DRAFT_LANGUAGES: frozenset[CabinetLanguage] = frozenset(
-    {CabinetLanguage.HEBREW, CabinetLanguage.GERMAN}
-)
+DRAFT_LANGUAGES: frozenset[CabinetLanguage] = frozenset({CabinetLanguage.ITALIAN})
 
 
 def setup_texts() -> dict[str, LocalizedText]:
@@ -68,7 +66,7 @@ def test_every_setup_key_exists_in_every_catalog_file() -> None:
         assert missing == set(), language
 
 
-def test_hebrew_and_german_are_drafts_the_others_reviewed() -> None:
+def test_italian_is_a_draft_and_english_reviewed() -> None:
     registry = TextCatalogRegistry()
 
     for key in setup_keys():
@@ -81,15 +79,14 @@ def test_hebrew_and_german_are_drafts_the_others_reviewed() -> None:
             ), (key, language)
 
 
-def test_a_hebrew_or_german_cabinet_reads_its_own_language() -> None:
+def test_an_italian_cabinet_reads_its_own_language() -> None:
     resolver = LocalizedTextResolver()
     title = STEP_TITLES[SetupStepCode.TEST]
 
     english = resolver.resolve(title, LanguageTag("en"))
-    hebrew = resolver.resolve(title, LanguageTag("he"))
-    german = resolver.resolve(title, LanguageTag("de-AT"))
+    italian = resolver.resolve(title, LanguageTag("it"))
+    swiss_italian = resolver.resolve(title, LanguageTag("it-CH"))
 
     assert str(english) == "Try your assistant"
-    assert str(hebrew) == "נסו את העוזר שלכם"
-    assert str(german) == "Testen Sie Ihren Assistenten"
-    assert len({str(english), str(hebrew), str(german)}) == 3
+    assert str(italian) == "Prova il tuo assistente"
+    assert str(swiss_italian) == str(italian)

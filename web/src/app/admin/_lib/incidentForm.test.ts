@@ -118,19 +118,19 @@ describe("buildIncidentBody", () => {
   });
 
   it("makes a breach SEV1 and sends the complete notices only", () => {
-    const form = breach({ notices: { en: notice("en"), ka: notice("ka"), ru: { ...notice("ru"), measures: "" } } });
+    const form = breach({ notices: { en: notice("en"), it: { ...notice("it"), measures: "" } } });
 
     const built = buildIncidentBody(form, NOW);
     expect(built.ok).toBe(false);
-    expect(!built.ok && built.errors.notices).toEqual({ ru: "noticeIncomplete" });
+    expect(!built.ok && built.errors.notices).toEqual({ it: "noticeIncomplete" });
 
-    const fixed = buildIncidentBody({ ...form, notices: { ...form.notices, ru: notice("") } }, NOW);
+    const fixed = buildIncidentBody({ ...form, notices: { ...form.notices, it: notice("") } }, NOW);
     expect(fixed.ok).toBe(true);
     if (fixed.ok) {
       expect(fixed.body.severity).toBe("sev1");
       expect(fixed.body.approximate_subject_count).toBe(120);
       expect(fixed.body.approximate_record_count).toBe(240);
-      expect(fixed.body.notice_texts?.map((text) => text.language)).toEqual(["en", "ka", "ru"]);
+      expect(fixed.body.notice_texts?.map((text) => text.language)).toEqual(["en", "it"]);
     }
     const englishOnly = buildIncidentBody(breach(), NOW);
     expect(englishOnly.ok && englishOnly.body.notice_texts?.map((text) => text.language)).toEqual(["en"]);
@@ -138,7 +138,7 @@ describe("buildIncidentBody", () => {
 
   it("needs the English notice and both counts for a breach", () => {
     const built = buildIncidentBody(
-      breach({ subjectCount: "", recordCount: "1.5", notices: { en: notice(""), ka: notice("ka"), ru: notice("ru") } }),
+      breach({ subjectCount: "", recordCount: "1.5", notices: { en: notice(""), it: notice("it") } }),
       NOW,
     );
 
@@ -163,6 +163,6 @@ describe("withKind and noticeFill", () => {
   it("tells a complete notice from an empty or a partial one", () => {
     expect(noticeFill(notice())).toBe("complete");
     expect(noticeFill({ ...notice(), nature: " " })).toBe("partial");
-    expect(noticeFill(emptyIncidentForm(NOW).notices.ka)).toBe("empty");
+    expect(noticeFill(emptyIncidentForm(NOW).notices.it)).toBe("empty");
   });
 });

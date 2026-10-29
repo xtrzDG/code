@@ -16,7 +16,7 @@ import type { Page } from "@playwright/test";
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import {
   answerBusiness,
   expectBackdropBehind,
@@ -174,16 +174,16 @@ test.describe("the rail and the offer step", () => {
     await expect(page.getByText(en.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
 
     // In another interface language the saved lines are not doubled by the examples' own titles.
-    await page.context().addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL }]);
+    await page.context().addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
     await page.reload();
-    await expectStep(page, ru.tunnelOffer.offer.title);
-    const ruNames = page.getByRole("textbox", { name: new RegExp(`^${ru.tunnelOffer.offer.name} \\d+$`) });
-    await expect(ruNames).toHaveCount(3);
-    await expect(page.getByText(ru.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
+    await expectStep(page, it.tunnelOffer.offer.title);
+    const italianNames = page.getByRole("textbox", { name: new RegExp(`^${it.tunnelOffer.offer.name} \\d+$`) });
+    await expect(italianNames).toHaveCount(3);
+    await expect(page.getByText(it.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
   });
 });
 
-for (const [locale, texts] of Object.entries({ ru, ka })) {
+for (const [locale, texts] of Object.entries({ it })) {
   test(`the hours read 08:00 on a 24-hour clock, never AM/PM (${locale})`, async ({ page, newOwner }) => {
     await page.context().addCookies([{ name: "aw_locale", value: locale, url: WEB_URL }]);
     await page.goto(`/b/${newOwner.businessId}/setup?step=hours`);

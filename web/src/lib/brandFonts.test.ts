@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "@/i18n/config";
 
-import { BRAND_TYPEFACE_CLASS, LATIN_FONT_FILE, SCRIPT_FONT_OF_LOCALE, brandFontHrefs } from "./brandFonts";
+import { BRAND_TYPEFACE_CLASS, LATIN_FONT_FILE, SCRIPT_FONT_OF_LOCALE, brandFontHrefs, type ScriptFontFile } from "./brandFonts";
 
 /** A listing of the build's static media as `next build` (Turbopack) leaves it. */
 const MEDIA = [
@@ -18,30 +18,45 @@ const MEDIA = [
 ];
 
 const LATIN = "/_next/static/media/noto-sans-latin-wght.05o5-i1cea2yx.woff2";
+const GEORGIAN = "/_next/static/media/noto-sans-georgian-wght.3v3gllle3jls7.woff2";
+
+/** The script files typeface.css keeps for a language that joins (no cabinet language needs one today). */
+const SCRIPT_FILES: readonly ScriptFontFile[] = ["noto-sans-cyrillic-wght", "noto-sans-georgian-wght", "noto-sans-hebrew-wght"];
+
+/** What a language with its own script would declare: here Italian standing in for one written in Georgian. */
+const WITH_GEORGIAN = { en: null, it: "noto-sans-georgian-wght" } as const;
 
 describe("the brand font files a cabinet page preloads", () => {
-  it("are Latin and the file of the language's own script", () => {
-    expect(brandFontHrefs("ka", MEDIA)).toEqual([LATIN, "/_next/static/media/noto-sans-georgian-wght.3v3gllle3jls7.woff2"]);
-    expect(brandFontHrefs("ru", MEDIA)).toEqual([LATIN, "/_next/static/media/noto-sans-cyrillic-wght.3zok7wrwvaysp.woff2"]);
-    expect(brandFontHrefs("he", MEDIA)).toEqual([LATIN, "/_next/static/media/noto-sans-hebrew-wght.1c3_izrpi4_9e.woff2"]);
+  it("are Latin alone for English and Italian, never the extended Latin file", () => {
+    expect(brandFontHrefs("en", MEDIA)).toEqual([LATIN]);
+    expect(brandFontHrefs("it", MEDIA)).toEqual([LATIN]);
+    expect(LOCALES.every((locale) => SCRIPT_FONT_OF_LOCALE[locale] === null)).toBe(true);
   });
 
-  it("are Latin alone for English and German, never the extended Latin file", () => {
-    expect(brandFontHrefs("en", MEDIA)).toEqual([LATIN]);
-    expect(brandFontHrefs("de", MEDIA)).toEqual([LATIN]);
+  it("are Latin and the file of the language's own script, for a language that declares one", () => {
+    expect(brandFontHrefs("it", MEDIA, WITH_GEORGIAN)).toEqual([LATIN, GEORGIAN]);
+    expect(brandFontHrefs("it", MEDIA, { en: null, it: "noto-sans-cyrillic-wght" })).toEqual([
+      LATIN,
+      "/_next/static/media/noto-sans-cyrillic-wght.3zok7wrwvaysp.woff2",
+    ]);
+    expect(brandFontHrefs("it", MEDIA, { en: null, it: "noto-sans-hebrew-wght" })).toEqual([
+      LATIN,
+      "/_next/static/media/noto-sans-hebrew-wght.1c3_izrpi4_9e.woff2",
+    ]);
+    expect(brandFontHrefs("en", MEDIA, WITH_GEORGIAN)).toEqual([LATIN]);
   });
 
   it("leave out rather than guess a file the build holds not once", () => {
-    expect(brandFontHrefs("ka", [])).toEqual([]);
-    expect(brandFontHrefs("ka", [...MEDIA, "noto-sans-georgian-wght.0ld0ne0ld0ne.woff2"])).toEqual([LATIN]);
+    expect(brandFontHrefs("it", [], WITH_GEORGIAN)).toEqual([]);
+    expect(brandFontHrefs("it", [...MEDIA, "noto-sans-georgian-wght.0ld0ne0ld0ne.woff2"], WITH_GEORGIAN)).toEqual([LATIN]);
     // Another file whose name begins alike is not the Georgian one.
-    expect(brandFontHrefs("ka", ["noto-sans-georgian-wght-old.3v3gllle3jls7.woff2", "noto-sans-georgian-wght.css"])).toEqual([]);
+    expect(brandFontHrefs("it", ["noto-sans-georgian-wght-old.3v3gllle3jls7.woff2", "noto-sans-georgian-wght.css"], WITH_GEORGIAN)).toEqual([]);
   });
 
   it("name files typeface.css loads", () => {
     const typeface = readFileSync(path.resolve(__dirname, "..", "styles", "typeface.css"), "utf8");
-    const files = [LATIN_FONT_FILE, ...LOCALES.map((locale) => SCRIPT_FONT_OF_LOCALE[locale]).filter((file) => file !== null)];
-    for (const file of files) {
+    const declared = LOCALES.map((locale) => SCRIPT_FONT_OF_LOCALE[locale]).filter((file) => file !== null);
+    for (const file of [LATIN_FONT_FILE, ...SCRIPT_FILES, ...declared]) {
       expect(typeface, file).toContain(`url("../../public/fonts/${file}.woff2")`);
     }
   });

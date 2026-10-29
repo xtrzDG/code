@@ -44,8 +44,8 @@ function latestStatement(): Map<string, string> {
 describe("the cookie statement", () => {
   const statement = latestStatement();
 
-  it("is published in English, Russian and Georgian", () => {
-    expect([...statement.keys()].sort()).toEqual(["en", "ka", "ru"]);
+  it("is published in English, the legal texts' only language today (docs/legal/README.md)", () => {
+    expect([...statement.keys()].sort()).toEqual(["en"]);
   });
 
   it.each(COOKIES)("lists %s with its purpose and lifetime in every language", (cookie) => {

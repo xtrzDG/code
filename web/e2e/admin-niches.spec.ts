@@ -1,8 +1,8 @@
 /**
  * The platform admin's niche template editor: a SUPER admin rewords the
- * first question of the veterinary template in Russian, sees it in the
+ * first question of the veterinary template in Italian, sees it in the
  * preview, saves the draft and publishes it; a new owner who opens "Create
- * an AI assistant" in Russian reads the new question; going back to the
+ * an AI assistant" in Italian reads the new question; going back to the
  * code template restores the code's wording for the next owner. The page
  * passes the accessibility audit; owners get "Page not found".
  *
@@ -21,8 +21,8 @@ import { en } from "./support/messages";
 import { trackRequests, waitForNetworkQuiet } from "./support/network";
 
 const texts = en.adminNiches;
-const CODE_LABEL = "Каких животных вы лечите?";
-const NEW_LABEL = "Каких питомцев вы принимаете?";
+const CODE_LABEL = "Quali animali curi?";
+const NEW_LABEL = "Quali animali domestici accogli?";
 
 async function openAdmin(browser: Browser, request: APIRequestContext): Promise<{ context: BrowserContext; admin: Page }> {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
@@ -32,19 +32,19 @@ async function openAdmin(browser: Browser, request: APIRequestContext): Promise<
   return { context, admin };
 }
 
-/** A new owner's first screen of "Create an AI assistant", in Russian, with the veterinary niche chosen. */
+/** A new owner's first screen of "Create an AI assistant", in Italian, with the veterinary niche chosen. */
 async function tunnelQuestion(browser: Browser, request: APIRequestContext, label: string): Promise<void> {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   await signInContext(context, await signInByEmail(request, uniqueEmail()));
-  await context.addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL }]);
+  await context.addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
   const owner = await context.newPage();
   await owner.goto("/create");
-  await owner.locator("label").filter({ hasText: /^Ветклиники/ }).click();
+  await owner.locator("label").filter({ hasText: /^Cliniche veterinarie/ }).click();
   await expect(owner.getByRole("group", { name: label })).toBeVisible();
   await context.close();
 }
 
-test("an admin rewords a question in Russian, new owners read it, and the code template comes back", async ({
+test("an admin rewords a question in Italian, new owners read it, and the code template comes back", async ({
   browser,
   request,
 }) => {
@@ -59,8 +59,8 @@ test("an admin rewords a question in Russian, new owners read it, and the code t
   await expect(admin).toHaveURL(/\/admin\/niches\/veterinary\?language=en$/);
   await expect(admin.getByRole("heading", { level: 1, name: "Veterinary clinics and grooming" })).toBeVisible();
 
-  await admin.getByRole("tab", { name: "Русский" }).click();
-  await expect(admin).toHaveURL(/language=ru$/);
+  await admin.getByRole("tab", { name: "Italiano" }).click();
+  await expect(admin).toHaveURL(/language=it$/);
   // Every part of the template is folded to its title until opened.
   const questionTitle = `${texts.editor.question.replace("{position}", "1")} · ${CODE_LABEL}`;
   await admin.locator("summary", { hasText: questionTitle }).click();

@@ -8,9 +8,9 @@ then five calm sections (Overview, Inbox, Bookings, Assistant, Settings; see
 [Navigation](#navigation)) and the platform admin. It installs as an app (manifest, icons, service worker,
 offline page).
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
-Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`), Hebrew (`he`,
-right to left) and German (`de`); Hebrew and German are drafts awaiting a
-native speaker's review.
+Interface languages: English (`en`) and Italian (`it`, the first market);
+Italian is a draft awaiting a native speaker's review. The layout keeps
+logical (start/end) classes, so a right-to-left language can join later.
 Colour themes: dark (the default), light and the system's setting.
 
 The browser never talks to the Python API directly and never sees the bearer
@@ -64,7 +64,7 @@ Behind a reverse proxy, run the API with
 | `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
 | `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
-| `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Georgian, Russian and English (dates, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
+| `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Italian and English (dates, numbers, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
 | `npm test` | Vitest: the `unit` project (`src/**/*.test.ts` and the e2e suite's own helpers `e2e/**/*.test.ts`, in Node) and the `components` project (`src/**/*.test.tsx`: React components in jsdom with Testing Library and user-event; helpers in `src/test/`). Property tests (`*.property.test.ts`, fast-check) run with a fixed seed; `FC_SEED=<n>` replays another |
 | `npm run knip` | Unused files, exports and dependencies (`knip.config.ts`); CI fails on any |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
@@ -73,7 +73,7 @@ Behind a reverse proxy, run the API with
 | `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file. With `--check` it measures the pages of `first-load-budget.json` and fails when one of them, or the 3D chunk, is over its budget (CI job "web-build", after the build) |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
 | `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
-| `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
+| `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in the interface languages from the backend's CLDR data. `countryName` and `languageName` read it before Intl, so the server and the browser never disagree (a hydration error) whatever display names a browser ships or lacks. A backend test fails when the file is stale. |
 
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
 (CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
@@ -112,9 +112,9 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
   it did not accept (`consoleErrors.allow(/…/)` accepts one a test provokes
   on purpose), and always on a hydration failure (React #418/#423), which
   `allow` cannot hide. `cyrillicCheck` (on by default; `E2E_CYRILLIC_CHECK=0`
-  or `test.use({ cyrillicCheck: false })` turns it off) also fails an
-  English or Georgian page that shows interface text in Cyrillic at the end
-  of a test: an untranslated text. User content is left out: elements
+  or `test.use({ cyrillicCheck: false })` turns it off) also fails a page
+  that shows interface text in Cyrillic at the end of a test: a text left
+  from the former languages (the cabinet reads English or Italian). User content is left out: elements
   marked `data-user-content`, form fields, code and text marked with
   another `lang`. The cabinet marks the business's, its team's and its
   customers' own words (names, messages, knowledge, notes, quick replies,
@@ -168,7 +168,7 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
   model), a reload and a later visit continuing where the owner left off,
   a business in Turkey with Turkish, English and Arabic, a failed creation
   keeping every answer, the business profile's section editors (`e2e/profile-edit.spec.ts` in
-  ru/en/ka: a new closing time saves itself and the banner counts one change;
+  en/it: a new closing time saves itself and the banner counts one change;
   `e2e/profile-sections.spec.ts`), every section and page from
   the sidebar (`e2e/navigation.spec.ts`: the open section's pages under it,
   Advanced, folding the sidebar, the user menu) and on a phone from the tab
@@ -178,7 +178,7 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
   (`e2e/roles.spec.ts`), old addresses redirected with their query
   (`e2e/redirects.spec.ts`), the manifest, icons, service worker and offline
   page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
-  a phone (`e2e/a11y*.spec.ts`), switching the interface language ru/ka/en
+  a phone (`e2e/a11y*.spec.ts`), switching the interface language en/it
   from the user menu, the website chat demo page of the API, going back to a
   section showing its data from the cache (no skeleton, no spinner), a
   request's status changing at once on its conversation, rolling back on a
@@ -210,9 +210,9 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
   by the worker and downloaded through one-time links (asked for per
   download, bound to the owner's session, three downloads at most), no
   export buttons for staff (`e2e/data-exports.spec.ts`), the settings that
-  save themselves (`e2e/settings.spec.ts`: the time zone in Russian saved
+  save themselves (`e2e/settings.spec.ts`: the time zone in Italian saved
   without a button and kept after a reload, stale saves rebased), and times
-  that read "08:00" with no AM/PM in Russian and Georgian (the tunnel's
+  that read "08:00" with no AM/PM in Italian (the tunnel's
   hours in `e2e/setup-tunnel.spec.ts`, the new booking in
   `e2e/booking-time.spec.ts`).
 
@@ -221,7 +221,7 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
 | `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
 | `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: spec files go, longest first, to the shard with the least measured work, by `e2e/durations.json`) |
-| `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
+| `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on a cabinet page |
 | `E2E_VISUAL` / `VISUAL_BROWSER_WS` | — | Set by `npm run e2e:visual`: the visual projects, the API with its started clock, and the browser server of Playwright's image (see [Visual tests and the review gate](#visual-tests-and-the-review-gate)) |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
 
@@ -312,17 +312,18 @@ or the suite's phone, 390×844 with touch. **Coverage:**
   platform admin's, an owner's business, settings and account pages, over
   the demo restaurant), with the pages the tour does not walk (a
   conversation, customers, a customer's card, segments, integrations,
-  deposits), at 1440 px dark and 390 px light, in Russian
+  deposits), at 1440 px dark and 390 px light, in Italian
   (`restaurant-pages.spec.ts`, `public.spec.ts`, `platform.spec.ts`);
-- the main screens in the full matrix {1440, 390} × {dark, light} × {ru,
-  en, ka}: Overview, the Inbox with a conversation, Bookings by day and by
+- the main screens in the full matrix {1440, 390} × {dark, light} × {it,
+  en}: Overview, the Inbox with a conversation, Bookings by day and by
   week, Customers, the business profile, Knowledge, Channels, Settings,
   Plan and billing (`matrix.spec.ts`) and the tunnel's finale
-  (`new-business.spec.ts`);
-- a Hebrew conversation right to left at 1440 px dark and 390 px light
-  (`rtl.spec.ts`).
+  (`new-business.spec.ts`).
 
-That is 222 pictures, about 25 MB. The baselines may take at most 30 MB:
+There is no right-to-left cabinet screenshot any more (no cabinet language
+reads right to left; the layout's readiness is checked by the `ar-XB`
+pseudo-locale run, see [Translations](#translations)). The baselines may
+take at most 30 MB (the five-language cabinet's 222 pictures took 25 MB):
 take a new screen at the widths and themes above, not in more of them.
 
 **The review gate** (`e2e/visual/gate.ts`) fails a page, softly so that one
@@ -337,8 +338,8 @@ run lists every finding, on:
   `tests/platform/test_palette_guard.py`; the allow-list is the "done" sage
   (`--success`, `--success-soft`) and the chart series (`--chart-1..3`) as
   the theme resolves them, and the WhatsApp mark's two colours;
-- Cyrillic on an English, Georgian or Hebrew page outside user content
-  (`strayCyrillic`, as the console-clean gate);
+- Cyrillic outside user content on any page (`strayCyrillic`, as the
+  console-clean gate: the cabinet reads English or Italian);
 - a cabinet page taller than four phone screens at 390 px. The public
   site's reading pages are exempt, and the pages that were already longer
   when the gate came have their own budget in `e2e/visual/heights.ts`: a
@@ -375,7 +376,7 @@ web/
   scripts/                     measure-first-load.mjs, render-app-icons.mjs, check-intl.mjs,
                                rtl-codemod.mjs, translation-status.mjs
   content/changelog/           "What's new": one entry per file (key = the day it shipped + a name,
-                               title and paragraphs in en/ru/ka), listed in index.ts
+                               title and paragraphs in en/it), listed in index.ts
   src/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie;
                                the hosted chat page's lookup and policy (server/hostedChatProxy.ts)
@@ -400,7 +401,7 @@ web/
                                guest's language (lib/bookingPage/), system colours (bookingPage.css)
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
       page.tsx                 "/": signed-in users go to /businesses, visitors to the public site in
-                               their language (/en, /ru, /ka; the query is kept)
+                               their language (/en, /it; the query is kept)
       [locale]/                the public site, one address per language (lib/publicSite/paths.ts; the
                                proxy renders the page in its path's language): page.tsx the landing page,
                                for/[niche]/ a kind of business from the niche catalog, terms/, privacy/,
@@ -539,14 +540,15 @@ web/
       managedBooking.ts        the booking page's lookup (GET /v1/public/bookings/{token}) and its language
       bodyLimits.ts            request body limits of the BFF (413)
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
-      messages/en.ts ru.ts ka.ts he.ts de.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
+      messages/en.ts it.ts     shared texts (common, auth, nav, theme, errors …); English is the reference,
+                               Italian a draft awaiting a native speaker's review
       messages/onboarding/     the business profile's texts (profileEdit.*), one file per language
       messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into every dictionary: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
                                workspace.ts (channels, billing, settings, admin), shell.ts (navigation,
                                account, setup, app); each composes one file per namespace and language
-                               from its folder (insights/bookings.ru.ts)
+                               from its folder (insights/bookings.it.ts)
     components/
       ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
                                Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
@@ -621,7 +623,8 @@ web/
                                where a path is, safeNextPath), sections (the five sections, their pages,
                                roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
                                (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units),
-                               intl/ (Intl factories; Georgian dates, numbers, lists from CLDR tables), countries (phone/country),
+                               intl/ (Intl factories; Georgian dates, numbers, lists from CLDR tables for the
+                               customers' pages), countries (phone/country),
                                hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
                                (kinds, item form, menu import, websiteImport), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
@@ -743,7 +746,7 @@ section tabs, page titles and the e2e suite read it):
 | Notification links (`/n/{token}`) | The link at the end of every staff e-mail, SMS, chat message and device notification: signed in first (the proxy sends visitors to `/login?next=…`), then the API says where it leads (a conversation, the requests, the bookings of the booking's day, the notification settings) and the page opens there; an expired (7 days), altered or foreign link says so (`app/n/[token]/page.tsx`, `lib/notificationLinks.ts`) |
 | Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). A conversation's calls show each summary in the reader's language |
 | Settings → Privacy (owners) | A link to the customers' data requests (now on each customer's page); the data processing agreement and, over every page while a new version waits, a banner with its due day (`components/shell/DpaBanner.tsx`, `lib/dpaNotice.ts`); retention periods and the switch that keeps real conversations out of the nightly quality sample (`quality_sampling_allowed`); the full export: each download asks `POST …/business-exports/{id}/download-link` for a one-time link (step-up when the sign-in is old, 10 minutes, this owner's session only) and the browser fetches it through the proxy; the row shows the downloads left of three, and every owner is told of each download (a notification link opens this page) |
-| Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the audit log with server filters (every entity named in en/ru/ka; repeated views within five minutes read as one entry with a count) and, above it for owners, the tamper check of the log (`GET …/audit-log/chain`: not checked yet, no sealed entries yet (only entries from before sealing began, which are never sealed), unchanged, or changed at entry N and why; a failed load shows with Retry; `components/workspace/AuditChainSummary.tsx`). Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
+| Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the audit log with server filters (every entity named in en/it; repeated views within five minutes read as one entry with a count) and, above it for owners, the tamper check of the log (`GET …/audit-log/chain`: not checked yet, no sealed entries yet (only entries from before sealing began, which are never sealed), unchanged, or changed at entry N and why; a failed load shows with Retry; `components/workspace/AuditChainSummary.tsx`). Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
 | Account → Security (`/account/security`, account panel) | Everyone: set up an authenticator app (QR code or key, its first code, then ten recovery codes shown once: copy, download, "I saved them"), turn it off, get new recovery codes, see how this session is signed in; a business that requires two factors and the admin pages send people here (`?reason=&next=`). Settings → Team: owners require the app for the whole team (their own two-factor session first) and see who has none |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet; on a client, "Account actions" for roles that manage client billing (a longer trial, a discount, credit, the setup fee waived, a payment recorded by hand, a plan set by hand; each asks why), what the team granted, the done-for-you request with "Mark as done", the team's notes (pinned first) and the client's timeline (30 lines at a time) |
 | Admin → Metrics (`/admin/metrics`) | Platform admins (under More on phones): the founder's growth numbers from `GET /v1/admin/metrics` with the filters in the address (`?from=&to=&country=&niche=&source=&include_admins=`, period presets or chosen days): key numbers, the funnel as bars on one scale with both shares as text, the setup tunnel per screen, the MRR bridge (start, signed movements with their accounts, end; the rates it was converted with named under it, currencies without a rate named), every business created in the period (an owner's second one included) as a funnel and a setup tunnel next to the owners', the platform admins left out with "Count them" (`&include_admins=true`), gross margin, a cohort grid that prints every share over a light accent, sources and Web Vitals (p75 with Google's rating) |
@@ -764,8 +767,8 @@ redirect):
   (the default, no query), Requests, Mine, Unassigned, All. The first three
   stay in the row; Unassigned and All sit under "More ▾", and one chosen
   there takes the More button's place in full (`_lib/viewTabs.ts`). Beside
-  a conversation at 1440 px the whole row fits in English and Russian (the
-  list column is up to 26.5rem from `xl`); in Georgian and on a phone the
+  a conversation at 1440 px the whole row fits in English and Italian (the
+  list column is up to 26.5rem from `xl`); on a phone the
   three scroll sideways with the chosen one in sight. The four work
   views come from `GET …/inbox` with live counts from `GET …/inbox/counts`
   (not audited, kept fresh by every live event); a search or a history
@@ -1023,7 +1026,7 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   and the phone's top bar show). Links in an article open another article
   in place (Back returns), cabinet links (`cabinet:assistant/channels`) lead
   into the business that is open, and "Open in the help center" goes to
-  `/help/{slug}`. The articles are Markdown files of the API (`docs/help/{en,ru,ka}`,
+  `/help/{slug}`. The articles are Markdown files of the API (`docs/help/{en,it}`,
   served by `GET /v1/help/{language}/{slug}`); `helpTopics.test.ts` fails when
   a file, a link or a cabinet page does not exist.
 - **The help center** (`/help`, public): the articles by topic and a search
@@ -1039,7 +1042,7 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 - **"What's new"** (`/help/whats-new`): entries in `content/changelog/`; the
   account button has a dot and "Help and support" counts the entries
   newer than the last one read (a new account sees only the newest).
-  Add an entry: a file named by its key with en, ru and ka texts, listed in
+  Add an entry: a file named by its key with en and it texts, listed in
   `content/changelog/index.ts`.
 - **Help and support** in the account menu (and "More" on phones): the help
   center, "What's new", the status page and the support team's WhatsApp,
@@ -1052,7 +1055,7 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   plain notice when the platform cannot be reached.
 - **Announcements** (Admin → System, "Status page announcements"): a
   notice, planned maintenance, a slowdown or an outage with the parts it
-  affects, texts in English (required), Georgian and Russian, an optional
+  affects, texts in English (required) and Italian, an optional
   start and expected end; updates and "Resolve" are audited. Every cabinet
   shows the active ones above the page (`AnnouncementBanner`); an owner may
   hide a notice, maintenance or a slowdown in this browser until it changes,
@@ -1090,9 +1093,9 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 
 ### Accessibility
 
-- `e2e/a11y-sections-en.spec.ts` and `e2e/a11y-sections-he.spec.ts`
-  (`e2e/support/axe.ts`) run axe-core (WCAG 2.1 A and AA rules) on every page
-  of a business in the dark and the light theme; `e2e/a11y.spec.ts` on the
+- `e2e/a11y-sections-en.spec.ts` (`e2e/support/axe.ts`) runs axe-core
+  (WCAG 2.1 A and AA rules) on every page of a business in the dark and the
+  light theme; `e2e/a11y.spec.ts` on the
   setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
@@ -1414,12 +1417,12 @@ as `reasonMessages` to `useMutation`); never match the English message.
 ### Translations
 
 - Shared texts (common, auth, nav, theme, pages, errors, validation) live
-  in `src/i18n/messages/{en,ru,ka,he,de}.ts`; section texts in
+  in `src/i18n/messages/{en,it}.ts`; section texts in
   `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
-  `*En`/`*Ru`/`*Ka`/`*He`/`*De` objects are spread into those files; each is
+  `*En`/`*It` objects are spread into those files; each is
   composed of one file per namespace and language in its folder
-  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`,
-  `bookings.he.ts`, `bookings.de.ts`; a large namespace in a few parts); the business profile's and the landing page's in
+  (`sections/insights/bookings.en.ts`, `bookings.it.ts`; a large namespace
+  in a few parts); the business profile's and the landing page's in
   `messages/onboarding/` and `messages/landing/` (one file per language).
   Translations are typed `Translation<typeof …En>`. English is the
   reference; the other dictionaries are typed as `Messages`, so a key added in
@@ -1429,14 +1432,16 @@ as `reasonMessages` to `useMutation`); never match the English message.
   `CABINET_LANGUAGES` those owners can pick (the language switcher, the
   public site, the sitemap and hreflang, notification languages; the backend
   keeps the same list), `NEEDS_REVIEW_LOCALES` the drafts no native speaker has
-  read yet (`he`, `de`). A new language joins `LOCALES` while it is translated
+  read yet (`it`, written by the team). A new language joins `LOCALES` while it is translated
   and `CABINET_LANGUAGES` once every text is there: `i18n.test.ts` fails when
   the picker and completeness disagree.
   `node --no-warnings scripts/translation-status.mjs` prints each locale's
-  share of texts and help articles; `--missing he` gives the English texts a
+  share of texts and help articles; `--missing it` gives the English texts a
   locale lacks as JSON (the brief for a translator), `--check` fails like the
   test.
-- Right to left: `LOCALE_DIRECTION` sets `<html dir>` (Hebrew `rtl`). Use
+- Right to left: `LOCALE_DIRECTION` sets `<html dir>` (both cabinet
+  languages read left to right today; the layout stays ready for a
+  right-to-left one, which the `ar-XB` pseudo-locale run checks). Use
   logical classes (`ms-2`, `ps-3`, `start-0`, `text-start`, `border-s`,
   `rounded-e-lg`), never physical ones: `logicalClasses.policy.test.ts` fails on
   `ml-2`, `left-0` or `text-left`, and `node --no-warnings scripts/rtl-codemod.mjs`
@@ -1444,18 +1449,19 @@ as `reasonMessages` to `useMutation`); never match the English message.
   (the sliding knob `translate-x-5 rtl:-translate-x-5`, the toast's
   `rtl:origin-right`); a directional icon (arrow, chevron) gets
   `rtl:-scale-x-100`; charts, phone numbers, codes and times keep `dir="ltr"`,
-  a customer's text `dir="auto"`. In Hebrew texts wrap a Latin fragment that
-  starts or ends with punctuation (`@BotFather`, `</body>`) in U+200E marks.
+  a customer's text `dir="auto"`. In a right-to-left text wrap a Latin
+  fragment that starts or ends with punctuation (`@BotFather`, `</body>`) in
+  U+200E marks.
 - Top-level keys are namespaces and must not clash between the files. An
   object with a key named `other` is read as plural forms, so do not use
   `other` as an ordinary key (e.g. `leads.type.otherRequest`).
 - Client Components: `const { t, tp, locale } = useI18n();` —
   `t("bookings.title")`, `t("tunnel.stepOf", { number: 2, total: 8 })`,
   plurals `tp("onboarding.gaps.times", count)` with Intl plural categories
-  (`one`/`two`/`few`/`many`/`other`; Russian needs `few` and `many`, Hebrew
-  `two`).
+  (`one`/`two`/`few`/`many`/`other`; Italian has `one`, `other` and `many`
+  for the millions).
 - Server Components: `const { t } = await getI18n();` (`@/i18n/server`).
-- The public site (`/en`, `/ru/for/hotel`, `/ka/terms`…) renders its texts on
+- The public site (`/en`, `/it/for/hotel`, `/it/terms`…) renders its texts on
   the server; its client components get only their own share of the
   dictionary (`PUBLIC_CLIENT_TEXTS`, `src/i18n/publicScope.ts`), not the
   cabinet's 280 KB. `publicScope.test.ts` walks the imports of the public
@@ -1484,30 +1490,31 @@ as `reasonMessages` to `useMutation`); never match the English message.
   come from `src/lib/intl/calendarFields.ts`); other
   formats in a UI language (lists, relative times, plural forms) through the
   factories of `src/lib/intl/formatters.ts`, never `new Intl.*(locale)`
-  (`intlUsage.test.ts`). Chrome's Intl has no Georgian (it writes "ka" as
-  American English, "8 hours ago") while the server's Node writes Georgian,
-  so Georgian is formatted from our own CLDR tables (`src/lib/intl/georgian*.ts`)
-  on both sides; their tests compare every pattern with Node's ICU.
+  (`intlUsage.test.ts`). The cabinet's own languages format from Intl; the
+  customers' pages (the guest booking page, the hosted chat) also come in
+  Georgian, which Chrome's Intl lacks (it writes "ka" as American English,
+  "8 hours ago") while the server's Node writes it, so Georgian is
+  formatted from our own CLDR tables (`src/lib/intl/georgian*.ts`) on both
+  sides; their tests compare every pattern with Node's ICU.
 
 Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
-and checks, Platform; staff never see an English system text in a Russian or
-Georgian cabinet, and no sentence ends on a formatted date (a unit test).
+and checks, Platform; staff never see an English system text in an Italian
+cabinet, and no sentence ends on a formatted date (a unit test).
 `src/i18n/glossary.test.ts` checks the dictionaries themselves: every text
-in its own script (no Cyrillic in English, Georgian, Hebrew or German, no
-Georgian or Hebrew in the others, no Russian, Georgian or Hebrew text made
-mostly of Latin words beyond brand names), "помощник" and never "ассистент" in the Russian cabinet (the
-product's name aside), and version and autotest words only on the
-Assistant's advanced pages and the platform's. It replaces the screenshot
-tour's text lint.
+in its own script (no Cyrillic, Georgian or Hebrew in English or Italian),
+"assistente" and never a helper or a bot in the Italian cabinet, and version
+and autotest words only on the Assistant's advanced pages and the
+platform's. It replaces the screenshot tour's text lint.
 
 Phone numbers are shown with `formatPhone` (`src/lib/phone.ts`,
-libphonenumber-js with its small "min" metadata): "+995 555 00 00 01", always
-inside `dir="ltr"`. Time zones read "Тбилиси (UTC+4)" (`src/lib/timeZones.ts`):
+libphonenumber-js with its small "min" metadata): "+39 06 1234 5678", always
+inside `dir="ltr"`. Time zones read "Roma (UTC+1)" (`src/lib/timeZones.ts`):
 the city from `src/lib/zoneCities.generated.ts` (the backend's CLDR exemplar
-cities, written by `npm run gen:names`; browsers have no Georgian ones), the
-offset in force at the moment.
+cities in the interface languages, written by `npm run gen:names`, so the
+server and the browser agree), the offset in force at the moment.
 
-**Pseudo-locale.** Russian and Georgian run 20–40 % longer than English. Start
+**Pseudo-locale.** Italian runs up to 30 % longer than English (a customer's
+Russian or Georgian 20–40 %). Start
 the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
 (`document.cookie = "aw_locale=en-XA; path=/"`): every text becomes
 `[Šáṽé ẋẋ]`, accented, 40 % longer and in brackets, so a cut text (no closing
@@ -1516,8 +1523,9 @@ out. `e2e/pseudo-locale-ltr.spec.ts` opens every page this way at 1440 and 390 p
 and fails on a page that scrolls sideways or a button, tab or link whose
 text does not fit. Dates and numbers stay English. Its right-to-left twin
 `ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts on pages
-laid out right to left, as for Hebrew; `e2e/pseudo-locale-rtl.spec.ts` runs
-every page in it (both from `e2e/support/long-texts.ts`).
+laid out right to left, as a right-to-left cabinet language would be (none
+is offered today; this keeps the layout ready); `e2e/pseudo-locale-rtl.spec.ts`
+runs every page in it (both from `e2e/support/long-texts.ts`).
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from
@@ -1538,14 +1546,15 @@ dialog; it keeps the current page and re-renders it in the new language.
   (`country_hint`); the API parses them. `CountrySelect` lists countries from
   `GET /v1/catalog/countries` in the interface language.
 - Times and dates never use the browser's own `<input type="time|date">`
-  (it follows the browser's language: AM/PM and mm/dd/yyyy in a Russian
+  (it follows the browser's language: AM/PM and mm/dd/yyyy in an Italian
   cabinet on an English Chrome). `TimeField` has hours and minutes (and
   AM/PM only where the cabinet's language has a 12-hour clock: English),
   arrows step by `step` minutes, typing "0830" fills both; `DateField` shows
   the date in the cabinet's language and opens a calendar whose week starts
   where the language's region starts it; both store "HH:MM" and
   "YYYY-MM-DD" (`DateTimeField`: "YYYY-MM-DDTHH:MM"). The clock and week
-  rules are in `lib/intl/localeCalendar.ts` (Georgian has its own tables),
+  rules are in `lib/intl/localeCalendar.ts` (Georgian, for the customers'
+  pages, has its own tables),
   the parsing in `lib/timeInput.ts`, `lib/timeSegments.ts`, `lib/dateInput.ts`.
 - A settings form saves itself (`useAutosaveForm`): choices at once, typed
   text a moment after the last key and when the field is left, one save at
@@ -1597,8 +1606,9 @@ adopts it.
 ### Typeface
 
 Noto Sans, a variable font (weights 100–900), with Noto Sans Georgian and
-Noto Sans Hebrew of the same family: Latin, German, Cyrillic, Georgian and
-Hebrew look alike on every system. The files are in `public/fonts/` with
+Noto Sans Hebrew of the same family: the interface's Latin (English,
+Italian) and the customers' Cyrillic, Georgian and Hebrew words look alike
+on every system. The files are in `public/fonts/` with
 their licence (SIL Open Font License 1.1, `public/fonts/OFL.txt`) and load
 through `@font-face` rules in the shared stylesheet (`src/styles/typeface.css`,
 the build emits each file under a content hash), one file per script with its
@@ -1613,9 +1623,9 @@ with the preloads, for cabinet pages only (`/login` included):
 | --- | --- | --- |
 | `noto-sans-latin-wght.woff2` | Latin (preloaded on every cabinet page) | 35.0 KB |
 | `noto-sans-latin-ext-wght.woff2` | the extended Latin letters and currency signs the cabinet's countries use (ğ, ș, ə, ₾, ₽…) | 23.5 KB |
-| `noto-sans-cyrillic-wght.woff2` | Cyrillic (preloaded on Russian pages) | 19.6 KB |
-| `noto-sans-georgian-wght.woff2` | Georgian: Mkhedruli, Mtavruli, Asomtavruli (preloaded on Georgian pages) | 40.6 KB |
-| `noto-sans-hebrew-wght.woff2` | Hebrew (preloaded on Hebrew pages) | 12.0 KB |
+| `noto-sans-cyrillic-wght.woff2` | Cyrillic (customers' words; loaded when first shown) | 19.6 KB |
+| `noto-sans-georgian-wght.woff2` | Georgian: Mkhedruli, Mtavruli, Asomtavruli (customers' words) | 40.6 KB |
+| `noto-sans-hebrew-wght.woff2` | Hebrew (customers' words) | 12.0 KB |
 
 `font-display: optional` and an Arial fallback resized to Noto's metrics
 (`Brand Latin Fallback`, the metrics next/font's `adjustFontFallback`
@@ -1624,8 +1634,9 @@ is late for the first paint is not swapped in. It stays out for the rest of
 that document, and the cabinet changes pages on the client, so a late file
 shows from the next full load on (it is in the cache by then). That is why a
 cabinet page preloads Latin and its own script: the root layout adds Latin
-and the Georgian, Cyrillic or Hebrew file for a page in that language
-(`src/server/brandFontPreload.ts` finds the files the build emitted in its
+and, for a page in a language of another script, that script's file (both
+cabinet languages are Latin today, so only Latin is preloaded;
+`src/server/brandFontPreload.ts` finds the files the build emitted in its
 `static/media`; `src/lib/brandFonts.ts` picks them), so they
 come with the stylesheet and Chrome holds the first paint for them. The
 extended Latin file (₾, ₽, ₪ and the letters of the neighbouring
@@ -1828,8 +1839,8 @@ niche pages):
 | Page | First load | Budget |
 | --- | --- | --- |
 | `/en` (landing) | 189.8 KB | 192 KB |
-| `/ru/for/restaurant`, `/ka/for/hotel` (niche pages) | 187.1 KB | |
-| `/ka/terms` (legal pages) | 177.7 KB | 180 KB |
+| `/it/for/restaurant`, `/en/for/hotel` (niche pages) | 187.1 KB | |
+| `/it/terms` (legal pages) | 177.7 KB | 180 KB |
 | `/offline` (the installed app's offline page) | 171.5 KB | 174 KB |
 | `/login` (the cabinet: its pages carry the motion library) | 313.3 KB | 316 KB |
 | 3D chunk (three.js 0.182 + react-three-fiber + the scenes), fetched later where WebGL draws | 243.0 KB | 245 KB |
@@ -1862,9 +1873,9 @@ reflections, the floating and billboarding are a few lines in `useFrame`).
 
 ### Landing page
 
-The public site lives under its language: `/en`, `/ru`, `/ka` (the landing
-page), `/ru/for/restaurant` (a kind of business, from the niche catalog) and
-`/ka/terms`, `/privacy`, `/dpa`, `/security`, `/contact`. `/` sends a
+The public site lives under its language: `/en`, `/it` (the landing
+page), `/it/for/restaurant` (a kind of business, from the niche catalog) and
+`/it/terms`, `/privacy`, `/dpa`, `/security`, `/contact`. `/` sends a
 signed-in user to `/businesses` and a visitor to the page in their language
 (cookie, else Accept-Language), keeping the query; `/privacy` without a
 language does the same (the proxy). The proxy sets the request's language
@@ -1885,9 +1896,9 @@ The data comes from the public API on the server (`_landing/landingData.ts`):
 countries, niches, `GET /v1/public-demos` and `GET /v1/catalog/plans` for the
 country in `?country=` (else the visitor's country from `x-vercel-ip-country`
 / `cf-ipcountry`, else a guess from Accept-Language, both only among the
-countries with a price book, else Georgia). Honest prices
+countries with a price book, else Italy). Honest prices
 (`lib/publicSite/prices.ts`): the price a plan is billed at comes first (the
-price book's lari, else euros), a conversion second and rounded to whole
+price book's currency, lari in Georgia, else euros), a conversion second and rounded to whole
 units ("≈ $199"), and the note under the cards names who set its rate (the
 National Bank of Georgia, the ECB, or the platform's planning rate).
 

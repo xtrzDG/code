@@ -50,17 +50,23 @@ def test_reasons_are_worded_in_the_requested_language() -> None:
     apply(testbed, business)
 
     english = progress(testbed, business, "en")
-    russian = progress(testbed, business, "ru")
+    italian = progress(testbed, business, "it")
     georgian = progress(testbed, business, "ka")
 
     assert english.attention[0].message == (
         "Accept the data processing agreement to go live."
     )
-    assert russian.attention[0].message == (
-        "Чтобы запустить помощника, примите соглашение об обработке данных."
+    assert str(english.attention[0].action.label) == "Accept the data agreement"
+    assert str(italian.attention[0].action.label) == (
+        "Accetta l'accordo sul trattamento dei dati"
     )
+    # The attention texts are still a code table (en, ru, ka; PLAN 18.4): an
+    # Italian owner reads the English message until they move into the catalog.
+    assert italian.attention[0].message == english.attention[0].message
+    # Georgian is no cabinet language: its label reads English, its message
+    # still comes from the code table.
+    assert georgian.attention[0].action.label == english.attention[0].action.label
     assert georgian.attention[0].message.startswith("ასისტენტის გასაშვებად")
-    assert english.attention[0].action.label != russian.attention[0].action.label
 
 
 def test_an_ended_trial_asks_for_payment() -> None:

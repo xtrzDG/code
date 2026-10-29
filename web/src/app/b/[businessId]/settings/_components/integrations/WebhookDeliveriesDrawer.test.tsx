@@ -19,7 +19,7 @@ const DELIVERIES = "/v1/businesses/{business_id}/webhooks/{webhook_id}/deliverie
 const DELIVERY = "/v1/businesses/{business_id}/webhook-deliveries/{delivery_id}";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 
-function renderDrawer(locale: "en" | "ru" | "ka" = "en") {
+function renderDrawer(locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <WebhookDeliveriesDrawer endpoint={endpoint()} onClose={() => undefined} />
@@ -44,7 +44,7 @@ describe("WebhookDeliveriesDrawer: what was sent to a webhook", () => {
     vi.mocked(api.POST).mockReset();
   });
 
-  it.each(["en", "ru", "ka"] as const)("lists deliveries with their state and last answer in %s", async (locale) => {
+  it.each(["en", "it"] as const)("lists deliveries with their state and last answer in %s", async (locale) => {
     const { t, tp } = textsIn(locale);
     answerGet((path) => (path === DELIVERIES ? ok({ items: [delivery(), failed, waiting], next_cursor: null }) : pending()));
     renderDrawer(locale);

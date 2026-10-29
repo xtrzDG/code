@@ -23,21 +23,9 @@ const EXAMPLES: Record<Locale, Example[]> = {
     { key: "business_lunch", kind: "menu_item", title: "Business lunch", duration_minutes: null },
     { key: "khachapuri", kind: "menu_item", title: "Khachapuri", duration_minutes: null },
   ],
-  ru: [
-    { key: "business_lunch", kind: "menu_item", title: "Бизнес-ланч", duration_minutes: null },
-    { key: "khachapuri", kind: "menu_item", title: "Хачапури", duration_minutes: null },
-  ],
-  ka: [
-    { key: "business_lunch", kind: "menu_item", title: "ბიზნეს-ლანჩი", duration_minutes: null },
-    { key: "khachapuri", kind: "menu_item", title: "ხაჭაპური", duration_minutes: null },
-  ],
-  he: [
-    { key: "business_lunch", kind: "menu_item", title: "ארוחה עסקית", duration_minutes: null },
-    { key: "khachapuri", kind: "menu_item", title: "חצ׳פורי", duration_minutes: null },
-  ],
-  de: [
-    { key: "business_lunch", kind: "menu_item", title: "Mittagsmenü", duration_minutes: null },
-    { key: "khachapuri", kind: "menu_item", title: "Chatschapuri", duration_minutes: null },
+  it: [
+    { key: "business_lunch", kind: "menu_item", title: "Pranzo di lavoro", duration_minutes: null },
+    { key: "khachapuri", kind: "menu_item", title: "Khachapuri", duration_minutes: null },
   ],
 };
 
@@ -79,26 +67,26 @@ describe("useOfferRows: the offer table never brings examples back across langua
   });
 
   it("offers the niche's examples, in the interface language, to an empty table", async () => {
-    expect(await shownRows("ka", "business_empty", [])).toEqual([
-      ["ბიზნეს-ლანჩი", true],
-      ["ხაჭაპური", true],
+    expect(await shownRows("it", "business_empty", [])).toEqual([
+      ["Pranzo di lavoro", true],
+      ["Khachapuri", true],
     ]);
   });
 
-  it.each(["en", "ka", "ru"] as const)("shows only the line saved in Russian when reopened in %s", async (locale) => {
+  it.each(["en", "it"] as const)("shows only the line saved in Russian when reopened in %s", async (locale) => {
     expect(await shownRows(locale, `business_saved_${locale}`, [item({ title: "Бизнес-ланч" })])).toEqual([["Бизнес-ланч", false]]);
   });
 
-  it("does not bring back, in Georgian, an example removed in a Russian session", async () => {
+  it("does not bring back, in Italian, an example removed in an English session", async () => {
     rememberDoneExample(window.localStorage, "business_removed", "business_lunch");
 
-    expect(await shownRows("ka", "business_removed", [])).toEqual([["ხაჭაპური", true]]);
+    expect(await shownRows("it", "business_removed", [])).toEqual([["Khachapuri", true]]);
   });
 
   it("asks for the items in the interface language", async () => {
-    const { result } = rowsIn("ka", "business_language", []);
+    const { result } = rowsIn("it", "business_language", []);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(lastGetQuery().language).toBe("ka");
+    expect(lastGetQuery().language).toBe("it");
   });
 });

@@ -1,9 +1,9 @@
 /**
  * The platform team's announcements for the status page and the cabinet's
  * banner (POST and PATCH /v1/admin/announcements): the form as typed, its
- * checks and the request bodies. English is required; Georgian and Russian
- * are either a text or empty (owners then read English). Pure functions, so
- * the dialog and the tests share them.
+ * checks and the request bodies. English is required; Italian is either a
+ * text or empty (owners then read English). Pure functions, so the dialog
+ * and the tests share them.
  */
 
 import type { RequestBody, Schema } from "@/api/types";
@@ -16,7 +16,7 @@ type StatusComponent = Schema<"StatusComponent">;
 export type CreateAnnouncementBody = RequestBody<"/v1/admin/announcements", "post">;
 export type UpdateAnnouncementBody = RequestBody<"/v1/admin/announcements/{announcement_id}", "patch">;
 
-export const ANNOUNCEMENT_LANGUAGES = ["en", "ka", "ru"] as const;
+export const ANNOUNCEMENT_LANGUAGES = ["en", "it"] as const;
 type AnnouncementLanguage = (typeof ANNOUNCEMENT_LANGUAGES)[number];
 
 /** The API's limits. */
@@ -46,12 +46,12 @@ export interface AnnouncementErrors {
 export const NO_ERRORS: AnnouncementErrors = { texts: {} };
 
 export function emptyAnnouncementForm(): AnnouncementForm {
-  return { level: "degraded", components: [], texts: { en: "", ka: "", ru: "" }, startsAt: "", expectedEnd: "" };
+  return { level: "degraded", components: [], texts: { en: "", it: "" }, startsAt: "", expectedEnd: "" };
 }
 
 /** The form of a published announcement, to update it. */
 export function formFromAnnouncement(announcement: AdminAnnouncement): AnnouncementForm {
-  const texts = { en: "", ka: "", ru: "" };
+  const texts = { en: "", it: "" };
   for (const message of announcement.messages) {
     if ((ANNOUNCEMENT_LANGUAGES as readonly string[]).includes(message.language)) {
       texts[message.language as AnnouncementLanguage] = message.text;

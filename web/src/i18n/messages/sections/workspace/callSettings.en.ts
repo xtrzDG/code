@@ -1,8 +1,7 @@
 /**
  * `callSettings.*` texts of Settings → Calls (summaries after calls,
  * messages to callers who did not get through, the WhatsApp template text
- * and the latest text-backs), in English: the reference that ru and ka
- * are typed against.
+ * and the latest text-backs), in English: the reference that it is typed against.
  */
 
 export const callSettingsEn = {
@@ -45,7 +44,6 @@ export const callSettingsEn = {
     description:
       "Create a WhatsApp utility template with this text in Meta Business Manager, one translation per language; its only parameter is your business name. Callers get it in their language, or in English when there is no translation.",
     body: "Text for the template",
-    example: "What callers read",
   },
   history: {
     title: "Latest text-backs",

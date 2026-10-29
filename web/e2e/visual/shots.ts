@@ -27,11 +27,11 @@ import { reviewPage, watchConsole } from "./gate";
 const SETTLED_MS = 300;
 
 export type Theme = "dark" | "light";
-export type Locale = "ru" | "en" | "ka" | "he";
+export type Locale = "it" | "en";
 
 export const THEMES: readonly Theme[] = ["dark", "light"];
 /** The languages of the full matrix (README "Visual tests and the review gate"). */
-export const MATRIX_LOCALES: readonly Locale[] = ["ru", "en", "ka"];
+export const MATRIX_LOCALES: readonly Locale[] = ["it", "en"];
 
 export interface Shot {
   /** The screen, e.g. "restaurant-overview": the baseline's name starts with it. */

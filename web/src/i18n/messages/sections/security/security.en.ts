@@ -1,8 +1,7 @@
 /**
  * `security.*` texts: Account → Security (the authenticator app, recovery
  * codes, how this session is signed in) and a business's two-factor
- * requirement in Settings → Team, in English: the reference that ru and ka
- * are typed against.
+ * requirement in Settings → Team, in English: the reference that it is typed against.
  */
 
 export const securityEn = {

@@ -28,12 +28,11 @@ from app.utilities.niches.niche_text_overlay import (
 TEMPLATES = NicheTemplateRegistry()
 STARTERS = StarterAnswerRegistry()
 GE = CountryCode("GE")
-RU = LanguageTag("ru")
+IT = LanguageTag("it")
 EN = LanguageTag("en")
-HE = LanguageTag("he")
 
 
-def entry(field: str, text: str, language: LanguageTag = RU) -> NicheTextEntry:
+def entry(field: str, text: str, language: LanguageTag = IT) -> NicheTextEntry:
     return NicheTextEntry(
         field_key=NicheTextFieldKey(field),
         language=language,
@@ -76,8 +75,10 @@ def test_without_overrides_the_code_template_comes_back_unchanged(
     assert overlay_niche_template(template, []) is template
     assert overlay_starter_answers(starters, []) is starters
     # Overrides of starters only leave the template as it was, and back.
-    assert overlay_niche_template(template, [entry("starters.tone", "Тон")]) == template
-    assert overlay_starter_answers(starters, [entry("name", "Имя")]) is starters
+    assert (
+        overlay_niche_template(template, [entry("starters.tone", "Tono")]) == template
+    )
+    assert overlay_starter_answers(starters, [entry("name", "Nome")]) is starters
 
 
 @pytest.mark.parametrize("niche", list(NicheKey))
@@ -86,7 +87,7 @@ def test_overriding_every_text_changes_only_words(niche: NicheKey) -> None:
     starters = STARTERS.get(niche, GE)
     catalog = build_niche_text_catalog(template, starters)
     entries = [
-        entry(str(field.field_key), f"Свой текст {position}")
+        entry(str(field.field_key), f"Testo proprio {position}")
         for position, field in enumerate(catalog.fields)
     ]
 
@@ -94,7 +95,7 @@ def test_overriding_every_text_changes_only_words(niche: NicheKey) -> None:
     effective_starters = overlay_starter_answers(starters, entries)
 
     assert structure(effective) == structure(template)
-    assert effective.questions[0].labels.values[RU].startswith("Свой текст")
+    assert effective.questions[0].labels.values[IT].startswith("Testo proprio")
     # English, the prompt's language, keeps the code's words.
     assert (
         effective.questions[0].labels.values[EN]
@@ -105,7 +106,7 @@ def test_overriding_every_text_changes_only_words(niche: NicheKey) -> None:
         == template.default_handoff_rules.values[EN]
     )
     assert effective_starters.hours == starters.hours
-    assert effective_starters.tones.values[RU].startswith("Свой текст")
+    assert effective_starters.tones.values[IT].startswith("Testo proprio")
     assert [offer.kind for offer in effective_starters.offers] == [
         offer.kind for offer in starters.offers
     ]
@@ -115,10 +116,10 @@ def test_one_label_in_one_language_changes_only_that_label() -> None:
     template = TEMPLATES.get(NicheKey.RESTAURANT)
 
     effective = overlay_niche_template(
-        template, [entry("questions.cuisine.label", "Какую кухню вы готовите?")]
+        template, [entry("questions.cuisine.label", "Quale cucina proponete?")]
     )
 
-    assert str(effective.questions[0].labels.values[RU]) == "Какую кухню вы готовите?"
+    assert str(effective.questions[0].labels.values[IT]) == "Quale cucina proponete?"
     assert effective.questions[0].hints == template.questions[0].hints
     assert effective.questions[1:] == template.questions[1:]
     assert effective.names == template.names
@@ -126,14 +127,16 @@ def test_one_label_in_one_language_changes_only_that_label() -> None:
 
 
 def test_a_language_the_code_lacks_is_added_for_that_text() -> None:
+    # The starter answers are still written in code (en, ru, ka), so Italian
+    # is a language the code lacks until they move into the text catalog.
     starters = STARTERS.get(NicheKey.RESTAURANT, GE)
-    assert HE not in starters.tones.values
+    assert IT not in starters.tones.values
 
     effective = overlay_starter_answers(
-        starters, [entry("starters.tone", "חם וקצר", HE)]
+        starters, [entry("starters.tone", "Caldo e breve")]
     )
 
-    assert str(effective.tones.values[HE]) == "חם וקצר"
+    assert str(effective.tones.values[IT]) == "Caldo e breve"
     assert effective.tones.values[EN] == starters.tones.values[EN]
 
 
@@ -145,21 +148,21 @@ def test_a_rule_line_is_replaced_in_its_list_and_the_platforms_rules_stay_first(
     effective = overlay_niche_template(
         template,
         [
-            entry("handoff_rules.2", "Банкет или группа больше 25 человек"),
-            entry("forbidden_rules.1", "Никаких обещаний об аллергенах"),
+            entry("handoff_rules.2", "Banchetto o gruppo di oltre 25 persone"),
+            entry("forbidden_rules.1", "Nessuna promessa sugli allergeni"),
         ],
     )
 
-    handoff = str(effective.default_handoff_rules.values[RU]).split("\n")
-    code_handoff = str(template.default_handoff_rules.values[RU]).split("\n")
+    handoff = str(effective.default_handoff_rules.values[IT]).split("\n")
+    code_handoff = str(template.default_handoff_rules.values[IT]).split("\n")
     assert handoff == [
         code_handoff[0],
-        "Банкет или группа больше 25 человек",
+        "Banchetto o gruppo di oltre 25 persone",
         code_handoff[2],
     ]
-    forbidden = str(effective.default_forbidden_rules.values[RU]).split("\n")
-    code_forbidden = str(template.default_forbidden_rules.values[RU]).split("\n")
-    assert forbidden == [*code_forbidden[:-1], "Никаких обещаний об аллергенах"]
+    forbidden = str(effective.default_forbidden_rules.values[IT]).split("\n")
+    code_forbidden = str(template.default_forbidden_rules.values[IT]).split("\n")
+    assert forbidden == [*code_forbidden[:-1], "Nessuna promessa sugli allergeni"]
     assert (
         effective.default_forbidden_rules.values[EN]
         == template.default_forbidden_rules.values[EN]
@@ -172,13 +175,13 @@ def test_an_entry_of_a_field_the_code_dropped_is_ignored() -> None:
 
     assert (
         overlay_niche_template(
-            template, [entry("questions.gone.label", "Нет такого вопроса")]
+            template, [entry("questions.gone.label", "Nessuna domanda così")]
         )
         == template
     )
     assert (
         overlay_starter_answers(
-            starters, [entry("starters.faq.gone.question", "Нет такого")]
+            starters, [entry("starters.faq.gone.question", "Non esiste")]
         )
         == starters
     )

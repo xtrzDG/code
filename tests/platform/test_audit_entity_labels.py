@@ -2,7 +2,7 @@
 The Audit tab names every entity the backend writes in the reader's
 language: each `AuditEntityName("…")` of the application, the kinds a
 retention purge counts and the copies at each sub-processor have a label in
-the cabinet's en, ru and ka dictionaries (a dotted name reads as one key
+the cabinet's en and it dictionaries (a dotted name reads as one key
 with underscores, as `auditEntityKey` in the cabinet looks it up).
 """
 
@@ -50,7 +50,7 @@ def test_the_backend_writes_the_entities_the_tab_knows() -> None:
     )
 
 
-@pytest.mark.parametrize("language", ["en", "ru", "ka"])
+@pytest.mark.parametrize("language", ["en", "it"])
 def test_every_audit_entity_has_a_label(language: str) -> None:
     missing = sorted(written_entities() - labelled_entities(language))
 

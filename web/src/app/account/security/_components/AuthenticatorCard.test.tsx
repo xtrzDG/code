@@ -28,7 +28,7 @@ const security: AccountSecurityView = {
 
 function Card({ zone }: { zone: string | null }): ReactNode {
   return (
-    <Providers locale="ru">
+    <Providers locale="it">
       <ViewerTimeZoneProvider initialZone={zone}>
         <AuthenticatorCard security={security} account="owner@example.com" onChanged={async () => undefined} />
       </ViewerTimeZoneProvider>
@@ -70,8 +70,8 @@ describe("AuthenticatorCard renders the same text whatever the process's zone", 
     const berlin = renderOnServerIn("Asia/Tbilisi", "Europe/Berlin");
     const tbilisi = renderOnServerIn("UTC", "Asia/Tbilisi");
 
-    expect(textOf(berlin)).toMatch(/14 мар/);
-    expect(textOf(tbilisi)).toMatch(/15 мар/);
+    expect(textOf(berlin)).toMatch(/14 mar/);
+    expect(textOf(tbilisi)).toMatch(/15 mar/);
   });
 
   it("hydrates in a browser in another zone without a mismatch", async () => {

@@ -29,27 +29,17 @@ TABLE_BLOCK: re.Pattern[str] = re.compile(
 
 HEADERS: dict[str, tuple[str, str, str, str]] = {
     "en": ("Sub-processor", "Purpose", "Personal data", "Location"),
-    "ru": ("Субобработчик", "Цель", "Персональные данные", "Где"),
-    "ka": (
-        "ქვე-უფლებამოსილი პირი",
-        "მიზანი",
-        "პერსონალური მონაცემები",
-        "ადგილმდებარეობა",
-    ),
+    "it": ("Sub-responsabile", "Finalità", "Dati personali", "Luogo"),
 }
 # "(from 2026-12-01)": an announced addition; "(until ...)": its last day.
-FROM_LABEL: dict[str, str] = {"en": "from {day}", "ru": "с {day}", "ka": "{day}-დან"}
-UNTIL_LABEL: dict[str, str] = {
-    "en": "until {day}",
-    "ru": "по {day}",
-    "ka": "{day}-მდე",
-}
+FROM_LABEL: dict[str, str] = {"en": "from {day}", "it": "dal {day}"}
+UNTIL_LABEL: dict[str, str] = {"en": "until {day}", "it": "fino al {day}"}
 FALLBACK_LANGUAGE: str = "en"
 _RESOLVER: LocalizedTextResolver = LocalizedTextResolver()
 
 
 def table_language(language: LanguageTag) -> LanguageTag:
-    """The language the list is written in for a request: en, ru or ka."""
+    """The language the list is written in for a request: en or it."""
 
     base: str = base_language_code(language)
     return LanguageTag(base if base in HEADERS else FALLBACK_LANGUAGE)
@@ -58,7 +48,7 @@ def table_language(language: LanguageTag) -> LanguageTag:
 def render_subprocessor_table(
     entries: list[SubprocessorEntry], language: LanguageTag
 ) -> str:
-    """The Markdown table in a language (the header in en, ru or ka)."""
+    """The Markdown table in a language (the header in en or it)."""
 
     written_in: str = str(table_language(language))
     header: tuple[str, str, str, str] = HEADERS[written_in]

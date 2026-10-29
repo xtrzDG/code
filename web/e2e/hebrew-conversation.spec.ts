@@ -1,9 +1,10 @@
 /**
- * A Hebrew conversation end to end, in a cabinet that reads Hebrew: a
+ * A Hebrew conversation end to end, in a cabinet that reads Italian: a
  * visitor writes in Hebrew in the website chat and asks for a manager, the
- * conversation waits in the inbox and opens right to left (the customer's
- * bubble on the right, the team's on the left, each text in its own
- * direction), and the team's Hebrew reply reaches the visitor's chat.
+ * conversation waits in the inbox and opens with each text in its own
+ * direction (the customer's Hebrew bubble at the start of the left-to-right
+ * page, the team's at its end), and the team's Hebrew reply reaches the
+ * visitor's chat.
  */
 
 import { uniqueSuffix } from "./support/api";
@@ -11,7 +12,7 @@ import { signInAsDemoOwner, visitorTranscript } from "./support/demo";
 import { API_URL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { waitingConversationOf } from "./support/inbox";
-import { he } from "./support/messages";
+import { it } from "./support/messages";
 
 test("a Hebrew conversation reads right to left from the visitor's question to the team's reply", async ({
   page,
@@ -20,7 +21,7 @@ test("a Hebrew conversation reads right to left from the visitor's question to t
 }) => {
   const owner = await signInAsDemoOwner(request);
   await signInContext(context, owner.token);
-  await context.addCookies([{ name: "aw_locale", value: "he", url: WEB_URL }]);
+  await context.addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
 
   const visitor = {
     name: `נועה לוי ${uniqueSuffix()}`,
@@ -61,14 +62,14 @@ test("a Hebrew conversation reads right to left from the visitor's question to t
   );
 
   await page.goto(`/b/${owner.businessId}/inbox/${conversationId}`);
-  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(page.locator("html")).toHaveAttribute("lang", "he");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
   await expect(
     page.getByRole("heading", { level: 2, name: visitor.name }),
   ).toBeVisible();
 
   const transcript = page.getByRole("region", {
-    name: he.conversations.transcript,
+    name: it.conversations.transcript,
   });
   const message = transcript.getByText(question).first();
   await expect(message).toBeVisible();
@@ -83,20 +84,20 @@ test("a Hebrew conversation reads right to left from the visitor's question to t
     const box = await locator.boundingBox();
     return box ? box.x + box.width / 2 : 0;
   };
-  // The customer's bubble stands on the right, where a Hebrew line starts.
-  expect(await centre(message)).toBeGreaterThan(middle);
+  // The customer's bubble stands at the start of the page (its left); the Hebrew line inside it starts on its right.
+  expect(await centre(message)).toBeLessThan(middle);
 
   const reply = `שלום נועה, אני המנהל במשמרת. ${uniqueSuffix()}`;
   await page
-    .getByRole("textbox", { name: he.conversations.reply.label })
+    .getByRole("textbox", { name: it.conversations.reply.label })
     .fill(reply);
   await page
-    .getByRole("button", { name: he.inboxCard.composer.sendLabel, exact: true })
+    .getByRole("button", { name: it.inboxCard.composer.sendLabel, exact: true })
     .click();
   const answer = transcript.getByText(reply);
   await expect(answer).toBeVisible();
   // The team's bubble stands on the other side.
-  expect(await centre(answer)).toBeLessThan(middle);
+  expect(await centre(answer)).toBeGreaterThan(middle);
   await expect
     .poll(() => visitorTranscript(request, owner.businessId, visitor))
     .toContain(reply);

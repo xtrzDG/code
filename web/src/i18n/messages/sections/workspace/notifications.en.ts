@@ -1,7 +1,7 @@
 /**
  * `notifications.*` texts of Settings → Notifications (this device, my
  * events and quiet hours, staff contacts' delivery and checks) and of the
- * notification link page, in English: the reference that ru and ka are
+ * notification link page, in English: the reference that it is
  * typed against.
  */
 

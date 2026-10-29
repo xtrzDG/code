@@ -37,6 +37,8 @@ UNDESCRIBED_ROUTES: frozenset[str] = frozenset(
 
 # The guide names the curated country data relative to this folder.
 REGISTRIES: Path = ROOT / "app" / "registries"
+# ... and the legal texts relative to this one.
+LEGAL: Path = ROOT / "docs" / "legal"
 
 # Every developer guide of docs/dev/ (the README links them all).
 DEVELOPER_GUIDES: tuple[str, ...] = tuple(
@@ -69,7 +71,7 @@ def test_the_launch_guide_names_only_what_exists() -> None:
     assert "/v1/channels/meta/webhook" in routes
     assert routes - described - UNDESCRIBED_ROUTES == set()
     for name in files:
-        assert (ROOT / name).exists() or (REGISTRIES / name).exists(), name
+        assert any((base / name).exists() for base in (ROOT, REGISTRIES, LEGAL)), name
 
 
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
@@ -84,12 +86,12 @@ COPIES_EVERY_VALUE: re.Pattern[str] = re.compile(
     r"|takes every value of the API"
 )
 
-# Russian labels of the cabinet the guide names (web/src/i18n, workspace).
-WEB_CHAT_CARD: str = "«Чат на сайте»"
-TURN_ON: str = "«Включить»"
+# Labels of the cabinet (English, web/src/i18n workspace) the guide names.
+WEB_CHAT_CARD: str = "«Website chat»"
+TURN_ON: str = "«Turn on»"
 WIDGET_SECTION_LABELS: tuple[str, ...] = (
-    "«Поставьте чат на сайт»",
-    "«Живой просмотр»",
+    "«Put the chat on your website»",
+    "«Live preview»",
 )
 # The cabinet's workspace texts: one file per namespace and language.
 WORKSPACE_TEXTS: Path = ROOT / "web/src/i18n/messages/sections/workspace"
@@ -136,8 +138,6 @@ def test_the_guide_turns_the_website_chat_on_before_its_code() -> None:
     assert len(mentioning) >= 3
     for paragraph in mentioning:
         turn_on: int = paragraph.find(f"{WEB_CHAT_CARD} → {TURN_ON}")
-        if turn_on == -1:
-            turn_on = paragraph.find(f"карточка {WEB_CHAT_CARD} → {TURN_ON}")
         assert turn_on != -1, paragraph
         first_widget_label: int = min(
             paragraph.find(label)

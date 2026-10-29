@@ -123,7 +123,7 @@ def test_hebrew_confirmation_isolates_latin_values() -> None:
         currency_code="ILS",
         languages=("he", "en", "ar"),
         owner_language="he",
-        managers=(manager("Dana", ManagerContactChannel.SMS, "+972502345678", "he"),),
+        managers=(manager("Dana", ManagerContactChannel.SMS, "+972502345678", "it"),),
     )
     world.add_profile(clinic, hours=every_day("08:00", "20:00"), slot_minutes=30)
     world.add_resource(clinic, "Chair 1", capacity=1)
@@ -146,7 +146,8 @@ def test_hebrew_confirmation_isolates_latin_values() -> None:
     assert "אושרה" in text
     assert f"{FIRST_STRONG_ISOLATE}Noa Levi{POP_DIRECTIONAL_ISOLATE}" in text
     assert f"{FIRST_STRONG_ISOLATE}10:30{POP_DIRECTIONAL_ISOLATE}" in text
-    # The manager reads Hebrew too, with the Latin name isolated.
-    assert str(world.notifier.sent[0][1]).startswith(
-        f"הזמנה חדשה · {FIRST_STRONG_ISOLATE}Tel Aviv Smile{POP_DIRECTIONAL_ISOLATE}"
+    # The manager reads Italian: the brief, with the date in her language.
+    assert str(world.notifier.sent[0][1]) == (
+        "Nuova prenotazione · Tel Aviv Smile\n"
+        "mercoledì 7 ottobre 2026, 10:30–11:00 · persone: 1"
     )

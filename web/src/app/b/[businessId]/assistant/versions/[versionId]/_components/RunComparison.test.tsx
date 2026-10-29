@@ -37,7 +37,7 @@ function comparison(): AutotestRunComparison {
 }
 
 describe("RunComparison: a voice check change names the phone call", () => {
-  it.each(["en", "ru", "ka", "he", "de"] as const)("tells the chat and the call apart in %s", (locale) => {
+  it.each(["en", "it"] as const)("tells the chat and the call apart in %s", (locale) => {
     const { t } = textsIn(locale);
     renderInLocale(<RunComparison comparison={comparison()} />, { locale });
 

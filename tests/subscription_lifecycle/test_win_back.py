@@ -29,7 +29,10 @@ def cancelled_business(
     world: LifecycleWorld,
     reason: CancellationReason | None = CancellationReason.SEASONAL_BREAK,
 ) -> tuple[UserDocument, BusinessDocument, Microseconds]:
-    """A paying business with a Telegram chat on the bot, cancelled now."""
+    """
+    A paying business with a Telegram chat on the bot (the front desk reads
+    Italian), cancelled now.
+    """
 
     owner, business = world.paying_business()
     stored = world.business(business.id)
@@ -38,7 +41,7 @@ def cancelled_business(
             name=ManagerName("Front desk"),
             channel=ManagerContactChannel.TELEGRAM,
             address=ManagerContactAddress("123456789"),
-            language=LanguageTag("ru"),
+            language=LanguageTag("it"),
         )
     )
     world.business_repo.save(stored)
@@ -100,8 +103,8 @@ def test_day_14_tells_the_owner_what_the_assistant_did_since() -> None:
         for contact, text in world.notifier.sent
         if contact.channel is ManagerContactChannel.TELEGRAM
     )
-    assert "ассистент всё ещё на месте" in telegram
-    assert "Клиентов, написавших за это время: 2." in telegram
+    assert "il tuo assistente è ancora qui" in telegram
+    assert "Clienti che hanno scritto in questo periodo: 2." in telegram
     assert "/n/" in telegram  # a signed link to Billing
     email = next(
         str(text)

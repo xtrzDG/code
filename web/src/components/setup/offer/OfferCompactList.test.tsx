@@ -117,9 +117,9 @@ describe("the offer on a phone, once it is long", () => {
 
   it("finds lines by name across groups, case and accents aside", async () => {
     const user = userEvent.setup();
-    const { t } = textsIn("de");
+    const { t } = textsIn("it");
     onPhone(true);
-    renderOffer(fakeTable(SALON), "de");
+    renderOffer(fakeTable(SALON), "it");
 
     await user.type(screen.getByRole("searchbox", { name: t("profileEdit.offer.compact.search") }), "DAY");
     expect(screen.getAllByRole("button", { name: /^Spa day/ })).toHaveLength(1);
@@ -138,12 +138,13 @@ describe("the offer on a phone, once it is long", () => {
     expect(screen.getByRole("button", { name: "Services: 5 lines" }).getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("speaks Russian plural counts", () => {
-    const { t, tp } = textsIn("ru");
+  it("speaks Italian plural counts", () => {
+    const { t, tp } = textsIn("it");
     onPhone(true);
-    renderOffer(fakeTable(SALON), "ru");
+    renderOffer(fakeTable(SALON), "it");
     expect(screen.getByRole("button", { name: tp("profileEdit.offer.compact.group", 5, { kind: t("knowledge.kindGroups.service") }) })).toBeTruthy();
-    expect(tp("profileEdit.offer.compact.group", 5, { kind: "Услуги" })).toBe("Услуги: 5 строк");
+    expect(tp("profileEdit.offer.compact.group", 5, { kind: "Servizi" })).toBe("Servizi: 5 righe");
+    expect(tp("profileEdit.offer.compact.group", 1, { kind: "Pacchetti" })).toBe("Pacchetti: 1 riga");
   });
 
   it("stays the full table on a larger screen, and for a short offer on a phone", () => {

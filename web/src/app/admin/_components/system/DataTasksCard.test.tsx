@@ -77,7 +77,7 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
     vi.mocked(api.POST).mockReset();
   });
 
-  it.each(["en", "ru", "ka"] as const)("shows each task's status, progress and lists in %s", async (locale) => {
+  it.each(["en", "it"] as const)("shows each task's status, progress and lists in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet(() => ok(view()));
     renderInLocale(<DataTasksCard />, { locale });
@@ -127,11 +127,11 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
   });
 
   it("folds the done tasks behind a toggle that says how many there are", async () => {
-    const { t } = textsIn("ru");
+    const { t } = textsIn("it");
     answerGet(() => ok(view({ tasks: [done, running, { ...done, key: "backfill_lookup:knowledge_items.is_active", field: "is_active" }] })));
-    renderInLocale(<DataTasksCard />, { locale: "ru" });
+    renderInLocale(<DataTasksCard />, { locale: "it" });
 
-    const toggle = await screen.findByRole("button", { name: "Показать 2 готовые задачи" });
+    const toggle = await screen.findByRole("button", { name: "Mostra 2 attività completate" });
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByRole("table", { name: t("dataTasks.doneCaption") })).toBeNull();
 
@@ -144,7 +144,7 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
   });
 
   it("stacks the tasks as a list on a phone instead of a table that scrolls sideways", async () => {
-    const { t } = textsIn("ka");
+    const { t } = textsIn("it");
     vi.spyOn(window, "matchMedia").mockImplementation(
       (query: string) =>
         ({
@@ -155,7 +155,7 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
         }) as unknown as MediaQueryList,
     );
     answerGet(() => ok(view()));
-    renderInLocale(<DataTasksCard />, { locale: "ka" });
+    renderInLocale(<DataTasksCard />, { locale: "it" });
 
     const list = await screen.findByRole("list", { name: t("dataTasks.openCaption") });
     const items = within(list).getAllByRole("listitem");

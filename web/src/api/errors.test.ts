@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createTranslator } from "@/i18n/translate";
 import { en } from "@/i18n/messages/en";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 
 import {
   API_ERROR_CODES,
@@ -134,12 +134,12 @@ describe("readApiError", () => {
 });
 
 describe("friendly messages", () => {
-  const tRu = createTranslator("ru", ru, en).t;
+  const tIt = createTranslator("it", italian, en).t;
   const tEn = createTranslator("en", en).t;
 
   it("localizes by code", () => {
     const error = new ApiError({ status: 429, code: "rate_limited", detail: "Wait." });
-    expect(describeError(error, tRu).title).toBe(ru.errors.codes.rate_limited);
+    expect(describeError(error, tIt).title).toBe(italian.errors.codes.rate_limited);
     expect(describeError(error, tEn).title).toBe(en.errors.codes.rate_limited);
   });
 
@@ -166,7 +166,7 @@ describe("friendly messages", () => {
     });
     const plain = new ApiError({ status: 403, code: "access_denied" });
     expect(describeError(error, tEn).title).toBe(en.errors.twoFactorRequired);
-    expect(describeError(error, tRu).title).toBe(ru.errors.twoFactorRequired);
+    expect(describeError(error, tIt).title).toBe(italian.errors.twoFactorRequired);
     expect(describeError(error, tEn).detail).toBeNull();
     expect(describeError(plain, tEn).title).toBe(en.errors.codes.access_denied);
     expect(describeError(error, tEn, { access_denied: "auth.errors.countryRestricted" }).title).toBe(

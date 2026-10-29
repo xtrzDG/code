@@ -14,26 +14,14 @@
  */
 
 import type { Translation } from "../../translate";
-import { depositsDe } from "./growth/deposits.de";
+import { depositsIt } from "./growth/deposits.it";
 import { depositsEn } from "./growth/deposits.en";
-import { depositsHe } from "./growth/deposits.he";
-import { depositsKa } from "./growth/deposits.ka";
-import { depositsRu } from "./growth/deposits.ru";
 import { growthValueEn } from "./growth/growthValue.en";
-import { growthValueKa } from "./growth/growthValue.ka";
-import { growthValueRu } from "./growth/growthValue.ru";
 import { returnVisitsEn } from "./growth/returnVisits.en";
-import { returnVisitsKa } from "./growth/returnVisits.ka";
-import { returnVisitsRu } from "./growth/returnVisits.ru";
 import { waitlistEn } from "./growth/waitlist.en";
-import { waitlistKa } from "./growth/waitlist.ka";
-import { waitlistRu } from "./growth/waitlist.ru";
-import { growthValueHe } from "./growth/growthValue.he";
-import { growthValueDe } from "./growth/growthValue.de";
-import { returnVisitsHe } from "./growth/returnVisits.he";
-import { returnVisitsDe } from "./growth/returnVisits.de";
-import { waitlistHe } from "./growth/waitlist.he";
-import { waitlistDe } from "./growth/waitlist.de";
+import { growthValueIt } from "./growth/growthValue.it";
+import { returnVisitsIt } from "./growth/returnVisits.it";
+import { waitlistIt } from "./growth/waitlist.it";
 
 export const growthSectionEn = {
   waitlist: waitlistEn,
@@ -42,30 +30,9 @@ export const growthSectionEn = {
   deposits: depositsEn,
 } as const;
 
-export const growthSectionRu: Translation<typeof growthSectionEn> = {
-  waitlist: waitlistRu,
-  returnVisits: returnVisitsRu,
-  growthValue: growthValueRu,
-  deposits: depositsRu,
-};
-
-export const growthSectionKa: Translation<typeof growthSectionEn> = {
-  waitlist: waitlistKa,
-  returnVisits: returnVisitsKa,
-  growthValue: growthValueKa,
-  deposits: depositsKa,
-};
-
-export const growthSectionHe: Translation<typeof growthSectionEn> = {
-  waitlist: waitlistHe,
-  returnVisits: returnVisitsHe,
-  growthValue: growthValueHe,
-  deposits: depositsHe,
-};
-
-export const growthSectionDe: Translation<typeof growthSectionEn> = {
-  waitlist: waitlistDe,
-  returnVisits: returnVisitsDe,
-  growthValue: growthValueDe,
-  deposits: depositsDe,
+export const growthSectionIt: Translation<typeof growthSectionEn> = {
+  waitlist: waitlistIt,
+  returnVisits: returnVisitsIt,
+  growthValue: growthValueIt,
+  deposits: depositsIt,
 };

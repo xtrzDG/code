@@ -62,6 +62,13 @@ class LeadsFixture:
 
 def test_lead_notifies_managers_with_all_details() -> None:
     leads = LeadsFixture()
+    nino, daniel, anna = leads.business.manager_contacts
+    leads.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        daniel,
+        anna,
+    ]
+    leads.world.business_repo.save(leads.business)
 
     view = leads.create()
 
@@ -69,18 +76,19 @@ def test_lead_notifies_managers_with_all_details() -> None:
     texts = {
         str(contact.language): str(text) for contact, text in leads.world.notifier.sent
     }
-    assert texts["ru"].splitlines() == [
-        "Новая заявка · Salobie Bia",
-        "Тип: Банкет",
+    assert texts["it"].splitlines() == [
+        "Nuova richiesta · Salobie Bia",
+        "Tipo: Banchetto",
         "Wedding dinner with live music",
-        "Имя: Ketevan",
-        "Телефон: +995 577 11 22 33",
-        "Канал: Instagram",
-        "Дата: суббота, 14 ноября 2026 г.",
-        "Гостей: 60",
-        "Бюджет: about 6000 lari",
+        "Nome: Ketevan",
+        "Telefono: +995 577 11 22 33",
+        "Canale: Instagram",
+        "Data: sabato 14 novembre 2026",
+        "Persone: 60",
+        "Budget: about 6000 lari",
     ]
-    assert texts["ka"].startswith("ახალი მოთხოვნა · Salobie Bia\nტიპი: ბანკეტი")
+    # Russian is not in the catalog: that contact reads the English details.
+    assert texts["ru"].startswith("New request · Salobie Bia\nType: Banquet")
     assert texts["en"] == (
         "New request · Salobie Bia\nBanquet · Saturday, November 14, 2026"
     )

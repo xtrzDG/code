@@ -13,11 +13,11 @@ def test_cabinet_display_names_match_the_backend() -> None:
     )
 
 
-def test_georgian_names_are_exported() -> None:
-    # Chrome has no Georgian display names; the table must.
+def test_italian_names_are_exported() -> None:
+    # The server and every browser name countries and languages alike.
     module: str = export_display_names()
 
-    assert '    "GE": "საქართველო",\n' in module
-    assert '    "DE": "გერმანია",\n' in module
-    assert '    "ru": "რუსული",\n' in module
-    assert '    "he": "ებრაული",\n' in module
+    assert '    "GE": "Georgia",\n' in module
+    assert '    "DE": "Germania",\n' in module
+    assert '    "ru": "russo",\n' in module
+    assert '    "he": "ebraico",\n' in module

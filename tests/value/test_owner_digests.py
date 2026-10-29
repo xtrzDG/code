@@ -68,7 +68,7 @@ def weekly_report(scene: ValueScene) -> ValueReportView:
 def test_every_owner_who_wants_it_gets_it_and_staff_never_do() -> None:
     scene = ValueScene()
     second_owner = scene.add_user("partner@example.com", "en")
-    phone_owner = scene.add_user(None, "ka")
+    phone_owner = scene.add_user(None, "it")
     scene.business.members.extend(
         [
             BusinessMember(user_id=second_owner.id, role=BusinessMemberRole.OWNER),
@@ -76,7 +76,7 @@ def test_every_owner_who_wants_it_gets_it_and_staff_never_do() -> None:
         ]
     )
     scene.world.business_repo.save(scene.business)
-    scene.device(phone_owner, "ka")
+    scene.device(phone_owner, "it")
     scene.world.digest_preferences_repo.save(
         DigestPreferencesDocument(
             id=digest_preferences_id_of(scene.business.id, second_owner.id),
@@ -91,10 +91,13 @@ def test_every_owner_who_wants_it_gets_it_and_staff_never_do() -> None:
     assert count == 2  # the first owner's e-mail, the phone owner's device
     [email] = scene.world.notifier.notifications
     assert str(email.contact.address) == "owner@example.com"
-    assert str(email.text).startswith("Ваш помощник за неделю · Salobie Bia")
+    # The first owner reads Russian, which the catalog lacks: English.
+    assert str(email.text).startswith("Your assistant last week · Salobie Bia")
     [push] = scene.world.push_queue.queued
     assert push.user_id == phone_owner.id
-    assert str(push.brief.title) == "თქვენი ასისტენტი გასულ კვირას · Salobie Bia"
+    assert str(push.brief.title) == (
+        "Il tuo assistente la settimana scorsa · Salobie Bia"
+    )
     assert str(push.tag) == "value_report:weekly"
     assert push.deliver_after is None
 

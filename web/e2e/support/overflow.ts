@@ -15,8 +15,9 @@ import { WEB_URL } from "./env";
 
 /**
  * The pseudo-locale (src/i18n/pseudo.ts): `en-XA` left to right, or its
- * twin `ar-XB` on pages laid out right to left as for Hebrew. The cabinet
- * serves them when started with PSEUDO_LOCALE=true.
+ * twin `ar-XB` on pages laid out right to left (the layout stays ready for
+ * such a language). The cabinet serves them when started with
+ * PSEUDO_LOCALE=true.
  */
 export async function usePseudoLocale(
   context: BrowserContext,

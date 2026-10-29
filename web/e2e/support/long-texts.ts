@@ -1,11 +1,11 @@
 /**
  * Long texts never break a layout. The pseudo-locale (accented English, 40 %
- * longer, in brackets: src/i18n/pseudo.ts) stands in for Russian and
- * Georgian, which run 20–40 % longer than English: every page of a business,
+ * longer, in brackets: src/i18n/pseudo.ts) stands in for Italian and any
+ * language to come, which run longer than English: every page of a business,
  * the setup invitation and tunnel, the business list, the account settings
  * (Reduce motion among them) and the sign-in page, on a desktop and on a
  * phone, fit the screen and keep every button, tab and link whole. Its right-to-left twin (`ar-XB`) checks the same pages laid out
- * as for Hebrew: a box placed by a physical side would push the page sideways
+ * right to left (the layout stays ready for such a language): a box placed by a physical side would push the page sideways
  * there. One spec file per direction (pseudo-locale-ltr.spec.ts,
  * pseudo-locale-rtl.spec.ts), so CI's shards can run them side by side.
  */

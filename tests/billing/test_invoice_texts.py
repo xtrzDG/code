@@ -12,14 +12,13 @@ from app.schemas.typings.localization.constrained_strings import (
 from tests.billing.billing_testbed import BillingTestbed, describe_invoice
 from tests.billing.billing_text_inputs import TBILISI, tbilisi
 
-# Words the concept's tax rule forbids on invoices, in every language.
-FORBIDDEN_FRAGMENTS: tuple[str, ...] = (
-    "licen",
-    "consult",
-    "лиценз",
-    "консульт",
-    "ლიცენზ",
-    "კონსულტ",
+# Words the concept's tax rule forbids on invoices, in English and Italian
+# ("licenza", "consulenza", "consultazione").
+FORBIDDEN_FRAGMENTS: tuple[str, ...] = ("licen", "consult", "consulen")
+
+ENGLISH_SERVICE_PERIOD_LINE: str = (
+    "Call and message handling service — Voice + chat, monthly, "
+    "Oct 1, 2026 – Oct 31, 2026"
 )
 
 
@@ -40,69 +39,44 @@ def invoice_input(
     )
 
 
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    [
-        (
-            "en",
-            "Call and message handling service — Voice + chat, monthly, "
-            "Oct 1, 2026 – Oct 31, 2026",
-        ),
-        (
-            "ru",
-            "Услуга приёма и обработки обращений — Голос + чат, помесячно, "
-            "1 окт. 2026 г. – 31 окт. 2026 г.",
-        ),
-        (
-            "ka",
-            "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
-            "ხმა + ჩატი, ყოველთვიური, 1 ოქტ. 2026 – 31 ოქტ. 2026",
-        ),
-        (
-            "ru-KZ",
-            "Услуга приёма и обработки обращений — Голос + чат, помесячно, "
-            "1 окт. 2026 г. – 31 окт. 2026 г.",
-        ),
-    ],
-)
-def test_invoice_line_names_the_service_in_the_owner_language(
-    language: str,
-    expected: str,
-) -> None:
-    assert describe_invoice(BillingTestbed(), invoice_input(language)) == expected
-
-
-@pytest.mark.parametrize("language", ["he", "ar", "ja", "it", "zh-Hant"])
-def test_other_languages_read_the_english_invoice(language: str) -> None:
-    testbed = BillingTestbed()
-
-    assert describe_invoice(testbed, invoice_input(language)) == describe_invoice(
-        testbed, invoice_input("en")
+def test_invoice_line_names_the_service_and_the_plan() -> None:
+    assert (
+        describe_invoice(BillingTestbed(), invoice_input("en"))
+        == ENGLISH_SERVICE_PERIOD_LINE
     )
 
 
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    [
-        ("en", "Call and message handling service — setup"),
-        ("ru", "Услуга приёма и обработки обращений — подключение"),
-        (
-            "ka",
-            "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — ჩართვა",
-        ),
-    ],
-)
-def test_setup_fee_line(language: str, expected: str) -> None:
+def test_an_italian_owner_reads_the_english_invoice_until_the_draft_is_reviewed() -> (
+    None
+):
+    # it.json is a draft (needs_review), and a draft never reaches an invoice:
+    # issued invoices keep their wording, so Italian reads English for now.
+    assert (
+        describe_invoice(BillingTestbed(), invoice_input("it"))
+        == ENGLISH_SERVICE_PERIOD_LINE
+    )
+
+
+@pytest.mark.parametrize("language", ["ru", "ka", "ru-KZ", "ar", "ja", "zh-Hant"])
+def test_other_languages_read_the_english_invoice(language: str) -> None:
+    # Russian and Georgian are no longer owner languages; the others never were.
+    assert (
+        describe_invoice(BillingTestbed(), invoice_input(language))
+        == ENGLISH_SERVICE_PERIOD_LINE
+    )
+
+
+def test_setup_fee_line() -> None:
     assert (
         describe_invoice(
             BillingTestbed(),
-            invoice_input(language, kind=InvoiceKind.SETUP_FEE),
+            invoice_input("en", kind=InvoiceKind.SETUP_FEE),
         )
-        == expected
+        == "Call and message handling service — setup"
     )
 
 
-@pytest.mark.parametrize("language", ["en", "ru", "ka", "he", "ar"])
+@pytest.mark.parametrize("language", ["en", "it", "ru"])
 @pytest.mark.parametrize("kind", list(InvoiceKind))
 @pytest.mark.parametrize("billing_period", list(BillingPeriod))
 @pytest.mark.parametrize("plan_key", list(PlanKey))
@@ -121,9 +95,15 @@ def test_invoices_never_mention_a_license_or_a_consultation(
 
 
 def test_annual_invoice_line_says_annual() -> None:
-    line: str = describe_invoice(
-        BillingTestbed(),
-        invoice_input("ru", billing_period=BillingPeriod.ANNUAL),
+    testbed = BillingTestbed()
+
+    english: str = describe_invoice(
+        testbed, invoice_input("en", billing_period=BillingPeriod.ANNUAL)
+    )
+    italian: str = describe_invoice(
+        testbed, invoice_input("it", billing_period=BillingPeriod.ANNUAL)
     )
 
-    assert "за год" in line
+    assert ", annual, " in english
+    # A draft never reaches an invoice: the Italian owner reads the English line.
+    assert italian == english

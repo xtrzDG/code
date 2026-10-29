@@ -1,6 +1,6 @@
 /**
  * `channelSetup.*` texts of the Channels page's guided parts, in English
- * (the reference ru and ka are typed against): how each channel is doing,
+ * (the reference it is typed against): how each channel is doing,
  * the Telegram walk-through, Meta's channels, WhatsApp templates for late
  * replies, the live preview of the website chat and where to paste its code.
  */

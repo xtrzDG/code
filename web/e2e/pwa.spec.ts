@@ -6,7 +6,7 @@
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 
 test.use({ serviceWorkers: "allow" });
 
@@ -38,9 +38,9 @@ test("the manifest names the app in the interface language and its icons load", 
     expect(response.headers()["content-type"]).toContain("image/png");
   }
 
-  await page.context().addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL }]);
-  const russian = (await (await page.request.get("/manifest.webmanifest")).json()) as { name: string; lang: string };
-  expect(russian).toMatchObject({ name: ru.common.appName, lang: "ru" });
+  await page.context().addCookies([{ name: "aw_locale", value: "it", url: WEB_URL }]);
+  const italian = (await (await page.request.get("/manifest.webmanifest")).json()) as { name: string; lang: string };
+  expect(italian).toMatchObject({ name: it.common.appName, lang: "it" });
 });
 
 /*

@@ -1,6 +1,6 @@
 /**
  * `knowledge.*` texts of the import from the business's website, in English:
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const knowledgeWebsiteEn = {
@@ -12,7 +12,7 @@ export const knowledgeWebsiteEn = {
     description:
       "Give the address of your site. We read up to 15 of its pages — menu, prices, services, questions and opening hours — and show you what we found before anything changes.",
     address: "Website address",
-    addressHint: "Your own site, for example https://my-cafe.ge",
+    addressHint: "Your own site, for example https://la-mia-trattoria.it",
     start: "Read my website",
     starting: "Starting…",
     safety: "Only public pages are read. Nothing reaches customers until you check the items and add them.",
@@ -37,7 +37,7 @@ export const knowledgeWebsiteEn = {
     sourcePage: "From {page}",
     errors: {
       required: "Enter your website address",
-      address: "Enter a web address such as https://my-cafe.ge",
+      address: "Enter a web address such as https://la-mia-trattoria.it",
       failedTitle: "The website could not be read",
       notPublic: "This is not a public website. Use the address customers open in their browser.",
       notHttp: "Use a web address that starts with http:// or https://.",

@@ -31,28 +31,18 @@ from app.utilities.localization.text_catalog_files import placeholders
 BATCH_SIZE: int = 40
 MAX_OUTPUT_TOKENS: LlmMaxOutputTokens = LlmMaxOutputTokens(8000)
 LANGUAGE_NAMES: dict[CabinetLanguage, str] = {
-    CabinetLanguage.GEORGIAN: "Georgian",
-    CabinetLanguage.RUSSIAN: "Russian",
+    CabinetLanguage.ITALIAN: "Italian",
     CabinetLanguage.ENGLISH: "English",
-    CabinetLanguage.HEBREW: "Hebrew",
-    CabinetLanguage.GERMAN: "German",
 }
 # How the cabinet of each language speaks to owners (the web dictionaries
 # use the same words).
 STYLE_NOTES: dict[CabinetLanguage, str] = {
-    CabinetLanguage.GEORGIAN: "Address the owner politely (თქვენ).",
-    CabinetLanguage.RUSSIAN: "Address the owner as «вы», lowercase.",
+    CabinetLanguage.ITALIAN: (
+        "Address the owner informally (tu). The business is «attività», the "
+        "owner «titolare», the assistant «l'assistente», a booking "
+        "«prenotazione», a deposit «caparra»."
+    ),
     CabinetLanguage.ENGLISH: "",
-    CabinetLanguage.HEBREW: (
-        "Address the owner in the plural imperative (בדקו, שלמו). The cabinet "
-        "is «לוח הבקרה», the plan and billing page «מסלול וחיוב», the "
-        "assistant «העוזר»."
-    ),
-    CabinetLanguage.GERMAN: (
-        "Address the owner formally (Sie). The cabinet is «Dashboard», the "
-        "plan and billing page «Tarif und Abrechnung», the assistant «der "
-        "Assistent»."
-    ),
 }
 SYSTEM_PROMPT: str = (
     "You translate the owner-facing texts of Assistant Workshop, an AI "
@@ -62,7 +52,7 @@ SYSTEM_PROMPT: str = (
     "Translate every value of the JSON object the user sends from English "
     "into {language}. {style}\n"
     "Keep every {{placeholder}} in curly braces exactly as it is, keep brand "
-    "names (Telegram, WhatsApp, Magti), dial codes such as **61*{{number}}# "
+    "names (Telegram, WhatsApp, TIM), dial codes such as **61*{{number}}# "
     "and line breaks. Keep the tone short and plain.\n"
     "Answer with one JSON object with the same keys and the translated "
     "values, and nothing else."

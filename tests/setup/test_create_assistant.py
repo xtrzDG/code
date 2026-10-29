@@ -61,9 +61,10 @@ def test_the_new_assistant_starts_at_the_first_step_of_its_setup(
     assert setup["phone_test_links"] == []
     assert setup["apply"]["stage"] is None
     assert setup["apply"]["is_in_progress"] is False
-    # Texts are in the owner's language (Georgian, from the phone).
+    # The owner's language is Georgian (from the phone); the catalog lacks
+    # it, so the texts read English.
     assert setup["language"] == "ka"
-    assert setup["steps"][0]["title"] == "თქვენი ბიზნესი"
+    assert setup["steps"][0]["title"] == "Your business"
 
 
 def test_the_new_assistant_comes_with_its_niche_starter_answers(
@@ -94,7 +95,7 @@ def test_the_owner_may_choose_the_country_and_languages(workshop: Workshop) -> N
             "niche_key": "beauty_salon",
             "country_code": "IT",
             "languages": ["it", "en"],
-            "owner_language": "en",
+            "owner_language": "it",
         },
     )
 
@@ -103,8 +104,8 @@ def test_the_owner_may_choose_the_country_and_languages(workshop: Workshop) -> N
     assert business["timezone"] == "Europe/Rome"
     assert business["currency_code"] == "EUR"
     assert business["languages"] == ["it", "en"]
-    assert assistant.created["setup"]["language"] == "en"
-    assert assistant.created["setup"]["steps"][0]["title"] == "Your business"
+    assert assistant.created["setup"]["language"] == "it"
+    assert assistant.created["setup"]["steps"][0]["title"] == "La tua attività"
     assert assistant.created["starter_answers"]["niche_key"] == "beauty_salon"
 
 

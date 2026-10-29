@@ -1,6 +1,6 @@
 /**
  * `adminSystem.*` texts of the platform admin's System page (/admin/system),
- * in English: the reference that ru and ka are typed against. Job, table and
+ * in English: the reference that it is typed against. Job, table and
  * host names, releases and the alerts' technical details stay as the API
  * sends them.
  */

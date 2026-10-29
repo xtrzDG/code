@@ -12,10 +12,10 @@ from app.schemas.constants.help import HelpTopic
 from app.schemas.dto.help import HelpArticleRecord
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
-REQUIRED_LANGUAGES: tuple[str, ...] = ("de", "en", "he", "ka", "ru")
-TRANSLATED_LANGUAGES: tuple[str, ...] = ("de", "he", "ka", "ru")
+REQUIRED_LANGUAGES: tuple[str, ...] = ("en", "it")
+TRANSLATED_LANGUAGES: tuple[str, ...] = ("it",)
 # Drafted by the team; a native speaker has not read them yet.
-NEEDS_REVIEW_LANGUAGES: tuple[str, ...] = ("de", "he")
+NEEDS_REVIEW_LANGUAGES: tuple[str, ...] = ("it",)
 HELP_DIRECTORY: Path = Path(__file__).resolve().parents[2] / "docs" / "help"
 # The articles the cabinet's pages open ("?") and the package promises.
 REQUIRED_SLUGS: frozenset[str] = frozenset(

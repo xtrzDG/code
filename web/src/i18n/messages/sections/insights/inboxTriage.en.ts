@@ -2,7 +2,7 @@
  * `inboxTriage.*` texts of working through the inbox list: row density,
  * the list column's width, the keyboard, selecting several conversations
  * and resolving them at once, and a row's details on hover, in English:
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const inboxTriageEn = {

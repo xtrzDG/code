@@ -1,5 +1,5 @@
 /**
- * POST /api/locale {"locale": "ka" | "ru" | "en" | "he" | "de"} — change the interface
+ * POST /api/locale {"locale": "en" | "it"} — change the interface
  * language: stored in a cookie and, for a signed-in user, in the account
  * (PATCH /v1/me) so it follows them to other devices. Answers 204.
  */

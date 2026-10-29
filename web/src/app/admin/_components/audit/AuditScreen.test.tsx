@@ -44,7 +44,7 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
     queryCache.clear();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("shows the chains and the platform's entries in %s", async (locale) => {
+  it.each(["en", "it"] as const)("shows the chains and the platform's entries in %s", async (locale) => {
     const { t } = textsIn(locale);
     answers({ items: [failed], next_cursor: null });
     renderInLocale(<AuditScreen showSecurityLog />, { locale });

@@ -15,22 +15,23 @@ from tests.knowledge.harness import KnowledgeHarness
 def test_catalog_lists_all_niches_in_the_requested_language() -> None:
     harness = KnowledgeHarness()
 
-    russian = harness.list_niche_templates.run(
-        NicheCatalogQuery(language=LanguageTag("ru"))
+    italian = harness.list_niche_templates.run(
+        NicheCatalogQuery(language=LanguageTag("it"))
     )
     fallback = harness.list_niche_templates.run(NicheCatalogQuery())
-    hebrew = harness.list_niche_templates.run(
-        NicheCatalogQuery(language=LanguageTag("he"))
+    russian = harness.list_niche_templates.run(
+        NicheCatalogQuery(language=LanguageTag("ru"))
     )
     french = harness.list_niche_templates.run(
         NicheCatalogQuery(language=LanguageTag("fr"))
     )
 
-    assert len(russian.niches) == 16
-    assert russian.niches[0].name == "Рестораны и кафе"
+    assert len(italian.niches) == 16
+    assert italian.niches[0].name == "Ristoranti e bar"
     assert fallback.language == "en"
     assert fallback.niches[0].name == "Restaurants and cafes"
-    assert hebrew.niches[0].name == "מסעדות ובתי קפה"
+    # Languages the catalog lacks read English, former cabinet ones included.
+    assert russian.niches[0].name == "Restaurants and cafes"
     assert french.niches[0].name == "Restaurants and cafes"
 
 
@@ -54,15 +55,13 @@ def test_niche_details_resolve_questions_and_default_rules() -> None:
     harness = KnowledgeHarness()
 
     details = harness.get_niche_template.run(
-        NicheTemplateQuery(niche_key=NicheKey.CLINIC, language=LanguageTag("ka-GE"))
+        NicheTemplateQuery(niche_key=NicheKey.CLINIC, language=LanguageTag("it-IT"))
     )
 
-    assert details.niche.name == "სტომატოლოგიები და კერძო კლინიკები"
+    assert details.niche.name == "Studi dentistici e cliniche private"
     assert details.niche.requires_legal_review is True
-    assert details.questions[0].label == "რა მიმართულებებია კლინიკაში?"
-    assert (
-        details.default_handoff_rules[0] == "სასწრაფო სიმპტომები ან საგანგებო ვითარება"
-    )
+    assert details.questions[0].label == "Quali specialità offri?"
+    assert details.default_handoff_rules[0] == "Sintomi urgenti o un'emergenza"
     assert len(details.default_forbidden_rules) == 4
     assert all(
         isinstance(rule, ForbiddenRuleText) for rule in details.default_forbidden_rules
@@ -71,20 +70,22 @@ def test_niche_details_resolve_questions_and_default_rules() -> None:
 
 def test_wizard_has_six_steps_with_localized_questions_and_blank_profile() -> None:
     harness = KnowledgeHarness()
-    business = harness.add_business(niche_key=NicheKey.HOTEL, owner_language="ru")
+    business = harness.add_business(niche_key=NicheKey.HOTEL, owner_language="it")
 
     wizard = harness.get_profile_wizard.run(ProfileWizardQuery(business_id=business.id))
 
-    assert wizard.language == "ru"
+    assert wizard.language == "it"
     assert [step.step for step in wizard.steps] == list(ProfileWizardStep)
     assert [step.number for step in wizard.steps] == [1, 2, 3, 4, 5, 6]
-    assert wizard.steps[0].title == "Ниша и языки"
-    assert wizard.steps[0].questions[0].question.label == "Какой у вас тип размещения?"
+    # The step titles are still a code table (en, ru, ka; PLAN 18.4): an
+    # Italian owner reads them in English until they move into the catalog.
+    assert wizard.steps[0].title == "Niche and languages"
+    assert wizard.steps[0].questions[0].question.label == "Che tipo di struttura è?"
     assert wizard.currency_code == "GEL"
     assert wizard.timezone == "Asia/Tbilisi"
     assert wizard.niche.booking_unit == "night"
     assert wizard.profile.is_saved is False
-    assert wizard.default_handoff_rules[0] == "Жалоба во время проживания"
+    assert wizard.default_handoff_rules[0] == "Reclamo durante il soggiorno"
     assert not wizard.steps[0].is_complete
     assert not wizard.steps[1].is_complete
     assert wizard.steps[2].is_complete

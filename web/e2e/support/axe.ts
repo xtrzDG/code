@@ -61,7 +61,7 @@ export async function audit(page: Page, path: string): Promise<void> {
 }
 
 /** Every section of a business passes the audit in the dark and the light theme, read in this language. */
-export function auditEverySection(locale: "en" | "he"): void {
+export function auditEverySection(locale: "en" | "it"): void {
   for (const theme of ["dark", "light"] as const) {
     test(`every section passes the audit in the ${theme} theme, in ${locale}`, async ({ page, owner }) => {
       test.setTimeout(180_000);
@@ -72,7 +72,8 @@ export function auditEverySection(locale: "en" | "he"): void {
       for (const path of OWNER_PAGES) {
         await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
       }
-      await expect(page.locator("html")).toHaveAttribute("dir", locale === "he" ? "rtl" : "ltr");
+      await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
     });
   }
 }

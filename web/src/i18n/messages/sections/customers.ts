@@ -14,20 +14,11 @@
 
 import type { Translation } from "../../translate";
 import { customersEn } from "./customers/customers.en";
-import { customersKa } from "./customers/customers.ka";
-import { customersRu } from "./customers/customers.ru";
 import { paletteEn } from "./customers/palette.en";
-import { paletteKa } from "./customers/palette.ka";
-import { paletteRu } from "./customers/palette.ru";
 import { segmentsEn } from "./customers/segments.en";
-import { segmentsKa } from "./customers/segments.ka";
-import { segmentsRu } from "./customers/segments.ru";
-import { customersHe } from "./customers/customers.he";
-import { customersDe } from "./customers/customers.de";
-import { paletteHe } from "./customers/palette.he";
-import { paletteDe } from "./customers/palette.de";
-import { segmentsHe } from "./customers/segments.he";
-import { segmentsDe } from "./customers/segments.de";
+import { customersIt } from "./customers/customers.it";
+import { paletteIt } from "./customers/palette.it";
+import { segmentsIt } from "./customers/segments.it";
 
 export const customersSectionEn = {
   customers: customersEn,
@@ -35,26 +26,8 @@ export const customersSectionEn = {
   palette: paletteEn,
 } as const;
 
-export const customersSectionRu: Translation<typeof customersSectionEn> = {
-  customers: customersRu,
-  segments: segmentsRu,
-  palette: paletteRu,
-};
-
-export const customersSectionKa: Translation<typeof customersSectionEn> = {
-  customers: customersKa,
-  segments: segmentsKa,
-  palette: paletteKa,
-};
-
-export const customersSectionHe: Translation<typeof customersSectionEn> = {
-  customers: customersHe,
-  segments: segmentsHe,
-  palette: paletteHe,
-};
-
-export const customersSectionDe: Translation<typeof customersSectionEn> = {
-  customers: customersDe,
-  segments: segmentsDe,
-  palette: paletteDe,
+export const customersSectionIt: Translation<typeof customersSectionEn> = {
+  customers: customersIt,
+  segments: segmentsIt,
+  palette: paletteIt,
 };

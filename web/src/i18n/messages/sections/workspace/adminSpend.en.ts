@@ -1,8 +1,7 @@
 /**
  * `adminSpend.*` texts: the platform admin's "Spend today" tile on the
  * clients overview (provider spend of the UTC day, the week's mean, the
- * daily budget, clients past a spend limit), in English: the reference
- * that ru and ka are typed against.
+ * daily budget, clients past a spend limit), in English: the reference that it is typed against.
  */
 
 export const adminSpendEn = {

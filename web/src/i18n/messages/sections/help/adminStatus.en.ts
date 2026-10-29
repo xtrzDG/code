@@ -1,7 +1,7 @@
 /**
  * `adminStatus.*` texts: the platform admin's announcements for the public
  * status page and the cabinet's banner (Admin → System), in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const adminStatusEn = {

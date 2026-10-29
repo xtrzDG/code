@@ -49,6 +49,7 @@ class TestChannelFacilitators:
         [
             ("ka", "Assistant Workshop: შესვლის კოდი 042317, 10 წთ."),
             ("ru-RU", "Assistant Workshop: код входа 042317, 10 мин."),
+            ("it-IT", "Assistant Workshop: codice di accesso 042317, valido 10 min."),
             ("pt-BR", "Assistant Workshop sign-in code: 042317. Valid for 10 min."),
         ],
     )
@@ -68,7 +69,8 @@ class TestChannelFacilitators:
         assert facilitator.available_channels() == {OtpDeliveryChannel.SMS}
 
     @pytest.mark.parametrize(
-        "language", ["en", "ru", "ka", "uk", "tr", "he", "ar", "de", "fr", "es"]
+        "language",
+        ["en", "ru", "ka", "uk", "tr", "he", "ar", "de", "fr", "es", "it"],
     )
     def test_sms_names_the_service_and_fits_one_part(self, language: str) -> None:
         sms = FakeSms()
@@ -99,6 +101,7 @@ class TestChannelFacilitators:
             ("ru", "Ваш код входа: 042317", "действует 10 мин"),
             ("ka", "თქვენი შესვლის კოდი: 042317", "მოქმედებს 10 წუთის"),
             ("he", "קוד הכניסה שלך: 042317", "בתוקף 10 דקות"),
+            ("it", "Il tuo codice di accesso: 042317", "valido per 10 minuti"),
             ("hy", "Your sign-in code: 042317", "valid for 10 minutes"),
         ],
     )

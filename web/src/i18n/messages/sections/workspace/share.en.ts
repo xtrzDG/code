@@ -1,7 +1,6 @@
 /**
  * `share.*`: Channels → Share: the hosted chat page's address, a link per
- * channel, QR codes and the printable table card. English is the reference
- * that ru and ka are typed against.
+ * channel, QR codes and the printable table card. English is the reference that it is typed against.
  */
 
 export const shareEn = {

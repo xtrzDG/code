@@ -1,6 +1,6 @@
 /**
  * The public pages of the route tour (support/tour.ts) without a session,
- * with the demo restaurant's hosted chat page and its notice, in Russian at
+ * with the demo restaurant's hosted chat page and its notice, in Italian at
  * 1440 px dark and 390 px light. The landing page, the help center and the
  * status page are reading pages: the gate lets them be longer than four
  * phone screens.
@@ -27,7 +27,7 @@ for (const [screen, theme] of [
   test.describe(`at ${screen.viewport.width} px`, () => {
     test.use(screen);
 
-    test(`the public pages (${theme}, ru)`, async ({ page, context }) => {
+    test(`the public pages (${theme}, it)`, async ({ page, context }) => {
       test.setTimeout(120_000);
       const { slug } = await openRestaurant(context);
       await context.clearCookies({ name: "aw_session" });
@@ -37,7 +37,7 @@ for (const [screen, theme] of [
           name: screenOf(path, slug),
           path,
           theme,
-          locale: "ru",
+          locale: "it",
           isDocument: !APP_PAGES.has(path) && !isChatPage,
         });
       }

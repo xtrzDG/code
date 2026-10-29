@@ -71,18 +71,17 @@ describe("counted texts", () => {
     expect(hint(12, 3)).toBe("12 replies written and 3 calls answered for you");
   });
 
-  it("follow Russian agreement after a number", () => {
-    const { tp } = createTranslator("ru", DICTIONARIES.ru, en as unknown as MessageTree);
-    expect([1, 3, 5, 21].map((count) => tp("value.hero.savedCalls", count))).toEqual([
-      "принят 1 звонок",
-      "принято 3 звонка",
-      "принято 5 звонков",
-      "принят 21 звонок",
+  it("follow Italian agreement after a number", () => {
+    const { tp } = createTranslator("it", DICTIONARIES.it, en as unknown as MessageTree);
+    expect([1, 3, 21].map((count) => tp("value.hero.savedCalls", count))).toEqual([
+      "1 chiamata gestita",
+      "3 chiamate gestite",
+      "21 chiamate gestite",
     ]);
     expect([1, 2, 5].map((total) => tp("setup.progress", total, { done: 1, total }))).toEqual([
-      "Готово 1 из 1 шага",
-      "Готово 1 из 2 шагов",
-      "Готово 1 из 5 шагов",
+      "1 su 1 passaggio completato",
+      "1 su 2 passaggi completati",
+      "1 su 5 passaggi completati",
     ]);
   });
 });

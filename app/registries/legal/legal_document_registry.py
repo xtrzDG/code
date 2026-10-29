@@ -37,7 +37,7 @@ class LegalDocumentRegistry(LegalDocumentRegistryContract):
     """
     Data processing agreements kept as Markdown files in the repository,
     one file per version and language: `dpa-<version>.<language>.md` (for
-    example `docs/legal/dpa-2026-10-01.ka.md`). The first `# ` heading is
+    example `docs/legal/dpa-2026-10-01.en.md`). The first `# ` heading is
     the title. Files are read on first use and kept for the process.
 
     Section 8's sub-processor table is served live from the sub-processor

@@ -37,8 +37,8 @@ class GetSubprocessorsUseCase(
 ):
     """
     GET /v1/legal/subprocessors (public): the platform's sub-processors
-    from the registry that also renders the DPA's section 8, in English,
-    Russian or Georgian (other languages read English). The list holds
+    from the registry that also renders the DPA's section 8, in English or
+    Italian (other languages read English). The list holds
     every sub-processor in use today and every announced addition (not in
     force yet); one that left the list is gone from the day it left. The
     changes still ahead come with the day owners hear of them.

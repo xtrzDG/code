@@ -1,6 +1,7 @@
 """
 Forwarding guides of the first markets after Georgia: named carriers with
-the GSM codes, in the owner's language, each marked as not yet confirmed
+the GSM codes, in the owner's language (Italian or English; an owner
+language the cabinet lacks reads English), each marked as not yet confirmed
 with the carrier until someone checks the carrier's own documentation.
 """
 
@@ -27,66 +28,40 @@ from tests.localization.test_call_forwarding import request_instructions
 
 UNCONFIRMED: dict[str, str] = {
     "en": "not yet confirmed with",
-    "ru": "ещё не подтверждены",
-    "ka": "ჯერ არ არის დადასტურებული",
-    "he": "עדיין לא אושרו מול",
-    "de": "noch nicht bestätigt",
+    "it": "non ancora confermati con",
 }
-MARKETS: list[tuple[str, str, str, list[str], str]] = [
-    (
-        "AM",
-        "+37477123456",
-        "ru",
-        ["Team Telecom Armenia", "Viva", "Ucom"],
-        "Наберите **61*+37477123456#",
-    ),
-    (
-        "AZ",
-        "+994501234567",
-        "ru",
-        ["Azercell", "Bakcell", "Nar"],
-        "Наберите **61*+994501234567#",
-    ),
-    (
-        "UA",
-        "+380501234567",
-        "ka",
-        ["Kyivstar", "Vodafone Ukraine", "lifecell"],
-        "აკრიფეთ **61*+380501234567#",
-    ),
-    (
-        "TR",
-        "+905321234567",
-        "en",
-        ["Turkcell", "Vodafone", "Türk Telekom"],
-        "Dial **61*+905321234567#",
-    ),
-    (
-        "DE",
-        "+4915112345678",
-        "de",
-        ["Telekom", "Vodafone", "O2"],
-        "Wählen Sie **61*+4915112345678#",
-    ),
+DIAL_STEP: dict[str, str] = {
+    "en": "Dial **61*{number}#",
+    "it": "Componi **61*{number}#",
+}
+# Market, assistant number, the owner's language, the language of the texts
+# the owner reads (ru is not a cabinet language: English), the carriers.
+MARKETS: list[tuple[str, str, str, str, list[str]]] = [
+    ("IT", "+390212345678", "it", "it", ["TIM", "Vodafone", "WindTre", "Iliad"]),
+    ("AM", "+37477123456", "ru", "en", ["Team Telecom Armenia", "Viva", "Ucom"]),
+    ("AZ", "+994501234567", "en", "en", ["Azercell", "Bakcell", "Nar"]),
+    ("UA", "+380501234567", "it", "it", ["Kyivstar", "Vodafone Ukraine", "lifecell"]),
+    ("TR", "+905321234567", "en", "en", ["Turkcell", "Vodafone", "Türk Telekom"]),
+    ("DE", "+4915112345678", "it", "it", ["Telekom", "Vodafone", "O2"]),
     (
         "IL",
         "+972587654321",
-        "he",
+        "en",
+        "en",
         ["Partner", "Cellcom", "Pelephone", "HOT Mobile"],
-        "חייגו **61*+972587654321#",
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    ("country", "number", "language", "carriers", "dial_step"), MARKETS
+    ("country", "number", "language", "texts_language", "carriers"), MARKETS
 )
 def test_each_market_lists_its_carriers_with_ready_to_dial_codes(
     country: str,
     number: str,
     language: str,
+    texts_language: str,
     carriers: list[str],
-    dial_step: str,
 ) -> None:
     world = build_cabinet_world()
     owner_id = UserId()
@@ -96,25 +71,26 @@ def test_each_market_lists_its_carriers_with_ready_to_dial_codes(
 
     instructions = request_instructions(world, business, owner_id)
 
+    assert instructions.display_language == language
     assert [str(carrier.carrier_name) for carrier in instructions.carriers] == carriers
     assert str(instructions.codes[0].dial_code) == f"**61*{number}#"
-    assert dial_step in instructions.steps[1]
+    assert DIAL_STEP[texts_language].format(number=number) in instructions.steps[1]
     for carrier in instructions.carriers:
         assert [code.dial_code for code in carrier.codes] == [
             code.dial_code for code in instructions.codes
         ]
         assert carrier.note is not None
-        assert UNCONFIRMED[language] in carrier.note
+        assert UNCONFIRMED[texts_language] in carrier.note
         assert str(carrier.carrier_name) in carrier.note
         assert "{" not in carrier.note
 
 
 def test_german_carriers_explain_that_the_code_replaces_the_mailbox() -> None:
     guide = CallForwardingGuideRegistry().get(CountryCode("DE"))
-    german = LanguageTag("de")
+    italian = LanguageTag("it")
 
     notes = {
-        str(carrier.carrier_name): str(carrier.notes.values[german])
+        str(carrier.carrier_name): str(carrier.notes.values[italian])
         for carrier in guide.carriers
         if carrier.notes is not None
     }
@@ -122,7 +98,7 @@ def test_german_carriers_explain_that_the_code_replaces_the_mailbox() -> None:
     assert "3311" in notes["Telekom"]
     assert "5500" in notes["Vodafone"]
     assert "333" in notes["O2"]
-    assert all("noch nicht bestätigt" in note for note in notes.values())
+    assert all("non ancora confermati" in note for note in notes.values())
 
 
 def test_a_known_fact_and_the_review_note_join_in_every_language() -> None:
@@ -131,7 +107,7 @@ def test_a_known_fact_and_the_review_note_join_in_every_language() -> None:
 
     assert team_telecom.review_status is TextReviewStatus.NEEDS_REVIEW
     assert team_telecom.notes is not None
-    assert len(team_telecom.notes.values) == 5
+    assert {str(language) for language in team_telecom.notes.values} == {"en", "it"}
     for language, note in team_telecom.notes.values.items():
         assert "30" in note
         assert UNCONFIRMED[str(language)] in note
@@ -161,4 +137,4 @@ def test_every_new_market_is_a_draft_awaiting_review() -> None:
         if all(c.review_status is TextReviewStatus.NEEDS_REVIEW for c in carriers)
     }
 
-    assert drafts == {"AM", "AZ", "UA", "TR", "DE", "IL"}
+    assert drafts == {"AM", "AZ", "UA", "TR", "IT", "DE", "IL"}

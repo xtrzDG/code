@@ -1,6 +1,6 @@
 /**
  * `assistant.*` texts of the live version, versions and their details, tools,
- * in English: the reference that ru and ka are typed against.
+ * in English: the reference that it is typed against.
  */
 
 export const assistantEn = {

@@ -16,7 +16,7 @@ export const PROFILE_SECTIONS = ["business", "place", "offer", "hours", "people"
 
 export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
 
-/** The cabinet's texts in any of its languages (ru and ka are typed against English). */
+/** The cabinet's texts in any of its languages (Italian is typed against English). */
 export type { Messages };
 
 export function escapeRegExp(text: string): string {

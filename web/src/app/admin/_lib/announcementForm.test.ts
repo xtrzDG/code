@@ -20,7 +20,7 @@ function form(overrides: Partial<AnnouncementForm> = {}): AnnouncementForm {
     ...emptyAnnouncementForm(),
     level: "outage",
     components: ["meta"],
-    texts: { en: "  WhatsApp replies\nare slow.  ", ka: "", ru: "Ответы в WhatsApp идут медленно." },
+    texts: { en: "  WhatsApp replies\nare slow.  ", it: "Le risposte su WhatsApp sono lente." },
     ...overrides,
   };
 }
@@ -33,7 +33,7 @@ function published(overrides: Partial<AdminAnnouncement> = {}): AdminAnnouncemen
     components: ["meta"],
     messages: [
       { language: "en", text: "WhatsApp replies are slow." },
-      { language: "ru", text: "Ответы в WhatsApp идут медленно." },
+      { language: "it", text: "Le risposte su WhatsApp sono lente." },
     ],
     starts_at: NOW - HOUR,
     expected_end_at: null,
@@ -55,7 +55,7 @@ describe("a new announcement", () => {
         components: ["meta"],
         messages: [
           { language: "en", text: "WhatsApp replies are slow." },
-          { language: "ru", text: "Ответы в WhatsApp идут медленно." },
+          { language: "it", text: "Le risposte su WhatsApp sono lente." },
         ],
         starts_at: null,
         expected_end_at: null,
@@ -77,10 +77,10 @@ describe("a new announcement", () => {
 
   it("explains what is missing or wrong", () => {
     expect(
-      buildCreateBody(form({ components: [], texts: { en: " ", ka: "აბ", ru: "" }, startsAt: "soon", expectedEnd: "2026-10-04T11:00" }), NOW),
+      buildCreateBody(form({ components: [], texts: { en: " ", it: "Sì" }, startsAt: "soon", expectedEnd: "2026-10-04T11:00" }), NOW),
     ).toEqual({
       ok: false,
-      errors: { texts: { en: "textRequired", ka: "textShort" }, components: "componentsRequired", startsAt: "time", expectedEnd: "endBeforeStart" },
+      errors: { texts: { en: "textRequired", it: "textShort" }, components: "componentsRequired", startsAt: "time", expectedEnd: "endBeforeStart" },
     });
     expect(buildCreateBody(form({ startsAt: "2027-01-01T00:00", expectedEnd: "later" }), NOW)).toEqual({
       ok: false,
@@ -92,7 +92,7 @@ describe("a new announcement", () => {
 describe("updating an announcement", () => {
   it("starts from what is published", () => {
     const start = formFromAnnouncement(published({ expected_end_at: NOW + HOUR, messages: [{ language: "de", text: "Langsam." }] }));
-    expect(start.texts).toEqual({ en: "", ka: "", ru: "" });
+    expect(start.texts).toEqual({ en: "", it: "" });
     expect(start.expectedEnd).not.toBe("");
   });
 
@@ -102,15 +102,14 @@ describe("updating an announcement", () => {
     expect(buildUpdateBody(unchanged, original, NOW)).toEqual({ ok: true, body: null });
 
     const changed = { ...unchanged, level: "degraded" as const, components: ["meta", "chat"] as AnnouncementForm["components"], expectedEnd: "2026-10-04T14:00" };
-    expect(buildUpdateBody({ ...changed, texts: { ...changed.texts, ka: "WhatsApp ნელა მუშაობს." } }, original, NOW)).toEqual({
+    expect(buildUpdateBody({ ...changed, texts: { ...changed.texts, it: "Le risposte su WhatsApp arrivano in ritardo." } }, original, NOW)).toEqual({
       ok: true,
       body: {
         level: "degraded",
         components: ["meta", "chat"],
         messages: [
           { language: "en", text: "WhatsApp replies are slow." },
-          { language: "ka", text: "WhatsApp ნელა მუშაობს." },
-          { language: "ru", text: "Ответы в WhatsApp идут медленно." },
+          { language: "it", text: "Le risposte su WhatsApp arrivano in ritardo." },
         ],
         expected_end_at: localInputToMicros("2026-10-04T14:00"),
       },

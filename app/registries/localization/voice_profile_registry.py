@@ -1,14 +1,14 @@
 """
 The voice of the phone assistant in each language (ElevenLabs voices).
 
-A language the low-latency speech model says well (Russian, English,
-German, Ukrainian) gets it; Georgian, Hebrew and every other language get
-the conversational v3 model, the platform's model with the widest choice
-of languages, and a steadier voice: a model that speaks a language less
-often drifts less when it speaks evenly. The voices are premade voices of
-the ElevenLabs library, which every workspace has.
+A language the low-latency speech model says well (Italian, English,
+German, Russian, Ukrainian) gets it; Georgian, Hebrew and every other
+language get the conversational v3 model, the platform's model with the
+widest choice of languages, and a steadier voice: a model that speaks a
+language less often drifts less when it speaks evenly. The voices are
+premade voices of the ElevenLabs library, which every workspace has.
 
-The choice is a starting point: the pilot calls in Tbilisi measure how
+The choice is a starting point: the pilot calls in Italy measure how
 callers understand each voice and how often a booking comes out right,
 and this table changes with what they show (docs/LAUNCH.md, 4.6).
 """
@@ -47,6 +47,7 @@ VOICE_PROFILES: Mapping[str, VoiceProfile] = MappingProxyType(
         "ru": VoiceProfile(voice_id=SARAH, tts_model=FLASH_MODEL, stability=BALANCED),
         "uk": VoiceProfile(voice_id=SARAH, tts_model=FLASH_MODEL, stability=BALANCED),
         "en": VoiceProfile(voice_id=JESSICA, tts_model=FLASH_MODEL, stability=BALANCED),
+        "it": VoiceProfile(voice_id=SARAH, tts_model=FLASH_MODEL, stability=BALANCED),
         "de": VoiceProfile(voice_id=LAURA, tts_model=FLASH_MODEL, stability=BALANCED),
         "he": VoiceProfile(
             voice_id=MATILDA, tts_model=CONVERSATIONAL_MODEL, stability=STEADY

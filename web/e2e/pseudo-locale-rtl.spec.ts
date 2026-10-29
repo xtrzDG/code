@@ -1,7 +1,7 @@
 /**
  * Long texts right to left: every page in the pseudo-locale `ar-XB`
- * (support/long-texts.ts), laid out as for Hebrew, fits a desktop and a
- * phone.
+ * (support/long-texts.ts), laid out right to left as the layout stays ready
+ * to be, fits a desktop and a phone.
  */
 
 import { test } from "./support/fixtures";

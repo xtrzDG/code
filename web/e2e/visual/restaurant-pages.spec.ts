@@ -1,6 +1,6 @@
 /**
  * Every page of an owner's cabinet over the demo restaurant's data, in
- * Russian: at 1440 px in the dark theme and at 390 px in the light one
+ * Italian: at 1440 px in the dark theme and at 390 px in the light one
  * (README "Visual tests and the review gate"). The pages are the route
  * tour's (support/tour.ts) and the few it does not walk (customers, a
  * customer's card, integrations, deposits); the main screens in every theme
@@ -34,7 +34,7 @@ function shotOf(restaurant: Restaurant, path: string, theme: Theme): Shot {
   // A conversation's and a customer's ids are new in every run.
   const stable = path.replace(/\/conversation_[\w-]+$/, "/conversation").replace(/\/contact_[\w-]+$/, "/customer");
   const name = screenOf(stable, restaurant.businessId);
-  return { name, path, theme, locale: "ru", mask: path.endsWith("/settings/audit") ? auditEntries : undefined };
+  return { name, path, theme, locale: "it", mask: path.endsWith("/settings/audit") ? auditEntries : undefined };
 }
 
 for (const [screen, theme] of [
@@ -44,7 +44,7 @@ for (const [screen, theme] of [
   test.describe(`at ${screen.viewport.width} px`, () => {
     test.use(screen);
 
-    test(`the demo restaurant's business pages (${theme}, ru)`, async ({ page, request, context }) => {
+    test(`the demo restaurant's business pages (${theme}, it)`, async ({ page, request, context }) => {
       test.setTimeout(180_000);
       const restaurant = await openRestaurant(context);
       for (const path of [...businessRoutes(restaurant.businessId), ...(await morePages(restaurant, request))]) {
@@ -52,7 +52,7 @@ for (const [screen, theme] of [
       }
     });
 
-    test(`the demo restaurant's settings (${theme}, ru)`, async ({ page, context }) => {
+    test(`the demo restaurant's settings (${theme}, it)`, async ({ page, context }) => {
       test.setTimeout(120_000);
       const restaurant = await openRestaurant(context);
       const settings = `/b/${restaurant.businessId}/settings`;

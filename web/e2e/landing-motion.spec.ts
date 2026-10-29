@@ -110,7 +110,7 @@ test.describe("the landing hero", () => {
 test.describe("pages without the 3D hero", () => {
   test.use({ contextOptions: { reducedMotion: "no-preference" } });
 
-  for (const path of ["/ru/for/restaurant", "/en/terms", "/login"]) {
+  for (const path of ["/it/for/restaurant", "/en/terms", "/login"]) {
     test(`never download three.js: ${path}`, async ({ page }) => {
       await emulateCapableDesktop(page);
       const loadedThree = watchForThreeJs(page);

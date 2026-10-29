@@ -6,6 +6,7 @@ import { api } from "@/api/client";
 import { queryCache } from "@/api/queryCache";
 import type { BusinessView, CurrentUserView, SecurityNudgeView } from "@/api/types";
 import { BusinessProvider } from "@/components/business/BusinessContext";
+import type { Locale } from "@/i18n/config";
 import { answerGet, ok } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
@@ -26,7 +27,7 @@ const shown: SecurityNudgeView = {
   reason: "protect_customers",
 };
 
-function renderBanner(business: BusinessView = live, locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function renderBanner(business: BusinessView = live, locale: Locale = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <SecurityNudgeBanner />
@@ -42,7 +43,7 @@ describe("SecurityNudgeBanner: the owner's reminder to turn on a second factor",
     vi.mocked(api.PUT).mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("asks the owner of a live business, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("asks the owner of a live business, in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet((path) => {
       expect(path).toBe(NUDGE);
@@ -57,7 +58,7 @@ describe("SecurityNudgeBanner: the owner's reminder to turn on a second factor",
     expect(action.getAttribute("href")).toBe(`/account/security?next=${encodeURIComponent("/b/business_1/bookings")}`);
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)(
+  it.each(["en", "it"] as const)(
     "names Not now by its visible words, in %s (WCAG 2.5.3)",
     async (locale) => {
       const { t } = textsIn(locale);

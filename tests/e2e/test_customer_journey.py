@@ -84,7 +84,8 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
         headers=headers,
     )
     assert holiday.status_code == 201, holiday.text
-    # Staff get notifications in the platform Telegram bot; the widget is on.
+    # Staff get notifications in the platform Telegram bot, each in the
+    # contact's language; the widget is on.
     settings = client.patch(
         base,
         json={
@@ -93,7 +94,7 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
                     "name": "Гиорги",
                     "channel": "telegram",
                     "address": "70001",
-                    "language": "ru",
+                    "language": "it",
                 }
             ]
         },
@@ -256,7 +257,7 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     # Staff hear about it from the outbox, sent by the worker.
     staff_messages = workshop.telegram.bodies("sendMessage")
     assert staff_messages[-1]["chat_id"] == "70001"
-    assert staff_messages[-1]["text"].startswith("Новая бронь · Salobie Bia")
+    assert staff_messages[-1]["text"].startswith("Nuova prenotazione · Salobie Bia")
 
     # The visitor asks for a person: staff are notified, the bot goes silent.
     handed_off = ask_widget(
@@ -265,7 +266,8 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert handed_off["is_handed_off"] is True
     assert handed_off["text"] == "Ваш вопрос передан коллеге. Вам скоро ответят."
     assert (
-        "Клиенту нужен человек" in workshop.telegram.bodies("sendMessage")[-1]["text"]
+        "Un cliente ha bisogno di una persona"
+        in workshop.telegram.bodies("sendMessage")[-1]["text"]
     )
     model_calls_before = workshop.model.assistant_calls
     silent = ask_widget(workshop, business["id"], WIDGET_SESSION, "Алло?")

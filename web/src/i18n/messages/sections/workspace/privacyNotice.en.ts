@@ -2,7 +2,7 @@
  * `privacyNotice.*`: the platform's default privacy notice for a business's
  * chat (/c/{address}/privacy), shown when the business has not linked its
  * own. Customers read it; `{business}` is the business's name. English is
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const privacyNoticeEn = {

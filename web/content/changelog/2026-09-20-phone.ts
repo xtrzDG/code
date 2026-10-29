@@ -10,32 +10,11 @@ export const phone: ChangelogEntry = {
         "Bookings opens on today's agenda, and a status changed by mistake can be undone for a few seconds.",
       ],
     },
-    ru: {
-      title: "Спокойный кабинет на телефоне",
+    it: {
+      title: "Un pannello più tranquillo sul telefono",
       body: [
-        "На телефоне заголовок страницы переехал в верхнюю панель, а главное действие — в кнопку над вкладками.",
-        "Записи открываются на расписании на сегодня, а случайно изменённый статус можно отменить в течение нескольких секунд.",
-      ],
-    },
-    ka: {
-      title: "მშვიდი კაბინეტი ტელეფონზე",
-      body: [
-        "ტელეფონზე გვერდის სათაური ზედა პანელში გადავიდა, მთავარი მოქმედება კი — ღილაკში ჩანართების თავზე.",
-        "ჯავშნები დღევანდელი განრიგით იხსნება, შემთხვევით შეცვლილი სტატუსის გაუქმება კი რამდენიმე წამის განმავლობაში შეიძლება.",
-      ],
-    },
-    he: {
-      title: "לוח בקרה רגוע יותר בטלפון",
-      body: [
-        "בטלפון הכותרת של כל עמוד עוברת לסרגל העליון, והפעולה הראשית שלו צפה מעל הלשוניות.",
-        "ההזמנות נפתחות בסדר היום של היום, ואת שינוי הסטטוס שנעשה בטעות אפשר לבטל במשך כמה שניות.",
-      ],
-    },
-    de: {
-      title: "Ein ruhigeres Dashboard auf dem Handy",
-      body: [
-        "Auf dem Handy wandert der Titel jeder Seite in die obere Leiste, und ihre Hauptaktion schwebt über den Tabs.",
-        "Buchungen öffnet sich mit dem heutigen Tagesplan, und ein versehentlich geänderter Status lässt sich einige Sekunden lang rückgängig machen.",
+        "Sul telefono il titolo di ogni pagina passa nella barra in alto e l'azione principale resta sopra le schede.",
+        "Prenotazioni si apre sull'agenda di oggi e uno stato cambiato per sbaglio si può annullare per qualche secondo.",
       ],
     },
   },

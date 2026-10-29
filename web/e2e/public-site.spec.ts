@@ -2,15 +2,15 @@ import type { Schema } from "../src/api/types";
 import { rateSourceKey } from "../src/lib/publicSite/prices";
 import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 
 /**
  * The public site around the cabinet: every page in its language under its
- * own address (/en, /ru/for/hotel, /ka/privacy) with hreflang alternates,
+ * own address (/en, /it/for/hotel, /it/privacy) with hreflang alternates,
  * structured data and a sitemap; the footer's links all open; the legal
  * texts say they are drafts; prices never show a raw conversion.
  */
-const DICTIONARIES = { en, ru, ka } as const;
+const DICTIONARIES = { en, it } as const;
 
 test.describe("the public site", () => {
   test("sends the root and a legal page without a language to the reader's", async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe("the public site", () => {
     await expect(page).toHaveURL(/\/en\/privacy$/);
   });
 
-  for (const locale of ["en", "ru", "ka"] as const) {
+  for (const locale of ["en", "it"] as const) {
     test(`renders a niche page in ${locale} with its alternates and structured data`, async ({ page }) => {
       const t = DICTIONARIES[locale];
       await page.goto(`/${locale}/for/restaurant`);
@@ -31,7 +31,7 @@ test.describe("the public site", () => {
       await expect(page.getByText(t.nichePage.eyebrow)).toBeVisible();
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${locale}/for/restaurant$`));
-      for (const alternate of ["ka", "ru", "en", "x-default"]) {
+      for (const alternate of ["it", "en", "x-default"]) {
         await expect(page.locator(`link[rel="alternate"][hreflang="${alternate}"]`)).toHaveCount(1);
       }
       const structured = await page.locator('script[type="application/ld+json"]').first().textContent();
@@ -60,14 +60,14 @@ test.describe("the public site", () => {
   });
 
   test("shows the legal texts with a draft banner while they are not final", async ({ page }) => {
-    await page.goto("/ru/terms");
-    await expect(page.getByTestId("legal-draft")).toContainText(ru.legalPages.draftTitle);
+    await page.goto("/it/terms");
+    await expect(page.getByTestId("legal-draft")).toContainText(it.legalPages.draftTitle);
     await expect(page.getByTestId("legal-text").getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 
-    await page.getByRole("link", { name: ru.legalPages.nav.dpa }).first().click();
-    await expect(page).toHaveURL(/\/ru\/dpa$/);
-    await expect(page.getByText(ru.legalPages.dpaLead)).toBeVisible();
+    await page.getByRole("link", { name: it.legalPages.nav.dpa }).first().click();
+    await expect(page).toHaveURL(/\/it\/dpa$/);
+    await expect(page.getByText(it.legalPages.dpaLead)).toBeVisible();
 
     await page.goto("/en/contact");
     await expect(page.getByTestId("contact-details").getByRole("heading", { level: 1, name: en.legalPages.contactTitle })).toBeVisible();
@@ -83,8 +83,8 @@ test.describe("the public site", () => {
 
   test("lists the public pages in the sitemap and points robots to it", async ({ request }) => {
     const sitemap = await (await request.get("/sitemap.xml")).text();
-    expect(sitemap).toContain("/ka/for/restaurant");
-    expect(sitemap).toContain('hreflang="ru"');
+    expect(sitemap).toContain("/it/for/restaurant");
+    expect(sitemap).toContain('hreflang="it"');
     // Drafts are not offered to search engines.
     expect(sitemap).not.toContain("/en/terms");
     const robots = await (await request.get("/robots.txt")).text();
@@ -129,9 +129,9 @@ test.describe("the public site", () => {
 
   test("switches a public page to another language at its own address", async ({ page }) => {
     await page.goto("/en/for/hotel");
-    await page.getByRole("combobox", { name: en.language.label }).selectOption("ka");
-    await expect(page).toHaveURL(/\/ka\/for\/hotel$/);
-    await expect(page.locator("html")).toHaveAttribute("lang", "ka");
-    await expect(page.getByText(ka.nichePage.eyebrow)).toBeVisible();
+    await page.getByRole("combobox", { name: en.language.label }).selectOption("it");
+    await expect(page).toHaveURL(/\/it\/for\/hotel$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
+    await expect(page.getByText(it.nichePage.eyebrow)).toBeVisible();
   });
 });

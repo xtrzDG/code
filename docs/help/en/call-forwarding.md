@@ -2,7 +2,7 @@
 summary: Send the calls you miss to the assistant with one code per condition, for any mobile operator.
 topic: channels
 order: 50
-keywords: call forwarding, forwarding, phone, calls, missed calls, busy, no answer, unreachable, operator, carrier, magti, silknet, cellfie, gsm code, **61, **67, **62, ##002#
+keywords: call forwarding, forwarding, phone, calls, missed calls, busy, no answer, unreachable, operator, carrier, tim, vodafone, windtre, iliad, gsm code, **61, **67, **62, ##002#
 related: channels, inbox
 ---
 # Call forwarding
@@ -26,8 +26,8 @@ After each code wait for the operator's confirmation on the screen. Then check: 
 
 ## By operator
 
-- **Magti** publishes exactly these codes (*61 no answer, *67 busy, *62 unreachable).
-- **Silknet** and **Cellfie**, and most operators in other countries, accept the same standard GSM codes. If a code does not work, the operator may switch forwarding on in its app or through its support.
+- **TIM**, **Vodafone**, **WindTre** and **Iliad**, like most mobile operators, accept these standard GSM codes.
+- If a code does not work, the operator may switch forwarding on in its app or through its support.
 
 ## Good to know
 

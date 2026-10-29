@@ -86,8 +86,8 @@ describe("after a booking is moved on the calendar", () => {
   });
 
   it("names nobody for a booking without a name and goes away on Close", async () => {
-    const { t } = textsIn("de");
-    const user = await dropIn("de", { ...dinner, contact_name: null });
+    const { t } = textsIn("it");
+    const user = await dropIn("it", { ...dinner, contact_name: null });
 
     expect(await screen.findByText(t("bookingCalendar.move.tell.titleAnonymous"))).toBeTruthy();
     // The offer's Close, not the toast's.
@@ -97,18 +97,14 @@ describe("after a booking is moved on the calendar", () => {
   });
 
   it("is withdrawn when the move is undone: the customer knows the old time", async () => {
-    const { t } = textsIn("ru");
-    const user = await dropIn("ru");
-    expect(await screen.findByText(sentence("Nino ещё не знает новое время"))).toBeTruthy();
+    const { t } = textsIn("it");
+    const user = await dropIn("it");
+    const title = t("bookingCalendar.move.tell.title", { name: "Nino" });
+    expect(await screen.findByText(sentence(title))).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: t("common.undo") }));
     expect(await screen.findByText(t("bookingCalendar.move.undone"))).toBeTruthy();
     expect(vi.mocked(api.POST)).toHaveBeenCalledTimes(2);
-    expect(screen.queryByText(sentence("Nino ещё не знает новое время"))).toBeNull();
-  });
-
-  it("reads right to left in Hebrew", async () => {
-    await dropIn("he");
-    expect(await screen.findByText(sentence("יש לעדכן את Nino בשעה החדשה"))).toBeTruthy();
+    expect(screen.queryByText(sentence(title))).toBeNull();
   });
 });

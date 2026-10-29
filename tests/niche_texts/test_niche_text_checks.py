@@ -28,13 +28,13 @@ from app.utilities.niches.niche_text_checks import (
     still_valid_entries,
 )
 
-RU = LanguageTag("ru")
+IT = LanguageTag("it")
 GREETING = NicheTextFieldKey("starters.faq.greeting.answer")
 LABEL = NicheTextFieldKey("questions.cuisine.label")
 
 
 def field(
-    key: NicheTextFieldKey, english: str, russian: str, limit: int
+    key: NicheTextFieldKey, english: str, italian: str, limit: int
 ) -> NicheTextField:
     return NicheTextField(
         field_key=key,
@@ -42,7 +42,7 @@ def field(
         code_texts=LocalizedText(
             values={
                 LanguageTag("en"): LocalizedTextValue(english),
-                RU: LocalizedTextValue(russian),
+                IT: LocalizedTextValue(italian),
             }
         ),
         max_length=NicheTextLengthLimit(limit),
@@ -52,8 +52,8 @@ def field(
 CATALOG = NicheTextCatalog(
     niche_key=NicheKey.RESTAURANT,
     fields=[
-        field(GREETING, "Hello, {name}!", "Здравствуйте, {name}!", 60),
-        field(LABEL, "What cuisine do you serve?", "Какая у вас кухня?", 30),
+        field(GREETING, "Hello, {name}!", "Ciao, {name}!", 60),
+        field(LABEL, "What cuisine do you serve?", "Che cucina proponi?", 30),
     ],
     questions=[],
 )
@@ -69,27 +69,27 @@ def inputs(**texts: str) -> list[NicheTextInput]:
 
 def test_valid_texts_become_entries_of_their_language() -> None:
     entries = check_draft_texts(
-        CATALOG, RU, inputs(greeting="Добрый день, {name}!", label="Ваша кухня?")
+        CATALOG, IT, inputs(greeting="Buongiorno, {name}!", label="La tua cucina?")
     )
 
     assert [(str(e.field_key), str(e.language), str(e.text)) for e in entries] == [
-        (str(GREETING), "ru", "Добрый день, {name}!"),
-        (str(LABEL), "ru", "Ваша кухня?"),
+        (str(GREETING), "it", "Buongiorno, {name}!"),
+        (str(LABEL), "it", "La tua cucina?"),
     ]
 
 
 def test_the_codes_own_wording_overrides_nothing() -> None:
-    assert check_draft_texts(CATALOG, RU, inputs(label="Какая у вас кухня?")) == []
+    assert check_draft_texts(CATALOG, IT, inputs(label="Che cucina proponi?")) == []
 
 
 @pytest.mark.parametrize(
     ("language", "texts", "message"),
     [
-        ("tr", {"label": "Mutfak?"}, "cabinet's languages"),
-        ("ru", {"unknown": "Текст"}, "has no text x.y"),
-        ("ru", {"label": "Слишком длинный вопрос про кухню и меню?"}, "at most 30"),
-        ("ru", {"greeting": "Добрый день!"}, "placeholders of the code's text: {name}"),
-        ("ru", {"greeting": "Добрый день, {name} и {city}!"}, "{name}"),
+        ("ru", {"label": "Какая кухня?"}, "cabinet's languages"),
+        ("it", {"unknown": "Testo"}, "has no text x.y"),
+        ("it", {"label": "Una domanda troppo lunga sulla cucina?"}, "at most 30"),
+        ("it", {"greeting": "Buongiorno!"}, "placeholders of the code's text: {name}"),
+        ("it", {"greeting": "Buongiorno, {name} e {city}!"}, "{name}"),
     ],
 )
 def test_a_text_that_does_not_fit_is_refused(
@@ -100,10 +100,10 @@ def test_a_text_that_does_not_fit_is_refused(
 
 
 def test_a_field_given_twice_is_refused() -> None:
-    twice = [*inputs(label="Кухня?"), *inputs(label="Ваша кухня?")]
+    twice = [*inputs(label="Cucina?"), *inputs(label="La tua cucina?")]
 
     with pytest.raises(ValidationFailedError, match="given twice"):
-        check_draft_texts(CATALOG, RU, twice)
+        check_draft_texts(CATALOG, IT, twice)
 
 
 @pytest.mark.parametrize(
@@ -131,18 +131,18 @@ def test_a_comparison_sign_is_not_html() -> None:
 
 def test_an_older_versions_entries_are_kept_only_while_the_code_accepts_them() -> None:
     kept = NicheTextEntry(
-        field_key=LABEL, language=RU, text=NicheOverrideText("Кухня?")
+        field_key=LABEL, language=IT, text=NicheOverrideText("Cucina?")
     )
     gone_field = NicheTextEntry(
         field_key=NicheTextFieldKey("questions.gone.label"),
-        language=RU,
-        text=NicheOverrideText("Нет"),
+        language=IT,
+        text=NicheOverrideText("No"),
     )
     lost_placeholder = NicheTextEntry(
-        field_key=GREETING, language=RU, text=NicheOverrideText("Привет!")
+        field_key=GREETING, language=IT, text=NicheOverrideText("Ciao!")
     )
     other_language = NicheTextEntry(
-        field_key=LABEL, language=LanguageTag("tr"), text=NicheOverrideText("Mutfak?")
+        field_key=LABEL, language=LanguageTag("ru"), text=NicheOverrideText("Кухня?")
     )
 
     assert still_valid_entries(

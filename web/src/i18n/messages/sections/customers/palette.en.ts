@@ -1,7 +1,7 @@
 /**
  * `palette.*` texts: the command palette (Cmd/Ctrl+K) that finds pages,
  * customers, conversations and bookings, in English: the reference that
- * ru and ka are typed against.
+ * it is typed against.
  */
 
 export const paletteEn = {

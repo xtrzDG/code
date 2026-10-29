@@ -15,6 +15,7 @@ import { useQuery } from "@/api/useQuery";
 import type { OtpDeliveryChannel } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 import { guessCountryCode, isCountryAvailable, type LoginMethod } from "@/lib/countries";
+import { splitInternationalNumber } from "@/lib/internationalNumber";
 
 import {
   chooseDeliveryChannel,
@@ -82,8 +83,13 @@ export function useDestination() {
       setChosenCountry(value);
       setError(null);
     },
+    /** A number typed or autofilled with its code ("+39 351…") moves the code into the country picker. */
     setPhoneNumber: (value: string) => {
-      setPhoneNumber(value);
+      const international = splitInternationalNumber(value, countryList, countryCode ?? null);
+      if (international) {
+        setChosenCountry(international.countryCode);
+      }
+      setPhoneNumber(international ? international.nationalNumber : value);
       setError(null);
     },
     setEmail: (value: string) => {

@@ -72,7 +72,8 @@ def test_call_greeting_discloses_the_ai_recording_and_the_operator(
     language: str | None,
     expected: str,
 ) -> None:
-    world = build_world(scripted())
+    # A business of the greeting's language alone: no other language to offer.
+    world = build_world(scripted(), BusinessSetup(languages=(language or "ka",)))
 
     greeting = world.greeting.run(
         CallGreetingRequest(
@@ -83,6 +84,42 @@ def test_call_greeting_discloses_the_ai_recording_and_the_operator(
 
     assert greeting.text == expected
     assert greeting.language == (language or "ka")
+
+
+def test_the_greeting_offers_the_other_languages_of_the_business() -> None:
+    world = build_world(scripted())  # Georgian, Russian and English.
+
+    def greeting(language: str) -> str:
+        return str(
+            world.greeting.run(
+                CallGreetingRequest(
+                    business_id=world.business.id, language=LanguageTag(language)
+                )
+            ).text
+        )
+
+    assert greeting("en").startswith(
+        "Hello! This is the AI assistant of Sakhli. I can also speak other "
+        "languages: Georgian and Russian. Just answer in the language you "
+        "prefer. The call is recorded."
+    )
+    assert "სხვა ენებზეც ვსაუბრობ: რუსული და ინგლისური." in greeting("ka")
+    # A greeting outside the business's languages offers them all, in its own language.
+    assert "altre lingue: georgiano, russo e inglese." in greeting("it")
+    # No offer text in Swahili: the greeting stays in one language.
+    assert "Habari! Huyu ni msaidizi wa AI wa Sakhli. Simu hii" in greeting("sw")
+
+
+def test_a_business_of_one_language_offers_none() -> None:
+    world = build_world(scripted(), BusinessSetup(languages=("en",)))
+
+    greeting = world.greeting.run(
+        CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
+    )
+
+    assert greeting.text.startswith(
+        "Hello! This is the AI assistant of Sakhli. The call is recorded."
+    )
 
 
 def test_a_language_without_a_greeting_is_greeted_and_labelled_in_english() -> None:
@@ -142,7 +179,9 @@ def test_recorded_calls_always_say_so_whatever_the_profile_says(
 def test_all_party_consent_countries_let_the_caller_decline_the_recording(
     country: str, language: str, expected: str
 ) -> None:
-    world = build_world(scripted(), BusinessSetup(country_code=country))
+    world = build_world(
+        scripted(), BusinessSetup(country_code=country, languages=(language,))
+    )
 
     greeting = world.greeting.run(
         CallGreetingRequest(

@@ -1,6 +1,6 @@
 /**
  * `adminSecurity.*` texts of the platform admin's Encryption keys page
- * (/admin/security), in English: the reference that ru and ka are typed
+ * (/admin/security), in English: the reference that it is typed
  * against. ENCRYPTION_KEYS stays as is: it is the setting's name.
  */
 

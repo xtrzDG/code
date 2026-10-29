@@ -12,14 +12,11 @@ import { describe, expect, it } from "vitest";
 
 import { holdsShownWords } from "@/test/labelInName";
 
-import { de } from "./messages/de";
 import { en } from "./messages/en";
-import { he } from "./messages/he";
-import { ka } from "./messages/ka";
-import { ru } from "./messages/ru";
+import { it as italian } from "./messages/it";
 import { interpolate, type MessageTree } from "./translate";
 
-const LANGUAGES = { en, ru, ka, he, de } as const;
+const LANGUAGES = { en, it: italian } as const;
 
 describe.each(Object.entries(LANGUAGES))("names that hold what they show, in %s", (_, messages) => {
   it("the setup ring says its title and percent as the bar shows them", () => {

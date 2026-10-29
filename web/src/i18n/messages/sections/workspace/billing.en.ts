@@ -1,6 +1,6 @@
 /**
  * `billing.*` texts of billing: plan, trial, usage, invoices and payment, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const billingEn = {
@@ -138,7 +138,7 @@ export const billingEn = {
     description: "Invoices and receipts name your business as the buyer with these details. Check them with your accountant.",
     notSaved: "Not filled in yet: invoices name the business as it is called in the cabinet.",
     legalName: "Legal name",
-    legalNameHint: "As registered, e.g. “Mtsvane Ezo LLC”.",
+    legalNameHint: "As registered, e.g. “Trattoria da Gino S.r.l.”.",
     taxId: "Tax ID",
     taxIdHint: "The number the tax office knows the company by; in Georgia, its identification code.",
     country: "Country",
@@ -157,7 +157,7 @@ export const billingEn = {
       legalName: "Enter the legal name.",
       taxId: "Use letters, digits, spaces, dots, slashes and dashes (2–40).",
       address: "Enter at least 3 characters.",
-      billingEmail: "Enter an e-mail like accounts@company.ge.",
+      billingEmail: "Enter an e-mail like fatture@azienda.it.",
     },
     save: "Save details",
     saved: "Billing details saved",

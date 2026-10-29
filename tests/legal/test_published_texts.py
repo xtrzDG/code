@@ -22,7 +22,7 @@ from app.utilities.legal.subprocessor_table import TABLE_END_MARKER
 from scripts import check_legal_texts, publish_legal_texts
 
 TERMS: str = "terms-2026-10-05.en.md"
-DPA: str = "dpa-2026-10-01.ru.md"
+DPA: str = "dpa-2026-10-01.en.md"
 
 
 def published_copy(tmp_path: Path, *names: str) -> Path:

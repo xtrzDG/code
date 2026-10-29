@@ -1,7 +1,7 @@
 /**
  * `adminPartners.*` texts of /admin/partners: the partners who bring
  * businesses, their codes and rates, and the monthly payout report, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const adminPartnersEn = {

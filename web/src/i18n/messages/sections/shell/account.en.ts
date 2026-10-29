@@ -1,7 +1,7 @@
 /**
  * `account.*` texts: the user menu at the bottom of the sidebar (and in
  * "More" on phones) and installing the cabinet as an app, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const accountEn = {

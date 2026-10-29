@@ -1,6 +1,6 @@
 /**
  * `leads.*` texts of leads (customer requests), in English: the reference that
- * ru and ka are typed against.
+ * it is typed against.
  */
 
 export const leadsEn = {

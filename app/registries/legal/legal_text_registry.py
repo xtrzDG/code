@@ -48,7 +48,7 @@ class LegalTextRegistry(LegalTextRegistryContract):
     security overview kept as Markdown in the repository, one file per
     version and language:
     `<kind>-<version>.<language>.md`, the version being the day the text
-    takes effect (docs/legal/terms-2026-10-05.ka.md). The version in force
+    takes effect (docs/legal/terms-2026-10-05.en.md). The version in force
     is the newest one whose day has come (UTC); a file with a later day is
     published ahead and served as `upcoming_version`. Files are read on
     first use and kept for the process.

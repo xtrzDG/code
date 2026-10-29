@@ -103,7 +103,8 @@ def test_country_list_keeps_restricted_countries_with_their_status() -> None:
     }
 
     assert statuses["IR"] is CountryOnboardingStatus.RESTRICTED
-    assert statuses["GE"] is CountryOnboardingStatus.PILOT
+    assert statuses["IT"] is CountryOnboardingStatus.PILOT
+    assert statuses["GE"] is CountryOnboardingStatus.SUPPORTED
     assert statuses["PL"] is CountryOnboardingStatus.SUPPORTED
 
 

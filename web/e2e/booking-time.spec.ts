@@ -1,17 +1,17 @@
 /**
- * Booking times in the cabinet's own clock: in a Russian or Georgian
- * cabinet the new booking's time reads "08:00" (a 24-hour clock, no AM or
- * PM) and its date puts the day first (never mm/dd/yyyy), whatever the
- * browser's own language is.
+ * Booking times in the cabinet's own clock: in an Italian cabinet the new
+ * booking's time reads "08:00" (a 24-hour clock, no AM or PM) and its date
+ * puts the day first (never mm/dd/yyyy), whatever the browser's own
+ * language is.
  */
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { ka, ru } from "./support/messages";
+import { it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 import { expectTime, shownTime, timeField, typeTime } from "./support/timeField";
 
-const DICTIONARIES = { ru, ka } as const;
+const DICTIONARIES = { it } as const;
 
 for (const [locale, texts] of Object.entries(DICTIONARIES)) {
   test(`a new booking's time reads 08:00 and its date puts the day first (${locale})`, async ({ page, owner, context }) => {

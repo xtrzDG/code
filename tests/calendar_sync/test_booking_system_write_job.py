@@ -18,6 +18,7 @@ from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
 from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.calendar_sync.booking_system_jobs import (
     WRITE_BOOKING_SYSTEM_BOOKING_JOB,
@@ -135,6 +136,8 @@ def test_a_slow_cal_com_is_retried_until_the_last_attempt() -> None:
 
 def test_a_guest_without_a_name_is_named_in_the_owners_language() -> None:
     world = BookingWriteWorld()
+    world.business.owner_language = LanguageTag("it")
+    world.business_repo.save(world.business)
     world.follow(world.table_for_four)
     booking = world.evening()
     contact = world.contact_repo.get(world.business.id, booking.contact_id)
@@ -144,9 +147,8 @@ def test_a_guest_without_a_name_is_named_in_the_owners_language() -> None:
     world.write(booking)
 
     [created] = world.cal_com.created
-    # The owner reads Cal.com in Russian; the guest wrote in Russian too.
-    assert str(world.business.owner_language) == "ru"
-    assert created["attendee"]["name"] == "Гость"
+    # The owner reads Cal.com in Italian; the guest wrote in Russian.
+    assert created["attendee"]["name"] == "Ospite"
     assert created["attendee"]["language"] == "ru"
     assert created["eventTypeId"] == int(EVENT_TYPE)
 

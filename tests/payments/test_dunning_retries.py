@@ -237,7 +237,7 @@ def test_the_retry_notices_reach_the_owners_telegram_chats() -> None:
             name=ManagerName("Nino"),
             channel=ManagerContactChannel.TELEGRAM,
             address=ManagerContactAddress("700000001"),
-            language=LanguageTag("ru"),
+            language=LanguageTag("it"),
         )
     )
     world.testbed.business_repo.save(business)
@@ -250,14 +250,14 @@ def test_the_retry_notices_reach_the_owners_telegram_chats() -> None:
     assert sorted(channel.value for channel in channels) == sorted(
         [ManagerContactChannel.TELEGRAM.value, ManagerContactChannel.WHATSAPP.value]
     )
-    [(_, russian)] = [
+    [(_, italian)] = [
         (contact, text)
         for contact, text in world.testbed.notifier.sent
         if contact.channel is ManagerContactChannel.TELEGRAM
     ]
-    assert str(russian).startswith(
-        "Funicular VR: мы снова попробовали списать 517,00\xa0GEL, но банк "
-        "отклонил карту."
+    assert str(italian).startswith(
+        "Funicular VR: abbiamo provato di nuovo ad addebitare 517,00\xa0GEL e la "
+        "carta è stata rifiutata."
     )
 
 

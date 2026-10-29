@@ -1,7 +1,7 @@
 /**
  * `sources.*` texts: Reports → "Where customers came from" (conversations,
  * bookings and value per link, QR code, ad and phone line) and the source
- * chip of the inbox, in English: the reference ru and ka are typed against.
+ * chip of the inbox, in English: the reference it is typed against.
  */
 
 export const sourcesEn = {

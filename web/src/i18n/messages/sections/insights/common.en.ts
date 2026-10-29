@@ -1,6 +1,6 @@
 /**
  * `insights.*` texts of shared by the dashboard, conversations, bookings,
- * leads and handoffs, in English: the reference that ru and ka are typed
+ * leads and handoffs, in English: the reference that it is typed
  * against.
  */
 

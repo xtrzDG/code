@@ -1,6 +1,6 @@
 """
 The niche template editor on the real application: a platform admin
-rewords a question of the restaurant template in Russian (and in English),
+rewords a question of the restaurant template in Italian (and in English),
 publishes it after the fresh sign-in's confirmation, new owners read it in
 the catalog and the profile wizard, an assistant's prompt stays as it was,
 and a reset brings back the code's wording; every publish is in the
@@ -20,8 +20,8 @@ from tests.e2e.journeys import WIZARD_STEPS, sign_in_and_create_restaurant
 type JsonObject = dict[str, Any]
 
 EDITOR: str = "/v1/admin/niche-templates/restaurant"
-CODE_LABEL_RU: str = "Какая у вас кухня?"
-NEW_LABEL_RU: str = "Какую кухню вы готовите?"
+CODE_LABEL_IT: str = "Che cucina proponi?"
+NEW_LABEL_IT: str = "Quale cucina proponete?"
 
 
 @pytest.fixture
@@ -85,14 +85,14 @@ def test_an_admin_rewords_publishes_and_resets_a_niche_question(
     prompt_before = assembled_prompt(workshop, base, owner_token)
 
     overview = client.get(
-        "/v1/admin/niche-templates", params={"language": "ru"}, headers=admin
+        "/v1/admin/niche-templates", params={"language": "it"}, headers=admin
     )
     assert overview.status_code == 200, overview.text
     assert len(overview.json()["items"]) == 16
     assert overview.json()["items"][0]["published_version"] == 0
 
     editor = save_draft(
-        workshop, admin, "ru", {"questions.cuisine.label": NEW_LABEL_RU}
+        workshop, admin, "it", {"questions.cuisine.label": NEW_LABEL_IT}
     )
     assert editor["status"]["has_draft"] is True
     save_draft(
@@ -105,17 +105,17 @@ def test_an_admin_rewords_publishes_and_resets_a_niche_question(
         },
     )
     # A draft is the admin's alone.
-    assert catalog_label(workshop, "ru") == CODE_LABEL_RU
+    assert catalog_label(workshop, "it") == CODE_LABEL_IT
 
     published = client.post(f"{EDITOR}/publish", headers=admin)
     assert published.status_code == 200, published.text
     assert (published.json()["version"], published.json()["kind"]) == (1, "publish")
     assert published.json()["override_count"] == 3
 
-    assert catalog_label(workshop, "ru") == NEW_LABEL_RU
+    assert catalog_label(workshop, "it") == NEW_LABEL_IT
     assert catalog_label(workshop, "en") == "Which cuisine do you cook?"
     wizard = client.get(
-        f"{base}/profile/wizard", params={"language": "ru"}, headers=bearer(owner_token)
+        f"{base}/profile/wizard", params={"language": "it"}, headers=bearer(owner_token)
     )
     assert wizard.status_code == 200, wizard.text
     labels = [
@@ -123,14 +123,14 @@ def test_an_admin_rewords_publishes_and_resets_a_niche_question(
         for step in wizard.json()["steps"]
         for question in step["questions"]
     ]
-    assert NEW_LABEL_RU in labels
+    assert NEW_LABEL_IT in labels
     # The assistant reads the code template: its prompt does not change.
     assert assembled_prompt(workshop, base, owner_token) == prompt_before
 
     reset = client.post(f"{EDITOR}/revert", json={"version": 0}, headers=admin)
     assert reset.status_code == 200, reset.text
     assert (reset.json()["version"], reset.json()["kind"]) == (2, "reset")
-    assert catalog_label(workshop, "ru") == CODE_LABEL_RU
+    assert catalog_label(workshop, "it") == CODE_LABEL_IT
 
     history = client.get(f"{EDITOR}/versions", headers=admin)
     assert [item["version"] for item in history.json()["items"]] == [2, 1]
@@ -162,15 +162,17 @@ def test_the_editor_refuses_owners_html_and_unknown_versions(
     with_html = client.put(
         f"{EDITOR}/draft",
         json={
-            "language": "ru",
-            "texts": [{"field_key": "questions.cuisine.label", "text": "<b>Кухня</b>"}],
+            "language": "it",
+            "texts": [
+                {"field_key": "questions.cuisine.label", "text": "<b>Cucina</b>"}
+            ],
         },
         headers=admin,
     )
     unknown_field = client.put(
         f"{EDITOR}/draft",
         json={
-            "language": "ru",
+            "language": "it",
             "texts": [{"field_key": "prompt_rules.1", "text": "x"}],
         },
         headers=admin,

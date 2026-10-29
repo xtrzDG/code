@@ -1,9 +1,9 @@
 /**
  * The main screens in the full matrix: 1440 and 390 px, the dark and the
- * light theme, Russian, English and Georgian, over the demo restaurant
+ * light theme, Italian and English, over the demo restaurant
  * (README "Visual tests and the review gate"). A screen that
  * restaurant-pages.spec.ts takes at the same address (1440 dark and 390
- * light, in Russian) is not taken twice. The tunnel's finale is in
+ * light, in Italian) is not taken twice. The tunnel's finale is in
  * new-business.spec.ts.
  */
 
@@ -42,7 +42,7 @@ for (const [screen, everyPageTheme] of [
         for (const theme of THEMES) {
           for (const main of mainScreens(conversation)) {
             // restaurant-pages.spec.ts has this one.
-            if (main.isOnEveryPage && locale === "ru" && theme === everyPageTheme) {
+            if (main.isOnEveryPage && locale === "it" && theme === everyPageTheme) {
               continue;
             }
             await shoot(page, { name: main.name, path: `/b/${restaurant.businessId}/${main.page}`, theme, locale });

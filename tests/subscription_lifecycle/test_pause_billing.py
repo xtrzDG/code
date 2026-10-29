@@ -5,8 +5,10 @@ import pytest
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.subscription_lifecycle import SubscriptionEventKind
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing_cabinet import StartCheckoutCommand, StartCheckoutRequest
 from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.billing.billing_periods import (
     add_calendar_months,
     to_local_calendar_day,
@@ -48,9 +50,18 @@ def test_a_pause_starts_when_the_paid_period_ends_and_stops_full_price_charges()
     assert len(scheduled) == 1 and scheduled[0].pause_months == 2
 
 
+def italian_owner(world: LifecycleWorld, business: BusinessDocument) -> None:
+    """The owner reads the business's notices in Italian."""
+
+    stored = world.business(business.id)
+    stored.owner_language = LanguageTag("it")
+    world.business_repo.save(stored)
+
+
 def test_billing_while_paused_bills_each_month_at_fifteen_percent() -> None:
     world = LifecycleWorld()
     owner, business = world.paying_business()
+    italian_owner(world, business)
     pause(world, owner, business, months=2)
 
     reach_pause_start(world, business)
@@ -67,8 +78,9 @@ def test_billing_while_paused_bills_each_month_at_fifteen_percent() -> None:
         "seasonal pause, requests only" in str(line.text)
         for line in first_month.line_texts
     )
-    # The owner language of the business is Georgian.
-    assert any("სეზონური პაუზა დაიწყო" in text for text in world.notifier.texts())
+    assert any(
+        "è iniziata la pausa stagionale" in text for text in world.notifier.texts()
+    )
     assert [s.kind for s in world.steps(business)][-1] is (
         SubscriptionEventKind.PAUSE_STARTED
     )
@@ -115,6 +127,7 @@ def test_a_paid_pause_month_keeps_the_pause_and_automatic_charges_start_after_it
 def test_auto_resume_brings_full_service_back_when_the_pause_ends() -> None:
     world = LifecycleWorld()
     owner, business = world.paying_business()
+    italian_owner(world, business)
     pause(world, owner, business, months=1)
     reach_pause_start(world, business)
     pause_until = world.current(business).pause_until
@@ -128,7 +141,9 @@ def test_auto_resume_brings_full_service_back_when_the_pause_ends() -> None:
     assert resumed.pause_starts_at is None and resumed.pause_until is None
     assert resumed.period_end == pause_until
     assert world.business(business.id).service_mode is ServiceMode.FULL
-    assert any("სეზონური პაუზა დასრულდა" in text for text in world.notifier.texts())
+    assert any(
+        "la pausa stagionale è finita" in text for text in world.notifier.texts()
+    )
     last = world.steps(business)[-1]
     assert last.kind is SubscriptionEventKind.RESUMED and last.actor_id is None
     assert last.pause_until == pause_until

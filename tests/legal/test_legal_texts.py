@@ -1,6 +1,6 @@
 """
-The legal texts in docs/legal: every document in English, Russian and
-Georgian with the same sections, its version in the file name and in the
+The legal texts in docs/legal: every document in every published language
+(English today) with the same sections, its version in the file name and in the
 text, and every field still in square brackets tracked as a launch blocker
 in docs/LAUNCH.md until a lawyer has filled it.
 """
@@ -19,7 +19,7 @@ from app.registries.legal.legal_text_registry import PLACEHOLDER_PATTERN
 LEGAL_FILE: re.Pattern[str] = re.compile(
     r"^(?P<document>[a-z]+-[0-9]{4}-[0-9]{2}-[0-9]{2})\.(?P<language>[a-z]{2})\.md$"
 )
-LANGUAGES: set[str] = {"en", "ru", "ka"}
+LANGUAGES: set[str] = {"en"}
 LAUNCH_GUIDE: Path = DEFAULT_LEGAL_DOCUMENTS_DIRECTORY.parents[0] / "LAUNCH.md"
 
 

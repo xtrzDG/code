@@ -1,9 +1,10 @@
 /**
  * The privacy notice of a hosted chat in a widget language: the reviewed
- * cabinet texts in the languages owners can choose, a draft marked
- * `needs_review` in the other languages of the chat widget (Hebrew and
- * German too while their cabinet texts await a native reviewer,
- * NEEDS_REVIEW_LOCALES), English for a language with neither.
+ * cabinet texts in the languages owners can choose, the texts of
+ * `drafts*.ts` in the other languages of the chat widget (reviewed ones and
+ * drafts marked `needs_review`; Italian too while its cabinet texts await a
+ * native reviewer, NEEDS_REVIEW_LOCALES), English for a language with
+ * neither.
  */
 
 import { NEEDS_REVIEW_LOCALES, isCabinetLanguage } from "@/i18n/config";

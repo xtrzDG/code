@@ -1,7 +1,7 @@
 /**
  * `settings.*` texts of settings tabs: the data processing agreement, customer
  * data requests, the audit log, team roles and customers, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const settingsRecordsEn = {

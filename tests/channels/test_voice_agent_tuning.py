@@ -76,8 +76,11 @@ def test_a_language_without_its_own_voice_falls_back() -> None:
 
     assert registry.get(LanguageTag("ka")).tts_model == CONVERSATIONAL_MODEL
     assert registry.get(LanguageTag("ru")).tts_model == FLASH_MODEL
+    assert registry.get(LanguageTag("it")).tts_model == FLASH_MODEL
     # A regional tag takes its base language's voice.
     assert registry.get(LanguageTag("en-GB")) == registry.get(LanguageTag("en"))
+    assert registry.get(LanguageTag("it-CH")) == registry.get(LanguageTag("it"))
+    assert registry.get(LanguageTag("it-CH")).tts_model == FLASH_MODEL
     assert registry.get(LanguageTag("hy")) == DEFAULT_VOICE_PROFILE
 
 

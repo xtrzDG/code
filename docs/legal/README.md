@@ -8,14 +8,16 @@ then its base language, then English) and links it from
 `DPA_DOCUMENT_VERSION` (default `2026-10-06`); a version without a text cannot be
 accepted.
 
-Hebrew and German translation drafts (not served, not accepted, marked
-needs_review) wait in `drafts/` with the steps to publish them.
+The published texts are in English only. An Italian translation draft of the
+DPA (not served, not accepted, marked needs_review) waits in `drafts/` for a
+native-Italian lawyer, with the steps to publish it.
 
 **These texts are templates.** Before production the operator must have them
 reviewed by a lawyer for its own jurisdiction and its clients' countries, fill in
 every field in square brackets (operator details, sub-processor locations,
-notice periods, backups, governing law) and keep the three languages in line.
-A changed text is a new version: add new files with a new date and set
+notice periods, backups, governing law) and keep a published translation in
+line with the English text. A changed text is a new version: add new files
+with a new date and set
 `DPA_DOCUMENT_VERSION`, so owners accept it again. The texts are built into the
 image and `docs/**` changes do not trigger a build on Render, so set the new
 value together with a rebuild from the commit that holds the files ("Save,
@@ -31,7 +33,8 @@ a recorded file changes or disappears, and when a new file is not recorded yet.
 The fingerprint leaves out the generated sub-processor table (section 8 is
 served live and changes with notice, not with a new version). To change a text:
 
-1. Copy it to a file with a new date (all three languages) and edit the copy;
+1. Copy it to a file with a new date (every published language) and edit the
+   copy;
    for the DPA also add a short "Changes from version …" note under the title
    and set `DPA_DOCUMENT_VERSION` (the default in
    `compliance_settings_section.py` for the next release).
@@ -75,8 +78,8 @@ API serves each DPA with the table rendered from the registry, and
 still ahead. To change the list:
 
 1. Add or edit the entry in `subprocessor_entries_*.py` (name, purpose,
-   personal data and location in English, Russian and Georgian; the
-   `app/clients/` modules it covers). A removal sets `removed_on` and
+   personal data and location, in English and in the registry's other
+   languages; the `app/clients/` modules it covers). A removal sets `removed_on` and
    `removal_announced_on`; an addition after the original list sets
    `added_on` and `addition_announced_on`. The registry refuses a change
    announced less than 30 days ahead.
@@ -92,7 +95,7 @@ Every module in `app/clients/` must be named by an entry or listed in
 ## Terms, privacy policy, cookie statement
 
 `terms-<date>.<language>.md`, `privacy-<date>.<language>.md` and
-`cookies-<date>.<language>.md` (English, Russian, Georgian) are served at
+`cookies-<date>.<language>.md` (English today) are served at
 `GET /v1/legal/{terms|privacy|cookies}?language=<tag>[&version=<date>]`. The
 version in force is the file with the latest date that is not after today
 (UTC); a file with a later date is announced as `upcoming_version` and takes

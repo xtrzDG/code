@@ -1,6 +1,6 @@
 /**
  * `assistant.comparison.*` texts: an update's checks against the live
- * update's, in English: the reference that ru and ka are typed against.
+ * update's, in English: the reference that it is typed against.
  */
 
 export const assistantComparisonEn = {

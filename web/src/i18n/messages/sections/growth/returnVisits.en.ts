@@ -3,7 +3,7 @@
  * message that brings customers back (an invitation after a visit, a
  * reminder that a check is due, a note before arrival), who may get it,
  * the monthly cap, what customers read and the latest messages, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const returnVisitsEn = {

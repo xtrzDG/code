@@ -129,13 +129,16 @@ def test_steps_needed_to_go_live_cannot_be_skipped(workshop: Workshop) -> None:
 def test_texts_follow_the_requested_language(workshop: Workshop) -> None:
     assistant = create_assistant(workshop)
 
-    russian = read_setup(workshop, assistant, language="ru")
+    italian = read_setup(workshop, assistant, language="it")
     english = read_setup(workshop, assistant, language="en")
+    georgian = read_setup(workshop, assistant, language="ka")
 
-    assert russian["language"] == "ru"
-    assert step_of(russian, "business")["title"] == "Ваш бизнес"
+    assert italian["language"] == "it"
+    assert step_of(italian, "business")["title"] == "La tua attività"
     assert step_of(english, "launch")["title"] == "Go live"
     assert english["next_action"]["label"]
+    # A language the catalog lacks reads English.
+    assert step_of(georgian, "business")["title"] == "Your business"
 
 
 def test_staff_follow_the_setup_but_only_owners_skip_steps(workshop: Workshop) -> None:

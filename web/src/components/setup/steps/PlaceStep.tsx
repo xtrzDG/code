@@ -2,7 +2,8 @@
 
 /**
  * Step 2, "Where are you?": the country (prefilled from the owner's phone;
- * fixed once the business exists), the city, the address (required for
+ * fixed once the business exists), the city (required: it places the
+ * business for customers and the assistant), the address (required for
  * businesses that take bookings: customers need to find them), the
  * customer languages and the time zone. Checked on Continue. In the edit
  * mode (Assistant → Business profile) the screen passes the problems of
@@ -23,7 +24,7 @@ import { StepScreen } from "../StepScreen";
 import type { StepMode } from "../stepMode";
 import { forCountry, type PlaceForm, type PlaceValues } from "../usePlace";
 
-type Problem = "country" | "languages" | "address";
+type Problem = "country" | "city" | "languages" | "address";
 
 export type PlaceProblems = Partial<Record<Problem, boolean>>;
 
@@ -66,6 +67,7 @@ export function PlaceStep({
   const submit = () => {
     const found: Partial<Record<Problem, boolean>> = {
       country: !countryCode,
+      city: form.city.trim() === "",
       languages: languages.length === 0,
       address: isAddressRequired && form.address.trim() === "",
     };
@@ -127,7 +129,7 @@ export function PlaceStep({
                 )}
               </Field>
             )}
-            <Field label={t("tunnelBusiness.place.city")} optionalLabel={t("common.optional")}>
+            <Field label={t("tunnelBusiness.place.city")} required error={problems.city ? t("tunnelBusiness.place.errors.city") : undefined}>
               {(control) => (
                 <Input
                   {...control}
@@ -135,7 +137,10 @@ export function PlaceStep({
                   maxLength={120}
                   autoComplete="address-level2"
                   placeholder={t("tunnelBusiness.place.cityPlaceholder")}
-                  onChange={(event) => onChange({ ...form, city: event.target.value })}
+                  onChange={(event) => {
+                    onChange({ ...form, city: event.target.value });
+                    setProblems((current) => ({ ...current, city: false }));
+                  }}
                 />
               )}
             </Field>

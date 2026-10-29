@@ -7,16 +7,19 @@ from tests.localization.catalog_routes_client import read_json
 
 
 def test_countries_are_listed_in_the_requested_language(client: TestClient) -> None:
-    response = client.get("/v1/catalog/countries", params={"language": "ka"})
+    response = client.get("/v1/catalog/countries", params={"language": "it"})
 
     assert response.status_code == 200
     body = read_json(response)
-    assert body["display_language"] == "ka"
+    assert body["display_language"] == "it"
     assert len(body["countries"]) >= 200
+    italy = next(c for c in body["countries"] if c["country_code"] == "IT")
     georgia = next(c for c in body["countries"] if c["country_code"] == "GE")
-    assert georgia["display_name"] == "საქართველო"
-    assert georgia["calling_code"] == 995
-    assert georgia["onboarding_status"] == "pilot"
+    assert italy["display_name"] == "Italia"
+    assert italy["calling_code"] == 39
+    assert italy["onboarding_status"] == "pilot"
+    assert georgia["display_name"] == "Georgia"
+    assert georgia["onboarding_status"] == "supported"
 
 
 def test_language_defaults_to_english_and_is_normalized(client: TestClient) -> None:
@@ -79,13 +82,13 @@ def test_plans_route_quotes_lari_for_georgia_and_dollars_for_the_usa(
     client: TestClient,
 ) -> None:
     georgia = read_json(
-        client.get("/v1/catalog/plans", params={"country_code": "GE", "language": "ru"})
+        client.get("/v1/catalog/plans", params={"country_code": "GE", "language": "it"})
     )
     usa = read_json(client.get("/v1/catalog/plans", params={"country_code": "us"}))
     japan = read_json(client.get("/v1/catalog/plans", params={"country_code": "JP"}))
 
     voice = next(q for q in georgia["quotes"] if q["plan_key"] == "voice_and_chat")
-    assert voice["name"] == "Голос + чат"
+    assert voice["name"] == "Voce + chat"
     assert voice["local_monthly_price"]["money"] == {
         "amount_minor": 51700,
         "currency_code": "GEL",

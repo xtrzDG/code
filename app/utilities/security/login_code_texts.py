@@ -39,6 +39,8 @@ LOGIN_CODE_SMS: LocalizedText = build_localized_text(
     fr="Code de connexion Assistant Workshop : {code}. Valable {minutes} min. "
     "Ne le partagez pas.",
     es="Assistant Workshop: código {code}, válido {minutes} min. No lo compartas.",
+    it="Assistant Workshop: codice di accesso {code}, valido {minutes} min. "
+    "Non condividerlo.",
 )
 
 LOGIN_CODE_EMAIL_SUBJECT: LocalizedText = build_localized_text(
@@ -52,6 +54,7 @@ LOGIN_CODE_EMAIL_SUBJECT: LocalizedText = build_localized_text(
     de="Ihr Anmeldecode: {code}",
     fr="Votre code de connexion : {code}",
     es="Tu código de acceso: {code}",
+    it="Il tuo codice di accesso: {code}",
 )
 
 # Paragraphs are separated by an empty line; the HTML version keeps them.
@@ -106,6 +109,11 @@ LOGIN_CODE_EMAIL_BODY: LocalizedText = build_localized_text(
     "Es válido durante {minutes} minutos. No lo compartas con nadie: nuestro "
     "equipo nunca te lo pedirá.\n\n"
     "Si no intentaste iniciar sesión, ignora este correo.",
+    it="Ciao!\n\n"
+    "Il tuo codice di accesso ad Assistant Workshop:\n\n{code}\n\n"
+    "È valido per {minutes} minuti. Non condividerlo con nessuno: il nostro "
+    "team non lo chiede mai.\n\n"
+    "Se non hai provato ad accedere, ignora questa e-mail.",
 )
 
 

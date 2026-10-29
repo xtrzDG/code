@@ -2,7 +2,7 @@
  * `inboxCard.*` texts of a conversation in the team inbox: the folded
  * header, the quick actions, what waits in it, the details and notes
  * panels, quick replies and the technical details, in English: the
- * reference that ru and ka are typed against. Wording follows
+ * reference that it is typed against. Wording follows
  * docs/glossary.md.
  */
 

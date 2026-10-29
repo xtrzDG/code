@@ -11,20 +11,11 @@
 
 import type { Translation } from "../../translate";
 import { applyChangesEn } from "./assistant/applyChanges.en";
-import { applyChangesKa } from "./assistant/applyChanges.ka";
-import { applyChangesRu } from "./assistant/applyChanges.ru";
 import { teachingEn } from "./assistant/teaching.en";
-import { teachingKa } from "./assistant/teaching.ka";
-import { teachingRu } from "./assistant/teaching.ru";
 import { updatesEn } from "./assistant/updates.en";
-import { updatesKa } from "./assistant/updates.ka";
-import { updatesRu } from "./assistant/updates.ru";
-import { applyChangesHe } from "./assistant/applyChanges.he";
-import { applyChangesDe } from "./assistant/applyChanges.de";
-import { teachingHe } from "./assistant/teaching.he";
-import { teachingDe } from "./assistant/teaching.de";
-import { updatesHe } from "./assistant/updates.he";
-import { updatesDe } from "./assistant/updates.de";
+import { applyChangesIt } from "./assistant/applyChanges.it";
+import { teachingIt } from "./assistant/teaching.it";
+import { updatesIt } from "./assistant/updates.it";
 
 export const assistantFlowEn = {
   applyChanges: applyChangesEn,
@@ -32,26 +23,8 @@ export const assistantFlowEn = {
   updates: updatesEn,
 } as const;
 
-export const assistantFlowRu: Translation<typeof assistantFlowEn> = {
-  applyChanges: applyChangesRu,
-  teaching: teachingRu,
-  updates: updatesRu,
-};
-
-export const assistantFlowKa: Translation<typeof assistantFlowEn> = {
-  applyChanges: applyChangesKa,
-  teaching: teachingKa,
-  updates: updatesKa,
-};
-
-export const assistantFlowHe: Translation<typeof assistantFlowEn> = {
-  applyChanges: applyChangesHe,
-  teaching: teachingHe,
-  updates: updatesHe,
-};
-
-export const assistantFlowDe: Translation<typeof assistantFlowEn> = {
-  applyChanges: applyChangesDe,
-  teaching: teachingDe,
-  updates: updatesDe,
+export const assistantFlowIt: Translation<typeof assistantFlowEn> = {
+  applyChanges: applyChangesIt,
+  teaching: teachingIt,
+  updates: updatesIt,
 };

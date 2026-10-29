@@ -1,7 +1,7 @@
 /**
  * `growthValue.*` texts: the bookings the waitlist filled and those the
  * return-visit messages brought back, as their own lines of the value
- * hero and the reports, in English: the reference that ru and ka are
+ * hero and the reports, in English: the reference that it is
  * typed against.
  */
 

@@ -15,7 +15,7 @@ import { HostedChatNotice, HostedChatShell } from "../_components/HostedChatShel
 import { chatLanguage, visitorLanguage, type PageLanguage } from "../_lib/hostedChatRequest";
 import { PRIVACY_NOTICE_DRAFTS, privacyNoticeFor } from "./_texts/privacyNoticeTexts";
 
-const REVIEWED_LANGUAGES = ["en", "ru", "ka"];
+const REVIEWED_LANGUAGES = ["en"];
 
 async function lookUp(slug: string): Promise<HostedChatLookup> {
   return lookUpHostedChat(slug, await headers());

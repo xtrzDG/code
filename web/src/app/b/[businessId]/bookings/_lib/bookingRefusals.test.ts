@@ -2,14 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { describeError, parseApiError } from "@/api/errors";
 import { en } from "@/i18n/messages/en";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 import { createTranslator } from "@/i18n/translate";
 
 import { BOOKING_REFUSAL_MESSAGES } from "./bookingRefusals";
 
 describe("booking refusals in the user's language", () => {
-  const russian = createTranslator("ru", ru, en);
-  const tRu = russian.t;
+  const english = createTranslator("en", en);
+  const translator = createTranslator("it", italian, en);
+  const tIt = translator.t;
   const closedBody = {
     error: "validation_failed",
     message: "The business is closed at that time on 2026-12-31 (outside opening hours or a holiday).",
@@ -17,9 +18,9 @@ describe("booking refusals in the user's language", () => {
   };
 
   it("names the reason instead of a generic title and the English sentence", () => {
-    const description = describeError(parseApiError(422, closedBody), russian, undefined, BOOKING_REFUSAL_MESSAGES);
+    const description = describeError(parseApiError(422, closedBody), translator, undefined, BOOKING_REFUSAL_MESSAGES);
 
-    expect(description.title).toBe("2026-12-31 в это время заведение закрыто: вне часов работы или праздничный день.");
+    expect(description.title).toBe("Il 2026-12-31 a quell'ora l'attività è chiusa: fuori dagli orari di apertura o per festività.");
     expect(description.detail).toBeNull();
   });
 
@@ -35,16 +36,17 @@ describe("booking refusals in the user's language", () => {
       "unknown_service",
     ]) {
       const error = parseApiError(422, { error: "validation_failed", message: "x", reasons: [{ code, message: "x", details: ["4"] }] });
-      const { title } = describeError(error, russian, undefined, BOOKING_REFUSAL_MESSAGES);
-      expect(title).not.toBe(tRu("errors.codes.validation_failed"));
-      expect(title).not.toMatch(/[A-Za-z]{4}/);
+      const { title } = describeError(error, translator, undefined, BOOKING_REFUSAL_MESSAGES);
+      expect(title).not.toBe(tIt("errors.codes.validation_failed"));
+      // Its own text, not the English one through the fallback.
+      expect(title).not.toBe(describeError(error, english, undefined, BOOKING_REFUSAL_MESSAGES).title);
     }
   });
 
   it("falls back to the generic text without a known reason", () => {
     const error = parseApiError(422, { error: "validation_failed", message: "Odd" });
-    expect(describeError(error, russian, undefined, BOOKING_REFUSAL_MESSAGES)).toEqual({
-      title: tRu("errors.codes.validation_failed"),
+    expect(describeError(error, translator, undefined, BOOKING_REFUSAL_MESSAGES)).toEqual({
+      title: tIt("errors.codes.validation_failed"),
       detail: "Odd",
       requestId: null,
     });

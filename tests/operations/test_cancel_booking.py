@@ -21,6 +21,13 @@ from tests.operations.booked_restaurant import PHONE, BookedRestaurant
 class TestCancel:
     def test_customer_cancels_by_id_with_policy_and_staff_notice(self) -> None:
         restaurant = BookedRestaurant()
+        nino, daniel, anna = restaurant.business.manager_contacts
+        restaurant.business.manager_contacts = [
+            nino.model_copy(update={"language": LanguageTag("it")}),
+            daniel,
+            anna,
+        ]
+        restaurant.world.business_repo.save(restaurant.business)
 
         text = restaurant.cancel(
             booking_id=restaurant.dinner.id, contact_id=restaurant.customer.id
@@ -33,10 +40,12 @@ class TestCancel:
         titles = sorted(
             str(text).split("\n")[0] for _, text in restaurant.world.notifier.sent
         )
+        # Nino reads Italian; Daniel's Russian is not an owner language, so he
+        # reads English like Anna.
         assert titles == [
             "Booking cancelled · Salobie Bia",
-            "Бронь отменена · Salobie Bia",
-            "ჯავშანი გაუქმდა · Salobie Bia",
+            "Booking cancelled · Salobie Bia",
+            "Prenotazione annullata · Salobie Bia",
         ]
         assert [booking.id for booking in restaurant.world.calendar_sync.synced] == [
             restaurant.dinner.id

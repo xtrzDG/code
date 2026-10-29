@@ -2,7 +2,7 @@
  * `adminActions.*` texts of the admin client page's account actions (a
  * longer trial, a discount, credit, the setup fee waived, a payment
  * recorded by hand, a plan set by hand) and of what the team granted, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const adminActionsEn = {

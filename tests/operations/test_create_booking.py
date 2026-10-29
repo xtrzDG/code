@@ -12,6 +12,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.operations.builders import seconds
 from tests.operations.fakes import RecordingManagerNotifier
 from tests.operations.operations_world import OperationsWorld
@@ -64,6 +65,13 @@ def test_contact_details_are_updated_and_audited() -> None:
 
 def test_every_manager_is_notified_in_their_language() -> None:
     restaurant = Restaurant()
+    nino, daniel, anna = restaurant.business.manager_contacts
+    restaurant.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        daniel,
+        anna,
+    ]
+    restaurant.world.business_repo.save(restaurant.business)
 
     restaurant.book(restaurant.command())
 
@@ -71,11 +79,20 @@ def test_every_manager_is_notified_in_their_language() -> None:
         str(contact.language): str(text)
         for contact, text in restaurant.world.notifier.sent
     }
-    assert set(texts) == {"ka", "ru", "en"}
-    assert texts["ka"].startswith("ახალი ჯავშანი · Salobie Bia")
-    assert texts["ru"].startswith("Новая бронь · Salobie Bia")
-    assert "Телефон: +995 555 12 34 56" in texts["ru"]
-    assert "Пожелания: Window seat" in texts["ru"]
+    assert set(texts) == {"it", "ru", "en"}
+    assert texts["it"] == (
+        "Nuova prenotazione · Salobie Bia\n"
+        "martedì 6 ottobre 2026, 19:00–21:00 · Table 4\n"
+        "Nome: Giorgi Beridze\n"
+        "Telefono: +995 555 12 34 56\n"
+        "Persone: 4\n"
+        "Canale: WhatsApp\n"
+        "Note: Window seat"
+    )
+    # Russian is not in the catalog: that contact reads the English details.
+    assert texts["ru"].startswith("New booking · Salobie Bia")
+    assert "Phone: +995 555 12 34 56" in texts["ru"]
+    assert "Notes: Window seat" in texts["ru"]
     # E-mail gets the brief: when and how many, nothing about the customer.
     assert texts["en"] == (
         "New booking · Salobie Bia\nTuesday, October 6, 2026, 19:00–21:00 · guests: 4"

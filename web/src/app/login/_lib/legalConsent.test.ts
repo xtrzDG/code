@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 
 import { acceptedTermsBody, preferConsentVersions, splitConsentLine } from "./legalConsent";
 
@@ -18,7 +17,7 @@ describe("splitConsentLine", () => {
   });
 
   it("follows each language's own order and names both documents", () => {
-    for (const messages of [en, ru, ka]) {
+    for (const messages of [en, italian]) {
       const documents = splitConsentLine(messages.legalConsent.line)
         .filter((part) => part.kind === "document")
         .map((part) => (part.kind === "document" ? part.document : null));

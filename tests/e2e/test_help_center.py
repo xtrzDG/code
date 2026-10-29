@@ -31,13 +31,13 @@ def workshop() -> Iterator[Workshop]:
 
 
 def test_the_help_center_is_public_and_grouped_by_topic(workshop: Workshop) -> None:
-    response = workshop.client.get("/v1/help/ru")
+    response = workshop.client.get("/v1/help/it")
 
     assert response.status_code == 200, response.text
     assert response.headers["cache-control"] == "public, max-age=300"
     view: JsonObject = response.json()
-    assert view["language"] == "ru"
-    assert view["available_languages"] == ["de", "en", "he", "ka", "ru"]
+    assert view["language"] == "it"
+    assert view["available_languages"] == ["en", "it"]
     assert [topic["topic"] for topic in view["topics"]] == [
         "getting_started",
         "channels",
@@ -50,15 +50,15 @@ def test_the_help_center_is_public_and_grouped_by_topic(workshop: Workshop) -> N
 def test_an_article_opens_in_the_language_asked_or_english(
     workshop: Workshop,
 ) -> None:
-    georgian = workshop.client.get("/v1/help/ka/call-forwarding")
-    german = workshop.client.get("/v1/help/de-AT/call-forwarding")
+    italian = workshop.client.get("/v1/help/it/call-forwarding")
+    swiss = workshop.client.get("/v1/help/it-CH/call-forwarding")
     french = workshop.client.get("/v1/help/fr-FR/call-forwarding")
 
-    assert georgian.status_code == 200, georgian.text
-    assert georgian.json()["title"] == "ზარების გადამისამართება"
-    assert "**61*" in georgian.json()["markdown"]
-    assert german.json()["language"] == "de"
-    assert "**61*" in german.json()["markdown"]
+    assert italian.status_code == 200, italian.text
+    assert italian.json()["title"] == "Inoltro di chiamata"
+    assert "**61*" in italian.json()["markdown"]
+    assert swiss.json()["language"] == "it"
+    assert "**61*" in swiss.json()["markdown"]
     assert french.json()["language"] == "en"
     assert french.json()["title"] == "Call forwarding"
     assert [card["slug"] for card in french.json()["related"]] == ["channels", "inbox"]
@@ -75,9 +75,10 @@ def test_unknown_articles_and_languages_are_not_found(
 
 
 def test_search_finds_word_forms_and_needs_words(workshop: Workshop) -> None:
-    found = workshop.client.get("/v1/help/ru/search", params={"q": "переадресацию"})
-    empty = workshop.client.get("/v1/help/ru/search", params={"q": "  "})
-    missing = workshop.client.get("/v1/help/ru/search")
+    # The plural finds the keyword "deviazione di chiamata".
+    found = workshop.client.get("/v1/help/it/search", params={"q": "deviazioni"})
+    empty = workshop.client.get("/v1/help/it/search", params={"q": "  "})
+    missing = workshop.client.get("/v1/help/it/search")
 
     assert found.status_code == 200, found.text
     assert found.json()["items"][0]["slug"] == "call-forwarding"

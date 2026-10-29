@@ -15,8 +15,10 @@ describe("first-touch attribution", () => {
     expect(isAttributionPage("/")).toBe(true);
     expect(isAttributionPage("/c/cafe-batumi")).toBe(true);
     // "/?ref=…" redirects to the site in the reader's language with the same query.
-    expect(isAttributionPage("/ru")).toBe(true);
-    expect(isAttributionPage("/ka/restaurants")).toBe(true);
+    expect(isAttributionPage("/it")).toBe(true);
+    expect(isAttributionPage("/en/for/restaurant")).toBe(true);
+    // A language the site no longer has is not one of its pages.
+    expect(isAttributionPage("/ru")).toBe(false);
     expect(isAttributionPage("/rules")).toBe(false);
     expect(isAttributionPage("/login")).toBe(false);
     expect(isAttributionPage("/b/biz_1/overview")).toBe(false);

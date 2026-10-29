@@ -28,7 +28,7 @@ function answer(...views: (AuditChainStatusView | Promise<unknown>)[]) {
   });
 }
 
-function renderStrip(locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function renderStrip(locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <AuditChainStrip />
@@ -42,7 +42,7 @@ describe("AuditChainStrip: the tamper check on Settings → Audit", () => {
     queryCache.clear();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("says an intact log was checked, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("says an intact log was checked, in %s", async (locale) => {
     const { t } = textsIn(locale);
     answer({ status: "intact", verified_through_position: 214, entries_checked: 3, checked_at: CHECKED });
     renderStrip(locale);
@@ -79,7 +79,7 @@ describe("AuditChainStrip: the tamper check on Settings → Audit", () => {
     expect(screen.getByText(t("auditChain.purgedThrough", { position: "1,200" }))).toBeTruthy();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)(
+  it.each(["en", "it"] as const)(
     "does not call a log with no sealed entry intact, in %s",
     async (locale) => {
       const { t } = textsIn(locale);

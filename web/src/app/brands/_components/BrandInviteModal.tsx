@@ -46,7 +46,7 @@ function InviteFormBody({ onClose, brandId, locations }: { onClose: () => void; 
   const [form, setForm] = useState<InviteForm>({
     method: "phone",
     phone: "",
-    countryHint: locations[0]?.country_code ?? "GE",
+    countryHint: locations[0]?.country_code ?? "IT",
     email: "",
     displayName: "",
     role: "regional_manager",

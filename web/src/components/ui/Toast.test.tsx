@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/api/errors";
-import { renderInLocale } from "@/test/render";
+import { renderInLocale, textsIn } from "@/test/render";
 
 import { UNDO_WINDOW_MS, useToast, type ToastApi } from "./Toast";
 
@@ -76,14 +76,14 @@ describe("Toast", () => {
   });
 
   it("speaks Undo in the interface language", () => {
-    renderInLocale(<Grab />, { locale: "ka" });
+    renderInLocale(<Grab />, { locale: "it" });
     show((api) => api.undoable("…", () => undefined));
 
-    expect(screen.getByRole("button", { name: "გაუქმება" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: textsIn("it").t("common.undo") })).toBeTruthy();
   });
 
   it("announces an error as an alert in the interface language, with its request id", () => {
-    renderInLocale(<Grab />, { locale: "ru" });
+    renderInLocale(<Grab />, { locale: "it" });
     show((api) => api.error(new ApiError({ status: 500, code: "internal_error", detail: "boom", requestId: "req_42" })));
 
     const alert = screen.getByRole("alert");

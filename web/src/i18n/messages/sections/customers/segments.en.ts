@@ -1,7 +1,7 @@
 /**
  * `segments.*` texts: saved groups of customers by tag, last visit,
  * booking count and VIP mark, their members and their CSV, in English:
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const segmentsEn = {

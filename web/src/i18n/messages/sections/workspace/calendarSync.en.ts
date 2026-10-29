@@ -2,7 +2,7 @@
  * `calendarSync.*` texts of a resource's calendars (Knowledge → Resources:
  * the Google calendar, imported iCal calendars, the shared address, a
  * booking system, the busy times ahead) and of Settings → Integrations, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const calendarSyncEn = {

@@ -78,12 +78,19 @@ export function numberFormat(locale: string, options: Intl.NumberFormatOptions =
   return formatter;
 }
 
+/**
+ * Digits are grouped from the thousands on in every language unless the
+ * caller says otherwise: CLDR leaves a four-digit Italian or Spanish number
+ * ungrouped ("1728 €"), but not every browser's data agrees with the
+ * server's ("1.728 €" in Chrome), and the page would change its text when
+ * React hydrates it.
+ */
 function makeNumberFormat(locale: string, options: Intl.NumberFormatOptions): NumberFormatter {
   const georgian = isGeorgianLocale(locale) ? georgianNumberFormat(options) : null;
   if (georgian) {
     return { format: georgian };
   }
-  const native = new Intl.NumberFormat(locale, options);
+  const native = new Intl.NumberFormat(locale, { useGrouping: "always", ...options });
   return { format: (value) => native.format(value) };
 }
 

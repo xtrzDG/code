@@ -10,9 +10,9 @@ import { ReplyChoices } from "./ReplyChoices";
 describe("ReplyChoices", () => {
   it("sends the tapped option as the customer's message", async () => {
     const onChoose = vi.fn();
-    renderInLocale(<ReplyChoices choices={["18:00", "19:30"]} onChoose={onChoose} isSending={false} />, { locale: "ru" });
+    renderInLocale(<ReplyChoices choices={["18:00", "19:30"]} onChoose={onChoose} isSending={false} />, { locale: "it" });
 
-    const group = screen.getByRole("group", { name: textsIn("ru").t("assistant.chat.choicesLabel") });
+    const group = screen.getByRole("group", { name: textsIn("it").t("assistant.chat.choicesLabel") });
     expect(group.textContent).toBe("18:0019:30");
     await userEvent.click(screen.getByRole("button", { name: "19:30" }));
 

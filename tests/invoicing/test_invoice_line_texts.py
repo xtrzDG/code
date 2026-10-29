@@ -1,6 +1,7 @@
 """
 The invoice line in the languages of the PDFs: worded once at issue in
-English, Russian and Georgian without its dates, printed in the page's
+every reviewed language (English today: the Italian catalog is a draft, and
+a draft never reaches an invoice) without its dates, printed in the page's
 language (never another one), shown in the cabinet's language, and the
 issued line for an invoice from before the PDFs.
 """
@@ -48,7 +49,7 @@ def line_input(
 ) -> InvoiceDescriptionInput:
     return InvoiceDescriptionInput(
         kind=kind,
-        language=LanguageTag("ka"),
+        language=LanguageTag("it"),
         timezone=TimezoneName("Asia/Tbilisi"),
         plan_names=PLANS[plan_key].names,
         billing_period=billing_period,
@@ -66,38 +67,34 @@ def word(description_input: InvoiceDescriptionInput) -> dict[str, str]:
 
 
 def test_a_service_period_names_the_plan_and_its_billing_period_without_dates() -> None:
+    # English is the only reviewed language: an Italian owner's invoice has
+    # no Italian line (a draft never reaches an invoice).
     assert word(line_input(InvoiceKind.SERVICE_PERIOD)) == {
         "en": "Call and message handling service — Voice + chat, monthly",
-        "ru": "Услуга приёма и обработки обращений — Голос + чат, помесячно",
-        "ka": "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
-        "ხმა + ჩატი, ყოველთვიური",
     }
 
 
 @pytest.mark.parametrize(
-    ("kind", "minutes", "english", "russian"),
+    ("kind", "minutes", "english"),
     [
         (
             InvoiceKind.SETUP_FEE,
             None,
             "Call and message handling service — setup",
-            "Услуга приёма и обработки обращений — подключение",
         ),
         (
             InvoiceKind.USAGE_OVERAGE,
             1234,
             "Call and message handling service — 1,234 call minutes above the package",
-            "Услуга приёма и обработки обращений — 1\xa0234 мин. звонков сверх пакета",
         ),
     ],
 )
 def test_the_setup_fee_and_the_overage_lines(
-    kind: InvoiceKind, minutes: int | None, english: str, russian: str
+    kind: InvoiceKind, minutes: int | None, english: str
 ) -> None:
     worded = word(line_input(kind, minutes=minutes))
 
-    assert (worded["en"], worded["ru"]) == (english, russian)
-    assert set(worded) == {"en", "ru", "ka"}
+    assert worded == {"en": english}
 
 
 def test_the_demo_salon_invoice_reads_as_the_platform_words_it() -> None:
@@ -138,8 +135,8 @@ def test_an_issued_invoice_prints_and_shows_its_line_in_the_readers_language() -
     invoice = world.testbed.invoices(world.business.id)[0]
     documents = build_document_world(world, HtmlEchoRenderer()).documents
 
-    russian_page = documents.produce(
-        world.business, invoice, BillingDocumentKind.INVOICE, LanguageTag("ru")
+    italian_page = documents.produce(
+        world.business, invoice, BillingDocumentKind.INVOICE, LanguageTag("it")
     ).content.decode()
     overview = world.testbed.get_overview.run(
         BillingOverviewQuery(
@@ -150,10 +147,10 @@ def test_an_issued_invoice_prints_and_shows_its_line_in_the_readers_language() -
     )
 
     assert str(world.business.owner_language) == "ka"
-    assert "Услуга приёма и обработки обращений — Голос + чат, помесячно" in (
-        russian_page
-    )
-    assert "მომსახურება" not in russian_page
+    # An Italian reader gets the English page: a draft never reaches an invoice.
+    assert '<html lang="en">' in italian_page
+    assert "Call and message handling service — Voice + chat, monthly" in (italian_page)
+    assert "Servizio" not in italian_page and "მომსახურება" not in italian_page
     assert str(overview.invoices[0].description) == (
         "Call and message handling service — Voice + chat, monthly"
     )

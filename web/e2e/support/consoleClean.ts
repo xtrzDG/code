@@ -8,12 +8,14 @@
  *     as an error or a warning: never acceptable, `allow` cannot hide it.
  *
  * And, with `cyrillicCheck` (on by default; E2E_CYRILLIC_CHECK=0 or
- * `test.use({ cyrillicCheck: false })` turns it off), an English or
- * Georgian page whose interface shows Cyrillic text at the end of a test
- * fails too: an untranslated text of the cabinet. User content is left
- * out: anything marked `data-user-content` (the cabinet marks names,
- * messages, knowledge, notes and the like, `UserContent`/`UserSentence`
- * in the UI kit), form fields, code and text marked with another `lang`.
+ * `test.use({ cyrillicCheck: false })` turns it off), a cabinet page whose
+ * interface shows Cyrillic, Georgian or Hebrew text at the end of a test
+ * fails too: no cabinet language (English, Italian) is written in those
+ * scripts, so it is an untranslated text. User content is left out:
+ * anything marked `data-user-content` (the cabinet marks names, messages,
+ * knowledge, notes and the like, `UserContent`/`UserSentence` in the UI
+ * kit), form fields, code and text marked with another `lang` (a
+ * customer's language on a hosted chat page, a language's own name).
  */
 
 import type { BrowserContext, ConsoleMessage, Page } from "@playwright/test";
@@ -64,16 +66,19 @@ export function unexpectedErrors(record: ConsoleRecord, allowed: readonly RegExp
 }
 
 /**
- * Interface text in Cyrillic on an English or Georgian page (empty on a
- * Russian page): visible text nodes outside user content.
+ * Interface text in Cyrillic, Georgian or Hebrew letters on a cabinet page
+ * (one in a cabinet language or in the pseudo-locale; a page in another
+ * language is a customer's and is left alone): visible text nodes outside
+ * user content.
  */
-export async function strayCyrillic(page: Page): Promise<string[]> {
+export async function strayScripts(page: Page): Promise<string[]> {
   if (page.isClosed()) {
     return [];
   }
   return page.evaluate(() => {
-    const pageLanguage = (document.documentElement.lang || "en").slice(0, 2);
-    if (pageLanguage === "ru") {
+    const lang = document.documentElement.lang || "en";
+    const pageLanguage = lang.slice(0, 2);
+    if (!["en", "it"].includes(pageLanguage) && lang !== "ar-XB") {
       return [];
     }
     const userContent = "[data-user-content], input, textarea, select, option, [contenteditable], script, style, noscript, code, pre";
@@ -83,7 +88,7 @@ export async function strayCyrillic(page: Page): Promise<string[]> {
       const node = walker.currentNode;
       const text = (node.textContent ?? "").replace(/\s+/g, " ").trim();
       const element = node.parentElement;
-      if (!text || !element || !/[Ѐ-ӿ]/.test(text) || element.closest(userContent)) {
+      if (!text || !element || !/[Ѐ-ӿႠ-ჿ֐-׿]/.test(text) || element.closest(userContent)) {
         continue;
       }
       // Text the page marks as another language (a language's own name, a customer's message).

@@ -1,6 +1,6 @@
 /**
  * `setup.*` texts: "Create an AI assistant", what the cabinet shows before
- * the assistant exists, in English: the reference that ru and ka are typed
+ * the assistant exists, in English: the reference that it is typed
  * against.
  */
 

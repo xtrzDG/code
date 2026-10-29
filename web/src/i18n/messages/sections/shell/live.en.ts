@@ -1,7 +1,7 @@
 /**
  * `live.*` texts: the live cabinet (pages that update by themselves, the
  * "Updated just now" line, the chime and announcement when a customer
- * needs a person), in English: the reference that ru and ka are typed
+ * needs a person), in English: the reference that it is typed
  * against.
  */
 

@@ -1,7 +1,7 @@
 /**
  * `value.*` texts: what the assistant is worth (the owner's hero on the
  * dashboard, the average check, the change chips) and a staff member's
- * queue of the day, in English: the reference that ru and ka are typed
+ * queue of the day, in English: the reference that it is typed
  * against.
  */
 

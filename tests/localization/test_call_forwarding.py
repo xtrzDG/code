@@ -34,15 +34,15 @@ from tests.localization.cabinet_builders import (
     build_cabinet_world,
 )
 
-GEORGIAN_ASSISTANT_NUMBER: str = "+995322123456"
+ITALIAN_ASSISTANT_NUMBER: str = "+390212345678"
 
 
-def build_georgian_world() -> tuple[CabinetWorld, BusinessDocument, UserId, UserId]:
+def build_italian_world() -> tuple[CabinetWorld, BusinessDocument, UserId, UserId]:
     world = build_cabinet_world()
     owner_id, staff_id = UserId(), UserId()
-    business = build_business(owner_id, "GE", "ka", staff_ids=[staff_id])
+    business = build_business(owner_id, "IT", "it", staff_ids=[staff_id])
     world.business_repo.save(business)
-    add_phone_channel(world, business, GEORGIAN_ASSISTANT_NUMBER)
+    add_phone_channel(world, business, ITALIAN_ASSISTANT_NUMBER)
     return world, business, owner_id, staff_id
 
 
@@ -61,38 +61,40 @@ def request_instructions(
     )
 
 
-def test_georgian_owner_gets_codes_and_carriers_in_georgian() -> None:
-    world, business, owner_id, _ = build_georgian_world()
+def test_italian_owner_gets_codes_and_carriers_in_italian() -> None:
+    world, business, owner_id, _ = build_italian_world()
 
     instructions = request_instructions(world, business, owner_id)
 
-    assert instructions.display_language == "ka"
-    assert instructions.country_code == "GE"
-    assert instructions.assistant_phone_number == GEORGIAN_ASSISTANT_NUMBER
-    assert instructions.assistant_phone_number_display == "+995 32 212 34 56"
+    assert instructions.display_language == "it"
+    assert instructions.country_code == "IT"
+    assert instructions.assistant_phone_number == ITALIAN_ASSISTANT_NUMBER
+    assert instructions.assistant_phone_number_display == "+39 02 1234 5678"
     assert {code.condition: str(code.dial_code) for code in instructions.codes} == {
-        CallForwardingCondition.NO_ANSWER: "**61*+995322123456#",
-        CallForwardingCondition.BUSY: "**67*+995322123456#",
-        CallForwardingCondition.UNREACHABLE: "**62*+995322123456#",
+        CallForwardingCondition.NO_ANSWER: "**61*+390212345678#",
+        CallForwardingCondition.BUSY: "**67*+390212345678#",
+        CallForwardingCondition.UNREACHABLE: "**62*+390212345678#",
         CallForwardingCondition.CANCEL_ALL: "##002#",
     }
     assert all(
         type(code.dial_code) is CallForwardingDialCode for code in instructions.codes
     )
     assert [str(carrier.carrier_name) for carrier in instructions.carriers] == [
-        "Magti",
-        "Silknet",
-        "Cellfie",
+        "TIM",
+        "Vodafone",
+        "WindTre",
+        "Iliad",
     ]
     for carrier in instructions.carriers:
         assert [code.dial_code for code in carrier.codes] == [
             code.dial_code for code in instructions.codes
         ]
+        # Not confirmed with the carriers yet: the note says so, in Italian.
         assert carrier.note is not None
-    assert "*61" in str(instructions.carriers[0].note)
-    assert "Silknet" in str(instructions.carriers[1].note)
-    assert "აკრიფეთ **61*+995322123456#" in instructions.steps[1]
-    assert "+995 32 212 34 56" in instructions.steps[1]
+        assert "non ancora confermati" in str(carrier.note)
+    assert "TIM" in str(instructions.carriers[0].note)
+    assert "Componi **61*+390212345678#" in instructions.steps[1]
+    assert "+39 02 1234 5678" in instructions.steps[1]
     assert any("##002#" in note for note in instructions.notes)
     assert all(type(step) is InstructionText for step in instructions.steps)
     assert all("{" not in step for step in [*instructions.steps, *instructions.notes])
@@ -101,18 +103,16 @@ def test_georgian_owner_gets_codes_and_carriers_in_georgian() -> None:
 @pytest.mark.parametrize(
     ("language", "expected_fragment"),
     [
-        ("ru", "Наберите **61*+995322123456#"),
-        ("en", "Dial **61*+995322123456#"),
-        ("de", "Wählen Sie **61*+995322123456#"),
-        ("he", "חייגו **61*+995322123456#"),
-        ("ru-GE", "Наберите **61*+995322123456#"),
+        ("it", "Componi **61*+390212345678#"),
+        ("en", "Dial **61*+390212345678#"),
+        ("it-CH", "Componi **61*+390212345678#"),
     ],
 )
 def test_instructions_follow_the_requested_language(
     language: str,
     expected_fragment: str,
 ) -> None:
-    world, business, owner_id, _ = build_georgian_world()
+    world, business, owner_id, _ = build_italian_world()
 
     instructions = request_instructions(world, business, owner_id, language)
 
@@ -121,7 +121,7 @@ def test_instructions_follow_the_requested_language(
 
 
 def test_staff_may_read_instructions_and_strangers_may_not() -> None:
-    world, business, _, staff_id = build_georgian_world()
+    world, business, _, staff_id = build_italian_world()
 
     assert request_instructions(world, business, staff_id).codes != []
     with pytest.raises(NotFoundError):
@@ -129,7 +129,7 @@ def test_staff_may_read_instructions_and_strangers_may_not() -> None:
 
 
 def test_platform_support_without_an_open_look_is_refused() -> None:
-    world, business, _, _ = build_georgian_world()
+    world, business, _, _ = build_italian_world()
     admin = platform_admin("ru")
     world.user_repo.save(admin)
 
@@ -154,18 +154,24 @@ def test_other_countries_get_standard_gsm_codes_without_carriers() -> None:
     assert any("other codes" in note for note in instructions.notes)
 
 
-def test_hebrew_owner_reads_hebrew_steps() -> None:
+def test_an_owner_language_the_cabinet_lacks_reads_english_steps() -> None:
     world = build_cabinet_world()
     owner_id = UserId()
-    business = build_business(owner_id, "IL", "he")
+    business = build_business(owner_id, "GE", "ka")
     world.business_repo.save(business)
-    add_phone_channel(world, business, "+97221234567")
+    add_phone_channel(world, business, "+995322123456")
 
     instructions = request_instructions(world, business, owner_id)
 
-    assert instructions.display_language == "he"
-    assert instructions.codes[0].dial_code == "**61*+97221234567#"
-    assert instructions.steps[0].startswith("קחו את הטלפון")
+    # The owner's language is kept as asked; its texts fall back to English.
+    assert instructions.display_language == "ka"
+    assert instructions.codes[0].dial_code == "**61*+995322123456#"
+    assert instructions.steps[0].startswith("Take the phone")
+    assert [str(carrier.carrier_name) for carrier in instructions.carriers] == [
+        "Magti",
+        "Silknet",
+        "Cellfie",
+    ]
 
 
 def test_business_without_assistant_number_is_told_to_connect_the_phone() -> None:
@@ -190,7 +196,7 @@ def test_another_business_phone_channel_is_never_used() -> None:
     other_business = build_business(UserId(), "GE", "ka")
     world.business_repo.save(business)
     world.business_repo.save(other_business)
-    add_phone_channel(world, other_business, GEORGIAN_ASSISTANT_NUMBER)
+    add_phone_channel(world, other_business, ITALIAN_ASSISTANT_NUMBER)
 
     with pytest.raises(ValidationFailedError):
         request_instructions(world, business, owner_id)

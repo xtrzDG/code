@@ -47,7 +47,7 @@ def test_georgia_matches_the_concept_exactly() -> None:
     assert tags(georgia.on_request_customer_languages) == ["tr", "he", "ar", "hy"]
     assert georgia.default_owner_language == "ka"
     assert georgia.emergency_number == "112"
-    assert georgia.onboarding_status is CountryOnboardingStatus.PILOT
+    assert georgia.onboarding_status is CountryOnboardingStatus.SUPPORTED
     assert georgia.local_number_provisioning is LocalNumberProvisioning.AVAILABLE
     assert georgia.recording_consent_rule is RecordingConsentRule.NOTICE
     assert georgia.data_region is DataRegion.EU

@@ -68,23 +68,27 @@ def test_values_fill_their_place_in_every_language(code: HandoffSummaryCode) -> 
 
 
 def test_the_customer_message_is_quoted_in_the_readers_style() -> None:
-    assert render(HandoffSummaryCode.MODEL_UNAVAILABLE, "ru", "Можно с собакой?") == (
-        "Помощник был временно недоступен и не смог ответить. "
-        "Сообщение клиента: «Можно с собакой?»"
-    )
-    assert render(HandoffSummaryCode.MODEL_DECLINED, "ka", "გამარჯობა") == (
-        "ასისტენტმა ამ შეტყობინებას პასუხი არ გასცა. კლიენტის შეტყობინება: „გამარჯობა“"
+    assert render(
+        HandoffSummaryCode.MODEL_UNAVAILABLE, "it", "Posso portare il cane?"
+    ) == (
+        "L'assistente non è stato disponibile per qualche istante e non ha potuto "
+        "rispondere. Il messaggio del cliente: “Posso portare il cane?”"
     )
     assert render(HandoffSummaryCode.ANSWER_UNFINISHED, "en", "Hi {there}") == (
         "The assistant could not finish its answer. "
         "The customer's message: “Hi {there}”"
     )
+    # Georgian is not in the catalog: the owner reads English, the quote stays.
+    assert render(HandoffSummaryCode.MODEL_DECLINED, "ka", "გამარჯობა") == (
+        "The assistant would not answer this message. "
+        "The customer's message: “გამარჯობა”"
+    )
 
 
 def test_an_undelivered_reply_quotes_the_reply() -> None:
-    assert render(HandoffSummaryCode.REPLY_UNDELIVERED, "ru", "Столик свободен") == (
-        "Ответ помощника не дошёл до клиента. Свяжитесь с ним другим способом. "
-        "Ответ: «Столик свободен»"
+    assert render(HandoffSummaryCode.REPLY_UNDELIVERED, "it", "Il tavolo è libero") == (
+        "La risposta dell'assistente non è arrivata al cliente. Contattalo in un "
+        "altro modo. La risposta: “Il tavolo è libero”"
     )
 
 
@@ -93,18 +97,20 @@ def test_without_values_the_sentence_stays_whole() -> None:
         "On the call the assistant named figures that are not in your business "
         "details. Check the request from this call against the transcript."
     )
-    assert render(HandoffSummaryCode.DATA_ERASED, "ka") == (
-        "მონაცემები წაიშალა კლიენტის თხოვნით."
+    assert render(HandoffSummaryCode.DATA_ERASED, "it") == (
+        "Dati cancellati su richiesta del cliente."
     )
 
 
-def test_hebrew_and_german_owners_read_their_language() -> None:
-    assert render(HandoffSummaryCode.MODEL_DECLINED, "de") == (
-        "Der Assistent wollte diese Nachricht nicht beantworten."
+def test_italian_owners_read_their_language() -> None:
+    assert render(HandoffSummaryCode.MODEL_DECLINED, "it") == (
+        "L'assistente non ha voluto rispondere a questo messaggio."
     )
-    hebrew = render(HandoffSummaryCode.UNVERIFIED_VALUES, "he", "שלום", ("50 ₪",))
-    assert hebrew.startswith("העוזר עצר תשובה")
-    assert "50 ₪" in hebrew
+    assert render(HandoffSummaryCode.UNVERIFIED_VALUES, "it", "Ciao", ("50 €",)) == (
+        "L'assistente non ha inviato una risposta con cifre o affermazioni che non "
+        "risultano nei dati della tua attività (50 €). "
+        "Il messaggio del cliente: “Ciao”"
+    )
 
 
 def test_other_languages_read_english() -> None:

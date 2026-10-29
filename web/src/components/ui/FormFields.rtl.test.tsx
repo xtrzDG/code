@@ -1,14 +1,15 @@
 /**
- * TimeField and DateField in Hebrew (right to left, week from Sunday) and
- * German (week from Monday, day first): the clock stays 24-hour and reads
- * left to right in both, the calendar starts the week where the language
- * starts it, typed dates follow the language and, right to left, the arrow
- * keys move the way the eye reads the grid.
+ * TimeField and DateField on a page laid out right to left: the layout stays
+ * ready for such a language (`<html dir="rtl">`, config.ts LOCALE_DIRECTION)
+ * although every cabinet language reads left to right today, so the fields
+ * are rendered in Italian under `dir="rtl"`. The clock keeps reading left to
+ * right, hours before minutes, and in the calendar the arrow keys move the
+ * way the eye reads the grid.
  */
 
 import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { Locale } from "@/i18n/config";
@@ -19,6 +20,7 @@ import { Field } from "./Field";
 import { TimeField } from "./TimeField";
 
 const TODAY = "2026-10-06";
+const LOCALE: Locale = "it";
 
 function Day({ initial = "", onValue }: { initial?: string; onValue?: (value: string) => void }) {
   const [value, setValue] = useState(initial);
@@ -44,15 +46,29 @@ function Opens({ initial = "" }: { initial?: string }) {
   return <Field label="Opens">{(control) => <TimeField {...control} value={value} onChange={setValue} />}</Field>;
 }
 
-function openCalendar(locale: Locale) {
-  fireEvent.click(screen.getByRole("button", { name: textsIn(locale).t("formFields.date.open") }));
-  return screen.getByRole("dialog", { name: textsIn(locale).t("formFields.date.calendar") });
+/** The page as a right-to-left language lays it out. */
+function RightToLeft({ children }: { children: ReactNode }) {
+  return (
+    <div dir="rtl" style={{ direction: "rtl" }}>
+      {children}
+    </div>
+  );
 }
 
-describe.each<Locale>(["he", "de"])("TimeField in %s", (locale) => {
-  it("keeps a 24-hour clock with no AM/PM, hours before minutes", () => {
-    renderInLocale(<Opens initial="20:05" />, { locale });
-    const names = textsIn(locale);
+function openCalendar() {
+  fireEvent.click(screen.getByRole("button", { name: textsIn(LOCALE).t("formFields.date.open") }));
+  return screen.getByRole("dialog", { name: textsIn(LOCALE).t("formFields.date.calendar") });
+}
+
+describe("TimeField on a right-to-left page", () => {
+  it("keeps a 24-hour clock with no AM/PM, hours before minutes, reading left to right", () => {
+    renderInLocale(
+      <RightToLeft>
+        <Opens initial="20:05" />
+      </RightToLeft>,
+      { locale: LOCALE },
+    );
+    const names = textsIn(LOCALE);
     const segments = screen.getAllByRole("spinbutton");
     expect(segments.map((segment) => segment.getAttribute("aria-label"))).toEqual([
       names.t("formFields.time.hours"),
@@ -63,48 +79,17 @@ describe.each<Locale>(["he", "de"])("TimeField in %s", (locale) => {
   });
 });
 
-describe("DateField in Hebrew and German", () => {
-  it.each<[Locale, string]>([
-    ["he", "6 באוק׳ 2026"],
-    ["de", "06.10.2026"],
-  ])("shows the date in %s", (locale, text) => {
-    renderInLocale(<Day initial={TODAY} />, { locale });
-    expect(screen.getByRole("combobox", { name: "Day" })).toHaveProperty("value", text);
-  });
-
-  it.each<[Locale, string[]]>([
-    ["he", ["יום א׳", "יום ב׳", "יום ג׳", "יום ד׳", "יום ה׳", "יום ו׳", "שבת"]],
-    ["de", ["mo", "di", "mi", "do", "fr", "sa", "so"]],
-  ])("starts the week where %s starts it", (locale, weekdays) => {
-    renderInLocale(<Day initial={TODAY} />, { locale });
-    const calendar = openCalendar(locale);
-    const heads = within(calendar).getAllByRole("columnheader").map((cell) => cell.textContent?.toLowerCase().replace(/\.$/, ""));
-    expect(heads).toEqual(weekdays.map((day) => day.toLowerCase()));
-  });
-
-  it.each<[Locale, string, string]>([
-    ["he", "7 באוק׳ 2026", "2026-10-07"],
-    ["he", "07.10.2026", "2026-10-07"],
-    ["de", "7. Okt. 2026", "2026-10-07"],
-    ["de", "07.10.2026", "2026-10-07"],
-  ])("takes %s typed as %s", async (locale, typed, iso) => {
-    const user = userEvent.setup();
-    const onValue = vi.fn();
-    renderInLocale(<Day onValue={onValue} />, { locale });
-    await user.type(screen.getByRole("combobox", { name: "Day" }), typed);
-    expect(onValue).toHaveBeenLastCalledWith(iso);
-  });
-
+describe("DateField on a right-to-left page", () => {
   it("moves to the previous day on ArrowRight when the page reads right to left", async () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
     renderInLocale(
-      <div dir="rtl" style={{ direction: "rtl" }}>
+      <RightToLeft>
         <Day initial={TODAY} onValue={onValue} />
-      </div>,
-      { locale: "he" },
+      </RightToLeft>,
+      { locale: LOCALE },
     );
-    const calendar = openCalendar("he");
+    const calendar = openCalendar();
     expect(document.activeElement?.getAttribute("data-date")).toBe(TODAY);
     fireEvent.keyDown(within(calendar).getByRole("grid"), { key: "ArrowRight" });
     expect(document.activeElement?.getAttribute("data-date")).toBe("2026-10-05");

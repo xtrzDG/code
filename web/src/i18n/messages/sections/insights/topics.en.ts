@@ -1,7 +1,7 @@
 /**
  * `topics.*` texts: the Overview card "What customers ask about" (the first
  * messages of the last 30 days, grouped every night), in English: the
- * reference ru and ka are typed against.
+ * reference it is typed against.
  */
 
 export const topicsEn = {

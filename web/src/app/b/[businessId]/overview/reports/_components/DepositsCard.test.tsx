@@ -44,7 +44,7 @@ function report(overrides: Partial<DepositReport> = {}): DepositReport {
   };
 }
 
-function renderCard(view: DepositReport, locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function renderCard(view: DepositReport, locale: "en" | "it" = "en") {
   answerGet((path) => (path === REPORT ? ok(view) : pending()));
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
@@ -59,7 +59,7 @@ describe("DepositsCard: no-shows before deposits and since", () => {
     queryCache.clear();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("compares the two periods once deposits went on (%s)", async (locale) => {
+  it.each(["en", "it"] as const)("compares the two periods once deposits went on (%s)", async (locale) => {
     const { t } = textsIn(locale);
     renderCard(
       report({ enabled_at: 1_790_000_000_000_000, before_deposits: rate(20, 5), since_deposits: rate(19, 1) }),

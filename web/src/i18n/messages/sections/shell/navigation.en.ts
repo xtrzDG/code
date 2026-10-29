@@ -1,7 +1,6 @@
 /**
  * `navigation.*` texts: the sections of a business, their pages, the
- * sidebar and the phone tab bar, in English: the reference that ru and ka
- * are typed against.
+ * sidebar and the phone tab bar, in English: the reference that it is typed against.
  */
 
 export const navigationEn = {

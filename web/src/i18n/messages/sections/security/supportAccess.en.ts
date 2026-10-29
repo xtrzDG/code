@@ -2,7 +2,7 @@
  * `supportAccess.*` texts: the banner over a business's cabinet while
  * platform support looks into it (who, why, until when; the owner ends it
  * or lets support change things for some hours) and the read-only notice
- * support sees there, in English: the reference that ru and ka are typed
+ * support sees there, in English: the reference that it is typed
  * against.
  */
 

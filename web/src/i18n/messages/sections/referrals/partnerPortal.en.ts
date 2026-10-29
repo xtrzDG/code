@@ -1,7 +1,7 @@
 /**
  * `partnerPortal.*` texts of /partner: a partner's links and QR codes,
  * the businesses their links brought and their commissions, in English:
- * the reference that ru and ka are typed against.
+ * the reference that it is typed against.
  */
 
 export const partnerPortalEn = {

@@ -7,15 +7,15 @@ import { OfferedChoices, StoryContextLine } from "./MessageContext";
 
 describe("MessageContext", () => {
   it("says that a customer answered the business's story", () => {
-    const { container } = renderInLocale(<StoryContextLine note="story_reply" alignEnd={false} />, { locale: "ru" });
+    const { container } = renderInLocale(<StoryContextLine note="story_reply" alignEnd={false} />, { locale: "it" });
 
-    expect(container.textContent).toBe("Ответ на вашу историю");
+    expect(container.textContent).toBe("Risposta alla tua storia");
   });
 
   it("names a mention in the customer's own story", () => {
-    renderInLocale(<StoryContextLine note="story_mention" alignEnd />, { locale: "ka" });
+    renderInLocale(<StoryContextLine note="story_mention" alignEnd />, { locale: "it" });
 
-    expect(screen.getByText(textsIn("ka").t("inboxCard.messageContext.story_mention"))).toBeTruthy();
+    expect(screen.getByText(textsIn("it").t("inboxCard.messageContext.story_mention"))).toBeTruthy();
   });
 
   it("lists the options an answer offered without buttons", () => {

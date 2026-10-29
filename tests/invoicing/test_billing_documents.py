@@ -39,7 +39,7 @@ def download(
     documents: DocumentWorld,
     invoice: InvoiceDocument,
     kind: BillingDocumentKind = BillingDocumentKind.INVOICE,
-    language: str = "ru",
+    language: str = "it",
 ) -> tuple[BillingDocumentFile, str]:
     world = documents.world
     document = documents.get_document.run(
@@ -66,7 +66,7 @@ def pay(world: PaidWorld) -> None:
     )
 
 
-def test_the_russian_invoice_names_the_number_both_parties_and_the_vat() -> None:
+def test_the_invoice_names_the_number_both_parties_and_the_vat() -> None:
     world = build_seller_trial(is_vat_registered=True)
     save_billing_profile(world, "GE", tax_id="405123456")
     checkout(world)
@@ -75,27 +75,31 @@ def test_the_russian_invoice_names_the_number_both_parties_and_the_vat() -> None
     document, page = download(documents, first_invoice(world))
 
     assert str(document.file_name) == "invoice-AW-2026-000001.pdf"
+    # An Italian reader gets the English page: the Italian catalog is a
+    # draft, and a draft never reaches an invoice.
+    assert '<html lang="en">' in page
     for text in (
-        "<h1>Счёт</h1>",
-        "№ AW-2026-000001",
-        "Ожидает оплаты",
-        "Исполнитель",
+        "<h1>Invoice</h1>",
+        "No. AW-2026-000001",
+        "Awaiting payment",
+        "Seller",
         "Assistant Workshop LLC",
-        "Налоговый номер: 405999999",
-        "Заказчик",
+        "Tax number: 405999999",
+        "Buyer",
         "Mtsvane Ezo LLC",
-        "Налоговый номер: 405123456",
-        "Грузия",
-        "Итого без НДС",
-        "НДС 18\u00a0%",
-        "93,06",
-        "Итого к оплате",
-        "610,06",
-        "Оплатите онлайн в кабинете: Настройки → Тариф и оплата.",
-        "НДС начислен по ставке 18\u00a0%.",
-        "Документ сформирован электронно: Assistant Workshop LLC.",
+        "Tax number: 405123456",
+        "Georgia",
+        "Subtotal excl. VAT",
+        "VAT 18%",
+        "GEL93.06",
+        "Total due",
+        "GEL610.06",
+        "Pay online in the cabinet: Settings → Plan and billing.",
+        "VAT is charged at 18%.",
+        "Generated electronically by Assistant Workshop LLC.",
     ):
         assert text in page, text
+    assert "Fattura" not in page
 
 
 def test_a_receipt_comes_with_the_payment() -> None:
@@ -108,20 +112,23 @@ def test_a_receipt_comes_with_the_payment() -> None:
 
     pay(world)
     receipt, page = download(
-        documents, first_invoice(world), BillingDocumentKind.RECEIPT, "ka"
+        documents, first_invoice(world), BillingDocumentKind.RECEIPT, "it"
     )
 
     assert str(receipt.file_name) == "receipt-AW-2026-000001.pdf"
+    # The Italian reader's receipt reads English too (a draft never reaches one).
+    assert '<html lang="en">' in page
     for text in (
-        "გადახდის ქვითარი",
-        "ინვოისი № AW-2026-000001",
-        "გადახდის თარიღი",
-        "ბარათი Visa, ბოლო ციფრები 1111",
-        "მიღებული თანხა",
-        "დღგ არ ერიცხება",
+        "<h1>Payment receipt</h1>",
+        "For invoice No. AW-2026-000001",
+        "Payment date",
+        "Visa card ending in 1111",
+        "Amount received",
+        "VAT is not charged: the seller is not registered for VAT.",
     ):
         assert text in page, text
-    assert "ჯამი დღგ-ის გარეშე" not in page
+    assert "Subtotal excl. VAT" not in page
+    assert "Ricevuta" not in page
 
 
 def test_a_paid_invoice_in_english_says_when_and_how_it_was_paid() -> None:

@@ -2,7 +2,7 @@
  * Recording an incident (POST /v1/admin/incidents): the form as typed, its
  * checks, and the request body. A personal data breach carries the DPA 12.1
  * notice: the approximate numbers concerned and the five texts in English
- * (required) and in Georgian and Russian (each either complete or empty).
+ * (required) and in Italian (either complete or empty).
  * An incident names its businesses or concerns every business (the worker
  * walks them), and may publish its status announcement at once. Pure
  * functions, so the dialog and the tests share them.
@@ -23,7 +23,7 @@ export const INCIDENT_KINDS: readonly IncidentKind[] = ["outage", "degradation",
 export const INCIDENT_SEVERITIES: readonly IncidentSeverity[] = ["sev1", "sev2", "sev3"];
 
 /** The languages owners read a notice in; English is the fallback every notice needs. */
-export const NOTICE_LANGUAGES = ["en", "ka", "ru"] as const;
+export const NOTICE_LANGUAGES = ["en", "it"] as const;
 export type NoticeLanguage = (typeof NOTICE_LANGUAGES)[number];
 
 export const NOTICE_FIELDS = ["nature", "subject_categories", "record_categories", "likely_consequences", "measures"] as const;
@@ -105,7 +105,7 @@ export function emptyIncidentForm(nowMicros: number): IncidentForm {
     businesses: "",
     subjectCount: "",
     recordCount: "",
-    notices: { en: emptyNotice(), ka: emptyNotice(), ru: emptyNotice() },
+    notices: { en: emptyNotice(), it: emptyNotice() },
     announce: false,
     announcement: { ...emptyAnnouncementForm(), level: "outage", components: ["chat", "meta", "telegram"] },
   };

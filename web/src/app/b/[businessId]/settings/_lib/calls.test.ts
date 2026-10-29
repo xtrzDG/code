@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
-import { ka } from "@/i18n/messages/ka";
-import { ru } from "@/i18n/messages/ru";
+import { it as italian } from "@/i18n/messages/it";
 import { createTranslator } from "@/i18n/translate";
 
 import {
@@ -109,8 +108,7 @@ describe("the labels", () => {
     ];
     for (const [locale, messages] of [
       ["en", en],
-      ["ru", ru],
-      ["ka", ka],
+      ["it", italian],
     ] as const) {
       const { t } = createTranslator(locale, messages);
       for (const key of keys) {

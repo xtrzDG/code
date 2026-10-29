@@ -1,6 +1,6 @@
 /**
  * `conversations.*` texts of the conversation feed and card, in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const conversationsEn = {

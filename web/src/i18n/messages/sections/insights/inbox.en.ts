@@ -1,6 +1,6 @@
 /**
  * `inbox.*` texts of the team inbox list: its views, filters, rows and the
- * assign menu, in English: the reference that ru and ka are typed against.
+ * assign menu, in English: the reference that it is typed against.
  * Wording follows docs/glossary.md.
  */
 

@@ -1,8 +1,7 @@
 /**
  * `legalConsent.*` texts: the line on the sign-in page's code step that
  * says continuing accepts the terms, and the dialog that shows the terms,
- * the privacy policy and the cookie statement, in English: the reference
- * that ru and ka are typed against. `{terms}` and `{privacy}` become links.
+ * the privacy policy and the cookie statement, in English: the reference that it is typed against. `{terms}` and `{privacy}` become links.
  */
 
 export const legalConsentEn = {

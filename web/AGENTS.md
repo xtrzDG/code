@@ -15,21 +15,20 @@ API, translations). In short:
 
 - Browser code calls the API only through `api` from `@/api/client`
   (the BFF at `/api/backend/*`); never `BACKEND_URL`, never the token.
-- Every UI text goes into the dictionaries in Georgian, Russian, English,
-  Hebrew and German: shared texts in `src/i18n/messages/en.ts`, `ru.ts`,
-  `ka.ts`, `he.ts`, `de.ts`, section texts in `src/i18n/messages/sections/*/`
-  (one file per namespace and language, composed in `sections/*.ts`); no
-  hard-coded strings in components.
-- The cabinet reads right to left in Hebrew (`<html dir="rtl">`): use
-  logical classes (`ms-2`, `ps-3`, `start-0`, `text-start`, `border-s`,
+- Every UI text goes into the dictionaries in English and Italian: shared
+  texts in `src/i18n/messages/en.ts` and `it.ts`, section texts in
+  `src/i18n/messages/sections/*/` (one file per namespace and language,
+  composed in `sections/*.ts`); no hard-coded strings in components.
+- The layout stays ready for a right-to-left language (`<html dir="rtl">`):
+  use logical classes (`ms-2`, `ps-3`, `start-0`, `text-start`, `border-s`,
   `rounded-e-lg`), never physical ones (`ml-2`, `left-0`, `text-left`); a
   vitest policy test enforces it and `node --no-warnings scripts/rtl-codemod.mjs`
   rewrites a file. Directional icons (arrows, chevrons) get `rtl:-scale-x-100`.
 - Dates, times and money: Intl helpers in `src/lib/format.ts` /
   `useBusinessFormat()`, in the business time zone and currency. API
   timestamps are microseconds, prices are minor units. Any other format in a
-  UI language goes through `src/lib/intl/formatters.ts` (Chrome has no
-  Georgian Intl), never `new Intl.*(locale)`.
+  UI language goes through `src/lib/intl/formatters.ts` (its Georgian tables
+  serve customers' pages: Chrome has no Georgian Intl), never `new Intl.*(locale)`.
 - Use the UI kit in `@/components/ui` and the semantic color tokens of
   `src/app/globals.css`.
 - After a backend API change: `npm run gen:api` and commit `openapi.json`

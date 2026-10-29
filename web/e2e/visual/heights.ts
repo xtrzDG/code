@@ -13,9 +13,10 @@ const MAX_PHONE_SCREENS = 4;
  * drop the entry once the page fits in four screens, never raise one or add
  * a page (fold the page instead, as the Overview folds its statistics).
  * Their length is the business's own lists (knowledge, invoices, review
- * requests), a long settings form, the platform admin's dashboards, or
- * Georgian's longer words (the Overview: four screens in Russian and
- * English since its invitation folds, 14 px more in Georgian).
+ * requests), a long settings form, the platform admin's dashboards, or a
+ * language's longer words (the Overview: four screens in English since its
+ * invitation folds; it took 14 px more in Georgian, a language the cabinet
+ * no longer reads, and keeps its budget until a run shows it fits).
  */
 const LONG_PHONE_PAGES: readonly (readonly [RegExp, number])[] = [
   [/\/assistant\/knowledge$/, 7],

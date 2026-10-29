@@ -60,6 +60,12 @@ def texts_by_address(world: AlertWorld) -> dict[str, str]:
 
 def test_linked_chats_get_details_and_others_the_brief_with_a_signed_link() -> None:
     world = AlertWorld()
+    nino, anna, gio = world.business.manager_contacts
+    world.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        anna,
+        gio,
+    ]
     sent = handoff(world, HandoffUrgency.NORMAL)
 
     queued = world.alerts.alert(world.business, sent, texts())
@@ -71,11 +77,13 @@ def test_linked_chats_get_details_and_others_the_brief_with_a_signed_link() -> N
         by_address["anna@example.com"],
         by_address["+995555000222"],
     )
-    assert telegram.startswith("[ka] Tooth hurts, +995\nგახსნა: https://")
+    assert telegram.startswith("[it] Tooth hurts, +995\nApri: https://")
     assert email.startswith(
         "[en] A customer needs a person\nSalobie Bia · Complaint\nOpen: "
     )
+    # Russian is not in the catalog: the SMS ends with the English link line.
     assert sms.startswith("[ru] A customer needs a person\n")
+    assert "\nOpen: https://" in sms
     assert "+995" not in email and "Tooth" not in sms
     link = email.rsplit(" ", 1)[1]
     assert link.startswith(f"{CABINET}/n/")

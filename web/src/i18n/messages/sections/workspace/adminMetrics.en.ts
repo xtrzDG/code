@@ -1,6 +1,6 @@
 /**
  * `adminMetrics.*` texts of the platform admin's Metrics page
- * (/admin/metrics), in English: the reference that ru and ka are typed
+ * (/admin/metrics), in English: the reference that it is typed
  * against. LCP, INP, CLS, MRR, ARPA and p75 stay as they are: they are the
  * names founders search for.
  */

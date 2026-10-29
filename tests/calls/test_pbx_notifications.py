@@ -61,7 +61,7 @@ def setup() -> VoiceSetup:
     voice_setup = build_voice_setup()
     save_call_settings(voice_setup)
     connect_whatsapp(voice_setup)
-    add_staff_chat(voice_setup, language="ka")
+    add_staff_chat(voice_setup, language="it")
     return voice_setup
 
 
@@ -100,8 +100,8 @@ class TestZadarmaNotifications:
         assert len(whatsapp_templates(setup)) == 1
         [text] = staff_texts(setup)
         lines = str(text.text).split("\n")
-        assert lines[0] == "გამოტოვებული ზარი · Funicular VR"
-        assert lines[2] == "მიზეზი: არავინ უპასუხა"
+        assert lines[0] == "Chiamata persa · Funicular VR"
+        assert lines[2] == "Motivo: nessuno ha risposto"
 
     @pytest.mark.parametrize(
         ("disposition", "reason"),

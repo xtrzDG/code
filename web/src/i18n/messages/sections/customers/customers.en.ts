@@ -2,7 +2,7 @@
  * `customers.*` texts: the customer list, one customer's page (history,
  * card, block, data requests), the standing over a conversation, the
  * team's access to phones and the link left in Settings → Privacy, in
- * English: the reference that ru and ka are typed against.
+ * English: the reference that it is typed against.
  */
 
 export const customersEn = {

@@ -1,7 +1,7 @@
 /**
  * `digestChannels.*` texts: Reports → Your summaries → where they arrive
  * (e-mail, devices, a Telegram chat of the platform bot, WhatsApp from the
- * platform's number), in English: the reference ru and ka are typed against.
+ * platform's number), in English: the reference it is typed against.
  */
 
 export const digestChannelsEn = {

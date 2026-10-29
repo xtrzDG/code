@@ -6,8 +6,8 @@
       "startServerReadyTimeout": 120000,
       "url": [
         "http://localhost:3020/en",
-        "http://localhost:3020/ru/for/restaurant",
-        "http://localhost:3020/ka/for/hotel"
+        "http://localhost:3020/it/for/restaurant",
+        "http://localhost:3020/en/for/hotel"
       ],
       "numberOfRuns": 3,
       "settings": {

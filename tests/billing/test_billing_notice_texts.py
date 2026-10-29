@@ -48,29 +48,15 @@ def test_payment_failed_notice_names_amount_and_deadline_per_language() -> None:
         "keeps full service until November 8, 2026; after that it will only take "
         "requests."
     )
-    assert render("ru") == (
-        "Funicular VR: оплата 517,00\xa0GEL за ассистента не прошла. Проверьте "
-        "карту и оплатите снова в разделе «Тариф и счета». Ассистент работает в "
-        "полном режиме до 8 ноября 2026 г., потом будет только принимать "
-        "заявки."
+    assert render("it") == (
+        "Funicular VR: il pagamento di 517,00\xa0GEL per l'assistente non è "
+        "andato a buon fine. Controlla la carta e paga di nuovo in Fatturazione. "
+        "L'assistente mantiene il servizio completo fino al 8 novembre 2026; "
+        "dopo, raccoglierà solo le richieste."
     )
-    assert render("ka") == (
-        "Funicular VR: ასისტენტის გადახდა (517,00\xa0₾) ვერ შესრულდა. გთხოვთ, "
-        "შეამოწმოთ ბარათი და ხელახლა გადაიხადოთ განყოფილებაში „ბილინგი“. "
-        "ასისტენტი სრულ რეჟიმში იმუშავებს ამ თარიღამდე: 8 ნოემბერი, 2026; "
-        "შემდეგ კი მხოლოდ მოთხოვნებს მიიღებს."
-    )
-    assert render("he") == (
-        "Funicular VR: התשלום של \u200f517.00\xa0\u200fGEL עבור העוזר לא עבר. "
-        "בדקו את הכרטיס ושלמו שוב ב„מסלול וחיוב”. העוזר ימשיך בשירות מלא עד "
-        "8 בנובמבר 2026; אחר כך הוא רק יקבל פניות."
-    )
-    assert render("de") == (
-        "Funicular VR: Die Zahlung von 517,00\xa0GEL für den Assistenten ist "
-        "nicht durchgegangen. Bitte prüfen Sie die Karte und zahlen Sie erneut "
-        "unter „Tarif und Abrechnung“. Der Assistent arbeitet bis zum 8. November "
-        "2026 im vollen Betrieb; danach nimmt er nur noch Anfragen auf."
-    )
+    # Languages the owner text catalog lacks read English: Georgian is no
+    # longer an owner language, French never was.
+    assert render("ka") == render("en")
     assert render("fr") == render("en")
 
 
@@ -102,7 +88,7 @@ def test_notices_without_a_deadline_have_no_deadline_sentence() -> None:
         BillingTestbed(),
         BillingNotice(
             kind=BillingNoticeKind.LEADS_ONLY_STARTED,
-            language=LanguageTag("ka"),
+            language=LanguageTag("it"),
             timezone=TimezoneName(TBILISI),
             business_name=BusinessName("Funicular VR"),
             deadline=tbilisi(2026, 11, 8, 9, 0),
@@ -110,9 +96,9 @@ def test_notices_without_a_deadline_have_no_deadline_sentence() -> None:
     )
 
     assert text == (
-        "Funicular VR: გამოწერა გადაუხდელია, ამიტომ ასისტენტი ახლა მხოლოდ "
-        "მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს. სრული რეჟიმის აღსადგენად "
-        "გადაიხადეთ განყოფილებაში „ბილინგი“."
+        "Funicular VR: l'abbonamento non è pagato, quindi ora l'assistente "
+        "raccoglie solo le richieste e le passa al tuo team. Paga in "
+        "Fatturazione per ripristinare il servizio completo."
     )
 
 
@@ -120,7 +106,7 @@ def test_usage_warnings_for_minutes_and_dialogs() -> None:
     testbed = BillingTestbed()
     minutes = BillingNotice(
         kind=BillingNoticeKind.PACKAGE_USAGE_WARNING,
-        language=LanguageTag("ru"),
+        language=LanguageTag("it"),
         timezone=TimezoneName(TBILISI),
         business_name=BusinessName("Funicular VR"),
         metric=PackageMetric.VOICE_MINUTES,
@@ -141,8 +127,9 @@ def test_usage_warnings_for_minutes_and_dialogs() -> None:
     )
 
     assert describe_notice(testbed, minutes) == (
-        "Funicular VR: в этом периоде использовано 82% минут звонков из тарифа "
-        "(328 из 400). Минуты сверх пакета стоят 0,44\xa0GEL за минуту."
+        "Funicular VR: in questo periodo hai usato il 82% dei minuti di chiamata "
+        "del tuo piano (328 su 400). Ogni minuto oltre il pacchetto costa "
+        "0,44\xa0GEL."
     )
     assert describe_notice(testbed, dialogs) == (
         "Funicular VR: 80% of the dialogs in your plan are used this period "

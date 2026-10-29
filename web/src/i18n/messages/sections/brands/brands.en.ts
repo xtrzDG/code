@@ -30,7 +30,7 @@ export const brandsEn = {
     title: "Create a brand",
     description: "Start with one business you own; add the other locations next.",
     name: "Brand name",
-    namePlaceholder: "Mtsvane Ezo",
+    namePlaceholder: "Trattoria da Gino",
     firstLocation: "First location",
     noOwnedBusiness: "Brands start from a business you own. Create an assistant first.",
     submit: "Create brand",

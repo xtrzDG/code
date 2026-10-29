@@ -43,7 +43,7 @@ function closing(changes: Partial<BusinessClosureView> = {}): BusinessClosureVie
   };
 }
 
-function renderCard(role: "owner" | "staff" = "owner", locale: "en" | "ru" | "ka" | "he" | "de" = "en") {
+function renderCard(role: "owner" | "staff" = "owner", locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={{ ...business, viewer_role: role }} me={me}>
       <CloseBusinessCard />
@@ -61,7 +61,7 @@ describe("CloseBusinessCard: Settings → Business, the danger zone", () => {
     refresh.mockReset();
   });
 
-  it.each(["en", "ru", "ka", "he", "de"] as const)("says what closing does and offers the export first, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("says what closing does and offers the export first, in %s", async (locale) => {
     const { t } = textsIn(locale);
     answerGet(() => ok(open));
     renderCard("owner", locale);

@@ -186,7 +186,7 @@ def test_customers_and_the_agreement_text_over_http() -> None:
     found = client.get(f"{base_url}/contacts?search=123 456", headers=headers)
     detail = client.get(f"{base_url}/contacts/{giorgi.contact.id}", headers=headers)
     status = client.get(f"{base_url}/dpa", headers=headers)
-    document = client.get(status.json()["document_url"], params={"language": "ka"})
+    document = client.get(status.json()["document_url"], params={"language": "it"})
 
     assert [item["name"] for item in first.json()["items"]] == ["Nino"]
     assert [item["name"] for item in second.json()["items"]] == ["Giorgi"]
@@ -200,5 +200,8 @@ def test_customers_and_the_agreement_text_over_http() -> None:
     ]
     assert status.json()["document_url"] == "/v1/legal/dpa/2026-10-06"
     assert document.status_code == 200
-    assert document.json()["language"] == "ka"
+    # The agreement is published in English only; its Italian text is still a
+    # draft (docs/legal/drafts), so an Italian owner reads English.
+    assert document.json()["language"] == "en"
+    assert document.json()["available_languages"] == ["en"]
     assert document.json()["text"].startswith("# ")

@@ -21,6 +21,13 @@ from tests.operations.operations_world import OperationsWorld
 def test_handoff_in_opening_hours_notifies_staff_and_silences_the_bot() -> None:
     # Monday 11:00 in Jerusalem.
     fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
+    nino, daniel, anna = fixture.business.manager_contacts
+    fixture.business.manager_contacts = [
+        nino.model_copy(update={"language": LanguageTag("it")}),
+        daniel,
+        anna,
+    ]
+    fixture.world.business_repo.save(fixture.business)
 
     result = fixture.hand_off(language="ar")
 
@@ -34,15 +41,16 @@ def test_handoff_in_opening_hours_notifies_staff_and_silences_the_bot() -> None:
         str(contact.language): str(text)
         for contact, text in fixture.world.notifier.sent
     }
-    assert texts["ru"].splitlines() == [
-        "[Высокая] Клиенту нужен человек · Tel Aviv Smile",
-        "Причина: Жалоба",
+    assert texts["it"].splitlines() == [
+        "[Alta] Un cliente ha bisogno di una persona · Tel Aviv Smile",
+        "Motivo: Reclamo",
         "Tooth still hurts after the filling.",
-        "Имя: Yossi",
-        "Телефон: +972 50-234-5678",
-        "Канал: Telegram",
+        "Nome: Yossi",
+        "Telefono: +972 50-234-5678",
+        "Canale: Telegram",
     ]
-    assert texts["ka"].startswith("[მაღალი] კლიენტს ადამიანი სჭირდება")
+    # Russian is not in the catalog: that contact reads the English details.
+    assert texts["ru"].startswith("[High] A customer needs a person · Tel Aviv Smile")
     # E-mail gets the brief: urgency and reason, no summary, name or phone.
     assert texts["en"] == (
         "Urgent: a customer needs a person\nTel Aviv Smile · Complaint"

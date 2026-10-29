@@ -75,6 +75,12 @@ CARRIER_GUIDES_BY_COUNTRY: dict[CountryCode, tuple[CarrierForwardingGuide, ...]]
         carrier("tr", "vodafone", "Vodafone"),
         carrier("tr", "turk_telekom", "Türk Telekom"),
     ),
+    CountryCode("IT"): (
+        carrier("it", "tim", "TIM"),
+        carrier("it", "vodafone", "Vodafone"),
+        carrier("it", "windtre", "WindTre"),
+        carrier("it", "iliad", "Iliad"),
+    ),
     CountryCode("DE"): (
         carrier("de", "telekom", "Telekom"),
         carrier("de", "vodafone", "Vodafone"),

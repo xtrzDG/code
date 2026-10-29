@@ -32,9 +32,9 @@ describe("BFF path and headers", () => {
       "x-forwarded-for": "203.0.113.77, 198.51.100.9",
       host: "cabinet.example",
     });
-    const headers = buildUpstreamHeaders(incoming, { token: "tok", locale: "ka", requestId: "r1" });
+    const headers = buildUpstreamHeaders(incoming, { token: "tok", locale: "it", requestId: "r1" });
     expect(headers.get("authorization")).toBe("Bearer tok");
-    expect(headers.get("accept-language")).toBe("ka, en;q=0.5");
+    expect(headers.get("accept-language")).toBe("it, en;q=0.5");
     expect(headers.get("content-type")).toBe("application/json");
     // The browser's own X-Forwarded-For could be forged: dropped by default.
     expect(headers.get("x-forwarded-for")).toBeNull();

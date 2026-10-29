@@ -8,8 +8,8 @@
  *   - a colour outside the palette (palette.ts): computed text, background,
  *     border, outline, fill and stroke colours of every element shown,
  *     except user content (`data-user-content`), pictures and canvases;
- *   - Cyrillic on an English or Georgian (or Hebrew) page outside user
- *     content (support/consoleClean.ts `strayCyrillic`): an untranslated text;
+ *   - Cyrillic, Georgian or Hebrew on a cabinet page outside user content
+ *     (support/consoleClean.ts `strayScripts`): an untranslated text;
  *   - a cabinet page taller than four phone screens on a phone (the public
  *     site's reading pages, `isDocument`, may be longer; the pages of
  *     LONG_PHONE_PAGES have their own, larger budget until they are folded).
@@ -17,7 +17,7 @@
 
 import type { ConsoleMessage, Page } from "@playwright/test";
 
-import { strayCyrillic } from "../support/consoleClean";
+import { strayScripts } from "../support/consoleClean";
 import { renderDeferredBlocks } from "../support/deferredBlocks";
 import { expect } from "../support/fixtures";
 import { phoneScreensAllowed } from "./heights";
@@ -140,7 +140,7 @@ export async function reviewPage(page: Page, { label, isDocument }: { label: str
   expect(seen.length, `${label}: the palette scan read the page's colours`).toBeGreaterThan(0);
   expect(allowed, `${label}: the allowed tokens resolved`).toHaveLength(ALLOWED_TOKENS.length);
   expect.soft(offPalette(seen, allowed), `${label}: colours outside the palette`).toEqual([]);
-  expect.soft(await strayCyrillic(page), `${label}: interface text in Cyrillic`).toEqual([]);
+  expect.soft(await strayScripts(page), `${label}: interface text in Cyrillic, Georgian or Hebrew`).toEqual([]);
   const viewport = page.viewportSize();
   if (viewport && viewport.width <= PHONE_MAX_WIDTH && !isDocument) {
     const screens = phoneScreensAllowed(new URL(page.url()).pathname);

@@ -11,28 +11,13 @@
  */
 
 import type { Translation } from "../../translate";
-import { adminNichesDe } from "./niches/adminNiches.de";
+import { adminNichesIt } from "./niches/adminNiches.it";
 import { adminNichesEn } from "./niches/adminNiches.en";
-import { adminNichesHe } from "./niches/adminNiches.he";
-import { adminNichesKa } from "./niches/adminNiches.ka";
-import { adminNichesRu } from "./niches/adminNiches.ru";
 
 export const nichesSectionEn = {
   adminNiches: adminNichesEn,
 } as const;
 
-export const nichesSectionRu: Translation<typeof nichesSectionEn> = {
-  adminNiches: adminNichesRu,
-};
-
-export const nichesSectionKa: Translation<typeof nichesSectionEn> = {
-  adminNiches: adminNichesKa,
-};
-
-export const nichesSectionHe: Translation<typeof nichesSectionEn> = {
-  adminNiches: adminNichesHe,
-};
-
-export const nichesSectionDe: Translation<typeof nichesSectionEn> = {
-  adminNiches: adminNichesDe,
+export const nichesSectionIt: Translation<typeof nichesSectionEn> = {
+  adminNiches: adminNichesIt,
 };

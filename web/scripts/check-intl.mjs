@@ -1,18 +1,14 @@
 #!/usr/bin/env node
 /**
  * Fails when this Node cannot format the cabinet's languages: a build with
- * "small ICU" (English only) or without Georgian data renders Georgian and
- * Russian dates, plurals and lists in English, or crashes on them, during
- * server rendering. CI runs it before the build and the cabinet's image
- * before `next build` (`npm run check:intl`).
+ * "small ICU" (English only) renders Italian dates, plurals and lists in
+ * English, or crashes on them, during server rendering. CI runs it before
+ * the build and the cabinet's image before `next build` (`npm run check:intl`).
  */
 
 // The cabinet's languages (src/i18n/config.ts, LOCALES).
-const LOCALES = ["ka", "ru", "en", "he", "de"];
+const LOCALES = ["en", "it"];
 const DATE = new Date(Date.UTC(2026, 9, 16, 12, 0));
-const GEORGIAN_LETTER = /[ა-ჿ]/;
-const CYRILLIC_LETTER = /[Ѐ-ӿ]/;
-const HEBREW_LETTER = /[\u05d0-\u05ea]/;
 
 const problems = [];
 
@@ -46,36 +42,33 @@ for (const [name, api] of Object.entries({
   );
 }
 
-attempt("Georgian month names", () => {
-  const month = new Intl.DateTimeFormat("ka", { month: "long", timeZone: "UTC" }).format(DATE);
-  check(GEORGIAN_LETTER.test(month), `A Georgian month name came out as “${month}”.`);
+attempt("Italian month names", () => {
+  const month = new Intl.DateTimeFormat("it", { month: "long", timeZone: "UTC" }).format(DATE);
+  check(month === "ottobre", `An Italian month name came out as “${month}”.`);
 });
-attempt("Russian dates", () => {
-  const date = new Intl.DateTimeFormat("ru", { dateStyle: "medium", timeZone: "UTC" }).format(DATE);
-  check(CYRILLIC_LETTER.test(date), `A Russian date came out as “${date}”.`);
+attempt("Italian dates", () => {
+  const date = new Intl.DateTimeFormat("it", { dateStyle: "medium", timeZone: "UTC" }).format(DATE);
+  check(date === "16 ott 2026", `An Italian date came out as “${date}”.`);
 });
-attempt("Russian plural rules", () => {
-  const rules = new Intl.PluralRules("ru");
+attempt("Italian numbers", () => {
+  // The cabinet groups thousands always (src/lib/intl/formatters.ts).
+  const amount = new Intl.NumberFormat("it", { style: "currency", currency: "EUR", useGrouping: "always" }).format(1234.5);
+  check(amount.replace(/\s/g, " ") === "1.234,50 €", `An Italian amount came out as “${amount}”.`);
+});
+attempt("Italian plural rules", () => {
+  const rules = new Intl.PluralRules("it");
   check(
-    rules.select(1) === "one" && rules.select(3) === "few" && rules.select(5) === "many",
-    "Russian plural rules are not the CLDR ones (1 one, 3 few, 5 many).",
+    rules.select(1) === "one" && rules.select(5) === "other" && rules.select(1_000_000) === "many",
+    "Italian plural rules are not the CLDR ones (1 one, 5 other, 1 000 000 many).",
   );
 });
-attempt("Hebrew dates", () => {
-  const date = new Intl.DateTimeFormat("he", { dateStyle: "long", timeZone: "UTC" }).format(DATE);
-  check(HEBREW_LETTER.test(date), `A Hebrew date came out as “${date}”.`);
+attempt("Italian lists", () => {
+  const list = new Intl.ListFormat("it", { type: "conjunction" }).format(["a", "b", "c"]);
+  check(list === "a, b e c", `An Italian list came out as “${list}”.`);
 });
-attempt("Hebrew plural rules", () => {
-  const rules = new Intl.PluralRules("he");
-  check(rules.select(1) === "one" && rules.select(2) === "two" && rules.select(5) === "other", "Hebrew plural rules are not the CLDR ones (1 one, 2 two, 5 other).");
-});
-attempt("German dates", () => {
-  const date = new Intl.DateTimeFormat("de", { month: "long", timeZone: "UTC" }).format(DATE);
-  check(date === "Oktober", `A German month name came out as “${date}”.`);
-});
-attempt("Georgian relative time", () => {
-  const text = new Intl.RelativeTimeFormat("ka", { numeric: "auto" }).format(-1, "day");
-  check(GEORGIAN_LETTER.test(text), `“Yesterday” in Georgian came out as “${text}”.`);
+attempt("Italian relative time", () => {
+  const text = new Intl.RelativeTimeFormat("it", { numeric: "auto" }).format(-1, "day");
+  check(text === "ieri", `“Yesterday” in Italian came out as “${text}”.`);
 });
 
 if (problems.length > 0) {

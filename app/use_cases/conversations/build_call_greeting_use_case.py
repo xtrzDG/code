@@ -18,6 +18,10 @@ from app.utilities.conversations.assistant_texts.business_name_placeholder impor
 from app.utilities.conversations.assistant_texts.call_consent_texts import (
     CALL_RECORDING_CONSENT,
 )
+from app.utilities.conversations.assistant_texts.call_language_offer import (
+    language_offer_sentence,
+    other_languages,
+)
 from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
@@ -32,9 +36,10 @@ ENGLISH_LANGUAGE_CODE: str = "en"
 class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting]):
     """
     First phrase of a phone call (concept sections 6 and 7): who answers (the
-    AI assistant of the business), that the call is recorded, and how to
-    reach a human, in the requested language or the business greeting
-    language.
+    AI assistant of the business), which other languages the business
+    speaks (the caller may answer in any of them; the voice agent follows),
+    that the call is recorded, and how to reach a human, in the requested
+    language or the business greeting language.
 
     Every call is recorded (the voice platform keeps the audio and the
     transcript), so the recording sentence is always said: recording without
@@ -72,11 +77,15 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
             else business.default_language
         )
         language: LanguageTag = select_greeting_language(requested_language)
+        offer: str | None = language_offer_sentence(
+            language, other_languages(business.languages, language)
+        )
         sentences: list[str] = [
             fill_business_name(
                 self._localized_text_resolver.resolve(CALL_GREETING, language),
                 str(business.name),
             ),
+            *([offer] if offer is not None else []),
             self._localized_text_resolver.resolve(
                 self._recording_sentence(business), language
             ),

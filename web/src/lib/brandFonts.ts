@@ -8,7 +8,7 @@
  * `font-display: optional` a file that is not there within about 100 ms of
  * being needed is dropped for the rest of the document, while the cabinet
  * changes pages without a new document. So the root layout preloads, on
- * cabinet pages only, Latin (digits, punctuation, every English and German
+ * cabinet pages only, Latin (digits, punctuation, every English and Italian
  * word) and the one script file the page's language needs, as the build
  * emitted them (`<file name>.<content hash>.woff2` in its static media).
  */
@@ -26,13 +26,13 @@ export const LATIN_FONT_FILE = "noto-sans-latin-wght";
 
 type BrandFontFile = ScriptFontFile | typeof LATIN_FONT_FILE;
 
-/** The file a language's own script needs beyond Latin (German and English: none). */
+/**
+ * The file a language's own script needs beyond Latin (English and Italian:
+ * none; the script files stay in typeface.css for a language that joins).
+ */
 export const SCRIPT_FONT_OF_LOCALE: Record<Locale, ScriptFontFile | null> = {
-  ka: "noto-sans-georgian-wght",
-  ru: "noto-sans-cyrillic-wght",
-  he: "noto-sans-hebrew-wght",
   en: null,
-  de: null,
+  it: null,
 };
 
 /** Where the build serves the files a stylesheet's url() names (its `static/media`). */
@@ -51,11 +51,16 @@ function emittedHref(file: BrandFontFile, mediaFiles: readonly string[]): string
 
 /**
  * The addresses a cabinet page in `locale` preloads: Latin, then its own
- * script's file when it needs one. A file the listing does not hold exactly
+ * script's file when it needs one (`scriptFonts`, the languages' script
+ * files: SCRIPT_FONT_OF_LOCALE). A file the listing does not hold exactly
  * once is left out rather than guessed.
  */
-export function brandFontHrefs(locale: Locale, mediaFiles: readonly string[]): string[] {
-  const script = SCRIPT_FONT_OF_LOCALE[locale];
+export function brandFontHrefs(
+  locale: Locale,
+  mediaFiles: readonly string[],
+  scriptFonts: Readonly<Record<Locale, ScriptFontFile | null>> = SCRIPT_FONT_OF_LOCALE,
+): string[] {
+  const script = scriptFonts[locale];
   const files: BrandFontFile[] = script === null ? [LATIN_FONT_FILE] : [LATIN_FONT_FILE, script];
   return files.map((file) => emittedHref(file, mediaFiles)).filter((href) => href !== null);
 }

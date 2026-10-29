@@ -29,33 +29,33 @@ def test_the_shipped_catalog_reads_in_every_cabinet_language() -> None:
 def test_a_consistent_catalog_keeps_every_file(tmp_path: Path) -> None:
     catalog = read_text_catalog(write_catalog(tmp_path))
 
-    assert list(catalog.files[CabinetLanguage.GERMAN].texts) == list(ENGLISH_TEXTS)
-    assert catalog.files[CabinetLanguage.HEBREW].review_status is (
+    assert list(catalog.files[CabinetLanguage.ITALIAN].texts) == list(ENGLISH_TEXTS)
+    assert catalog.files[CabinetLanguage.ITALIAN].review_status is (
         TextReviewStatus.NEEDS_REVIEW
     )
 
 
 def test_a_missing_language_file_stops_the_start(tmp_path: Path) -> None:
     write_catalog(tmp_path)
-    (tmp_path / "de.json").unlink()
+    (tmp_path / "it.json").unlink()
 
-    with pytest.raises(TextCatalogError, match="de.json cannot be read"):
+    with pytest.raises(TextCatalogError, match="it.json cannot be read"):
         read_text_catalog(tmp_path)
 
 
 def test_a_malformed_file_stops_the_start(tmp_path: Path) -> None:
     write_catalog(tmp_path)
-    (tmp_path / "ka.json").write_text("{not json", encoding="utf-8")
+    (tmp_path / "it.json").write_text("{not json", encoding="utf-8")
 
-    with pytest.raises(TextCatalogError, match="ka.json cannot be read"):
+    with pytest.raises(TextCatalogError, match="it.json cannot be read"):
         read_text_catalog(tmp_path)
 
 
 def test_a_file_holding_another_language_is_refused(tmp_path: Path) -> None:
     write_catalog(tmp_path)
-    write_catalog_file(tmp_path, "ru", dict(ENGLISH_TEXTS), declared_language="ka")
+    write_catalog_file(tmp_path, "it", dict(ENGLISH_TEXTS), declared_language="en")
 
-    with pytest.raises(TextCatalogError, match="ru.json holds the texts of ka"):
+    with pytest.raises(TextCatalogError, match="it.json holds the texts of en"):
         read_text_catalog(tmp_path)
 
 
@@ -73,9 +73,9 @@ def test_english_must_be_the_reviewed_source(tmp_path: Path) -> None:
 
 
 def test_a_translation_key_english_lacks_is_refused(tmp_path: Path) -> None:
-    write_catalog(tmp_path, {"he": {**ENGLISH_TEXTS, "plans.gone.name": "ישן"}})
+    write_catalog(tmp_path, {"it": {**ENGLISH_TEXTS, "plans.gone.name": "Vecchio"}})
 
-    with pytest.raises(TextCatalogError, match="he.json has keys en.json lacks"):
+    with pytest.raises(TextCatalogError, match="it.json has keys en.json lacks"):
         read_text_catalog(tmp_path)
 
 
@@ -83,31 +83,31 @@ def test_a_draft_key_must_name_a_text_of_its_file(tmp_path: Path) -> None:
     write_catalog(tmp_path)
     write_catalog_file(
         tmp_path,
-        "ka",
-        {"plans.chat.name": "ჩატი"},
+        "it",
+        {"plans.chat.name": "Chat"},
         draft_keys=["billing.notice"],
     )
 
-    with pytest.raises(TextCatalogError, match="ka.json names drafts it lacks"):
+    with pytest.raises(TextCatalogError, match="it.json names drafts it lacks"):
         read_text_catalog(tmp_path)
 
 
 @pytest.mark.parametrize(
     "translation",
-    ["{business}: zahlen Sie.", "{business}: zahlen Sie {amount} {extra}."],
+    ["{business}: paga.", "{business}: paga {amount} {extra}."],
 )
 def test_translations_keep_the_english_placeholders(
     tmp_path: Path, translation: str
 ) -> None:
-    write_catalog(tmp_path, {"de": {**ENGLISH_TEXTS, "billing.notice": translation}})
+    write_catalog(tmp_path, {"it": {**ENGLISH_TEXTS, "billing.notice": translation}})
 
-    with pytest.raises(TextCatalogError, match="de.json billing.notice"):
+    with pytest.raises(TextCatalogError, match="it.json billing.notice"):
         read_text_catalog(tmp_path)
 
 
 def test_a_missing_translation_is_allowed_and_reads_english(tmp_path: Path) -> None:
-    write_catalog(tmp_path, {"de": {"plans.chat.name": "Chat"}})
+    write_catalog(tmp_path, {"it": {"plans.chat.name": "Chat"}})
 
     catalog = read_text_catalog(tmp_path)
 
-    assert list(catalog.files[CabinetLanguage.GERMAN].texts) == ["plans.chat.name"]
+    assert list(catalog.files[CabinetLanguage.ITALIAN].texts) == ["plans.chat.name"]

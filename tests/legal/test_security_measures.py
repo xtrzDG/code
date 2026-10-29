@@ -86,7 +86,7 @@ def test_the_current_version_generates_its_section_9() -> None:
         if file_version(path)[0] == DEFAULT_DPA_DOCUMENT_VERSION
     ]
 
-    assert {file_version(path)[1] for path in current} == {"en", "ru", "ka"}
+    assert {file_version(path)[1] for path in current} == {"en"}
     for path in current:
         assert SECTION_START_MARKER in path.read_text(encoding="utf-8"), path.name
 
@@ -123,12 +123,12 @@ def test_the_served_agreement_shows_the_list_without_markers() -> None:
     registry = LegalDocumentRegistry()
     version = DpaDocumentVersion(DEFAULT_DPA_DOCUMENT_VERSION)
 
-    georgian = registry.find_dpa(version, LanguageTag("ka"))
+    english = registry.find_dpa(version, LanguageTag("en"))
 
-    assert georgian is not None
-    assert "security-measures:" not in georgian.text
+    assert english is not None
+    assert "security-measures:" not in english.text
     first = SecurityMeasureRegistry().measures_of(version)[0]
-    assert render_security_measures([first], LanguageTag("ka"))[2:-1] in georgian.text
+    assert render_security_measures([first], LanguageTag("en"))[2:-1] in english.text
 
 
 def test_a_version_lists_the_measures_in_force_on_its_date() -> None:
@@ -160,10 +160,10 @@ def test_a_measure_cannot_be_listed_twice() -> None:
 def test_the_list_reads_as_one_sentence() -> None:
     rendered = render_security_measures(
         [measure("first", "2026-10-06"), measure("second", "2026-10-06")],
-        LanguageTag("ru"),
+        LanguageTag("en"),
     )
 
-    assert rendered.splitlines() == ["- first по-русски;", "- second по-русски."]
+    assert rendered.splitlines() == ["- first in English;", "- second in English."]
 
 
 def test_a_path_must_stay_inside_the_repository() -> None:

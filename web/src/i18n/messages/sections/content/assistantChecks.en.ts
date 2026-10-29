@@ -1,6 +1,6 @@
 /**
  * `assistant.*` texts of autotests, the go-live checklist, publish and
- * rollback, in English: the reference that ru and ka are typed against.
+ * rollback, in English: the reference that it is typed against.
  */
 
 export const assistantChecksEn = {

@@ -20,7 +20,7 @@ const DELIVERIES = "/v1/businesses/{business_id}/webhooks/{webhook_id}/deliverie
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 const { t, tp } = textsIn("en");
 
-function renderCard(locale: "en" | "ru" | "ka" = "en") {
+function renderCard(locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <WebhooksCard />
@@ -47,7 +47,7 @@ describe("WebhooksCard: where the business's events go", () => {
     for (const method of [api.POST, api.PATCH, api.DELETE]) vi.mocked(method).mockReset();
   });
 
-  it.each(["en", "ru", "ka"] as const)("lists each webhook with its state and events in %s", async (locale) => {
+  it.each(["en", "it"] as const)("lists each webhook with its state and events in %s", async (locale) => {
     const texts = textsIn(locale);
     const off = endpoint({ id: "webhook_2", label: "Zapier", status: "disabled", origin: "api", disabled_at: 1, consecutive_failures: 15 });
     answerGet((path) => (path === WEBHOOKS ? ok(endpointList([endpoint({ consecutive_failures: 2 }), off])) : pending()));

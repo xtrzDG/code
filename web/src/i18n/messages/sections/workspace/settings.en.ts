@@ -1,6 +1,6 @@
 /**
  * `settings.*` texts of settings tabs: general, status, team and manager
- * contacts, in English: the reference that ru and ka are typed against.
+ * contacts, in English: the reference that it is typed against.
  */
 
 export const settingsEn = {

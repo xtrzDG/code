@@ -1,6 +1,6 @@
 /**
  * `adminIncident.*` texts of "Record incident" on the platform admin's
- * System page, in English: the reference that ru and ka are typed against.
+ * System page, in English: the reference that it is typed against.
  * The notice fields follow section 12.1 of the DPA.
  */
 
@@ -39,11 +39,6 @@ export const adminIncidentEn = {
     subjects: "People concerned (approx.)",
     records: "Records concerned (approx.)",
     language: "Notice language",
-    languages: {
-      en: "English",
-      ka: "Georgian",
-      ru: "Russian",
-    },
     complete: "complete",
     partial: "incomplete",
     fields: {

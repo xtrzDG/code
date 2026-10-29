@@ -28,7 +28,7 @@ export const tunnelBusinessEn = {
     countryHint: "Prices in {currency}",
     countryFixed: "The country can't be changed once the assistant exists.",
     city: "City",
-    cityPlaceholder: "For example, Tbilisi",
+    cityPlaceholder: "For example, Milan",
     address: "Address",
     addressPlaceholder: "Street and number",
     addressHint: "The assistant tells customers how to find you.",
@@ -40,6 +40,7 @@ export const tunnelBusinessEn = {
     creating: "Creating your assistant…",
     errors: {
       country: "Choose your country.",
+      city: "Write your city: it tells customers and the assistant where you are.",
       languages: "Choose at least one language.",
       address: "Write your address: customers need it to find you.",
       restricted: "Businesses from this country can't be created yet.",

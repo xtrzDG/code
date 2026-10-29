@@ -1,6 +1,6 @@
 /**
  * `handoffs.*` texts of "Needs a person" (conversations the assistant passed
- * to a person), in English: the reference that ru and ka are typed against.
+ * to a person), in English: the reference that it is typed against.
  * Wording follows docs/glossary.md.
  */
 

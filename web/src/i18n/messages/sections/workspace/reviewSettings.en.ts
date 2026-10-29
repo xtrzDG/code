@@ -1,8 +1,7 @@
 /**
  * `reviewSettings.*` texts of Settings → Reviews (feedback after visits,
  * the Google review link, the numbers of the last 30 days, the template
- * text and the latest requests), in English: the reference that ru and ka
- * are typed against.
+ * text and the latest requests), in English: the reference that it is typed against.
  */
 
 export const reviewSettingsEn = {

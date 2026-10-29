@@ -19,7 +19,7 @@ const KEYS = "/v1/businesses/{business_id}/api-keys";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 const { t, tp } = textsIn("en");
 
-function renderCard(locale: "en" | "ru" | "ka" = "en") {
+function renderCard(locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <ApiKeysCard />
@@ -35,7 +35,7 @@ describe("ApiKeysCard: keys of Zapier and the public API", () => {
     vi.mocked(api.DELETE).mockReset();
   });
 
-  it.each(["en", "ru", "ka"] as const)("lists keys by prefix with their scopes, never a secret, in %s", async (locale) => {
+  it.each(["en", "it"] as const)("lists keys by prefix with their scopes, never a secret, in %s", async (locale) => {
     const texts = textsIn(locale);
     answerGet((path) => (path === KEYS ? ok(apiKeyList()) : pending()));
     renderCard(locale);

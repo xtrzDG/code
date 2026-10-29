@@ -7,14 +7,14 @@ const SUMMER = new Date(Date.UTC(2026, 6, 15, 12));
 
 describe("time zone labels", () => {
   it("name the city in the interface language with the offset in force", () => {
-    expect(timeZoneLabel("Asia/Tbilisi", "ru", SUMMER)).toBe("Тбилиси (UTC+4)");
-    expect(timeZoneLabel("Asia/Tbilisi", "ka", SUMMER)).toBe("თბილისი (UTC+4)");
+    expect(timeZoneLabel("Europe/Berlin", "it", SUMMER)).toBe("Berlino (UTC+2)");
+    expect(timeZoneLabel("Asia/Tbilisi", "it", SUMMER)).toBe("Tbilisi (UTC+4)");
     expect(timeZoneLabel("Asia/Tbilisi", "en", SUMMER)).toBe("Tbilisi (UTC+4)");
   });
 
   it("follow summer time", () => {
-    expect(timeZoneLabel("Europe/Berlin", "ru", WINTER)).toBe("Берлин (UTC+1)");
-    expect(timeZoneLabel("Europe/Berlin", "ru", SUMMER)).toBe("Берлин (UTC+2)");
+    expect(timeZoneLabel("Europe/Berlin", "it", WINTER)).toBe("Berlino (UTC+1)");
+    expect(timeZoneLabel("Europe/Berlin", "it", SUMMER)).toBe("Berlino (UTC+2)");
     expect(timeZoneLabel("America/New_York", "en", SUMMER)).toBe("New York (UTC−4)");
   });
 
@@ -27,7 +27,7 @@ describe("time zone labels", () => {
 
   it("use CLDR's spelling where it differs from the zone name", () => {
     expect(zoneCity("Europe/Kiev", "en")).toBe("Kyiv");
-    expect(zoneCity("Europe/Kiev", "ru")).toBe("Киев");
+    expect(zoneCity("Asia/Kolkata", "it")).toBe("Calcutta");
     expect(zoneCity("America/Argentina/Buenos_Aires", "en")).toBe("Buenos Aires");
   });
 

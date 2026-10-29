@@ -1,7 +1,7 @@
 /**
  * `dpaNotice.*` texts: the banner over an owner's cabinet when a new
  * version of the data processing agreement replaces the one the business
- * accepted, in English: the reference that ru and ka are typed against.
+ * accepted, in English: the reference that it is typed against.
  */
 
 export const dpaNoticeEn = {

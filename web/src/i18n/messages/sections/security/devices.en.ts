@@ -1,7 +1,7 @@
 /**
  * `devices.*` texts: Account → Security → "Where you are signed in" (the
  * person's sessions, ending one or all the others), in English: the
- * reference that ru and ka are typed against.
+ * reference that it is typed against.
  */
 
 export const devicesEn = {

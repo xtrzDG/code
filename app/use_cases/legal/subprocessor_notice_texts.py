@@ -1,7 +1,7 @@
 """
 The notice an owner gets about a change of the sub-processor list (DPA
-section 8.3), in the owner's cabinet language (Georgian, Russian or
-English; others read English). The first line is the e-mail's subject.
+section 8.3), in the owner's cabinet language (Italian or English; others
+read English). The first line is the e-mail's subject.
 """
 
 from dataclasses import dataclass
@@ -59,65 +59,37 @@ NOTICE_FRAMES: dict[str, NoticeFrame] = {
             "The full list is in section 8 of the agreement: Settings, Data protection."
         ),
     ),
-    "ru": NoticeFrame(
-        added_subject="Новый субобработчик с {day}: {name}",
-        removed_subject="Субобработчик уходит {day}: {name}",
+    "it": NoticeFrame(
+        added_subject="Nuovo sub-responsabile dal {day}: {name}",
+        removed_subject="Sub-responsabile in uscita il {day}: {name}",
         added_intro=(
-            "По пункту 8.3 соглашения об обработке данных сообщаем заранее: с "
-            "{day} «Мастерская ассистентов» будет привлекать и этого "
-            "субобработчика для данных {business}."
+            "Ai sensi del punto 8.3 dell'accordo sul trattamento dei dati (DPA) "
+            "ti avvisiamo in anticipo: dal {day} Assistant Workshop utilizzerà "
+            "anche questo sub-responsabile del trattamento per i dati di "
+            "{business}."
         ),
         added_late_intro=(
-            "По пункту 8.3 соглашения об обработке данных мы должны были сообщить "
-            "раньше: с {day} «Мастерская ассистентов» привлекает и этого "
-            "субобработчика для данных {business}."
+            "Ai sensi del punto 8.3 dell'accordo sul trattamento dei dati (DPA) "
+            "avremmo dovuto avvisarti prima: dal {day} Assistant Workshop "
+            "utilizza anche questo sub-responsabile del trattamento per i dati "
+            "di {business}."
         ),
         removed_intro=(
-            "С {day} «Мастерская ассистентов» больше не привлекает этого "
-            "субобработчика для данных {business}. От вас ничего не требуется."
+            "Dal {day} Assistant Workshop non utilizza più questo sub-responsabile "
+            "del trattamento per i dati di {business}. Non devi fare nulla."
         ),
         details=(
-            "{name}\nЦель: {purpose}\nПерсональные данные: {data}\nГде: {location}"
+            "{name}\nFinalità: {purpose}\nDati personali: {data}\nLuogo: {location}"
         ),
         objection=(
-            "Вы можете возразить по обоснованным причинам защиты данных через "
-            "поддержку платформы («Помощь» в кабинете) до {day}. Если мы не "
-            "договоримся, вы можете прекратить подписку до вступления изменения в "
-            "силу."
+            "Puoi opporti per motivi fondati di protezione dei dati tramite "
+            "l'assistenza della piattaforma (Aiuto nel pannello) prima del {day}. "
+            "Se non troviamo un accordo, puoi terminare l'abbonamento prima che "
+            "la modifica entri in vigore."
         ),
         closing=(
-            "Полный список — в разделе 8 соглашения: «Настройки», «Защита данных»."
-        ),
-    ),
-    "ka": NoticeFrame(
-        added_subject="ახალი ქვე-უფლებამოსილი პირი {day}-დან: {name}",
-        removed_subject="ქვე-უფლებამოსილი პირი გადის {day}-ს: {name}",
-        added_intro=(
-            "მონაცემთა დამუშავების შეთანხმების 8.3 პუნქტის შესაბამისად წინასწარ "
-            "გაცნობებთ: {day}-დან „ასისტენტების სახელოსნო“ {business}-ის "
-            "მონაცემებისთვის ამ ქვე-უფლებამოსილ პირსაც ჩართავს."
-        ),
-        added_late_intro=(
-            "მონაცემთა დამუშავების შეთანხმების 8.3 პუნქტის შესაბამისად ეს უფრო "
-            "ადრე უნდა გვეცნობებინა: {day}-დან „ასისტენტების სახელოსნო“ "
-            "{business}-ის მონაცემებისთვის ამ ქვე-უფლებამოსილ პირსაც იყენებს."
-        ),
-        removed_intro=(
-            "{day}-დან „ასისტენტების სახელოსნო“ {business}-ის მონაცემებისთვის ამ "
-            "ქვე-უფლებამოსილ პირს აღარ იყენებს. თქვენგან არაფერია საჭირო."
-        ),
-        details=(
-            "{name}\nმიზანი: {purpose}\nპერსონალური მონაცემები: {data}\n"
-            "ადგილმდებარეობა: {location}"
-        ),
-        objection=(
-            "შეგიძლიათ მონაცემთა დაცვის საფუძვლიანი მიზეზით შეეწინააღმდეგოთ "
-            "პლატფორმის მხარდაჭერის მეშვეობით (კაბინეტში „დახმარება“) {day}-მდე. "
-            "თუ ვერ შევთანხმდებით, შეგიძლიათ გამოწერა ცვლილების ძალაში შესვლამდე "
-            "შეწყვიტოთ."
-        ),
-        closing=(
-            "სრული სია შეთანხმების მე-8 ნაწილშია: „პარამეტრები“, „მონაცემთა დაცვა“."
+            "L'elenco completo è nella sezione 8 dell'accordo: Impostazioni, "
+            "Protezione dei dati."
         ),
     ),
 }

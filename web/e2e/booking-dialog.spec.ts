@@ -9,10 +9,10 @@ import type { Page } from "@playwright/test";
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 
-const DICTIONARIES = { en, ru, ka } as const;
+const DICTIONARIES = { en, it } as const;
 
 type Texts = (typeof DICTIONARIES)[keyof typeof DICTIONARIES];
 

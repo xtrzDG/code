@@ -1,6 +1,6 @@
 /**
  * `workspace.*` texts of shared by channels, billing, settings and the admin,
- * in English: the reference that ru and ka are typed against.
+ * in English: the reference that it is typed against.
  */
 
 export const workspaceCommonEn = {

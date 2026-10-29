@@ -17,7 +17,7 @@ import { signInAsDemoOwner, visitorAsksForPerson, visitorTranscript, type DemoOw
 import { API_URL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { assignByApi, cardOf, subscribeDevice, userIdOf, waitingConversationOf } from "./support/inbox";
-import { en, ka, ru } from "./support/messages";
+import { en, it } from "./support/messages";
 import { decryptPush, newReceiver, startPushService } from "./support/push";
 
 test.describe.configure({ timeout: 120_000 });
@@ -187,7 +187,7 @@ test("the transcript's date sits in the flow and a right-to-left name stays besi
   expect(gap).toBeLessThan(24);
 });
 
-for (const [locale, texts] of Object.entries({ en, ru, ka })) {
+for (const [locale, texts] of Object.entries({ en, it })) {
   test(`the inbox views fit: three in the row, Unassigned and All under More, the chosen one in full (${locale})`, async ({ page, context, request }) => {
     const demo = await signInAsDemoOwner(request);
     await signInContext(context, demo.token);
@@ -209,8 +209,8 @@ for (const [locale, texts] of Object.entries({ en, ru, ka })) {
         await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views[view]}`) }), where).toBeAttached();
       }
       await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views.all}`) })).toHaveCount(0);
-      if (size.width >= 1440 && locale !== "ka") {
-        // In English and Russian the whole row fits beside a conversation: Mine ends before More, nothing scrolls away.
+      if (size.width >= 1440) {
+        // In English and Italian the whole row fits beside a conversation: Mine ends before More, nothing scrolls away.
         const mine = await views.locator('label[data-inbox-view="mine"]').boundingBox();
         const more = await views.locator("[data-more-views]").boundingBox();
         expect((mine?.x ?? 0) + (mine?.width ?? 0), `${where}: Mine is whole`).toBeLessThanOrEqual(more?.x ?? 0);

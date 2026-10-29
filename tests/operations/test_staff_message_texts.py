@@ -41,30 +41,25 @@ from tests.operations.message_text_helpers import RESOLVER, booking_view, staff_
 def test_staff_booking_notifications_in_staff_languages() -> None:
     new_booking = NewBookingNotificationTransformer(RESOLVER)
 
-    assert str(new_booking.transform(staff_input("ka", notes="Birthday cake"))) == (
-        "ახალი ჯავშანი · Salobie Bia\n"
-        "სამშაბათი, 06 ოქტომბერი, 2026, 19:30–21:30 · Table 4\n"
-        "სახელი: Nino Kapanadze\n"
-        "ტელეფონი: +995 555 12 34 56\n"
-        "სტუმრები: 5\n"
-        "არხი: Instagram\n"
-        "შენიშვნა: Birthday cake"
-    )
-    assert str(new_booking.transform(staff_input("de"))) == (
-        "Neue Buchung · Salobie Bia\n"
-        "Dienstag, 6. Oktober 2026, 19:30–21:30 · Table 4\n"
-        "Name: Nino Kapanadze\n"
-        "Telefon: +995 555 12 34 56\n"
-        "Gäste: 5\n"
-        "Kanal: Instagram"
+    assert str(new_booking.transform(staff_input("it", notes="Birthday cake"))) == (
+        "Nuova prenotazione · Salobie Bia\n"
+        "martedì 6 ottobre 2026, 19:30–21:30 · Table 4\n"
+        "Nome: Nino Kapanadze\n"
+        "Telefono: +995 555 12 34 56\n"
+        "Persone: 5\n"
+        "Canale: Instagram\n"
+        "Note: Birthday cake"
     )
     # A language outside the cabinet reads English.
     assert str(new_booking.transform(staff_input("fr"))).startswith(
         "New booking · Salobie Bia\nTuesday, October 6, 2026, 19:30–21:30"
     )
+    assert str(new_booking.transform(staff_input("ka"))).startswith(
+        "New booking · Salobie Bia\nTuesday, October 6, 2026, 19:30–21:30"
+    )
     assert str(
-        BookingCancelledNotificationTransformer(RESOLVER).transform(staff_input("ru"))
-    ).startswith("Бронь отменена · Salobie Bia\nвторник, 6 октября 2026")
+        BookingCancelledNotificationTransformer(RESOLVER).transform(staff_input("it"))
+    ).startswith("Prenotazione annullata · Salobie Bia\nmartedì 6 ottobre 2026")
     assert str(
         BookingMovedNotificationTransformer(RESOLVER).transform(staff_input("en"))
     ).startswith("Booking moved to a new time · Salobie Bia")
@@ -112,7 +107,7 @@ def test_lead_and_handoff_notifications_without_optional_values() -> None:
                 urgency=HandoffUrgency.CRITICAL,
                 summary=HandoffSummary("Guest fainted at table 4."),
                 channel=ChannelKind.PHONE,
-                language=LanguageTag("ka"),
+                language=LanguageTag("it"),
             )
         )
     )
@@ -126,11 +121,11 @@ def test_lead_and_handoff_notifications_without_optional_values() -> None:
         "Channel: Website chat",
     ]
     assert handoff_text.splitlines()[:3] == [
-        "[კრიტიკული] კლიენტს ადამიანი სჭირდება · Salobie Bia",
-        "მიზეზი: საგანგებო სიტუაცია",
+        "[Critica] Un cliente ha bisogno di una persona · Salobie Bia",
+        "Motivo: Emergenza",
         "Guest fainted at table 4.",
     ]
-    assert handoff_text.splitlines()[-1] == "არხი: ზარი"
+    assert handoff_text.splitlines()[-1] == "Canale: Chiamata"
 
 
 def test_calendar_event_text_in_the_owner_language() -> None:
@@ -138,14 +133,14 @@ def test_calendar_event_text_in_the_owner_language() -> None:
         CalendarEventTextInput(
             booking=booking_view(notes="High chair"),
             contact_phone_display=FormattedPhoneNumber("+995 555 12 34 56"),
-            language=LanguageTag("ru"),
+            language=LanguageTag("it"),
         )
     )
 
-    assert text.title == "Бронь: Nino Kapanadze, гостей: 5"
+    assert text.title == "Prenotazione: Nino Kapanadze, persone: 5"
     assert str(text.description).splitlines()[:3] == [
         "Table 4",
-        "Телефон: +995 555 12 34 56",
-        "Канал: Instagram",
+        "Telefono: +995 555 12 34 56",
+        "Canale: Instagram",
     ]
-    assert str(text.description).splitlines()[-1] == "Пожелания: High chair"
+    assert str(text.description).splitlines()[-1] == "Note: High chair"

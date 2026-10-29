@@ -10,7 +10,7 @@ import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
 
-const PUBLIC_PAGES = ["/en", "/ru/for/hotel", "/ka/terms", "/en/contact"];
+const PUBLIC_PAGES = ["/en", "/it/for/hotel", "/it/terms", "/en/contact"];
 
 for (const theme of ["dark", "light"] as const) {
   test(`the public pages have no serious accessibility violations (${theme})`, async ({ page, context }) => {

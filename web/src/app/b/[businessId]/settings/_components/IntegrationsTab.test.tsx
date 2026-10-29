@@ -36,7 +36,7 @@ function serve(summaries: ResourceSyncSummary[], names: "loaded" | "loading" = "
   });
 }
 
-function renderTab(locale: "en" | "ru" | "ka" = "en") {
+function renderTab(locale: "en" | "it" = "en") {
   return renderInLocale(
     <BusinessProvider business={business} me={me}>
       <IntegrationsTab />
@@ -50,7 +50,7 @@ describe("IntegrationsTab: the business's calendars and booking systems", () => 
     queryCache.clear();
   });
 
-  it.each(["en", "ru", "ka"] as const)("lists every integration with its state in %s", async (locale) => {
+  it.each(["en", "it"] as const)("lists every integration with its state in %s", async (locale) => {
     const { t, tp } = textsIn(locale);
     serve(resources);
     renderTab(locale);

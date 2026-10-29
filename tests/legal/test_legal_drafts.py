@@ -1,5 +1,5 @@
 """
-Drafts of legal texts in the newer cabinet languages (docs/legal/drafts):
+Drafts of legal texts in the other cabinet language (docs/legal/drafts):
 marked needs_review, numbered like the English text they translate, with
 the generated sections' markers, and never served or accepted.
 """
@@ -39,11 +39,8 @@ def english_of(draft: Path) -> Path:
     return DEFAULT_LEGAL_DOCUMENTS_DIRECTORY / f"{match.group('document')}.en.md"
 
 
-def test_hebrew_and_german_dpa_drafts_exist() -> None:
-    assert [path.name for path in DRAFTS] == [
-        "dpa-2026-10-06.de.md",
-        "dpa-2026-10-06.he.md",
-    ]
+def test_the_italian_dpa_draft_exists() -> None:
+    assert [path.name for path in DRAFTS] == ["dpa-2026-10-06.it.md"]
 
 
 @pytest.mark.parametrize("draft", DRAFTS, ids=lambda path: path.name)
@@ -58,7 +55,7 @@ def test_a_draft_is_marked_and_numbered_like_its_english_text(draft: Path) -> No
         assert marker in text, marker
 
 
-@pytest.mark.parametrize("language", ["he", "de"])
+@pytest.mark.parametrize("language", ["it", "it-IT"])
 def test_a_draft_is_not_served(language: str) -> None:
     view = LegalDocumentRegistry().find_dpa(
         DpaDocumentVersion("2026-10-06"), LanguageTag(language)

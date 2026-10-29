@@ -1,6 +1,6 @@
 /**
  * `app.*` texts: the installed app (its short name) and the page shown
- * without a connection, in English: the reference that ru and ka are typed
+ * without a connection, in English: the reference that it is typed
  * against.
  */
 
