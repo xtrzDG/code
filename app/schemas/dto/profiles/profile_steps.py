@@ -99,7 +99,9 @@ class ChannelsStepInput(ImmutableDTO):
 
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
-        default=True, deprecated=RECORDING_NOTICE_DEPRECATION
+        default=True,
+        deprecated=RECORDING_NOTICE_DEPRECATION,
+        description=RECORDING_NOTICE_DEPRECATION,
     )
     answers: list[ProfileAnswerInput] = Field(default_factory=list[ProfileAnswerInput])
 

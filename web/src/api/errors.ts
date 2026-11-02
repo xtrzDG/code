@@ -15,6 +15,7 @@
 
 import type { MessageKey, MessageValues, PluralKey, Translator } from "@/i18n/translate";
 
+import { SHARED_REASON_MESSAGES } from "./platformBrake";
 import type { components } from "./schema";
 
 /** The body of every failed backend request. */
@@ -273,13 +274,16 @@ export function describeError(
 ): ErrorDescription {
   const t = typeof texts === "function" ? texts : texts.t;
   const apiError = toApiError(error);
-  const known = reasonMessages ? apiError.reasons.find((reason) => Object.hasOwn(reasonMessages, reason.code)) : undefined;
-  if (known && reasonMessages && typeof texts !== "function") {
-    const message = reasonMessages[known.code]?.(known);
-    if (message) {
-      const title = "pluralKey" in message ? texts.tp(message.pluralKey, message.count, message.values) : t(message.key, message.values);
-      return { title, detail: null, requestId: null };
-    }
+  // A bare `t` cannot count: a screen's own reasons need the translator.
+  const messages: ReasonMessages =
+    reasonMessages && typeof texts !== "function" ? { ...SHARED_REASON_MESSAGES, ...reasonMessages } : SHARED_REASON_MESSAGES;
+  const known = apiError.reasons.find((reason) => Object.hasOwn(messages, reason.code));
+  const message = known ? messages[known.code]?.(known) : undefined;
+  if (message && !("pluralKey" in message)) {
+    return { title: t(message.key, message.values), detail: null, requestId: null };
+  }
+  if (message && typeof texts !== "function") {
+    return { title: texts.tp(message.pluralKey, message.count, message.values), detail: null, requestId: null };
   }
   const overridden = overrides?.[apiError.code] !== undefined;
   if (!overridden && needsTwoFactors(apiError)) {

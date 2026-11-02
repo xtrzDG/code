@@ -1,9 +1,11 @@
 /**
  * The import from the business's website: the address the owner typed,
- * how far an import got, and the words for why it could not read the site.
+ * how far an import got, and the words for why it could not read the site
+ * (or why it could not start: the platform brake, src/api/platformBrake.ts).
  */
 
-import { isApiError } from "@/api/errors";
+import { isApiError, type ApiErrorReason } from "@/api/errors";
+import { PLATFORM_BRAKE_REASON, platformBrakeText } from "@/api/platformBrake";
 import type { Schema } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -97,6 +99,8 @@ const DETAIL_TEXTS: Record<string, MessageKey> = {
   credentials_in_url: "knowledge.website.errors.credentials",
   unknown_host: "knowledge.website.errors.unknownHost",
   timeout: "knowledge.website.errors.timeout",
+  // A queued import stopped by the platform brake (reader unavailable).
+  platform_brake: "errors.platformBrake.held",
 };
 const PROBLEM_TEXTS: Record<string, MessageKey> = {
   website_link_invalid: "knowledge.website.errors.notPublic",
@@ -119,10 +123,23 @@ export function problemText(problem: string, detail: string | null | undefined):
   return { key: PROBLEM_TEXTS[problem] ?? "knowledge.website.errors.unreachable" };
 }
 
+/** The platform brake that refused a start, or null for any other refusal. */
+export function startBrake(error: unknown): ApiErrorReason | null {
+  if (!isApiError(error) || error.status !== 409) {
+    return null;
+  }
+  return error.reasons.find((reason) => reason.code === PLATFORM_BRAKE_REASON) ?? null;
+}
+
 /** The words for a refused start, or null for errors the generic message covers. */
 export function startProblemText(error: unknown): ProblemText | null {
   if (!isApiError(error)) {
     return null;
+  }
+  const brake = startBrake(error);
+  if (brake) {
+    // Not "an import is running": the platform holds AI work back.
+    return { key: platformBrakeText(brake.details[0]) };
   }
   if (error.status === 409) {
     return { key: "knowledge.website.errors.running" };

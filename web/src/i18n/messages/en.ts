@@ -165,6 +165,12 @@ export const en = {
     backHome: "To my businesses",
     twoFactorRequired:
       "A business here asks its team to sign in with an authenticator app. Set one up in Account → Security, sign in again, then try once more.",
+    platformBrake: {
+      paused: "The platform has paused AI work for every assistant for now. Nothing was started; try again later.",
+      budgetStop:
+        "The platform has stopped AI work for every assistant for the rest of the day. Nothing was started; try again later.",
+      held: "The platform is holding AI work back for every assistant for now. Try again later.",
+    },
     codes: {
       not_found: "Not found, or you do not have access.",
       validation_failed: "Check the entered data.",

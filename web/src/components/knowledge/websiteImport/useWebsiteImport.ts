@@ -8,7 +8,7 @@ import { queryKeys } from "@/api/queryKeys";
 import type { Schema } from "@/api/types";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
-import { isImportRunning, type WebsiteImport } from "@/lib/knowledge/websiteImport";
+import { isImportRunning, startBrake, type WebsiteImport } from "@/lib/knowledge/websiteImport";
 
 /** While the worker reads the site and no live event arrives, look again this often. */
 const WEBSITE_IMPORT_POLL_MS = 3_000;
@@ -63,7 +63,8 @@ export function useWebsiteImport(businessId: string) {
     const result = await start.run(url);
     if (!result.ok) {
       // Another import runs already (another tab, a teammate): show it.
-      if (isApiError(result.error) && result.error.status === 409) {
+      // A platform brake refuses with 409 too, and nothing runs then.
+      if (isApiError(result.error) && result.error.status === 409 && !startBrake(result.error)) {
         reload();
       }
       return false;

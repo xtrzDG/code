@@ -12,6 +12,7 @@ import {
   problemText,
   profileWebsite,
   siteHost,
+  startBrake,
   startProblemText,
   type WebsiteImport,
 } from "./websiteImport";
@@ -116,5 +117,16 @@ describe("problems in words", () => {
     expect(startProblemText(refused(429))?.key).toBe("knowledge.website.errors.tooMany");
     expect(startProblemText(new ApiError({ status: 502, code: "external_service_error" }))).toBeNull();
     expect(startProblemText(new Error("network"))).toBeNull();
+  });
+
+  it("says the platform brake stopped a start, not that an import is running", () => {
+    expect(startProblemText(refused(409, "platform_brake", ["paused"]))?.key).toBe("errors.platformBrake.paused");
+    expect(startProblemText(refused(409, "platform_brake", ["budget_stop"]))?.key).toBe(
+      "errors.platformBrake.budgetStop",
+    );
+    expect(startBrake(refused(409, "platform_brake", ["paused"]))?.details).toEqual(["paused"]);
+    expect(startBrake(refused(409, "website_import_running"))).toBeNull();
+    // A queued import the brake stopped: the reader was unavailable.
+    expect(problemText("website_reader_unavailable", "platform_brake").key).toBe("errors.platformBrake.held");
   });
 });

@@ -8581,7 +8581,11 @@ export interface components {
             handoff_rules?: string[];
             /** Hours */
             hours?: components["schemas"]["OpeningInterval"][];
-            /** Is Recording Notice Enabled */
+            /**
+             * Is Recording Notice Enabled
+             * @deprecated
+             * @description Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).
+             */
             is_recording_notice_enabled: boolean;
             /** Is Saved */
             is_saved: boolean;
@@ -45732,6 +45736,8 @@ export interface operations {
                     }[];
                     /**
                      * Is Recording Notice Enabled
+                     * @deprecated
+                     * @description Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).
                      * @default true
                      */
                     is_recording_notice_enabled?: boolean;
@@ -45904,7 +45910,11 @@ export interface operations {
                          */
                         weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                     }[] | null;
-                    /** Is Recording Notice Enabled */
+                    /**
+                     * Is Recording Notice Enabled
+                     * @deprecated
+                     * @description Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).
+                     */
                     is_recording_notice_enabled?: boolean | null;
                     /** Links */
                     links?: {
@@ -46301,6 +46311,8 @@ export interface operations {
                     }[];
                     /**
                      * Is Recording Notice Enabled
+                     * @deprecated
+                     * @description Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).
                      * @default true
                      */
                     is_recording_notice_enabled?: boolean;

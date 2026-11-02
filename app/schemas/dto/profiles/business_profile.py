@@ -79,7 +79,8 @@ class BusinessProfileView(ImmutableDTO):
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     niche_answers: list[ProfileAnswer] = Field(default_factory=list[ProfileAnswer])
     is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
-        deprecated=RECORDING_NOTICE_DEPRECATION
+        deprecated=RECORDING_NOTICE_DEPRECATION,
+        description=RECORDING_NOTICE_DEPRECATION,
     )
     is_saved: IsProfileSaved
     updated_at: Microseconds | None = None
@@ -153,7 +154,9 @@ class ProfileInput(ImmutableDTO):
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     answers: list[ProfileAnswerInput] = Field(default_factory=list[ProfileAnswerInput])
     is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
-        default=True, deprecated=RECORDING_NOTICE_DEPRECATION
+        default=True,
+        deprecated=RECORDING_NOTICE_DEPRECATION,
+        description=RECORDING_NOTICE_DEPRECATION,
     )
 
 

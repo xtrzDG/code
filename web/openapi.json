@@ -6327,6 +6327,8 @@
             "type": "array"
           },
           "is_recording_notice_enabled": {
+            "deprecated": true,
+            "description": "Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).",
             "title": "Is Recording Notice Enabled",
             "type": "boolean"
           },
@@ -77497,6 +77499,8 @@
                         "type": "null"
                       }
                     ],
+                    "deprecated": true,
+                    "description": "Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).",
                     "title": "Is Recording Notice Enabled"
                   },
                   "links": {
@@ -77970,6 +77974,8 @@
                   },
                   "is_recording_notice_enabled": {
                     "default": true,
+                    "deprecated": true,
+                    "description": "Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).",
                     "title": "Is Recording Notice Enabled",
                     "type": "boolean"
                   },
@@ -79107,7 +79113,7 @@
                   },
                   {
                     "additionalProperties": false,
-                    "description": "Step 6: links the assistant may send and the call recording notice.\n\nChannels themselves are connected in the channels section.",
+                    "description": "Step 6: links the assistant may send (and the old call recording\nnotice, which has no effect: the call settings record calls).\n\nChannels themselves are connected in the channels section.",
                     "properties": {
                       "answers": {
                         "items": {
@@ -79154,6 +79160,8 @@
                       },
                       "is_recording_notice_enabled": {
                         "default": true,
+                        "deprecated": true,
+                        "description": "Has no effect: whether calls are recorded and announced is set in the call settings (is_recording_enabled).",
                         "title": "Is Recording Notice Enabled",
                         "type": "boolean"
                       },

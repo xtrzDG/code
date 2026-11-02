@@ -48,7 +48,9 @@ class ProfilePatch(ImmutableDTO):
     links: list[BusinessLink] | None = None
     answers: list[ProfileAnswerInput] | None = None
     is_recording_notice_enabled: IsRecordingNoticeEnabled | None = Field(
-        default=None, deprecated=RECORDING_NOTICE_DEPRECATION
+        default=None,
+        deprecated=RECORDING_NOTICE_DEPRECATION,
+        description=RECORDING_NOTICE_DEPRECATION,
     )
 
 

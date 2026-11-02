@@ -162,6 +162,13 @@ export const it: Messages = {
     backHome: "Alle mie attività",
     twoFactorRequired:
       "Un’attività qui chiede al suo team di accedere con un’app di autenticazione. Configurane una in Account → Sicurezza, accedi di nuovo e riprova.",
+    platformBrake: {
+      paused:
+        "La piattaforma ha messo in pausa per ora il lavoro dell’IA di tutti gli assistenti. Non è stato avviato nulla; riprova più tardi.",
+      budgetStop:
+        "La piattaforma ha fermato il lavoro dell’IA di tutti gli assistenti per il resto della giornata. Non è stato avviato nulla; riprova più tardi.",
+      held: "La piattaforma sta trattenendo per ora il lavoro dell’IA di tutti gli assistenti. Riprova più tardi.",
+    },
     codes: {
       not_found: "Non trovato, oppure non hai accesso.",
       validation_failed: "Controlla i dati inseriti.",
