@@ -2,6 +2,24 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+/**
+ * The only files that may hand markup to the browser (INP-02): each was
+ * reviewed and builds its markup from constant or escaped parts, never
+ * from a customer's, a model's or an owner's text. Everything else renders
+ * text through React, which escapes it. src/lib/csp/htmlSinks.test.ts
+ * keeps this list and the code in step.
+ */
+const REVIEWED_HTML_SINK_FILES = [
+  // The Trusted Types bootstrap: a constant script with the page's nonce.
+  "src/components/csp/TrustedTypesScript.tsx",
+  // Structured data for search engines, serialized with every "<" escaped.
+  "src/app/_landing/JsonLd.tsx",
+  // The hosted chat's empty container, which the widget fills itself.
+  "src/app/c/[[]slug]/page.tsx",
+  // The printable table card in a frame's srcdoc, built from escaped parts.
+  "src/app/b/[[]businessId]/assistant/channels/_components/TableCardPanel.tsx",
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -60,6 +78,25 @@ const eslintConfig = defineConfig([
           selector: "CallExpression[callee.property.name=/^toLocale(Date|Time)?String$/]",
           message: "toLocale*String formats in the zone and language of whatever runs it; use lib/format with a timeZone.",
         },
+      ],
+    },
+  },
+  {
+    // Untrusted text is rendered as text (INP-02): no raw HTML sink outside
+    // the reviewed files. Tests may build markup to render into.
+    files: ["src/**/*.{ts,tsx,mts}"],
+    ignores: ["src/**/*.test.{ts,tsx}", "src/test/**", ...REVIEWED_HTML_SINK_FILES],
+    rules: {
+      "react/no-danger": "error",
+      "react/forbid-dom-props": ["error", { forbid: [{ propName: "srcDoc", message: "Markup in a frame is a reviewed HTML sink (REVIEWED_HTML_SINK_FILES)." }] }],
+      "no-restricted-properties": [
+        "error",
+        { property: "innerHTML", message: "Render text through React; markup sinks are reviewed (REVIEWED_HTML_SINK_FILES)." },
+        { property: "outerHTML", message: "Render text through React; markup sinks are reviewed (REVIEWED_HTML_SINK_FILES)." },
+        { property: "insertAdjacentHTML", message: "Render text through React; markup sinks are reviewed (REVIEWED_HTML_SINK_FILES)." },
+        { property: "createContextualFragment", message: "Render text through React; markup sinks are reviewed (REVIEWED_HTML_SINK_FILES)." },
+        { object: "document", property: "write", message: "document.write is never used." },
+        { object: "document", property: "writeln", message: "document.write is never used." },
       ],
     },
   },

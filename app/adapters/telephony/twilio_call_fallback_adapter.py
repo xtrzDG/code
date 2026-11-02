@@ -49,8 +49,9 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
     The fallback names the call (`CallSid`), the line (`To`), the caller
     (`From`) and, for a call forwarded to the line, `ForwardedFrom`; the
     dial's action adds `DialCallStatus`. A call put through to staff
-    presents the line as its caller id (`build_dial_twiml`). A missed call of the fallback is
-    the line's (source PBX) of the business, keyed by Twilio's call SID.
+    presents the line as its caller id (`build_dial_twiml`). A missed call
+    of the fallback is the line's (source PBX) of the business, keyed by
+    Twilio's call SID.
 
     Twilio's signature carries no time, so once a request's signature
     checks out its address, call and status are claimed for a day

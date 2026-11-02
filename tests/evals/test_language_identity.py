@@ -82,3 +82,14 @@ def test_no_written_reply_fails() -> None:
 def test_the_expected_language_wins_only_a_tie() -> None:
     assert read_reply_language(UKRAINIAN_REPLY, LanguageTag("ru")) == "uk"
     assert read_reply_language("Merci beaucoup !", LanguageTag("fr")) == "fr"
+
+
+def test_the_random_ids_of_a_link_are_not_read() -> None:
+    # This privacy link once read as Italian and flipped an English reply.
+    text: str = (
+        "Privacy notice: http://localhost:3000/c/business_6e568e2e-63ac-40d4-"
+        "97ac-6e32749c7e2d/privacy\nThe women's haircut costs 60 GEL. Can I "
+        "help with anything else?"
+    )
+
+    assert read_reply_language(text, LanguageTag("en")) == LanguageTag("en")

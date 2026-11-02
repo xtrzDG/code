@@ -16,6 +16,7 @@ from app.schemas.dto.jobs import JobTick
 from app.schemas.dto.platform_status import PlatformStatusQuery, PlatformStatusView
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.platform_status.gated_components import stored_components
 from app.use_cases.platform_status.get_platform_status_use_case import (
     GetPlatformStatusUseCase,
 )
@@ -84,7 +85,7 @@ def test_a_firing_alert_shows_on_its_components_and_overall() -> None:
 def test_the_job_keeps_the_worst_of_each_day() -> None:
     world = StatusWorld()
     world.fire(PlatformAlertCode.LLM_ERRORS, 30)
-    assert record(world) == len(StatusComponent)
+    assert record(world) == len(stored_components())
     world.clock.advance(10 * MINUTE)
     world.resolve(PlatformAlertCode.LLM_ERRORS)
     record(world)

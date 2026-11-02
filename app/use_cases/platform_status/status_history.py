@@ -18,9 +18,11 @@ from app.schemas.domain.platform_status import (
     PlatformStatusDayDocument,
 )
 from app.schemas.dto.platform_status import StatusDayView
+from app.schemas.dto.release_gates import ReleaseGate
 from app.schemas.typings.platform_status.constrained_integers import StatusCheckCount
 from app.schemas.typings.platform_status.constrained_strings import StatusDay
 from app.use_cases.platform_status.component_levels import worse
+from app.use_cases.platform_status.gated_components import stored_components
 
 HISTORY_DAYS: int = 90
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -46,8 +48,12 @@ def fold_levels(
     day: StatusDay,
     levels: Mapping[StatusComponent, StatusLevel],
     now: Microseconds,
+    gates: Sequence[ReleaseGate] | None = None,
 ) -> PlatformStatusDayDocument:
-    """The day with one more record of every component's level."""
+    """
+    The day with one more record of every component's level (payments
+    once its release gate opened, `gated_components.py`).
+    """
 
     records: dict[StatusComponent, ComponentDayRecord] = (
         {}
@@ -55,7 +61,7 @@ def fold_levels(
         else {record.component: record for record in stored.components}
     )
     folded: list[ComponentDayRecord] = []
-    for component in StatusComponent:
+    for component in stored_components(gates):
         level: StatusLevel = levels.get(component, StatusLevel.OPERATIONAL)
         record: ComponentDayRecord | None = records.get(component)
         folded.append(

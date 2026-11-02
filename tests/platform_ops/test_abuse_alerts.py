@@ -13,6 +13,9 @@ from typed_time_provider import Microseconds
 
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
 from app.adapters.channels.whatsapp_quality_signals import report_quality_warnings
+from app.adapters.events.in_memory_live_event_bus_adapter import (
+    InMemoryLiveEventBusAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -31,7 +34,6 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.monitoring import PlatformAlertCode, PlatformSignal
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.dto.channels.channel_webhooks import ChannelWebhookPayload
-from app.schemas.dto.live_events import LiveEvent
 from app.schemas.dto.platform_alerts import AlertObservation
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
@@ -48,11 +50,6 @@ from tests.channels.channels_payloads import to_json_bytes
 from tests.channels.testbed import ChannelsTestbed
 from tests.platform_ops.ops_documents import HOUR, MINUTE, SECOND
 from tests.platform_ops.ops_world import OpsWorld
-
-
-class SilentBus:
-    def publish(self, event: LiveEvent) -> None:
-        del event
 
 
 class BookingWorld:
@@ -148,9 +145,7 @@ def test_new_bookings_count_per_business_and_hour(world: BookingWorld) -> None:
 
 def test_the_16th_cancellation_an_hour_fires_the_alert(world: BookingWorld) -> None:
     business_id = BusinessId()
-    cancelled = [
-        world.booking(business_id, BookingStatus.CANCELLED) for _ in range(16)
-    ]
+    cancelled = [world.booking(business_id, BookingStatus.CANCELLED) for _ in range(16)]
 
     for booking_id in cancelled[:15]:
         world.announce(business_id, LiveEventKind.BOOKING_CHANGED, (booking_id,))
@@ -196,7 +191,9 @@ def test_a_change_without_a_booking_counts_nothing(world: BookingWorld) -> None:
 
 def test_owners_test_bookings_never_count(world: BookingWorld) -> None:
     publisher = EventPublisherFacilitator(
-        SilentBus(), world.ops.clock.wall_clock, observers=[world.observer]
+        InMemoryLiveEventBusAdapter(),
+        world.ops.clock.wall_clock,
+        observers=[world.observer],
     )
     business_id = BusinessId()
 

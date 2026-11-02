@@ -1,7 +1,7 @@
 {
   "collection": "platform_announcements",
   "document_type": "PlatformAnnouncementDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -12,7 +12,8 @@
             "meta",
             "telegram",
             "voice",
-            "cabinet"
+            "cabinet",
+            "payments"
           ],
           "type": "string"
         },
@@ -87,7 +88,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "starts_at": {

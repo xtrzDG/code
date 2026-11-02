@@ -170,3 +170,28 @@ def test_placeholders_never_sway_the_customers_language() -> None:
 
     assert masked == f"ecco la mia carta {CARD_PLACEHOLDER}"
     assert detected.language == LanguageTag("it")
+
+
+@pytest.mark.parametrize(
+    ("said", "masked"),
+    [
+        ("4242 4242 4242 4242 12/26 123", CARD_PLACEHOLDER),
+        ("4242 4242 4242 4242, 12/26, 123 grazie", f"{CARD_PLACEHOLDER} grazie"),
+        ("4242 4242 4242 4242 alle 19:00", f"{CARD_PLACEHOLDER} alle 19:00"),
+    ],
+)
+def test_the_expiry_and_code_after_a_card_go_with_it(said: str, masked: str) -> None:
+    assert mask_sensitive_numbers(said) == masked
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        # Luhn-valid digits inside ids the platform writes into the context.
+        "booking_d4242424-2424-2424-bb47-18cef8ccf178",
+        "42424242-4242-4242-4242-424242424242",
+        "ref x4242424242424242",
+    ],
+)
+def test_digits_of_an_identifier_stay(identifier: str) -> None:
+    assert mask_sensitive_numbers(identifier) == identifier

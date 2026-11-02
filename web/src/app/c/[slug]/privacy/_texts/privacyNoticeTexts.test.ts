@@ -69,6 +69,15 @@ describe("privacyNoticeFor", () => {
     expect(privacyNoticeFor("ar").text("backToChat")).toBe("العودة إلى المحادثة");
   });
 
+  it("tells every reader that children under 14 need a parent's or guardian's consent", () => {
+    for (const language of ["en", ...Object.keys(PRIVACY_NOTICE_DRAFTS)]) {
+      const notice = privacyNoticeFor(language);
+      expect([language, /14|۱۴/.test(notice.text("minors"))]).toEqual([language, true]);
+      expect([language, notice.text("minorsTitle").length > 1]).toEqual([language, true]);
+    }
+    expect(privacyNoticeFor("it").text("minors")).toContain("consenso di un genitore");
+  });
+
   it("falls back to English for a language with neither", () => {
     const swahili = privacyNoticeFor("sw");
     expect(swahili.language).toBe("en");

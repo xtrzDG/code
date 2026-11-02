@@ -76,7 +76,7 @@ def is_dto(model: type) -> bool:
 
 
 def describe(route: APIRoute) -> str:
-    return f"{sorted(route.methods)} {route.path}"
+    return f"{sorted(route.methods or set())} {route.path}"
 
 
 def undeclared_routes(routes: list[APIRoute]) -> list[str]:

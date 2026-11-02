@@ -175,7 +175,7 @@ class TestScriptAgreesWithTheApi:
         )
 
         assert snippet_response.status_code == 200
-        body = snippet_response.json()
+        body: dict[str, str] = snippet_response.json()
         [tag] = parse_script_tags(body["snippet"])
         loader_url = tag["src"]
         assert loader_url is not None

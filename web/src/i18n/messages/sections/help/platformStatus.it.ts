@@ -26,6 +26,7 @@ export const platformStatusIt: Translation<typeof platformStatusEn> = {
     telegram: "Telegram",
     voice: "Chiamate",
     cabinet: "Pannello e accesso",
+    payments: "Pagamenti e caparre",
   },
   checkedAt: "Verificato: {time}",
   monitoringDelayed: {

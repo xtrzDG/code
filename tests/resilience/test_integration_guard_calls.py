@@ -157,17 +157,28 @@ def google_answering(
     return GoogleCalendarClient(None, None, None, transport=httpx.MockTransport(answer))
 
 
+type Answer = Callable[[httpx.Request], httpx.Response]
+
+
 def unreachable(request: httpx.Request) -> httpx.Response:
     raise httpx.ConnectError("connection refused", request=request)
+
+
+def status(code: int, body: dict[str, object]) -> Answer:
+    def answer(request: httpx.Request) -> httpx.Response:
+        del request
+        return httpx.Response(code, json=body)
+
+    return answer
 
 
 @pytest.mark.parametrize(
     ("answer", "is_outage"),
     [
-        (lambda _: httpx.Response(503, json={"error": "backendError"}), True),
+        (status(503, {"error": "backendError"}), True),
         (unreachable, True),
-        (lambda _: httpx.Response(401, json={"error": "invalid_grant"}), False),
-        (lambda _: httpx.Response(404, json={}), False),
+        (status(401, {"error": "invalid_grant"}), False),
+        (status(404, {}), False),
     ],
 )
 def test_google_names_its_outages(
@@ -183,10 +194,10 @@ def test_google_names_its_outages(
 @pytest.mark.parametrize(
     ("answer", "is_outage"),
     [
-        (lambda _: httpx.Response(500, json={"code": 20500}), True),
+        (status(500, {"code": 20500}), True),
         (unreachable, True),
-        (lambda _: httpx.Response(401, json={"code": 20003}), False),
-        (lambda _: httpx.Response(400, json={"code": 21422}), False),
+        (status(401, {"code": 20003}), False),
+        (status(400, {"code": 21422}), False),
     ],
 )
 def test_twilio_numbers_name_their_outages(

@@ -7,9 +7,11 @@
  * in: the public page their visit began on (`page`, its path and query)
  * and another site's page before it (`referrer`), checked like the
  * proxy's first visit (components/consent/saveConsent.ts sends them).
- * Rejecting drops `aw_attr`. Answers 204; 403 for another site (no site
- * may answer for the visitor), 413 over 4 KB, 422 for anything but a
- * choice.
+ * Rejecting drops `aw_attr`. Every answer is logged on the server with
+ * its pseudonymous receipt id, kept in the cookie so a changed mind keeps
+ * one history (server/consentLog.ts). Answers 204; 403 for another site
+ * (no site may answer for the visitor), 413 over 4 KB, 422 for anything
+ * but a choice.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -19,7 +21,8 @@ import { z } from "@/lib/zod";
 import { forgetAttribution, keepAttribution } from "@/server/attributionCookie";
 import { REQUEST_ID_HEADER, jsonError, sanitizeRequestId } from "@/server/backend";
 import { BodyTooLargeError, readLimitedText } from "@/server/bodyLimits";
-import { setConsentCookie } from "@/server/consentCookie";
+import { CONSENT_VERSION, newConsentId, readConsentId, setConsentCookie } from "@/server/consentCookie";
+import { logConsent } from "@/server/consentLog";
 import { isSameOriginRequest } from "@/server/sameOrigin";
 import { readSessionToken } from "@/server/sessionCookie";
 
@@ -75,7 +78,9 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   const { choice, page, referrer } = parsed.data;
   const response = new NextResponse(null, { status: 204, headers: { "cache-control": "no-store" } });
-  setConsentCookie(response, choice, request.headers);
+  const consentId = readConsentId(request.cookies) ?? newConsentId();
+  setConsentCookie(response, choice, consentId, request.headers);
+  logConsent({ choice, version: CONSENT_VERSION, consentId, at: new Date().toISOString() });
   if (choice === "denied") {
     if (request.cookies.has(ATTRIBUTION_COOKIE)) {
       forgetAttribution(response, request.headers);

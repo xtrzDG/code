@@ -196,6 +196,17 @@
         "items": {
           "additionalProperties": false,
           "properties": {
+            "invited_at": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "role": {
               "enum": [
                 "owner",

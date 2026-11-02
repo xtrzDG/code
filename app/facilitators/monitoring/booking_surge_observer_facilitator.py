@@ -82,9 +82,7 @@ class BookingSurgeObserverFacilitator(BusinessEventObserverContract):
             elif event is LiveEventKind.BOOKING_CHANGED and self._is_cancellation(
                 business_id, ids
             ):
-                self._count(
-                    business_id, CANCELLATIONS_KEY, CANCELLATION_SURGE_PER_HOUR
-                )
+                self._count(business_id, CANCELLATIONS_KEY, CANCELLATION_SURGE_PER_HOUR)
         except (ApplicationError, ValidationError) as error:
             LOGGER.warning(
                 "Booking surge of business %s was not counted: %s",
@@ -119,7 +117,9 @@ class BookingSurgeObserverFacilitator(BusinessEventObserverContract):
 
         is_new: bool = prefix == NEW_BOOKINGS_KEY
         self._signals.count(
-            PlatformSignal.BOOKING_SURGE if is_new else PlatformSignal.CANCELLATION_SURGE
+            PlatformSignal.BOOKING_SURGE
+            if is_new
+            else PlatformSignal.CANCELLATION_SURGE
         )
         LOGGER.warning(
             "Business %s had more than %s %s this hour",

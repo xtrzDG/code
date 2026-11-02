@@ -13,6 +13,8 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.config_helpers.production.database_tls_requirements import (
+    CLEAR_TEXT_SSL_MODES,
+    ENCRYPTED_SSL_MODES,
     is_tls_required,
     named_ssl_mode_text,
 )
@@ -38,9 +40,7 @@ def test_pgsslmode_require_covers_addresses_that_name_no_mode() -> None:
 def test_without_a_tls_default_every_address_is_named(mode: str | None) -> None:
     problems = problems_with({"PGSSLMODE": mode})
 
-    assert [problem.split(" ", 1)[0] for problem in problems] == list(
-        ADDRESS_VARIABLES
-    )
+    assert [problem.split(" ", 1)[0] for problem in problems] == list(ADDRESS_VARIABLES)
     assert all("does not require TLS" in problem for problem in problems)
 
 
@@ -67,9 +67,7 @@ def test_a_weaker_mode_in_the_address_wins_over_pgsslmode(weaker: str) -> None:
 
 
 def test_the_live_events_address_is_checked_too() -> None:
-    [problem] = problems_with(
-        {"LIVE_EVENTS_DATABASE_URL": f"{PLAIN}?sslmode=disable"}
-    )
+    [problem] = problems_with({"LIVE_EVENTS_DATABASE_URL": f"{PLAIN}?sslmode=disable"})
 
     assert problem.startswith("LIVE_EVENTS_DATABASE_URL does not require TLS")
 
@@ -124,3 +122,11 @@ def test_development_never_asks_for_tls() -> None:
 
     assert any(str(problem).startswith("DATABASE_URL does not") for problem in problems)
     require_production_settings(settings, problems)
+
+
+def test_every_ssl_mode_is_either_encrypted_or_clear_text() -> None:
+    assert ENCRYPTED_SSL_MODES.isdisjoint(CLEAR_TEXT_SSL_MODES)
+    assert set(DatabaseSslMode) == ENCRYPTED_SSL_MODES | CLEAR_TEXT_SSL_MODES
+    for mode in DatabaseSslMode:
+        address = DatabaseUrl(f"{PLAIN}?sslmode={mode.value}")
+        assert is_tls_required(address, None) is (mode in ENCRYPTED_SSL_MODES)

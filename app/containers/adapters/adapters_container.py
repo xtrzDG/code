@@ -63,7 +63,6 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.process_adapters_container import (
     ProcessAdaptersContainer,
 )
-from app.containers.adapters.provider_guards import guard_tenant_sms_volume
 from app.containers.adapters.provider_resilience import ProviderResilience
 from app.containers.adapters.provider_resilience_seam import provider_resilience
 from app.containers.adapters.security_adapters_container import (
@@ -80,7 +79,6 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
-from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.schemas.dto.conversations import LlmCallLimits
@@ -154,20 +152,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
     )
     # --- Circuit breakers (the call adapters' ElevenLabs too) and bulkheads (W20).
     resilience: Singleton[ProviderResilience] = provider_resilience(
-        clients=clients, config=config, time_provider=time_provider, utilities=utilities
+        clients, config, time_provider, utilities, rate_limit_buckets
     )
     guarded = resilience.provided
     circuit_breaker, payment_gateway = guarded.circuit_breaker, guarded.payment_gateway
     outbound_bulkhead = guarded.outbound_bulkhead
     platform_bot_client = guarded.platform_bot_client
-    guarded_email_sender = guarded.email_sender
-    # A business's SMS: hourly volume alerted at 60 and capped at 200 (LOG-05).
-    guarded_sms_sender: Singleton[SmsMessagingClientContract | None] = Singleton(
-        guard_tenant_sms_volume,
-        inner_client=guarded.sms_sender,
-        buckets=rate_limit_buckets,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
+    guarded_email_sender, guarded_sms_sender = guarded.email_sender, guarded.sms_sender
     calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
         CallAdaptersContainer, clients=clients, config=config,
         time_provider=time_provider, utilities=utilities,

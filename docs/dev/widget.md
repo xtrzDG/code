@@ -8,14 +8,28 @@ chat page `/c/{address}` of the cabinet runs the same script in page mode.
 The cabinet hands out the code for a website (`GET …/channels/web/snippet`):
 
 ```html
-<script src="<APP_BASE_URL>/widget.js" data-tenant="<business id>" async></script>
+<script src="<APP_BASE_URL>/widget/v/<version>.js"
+  integrity="sha384-<hash>" crossorigin="anonymous"
+  data-tenant="<business id>" async></script>
 ```
+
+The tag names the loader (`app/utilities/channels/widget_loader.js`): a
+small script served from an address that names its content, cached for a
+year, and pinned by its Subresource Integrity hash, so a copy changed on the
+way does not run. It only adds `/widget.js` (next to its `/widget/v/`
+folder) with the tag's `data-*` attributes, so the widget itself keeps
+updating with every deploy. A published loader never changes: a new one is
+a new file, and the old one stays served (`published_widget_loaders`,
+`tests/channels/test_widget_loader.py` pins the first address). Embed codes
+pasted before the loader name `/widget.js` directly and keep working.
 
 `/widget.js` is a script without dependencies or cookies: a button and a
 chat window in a shadow DOM (the site's and the widget's styles never mix),
 the visitor's browser language among the business's languages,
 right-to-left writing for Hebrew and Arabic, a typing indicator, errors with
-a retry, a full-screen window on phones, keyboard control. A random key in
+a retry (when the chat cannot answer at all, also the business's public
+phone, `business_phone_number` of the config, as a call link), a
+full-screen window on phones, keyboard control. A random key in
 `localStorage` recognises the visitor; the last messages, the read position
 and an open handoff are kept there too, and a conversation idle for 24 hours
 (`CONVERSATION_IDLE_EXPIRY_MS`) is removed when the widget next loads. On

@@ -140,7 +140,9 @@ class TestTheRule:
         )
 
         with pytest.raises(ValidationFailedError):
-            sms.send(setup.business, only_missed_call(setup), E164PhoneNumber(SATELLITE))
+            sms.send(
+                setup.business, only_missed_call(setup), E164PhoneNumber(SATELLITE)
+            )
         assert setup.testbed.sms_client.sent == []
 
 

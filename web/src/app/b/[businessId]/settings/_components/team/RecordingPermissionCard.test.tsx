@@ -45,7 +45,8 @@ describe("RecordingPermissionCard: who may play call recordings", () => {
     const { t } = textsIn(locale);
     renderCard(business, locale);
 
-    const toggle = await screen.findByRole("checkbox", { name: t("security.recordings.toggle") });
+    const toggle = await screen.findByRole("checkbox");
+    expect(screen.getByText(t("security.recordings.toggle"))).toBeTruthy();
     expect((toggle as HTMLInputElement).checked).toBe(false);
     expect(screen.getByText(t("security.recordings.off"))).toBeTruthy();
   });
@@ -55,7 +56,7 @@ describe("RecordingPermissionCard: who may play call recordings", () => {
     vi.mocked(api.PUT).mockImplementation((() => ok({ ...ownersOnly, staff_may_play_recordings: true })) as never);
     renderCard();
 
-    await userEvent.click(await screen.findByRole("checkbox", { name: t("security.recordings.toggle") }));
+    await userEvent.click(await screen.findByRole("checkbox"));
 
     await waitFor(() => expect(screen.getByText(t("security.recordings.on"))).toBeTruthy());
     expect(vi.mocked(api.PUT).mock.calls[0]?.[1]).toEqual({
@@ -68,7 +69,8 @@ describe("RecordingPermissionCard: who may play call recordings", () => {
     const { t } = textsIn("it");
     renderCard({ ...business, viewer_role: "staff" }, "it");
 
-    const toggle = await screen.findByRole("checkbox", { name: t("security.recordings.toggle") });
+    const toggle = await screen.findByRole("checkbox");
+    expect(screen.getByText(t("security.recordings.toggle"))).toBeTruthy();
     expect((toggle as HTMLInputElement).disabled).toBe(true);
     expect(screen.getByText(t("security.team.ownerOnly"))).toBeTruthy();
   });

@@ -25,12 +25,19 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_text,
     read_typed_integer,
 )
+from app.utilities.conversations.llm_model_pins import (
+    ANTHROPIC_OPUS_5_5,
+    ANTHROPIC_SONNET_5_5,
+    OPENAI_GPT_5_MINI,
+)
 
 # The concept's choice: OpenAI gpt-5-mini in a project with EU data residency.
+# Every default is a pinned model version, never a floating alias
+# (llm_model_pins.py).
 DEFAULT_LLM_PROVIDER: str = LlmProvider.OPENAI
 DEFAULT_MODEL_IDS: dict[str, str] = {
-    LlmProvider.OPENAI: "gpt-5-mini",
-    LlmProvider.ANTHROPIC: "claude-opus-5-5",
+    LlmProvider.OPENAI: OPENAI_GPT_5_MINI,
+    LlmProvider.ANTHROPIC: ANTHROPIC_OPUS_5_5,
     LlmProvider.SCRIPTED: "scripted",
 }
 # The judge of autotests and of real conversations comes from the other
@@ -39,8 +46,8 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
 # Anthropic ones; used when that provider's key is set, else the judge
 # falls back to the deployment's own default model.
 DEFAULT_JUDGE_MODEL_IDS: dict[str, tuple[str, str]] = {
-    LlmProvider.OPENAI: ("claude-sonnet-5-5", "ANTHROPIC_API_KEY"),
-    LlmProvider.ANTHROPIC: ("gpt-5-mini", "OPENAI_API_KEY"),
+    LlmProvider.OPENAI: (ANTHROPIC_SONNET_5_5, "ANTHROPIC_API_KEY"),
+    LlmProvider.ANTHROPIC: (OPENAI_GPT_5_MINI, "OPENAI_API_KEY"),
 }
 # The API key of each model provider: the SDKs read them from the
 # environment themselves; the settings only note which ones are set.

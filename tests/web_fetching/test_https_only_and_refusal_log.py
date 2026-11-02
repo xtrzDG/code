@@ -27,7 +27,6 @@ from tests.web_fetching.fetch_fakes import (
     redirect,
 )
 
-
 EXPECTED_KEYS: tuple[str, ...] = (
     "security_event",
     "path",

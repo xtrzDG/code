@@ -48,7 +48,8 @@ def card(world: BrainWorld, admins: frozenset[UserId], token: str) -> dict[str, 
         headers=bearer(token),
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    body: dict[str, Any] = response.json()
+    return body
 
 
 def test_the_owner_reads_the_card_without_platform_details() -> None:
@@ -133,4 +134,3 @@ def test_the_admin_team_decides_never_the_stored_flag() -> None:
     assert sees.run(world.owner_id) is False
     assert sees.run(world.staff_id) is True
     assert sees.run(UserId()) is False
-

@@ -12,7 +12,6 @@ import pytest
 
 from app.schemas.constants.calls import MissedCallReason
 from tests.calls.call_fallback_steps import (
-    ASSISTANT_LINE,
     STAFF_MOBILE,
     fallback_form,
     fallback_path,
@@ -21,7 +20,12 @@ from tests.calls.call_fallback_steps import (
     set_staff_mobile,
 )
 from tests.calls.call_steps import missed_calls, save_call_settings
-from tests.channels.voice_setup import CALLER, VoiceSetup, build_voice_setup
+from tests.channels.voice_setup import (
+    ASSISTANT_LINE,
+    CALLER,
+    VoiceSetup,
+    build_voice_setup,
+)
 
 CALLER_ID: re.Pattern[str] = re.compile(r'callerId="([^"]*)"')
 

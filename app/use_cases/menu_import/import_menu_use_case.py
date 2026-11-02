@@ -21,6 +21,7 @@ from app.use_cases.menu_import.menu_upload_checks import check_menu_upload
 from app.utilities.knowledge.imported_drafts import build_draft
 from app.utilities.knowledge.imported_item_views import build_imported_item_view
 
+
 class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
     """
     Read a menu or price list from a photo, PDF, text or link (concept

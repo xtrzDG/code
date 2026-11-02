@@ -8,8 +8,9 @@ account or ID number to book a table (GDPR data minimization).
   by single spaces or hyphens ("4242 4242 4242 4242", "3782-822463-10005",
   digits a speech recognizer wrote one by one), that passes the Luhn check
   and does not start with 0. A phone number written the international way
-  (a leading +) is not one. The digits said right after the card in the
-  same run (the expiry date and the security code) go with it.
+  (a leading +), an all-digit UUID or digits joined to letters (an
+  identifier) are not one. The expiry date and the security code said
+  right after the card ("4242 4242 4242 4242 12/26 123") go with it.
 - A security code named as such ("cvv 123", "CVC: 1234", "il codice di
   sicurezza è 123").
 - An IBAN of a registered country whose mod-97 check holds, grouped in
@@ -44,11 +45,22 @@ MASKING_PLACEHOLDERS: tuple[str, ...] = (
 )
 # A run of at least 13 digits with single spaces or hyphens between them. A
 # run right after "+" is a phone number, one after a decimal point or
-# before a decimal part (0.30000000000000004) a fraction.
+# before a decimal part (0.30000000000000004) a fraction, one joined to
+# letters ("booking_d1234567-8901-2345-bb47-...", "id42424242...x") part of
+# an identifier.
 DIGIT_RUN_PATTERN: re.Pattern[str] = re.compile(
-    r"(?<!\d[.,])(?<![\d+])\d(?:[ \u00a0\-]?\d){12,}(?![.,]?\d)"
+    r"(?<!\d[.,])(?<![\w+])(?<!\w-)\d(?:[ \u00a0\-]?\d){12,}"
+    r"(?![.,]?\d)(?!-?\w)"
 )
 DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(r"[ \u00a0\-]")
+UUID_SHAPE: re.Pattern[str] = re.compile(r"\d{8}-\d{4}-\d{4}-\d{4}-\d{12}")
+# Right after a masked card, up to three of: the rest of an expiry date
+# ("/26" once the month joined the card's digits), an expiry date ("12/26")
+# or a security code ("123"); never a time or a decimal number.
+CARD_TAIL_PATTERN: re.Pattern[str] = re.compile(
+    re.escape(CARD_PLACEHOLDER) + r"(?:(?:\s?/\s?\d{2,4}|[ \u00a0,;\-]{1,3}"
+    r"(?:\d{1,2}\s?/\s?\d{2,4}|\d{3,4}))(?![\d:]|[.,]\d)){1,3}"
+)
 # Two letters, two check digits, then 11 to 30 letters or digits.
 IBAN_CANDIDATE_PATTERN: re.Pattern[str] = re.compile(
     r"(?<!\w)[A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){11,30}(?!\w)"
@@ -96,6 +108,7 @@ def mask_sensitive_numbers(text: str) -> str:
     masked = TAX_CODE_PATTERN.sub(_tax_code_placeholder, masked)
     masked = DOCUMENT_NUMBER_PATTERN.sub(rf"\1{ID_NUMBER_PLACEHOLDER}", masked)
     masked = DIGIT_RUN_PATTERN.sub(_card_placeholder, masked)
+    masked = CARD_TAIL_PATTERN.sub(CARD_PLACEHOLDER, masked)
     return SECURITY_CODE_PATTERN.sub(rf"\1{SECURITY_CODE_PLACEHOLDER}", masked)
 
 
@@ -145,6 +158,9 @@ def holds_card_number(groups: list[str]) -> bool:
 
 def _card_placeholder(match: re.Match[str]) -> str:
     run: str = match.group(0)
+    if UUID_SHAPE.fullmatch(run):
+        return run
+
     groups: list[str] = DIGIT_GROUP_SEPARATOR.split(run)
     return CARD_PLACEHOLDER if holds_card_number(groups) else run
 

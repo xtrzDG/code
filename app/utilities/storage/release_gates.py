@@ -5,12 +5,10 @@ During a deploy the previous release reads what the new one writes (and
 after a rollback the other way round), and an enum value it does not know
 fails the whole document. So a new value is added in two releases:
 
-1. the release that adds it reads it and lists it here behind a CLOSED
-   gate; storage refuses to write a value of a closed gate
-   (`PersistedDocumentCodec`), so nothing writes it yet;
-2. the next release opens the gate (`is_open=True`): the release before it
-   knows the value now. Once that release is the previous one too, the
-   gate goes.
+1. the release that adds it reads it and lists it behind a CLOSED gate:
+   storage (`PersistedDocumentCodec`) refuses to write the value yet;
+2. the next release opens the gate (`is_open=True`), as the release
+   before it knows the value; once that one is gone too, the gate goes.
 
 `tests/architecture_policy/test_enum_values_are_known_one_release_ahead.py`
 compares the enum values of every stored document with the snapshot of
@@ -31,6 +29,7 @@ from app.schemas.typings.maintenance.constrained_strings import (
     StoredEnumPath,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.status_release_gates import STATUS_RELEASE_GATES
 
 SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
@@ -217,6 +216,7 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         values=[GatedEnumValue("callback_requested")],
         is_open=False,
     ),
+    *STATUS_RELEASE_GATES,  # The status page's payments component (REL-06).
 )
 
 PATH_STEP: re.Pattern[str] = re.compile(r"[a-z_][a-z0-9_]*|\[\]|\{\}")

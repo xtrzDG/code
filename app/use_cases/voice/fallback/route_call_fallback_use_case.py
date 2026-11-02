@@ -43,9 +43,8 @@ class RouteCallFallbackUseCase(
     With nobody to put the call through to (no such phone, or the call
     comes from that very phone, was forwarded from it or that phone is the
     line itself, which would ring in a loop), or no line to present, the
-    call ends and is a missed
-    call of the line (NOT_STARTED) with its text-back. A business that is
-    gone: the call ends. So does a call from a number staff blocked
+    call ends and is a missed call of the line (NOT_STARTED) with its
+    text-back. A business that is gone: the call ends. So does a call from a number staff blocked
     (`is_blocked_caller`), which the voice agent refused: it reaches
     nobody and is no missed call. A signed copy of a request already
     handled (Twilio's signature has no time) changes nothing: no phone
@@ -126,9 +125,7 @@ class RouteCallFallbackUseCase(
         line: E164PhoneNumber | None = self._parse(business, report.assistant_number)
         if transfer is not None and not is_loop and line is not None:
             return CallFallbackPlan(
-                reply=self._call_fallback_adapter.transfer(
-                    business.id, transfer, line
-                ),
+                reply=self._call_fallback_adapter.transfer(business.id, transfer, line),
                 called_at=now,
                 business_id=business.id,
                 transfer_phone_number=transfer,

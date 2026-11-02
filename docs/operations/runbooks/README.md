@@ -42,6 +42,7 @@ which runbook is `../dependency-map.md`.
 | [tenant-sms-volume](tenant-sms-volume.md) | `tenant_sms_volume`, `otp_conversion` | SEV2 |
 | [booking-abuse](booking-abuse.md) | `booking_spike`, `cancellation_spike` | SEV3 |
 | [whatsapp-quality](whatsapp-quality.md) | `whatsapp_quality` | SEV2 |
+| [privacy-requests](privacy-requests.md) | none: a person asks the platform about their own data (access, copy, correction, erasure) | none; answer within a month |
 | [secret-rotation](secret-rotation.md) | none: the yearly rotation, an offboarding or a leak of a webhook secret | none; SEV1 for a leak |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,

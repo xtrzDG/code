@@ -5,8 +5,10 @@ class StatusComponent(StrEnum):
     """
     The parts of the platform the public status page reports on: the
     website chat and hosted chat page (CHAT), WhatsApp, Instagram and
-    Messenger (META), Telegram, phone calls (VOICE) and the owner cabinet
-    with its sign-in (CABINET).
+    Messenger (META), Telegram, phone calls (VOICE), the owner cabinet
+    with its sign-in (CABINET) and payments (PAYMENTS: deposits, payment
+    links and subscriptions through Flitt and Stripe, REL-06; stored
+    behind the `status_payments` release gate).
     """
 
     CHAT = "chat"
@@ -14,6 +16,7 @@ class StatusComponent(StrEnum):
     TELEGRAM = "telegram"
     VOICE = "voice"
     CABINET = "cabinet"
+    PAYMENTS = "payments"
 
 
 class StatusLevel(StrEnum):

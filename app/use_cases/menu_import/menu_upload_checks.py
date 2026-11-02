@@ -97,5 +97,5 @@ def check_text(content: bytes) -> None:
 def decode(data_base64: str) -> bytes:
     try:
         return base64.b64decode(data_base64, validate=True)
-    except (binascii.Error, ValueError):
+    except binascii.Error, ValueError:
         raise ValidationFailedError("The menu file is not valid base64.") from None

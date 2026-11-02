@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -36,6 +36,9 @@ class PlatformAnnouncementDocument(BaseDocument):
     resolves it. Creating, changing and resolving it are audited.
     """
 
+    # 2: `components` may hold `payments` (REL-06), written once the
+    # `status_payments` release gate opens.
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: AnnouncementId = Field(default_factory=AnnouncementId)
     level: AnnouncementLevel
     status: AnnouncementStatus = AnnouncementStatus.ACTIVE
@@ -70,6 +73,9 @@ class PlatformStatusDayDocument(BaseDocument):
     are shown; old days stay (one small row a day).
     """
 
+    # 2: a component record may be `payments` (REL-06), written once the
+    # `status_payments` release gate opens.
+    schema_version: SchemaVersion = SchemaVersion("2")
     day: StatusDay
     components: list[ComponentDayRecord] = Field(
         default_factory=list[ComponentDayRecord]

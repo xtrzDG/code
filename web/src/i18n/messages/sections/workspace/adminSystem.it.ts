@@ -78,6 +78,9 @@ export const adminSystemIt: Translation<typeof adminSystemEn> = {
       backup_failed: "Backup non riuscito",
       tenant_sms_volume: "Un cliente invia troppi SMS",
       otp_conversion: "Codici di accesso non usati",
+      booking_spike: "Un cliente riceve un'ondata di nuove prenotazioni",
+      cancellation_spike: "Le prenotazioni di un cliente vengono annullate in massa",
+      whatsapp_quality: "Meta segnala un numero o un modello WhatsApp",
     },
   },
   errorBudget: {

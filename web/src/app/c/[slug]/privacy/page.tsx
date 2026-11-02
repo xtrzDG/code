@@ -67,7 +67,9 @@ export async function generateMetadata({ searchParams }: PageProps<"/c/[slug]/pr
  * review (with a link to the English text, which prevails) in the other
  * languages of the chat widget. When the business's AI assistant answers
  * its phone, a "Phone calls" section says how calls are treated: recorded
- * only while the business records calls (Settings → Calls).
+ * only while the business records calls (Settings → Calls). A "Children"
+ * section says the chat is not meant for children under 14 without the
+ * consent of a parent or guardian.
  */
 export default async function PrivacyNoticePage({ params, searchParams }: PageProps<"/c/[slug]/privacy">) {
   const { slug } = await params;
@@ -110,6 +112,8 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
     { title: text("keptTitle"), body: [naming("kept", periods)] },
     ...(calls ? [{ title: text("callsTitle"), body: phoneCallKeys(calls).map((key) => naming(key, periods)) }] : []),
     { title: text("rightsTitle"), body: [naming("rights")] },
+    // Not for children under 14 without a parent's consent (Italy: L. 132/2025 art. 4(4)).
+    { title: text("minorsTitle"), body: [naming("minors")] },
   ];
   const address = hostedChatPath(view.slug ?? slug);
 

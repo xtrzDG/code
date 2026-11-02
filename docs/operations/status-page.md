@@ -9,8 +9,13 @@ how the team speaks to every owner during an incident
 `/status` (cabinet, public, `en`/`it`) reads `GET /v1/platform/status`:
 
 - **Components**: website chat (`chat`), WhatsApp/Instagram/Messenger
-  (`meta`), Telegram, phone calls (`voice`) and the cabinet with its
-  sign-in (`cabinet`).
+  (`meta`), Telegram, phone calls (`voice`), the cabinet with its
+  sign-in (`cabinet`) and payments (`payments`: deposits, payment links
+  and subscriptions through Flitt and Stripe). Payments is shown from
+  this release; its day records and announcements naming it are written
+  once its release gate `status_payments` opens in the next release
+  (`app/utilities/storage/status_release_gates.py`), so until then its
+  history bars are grey and an announcement cannot name it yet.
 - **Level now**: the worst of
   - the platform alerts that fire (`ops/alerts/*.yaml`, checked every five
     minutes by `platform_alerts`), mapped in
@@ -19,7 +24,9 @@ how the team speaks to every owner during an incident
     (an outage from half the model calls failing or a 15-minute backlog);
     delivery failures degrade the messengers (an outage from half failing);
     tool errors degrade the chat channels and calls; login-code cap trips
-    degrade the cabinet; `worker_down` (no worker pulsed for five minutes,
+    degrade the cabinet; storage errors degrade every component and API
+    latency the website chat and the cabinet; a payment reconciliation
+    mismatch degrades payments; `worker_down` (no worker pulsed for five minutes,
     raised by the API's pipeline watchdog) is an outage of every chat
     channel. Dead jobs and handoff spikes are internal and not shown;
   - the monitoring's own freshness: while the alert checks last ran more

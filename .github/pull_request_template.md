@@ -29,6 +29,7 @@ Risk:
 - [ ] New behaviour has tests; nothing reaches the network in tests (fakes implement contracts).
 - [ ] Domain values use typed primitives; the role chain and `.importlinter` layers hold.
 - [ ] **Entry points:** `uv run python -m scripts.entry_point_inventory` run when routes, jobs or commands changed, and both generated files committed.
+- [ ] **Dependencies:** a new direct dependency is needed (no existing one or a few lines of our own do it), maintained (recent releases, not archived, more than one maintainer), its name checked against typosquats, its licence allowed and its install scripts none or reviewed; the CI dependency review (`.github/dependency-review-config.yml`) is green.
 - [ ] **Database:** new SQL migration in `migrations/` (never edit an applied one), safe for a rolling deploy (old code keeps working on the new schema).
 - [ ] **Stored documents:** a changed document schema still reads old rows (new fields optional or defaulted, a schema version bump and upcaster when a field changes meaning).
 - [ ] **API:** `cd web && npm run gen:api` run and `openapi.json` + `src/api/schema.d.ts` committed; changes within `/v1` are additive (`docs/api-versioning.md`); an entry with the new `Spec:` fingerprint on top of `docs/API_CHANGELOG.md`.

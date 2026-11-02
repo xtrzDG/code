@@ -6,9 +6,13 @@ from app.schemas.typings.subscription_lifecycle.booleans import IsPauseEnabled
 
 class GrowthSettings(ImmutableDTO):
     """
-    The approved WhatsApp utility templates of the revenue features, for a
+    The approved WhatsApp templates of the revenue features, for a
     customer whose 24-hour window is closed (each business's WhatsApp
-    Business account registers them under these names; see `.env.example`):
+    Business account registers them under these names; see `.env.example`).
+    The waitlist's is a UTILITY template (a place the customer asked for);
+    the rebooking campaign's is a MARKETING one, never a service message's
+    utility template (`app/use_cases/campaigns/marketing_template.py`
+    refuses a name a service message uses):
 
     - `waitlist_template_name` (WHATSAPP_WAITLIST_TEMPLATE): a freed place
       held for a waiting customer; parameters business, date, time and the

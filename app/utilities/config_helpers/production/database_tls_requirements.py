@@ -24,6 +24,10 @@ ENCRYPTED_SSL_MODES: frozenset[DatabaseSslMode] = frozenset(
         DatabaseSslMode.VERIFY_FULL,
     }
 )
+# The modes that may connect in clear text: refused wherever they appear.
+CLEAR_TEXT_SSL_MODES: frozenset[DatabaseSslMode] = frozenset(
+    {DatabaseSslMode.DISABLE, DatabaseSslMode.ALLOW, DatabaseSslMode.PREFER}
+)
 URI_SCHEMES: tuple[str, ...] = ("postgresql://", "postgres://")
 # `sslmode=value` in a key/value connection string (`host=db sslmode=require`).
 KEYWORD_SSL_MODE: re.Pattern[str] = re.compile(
@@ -45,8 +49,7 @@ def find_database_tls_problems(
     return [
         unencrypted_address_problem(variable_name)
         for variable_name, address in addresses
-        if address is not None
-        and not is_tls_required(address, roles.default_ssl_mode)
+        if address is not None and not is_tls_required(address, roles.default_ssl_mode)
     ]
 
 
@@ -65,9 +68,11 @@ def is_tls_required(
         return default_ssl_mode in ENCRYPTED_SSL_MODES
 
     try:
-        return DatabaseSslMode(named_text) in ENCRYPTED_SSL_MODES
+        named_mode = DatabaseSslMode(named_text)
     except ValueError:
         return False
+
+    return named_mode not in CLEAR_TEXT_SSL_MODES
 
 
 def named_ssl_mode_text(address: DatabaseUrl) -> str | None:

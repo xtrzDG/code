@@ -19,6 +19,7 @@ from app.use_cases.platform_status.announcement_views import (
     admin_view,
     stored_messages,
 )
+from app.use_cases.platform_status.gated_components import require_announceable
 
 # A planned maintenance may be announced this far ahead at most.
 MAX_LEAD_MICROSECONDS: int = 60 * 24 * 60 * 60 * 1_000_000
@@ -40,7 +41,8 @@ class CreateAnnouncementUseCase(
         AccessDeniedError: not a platform admin who manages operations.
         StepUpRequiredError: the session must sign in again first.
         ValidationFailedError: the start is in the past by more than the
-            check allows, too far ahead, or after the expected end.
+            check allows, too far ahead, or after the expected end; or it
+            names a component storage may not name yet (payments).
     """
 
     def __init__(
@@ -83,6 +85,7 @@ class CreateAnnouncementUseCase(
                 "An announcement is expected to end after it starts and after now."
             )
 
+        require_announceable(body.components)
         announcement = PlatformAnnouncementDocument(
             level=body.level,
             components=list(body.components),

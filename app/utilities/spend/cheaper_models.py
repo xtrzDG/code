@@ -10,11 +10,15 @@ provider; otherwise each provider's small model: gpt-5-nano for OpenAI
 
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.utilities.conversations.llm_model_pins import (
+    ANTHROPIC_HAIKU_4_5,
+    OPENAI_GPT_5_NANO,
+)
 from app.utilities.conversations.llm_models import resolve_llm_provider
 
 CHEAPER_MODEL_IDS: dict[LlmProvider, LlmModelId] = {
-    LlmProvider.OPENAI: LlmModelId("gpt-5-nano"),
-    LlmProvider.ANTHROPIC: LlmModelId("claude-haiku-4-5"),
+    LlmProvider.OPENAI: LlmModelId(OPENAI_GPT_5_NANO),
+    LlmProvider.ANTHROPIC: LlmModelId(ANTHROPIC_HAIKU_4_5),
     LlmProvider.SCRIPTED: LlmModelId("scripted"),
 }
 

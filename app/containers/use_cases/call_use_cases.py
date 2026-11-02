@@ -11,6 +11,10 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.text_back_checks_factory import (
+    text_back_sms_destinations_factory,
+    text_back_template_check_factory,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.calls.call_fallback import (
@@ -46,9 +50,6 @@ from app.use_cases.voice.call_settings.list_text_backs_use_case import (
 from app.use_cases.voice.call_settings.update_call_settings_use_case import (
     UpdateCallSettingsUseCase,
 )
-from app.use_cases.voice.call_settings.text_back_template_check import (
-    TextBackTemplateCheck,
-)
 from app.use_cases.voice.fallback.notify_call_fallback_use_case import (
     NotifyCallFallbackUseCase,
 )
@@ -78,9 +79,6 @@ from app.use_cases.voice.missed_calls.register_missed_call_use_case import (
 )
 from app.use_cases.voice.missed_calls.send_text_back_use_case import (
     SendTextBackUseCase,
-)
-from app.use_cases.voice.missed_calls.text_back_destinations import (
-    TextBackSmsDestinations,
 )
 from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
 from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
@@ -145,11 +143,8 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
     )
 
     # --- Callers who did not get through and their text-backs.
-    text_back_sms_destinations: Factory[TextBackSmsDestinations] = Factory(
-        TextBackSmsDestinations,
-        high_cost_registry=registries.high_cost_phone_number_registry,
-        country_registry=registries.country_registry,
-        phone_number_parser=utilities.phone_number_parser,
+    text_back_sms_destinations = text_back_sms_destinations_factory(
+        registries, utilities
     )
     find_missed_voice_call_use_case: Factory[
         UseCaseContract[StoredFinishedCall, MissedCallReport | None]
@@ -284,13 +279,8 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
         assistant_version_repo=repositories.assistant_version_repo,
-        # A text-back's template must not be a MARKETING one (VOICE-09).
-        template_check=Factory(
-            TextBackTemplateCheck,
-            catalog=clients.meta_template_catalog_client,
-            channel_repo=repositories.channel_repo,
-            secret_cipher=adapters.secret_cipher,
-            app_settings=config.app_settings,
+        template_check=text_back_template_check_factory(
+            clients, repositories, adapters, config
         ),
     )
     list_text_backs_use_case: Factory[

@@ -22,13 +22,17 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_integer,
     read_text,
 )
+from app.utilities.conversations.llm_model_pins import (
+    ANTHROPIC_SONNET_5_5,
+    OPENAI_GPT_5_MINI,
+)
 
 # The model of the other provider a chat falls back to when its own
 # provider fails: a strong Anthropic model for OpenAI deployments and the
 # concept's OpenAI default for Anthropic ones. The scripted model has none.
 DEFAULT_FALLBACK_MODEL_IDS: dict[LlmProvider, str] = {
-    LlmProvider.OPENAI: "claude-sonnet-5-5",
-    LlmProvider.ANTHROPIC: "gpt-5-mini",
+    LlmProvider.OPENAI: ANTHROPIC_SONNET_5_5,
+    LlmProvider.ANTHROPIC: OPENAI_GPT_5_MINI,
 }
 FALLBACK_OFF_VALUES: frozenset[str] = frozenset({"off", "none"})
 

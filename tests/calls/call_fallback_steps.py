@@ -44,7 +44,8 @@ from tests.channels.channels_http import wrap
 from tests.channels.channels_payloads import HttpResponse
 from tests.channels.channels_settings import APP_BASE_URL, build_settings
 from tests.channels.testbed import ChannelsTestbed
-from tests.channels.voice_setup import ASSISTANT_LINE, CALLER, VoiceSetup
+from tests.channels.voice_setup import ASSISTANT_LINE as ASSISTANT_LINE
+from tests.channels.voice_setup import CALLER, VoiceSetup
 
 TWILIO_AUTH_TOKEN: str = "test-token-0000"
 TWILIO_SETTINGS: dict[str, str] = {

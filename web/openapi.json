@@ -31505,13 +31505,14 @@
         "type": "object"
       },
       "StatusComponent": {
-        "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+        "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
         "enum": [
           "chat",
           "meta",
           "telegram",
           "voice",
-          "cabinet"
+          "cabinet",
+          "payments"
         ],
         "title": "StatusComponent",
         "type": "string"
@@ -35544,7 +35545,7 @@
       },
       "WidgetConfigView": {
         "additionalProperties": false,
-        "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.\n\n`starter_questions` are up to three of the business's FAQ questions per\nlanguage, shown as one-tap chips before the visitor writes;\n`privacy_url` is the business's privacy notice (or the platform's\ndefault one for it; None without CABINET_BASE_URL), linked from the\nfooter; `contact_links` are the other channels, offered on the hosted\nchat page. `powered_by_url` is the footer's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).\n`attachments` says which photos and voice notes the visitor may send\nand how large or long they may be.",
+        "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.\n\n`starter_questions` are up to three of the business's FAQ questions per\nlanguage, shown as one-tap chips before the visitor writes;\n`privacy_url` is the business's privacy notice (or the platform's\ndefault one for it; None without CABINET_BASE_URL), linked from the\nfooter; `contact_links` are the other channels, offered on the hosted\nchat page. `powered_by_url` is the footer's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).\n`attachments` says which photos and voice notes the visitor may send\nand how large or long they may be. `business_phone_number` is the\nbusiness's public phone (its profile), offered when the chat cannot\nanswer (the assistant or the API is down); None when not given.",
         "properties": {
           "accent_color": {
             "anyOf": [
@@ -35577,6 +35578,20 @@
           "business_name": {
             "title": "Business Name",
             "type": "string"
+          },
+          "business_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Phone Number"
           },
           "contact_links": {
             "items": {
@@ -35976,7 +35991,7 @@
       },
       "WidgetSnippetView": {
         "additionalProperties": false,
-        "description": "Embed code the owner pastes into the website.\n\n`demo_url` is deprecated: the API's widget demo page is served in\ndevelopment and tests only (404 in production); owners preview the\nwidget on the hosted chat page (the share links' `hosted_chat_url`).",
+        "description": "Embed code the owner pastes into the website: a tag naming the\nloader (`loader_url`, an address that never changes) with its\nintegrity hash (`loader_integrity`), which loads the current widget\n(`script_url`; an older embed code names that one directly).\n\n`demo_url` is deprecated: the API's widget demo page is served in\ndevelopment and tests only (404 in production); owners preview the\nwidget on the hosted chat page (the share links' `hosted_chat_url`).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -35988,6 +36003,20 @@
             "minLength": 14,
             "pattern": "^https?://[^\\s/]+(/[^\\s]*)?/widget/demo\\?business_id=[^\\s&]+$",
             "title": "Demo Url",
+            "type": "string"
+          },
+          "loader_integrity": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha384-[A-Za-z0-9+/]{64}$",
+            "title": "Loader Integrity",
+            "type": "string"
+          },
+          "loader_url": {
+            "maxLength": 2048,
+            "minLength": 30,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?/widget/v/[0-9a-f]{16}\\.js$",
+            "title": "Loader Url",
             "type": "string"
           },
           "script_url": {
@@ -36005,6 +36034,8 @@
         "required": [
           "business_id",
           "script_url",
+          "loader_url",
+          "loader_integrity",
           "snippet",
           "demo_url"
         ],
@@ -36406,18 +36437,19 @@
                 "properties": {
                   "components": {
                     "items": {
-                      "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                      "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
                       "enum": [
                         "chat",
                         "meta",
                         "telegram",
                         "voice",
-                        "cabinet"
+                        "cabinet",
+                        "payments"
                       ],
                       "title": "StatusComponent",
                       "type": "string"
                     },
-                    "maxItems": 5,
+                    "maxItems": 6,
                     "title": "Components",
                     "type": "array"
                   },
@@ -36627,18 +36659,19 @@
                     "anyOf": [
                       {
                         "items": {
-                          "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                          "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
                           "enum": [
                             "chat",
                             "meta",
                             "telegram",
                             "voice",
-                            "cabinet"
+                            "cabinet",
+                            "payments"
                           ],
                           "title": "StatusComponent",
                           "type": "string"
                         },
-                        "maxItems": 5,
+                        "maxItems": 6,
                         "type": "array"
                       },
                       {
@@ -40277,18 +40310,19 @@
                         "properties": {
                           "components": {
                             "items": {
-                              "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                              "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
                               "enum": [
                                 "chat",
                                 "meta",
                                 "telegram",
                                 "voice",
-                                "cabinet"
+                                "cabinet",
+                                "payments"
                               ],
                               "title": "StatusComponent",
                               "type": "string"
                             },
-                            "maxItems": 5,
+                            "maxItems": 6,
                             "title": "Components",
                             "type": "array"
                           },
@@ -58436,6 +58470,126 @@
           }
         },
         "summary": "Post Booking Cancel",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/bookings/{booking_id}/manage-links/revoke": {
+      "post": {
+        "operationId": "operations_post_booking_links_revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Post Booking Links Revoke",
         "tags": [
           "operations"
         ]

@@ -75,13 +75,9 @@ def test_a_trial_without_a_card_texts_back_twenty_callers_a_day(
 
     missed = missed_calls(setup)
     assert int(TRIAL_BUSINESS_DAILY_LIMIT) == 20
-    assert (
-        sum(call.status is TextBackStatus.QUEUED for call in missed) == 20
-    )
+    assert sum(call.status is TextBackStatus.QUEUED for call in missed) == 20
     assert [
-        call.skip_reason
-        for call in missed
-        if call.status is TextBackStatus.SKIPPED
+        call.skip_reason for call in missed if call.status is TextBackStatus.SKIPPED
     ] == [TextBackSkipReason.DAILY_LIMIT] * 5
 
 
@@ -111,6 +107,4 @@ def test_with_a_card_the_twenty_first_caller_is_texted_too(setup: VoiceSetup) ->
     for caller in callers(int(TRIAL_BUSINESS_DAILY_LIMIT) + 1):
         report_missed_call(setup, caller)
 
-    assert all(
-        call.status is TextBackStatus.QUEUED for call in missed_calls(setup)
-    )
+    assert all(call.status is TextBackStatus.QUEUED for call in missed_calls(setup))

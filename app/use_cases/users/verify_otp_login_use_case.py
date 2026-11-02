@@ -27,6 +27,7 @@ from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
+from app.use_cases.shared.lapsed_invitations import LapsedInvitations
 from app.use_cases.users.otp_login.login_challenge_consumption import (
     consume_login_challenge,
 )
@@ -60,7 +61,9 @@ class VerifyOtpLoginUseCase(
     one-factor session at once (SignInCompletion: the token is returned
     once, only its hash is stored, the login is audited and counted); an
     owner of a business among them is asked to set up a second factor
-    (`second_factor_suggested`, at every such sign-in until they do); a
+    (`second_factor_suggested`, at every such sign-in until they do). The
+    first sign-in of an invited account ends its team invitations older
+    than seven days (`LapsedInvitations`); a
     wrong code is audited as LOGIN_FAILED, the one that locks the code as
     OTP_LOCKED (`SignInSecurityAudit`). A new
     account keeps where its owner came from (the cabinet's attribution,
@@ -91,6 +94,9 @@ class VerifyOtpLoginUseCase(
         business_repo: BusinessRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
+        self._lapsed_invitations: LapsedInvitations = LapsedInvitations(
+            business_repo, audit_log_repo
+        )
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
         self._app_settings: AppSettings = app_settings
@@ -187,6 +193,8 @@ class VerifyOtpLoginUseCase(
                 created_at=now,
             )
 
+        # The first sign-in of an invited account: lapsed invitations end.
+        self._lapsed_invitations.remove(user, now)
         user.is_verified = True
         if user.country_code is None:
             user.country_code = challenge.country_code

@@ -1,10 +1,10 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.booking_link_use_cases import (
     BookingLinkUseCasesContainer,
 )
-from app.containers.provider_chains import use_case_orchestrator
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.bookings.managed_booking_orchestrator import (

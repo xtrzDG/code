@@ -386,6 +386,15 @@ jobs:
         working-directory: web
         run: npm audit --audit-level=high
 
+      # The dependencies a pull request adds or updates (SDLC-02): a high or
+      # critical advisory or a denied licence fails it; the rules and the
+      # reviewed exceptions are in .github/dependency-review-config.yml.
+      - name: Dependencies this pull request changes (dependency review)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          config-file: ./.github/dependency-review-config.yml
+
       # Reviewed false positives are listed by fingerprint in .gitleaksignore.
       - name: Secrets in the whole history (gitleaks)
         run: |
@@ -483,20 +492,26 @@ jobs:
           trivyignores: .trivyignore
           skip-setup-trivy: true
 
+      # CycloneDX SBOMs of the images scanned above (SDLC-01): a 30-day
+      # artifact of every run and, on main, attested to each published image
+      # (job "publish-images"), so every production release keeps its SBOM
+      # in the registry and in the repository's attestations.
       - name: SBOM of the backend image (syft)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: assistant-workshop-backend:ci
-          format: spdx-json
-          artifact-name: sbom-backend.spdx.json
+          format: cyclonedx-json
+          artifact-name: sbom-backend.cdx.json
+          output-file: ${{ runner.temp }}/sbom-backend.cdx.json
           upload-artifact-retention: 30
 
       - name: SBOM of the cabinet image (syft)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: assistant-workshop-web:ci
-          format: spdx-json
-          artifact-name: sbom-web.spdx.json
+          format: cyclonedx-json
+          artifact-name: sbom-web.cdx.json
+          output-file: ${{ runner.temp }}/sbom-web.cdx.json
           upload-artifact-retention: 30
 
       # On main the images scanned above, not a rebuild of them, go on to be
@@ -515,7 +530,10 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: scanned-images
-          path: ${{ runner.temp }}/images.tar
+          path: |
+            ${{ runner.temp }}/images.tar
+            ${{ runner.temp }}/sbom-backend.cdx.json
+            ${{ runner.temp }}/sbom-web.cdx.json
           if-no-files-found: error
           retention-days: 1
 
@@ -771,13 +789,13 @@ jobs:
   # Main only (a push, or a run automerge.yml or a person started on main),
   # once every gate passed: the images the "images" job built and
   # scanned go to the GitHub container registry under the commit SHA, each
-  # with SLSA build provenance (GitHub's attestation store and the registry)
-  # and a keyless cosign signature (Sigstore, issued for this workflow's
+  # with SLSA build provenance and its CycloneDX SBOM (GitHub's attestation
+  # store and the registry) and a keyless cosign signature (Sigstore, issued for this workflow's
   # OIDC identity: no signing key exists to keep or to leak). Deploy smoke
   # verifies both for the commit it deployed (deploy-smoke.yml,
   # scripts/verify_images.sh, docs/operations/deploys.md).
   publish-images:
-    name: Images (publish, provenance, signature)
+    name: Images (publish, provenance, SBOM, signature)
     needs: [backend-checks, coverage, web-checks, security, images, e2e, visual]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
@@ -838,6 +856,25 @@ jobs:
         with:
           subject-name: ${{ steps.push.outputs.web-name }}
           subject-digest: ${{ steps.push.outputs.web-digest }}
+          push-to-registry: true
+
+      # The CycloneDX SBOM of each image, attested to its digest in the
+      # repository's attestations and the registry (actions/attest, which
+      # actions/attest-sbom v4.1.0 wraps at this same commit).
+      - name: SBOM attestation of the backend image
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-name: ${{ steps.push.outputs.backend-name }}
+          subject-digest: ${{ steps.push.outputs.backend-digest }}
+          sbom-path: ${{ runner.temp }}/scanned-images/sbom-backend.cdx.json
+          push-to-registry: true
+
+      - name: SBOM attestation of the cabinet image
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-name: ${{ steps.push.outputs.web-name }}
+          subject-digest: ${{ steps.push.outputs.web-digest }}
+          sbom-path: ${{ runner.temp }}/scanned-images/sbom-web.cdx.json
           push-to-registry: true
 
       # The installer checks the cosign binary against the digest pinned in

@@ -33,27 +33,24 @@ def build_customer_turn(
     the business's Instagram story), the messages the assistant stayed
     silent on, then this message as the model reads it (fenced, with a line
     per attachment) and its photos as pictures. Card, security code, IBAN
-    and ID numbers are masked before the provider sees the turn, also in
-    messages stored before masking at intake.
+    and ID numbers in what was written are masked before the provider sees
+    the turn, also in messages stored before masking at intake.
     """
 
     context: str = str(turn.context_line)
     if turn.context_note is not None:
         context = f"{context}\n{describe_context_note(turn.context_note)}"
 
-    text = MessageText(
-        mask_sensitive_numbers(
-            build_user_turn_text(
-                context,
-                build_text_with_unanswered_messages(
-                    collect_unanswered_messages(message_repo, turn, stored_turns),
-                    str(turn.model_text),
-                    fence_key,
-                ),
-                fence_key,
-            )
+    # Only what the customer and staff wrote is masked: the platform's own
+    # context (booking ids, dates) reaches the model as written.
+    written: str = mask_sensitive_numbers(
+        build_text_with_unanswered_messages(
+            collect_unanswered_messages(message_repo, turn, stored_turns),
+            str(turn.model_text),
+            fence_key,
         )
     )
+    text = MessageText(build_user_turn_text(context, written, fence_key))
     images: list[LlmImageInput] = turn_photos(turn)
     if not images:
         return llm_adapter.build_user_text_turn(text)

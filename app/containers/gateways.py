@@ -75,6 +75,12 @@ class GatewaysContainer(containers.DeclarativeContainer):
         metrics=utilities.service_metrics,
         tracer=utilities.span_tracer,
     )
+    # Refused webhooks, slow requests and requests or jobs failed by the
+    # database or the object storage, counted for the platform alerts
+    # (LOG-04); one per process, written in the background.
+    failure_signals: Singleton[FailureSignals] = Singleton(
+        FailureSignals, signal_counter=adapters.signal_counter
+    )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,
         periodic_jobs=periodic_jobs,
@@ -92,10 +98,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
         inbound_poll_seconds=config.app_settings.provided.worker_inbound_poll_seconds,
         lanes=config.app_settings.provided.worker_lanes,
         job_telemetry=job_telemetry,
-        # Jobs failed by the database or the object storage (storage_errors).
-        failure_signals=Singleton(
-            FailureSignals, signal_counter=adapters.signal_counter
-        ),
+        failure_signals=failure_signals,
     )
     # The API availability SLI of this API process, flushed every 15 s
     # (started by `start_telemetry` of the API, closed on shutdown).

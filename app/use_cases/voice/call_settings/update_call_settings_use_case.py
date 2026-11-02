@@ -31,13 +31,13 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.users.prefixed_id import UserId
-from app.use_cases.voice.call_settings.text_back_template_check import (
-    TextBackTemplateCheck,
-)
 from app.use_cases.voice.call_settings.call_settings_views import (
     CallSettingsSources,
     build_call_settings_view,
     stored_or_default,
+)
+from app.use_cases.voice.call_settings.text_back_template_check import (
+    TextBackTemplateCheck,
 )
 
 CALL_SETTINGS_ENTITY: AuditEntityName = AuditEntityName("call_settings")

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ATTRIBUTION_COOKIE, decodeAttribution } from "@/lib/attribution";
 
@@ -15,6 +15,29 @@ function answer(body: unknown, headers: Record<string, string> = {}): NextReques
   });
 }
 
+const RECEIPT = "[A-Za-z0-9_-]{22}";
+/** What the route wrote to the server's standard output. */
+const written: string[] = [];
+
+beforeEach(() => {
+  written.length = 0;
+  vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array) => {
+    written.push(String(chunk));
+    return true;
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+/** The consent records the route wrote to the server's log. */
+function consentLines(): Record<string, unknown>[] {
+  return written
+    .filter((line) => line.includes('"cookie_consent"'))
+    .map((line) => JSON.parse(line) as Record<string, unknown>);
+}
+
 function setCookie(response: Response, name: string): string | undefined {
   return response.headers
     .getSetCookie()
@@ -28,7 +51,7 @@ describe("POST /api/consent", () => {
     );
 
     expect(response.status).toBe(204);
-    expect(setCookie(response, "aw_consent")).toMatch(/^aw_consent=1\.granted; .*Max-Age=15811200/);
+    expect(setCookie(response, "aw_consent")).toMatch(new RegExp(`^aw_consent=1\\.granted\\.${RECEIPT}; .*Max-Age=15811200`));
     const attribution = setCookie(response, ATTRIBUTION_COOKIE)?.split(";")[0]?.split("=")[1];
     expect(decodeAttribution(attribution)).toMatchObject({
       utm_source: "instagram",
@@ -76,5 +99,35 @@ describe("POST /api/consent", () => {
     expect(large.status).toBe(413);
     expect((await POST(answer({ choice: "maybe" }))).status).toBe(422);
     expect((await POST(answer("not json"))).status).toBe(422);
+  });
+
+  it("logs each answer on the server with its version, time and receipt id, nothing about who", async () => {
+    const before = Date.now();
+    const response = await POST(
+      answer({ choice: "granted", page: "/it?utm_source=x", referrer: "https://www.instagram.com/" }, { "x-forwarded-for": "203.0.113.7" }),
+    );
+
+    const [line] = consentLines();
+    expect(consentLines()).toHaveLength(1);
+    expect(Object.keys(line ?? {}).sort()).toEqual(["at", "choice", "consent_id", "event", "version"]);
+    expect(line).toMatchObject({ event: "cookie_consent", choice: "granted", version: "1" });
+    expect(Date.parse(String(line?.at))).toBeGreaterThanOrEqual(before - 1000);
+    expect(setCookie(response, "aw_consent")).toContain(`1.granted.${String(line?.consent_id)};`);
+    expect(JSON.stringify(line)).not.toMatch(/203\.0\.113|instagram|utm_source/);
+  });
+
+  it("keeps the receipt id when the visitor changes their mind", async () => {
+    const receipt = "AAECAwQFBgcICQoLDA0ODw";
+    const response = await POST(answer({ choice: "denied" }, { cookie: `aw_consent=1.granted.${receipt}` }));
+
+    expect(setCookie(response, "aw_consent")).toMatch(new RegExp(`^aw_consent=1\\.denied\\.${receipt};`));
+    expect(consentLines()).toEqual([expect.objectContaining({ choice: "denied", consent_id: receipt })]);
+  });
+
+  it("logs nothing for a refused answer", async () => {
+    await POST(answer({ choice: "granted" }, { "sec-fetch-site": "cross-site", origin: "https://evil.example" }));
+    await POST(answer({ choice: "maybe" }));
+
+    expect(consentLines()).toEqual([]);
   });
 });

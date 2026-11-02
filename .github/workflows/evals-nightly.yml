@@ -53,10 +53,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - model: gpt-5-mini
+          # Pinned model versions, never floating aliases (AI-12,
+          # app/utilities/conversations/llm_model_pins.py).
+          - model: gpt-5-mini-2025-08-07
             judge: claude-opus-5-5
           - model: claude-opus-5-5
-            judge: gpt-5-mini
+            judge: gpt-5-mini-2025-08-07
     # The provider keys reach only the two steps that need them.
     env:
       UV_FROZEN: "1"

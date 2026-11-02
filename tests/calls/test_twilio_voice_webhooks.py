@@ -76,9 +76,7 @@ def test_form_fields_keep_repeats_and_unreadable_bodies_have_none() -> None:
 
 
 def test_the_dial_escapes_what_it_is_given() -> None:
-    twiml = build_dial_twiml(
-        "+1<2>", 'https://api.example.com/x?a=1&b="2"', '+3<9>"'
-    )
+    twiml = build_dial_twiml("+1<2>", 'https://api.example.com/x?a=1&b="2"', '+3<9>"')
 
     assert "<Number>+1&lt;2&gt;</Number>" in twiml
     assert 'callerId="+3&lt;9&gt;&quot;"' in twiml

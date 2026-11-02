@@ -129,7 +129,9 @@ class ManagedBookingPages:
         if guest_booking.booking.manage_link_generation != claims.link_generation:
             raise NotFoundError(
                 REVOKED_MESSAGE,
-                reasons=refusal(ManagedBookingRefusalCode.LINK_EXPIRED, REVOKED_MESSAGE),
+                reasons=refusal(
+                    ManagedBookingRefusalCode.LINK_EXPIRED, REVOKED_MESSAGE
+                ),
             )
 
         return guest_booking

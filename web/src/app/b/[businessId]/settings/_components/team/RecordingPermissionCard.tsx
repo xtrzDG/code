@@ -46,7 +46,7 @@ export function RecordingPermissionCard() {
           <Checkbox
             label={t("security.recordings.toggle")}
             description={view.staff_may_play_recordings ? t("security.recordings.on") : t("security.recordings.off")}
-            checked={view.staff_may_play_recordings ?? false}
+            checked={view.staff_may_play_recordings}
             disabled={!isOwner || save.isPending}
             onChange={(event) => void toggle(event.target.checked)}
           />

@@ -45,7 +45,7 @@ def test_the_page_states_the_limits_of_the_code() -> None:
         f"(default {DEFAULT_MAX_VOICE_SECONDS} s)",
         f"request body {mib(WIDGET_UPLOAD_BODY_LIMIT_BYTES)}",
         f"{MAX_MESSAGE_ATTACHMENTS} files per message",
-        f"({mib(MenuSourceBase64.max_length)} of base64)",
+        f"({mib(MenuSourceBase64.max_length or 0)} of base64)",
         f"request body {mib(MENU_IMPORT_BODY_LIMIT_BYTES)}",
         f"{MAX_MENU_TEXT_CHARACTERS:,} characters",
         f"{mib(int(MAX_MENU_LINK_BYTES))} after decompression",
@@ -59,7 +59,7 @@ def test_the_page_states_the_limits_of_the_code() -> None:
 
 
 def test_html_and_svg_are_no_menu_upload_types() -> None:
-    assert UPLOAD_MEDIA_TYPES == {
+    assert {
         "image/jpeg",
         "image/png",
         "image/webp",
@@ -67,7 +67,7 @@ def test_html_and_svg_are_no_menu_upload_types() -> None:
         "application/pdf",
         "text/plain",
         "text/csv",
-    }
+    } == UPLOAD_MEDIA_TYPES
     assert "never HTML or SVG" in PAGE
 
 

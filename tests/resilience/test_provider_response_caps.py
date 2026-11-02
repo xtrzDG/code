@@ -7,9 +7,9 @@ into their ExternalServiceError: nothing is held in memory past the cap.
 """
 
 import gzip
-import ssl
 import zlib
 from collections.abc import Callable, Iterator
+from typing import Any
 
 import httpx
 import pytest
@@ -62,13 +62,21 @@ def client(handler: Callable[[httpx.Request], httpx.Response]) -> httpx.Client:
     )
 
 
-def test_the_client_verifies_certificates_and_has_timeouts() -> None:
-    built = build_provider_http_client(timeout=7.0, max_response_bytes=CAP)
-    pool = getattr(getattr(built, "_transport"), "_pool")
-    context: ssl.SSLContext = getattr(pool, "_ssl_context")
+def test_the_client_verifies_certificates_and_has_timeouts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    built_with: dict[str, object] = {}
 
-    assert context.verify_mode is ssl.CERT_REQUIRED
-    assert context.check_hostname is True
+    class RecordingClient(httpx.Client):
+        def __init__(self, **options: Any) -> None:
+            built_with.update(options)
+            super().__init__(**options)
+
+    monkeypatch.setattr(httpx, "Client", RecordingClient)
+    built = build_provider_http_client(timeout=7.0, max_response_bytes=CAP)
+
+    assert built_with["verify"] is True
+    assert built_with["follow_redirects"] is False
     assert built.follow_redirects is False
     assert (built.timeout.connect, built.timeout.read) == (7.0, 7.0)
     assert built.headers["Accept-Encoding"] == "gzip, deflate"

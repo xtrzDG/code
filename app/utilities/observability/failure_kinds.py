@@ -26,7 +26,9 @@ def store_failure_of(error: BaseException) -> StoreFailureKind | None:
 
     seen: set[int] = set()
     current: BaseException | None = error
-    while current is not None and id(current) not in seen and len(seen) < MAX_CHAIN_LINKS:
+    while (
+        current is not None and id(current) not in seen and len(seen) < MAX_CHAIN_LINKS
+    ):
         seen.add(id(current))
         if type(current).__module__.startswith(DATABASE_MODULE_PREFIX):
             return StoreFailureKind.DATABASE

@@ -27,6 +27,7 @@ export const platformStatusEn = {
     telegram: "Telegram",
     voice: "Phone calls",
     cabinet: "Cabinet and sign-in",
+    payments: "Payments and deposits",
   },
   checkedAt: "Checked {time}",
   monitoringDelayed: {

@@ -53,7 +53,9 @@ def header_value(text: str) -> str:
     """One header line: control characters become spaces, runs collapse."""
 
     cleaned: str = "".join(
-        " " if unicodedata.category(character) in HEADER_BREAKING_CATEGORIES else character
+        " "
+        if unicodedata.category(character) in HEADER_BREAKING_CATEGORIES
+        else character
         for character in text
     )
     return " ".join(cleaned.split())

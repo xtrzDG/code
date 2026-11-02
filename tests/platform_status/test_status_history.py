@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.platform_status import StatusComponent, StatusLevel
 from app.schemas.typings.platform_status.constrained_strings import StatusDay
+from app.use_cases.platform_status.gated_components import stored_components
 from app.use_cases.platform_status.status_history import (
     component_history,
     fold_levels,
@@ -44,7 +45,7 @@ def test_a_day_keeps_its_worst_level_and_counts_its_records() -> None:
         1,
         1,
     )
-    assert len(third.components) == len(StatusComponent)
+    assert len(third.components) == len(stored_components())
     assert third.created_at == NOW and third.updated_at == int(NOW) + 1
 
 

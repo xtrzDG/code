@@ -181,7 +181,10 @@ def test_the_setup_travels_with_the_export_without_credentials() -> None:
 def test_every_recording_is_copied_and_listed() -> None:
     tenants = seed_two_tenants()
     storage = InMemoryRecordingStorage()
-    first, second = tenants.visitor.conversation_call, tenants.visitor.phone_matched_call
+    first, second = (
+        tenants.visitor.conversation_call,
+        tenants.visitor.phone_matched_call,
+    )
     assert first.recording_path is not None and second.recording_path is not None
     storage.store(
         RecordingLocation(business_id=first.business_id, path=first.recording_path),

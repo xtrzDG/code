@@ -13,18 +13,20 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
 
 
 def provider_resilience(
-    *,
     clients: ClientsContainer,
     config: ConfigContainer,
     time_provider: TimeProviderContainer,
     utilities: UtilitiesContainer,
+    rate_limit_buckets: Singleton[RateLimitBucketAdapterContract],
 ) -> Singleton[ProviderResilience]:
     """
-    The process's one ProviderResilience, its parts taken from the graph:
-    the single seam between the providers and the typed module
+    The process's one ProviderResilience, its parts taken from the graph
+    (the rate-limit buckets count a business's SMS per hour): the single
+    seam between the providers and the typed module
     (app/containers/adapters/provider_resilience.py).
     """
 
@@ -35,6 +37,7 @@ def provider_resilience(
         twilio_messaging_client=clients.twilio_messaging_client,
         flitt_client=clients.flitt_client,
         stripe_client=clients.stripe_client,
+        rate_limit_buckets=rate_limit_buckets,
         settings=config.app_settings,
         monotonic_clock=time_provider.monotonic_clock,
         wall_clock=time_provider.microsecond_wall_clock,

@@ -37,6 +37,10 @@ for (const theme of ["dark", "light"] as const) {
   });
 }
 
+/** The stored answer and its receipt id, which the server's consent log names too. */
+const GRANTED = /^1\.granted\.[A-Za-z0-9_-]{22}$/;
+const DENIED = /^1\.denied\.[A-Za-z0-9_-]{22}$/;
+
 test("the cookie banner offers both answers alike, rejects when closed and comes back from the footer", async ({ page, context }) => {
   await page.goto("/it?utm_source=newsletter");
   const banner = page.getByRole("region", { name: italian.cookieConsent.title });
@@ -53,7 +57,7 @@ test("the cookie banner offers both answers alike, rejects when closed and comes
   await banner.getByRole("button", { name: italian.cookieConsent.close }).click();
   await expect(banner).toBeHidden();
   let cookies = await context.cookies();
-  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toBe("1.denied");
+  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toMatch(DENIED);
   expect(cookies.map((cookie) => cookie.name)).not.toContain("aw_attr");
 
   // The choice is remembered on the next page.
@@ -70,7 +74,7 @@ test("the cookie banner offers both answers alike, rejects when closed and comes
   await expect(banner).toBeHidden();
   await expect(settings).toBeFocused();
   cookies = await context.cookies();
-  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toBe("1.granted");
+  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toMatch(GRANTED);
   expect(cookies.find((cookie) => cookie.name === "aw_attr")).toMatchObject({ httpOnly: true, sameSite: "Lax" });
 
   // Escape withdraws it again, and the attribution cookie goes with it.
@@ -80,7 +84,7 @@ test("the cookie banner offers both answers alike, rejects when closed and comes
   await page.keyboard.press("Escape");
   await expect(banner).toBeHidden();
   cookies = await context.cookies();
-  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toBe("1.denied");
+  expect(cookies.find((cookie) => cookie.name === "aw_consent")?.value).toMatch(DENIED);
   expect(cookies.map((cookie) => cookie.name)).not.toContain("aw_attr");
 });
 

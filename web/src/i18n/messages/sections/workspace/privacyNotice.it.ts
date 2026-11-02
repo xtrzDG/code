@@ -30,6 +30,9 @@ export const privacyNoticeIt: Translation<typeof privacyNoticeEn> = {
   callsKept: "{business} conserva le registrazioni e le trascrizioni delle chiamate per {recordings}, dopodiché vengono cancellate automaticamente.",
   rightsTitle: "Le Sue scelte",
   rights: "Può chiedere a {business} quali dati conserva su di Lei e chiedere di correggerli o cancellarli: scriva nella chat o contatti direttamente l'attività. L'assistente può sbagliare, quindi verifichi i dettagli importanti (prezzi, orari) con l'attività.",
+  minorsTitle: "Minori",
+  minors:
+    "Questa chat non è destinata ai minori di 14 anni: un minore di 14 anni può usarla solo con il consenso di un genitore o di un tutore (la legge italiana lo richiede per i servizi di intelligenza artificiale). Se ha meno di 14 anni, chieda a un genitore o a un tutore di scrivere per Lei.",
   platformNote: "Questa è l'informativa predefinita della piattaforma Assistant Workshop. {business} può pubblicarne una propria.",
   backToChat: "Torna alla chat",
 };

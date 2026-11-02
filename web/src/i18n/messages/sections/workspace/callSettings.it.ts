@@ -62,6 +62,7 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     number: "Numero del personale per i trasferimenti",
     numberRule: "Solo un cellulare o un fisso del tuo paese o di un altro paese dell'UE, mai un numero a tariffa maggiorata, a costo condiviso o satellitare.",
     openContacts: "Numeri del personale",
+    noticeTemplate: "Modello di informativa per il personale",
     turnedOff: "I trasferimenti al personale sono disattivati",
     readiness: {
       ready: "Chi chiede di parlare con una persona viene trasferito durante l'orario di apertura.",

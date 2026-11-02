@@ -20,12 +20,16 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_integer,
     read_text,
 )
+from app.utilities.conversations.llm_model_pins import (
+    ANTHROPIC_HAIKU_4_5,
+    OPENAI_GPT_5_NANO,
+)
 
 # The cheap model of the chat's own provider; the scripted model checks no
 # claims (tests use a fake verifier).
 DEFAULT_VERIFIER_MODEL_IDS: dict[LlmProvider, str] = {
-    LlmProvider.OPENAI: "gpt-5-nano",
-    LlmProvider.ANTHROPIC: "claude-haiku-4-5",
+    LlmProvider.OPENAI: OPENAI_GPT_5_NANO,
+    LlmProvider.ANTHROPIC: ANTHROPIC_HAIKU_4_5,
 }
 VERIFIER_OFF_VALUES: frozenset[str] = frozenset({"off", "none"})
 

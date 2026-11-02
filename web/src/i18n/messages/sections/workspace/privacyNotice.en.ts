@@ -32,6 +32,9 @@ export const privacyNoticeEn = {
   callsKept: "{business} keeps call recordings and transcripts for {recordings}, then they are deleted automatically.",
   rightsTitle: "Your choices",
   rights: "You can ask {business} what it keeps about you, and to correct or delete it: write in the chat or contact the business directly. The assistant can make mistakes, so check important details (prices, times) with the business.",
+  minorsTitle: "Children",
+  minors:
+    "This chat is not meant for children under 14: a child under 14 may use it only with the consent of a parent or guardian (Italian law requires this for AI services). If you are under 14, ask a parent or guardian to write for you.",
   platformNote: "This is the default notice of the Assistant Workshop platform. {business} may publish its own.",
   backToChat: "Back to the chat",
 } as const;

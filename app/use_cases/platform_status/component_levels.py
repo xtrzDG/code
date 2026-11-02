@@ -6,7 +6,8 @@ team wrote, whichever is worse.
 An alert names the components whose customers it affects, and how badly
 at its figure: model calls failing for half the turns is an outage of
 every chat channel, a few failing is degraded service; the daily budget
-stop degrades every chat channel and voice while it holds. Alerts about
+stop degrades every chat channel and voice while it holds; a payment
+reconciliation mismatch degrades payments. Alerts about
 the platform's inside (dead jobs, a handoff spike) affect no component.
 """
 
@@ -68,8 +69,16 @@ ALERT_IMPACTS: Mapping[PlatformAlertCode, AlertImpact] = {
     # The database or the object storage fails requests and jobs: answers,
     # calls and the cabinet are slow or partly failing.
     PlatformAlertCode.STORAGE_ERRORS: AlertImpact(
-        (*CHAT_CHANNELS, StatusComponent.VOICE, StatusComponent.CABINET)
+        (
+            *CHAT_CHANNELS,
+            StatusComponent.VOICE,
+            StatusComponent.CABINET,
+            StatusComponent.PAYMENTS,
+        )
     ),
+    # Payments whose status at Flitt or Stripe differs from the platform's
+    # record: deposits and subscriptions may show the wrong state.
+    PlatformAlertCode.PAYMENT_MISMATCH: AlertImpact((StatusComponent.PAYMENTS,)),
     # The API is slow: the website chat and the cabinet wait for it.
     PlatformAlertCode.API_LATENCY: AlertImpact(
         (StatusComponent.CHAT, StatusComponent.CABINET)

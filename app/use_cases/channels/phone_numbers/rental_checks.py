@@ -34,11 +34,11 @@ from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberLabel,
     RentedLineNumber,
 )
-from app.use_cases.shared.billing_records import is_service_paid_for
 from app.use_cases.channels.phone_numbers.rented_line_channel import (
     connected_number,
     find_phone_channel,
 )
+from app.use_cases.shared.billing_records import is_service_paid_for
 from app.utilities.money.money_formatting import format_money
 
 LABEL_LENGTH: int = 64

@@ -67,8 +67,9 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     connection): then, when SMS is on and may go to the caller's number
     (`TextBackSmsDestinations`; else the text-back is SKIPPED with
     NO_CHANNEL, or FAILED after WhatsApp refused it), an SMS from the
-    platform's sender follows. A temporary SMS failure is tried again by the job queue (the
-    last attempt gives up); a message hours late is not queued. Only a
+    platform's sender follows. A temporary SMS failure is tried again by
+    the job queue (the last attempt gives up); a message hours late is not
+    queued. Only a
     QUEUED missed call is sent, so a job that runs again sends nothing
     twice.
     """

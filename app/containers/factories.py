@@ -57,11 +57,12 @@ from app.schemas.constants.assistants import LlmProvider
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.storage import RecordingStorageKind
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.utilities.conversations.llm_model_pins import OPENAI_GPT_5_MINI
 from app.utilities.conversations.llm_models import resolve_llm_provider
 
 # Menu import reads photos and PDFs with an OpenAI vision model (brain slice);
 # used when the chat model itself is not an OpenAI model.
-DEFAULT_MENU_EXTRACTION_MODEL_ID: LlmModelId = LlmModelId("gpt-5-mini")
+DEFAULT_MENU_EXTRACTION_MODEL_ID: LlmModelId = LlmModelId(OPENAI_GPT_5_MINI)
 
 
 def build_elevenlabs_client(settings: AppSettings) -> ElevenLabsPlatformClientContract:

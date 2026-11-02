@@ -184,7 +184,9 @@ def is_caller_suppressed(
     )
 
 
-def business_daily_limit(subscription: SubscriptionDocument | None) -> RequestsPerWindow:
+def business_daily_limit(
+    subscription: SubscriptionDocument | None,
+) -> RequestsPerWindow:
     """
     The text-backs a business's day allows: TRIAL_BUSINESS_DAILY_LIMIT in a
     free trial without a card on file, else BUSINESS_DAILY_LIMIT.

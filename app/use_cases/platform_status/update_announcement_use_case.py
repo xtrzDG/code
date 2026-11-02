@@ -27,6 +27,7 @@ from app.use_cases.platform_status.announcement_views import (
     admin_view,
     stored_messages,
 )
+from app.use_cases.platform_status.gated_components import require_announceable
 
 
 class UpdateAnnouncementUseCase(
@@ -42,7 +43,8 @@ class UpdateAnnouncementUseCase(
     Raises:
         NotFoundError: no such announcement.
         ConflictError: it was resolved already.
-        ValidationFailedError: a level other than INFO without components.
+        ValidationFailedError: a level other than INFO without components,
+            or a component storage may not name yet (payments).
     """
 
     def __init__(
@@ -92,6 +94,7 @@ class UpdateAnnouncementUseCase(
                 "Maintenance, degraded service and outages name the components "
                 "they affect."
             )
+        require_announceable(components)
         if body.expected_end_at is not None and int(body.expected_end_at) <= max(
             int(announcement.starts_at), int(now)
         ):

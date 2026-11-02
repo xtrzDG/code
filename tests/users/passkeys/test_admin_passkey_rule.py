@@ -49,9 +49,7 @@ def give_app(workshop: Workshop, user_id: str) -> None:
     assert factors.start_enrollment(
         TotpFactorDocument(
             user_id=UserId(user_id),
-            sealed_secret=workshop.container.adapters.totp_secret_cipher().seal(
-                secret
-            ),
+            sealed_secret=workshop.container.adapters.totp_secret_cipher().seal(secret),
             created_at=now,
             updated_at=now,
         )

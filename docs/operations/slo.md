@@ -26,7 +26,8 @@ Postgres deliver without heroics.
 What does not count against the budgets: messages a business sent while
 its assistant was paused or off, sandbox and autotest conversations,
 requests refused by design (4xx, rate limits), and planned maintenance
-announced 24 h before on the status page (`docs/operations/maintenance.md`).
+announced at least 72 h (3 days) before on the status page, as
+`docs/operations/maintenance.md` asks of every interruption.
 
 ## Product objectives
 

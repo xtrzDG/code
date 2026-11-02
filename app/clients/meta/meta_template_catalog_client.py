@@ -12,8 +12,11 @@ from app.utilities.channels.json_values import JsonObject, read_objects, read_te
 TEMPLATE_FIELDS: str = "name,category,language,status"
 # One name exists in at most a few dozen languages.
 TEMPLATE_PAGE_SIZE: str = "100"
+# Meta's names of the categories; one Meta adds later is left out.
 KNOWN_CATEGORIES: dict[str, WhatsAppTemplateCategory] = {
-    category.value.upper(): category for category in WhatsAppTemplateCategory
+    "MARKETING": WhatsAppTemplateCategory.MARKETING,
+    "UTILITY": WhatsAppTemplateCategory.UTILITY,
+    "AUTHENTICATION": WhatsAppTemplateCategory.AUTHENTICATION,
 }
 
 

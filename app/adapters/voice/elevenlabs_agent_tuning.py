@@ -1,8 +1,8 @@
 """
 How an ElevenLabs agent sounds and listens (R16-VOICE-TUNING): the voice
 of each language, the speech recognition's keywords, the turn timeout, the
-filler said while an answer is late and the language presets that switch the greeting and the voice with the
-caller's language.
+filler said while an answer is late and the language presets that switch
+the greeting and the voice with the caller's language.
 """
 
 from app.contracts.channel_clients import JsonObject

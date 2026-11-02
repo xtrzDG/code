@@ -8,8 +8,8 @@ from app.contracts.repositories.customer_repositories import (
     CustomerSettingsRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.constants.consent_records import ConsentEventSource
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.domain.customer_settings import CustomerSettingsDocument
 from app.schemas.dto.access import BusinessAccessRequest

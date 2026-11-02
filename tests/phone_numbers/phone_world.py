@@ -29,9 +29,6 @@ from app.repositories.phone_number_repositories import (
     PhoneNumberRepository,
     PhoneNumberRequestRepository,
 )
-from app.schemas.constants.assistants import AssistantToolName, AssistantVersionStatus
-from app.schemas.constants.niches import NicheKey
-from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.phone_numbers import PhoneNumberType
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -41,23 +38,17 @@ from app.schemas.domain.phone_numbers import (
     PhoneNumberRequestDocument,
 )
 from app.schemas.domain.users import UserDocument
-from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.dto.billing import Money
-from app.schemas.dto.billing_cabinet import StartTrialCommand, StartTrialRequest
 from app.schemas.dto.phone_numbers.phone_line import (
     RentedPhoneNumberView,
     RentPhoneNumberCommand,
     RentPhoneNumberRequest,
 )
 from app.schemas.dto.phone_numbers.provisioning import PhoneNumberOfferClaims
-from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
-from app.schemas.typings.assistants.constrained_strings import LlmModelId
-from app.schemas.typings.assistants.strings import SystemPromptText, VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     E164PhoneNumber,
-    LanguageTag,
 )
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.telephony.constrained_strings import (
@@ -88,7 +79,6 @@ from app.use_cases.channels.phone_numbers import (
 from app.use_cases.channels.phone_numbers import (
     search_phone_numbers_use_case as search,
 )
-from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.spend_guard.admit_owner_action_use_case import (
     AdmitOwnerActionUseCase,
     CheckOwnerActionRoomUseCase,
@@ -100,6 +90,11 @@ from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.foundation.access_support import AllowStepUp
 from tests.phone_numbers.phone_settings import phone_settings
+from tests.phone_numbers.phone_world_parts import (
+    live_voice_version,
+    save_card,
+    start_trial_with_card,
+)
 from tests.phone_numbers.provisioner_fakes import FakePhoneNumberProvisioner
 from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
@@ -235,33 +230,16 @@ class PhoneWorld(BillingTestbed):
     def owner_and_business(
         self, email: str = "owner@example.com", card_on_file: bool = True
     ) -> tuple[UserDocument, BusinessDocument]:
-        """
-        An owner and their business; by default in its free trial with a
-        card on file, as a number may be rented only then or once paid.
-        """
+        """An owner's business, by default in its trial with a card on file."""
 
         owner = self.add_user(email=email, locale="en", display_name="Nino")
         business = self.add_business(owner)
         if card_on_file:
-            self.start_trial.run(
-                StartTrialCommand(
-                    user_id=owner.id,
-                    business_id=business.id,
-                    request=StartTrialRequest(),
-                )
-            )
-            self.save_card(business)
+            start_trial_with_card(self, owner, business)
         return owner, business
 
     def save_card(self, business: BusinessDocument) -> None:
-        """The card the owner saved, as the payment provider reported it."""
-
-        subscription = find_current_subscription(self.subscription_repo, business.id)
-        assert subscription is not None
-        subscription.payment_method_summary = PaymentMethodSummary(
-            provider=PaymentProvider.FLITT, saved_at=Microseconds(self.clock.now())
-        )
-        self.subscription_repo.save(subscription)
+        save_card(self, business)
 
     def rent_austin_number(
         self,
@@ -310,20 +288,6 @@ class PhoneWorld(BillingTestbed):
     def publish_voice_agent(
         self, business: BusinessDocument, agent_id: str = "agent_0000"
     ) -> AssistantVersionDocument:
-        version = AssistantVersionDocument(
-            business_id=business.id,
-            version_number=AssistantVersionNumber(1),
-            status=AssistantVersionStatus.PUBLISHED,
-            niche_key=NicheKey.ENTERTAINMENT,
-            model_id=LlmModelId("gpt-5-mini"),
-            prompt_text=SystemPromptText("You are the AI assistant."),
-            tools=[AssistantToolName.CREATE_BOOKING],
-            languages=[LanguageTag("ka")],
-            default_language=LanguageTag("ka"),
-            is_voice_enabled=True,
-            facts=[],
-            profile_revision=self.clock.now(),
-            voice_agent_id=VoiceAgentId(agent_id),
-        )
+        version = live_voice_version(business, self.clock.now(), agent_id)
         self.assistant_version_repo.save(version)
         return version

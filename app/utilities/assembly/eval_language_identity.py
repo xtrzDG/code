@@ -12,6 +12,7 @@ reply fails only when another language reads clearly better. A reply that
 tells too little ("OK!", a price) is undetermined and passes.
 """
 
+import re
 from collections.abc import Sequence
 
 from app.schemas.constants.evaluations import EvalCriterion
@@ -28,6 +29,11 @@ from app.utilities.conversations.any_language_detection import (
 )
 from app.utilities.localization.language_tags import base_language_code
 
+# A link (the privacy notice's, a payment page) says nothing of the reply's
+# language, and its random ids ("business_6e568e2e-63ac-...") must not
+# sway the reading.
+LINK_PATTERN: re.Pattern[str] = re.compile(r"https?://\S+")
+
 
 def read_reply_language(text: str, expected: LanguageTag) -> LanguageTag | None:
     """
@@ -37,7 +43,7 @@ def read_reply_language(text: str, expected: LanguageTag) -> LanguageTag | None:
     """
 
     detected: DetectedLanguage = detect_any_language(
-        text,
+        LINK_PATTERN.sub(" ", text),
         LanguageContext(
             version_languages=(expected,),
             default_language=expected,

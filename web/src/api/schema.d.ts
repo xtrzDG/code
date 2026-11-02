@@ -2076,6 +2076,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/bookings/{booking_id}/manage-links/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Booking Links Revoke */
+        post: operations["operations_post_booking_links_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule": {
         parameters: {
             query?: never;
@@ -18696,11 +18713,13 @@ export interface components {
          * StatusComponent
          * @description The parts of the platform the public status page reports on: the
          *     website chat and hosted chat page (CHAT), WhatsApp, Instagram and
-         *     Messenger (META), Telegram, phone calls (VOICE) and the owner cabinet
-         *     with its sign-in (CABINET).
+         *     Messenger (META), Telegram, phone calls (VOICE), the owner cabinet
+         *     with its sign-in (CABINET) and payments (PAYMENTS: deposits, payment
+         *     links and subscriptions through Flitt and Stripe, REL-06; stored
+         *     behind the `status_payments` release gate).
          * @enum {string}
          */
-        StatusComponent: "chat" | "meta" | "telegram" | "voice" | "cabinet";
+        StatusComponent: "chat" | "meta" | "telegram" | "voice" | "cabinet" | "payments";
         /**
          * StatusDayView
          * @description A day of a component's history and the worst level it had that day.
@@ -20289,7 +20308,9 @@ export interface components {
          *     chat page. `powered_by_url` is the footer's "Powered by" link with the
          *     business's referral code (None when a Plus owner switched it off).
          *     `attachments` says which photos and voice notes the visitor may send
-         *     and how large or long they may be.
+         *     and how large or long they may be. `business_phone_number` is the
+         *     business's public phone (its profile), offered when the chat cannot
+         *     answer (the assistant or the API is down); None when not given.
          */
         WidgetConfigView: {
             /** Accent Color */
@@ -20299,6 +20320,8 @@ export interface components {
             business_id: string;
             /** Business Name */
             business_name: string;
+            /** Business Phone Number */
+            business_phone_number?: string | null;
             /** Contact Links */
             contact_links?: components["schemas"]["WidgetContactLinkView"][];
             /** Default Language */
@@ -20453,7 +20476,10 @@ export interface components {
         };
         /**
          * WidgetSnippetView
-         * @description Embed code the owner pastes into the website.
+         * @description Embed code the owner pastes into the website: a tag naming the
+         *     loader (`loader_url`, an address that never changes) with its
+         *     integrity hash (`loader_integrity`), which loads the current widget
+         *     (`script_url`; an older embed code names that one directly).
          *
          *     `demo_url` is deprecated: the API's widget demo page is served in
          *     development and tests only (404 in production); owners preview the
@@ -20467,6 +20493,10 @@ export interface components {
              * @deprecated
              */
             demo_url: string;
+            /** Loader Integrity */
+            loader_integrity: string;
+            /** Loader Url */
+            loader_url: string;
             /** Script Url */
             script_url: string;
             /** Snippet */
@@ -20664,7 +20694,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Components */
-                    components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet")[];
+                    components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet" | "payments")[];
                     /** Expected End At */
                     expected_end_at?: number | null;
                     /**
@@ -20778,7 +20808,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Components */
-                    components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet")[] | null;
+                    components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet" | "payments")[] | null;
                     /** Expected End At */
                     expected_end_at?: number | null;
                     level?: ("info" | "maintenance" | "degraded" | "outage") | null;
@@ -23016,7 +23046,7 @@ export interface operations {
                     affected_business_ids?: string[];
                     announcement?: {
                         /** Components */
-                        components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet")[];
+                        components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet" | "payments")[];
                         /** Expected End At */
                         expected_end_at?: number | null;
                         /**
@@ -34071,6 +34101,92 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["BookingResult"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    operations_post_booking_links_revoke: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

@@ -40,7 +40,7 @@ class BusinessMember(PersistentDocument):
     invited them (None: the business's creator, a brand's location, or an
     invitation from before version 8); an invitation of an account that
     has not signed in yet lapses after seven days
-    (`app/use_cases/businesses/lapsed_invitations.py`).
+    (`app/use_cases/shared/lapsed_invitations.py`).
     """
 
     user_id: UserId

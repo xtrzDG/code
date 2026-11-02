@@ -4,7 +4,8 @@ typed Python (ADR 0010) instead of a child container: one circuit breaker
 per circuit for the whole process (the language models and every provider
 the platform sends through, `provider:*`), each provider's share of the
 outbound lane (half of its threads), and the platform's senders behind
-their circuits: the platform bot, SMTP, Twilio SMS, and the payment
+their circuits: the platform bot, SMTP, Twilio SMS (a business's also
+behind its hourly volume), and the payment
 gateway that routes each call to Flitt or Stripe, each behind its own
 circuit. Every worker
 writes the breakers' states into its pulse (GET /v1/admin/system).
@@ -36,6 +37,7 @@ from app.clients.stripe.stripe_client import StripeClient
 from app.containers.adapters.provider_guards import (
     guard_email_sender,
     guard_sms_sender,
+    guard_tenant_sms_volume,
     outbound_provider_slots,
 )
 from app.contracts.billing import PaymentGatewayAdapterContract
@@ -44,6 +46,7 @@ from app.contracts.messaging_clients import (
     EmailSenderClientContract,
     SmsMessagingClientContract,
 )
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
@@ -80,6 +83,7 @@ def build_provider_resilience(
     twilio_messaging_client: SmsMessagingClientContract | None,
     flitt_client: FlittClient | None,
     stripe_client: StripeClient | None,
+    rate_limit_buckets: RateLimitBucketAdapterContract,
     settings: AppSettings,
     monotonic_clock: MonotonicClock[Nanoseconds],
     wall_clock: WallClock[Microseconds],
@@ -103,7 +107,13 @@ def build_provider_resilience(
             circuit=provider_circuit(OutboundProvider.PLATFORM_BOT),
         ),
         email_sender=guard_email_sender(smtp_email_client, circuit_breaker),
-        sms_sender=guard_sms_sender(twilio_messaging_client, circuit_breaker),
+        # A business's SMS: its hourly volume alerted at 60, capped at 200
+        # (LOG-05), behind Twilio's circuit.
+        sms_sender=guard_tenant_sms_volume(
+            guard_sms_sender(twilio_messaging_client, circuit_breaker),
+            rate_limit_buckets,
+            wall_clock,
+        ),
         # Payments: Flitt or Stripe by the provider each call names.
         payment_gateway=PaymentGatewayRouterAdapter(
             flitt_gateway=CircuitBreakingPaymentGatewayAdapter(

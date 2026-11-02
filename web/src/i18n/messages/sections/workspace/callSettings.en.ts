@@ -64,6 +64,7 @@ export const callSettingsEn = {
     number: "Staff number for transfers",
     numberRule: "Only a mobile or landline of your country or another EU country, never a premium, shared-cost or satellite number.",
     openContacts: "Staff numbers",
+    noticeTemplate: "Notice template for your staff",
     turnedOff: "Transfers to staff are off",
     readiness: {
       ready: "Callers who ask for a person are put through while you are open.",

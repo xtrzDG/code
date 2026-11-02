@@ -96,9 +96,7 @@ class UpdateBusinessSecurityUseCase(
             if input_data.require_mfa_for_members is not None:
                 current.require_mfa_for_members = input_data.require_mfa_for_members
             if input_data.staff_may_play_recordings is not None:
-                current.staff_may_play_recordings = (
-                    input_data.staff_may_play_recordings
-                )
+                current.staff_may_play_recordings = input_data.staff_may_play_recordings
 
         stored: BusinessDocument = self._business_repo.update(business.id, apply)
         now: Microseconds = self._wall_clock.now_unix()

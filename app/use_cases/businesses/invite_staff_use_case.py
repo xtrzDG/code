@@ -28,6 +28,7 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.users.strings import UserDisplayName
 from app.use_cases.businesses.business_view_sources import business_view_source
 from app.use_cases.businesses.owner_promotion_sweep import OwnerPromotionSweep
+from app.use_cases.shared.lapsed_invitations import is_invitation_lapsed
 from app.use_cases.shared.team_invitations import (
     clean_display_name,
     find_or_create_invited_user,
@@ -42,9 +43,11 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
     staff or as another owner.
 
     A person without an account gets an unverified one in the business's
-    owner language; they confirm it by signing in with a code. Existing
-    accounts are reused unchanged and join at once (there is no acceptance
-    step). The new membership is audited.
+    owner language; they confirm it by signing in with a code within seven
+    days, or the invitation lapses at their first sign-in
+    (`lapsed_invitations.py`; the owner may invite them again, which
+    renews it). Existing accounts are reused unchanged and join at once
+    (there is no acceptance step). The new membership is audited.
 
     An existing account made an owner signs in again, as with a promotion
     (OwnerPromotionSweep): every session of theirs ends before the
@@ -116,17 +119,24 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
         is_owner: bool = invitation.role is BusinessMemberRole.OWNER
         if is_owner:
             # Refused before the sweep: a member's sessions stay as they are.
-            refuse_a_member(business, staff_user)
+            refuse_a_member(business, staff_user, now)
             self._end_sessions(staff_user, input_data)
 
         def add_member(current: BusinessDocument) -> None:
             # Checked and added on the business as stored now, so a change
-            # saved meanwhile (settings, another member) is kept.
-            refuse_a_member(current, staff_user)
+            # saved meanwhile (settings, another member) is kept; a lapsed
+            # invitation of the same person gives way to the new one.
+            refuse_a_member(current, staff_user, now)
 
             current.members = [
-                *current.members,
-                BusinessMember(user_id=staff_user.id, role=invitation.role),
+                *(
+                    member
+                    for member in current.members
+                    if member.user_id != staff_user.id
+                ),
+                BusinessMember(
+                    user_id=staff_user.id, role=invitation.role, invited_at=now
+                ),
             ]
             current.updated_at = now
 
@@ -159,6 +169,13 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
         )
 
 
-def refuse_a_member(business: BusinessDocument, invited: UserDocument) -> None:
-    if any(member.user_id == invited.id for member in business.members):
+def refuse_a_member(
+    business: BusinessDocument, invited: UserDocument, now: Microseconds
+) -> None:
+    """A member already, unless their invitation lapsed (invited again)."""
+
+    if any(
+        member.user_id == invited.id and not is_invitation_lapsed(member, invited, now)
+        for member in business.members
+    ):
         raise ConflictError(ALREADY_A_MEMBER_MESSAGE)

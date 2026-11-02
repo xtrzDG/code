@@ -46,7 +46,7 @@ def test_the_full_export_takes_the_setup_along(workshop: Workshop) -> None:
 
     with zipfile.ZipFile(io.BytesIO(downloaded.content)) as archive:
         files = {name: archive.read(name) for name in archive.namelist()}
-    assert CONFIGURATION_FILES <= set(files)
+    assert set(files) >= CONFIGURATION_FILES
     assert b"Archive format 2." in files["README.txt"]
     versions = json.loads(files["assistant_versions.json"])
     assert versions and all(version["prompt_text"] for version in versions)
