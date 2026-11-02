@@ -6564,6 +6564,24 @@
      },
      "type": "object"
     },
+    "text": {
+     "properties": {
+      "format": {
+       "anyOf": [
+        {
+         "$ref": "#/$defs/ResponseFormatText"
+        },
+        {
+         "$ref": "#/$defs/TextResponseFormatJsonSchema"
+        }
+       ]
+      }
+     },
+     "required": [
+      "format"
+     ],
+     "type": "object"
+    },
     "type": {
      "default": "configuration_update",
      "enum": [
