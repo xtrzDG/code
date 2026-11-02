@@ -4,7 +4,7 @@
 
 ## Risk
 
-<!-- One of HIGH, MEDIUM, LOW (docs/security/change-risk.md) and one line of why. With the `risk:high` label it is HIGH. When unsure, the higher one. -->
+<!-- One of HIGH, MEDIUM, LOW (docs/security/change-risk.md) and one line of why. `.github/workflows/risk-labels.yml` adds the `risk:high` label to a pull request that touches a security boundary (`.github/labeler.yml`); with it, the change is HIGH. When unsure, the higher one. -->
 
 Risk: 
 
@@ -34,5 +34,5 @@ Risk:
 - [ ] **API:** `cd web && npm run gen:api` run and `openapi.json` + `src/api/schema.d.ts` committed; changes within `/v1` are additive (`docs/api-versioning.md`); an entry with the new `Spec:` fingerprint on top of `docs/API_CHANGELOG.md`.
 - [ ] **Personal data:** views, exports, deletions and admin access write an audit entry; nothing personal goes to logs or traces.
 - [ ] **Configuration:** new environment variables are in the settings section, `.env.example`, the table of `docs/dev/environment.md` and `docs/LAUNCH.md`; new secrets also in `docs/security/secrets-inventory.md`.
-- [ ] **Cabinet texts:** every new text in English and Italian (natural translations), UI kit and design tokens used, works at 390 px and with a keyboard.
+- [ ] **Cabinet texts:** every new text in English and Italian (natural translations; never only one of them), UI kit and design tokens used, works at 390 px and with a keyboard.
 - [ ] **Security:** no new gate exception (bandit baseline, `.gitleaksignore`, `.trivyignore`, vulture whitelist) without a reason recorded in `SECURITY.md` or the file itself.

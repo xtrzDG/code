@@ -15,7 +15,6 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.businesses.booleans import IsVoiceEnabled
 from app.schemas.typings.businesses.strings import BusinessName
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -88,13 +87,11 @@ def test_the_website_chat_gets_no_widget_demo_link() -> None:
     # is for development only and answers 404 in production.
     web_chat = [channel(ChannelKind.WEB_CHAT)]
 
-    secure = phone_test_links(
-        BUSINESS, web_chat, PublicBaseUrl("https://api.example/"), is_live=False
-    )
-    unset = phone_test_links(BUSINESS, web_chat, None, is_live=True)
+    not_live = phone_test_links(web_chat, is_live=False)
+    live = phone_test_links(web_chat, is_live=True)
 
-    assert secure == []
-    assert unset == []
+    assert not_live == []
+    assert live == []
 
 
 def test_only_connected_channels_with_a_bot_name_give_links() -> None:
@@ -104,9 +101,7 @@ def test_only_connected_channels_with_a_bot_name_give_links() -> None:
         channel(ChannelKind.WHATSAPP, external_id="995555123456"),
     ]
 
-    links = phone_test_links(
-        BUSINESS, channels, PublicBaseUrl("https://api.example"), is_live=True
-    )
+    links = phone_test_links(channels, is_live=True)
 
     assert links == []
 

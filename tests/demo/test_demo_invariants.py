@@ -8,7 +8,9 @@ computed from the seeded records themselves, so no two screens disagree.
 - the inbox badge is the sum of the inbox tabs it stands for;
 - a client with provider costs has a margin;
 - the customer list comes most recently active first, as each row says;
-- every seeded rating is the team's (the owner rated it in the cabinet).
+- every seeded rating is the team's (the owner rated it in the cabinet);
+- every campaign message went to a guest who agreed to marketing, in the
+  chat the visit it follows was booked in.
 """
 
 import math
@@ -16,6 +18,7 @@ from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
+from app.schemas.constants.campaigns import CampaignMessageStatus
 from app.schemas.constants.conversations import ConversationRatingBy
 from app.schemas.domain.conversations import CallDocument
 from tests.demo.test_demo_seeding import (
@@ -200,3 +203,29 @@ def test_every_seeded_rating_is_the_teams() -> None:
     assert rated
     assert {c.rating_by for c in rated} == {ConversationRatingBy.TEAM}
     assert all(c.rated_by is not None for c in rated)
+
+
+def test_every_campaign_message_went_to_a_consenting_guest_in_their_chat() -> None:
+    workshop = start_workshop(DEMO_ENVIRONMENT)
+    collections = workshop.container.adapters
+    with workshop.client, workshop.container.utilities.storage_scope().platform_wide():
+        messages = collections.growth_collections.campaign_message_collection()
+        contacts = collections.collections.contact_collection().list_all()
+        bookings = collections.collections.booking_collection().list_all()
+        sent = [
+            message
+            for message in messages.list_all()
+            if message.status is not CampaignMessageStatus.SKIPPED
+        ]
+
+    by_contact = {contact.id: contact for contact in contacts}
+    by_booking = {booking.id: booking for booking in bookings}
+    assert sent
+    for message in sent:
+        guest = by_contact[message.contact_id]
+        consent = guest.marketing_consent
+        assert consent is not None and guest.has_marketing_consent
+        assert consent.booking_id == message.anchor_booking_id
+        assert message.sent_at is not None
+        assert int(consent.given_at) <= int(message.sent_at)
+        assert message.channel is by_booking[message.anchor_booking_id].source_channel

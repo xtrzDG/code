@@ -4,6 +4,11 @@ rule, and the messages of the last weeks, each following a visit 30 days
 before it. Two guests came back after their invitation (their booking of
 the last days counts as the campaign's); others were invited and have not
 answered yet; a guest who said STOP is skipped.
+
+Campaign messages are marketing: every guest a demo message went to
+ticked the marketing box on the page of the visit it follows (a recorded
+consent of the current wording), and that visit was booked in the
+guest's messenger, the chat the message goes to.
 """
 
 from collections.abc import Sequence
@@ -25,7 +30,11 @@ from app.schemas.domain.campaigns import (
     CampaignMessageDocument,
     CampaignSettingsDocument,
 )
-from app.schemas.domain.contacts import ContactDocument
+from app.schemas.constants.marketing_consent import (
+    CURRENT_MARKETING_CONSENT_TEXT,
+    MarketingConsentSource,
+)
+from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -112,11 +121,12 @@ def build_demo_campaign_messages(
         and not by_id[booking.contact_id].opted_out_channels
     ][:RETURNED_LIMIT]
     for booking in returning:
+        guest = by_id[booking.contact_id]
         earlier = earlier_visit(booking, booking.contact_id, booking.starts_at)
+        earlier.source_channel = channel_of(guest)
         bookings.append(earlier)
-        messages.append(
-            came_back(business, earlier, booking, by_id[booking.contact_id], zone)
-        )
+        agree_on_page_of(guest, earlier)
+        messages.append(came_back(business, earlier, booking, guest, zone))
 
     visited = {booking.contact_id for booking in kept}
     quiet = [
@@ -132,6 +142,7 @@ def build_demo_campaign_messages(
             int(now) // MICROSECONDS_PER_SECOND - (33 + 2 * index) * DAY_SECONDS
         )
         earlier = earlier_visit(kept[0], contact.id, visit_start, days_before=0)
+        earlier.source_channel = channel_of(contact)
         bookings.append(earlier)
         sent_at = Microseconds(
             int(earlier.ends_at) * MICROSECONDS_PER_SECOND + REBOOK_AFTER_DAYS * DAY
@@ -139,11 +150,26 @@ def build_demo_campaign_messages(
         if contact.opted_out_channels:
             messages.append(skipped(business, earlier, contact, zone, sent_at))
         elif index < INVITED_LIMIT:
+            agree_on_page_of(contact, earlier)
             messages.append(
                 message_of(business, earlier, contact, zone, sent_at, sent_at)
             )
 
     return messages
+
+
+def agree_on_page_of(contact: ContactDocument, visit: BookingDocument) -> None:
+    """
+    The guest ticked the marketing box on the visit's page once it ended
+    (the current wording), so the campaign may write to them.
+    """
+
+    contact.marketing_consent = MarketingConsent(
+        given_at=Microseconds(int(visit.ends_at) * MICROSECONDS_PER_SECOND),
+        source=MarketingConsentSource.BOOKING_PAGE,
+        text_version=CURRENT_MARKETING_CONSENT_TEXT,
+        booking_id=visit.id,
+    )
 
 
 def earlier_visit(
@@ -229,7 +255,7 @@ def message_of(
         status=CampaignMessageStatus.SENT,
         month=campaign_month_of(sent_at, zone),
         language=visit.language or contact.language or business.default_language,
-        channel=channel_of(contact),
+        channel=visit.source_channel,
         sent_at=sent_at,
         created_at=sent_at,
         updated_at=updated_at,

@@ -111,6 +111,7 @@ def build_inbound_message(event: InboundEventDocument) -> InboundMessage | None:
         reply_message_id=event.reply_message_id,
         acquisition_source=customer.acquisition_source,
         context_note=customer.context_note,
+        client_ip_address=customer.client_ip_address,
     )
 
 

@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import pytest
@@ -254,15 +255,21 @@ class TestWidgetSnippet:
         assert client.get(path, headers=bearer("stranger")).status_code == 404
         assert client.get(path).status_code == 401
 
-    def test_missing_base_url_is_reported(self) -> None:
+    def test_missing_base_url_is_logged_and_the_owner_reads_a_plain_text(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         testbed = ChannelsTestbed(build_settings(APP_BASE_URL=""))
         owner_id = testbed.add_user("owner")
         business = testbed.add_business(owner_id)
 
-        response = testbed.build_http_client().get(
-            f"/v1/businesses/{business.id}/channels/web/snippet",
-            headers=bearer("owner"),
-        )
+        with caplog.at_level(logging.WARNING):
+            response = testbed.build_http_client().get(
+                f"/v1/businesses/{business.id}/channels/web/snippet",
+                headers=bearer("owner"),
+            )
 
         assert response.status_code == 502
-        assert "APP_BASE_URL" in response.json()["message"]
+        assert response.json()["message"] == (
+            "The website chat code is not available right now. Contact support."
+        )
+        assert "APP_BASE_URL" in caplog.text

@@ -1,10 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.channels import VoiceWebhookAdapterContract
-from app.contracts.localization_utilities import (
-    LocalizedTextResolverContract,
-    PhoneNumberParserContract,
-)
+from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -40,7 +37,6 @@ from app.schemas.dto.voice_webhooks import (
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.channels.strings import CallLocalTimeText, CallNextDaysText
-from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.use_cases.voice.call_admission import (
@@ -48,7 +44,6 @@ from app.use_cases.voice.call_admission import (
     refuse_blocked_caller,
     refuse_past_daily_minutes,
 )
-from app.utilities.calls.call_privacy_texts import CALL_PRIVACY_NOTICE_HINT
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
 )
@@ -80,7 +75,8 @@ class StartVoiceCallUseCase(
     A call is refused (ConflictError) while the phone assistant is off: the
     business is not live, its live version or its plan has no voice, or its
     phone number is disconnected; past its hard daily spend limit (the
-    spend guard) or its daily call minutes, until its midnight; and from a
+    spend guard, the platform's budget stop or pause) or its daily call
+    minutes, until its midnight; and from a
     number staff blocked (`call_admission`). A refused call goes to the
     missed-call flow. The agent learns whether the business is open now,
     the staff number a transfer may go to (only while open and allowed,
@@ -104,7 +100,6 @@ class StartVoiceCallUseCase(
         voice_webhook_adapter: VoiceWebhookAdapterContract,
         phone_number_parser: PhoneNumberParserContract,
         build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
-        text_resolver: LocalizedTextResolverContract,
         app_settings: AppSettings,
         check_spend: UseCaseContract[SpendCheckRequest, SpendVerdict] | None = None,
     ) -> None:
@@ -130,7 +125,6 @@ class StartVoiceCallUseCase(
         self._build_call_greeting: UseCaseContract[
             CallGreetingRequest, CallGreeting
         ] = build_call_greeting
-        self._text_resolver: LocalizedTextResolverContract = text_resolver
         self._app_settings: AppSettings = app_settings
 
     def run(self, input_data: CallInitiationWebhookRequest) -> CallInitiationData:
@@ -188,12 +182,8 @@ class StartVoiceCallUseCase(
         is_open_now: IsOpenNow = self._is_open_now(business, profile, now_seconds)
         return CallInitiationData(
             business_id=business.id,
-            first_message=MessageText(
-                f"{greeting.text} "
-                + self._text_resolver.resolve(
-                    CALL_PRIVACY_NOTICE_HINT, greeting.language
-                )
-            ),
+            # The greeting ends with where the privacy notice is.
+            first_message=greeting.text,
             language=greeting.language,
             caller_phone_number=caller_phone_number,
             is_open_now=is_open_now,
@@ -217,8 +207,9 @@ class StartVoiceCallUseCase(
         )
         if verdict.level is SpendLevel.HARD_LIMIT:
             raise ConflictError(
-                "The business reached its daily spend limit: the voice assistant "
-                "takes no calls until its midnight."
+                "The voice assistant takes no calls now (the business's daily "
+                "spend limit, the platform's budget stop or a platform pause); "
+                "the call goes to the forwarding number."
             )
 
     def _is_open_now(

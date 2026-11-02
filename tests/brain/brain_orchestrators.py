@@ -166,6 +166,7 @@ def build_brain_orchestrators(
             wall_clock=wall_clock,
             app_base_url=app_base_url,
             suppression_list=build_suppression_list(repos.suppression_entry_repo),
+            card_repo=repos.contact_repo,
         ),
         check_spend=options.spend_check,
     )

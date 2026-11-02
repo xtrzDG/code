@@ -20,7 +20,7 @@ export const returnVisitsEn = {
   },
   settings: {
     title: "Return-visit messages",
-    description: "One message to bring customers back, in their channel and language. Nothing is sent until you turn it on.",
+    description: "One message to bring customers back, in the chat they booked in and their language. Nothing is sent until you turn it on.",
     toggle: "Send return-visit messages",
     rule: "What to send",
     daysAfter: "Days after the last visit",
@@ -46,6 +46,8 @@ export const returnVisitsEn = {
     cap: "At most a month",
     capHint: "The messages stop for the rest of the month at this number.",
     monthSent: { one: "{count} message sent this month, of {cap}", other: "{count} messages sent this month, of {cap}" },
+    consent:
+      "Invitations go only to customers who agreed to marketing messages (Customers → a customer → Marketing messages), and only in the chat where they made the booking. Bookings made by phone or in the website chat get none.",
     honours:
       "Customers who wrote STOP, are on the do-not-contact list or are blocked never get it. A customer gets at most one such message every two weeks, and none after booking again.",
     whatsapp:
@@ -82,7 +84,7 @@ export const returnVisitsEn = {
     skipReasons: {
       opted_out: "they asked not to be written to",
       no_contact: "the customer is unknown or erased",
-      no_channel: "there is no channel to reach them",
+      no_channel: "the chat they booked in cannot carry it",
       window_closed: "the 24-hour window is closed and there is no template",
     },
     notSentBecause: "Not sent: {reason}",

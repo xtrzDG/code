@@ -61,6 +61,24 @@ def test_refused_login_codes_degrade_the_cabinet() -> None:
     assert levels(alert(PlatformAlertCode.OTP_CAP_TRIPS, 3, NOW))[CABINET] is DEGRADED
 
 
+def test_the_budget_stop_degrades_every_chat_channel_and_voice_while_it_holds() -> None:
+    holding = levels(alert(PlatformAlertCode.SPEND_BUDGET_STOP, 104, NOW))
+    lifted = levels(
+        alert(
+            PlatformAlertCode.SPEND_BUDGET_STOP,
+            104,
+            NOW,
+            PlatformAlertStatus.RESOLVED,
+        )
+    )
+
+    assert [holding[CHAT], holding[META], holding[TELEGRAM], holding[VOICE]] == [
+        DEGRADED
+    ] * 4
+    assert holding[CABINET] is OK
+    assert set(lifted.values()) == {OK}
+
+
 def test_inside_alerts_and_resolved_ones_are_not_shown() -> None:
     result = levels(
         alert(PlatformAlertCode.DEAD_JOBS, 9, NOW),

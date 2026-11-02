@@ -7,6 +7,11 @@ it, so no actor), and the customer is told what changed in their language.
 The suppression list keeps a digest of every way to reach the customer
 (their numbers, this account), so the STOP outlives an erasure of their
 data: a new contact with the same number or account is still not messaged.
+
+A STOP also takes back the customer's marketing consent. A first STOP in a
+channel does it with the save (`keep_card_fields`); a STOP in a channel
+already opted out (the customer ticked the box again after it) does it as
+one card change (`change_card`), so a later START never revives it.
 """
 
 from dataclasses import dataclass
@@ -17,9 +22,11 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.feedback import CustomerSignalKind
+from app.schemas.constants.marketing_consent import MarketingConsentWithdrawal
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.conversation_engine import PreparedTurn
@@ -31,6 +38,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.shared.operations_support import CONTACT_ENTITY
 from app.utilities.channels.opt_out import with_opt_out
 from app.utilities.channels.opt_out_texts import OPTED_IN_TEXT, OPTED_OUT_TEXT
 from app.utilities.privacy.suppressed_identities import (
@@ -47,6 +55,7 @@ class MessagingPreferences:
     audit_log_repo: AuditLogRepoContract
     text_resolver: LocalizedTextResolverContract
     suppression_list: SuppressionListContract
+    card_repo: CustomerCardRepoContract
 
     def apply(
         self,
@@ -74,6 +83,8 @@ class MessagingPreferences:
             stopped = with_opt_out(contact, turn.conversation.channel)
             if stopped != contact.opted_out_channels:
                 self._store(contact, stopped, AuditAction.CREATE, now)
+            else:
+                self._withdraw_consent(contact, now)
 
             return self._reply(turn, kind, OPTED_OUT_TEXT)
 
@@ -101,14 +112,41 @@ class MessagingPreferences:
         self.contact_repo.save(contact)
         self._audit(contact, action, now)
 
+    def _withdraw_consent(self, contact: ContactDocument, now: Microseconds) -> None:
+        """
+        Take back a consent given after the channel's first STOP, as stored
+        now (one step: a consent ticked at the same moment is not missed);
+        audited as a change of the contact when there was one to take back.
+        """
+
+        withdrawn: list[ContactDocument] = []
+
+        def withdraw(stored: ContactDocument) -> None:
+            if stored.marketing_consent is None or not stored.has_marketing_consent:
+                return
+
+            stored.marketing_consent = stored.marketing_consent.withdrawn(
+                now, MarketingConsentWithdrawal.STOP
+            )
+            stored.updated_at = now
+            withdrawn.append(stored)
+
+        self.card_repo.change_card(contact.business_id, contact.id, withdraw)
+        if withdrawn:
+            self._audit(contact, AuditAction.UPDATE, now, CONTACT_ENTITY)
+
     def _audit(
-        self, contact: ContactDocument, action: AuditAction, now: Microseconds
+        self,
+        contact: ContactDocument,
+        action: AuditAction,
+        now: Microseconds,
+        entity: AuditEntityName = OPT_OUT_ENTITY,
     ) -> None:
         self.audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=contact.business_id,
                 action=action,
-                entity=OPT_OUT_ENTITY,
+                entity=entity,
                 entity_id=AuditEntityReference(str(contact.id)),
                 created_at=now,
                 updated_at=now,

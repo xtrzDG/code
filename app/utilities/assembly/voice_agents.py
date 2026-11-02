@@ -46,7 +46,13 @@ def find_existing_voice_agent_id(
 #   before them, and decline_recording on every agent.
 # 2 (W22): the tuning (model, temperature, a voice per language, speech
 #   recognition keywords, turn timeout) and the evaluation of every call.
-VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(2)
+# 3: the agent's authentication (signed URLs only), its call caps (calls at
+#   once and a day), the transfer to the call's transfer_number variable
+#   only while open and allowed, the Current call block without the
+#   caller's name or bookings, no tools bound to the caller id
+#   (list_my_bookings, cancel_booking, reschedule_booking) and the provider
+#   recording the voice only while the business records calls.
+VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(3)
 
 
 def needs_voice_agent_resync(version: AssistantVersionDocument) -> bool:

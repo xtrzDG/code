@@ -2,6 +2,9 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.messaging_clients import SmsMessagingClientContract
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     ChannelRepoContract,
@@ -13,6 +16,7 @@ from app.contracts.repositories.compliance_repositories import AuditLogRepoContr
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -47,6 +51,12 @@ class UpdateCallSettingsUseCase(
     the recording of calls on or off and confirms (or withdraws) the
     staff notice of transfers; the confirmation keeps who gave it and
     when, and a request that leaves either out changes neither. Audited.
+
+    The voice platform records the caller's voice only while recording is
+    on (`VoiceAgentSpec.is_recording_enabled`), so switching it marks the
+    live version's agent as built before the current revision:
+    `resync_voice_agents` sets it up again on its next run (until then the
+    audio of a call without recording is deleted after the call).
     """
 
     def __init__(
@@ -61,6 +71,7 @@ class UpdateCallSettingsUseCase(
         text_resolver: LocalizedTextResolverContract,
         sms_client: SmsMessagingClientContract | None,
         wall_clock: WallClock[Microseconds],
+        assistant_version_repo: AssistantVersionRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -74,6 +85,9 @@ class UpdateCallSettingsUseCase(
             is_sms_available=sms_client is not None,
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._assistant_version_repo: AssistantVersionRepoContract = (
+            assistant_version_repo
+        )
 
     def run(self, input_data: UpdateCallSettingsCommand) -> CallSettingsView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -88,6 +102,7 @@ class UpdateCallSettingsUseCase(
             business, self._call_settings_repo.get_by_business(business.id)
         )
         request = input_data.request
+        was_recording: bool = settings.is_recording_enabled
         settings.is_summary_enabled = request.is_summary_enabled
         settings.is_text_back_enabled = request.is_text_back_enabled
         settings.text_back_template_name = request.text_back_template_name
@@ -95,6 +110,9 @@ class UpdateCallSettingsUseCase(
         apply_privacy_choices(settings, request, input_data.user_id, now)
         settings.updated_at = now
         self._call_settings_repo.save(settings)
+        if settings.is_recording_enabled != was_recording:
+            self._rebuild_live_voice_agent(business, now)
+
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,
@@ -107,6 +125,28 @@ class UpdateCallSettingsUseCase(
             )
         )
         return build_call_settings_view(business, settings, self._sources)
+
+    def _rebuild_live_voice_agent(
+        self, business: BusinessDocument, now: Microseconds
+    ) -> None:
+        """The live version's agent, if any, is set up again by the re-sync."""
+
+        if business.published_assistant_version_id is None:
+            return
+
+        def outdate(
+            stored: AssistantVersionDocument,
+        ) -> AssistantVersionDocument | None:
+            if stored.voice_agent_id is None:
+                return None
+
+            stored.voice_agent_revision = None
+            stored.updated_at = now
+            return stored
+
+        self._assistant_version_repo.modify(
+            business.id, business.published_assistant_version_id, outdate
+        )
 
 
 def apply_privacy_choices(

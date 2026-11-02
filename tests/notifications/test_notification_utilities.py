@@ -1,9 +1,5 @@
-"""Signed links, quiet hours, push endpoint checks, staff e-mails and settings."""
+"""Quiet hours, push endpoint checks, staff e-mails and settings."""
 
-import base64
-import hashlib
-import hmac
-import struct
 from datetime import UTC, datetime
 
 import pytest
@@ -11,18 +7,11 @@ from typed_time_provider import Microseconds
 
 from app.containers.notification_factories import build_web_push_client
 from app.schemas.constants.environment import DeploymentEnvironment
-from app.schemas.constants.notifications import StaffLinkTarget
 from app.schemas.domain.notification_preferences import QuietHours
-from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.constrained_strings import LocalTimeOfDay
-from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import TimezoneName
-from app.schemas.typings.notifications.constrained_strings import StaffLinkToken
-from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
@@ -35,10 +24,6 @@ from app.utilities.notifications.quiet_hours import (
     quiet_hours_end,
 )
 from app.utilities.notifications.staff_email import build_staff_email
-from app.utilities.notifications.staff_link_signer import (
-    StaffLinkSigner,
-    derive_link_key,
-)
 from app.utilities.scheduling.zoned_time import load_time_zone
 from tests.notifications.test_web_push_encryption import (
     AUTH_SECRET,
@@ -47,102 +32,12 @@ from tests.notifications.test_web_push_encryption import (
     SENDER_PUBLIC,
 )
 
-KEY = PlatformSecret("a-long-enough-encryption-key-for-the-tests")
 EXPIRES = Microseconds(1_790_000_000_000_000)
 TBILISI = load_time_zone(TimezoneName("Asia/Tbilisi"))
 
 
-def signature_of(payload: bytes) -> bytes:
-    """What the signer under KEY appends: HMAC-SHA256, its first 12 bytes."""
-
-    return hmac.new(derive_link_key(KEY), payload, hashlib.sha256).digest()[:12]
-
-
 def at(text: str) -> Microseconds:
     return Microseconds(int(datetime.fromisoformat(text).timestamp() * 1_000_000))
-
-
-@pytest.mark.parametrize(
-    "claims",
-    [
-        StaffLinkClaims(
-            business_id=BusinessId(),
-            target=StaffLinkTarget.CONVERSATION,
-            conversation_id=ConversationId(),
-            expires_at=EXPIRES,
-        ),
-        StaffLinkClaims(
-            business_id=BusinessId(),
-            target=StaffLinkTarget.LEAD,
-            lead_id=LeadId(),
-            expires_at=EXPIRES,
-        ),
-        StaffLinkClaims(
-            business_id=BusinessId(),
-            target=StaffLinkTarget.BOOKING,
-            booking_id=BookingId(),
-            expires_at=EXPIRES,
-        ),
-        StaffLinkClaims(
-            business_id=BusinessId(),
-            target=StaffLinkTarget.NOTIFICATIONS,
-            expires_at=EXPIRES,
-        ),
-    ],
-)
-def test_signed_links_carry_their_page_and_are_short(claims: StaffLinkClaims) -> None:
-    signer = StaffLinkSigner(KEY)
-
-    token = signer.sign(claims)
-
-    assert len(token) == 67
-    assert signer.read(token) == claims
-
-
-def test_altered_foreign_and_malformed_tokens_are_refused() -> None:
-    signer = StaffLinkSigner(KEY)
-    claims = StaffLinkClaims(
-        business_id=BusinessId(),
-        target=StaffLinkTarget.NOTIFICATIONS,
-        expires_at=EXPIRES,
-    )
-    token = str(signer.sign(claims))
-    raw = base64.urlsafe_b64decode(token + "=")
-    altered = base64.urlsafe_b64encode(raw[:5] + bytes([raw[5] ^ 1]) + raw[6:])
-
-    assert signer.read(StaffLinkToken(altered.rstrip(b"=").decode())) is None
-    assert StaffLinkSigner(PlatformSecret("x" * 40)).read(StaffLinkToken(token)) is None
-    assert signer.read(StaffLinkToken(token[:-4])) is None
-    assert signer.read(StaffLinkToken("A" * 66 + "-")) is None
-    # The last character's two spare bits set: the same bytes, another link.
-    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-    respelled = token[:-1] + alphabet[alphabet.index(token[-1]) | 0b11]
-    assert base64.urlsafe_b64decode(respelled + "=") == raw
-    assert signer.read(StaffLinkToken(respelled)) is None
-
-    payload = struct.pack("!B16sB16sI", 2, bytes(16), 1, bytes(16), 1)
-    resigned = payload + signature_of(payload)
-    encoded = base64.urlsafe_b64encode(resigned).rstrip(b"=").decode()
-    assert signer.read(StaffLinkToken(encoded)) is None
-    unknown_target = struct.pack("!B16sB16sI", 1, bytes(16), 99, bytes(16), 1)
-    encoded = (
-        base64.urlsafe_b64encode(unknown_target + signature_of(unknown_target))
-        .rstrip(b"=")
-        .decode()
-    )
-    assert signer.read(StaffLinkToken(encoded)) is None
-
-
-def test_without_an_encryption_key_links_still_work_within_the_process() -> None:
-    signer = StaffLinkSigner(None)
-    claims = StaffLinkClaims(
-        business_id=BusinessId(),
-        target=StaffLinkTarget.NOTIFICATIONS,
-        expires_at=EXPIRES,
-    )
-
-    assert signer.read(signer.sign(claims)) == claims
-    assert StaffLinkSigner(None).read(signer.sign(claims)) is None
 
 
 def hours(starts: str, ends: str) -> QuietHours:

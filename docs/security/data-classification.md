@@ -64,7 +64,9 @@ start otherwise (`tests/legal/test_processor_uses.py`).
 | Records of model calls (and their Langfuse traces) | 30 days by default, never more | `purge_expired_personal_data` | `DEFAULT_LLM_TURN_RETENTION_DAYS` |
 | Call recordings and files customers sent | the business's choice; 90 days by default | `purge_expired_recordings`, daily | `recording_retention_days` of `app/schemas/domain/businesses.py` |
 | Leads, bookings, handoffs | anonymised with their conversation (bookings once the visit is over) | `purge_expired_personal_data` | `app/use_cases/compliance/retention/` |
-| Customer contacts | until the owner erases them or the business is deleted | the erasure, `delete_business` | `app/use_cases/compliance/delete_contact_data_use_case.py` |
+| Customer contacts | until the owner erases them or the business is deleted | the erasure, `delete_business` | `app/use_cases/compliance/delete_contact_data_use_case.py`, `app/use_cases/compliance/contact_data_eraser.py` |
+| Marketing consent (when, where, the wording's version, who recorded it; a withdrawal stays recorded) | with the contact, until the erasure | the erasure, `delete_business` | `app/schemas/domain/contacts.py` (`MarketingConsent`) |
+| Contact-erasure ledger objects (business and contact ids and the moment, nothing personal) | in the backup bucket beside the business ledger, so a restore can apply them again | nothing in the application: the ledger's key may not delete (`docs/operations/backup-restore.md`, "The bucket") | `app/adapters/business_closures/bucket_contact_erasure_ledger_adapter.py` |
 | Full business exports | until the one-time link expires (10 minutes by default) | `purge_business_exports`, hourly | `DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES` |
 | Idempotency keys | 24 hours | `purge_idempotency_keys`, hourly | `IDEMPOTENCY_KEY_LIFETIME` |
 | Finished queued jobs | 30 days | `purge_finished_jobs`, daily | `FINISHED_JOB_RETENTION_DAYS` |
@@ -75,9 +77,9 @@ start otherwise (`tests/legal/test_processor_uses.py`).
 | Backups | 30 daily and 12 monthly copies | `workshop backup` retention | `docs/operations/backup-restore.md` |
 | Render logs | 30 days | the EU log store's retention | `docs/operations/observability.md` |
 
-After a restore, deletions made since the backup are applied again from
-the deletion ledger (`reapply_deletion_ledger`), so a restore never brings
-an erased customer back.
+After a restore, deletions and customers' erasures made since the backup
+are applied again (`reapply_deletion_ledger`, `reapply_contact_erasures`),
+so a restore never brings an erased customer back.
 
 ## Is the retention job running?
 

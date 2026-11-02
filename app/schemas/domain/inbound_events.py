@@ -10,6 +10,7 @@ from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -32,7 +33,10 @@ class InboundCustomerMessage(PersistentDocument):
     customer came from when the message carried it (a tagged link, an ad):
     a conversation this message starts keeps it. `context_note` is what
     the message refers to that the assistant cannot see (a reply to the
-    business's Instagram story, a story mention).
+    business's Instagram story, a story mention). `client_ip_address` is a
+    website chat visitor's address (the widget and the hosted chat), kept
+    only while the event is: the anonymous bookings of one client network
+    are capped.
     """
 
     channel_user_id: ChannelUserId
@@ -44,6 +48,7 @@ class InboundCustomerMessage(PersistentDocument):
     )
     acquisition_source: AcquisitionSourceTag | None = None
     context_note: InboundContextNote | None = None
+    client_ip_address: ClientIpAddress | None = None
 
 
 class InboundEventDocument(BaseDocument):
@@ -90,9 +95,12 @@ class InboundEventDocument(BaseDocument):
     its author, its platform id the comment's). Written only once the
     comment-replies release gate opens; rows of the earlier kinds read
     unchanged.
+
+    Version 9: the customer message's `client_ip_address` (optional, a
+    website chat visitor's address for the anonymous booking cap).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("8")
+    schema_version: SchemaVersion = SchemaVersion("9")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind

@@ -43,9 +43,11 @@ class CampaignMessageStatus(StrEnum):
 class CampaignSkipReason(StrEnum):
     """
     Why a customer the rule found got no message: they said STOP (or are on
-    the suppression list, or blocked), are unknown or erased, can be reached
-    in no connected messenger, or only where the 24-hour window is closed
-    without an approved template.
+    the suppression list, or blocked), are unknown or erased, cannot be
+    reached in the chat the booking was made in (a messenger the business
+    has not connected, or a phone or website chat booking, which cannot
+    carry it), or only while its 24-hour window is closed without an
+    approved template.
     """
 
     OPTED_OUT = "opted_out"

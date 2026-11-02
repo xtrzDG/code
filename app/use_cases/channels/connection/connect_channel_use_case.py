@@ -144,7 +144,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         )
         if input_data.channel not in CONNECTABLE_CHANNELS:
             raise ValidationFailedError(
-                f"The {input_data.channel.value} channel cannot be connected yet."
+                f"The {input_data.channel.value} channel cannot be connected."
             )
 
         refuse_while_closing(
@@ -251,7 +251,11 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
 
         if channel_kind in (ChannelKind.MESSENGER, ChannelKind.INSTAGRAM):
             return connect_page(
-                self._meta_client, require_free_account, channel_kind, request
+                self._meta_client,
+                self._app_settings,
+                require_free_account,
+                channel_kind,
+                request,
             )
 
         if channel_kind is ChannelKind.PHONE:

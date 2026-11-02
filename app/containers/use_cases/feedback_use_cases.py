@@ -64,6 +64,7 @@ def feedback_root(
             business_profile_repo=repositories.business_profile_repo,
             booking_repo=repositories.booking_repo,
             contact_repo=repositories.contact_repo,
+            card_repo=repositories.contact_repo,
             channel_repo=repositories.channel_repo,
             conversation_repo=repositories.conversation_repo,
             message_repo=repositories.message_repo,

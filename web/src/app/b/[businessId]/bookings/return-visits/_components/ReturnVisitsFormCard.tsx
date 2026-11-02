@@ -31,7 +31,8 @@ import type { ReturnVisitsState } from "../_lib/useReturnVisits";
  * The owner's choices: send the message or not, which one and when (the
  * niche's usual rule a click away), who may get it (everyone the rule
  * finds or one saved segment) and the most a month, with what always
- * holds (STOP, the do-not-contact list, two weeks between messages).
+ * holds (only customers who agreed to marketing, in the chat they booked
+ * in; STOP, the do-not-contact list, two weeks between messages).
  */
 export function ReturnVisitsFormCard({ stored, state }: { stored: CampaignSettingsView; state: ReturnVisitsState }) {
   const { t, tp } = useI18n();
@@ -200,6 +201,7 @@ export function ReturnVisitsFormCard({ stored, state }: { stored: CampaignSettin
             {tp("returnVisits.settings.monthSent", stored.month_sent_count, { count: stored.month_sent_count, cap: stored.monthly_cap })}
           </p>
           <div className="space-y-2 rounded-xl bg-surface-muted px-3 py-2.5 text-sm text-ink-muted">
+            <p>{t("returnVisits.settings.consent")}</p>
             <p>{t("returnVisits.settings.honours")}</p>
             <p>{t("returnVisits.settings.whatsapp")}</p>
           </div>

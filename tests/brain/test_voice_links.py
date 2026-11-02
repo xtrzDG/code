@@ -43,6 +43,26 @@ def know_caller_on_telegram(world: BrainWorld) -> None:
 
 def test_a_caller_reachable_on_a_messenger_is_promised_a_text() -> None:
     world = build_world(scripted())
+
+    result, is_error = run_tool(
+        world,
+        AssistantToolName.SEND_LINK,
+        {"kind": "menu"},
+        build_context(world, channel=ChannelKind.PHONE, can_text_caller=True),
+    )
+
+    assert is_error is False
+    assert result["kind"] == "menu"
+    assert result["texted_after_call"] is True
+    assert "url" not in result
+    assert "I will text you the link" in str(result["note"])
+
+
+def test_a_caller_id_never_reaches_a_messenger_contact_by_its_proved_phone() -> None:
+    # The number a call comes from proves nobody: the call does not join
+    # the Telegram customer whose phone is that number, so nothing is texted
+    # to them because of it.
+    world = build_world(scripted())
     connect_telegram(world)
     know_caller_on_telegram(world)
 
@@ -51,10 +71,9 @@ def test_a_caller_reachable_on_a_messenger_is_promised_a_text() -> None:
     )
 
     assert is_error is False
-    assert result["kind"] == "menu"
-    assert result["texted_after_call"] is True
+    assert result["texted_after_call"] is False
     assert "url" not in result
-    assert "I will text you the link" in str(result["note"])
+    assert "do not promise one" in str(result["note"])
 
 
 def test_a_caller_no_messenger_reaches_is_never_promised_a_text() -> None:

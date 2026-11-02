@@ -7,8 +7,12 @@ bug that showed one business's data to another, a compromised admin
 account. The DPA (`docs/legal/`, section 12) gives the platform at most
 **48 hours from becoming aware** to notify each affected business (the
 controller), which then has **72 hours** under the GDPR to notify its
-supervisory authority. Write down the moment of awareness: the clocks
-start there.
+supervisory authority. Data the platform controls itself (accounts,
+billing, sign-in codes, sessions) goes to the Garante within **72 hours**
+by the platform, and every breach enters the breach register: the roles,
+the timed table and the risk criteria are in
+[incident.md, "Personal data breach"](../incident.md#personal-data-breach-gdpr-articles-33-and-34).
+Write down the moment of awareness: the clocks start there.
 
 ## First hour
 
@@ -40,7 +44,8 @@ start there.
 Record the incident on Admin → System → Incidents with `kind`
 "data breach" (or `POST /v1/admin/incidents`; it needs a recent sign-in):
 the affected businesses, the approximate numbers, and the five texts in
-English plus Georgian and Russian (examples in `../incident.md`). Every
+English plus Italian, the cabinet's languages (examples in English and
+Italian in [incident.md](../incident.md#personal-data-breach-the-five-texts-of-the-notice)). Every
 owner of each affected business gets the notice by e-mail or SMS through
 the outbox, in their language, and each business's audit log records it.
 Check on `/admin/system` that the `deliver_outbound` jobs went out; call
@@ -51,12 +56,14 @@ owners whose notice failed.
 - Owners may ask for details for their authority's form (GDPR article 33:
   the nature, categories and numbers, the contact point, consequences,
   measures). Answer within a working day.
-- If the people concerned must be told (high risk), help the owner word it;
-  the platform does not contact a business's customers on its own.
+- If the people concerned must be told (high risk), help the owner word it
+  with the English and Italian template of `../incident.md` ("what an owner
+  may tell its customers"); the platform does not contact a business's
+  customers on its own.
 
 ## Afterwards
 
 - Postmortem within 5 working days; the action items are reviewed by the
-  founder. Keep the record (timeline, notices, decisions) for at least 5
-  years: the DPA and the GDPR require documenting every breach, notified
-  or not.
+  founder. Enter it in the breach register and keep the record (timeline,
+  notices, decisions) for at least 5 years: the DPA and the GDPR require
+  documenting every breach, notified or not.

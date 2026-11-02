@@ -5,6 +5,7 @@ from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.utilities.channels.voice_service import CALLER_ID_BOUND_TOOLS
 
 # Tools offered while bookings are paused (unpaid subscription past grace):
 # taking a request, passing to staff, searching the knowledge base, telling
@@ -83,15 +84,19 @@ def select_voice_agent_tools(
 ) -> list[AssistantToolName]:
     """
     The tools the business's voice agent is built with: the version's, with
-    the tools a version assembled before them gets (list_my_bookings,
-    join_waitlist) and decline_recording. The service mode is not applied:
-    it changes without a new agent, and every tool call is checked against
-    the conversation's tools when it comes in.
+    join_waitlist for a version assembled before it and decline_recording,
+    but none of CALLER_ID_BOUND_TOOLS (list_my_bookings, cancel_booking,
+    reschedule_booking): a caller id proves nobody's identity, so the agent
+    is not even given them (the tool webhook still refuses them). The
+    service mode is not applied: it changes without a new agent, and every
+    tool call is checked against the conversation's tools when it comes in.
     """
 
-    return with_decline_recording(
-        with_join_waitlist(with_list_my_bookings(list(version.tools)))
-    )
+    return [
+        tool
+        for tool in with_decline_recording(with_join_waitlist(list(version.tools)))
+        if tool not in CALLER_ID_BOUND_TOOLS
+    ]
 
 
 def with_decline_recording(

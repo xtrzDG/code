@@ -2,13 +2,19 @@
 
 import threading
 
+from typed_time_provider import Microseconds
+
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.dto.jobs import JobReport
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.assistants.constrained_integers import VoiceAgentRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
+from app.utilities.calls.call_follow_up_keys import call_settings_id_of
 from tests.assembly.testbed import AssemblyTestbed
 from tests.assembly.voice_resync_helpers import (
     OLD_TOOLS,
@@ -30,12 +36,11 @@ def test_an_old_agent_gets_the_new_tools_without_a_new_publish() -> None:
     [spec] = testbed.voice_provisioner.specs
     assert spec.existing_agent_id == old.voice_agent_id
     assert spec.prompt_text == old.phone_prompt_text
+    # No tool bound to the caller id (list_my_bookings, cancel_booking).
     assert [tool.name for tool in spec.tools] == [
         AssistantToolName.SEARCH_KNOWLEDGE,
         AssistantToolName.CHECK_AVAILABILITY,
         AssistantToolName.CREATE_BOOKING,
-        AssistantToolName.CANCEL_BOOKING,
-        AssistantToolName.LIST_MY_BOOKINGS,
         AssistantToolName.JOIN_WAITLIST,
         AssistantToolName.HANDOFF_TO_HUMAN,
         AssistantToolName.DECLINE_RECORDING,
@@ -44,6 +49,52 @@ def test_an_old_agent_gets_the_new_tools_without_a_new_publish() -> None:
     assert synced is not None
     assert synced.voice_agent_revision == VOICE_AGENT_REVISION
     assert synced.tools == OLD_TOOLS
+    # No call settings: the platform records no voice.
+    assert spec.is_recording_enabled is False
+
+
+def test_an_agent_of_the_previous_revision_is_set_up_again() -> None:
+    # Revision 3 brought the agent's auth, call caps, the per-call transfer
+    # number and the Current call block without the caller's name.
+    testbed = AssemblyTestbed()
+    lines = phone_lines()
+    business_id, old = published_before_revisions(testbed, lines)
+
+    def at_revision_two(stored: AssistantVersionDocument) -> AssistantVersionDocument:
+        stored.voice_agent_revision = VoiceAgentRevision(2)
+        return stored
+
+    testbed.version_repo.modify(business_id, old.id, at_revision_two)
+
+    report: JobReport = resync_use_case(testbed, lines).run(TICK)
+
+    assert VoiceAgentRevision(3) == VOICE_AGENT_REVISION
+    assert int(report.processed_count) == 1
+    [spec] = testbed.voice_provisioner.specs
+    assert spec.existing_agent_id == old.voice_agent_id
+    synced = testbed.version_repo.get(business_id, old.id)
+    assert synced is not None
+    assert synced.voice_agent_revision == VOICE_AGENT_REVISION
+
+
+def test_a_business_that_records_calls_gets_an_agent_that_records() -> None:
+    testbed = AssemblyTestbed()
+    lines = phone_lines()
+    business_id, _ = published_before_revisions(testbed, lines)
+    testbed.call_settings_repo.save(
+        CallSettingsDocument(
+            id=call_settings_id_of(business_id),
+            business_id=business_id,
+            is_recording_enabled=True,
+            created_at=Microseconds(0),
+            updated_at=Microseconds(0),
+        )
+    )
+
+    resync_use_case(testbed, lines).run(TICK)
+
+    [spec] = testbed.voice_provisioner.specs
+    assert spec.is_recording_enabled is True
 
 
 def test_a_synced_agent_is_left_alone() -> None:

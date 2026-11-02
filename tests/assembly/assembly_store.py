@@ -24,6 +24,7 @@ from app.repositories.business_repositories import (
     BusinessProfileRepository,
     BusinessRepository,
 )
+from app.repositories.call_follow_up_repositories import CallSettingsRepository
 from app.repositories.compliance_repositories import (
     DpaAcceptanceRepository,
 )
@@ -44,6 +45,7 @@ from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunD
 from app.schemas.domain.autotest_cases import AutotestCaseDocument
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.jobs import QueuedJobDocument
@@ -165,6 +167,9 @@ class AssemblyStore:
         )
         self.autotest_case_repo = AutotestCaseRepository(
             InMemoryDocumentCollectionAdapter(AutotestCaseDocument)
+        )
+        self.call_settings_repo = CallSettingsRepository(
+            InMemoryDocumentCollectionAdapter(CallSettingsDocument)
         )
         self.job_stores: JobStores = build_job_stores()
         self.job_repo: QueuedJobRepoContract = self.job_stores.job_repo

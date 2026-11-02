@@ -1,6 +1,5 @@
-"""In-memory conversation engine for tests: real repositories, detector, phone
-parser, tool registry, texts and customer memory (`BrainMemory`); fake tools
-and claim check (`GuardOptions`), a scripted model, a manual clock."""
+"""In-memory conversation engine for tests: real repositories, parsers, texts and
+memory (`BrainMemory`); fake tools and claim check, a scripted model and clock."""
 
 from dataclasses import dataclass, field
 
@@ -31,6 +30,7 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
+from app.repositories.call_follow_up_repositories import CallSettingsRepository
 from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
@@ -123,6 +123,7 @@ class BrainWorld:
     handoff_repo: HandoffRepository
     channel_repo: ChannelRepository
     call_repo: CallRepository
+    call_settings_repo: CallSettingsRepository
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
@@ -263,6 +264,7 @@ def build_world(
         usage_event_repo=repos.usage_event_repo,
         channel_repo=repos.channel_repo,
         call_repo=repos.call_repo,
+        call_settings_repo=repos.call_settings_repo,
         handoff_repo=repos.handoff_repo,
         audit_log_repo=repos.audit_log_repo,
         user_repo=repos.user_repo,
@@ -292,7 +294,7 @@ def build_world(
             build_customer_turn_slots(assemble_app_settings({})),
         ),
         voice_orchestrator=orchestrators.voice_orchestrator,
-        greeting=build_call_greeting(repos.business_repo, texts),
+        greeting=build_call_greeting(repos, texts),
         texts=texts,
         live_events=orchestrators.live_events,
     )

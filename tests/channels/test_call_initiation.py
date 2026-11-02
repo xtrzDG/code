@@ -45,9 +45,9 @@ class TestCallInitiation:
             "type": "conversation_initiation_client_data",
             "conversation_config_override": {
                 "agent": {
-                    # The greeting, then where the privacy notice is.
-                    "first_message": "[ka] AI assistant of Funicular VR. "
-                    "კონფიდენციალურობის პოლიტიკა ჩვენს ვებგვერდზეა.",
+                    # The greeting as built (it ends with where the privacy
+                    # notice is): nothing is appended per call.
+                    "first_message": "[ka] AI assistant of Funicular VR.",
                     "language": "ka",
                 }
             },

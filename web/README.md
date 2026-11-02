@@ -19,7 +19,7 @@ backend-for-frontend), which keep the token in an httpOnly cookie.
 
 ## Run
 
-Requirements: Node 22.12+ and npm 10; the backend from the repository root.
+Requirements: Node 22.22.2+ (jsdom's engine) and npm 10; the backend from the repository root.
 
 ```bash
 # 1. the API (repository root), in-memory storage, login codes printed to its log
@@ -41,8 +41,8 @@ development the 6-digit code appears in the API log
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `BACKEND_URL` | `http://localhost:8000` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). |
-| `COOKIE_SECURE` | `true` in production | `false` serves the session cookie without `Secure` (a production build over plain HTTP). |
+| `BACKEND_URL` | `http://localhost:8000` in development and `next build` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). Required in production: without it every API call fails with `BackendUrlMissingError` (logged once) instead of asking localhost:8000 (`src/server/backend.ts`). |
+| `COOKIE_SECURE` | `true` in production | `false` is honoured only by a production build reached over plain HTTP on this machine (`http://localhost`, `127.0.0.1`, `[::1]`; no proxy reporting https or another host; `SITE_URL` unset or local), as the e2e suite and docker compose run it; a real deployment keeps `Secure` cookies and the `__Host-` session name (`src/server/cookieSecurity.ts`). |
 | `SITE_URL` | the request's own address (a production build: only a localhost one, else `http://localhost:3000`) | Public address of the site (`https://app.example.com`): the canonical links, hreflang alternates, `sitemap.xml`, `robots.txt` and structured data of the public pages name it. Set it in production: a request's `Host` header is the visitor's to write, so a production build without it never names a host a request sent (only this machine's, for `next start` and the e2e suite) and logs one error. |
 | `SECURITY_CONTACT_EMAIL` | none | The platform's security mailbox (`security@<your domain>`): `/.well-known/security.txt` (RFC 9116, `src/server/securityTxt.ts`) names it as the first `Contact`, ahead of GitHub's private vulnerability reporting, and adds its own `Canonical` address from `SITE_URL`. Set it in production: the deploy smoke test (`scripts/smoke.sh`) fails without it. Only one plain address is accepted. |
 | `TRUSTED_PROXY_HOPS` | `0` | How many right-most `X-Forwarded-For` entries the cabinet's own proxies add (Render: `1`). Only those are forwarded to the API; the rest of the header comes from the browser and could be forged. `0` forwards no client address. |
@@ -1094,9 +1094,9 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 ### Accessibility
 
 - `e2e/a11y-sections-en.spec.ts` (`e2e/support/axe.ts`) runs axe-core
-  (WCAG 2.1 A and AA rules) on every page of a business in the dark and the
-  light theme; `e2e/a11y.spec.ts` on the
-  setup invitation, every
+  (WCAG 2.2 A and AA rules, `WCAG_TAGS`; also `e2e/hosted-chat-a11y.spec.ts`
+  and `e2e/widget-a11y.spec.ts`) on every page of a business in the dark and the
+  light theme; `e2e/a11y.spec.ts` on the setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
 - Label in Name (WCAG 2.5.3, axe's `label-content-name-mismatch` since
@@ -1988,9 +1988,9 @@ Its motion and 3D hero: see [Motion](#motion).
   `__Host-aw_session` over HTTPS (Secure, `Path=/`, no `Domain`: no subdomain
   or plain-HTTP page can set or shadow it) and `aw_session` when
   `COOKIE_SECURE=false`; expires with the API session. A 401 from the API
-  clears it. A browser that still has the old `aw_session` keeps its session:
-  it is read as a fallback and moved to the new name on the next page view
-  (`src/server/sessionCookie.ts`).
+  clears it. In production the old `aw_session` is never read (a subdomain or
+  plain-HTTP page could plant it): the proxy only deletes it; outside
+  production it is read and moved to the new name (`src/server/sessionCookie.ts`).
 - Content Security Policy (`src/server/contentSecurityPolicy.ts`, set by the
   proxy on every page view with a fresh nonce that Next.js puts on its own
   scripts): scripts only with the nonce or loaded by a trusted script
@@ -2056,9 +2056,9 @@ Its motion and 3D hero: see [Motion](#motion).
   `challenge_required` with the site key), the page loads Cloudflare
   Turnstile, shows "One more step" and sends the request again with the
   check's token (`src/app/login/_lib/botCheck.ts`, `useTurnstile.ts`).
-- The BFF forwards only `/v1/*` paths, an allow-list of headers (never the
-  browser's cookies), and refuses cross-site state-changing requests
-  (`Origin`/`Sec-Fetch-Site` check) on top of `SameSite=Lax`.
+- The BFF forwards only `/v1/*` paths and allowed headers (never cookies). On top of
+  `SameSite=Lax`, a write needs `Sec-Fetch-Site: same-origin` or the site's `Origin` (else 403
+  `forbidden_origin`); audited exports refuse other sites (`src/server/sameOrigin.ts`).
 - Two-factor sign-in: after the login code, people with an authenticator app
   (and every platform admin, who sets one up at the first sign-in) enter its
   code or a recovery code (`app/login/_components/SecondStepForm.tsx`); the

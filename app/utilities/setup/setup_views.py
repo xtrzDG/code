@@ -12,7 +12,6 @@ from app.schemas.constants.setup import (
     SetupActionTarget,
     SetupStepStatus,
 )
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.dto.localization import LocalizedText
@@ -22,10 +21,7 @@ from app.schemas.dto.setup.setup_progress import (
     PhoneTestLinkView,
 )
 from app.schemas.dto.setup.setup_steps_view import SetupStepView
-from app.schemas.typings.channels.constrained_strings import (
-    PublicBaseUrl,
-    TelegramBotUsername,
-)
+from app.schemas.typings.channels.constrained_strings import TelegramBotUsername
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.setup.constrained_integers import SetupStepMinutes
 from app.schemas.typings.setup.constrained_strings import PhoneTestUrl
@@ -86,9 +82,7 @@ def step_views(
 
 
 def phone_test_links(
-    business: BusinessDocument,
     channels: Sequence[ChannelDocument],
-    app_base_url: PublicBaseUrl | None,
     is_live: bool,
 ) -> list[PhoneTestLinkView]:
     """
@@ -96,11 +90,9 @@ def phone_test_links(
     their own assistant: the Telegram bot, once connected. It answers once
     the assistant is live. The website chat is tried on its hosted chat
     page, whose link comes with the share links (`hosted_chat_url`), not on
-    the API's widget demo page (development only); `app_base_url` is no
-    longer read.
+    the API's widget demo page (development only).
     """
 
-    del business, app_base_url
     links: list[PhoneTestLinkView] = []
     connected: dict[ChannelKind, ChannelDocument] = {
         channel.kind: channel

@@ -175,11 +175,13 @@ def test_a_day_of_call_minutes_is_capped(minutes: int, status: int) -> None:
     assert response.status_code == status, response.text
 
 
-def test_the_greeting_says_where_the_privacy_notice_is() -> None:
+def test_the_greeting_is_said_as_built_with_nothing_appended() -> None:
+    # The greeting itself ends with where the privacy notice is
+    # (tests/brain/test_call_greeting_without_recording.py), so the call
+    # start adds nothing: the caller hears it once.
     response = post_start(build_voice_setup())
 
     first_message = response.json()["conversation_config_override"]["agent"][
         "first_message"
     ]
-    assert first_message.startswith("[ka] AI assistant of Funicular VR. ")
-    assert first_message.endswith("კონფიდენციალურობის პოლიტიკა ჩვენს ვებგვერდზეა.")
+    assert first_message == "[ka] AI assistant of Funicular VR."

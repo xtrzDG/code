@@ -15,13 +15,13 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.dto.calls.missed_calls import StoredFinishedCall
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import ChannelUserId
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.use_cases.shared.contact_activity import record_contact_seen
+from app.utilities.calls.call_contacts import find_or_create_call_contact
 from app.utilities.sharing.acquisition_sources import called_number_source
 
 
@@ -30,7 +30,8 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
     A call the caller spoke in but where the phone assistant used no tool
     has no conversation yet, so staff could not find it, its recording or
     its summary. It gets one now: a phone conversation of the caller (the
-    contact whose phone the call proved, else a new one) pinned to the
+    call-only contact of the number, else a new one: a caller id proves
+    nobody) pinned to the
     live version, its source the number the caller dialled, and the call
     points to it. Calls with a conversation,
     calls nobody spoke in, abandoned calls and calls of a business without
@@ -119,30 +120,17 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
         call: CallDocument,
         now: Microseconds,
     ) -> ContactDocument:
-        caller: E164PhoneNumber | None = call.from_phone_number
-        identity = ChannelIdentity(
-            channel=ChannelKind.PHONE,
-            channel_user_id=ChannelUserId(
-                str(call.provider_call_id) if caller is None else str(caller)
-            ),
-        )
-        contact: ContactDocument | None = (
-            None
-            if caller is None
-            else self._contact_repo.find_by_verified_phone_number(business.id, caller)
-        ) or self._contact_repo.find_by_channel_identity(
-            business.id, identity.channel, identity.channel_user_id
-        )
-        if contact is not None:
-            return record_contact_seen(self._contact_repo, contact, now)
+        """
+        The call-only contact of the caller's number, else a new one
+        (`find_or_create_call_contact`: a caller id proves nobody, so no
+        contact a channel proved is joined).
+        """
 
-        contact = ContactDocument(
-            business_id=business.id,
-            phone_number=caller,
-            verified_phone_number=caller,
-            channel_identities=[identity],
-            created_at=now,
-            updated_at=now,
+        contact: ContactDocument = find_or_create_call_contact(
+            self._contact_repo,
+            business.id,
+            call.from_phone_number,
+            ChannelUserId(str(call.provider_call_id)),
+            now,
         )
-        self._contact_repo.save(contact)
-        return contact
+        return record_contact_seen(self._contact_repo, contact, now)

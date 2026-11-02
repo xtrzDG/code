@@ -5,8 +5,9 @@ team wrote, whichever is worse.
 
 An alert names the components whose customers it affects, and how badly
 at its figure: model calls failing for half the turns is an outage of
-every chat channel, a few failing is degraded service. Alerts about the
-platform's inside (dead jobs, a handoff spike) affect no component.
+every chat channel, a few failing is degraded service; the daily budget
+stop degrades every chat channel and voice while it holds. Alerts about
+the platform's inside (dead jobs, a handoff spike) affect no component.
 """
 
 from collections.abc import Iterable, Mapping
@@ -59,6 +60,11 @@ ALERT_IMPACTS: Mapping[PlatformAlertCode, AlertImpact] = {
     PlatformAlertCode.TOOL_ERRORS: AlertImpact((*CHAT_CHANNELS, StatusComponent.VOICE)),
     # Login codes refused by a platform cap: signing in to the cabinet.
     PlatformAlertCode.OTP_CAP_TRIPS: AlertImpact((StatusComponent.CABINET,)),
+    # The platform's daily budget stop holds: every chat hands customers to
+    # the business's team and every call goes to the forwarding number.
+    PlatformAlertCode.SPEND_BUDGET_STOP: AlertImpact(
+        (*CHAT_CHANNELS, StatusComponent.VOICE)
+    ),
 }
 
 ANNOUNCEMENT_LEVELS: Mapping[AnnouncementLevel, StatusLevel | None] = {

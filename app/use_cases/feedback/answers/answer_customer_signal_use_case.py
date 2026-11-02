@@ -10,6 +10,7 @@ from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
@@ -67,9 +68,10 @@ class AnswerCustomerSignalUseCase(
         wall_clock: WallClock[Microseconds],
         app_base_url: PublicBaseUrl | None,
         suppression_list: SuppressionListContract,
+        card_repo: CustomerCardRepoContract,
     ) -> None:
         self._preferences: MessagingPreferences = MessagingPreferences(
-            contact_repo, audit_log_repo, text_resolver, suppression_list
+            contact_repo, audit_log_repo, text_resolver, suppression_list, card_repo
         )
         self._ratings: VisitRatings = VisitRatings(
             feedback_request_repo,

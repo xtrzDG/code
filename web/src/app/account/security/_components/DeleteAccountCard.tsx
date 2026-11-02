@@ -7,7 +7,8 @@
  * owner of a business that is not closing or the only owner of a brand:
  * the card then names them (from the person's memberships) and says what
  * to do first. Members of the platform team leave the team first. Once
- * deleted, the session's cookie goes and the sign-in page opens.
+ * deleted, the session's cookie and what it left in this browser's Web
+ * Storage go (`signOut`), and the sign-in page opens.
  */
 
 import { useState } from "react";
@@ -16,6 +17,7 @@ import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
 import { useMutation } from "@/api/useMutation";
 import type { CurrentUserView } from "@/api/types";
+import { signOut } from "@/components/shell/signOut";
 import { Alert, Button, Card, ConfirmDialog, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { LAST_BRAND_OWNER, LAST_BUSINESS_OWNER, PLATFORM_TEAM, refusedNames } from "@/lib/closure";
@@ -60,12 +62,10 @@ export function DeleteAccountCard({ me, account }: { me: CurrentUserView; accoun
       }
       return;
     }
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      // A full load drops every bit of client state of the deleted account.
-      window.location.assign(LOGIN_PATH);
-    }
+    // signOut never throws; a full load then drops the deleted account's
+    // in-memory client state too.
+    await signOut();
+    window.location.assign(LOGIN_PATH);
   };
 
   const isPlatformTeam = me.user.is_platform_admin || me.platform_admin_role != null;

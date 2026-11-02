@@ -64,6 +64,12 @@ class CampaignWriter:
     stored, so a consent given while the booking is still due counts.
     Service messages (confirmations, reminders, the booking's link) are
     other flows and need no marketing consent.
+
+    The consent's wording promises the messages "in the chat where I made
+    this booking", so a message goes only to the customer's identity in
+    the booking's own source channel, never to another messenger they are
+    known in. A booking made by phone or in the website chat, which cannot
+    carry a message the business starts, gets none (NO_CHANNEL).
     """
 
     message_repo: CampaignMessageRepoContract
@@ -111,7 +117,7 @@ class CampaignWriter:
 
         choice: RouteChoice = self.routing.choose(
             business,
-            contact,
+            in_booking_chat(contact, booking),
             booking.source_channel,
             self.whatsapp_template if rule_kind in TEMPLATED_RULES else None,
             now,
@@ -185,3 +191,20 @@ class CampaignWriter:
             template_parameters=[MessageText(str(business.name))],
             send_before=Microseconds(deadline),
         )
+
+
+def in_booking_chat(contact: ContactDocument, booking: BookingDocument) -> ContactDocument:
+    """
+    The contact as the campaign may reach it: only its identities in the
+    channel the booking was made in (the chat its consent names).
+    """
+
+    return contact.model_copy(
+        update={
+            "channel_identities": [
+                identity
+                for identity in contact.channel_identities
+                if identity.channel is booking.source_channel
+            ]
+        }
+    )

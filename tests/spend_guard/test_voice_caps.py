@@ -81,7 +81,6 @@ def start_call(setup: VoiceSetup, level: SpendLevel) -> FixedSpendCheck:
         testbed.voice_webhook_adapter,
         testbed.phone_number_parser,
         testbed.call_greeting,
-        testbed.text_resolver,
         testbed.settings,
         check_spend=spend,
     ).run(
@@ -114,5 +113,11 @@ def test_calls_are_answered_under_the_hard_limit() -> None:
 def test_past_the_hard_limit_the_voice_agent_takes_no_calls() -> None:
     setup = build_voice_setup()
 
-    with pytest.raises(ConflictError, match="daily spend limit"):
+    with pytest.raises(ConflictError) as refused:
         start_call(setup, SpendLevel.HARD_LIMIT)
+
+    # The same refusal holds at the platform's budget stop or pause.
+    message = str(refused.value)
+    assert "daily spend limit" in message
+    assert "budget stop" in message and "platform pause" in message
+    assert "forwarding number" in message

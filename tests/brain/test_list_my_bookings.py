@@ -131,10 +131,12 @@ def test_an_owner_test_chat_never_lists_real_bookings() -> None:
     assert "No bookings still to come" in result["note"]
 
 
-def test_the_voice_agent_lists_the_callers_bookings() -> None:
+def test_a_caller_id_lists_nobodys_bookings() -> None:
+    # A caller id proves nobody's identity: even past the tool webhook's
+    # refusal, the call's tools have no verified phone to find bookings by.
     world = build_world(scripted())
     caller = other_customer(world, str(CALLER))
-    booking = add_booking(world, caller, SATURDAY)
+    add_booking(world, caller, SATURDAY)
 
     result = world.voice_orchestrator.execute(
         VoiceToolCallRequest(
@@ -147,7 +149,7 @@ def test_the_voice_agent_lists_the_callers_bookings() -> None:
     )
 
     assert result.is_error is False
-    assert listed_ids(json.loads(str(result.result_json))) == [str(booking.id)]
+    assert listed_ids(json.loads(str(result.result_json))) == []
 
 
 def test_the_voice_tool_list_carries_list_my_bookings_without_arguments() -> None:

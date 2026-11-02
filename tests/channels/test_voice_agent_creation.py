@@ -183,6 +183,25 @@ class TestAgentCreation:
             "enable_conversation_initiation_client_data_from_webhook"
         ]
 
+    @pytest.mark.parametrize("is_recording_enabled", [False, True])
+    def test_the_platform_records_the_voice_only_while_the_business_records(
+        self, is_recording_enabled: bool
+    ) -> None:
+        testbed = ChannelsTestbed()
+        testbed.elevenlabs_transport.respond(
+            "POST", r"^/v1/convai/agents/create$", {"agent_id": "agent_rec"}
+        )
+        spec = build_spec(tools=[]).model_copy(
+            update={"is_recording_enabled": is_recording_enabled}
+        )
+
+        provisioner(testbed).upsert_agent(spec)
+
+        agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
+        assert agent["platform_settings"]["privacy"] == {
+            "record_voice": is_recording_enabled
+        }
+
     def test_brazilian_portuguese_uses_the_regional_code(self) -> None:
         testbed = ChannelsTestbed()
         testbed.elevenlabs_transport.respond(

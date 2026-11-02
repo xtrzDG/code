@@ -1,5 +1,7 @@
 """Connect WhatsApp, Messenger and Instagram accounts through the Graph API."""
 
+import logging
+
 from app.contracts.channel_clients import MetaGraphApiClientContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
@@ -27,8 +29,43 @@ from app.use_cases.channels.connection.channel_connection import (
     ChannelConnection,
 )
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 MIN_PAGE_TOKEN_LENGTH: int = 20
 MAX_PAGE_TOKEN_LENGTH: int = 1024
+
+# How the owner reads each Meta channel's name in a refusal.
+META_CHANNEL_NAMES: dict[ChannelKind, str] = {
+    ChannelKind.WHATSAPP: "WhatsApp",
+    ChannelKind.MESSENGER: "Messenger",
+    ChannelKind.INSTAGRAM: "Instagram",
+}
+
+
+def connect_unavailable_text(channel_kind: ChannelKind) -> str:
+    """What the owner reads when the platform cannot take the account now."""
+
+    return (
+        f"{META_CHANNEL_NAMES[channel_kind]} cannot be connected right now. "
+        "Contact support."
+    )
+
+
+def require_meta_webhooks(app_settings: AppSettings, channel_kind: ChannelKind) -> None:
+    """
+    Refuse a Meta channel while META_APP_SECRET is not configured: every
+    webhook Meta sends is then refused (its signature cannot be checked),
+    so the connected channel could never receive a message. The setting
+    name is logged for the operator; the owner reads a plain text.
+    """
+
+    if app_settings.meta_app_secret is None:
+        logger.warning(
+            "%s cannot be connected: META_APP_SECRET is not configured, so "
+            "every Meta webhook would be refused.",
+            META_CHANNEL_NAMES[channel_kind],
+        )
+        raise ExternalServiceError(connect_unavailable_text(channel_kind))
 
 
 def read_page_token(raw_token: RawChannelSecretInput | None) -> ChannelSecret:
@@ -56,12 +93,14 @@ def connect_whatsapp(
             "phone_number_id from WhatsApp Manager (API setup) is required."
         )
 
+    require_meta_webhooks(app_settings, ChannelKind.WHATSAPP)
     access_token: PlatformSecret | None = app_settings.whatsapp_system_user_token
     if access_token is None:
-        raise ExternalServiceError(
+        logger.warning(
             "WhatsApp cannot be connected: WHATSAPP_SYSTEM_USER_TOKEN is not "
             "configured."
         )
+        raise ExternalServiceError(connect_unavailable_text(ChannelKind.WHATSAPP))
 
     profile: WhatsAppPhoneNumberProfile = meta_client.get_whatsapp_phone_number(
         access_token,
@@ -86,12 +125,15 @@ def connect_whatsapp(
 
 def connect_page(
     meta_client: MetaGraphApiClientContract,
+    app_settings: AppSettings,
     require_free_account: AccountCheck,
     channel_kind: ChannelKind,
     request: ConnectChannelRequest,
 ) -> ChannelConnection:
     if request.page_id is None:
         raise ValidationFailedError("page_id of the Facebook page is required.")
+
+    require_meta_webhooks(app_settings, channel_kind)
 
     page_token: ChannelSecret = read_page_token(request.page_access_token)
     profile: MetaPageProfile = meta_client.get_page(page_token, request.page_id)

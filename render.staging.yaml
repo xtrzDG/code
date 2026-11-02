@@ -13,8 +13,9 @@
 # Every service follows `main` and deploys a commit only after all its
 # GitHub checks passed (`autoDeployTrigger: checksPass`). When the API is
 # live, .github/workflows/deploy-smoke.yml runs scripts/smoke.sh against it
-# and, if that passes, fast-forwards the `release` branch production deploys
-# (docs/operations/deploys.md).
+# and, if that passes, asks a reviewer of the GitHub environment
+# `production-release` to promote the commit to the `release` branch
+# production deploys (docs/operations/deploys.md).
 #
 # LLM_PROVIDER=openai with staging's own OpenAI project and key (EU data
 # residency, a small budget): production refuses the scripted model, so a

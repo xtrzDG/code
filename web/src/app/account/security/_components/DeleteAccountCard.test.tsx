@@ -1,15 +1,20 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/api/client";
 import type { CurrentUserView } from "@/api/types";
-import { failure } from "@/test/fakeApi";
+import { signOut } from "@/components/shell/signOut";
+import { LOGIN_PATH } from "@/lib/navigation";
+import { failure, ok } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
 import { DeleteAccountCard } from "./DeleteAccountCard";
 
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() } }));
+vi.mock("@/components/shell/signOut", () => ({ signOut: vi.fn(() => Promise.resolve()) }));
+
+const assign = vi.fn();
 
 const ACCOUNT = "nino@example.com";
 const me = {
@@ -35,6 +40,23 @@ async function deleteAccount() {
 describe("DeleteAccountCard: Account → Security, the danger zone", () => {
   beforeEach(() => {
     vi.mocked(api.DELETE).mockReset();
+    vi.mocked(signOut).mockClear();
+    assign.mockReset();
+    vi.stubGlobal("location", { ...window.location, assign });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("signs out with this browser's storage too once the account is gone", async () => {
+    vi.mocked(api.DELETE).mockImplementation((() => ok(null)) as never);
+    renderInLocale(<DeleteAccountCard me={me} account={ACCOUNT} />);
+
+    await deleteAccount();
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(LOGIN_PATH));
+    expect(vi.mocked(signOut)).toHaveBeenCalledOnce();
   });
 
   it.each(["en", "it"] as const)("says what deleting the account does, in %s", (locale) => {
@@ -58,6 +80,8 @@ describe("DeleteAccountCard: Account → Security, the danger zone", () => {
     const status = await screen.findByRole("status");
     await waitFor(() => expect(status.textContent).toBe(t("closure.account.lastOwner").replace("{names}", "Café Tbilisi")));
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(vi.mocked(signOut)).not.toHaveBeenCalled();
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it("sends the platform team to leave the team first, without a delete button", () => {

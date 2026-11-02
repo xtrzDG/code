@@ -125,6 +125,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             build_call_greeting=self.call_greeting,
             assistant_tool_catalog=self.tool_catalog,
             voice_profile_registry=VoiceProfileRegistry(),
+            call_settings_repo=self.call_settings_repo,
             app_settings=self.settings,
         )
         self.voice_checks = FakeVoiceCheckAdapter()

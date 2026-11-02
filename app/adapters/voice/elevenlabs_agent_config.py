@@ -119,7 +119,8 @@ def build_agent_config(
     and 30 seconds), and the agent takes at most MAX_CONCURRENT_CALLS calls
     at once and MAX_DAILY_CALLS a day (no paid bursting). The agent's
     authentication (`AGENT_AUTH`) lets no web or WebSocket conversation
-    start without a signed URL.
+    start without a signed URL, and the platform records the voice only
+    while the business records calls (`privacy.record_voice`).
     """
 
     limits: VoiceCallLimits = call_limits or VoiceCallLimits()
@@ -163,6 +164,9 @@ def build_agent_config(
         "platform_settings": {
             **build_analysis_settings(),
             "auth": dict(AGENT_AUTH),
+            # The provider records the caller's voice only while the
+            # business records calls (off by default).
+            "privacy": {"record_voice": bool(spec.is_recording_enabled)},
             "call_limits": {
                 "agent_concurrency_limit": MAX_CONCURRENT_CALLS,
                 "daily_limit": MAX_DAILY_CALLS,

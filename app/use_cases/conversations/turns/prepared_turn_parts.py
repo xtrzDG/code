@@ -108,6 +108,7 @@ def build_tool_context(
         is_sandbox=conversation.is_sandbox,
         available_tools=available_tools,
         business_timezone=business.timezone,
+        client_ip_address=message.client_ip_address,
     )
 
 

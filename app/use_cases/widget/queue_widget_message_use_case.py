@@ -82,6 +82,7 @@ class QueueWidgetMessageUseCase(
                 message.contact_phone_number,
                 attachments=accepted.attachments,
                 acquisition_source=message.acquisition_source,
+                client_ip_address=message.client_ip_address,
             ),
             created_at=now,
             updated_at=now,

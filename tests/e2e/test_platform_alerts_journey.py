@@ -2,7 +2,9 @@
 The platform alerts on the real worker: a dead job pages the team's
 Telegram chat through the platform bot once, again only after the
 cooldown, and once more when the dead letter is gone; the system page
-shows the episode.
+shows the episode. The worker ticks every few minutes throughout, as a
+live one does, so its periodic jobs' heartbeats stay fresh and the
+missed-run alert stays quiet.
 """
 
 from collections.abc import Iterator
@@ -23,6 +25,9 @@ from tests.platform.worker_fakes import FlakyQueuedOperator
 ALERT_CHAT: str = "-1001234567890"
 DOOMED_JOB: JobName = JobName("send_owner_digest")
 MINUTE_SECONDS: int = 60
+# Longer than the queue's last retry backoff (30 s x 2^3), shorter than the
+# missed-run grace of the most frequent periodic jobs (interval + 30 min).
+TICK_MINUTES: int = 5
 ALERTING_ENVIRONMENT: dict[str, str] = {
     **E2E_ENVIRONMENT,
     "PLATFORM_ALERT_TELEGRAM_CHAT_IDS": ALERT_CHAT,
@@ -62,13 +67,21 @@ def tick_after(workshop: Workshop, worker: BackgroundWorker, minutes: int) -> No
     worker.run_once()
 
 
+def wait(workshop: Workshop, worker: BackgroundWorker, minutes: int) -> None:
+    for _ in range(minutes // TICK_MINUTES):
+        tick_after(workshop, worker, TICK_MINUTES)
+
+
 def kill_one_job(workshop: Workshop, worker: BackgroundWorker) -> str:
     job_id = workshop.container.facilitators.job_queue_facilitator().enqueue(
         DOOMED_JOB, JobPayloadJson("{}"), None
     )
-    for _ in range(5):
+    worker.run_once()
+    # Five attempts, each retry due within one tick.
+    for _ in range(4):
+        workshop.clock.advance(TICK_MINUTES * MINUTE_SECONDS)
         worker.run_once()
-        workshop.clock.advance(10_000)
+    workshop.clock.advance(TICK_MINUTES * MINUTE_SECONDS)
     return str(job_id)
 
 
@@ -79,19 +92,17 @@ def test_a_dead_job_pages_once_per_cooldown_and_once_resolved(
     job_id = kill_one_job(workshop, worker)
     admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
 
-    tick_after(workshop, worker, 5)
+    tick_after(workshop, worker, TICK_MINUTES)
     first = alert_texts(workshop)
-    for _ in range(4):
-        tick_after(workshop, worker, 5)
+    wait(workshop, worker, 20)
     within_cooldown = alert_texts(workshop)
     page = workshop.client.get("/v1/admin/system", headers=bearer(admin_token))
-    tick_after(workshop, worker, 45)
+    wait(workshop, worker, 45)
     after_cooldown = alert_texts(workshop)
     discarded = workshop.client.post(
         f"/v1/admin/jobs/{job_id}/discard", headers=bearer(admin_token)
     )
-    tick_after(workshop, worker, 5)
-    tick_after(workshop, worker, 5)
+    wait(workshop, worker, 10)
     resolved = alert_texts(workshop)
 
     [firing] = first

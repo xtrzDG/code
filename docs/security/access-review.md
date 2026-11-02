@@ -30,14 +30,22 @@ of this file. Anything not needed any more is removed the same day.
 ### GitHub
 
 - [ ] Organisation and repository members, outside collaborators and teams;
-      two-factor authentication required for everyone. Write access can push
-      to `release`, which production deploys, past every check of `main`
-      (deploy smoke verifies with the deployed commit's own scripts).
+      two-factor authentication required for everyone. Repository admins
+      can edit the `release` ruleset and the environments; nobody else can
+      push to `release`.
+- [ ] The required reviewers of the environment `production-release`
+      (`.github/repository-settings.json`): each one still approves
+      promotions, and the team reviewers' members are who they should be
+      (the daily check reads the reviewer list, not a team's members).
+- [ ] The deploy key used for the promotion (Settings → Deploy keys; its
+      private half is `production-release`'s `RELEASE_DEPLOY_KEY`): exactly
+      one key with write access, and the `release` ruleset's only bypass is
+      "Deploy keys" (the daily check cannot read bypass actors).
 - [ ] Branch protection on the default branch: pull requests only, the CI
       checks required, no force push or deletion; the daily
       `.github/workflows/repo-settings.yml` is green and its token
-      (`REPO_SETTINGS_TOKEN`, SECURITY.md "Repository settings") has more
-      than a quarter left.
+      (`REPO_SETTINGS_TOKEN`, SECURITY.md "Repository settings", with
+      Administration and Actions read-only) has more than a quarter left.
 - [ ] Deploy keys, GitHub Apps and personal access tokens with access to the
       repository: each one still needed.
 - [ ] Environment secrets (the restore drill's age key, the contract tests'

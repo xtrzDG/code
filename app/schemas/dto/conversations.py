@@ -23,6 +23,7 @@ from app.schemas.typings.assistants.strings import (
 )
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     IsConversationHandedOff,
@@ -90,6 +91,9 @@ class InboundMessage(ImmutableDTO):
     is_reply_deferred: IsReplyDeferred = False
     acquisition_source: AcquisitionSourceTag | None = None
     context_note: InboundContextNote | None = None
+    # A website chat visitor's address (the widget, the hosted chat): the
+    # anonymous bookings of one client network are capped.
+    client_ip_address: ClientIpAddress | None = None
 
 
 class AssistantReply(ImmutableDTO):

@@ -5,6 +5,7 @@ from app.schemas.dto.conversations import LlmToolDefinition
 from app.schemas.typings.assistants.strings import SystemPromptText, VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.calls.booleans import IsCallRecordingEnabled
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import (
@@ -79,3 +80,6 @@ class VoiceAgentSpec(ImmutableDTO):
     asr_keywords: list[AsrKeyword] = Field(default_factory=list[AsrKeyword])
     # How long the agent waits for a silent caller before it speaks again.
     turn_timeout_seconds: VoiceTurnTimeoutSeconds
+    # The owner switched call recording on (call settings): only then does
+    # the voice platform record the caller's voice.
+    is_recording_enabled: IsCallRecordingEnabled = False

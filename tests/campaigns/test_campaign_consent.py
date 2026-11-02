@@ -6,10 +6,15 @@ consent is recorded and not taken back (Codice privacy art. 130).
 import pytest
 
 from app.schemas.constants.bookings import BookingStatus
-from app.schemas.constants.campaigns import RebookingRuleKind
+from app.schemas.constants.campaigns import (
+    CampaignMessageStatus,
+    CampaignSkipReason,
+    RebookingRuleKind,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.marketing_consent import MarketingConsentWithdrawal
-from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
+from app.schemas.typings.conversations.strings import ChannelUserId
 from tests.campaigns.campaign_world import CampaignWorld
 
 VISIT_STARTS: str = "2026-09-04T19:00:00+04:00"
@@ -91,3 +96,55 @@ def test_a_stop_takes_the_consent_back_for_good() -> None:
     assert after.marketing_consent.withdrawal is MarketingConsentWithdrawal.STOP
     assert not after.has_marketing_consent
     assert int(world.run_campaigns().processed_count) == 0
+
+
+@pytest.mark.parametrize("source_channel", [ChannelKind.PHONE, ChannelKind.WEB_CHAT])
+def test_a_booking_made_by_phone_or_website_chat_gets_no_message_elsewhere(
+    source_channel: ChannelKind,
+) -> None:
+    # The consent promises the messages "in the chat where I made this
+    # booking": a phone or website chat booking has no such chat, so the
+    # guest's Telegram is never used instead.
+    world = CampaignWorld()
+    world.enable()
+    guest = world.guest("Giulia", "en")
+    world.visit(guest, VISIT_STARTS, VISIT_ENDS, source_channel=source_channel)
+
+    assert int(world.run_campaigns().processed_count) == 0
+    assert world.outbox_texts() == []
+    [message] = world.messages_of(guest)
+    assert message.status is CampaignMessageStatus.SKIPPED
+    assert message.skip_reason is CampaignSkipReason.NO_CHANNEL
+
+
+def test_the_message_goes_only_to_the_chat_the_booking_was_made_in() -> None:
+    # The guest is known in Telegram and WhatsApp and booked in WhatsApp,
+    # which the business has not connected: no fallback to Telegram.
+    world = CampaignWorld()
+    world.enable()
+    guest = world.guest("Giulia", "en")
+    stored = world.contact_repo.get(world.business.id, guest.id)
+    assert stored is not None
+    stored.channel_identities.append(
+        ChannelIdentity(
+            channel=ChannelKind.WHATSAPP, channel_user_id=ChannelUserId("995555000111")
+        )
+    )
+    world.contact_repo.save(stored)
+    world.visit(guest, VISIT_STARTS, VISIT_ENDS, source_channel=ChannelKind.WHATSAPP)
+
+    assert int(world.run_campaigns().processed_count) == 0
+    assert world.outbox_texts() == []
+    [message] = world.messages_of(guest)
+    assert message.skip_reason is CampaignSkipReason.NO_CHANNEL
+
+
+def test_a_telegram_booking_is_answered_in_telegram() -> None:
+    world = CampaignWorld()
+    world.enable()
+    guest = world.guest("Giulia", "en")
+    world.visit(guest, VISIT_STARTS, VISIT_ENDS, source_channel=ChannelKind.TELEGRAM)
+
+    assert int(world.run_campaigns().processed_count) == 1
+    [message] = world.messages_of(guest)
+    assert message.channel is ChannelKind.TELEGRAM

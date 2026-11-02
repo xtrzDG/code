@@ -199,7 +199,6 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                     testbed.voice_webhook_adapter,
                     testbed.phone_number_parser,
                     testbed.call_greeting,
-                    testbed.text_resolver,
                     testbed.settings,
                 )
             ),

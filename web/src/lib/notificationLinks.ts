@@ -7,8 +7,9 @@
  *
  * The token is base64url of: version (1 byte), the business UUID (16
  * bytes), the target code (1), the target UUID (16), the expiry (4) and
- * the signature (12). Only the business is read here, to know which
- * business to ask; nothing read here is trusted.
+ * the signature (16 bytes in version 2; 12 in the links of version 1,
+ * which open until they expire). Only the business is read here, to know
+ * which business to ask; nothing read here is trusted.
  */
 
 import type { Schema } from "@/api/types";
@@ -18,7 +19,9 @@ import { ACCOUNT_SECURITY_PATH, businessPath, conversationPath, inboxPath, setup
 export type StaffLinkView = Schema<"StaffLinkView">;
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,120}$/;
-const TOKEN_LENGTH_BYTES = 1 + 16 + 1 + 16 + 4 + 12;
+const PAYLOAD_LENGTH_BYTES = 1 + 16 + 1 + 16 + 4;
+/** The signature's bytes by token version (the first byte). */
+const SIGNATURE_LENGTH_BYTES: Readonly<Record<number, number>> = { 1: 12, 2: 16 };
 const BUSINESS_PREFIX = "business_";
 
 function decodeBase64Url(text: string): Uint8Array | null {
@@ -42,7 +45,8 @@ export function businessIdOfLinkToken(token: string): string | null {
     return null;
   }
   const bytes = decodeBase64Url(token);
-  if (bytes === null || bytes.length !== TOKEN_LENGTH_BYTES) {
+  const signatureLength = bytes === null ? undefined : SIGNATURE_LENGTH_BYTES[bytes[0]];
+  if (bytes === null || signatureLength === undefined || bytes.length !== PAYLOAD_LENGTH_BYTES + signatureLength) {
     return null;
   }
   return `${BUSINESS_PREFIX}${uuidOf(bytes.slice(1, 17))}`;

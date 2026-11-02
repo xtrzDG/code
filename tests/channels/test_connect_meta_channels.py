@@ -1,5 +1,9 @@
 """Connecting WhatsApp, Messenger and Instagram from the cabinet."""
 
+import logging
+
+import pytest
+
 from app.schemas.constants.channels import ChannelKind
 from tests.channels.cabinet_setup import (
     INSTAGRAM_ID,
@@ -57,13 +61,58 @@ class TestConnectMetaChannels:
             == 422
         )
 
+    def test_whatsapp_without_the_system_user_token_reads_a_plain_text(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         unconfigured = CabinetSetup(build_settings(WHATSAPP_SYSTEM_USER_TOKEN=""))
-        assert (
-            unconfigured.put(
-                "whatsapp", {"phone_number_id": PHONE_NUMBER_ID}
-            ).status_code
-            == 502
+
+        with caplog.at_level(logging.WARNING):
+            response = unconfigured.put("whatsapp", {"phone_number_id": PHONE_NUMBER_ID})
+
+        assert response.status_code == 502
+        assert response.json()["message"] == (
+            "WhatsApp cannot be connected right now. Contact support."
         )
+        assert "WHATSAPP_SYSTEM_USER_TOKEN" in caplog.text
+        assert unconfigured.testbed.meta_transport.requests == []
+
+    @pytest.mark.parametrize(
+        ("channel", "body", "name"),
+        [
+            ("whatsapp", {"phone_number_id": PHONE_NUMBER_ID}, "WhatsApp"),
+            (
+                "messenger",
+                {"page_id": PAGE_ID, "page_access_token": PAGE_ACCESS_TOKEN},
+                "Messenger",
+            ),
+            (
+                "instagram",
+                {"page_id": PAGE_ID, "page_access_token": PAGE_ACCESS_TOKEN},
+                "Instagram",
+            ),
+        ],
+    )
+    def test_meta_channels_are_refused_without_the_app_secret(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        channel: str,
+        body: dict[str, str],
+        name: str,
+    ) -> None:
+        # Without META_APP_SECRET every Meta webhook is refused, so the
+        # channel could never receive a message: it is not connected at all.
+        setup = CabinetSetup(build_settings(META_APP_SECRET=""))
+
+        with caplog.at_level(logging.WARNING):
+            response = setup.put(channel, body)
+
+        assert response.status_code == 502
+        assert response.json()["message"] == (
+            f"{name} cannot be connected right now. Contact support."
+        )
+        assert "META_APP_SECRET" in caplog.text
+        assert "META_APP_SECRET" not in response.text
+        assert setup.testbed.meta_transport.requests == []
 
     def test_messenger_page_and_instagram_account(self) -> None:
         setup = CabinetSetup()

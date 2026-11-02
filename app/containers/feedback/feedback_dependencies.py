@@ -19,6 +19,7 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
 from app.contracts.repositories.delivery_repositories import (
     OutboundMessageRepoContract,
 )
@@ -50,6 +51,7 @@ class FeedbackDependencies:
     business_profile_repo: BusinessProfileRepoContract
     booking_repo: BookingRepoContract
     contact_repo: ContactRepoContract
+    card_repo: CustomerCardRepoContract
     channel_repo: ChannelRepoContract
     conversation_repo: ConversationRepoContract
     message_repo: MessageRepoContract

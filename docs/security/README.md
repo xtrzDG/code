@@ -6,6 +6,8 @@ policy and the gates of the code are in `SECURITY.md`.
 | Document | Answers | Kept true by |
 | --- | --- | --- |
 | `docs/security/threat-model.md` | the trust boundaries and, threat by threat, the mitigation with its code and tests | `tests/legal/test_security_documents.py` |
+| `docs/security/runtime-protections.md` | what the running API, worker and cabinet refuse and limit, each with its code and test | `tests/legal/test_operations_documents.py` |
+| `docs/security/dpia.md` | the platform's data protection impact assessment | |
 | `docs/security/entry-points.json` | every HTTP route, webhook, worker job and command with its access class (generated) | `tests/platform/test_entry_point_inventory.py` |
 | `docs/security/permission-matrix.md` | what each role may do (generated) | `tests/platform/test_entry_point_inventory.py` |
 | `docs/security/secrets-inventory.md` | every secret: purpose, owner, store, rotation | `tests/legal/test_secrets_inventory.py` |

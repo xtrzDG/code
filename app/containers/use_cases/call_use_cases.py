@@ -266,6 +266,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         text_resolver=utilities.localized_text_resolver,
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
+        assistant_version_repo=repositories.assistant_version_repo,
     )
     list_text_backs_use_case: Factory[
         UseCaseContract[TextBackPageQuery, TextBackPage]

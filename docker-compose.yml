@@ -62,7 +62,8 @@ x-backend: &backend
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # Tag and digest (2026-11-02); Dependabot's docker-compose updates move both.
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}

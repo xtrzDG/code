@@ -34,6 +34,8 @@ from app.utilities.channels.widget_rate_limits import (
 )
 from app.utilities.sharing.acquisition_sources import normalize_source
 
+NUL_CHARACTER: str = "\x00"
+
 
 class AcceptWidgetMessageUseCase(
     UseCaseContract[WidgetMessageCommand, AcceptedWidgetMessage]
@@ -128,14 +130,17 @@ class AcceptWidgetMessageUseCase(
                 if input_data.request.source is None
                 else str(input_data.request.source)
             ),
+            client_ip_address=input_data.client_ip_address,
         )
 
 
 def read_contact_name(raw_name: WidgetContactNameInput | None) -> ContactName | None:
     """
-    The visitor's name without surrounding spaces; blank means none. A name
-    must be a `CustomerGivenName` (at most 60 characters on one line, no
-    markup): it reaches the model's context and the team's inbox.
+    The visitor's name without NUL characters (nobody means them, and
+    storage cannot keep them; the engine drops them from every customer
+    text) and surrounding spaces; blank means none. A name must be a
+    `CustomerGivenName` (at most 60 characters on one line, no markup): it
+    reaches the model's context and the team's inbox.
 
     Raises:
         ValidationFailedError: the name is too long, spans lines or carries
@@ -145,7 +150,7 @@ def read_contact_name(raw_name: WidgetContactNameInput | None) -> ContactName | 
     if raw_name is None:
         return None
 
-    name_text: str = raw_name.strip()
+    name_text: str = raw_name.replace(NUL_CHARACTER, "").strip()
     if name_text == "":
         return None
 

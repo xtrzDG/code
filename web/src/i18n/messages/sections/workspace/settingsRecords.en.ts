@@ -146,6 +146,7 @@ export const settingsRecordsEn = {
       niche_template: "Niche template",
       platform_admin: "Platform admin",
       platform_announcement: "Platform announcement",
+      platform_pause: "Platform pause",
       encryption_keys: "Encryption keys",
       audit_log_entry: "Audit log entries",
       login_destination: "Sign-in address",

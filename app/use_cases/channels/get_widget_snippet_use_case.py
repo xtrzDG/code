@@ -1,4 +1,5 @@
 import html
+import logging
 from urllib.parse import urlencode
 
 from app.contracts.use_case_contract import UseCaseContract
@@ -19,6 +20,8 @@ from app.utilities.channels.channel_endpoints import (
     WIDGET_SCRIPT_PATH,
     join_public_url,
 )
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]):
@@ -52,8 +55,10 @@ class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetV
         )
         base_url = self._app_settings.app_base_url
         if base_url is None:
+            # The setting is the operator's business, not the owner's.
+            logger.warning("Widget snippet: APP_BASE_URL is not configured.")
             raise ExternalServiceError(
-                "The widget code needs APP_BASE_URL, which is not configured."
+                "The website chat code is not available right now. Contact support."
             )
 
         script_url = WidgetScriptUrl(join_public_url(str(base_url), WIDGET_SCRIPT_PATH))

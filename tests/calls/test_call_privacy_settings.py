@@ -9,11 +9,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.schemas.constants.niches import NicheKey
+from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
 from tests.calls.calls_http import build_calls_http_client
 from tests.channels.channels_payloads import bearer
 from tests.channels.voice_setup import VoiceSetup, build_voice_setup
@@ -120,3 +123,39 @@ def test_the_staff_number_shown_is_one_calls_may_go_to(
     body: dict[str, Any] = client.get(path(setup), headers=bearer("owner")).json()
 
     assert body["transfer_phone_number"] == shown
+
+
+def live_version_id(setup: VoiceSetup) -> AssistantVersionId:
+    version_id = setup.business.published_assistant_version_id
+    assert version_id is not None
+    return version_id
+
+
+def live_agent_revision(setup: VoiceSetup) -> int | None:
+    version = setup.testbed.assistant_version_repo.get(
+        setup.business.id, live_version_id(setup)
+    )
+    assert version is not None
+    revision = version.voice_agent_revision
+    return None if revision is None else int(revision)
+
+
+def test_switching_recording_sets_the_live_agent_up_again(
+    setup: VoiceSetup, client: TestClient
+) -> None:
+    def built_now(stored: AssistantVersionDocument) -> AssistantVersionDocument:
+        stored.voice_agent_revision = VOICE_AGENT_REVISION
+        return stored
+
+    setup.testbed.assistant_version_repo.modify(
+        setup.business.id, live_version_id(setup), built_now
+    )
+
+    put(client, setup)  # Recording stays off: the agent stays as it is.
+    unchanged = live_agent_revision(setup)
+    put(client, setup, is_recording_enabled=True)
+    switched_on = live_agent_revision(setup)
+
+    assert unchanged == int(VOICE_AGENT_REVISION)
+    # resync_voice_agents sets up an agent without a revision again.
+    assert switched_on is None

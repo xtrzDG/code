@@ -33,6 +33,7 @@ from app.schemas.typings.bookings.constrained_strings import (
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.bookings.strings import ResourceReference
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.constrained_strings import CustomerGivenName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
@@ -263,6 +264,9 @@ class AssistantToolContext(ImmutableDTO):
     # On the phone: a connected messenger reaches the caller, so the links
     # the agent promises are texted after the call.
     can_text_caller: CanTextCaller = False
+    # A website chat visitor's address (the widget and the hosted chat):
+    # anonymous bookings are capped per client network.
+    client_ip_address: ClientIpAddress | None = None
 
 
 class AssistantToolInvocation(ImmutableDTO):

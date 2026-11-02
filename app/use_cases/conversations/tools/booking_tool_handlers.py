@@ -119,6 +119,7 @@ def run_create_booking(
             source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,
+            client_ip_address=context.client_ip_address,
         )
     )
     return AssistantToolOutcome(
@@ -149,6 +150,7 @@ def run_cancel_booking(
                 phone_number_parser, tool_input.phone, context
             ),
             date=tool_input.date,
+            source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,
         )
@@ -182,6 +184,7 @@ def run_reschedule_booking(
             old_date=tool_input.old_date,
             new_date=tool_input.new_date,
             new_time=tool_input.new_time,
+            source_channel=context.channel,
             language=context.language,
         )
     )

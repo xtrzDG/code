@@ -12,6 +12,7 @@ from app.repositories.customer_history_repository import CustomerHistoryReposito
 from app.repositories.customer_repositories import CustomerSegmentRepository
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.campaigns import CampaignAudience, RebookingRuleKind
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.marketing_consent import (
     CURRENT_MARKETING_CONSENT_TEXT,
     MarketingConsentSource,
@@ -150,11 +151,15 @@ class CampaignWorld(GrowthWorld):
         starts: str,
         ends: str,
         status: BookingStatus = BookingStatus.COMPLETED,
+        source_channel: ChannelKind = ChannelKind.TELEGRAM,
     ) -> BookingDocument:
+        """A booking the guest made in `source_channel` (their Telegram chat)."""
+
         booking = self.add_booking(
             self.business, self.table_for_four, guest, starts, ends, status=status
         )
         booking.language = guest.language
+        booking.source_channel = source_channel
         self.booking_repo.save(booking)
         return booking
 

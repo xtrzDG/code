@@ -13,6 +13,7 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
+from app.repositories.call_follow_up_repositories import CallSettingsRepository
 from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
@@ -31,6 +32,7 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -64,6 +66,7 @@ class BrainRepositories:
     usage_event_repo: UsageEventRepository
     channel_repo: ChannelRepository
     call_repo: CallRepository
+    call_settings_repo: CallSettingsRepository
     handoff_repo: HandoffRepository
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
@@ -114,6 +117,9 @@ def build_brain_repositories() -> BrainRepositories:
             InMemoryDocumentCollectionAdapter(ChannelDocument)
         ),
         call_repo=CallRepository(InMemoryDocumentCollectionAdapter(CallDocument)),
+        call_settings_repo=CallSettingsRepository(
+            InMemoryDocumentCollectionAdapter(CallSettingsDocument)
+        ),
         handoff_repo=HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
         ),

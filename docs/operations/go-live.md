@@ -67,17 +67,18 @@ Check again at any time:
    working in pull requests into `main`.
 3. Protect `main` as `.github/repository-settings.json` says (SECURITY.md,
    "Repository settings"): pull requests only; the required checks
-   `CI passed (every gate)`, `Analyze (python)`,
-   `Analyze (javascript-typescript)` and `OpenAPI breaking changes (oasdiff)`;
-   no force push; no deletion. Turn on private vulnerability reporting and
-   Dependabot security updates.
+   `CI passed (every gate)`, `Analyze (python)`, `Analyze (actions)`,
+   `Analyze (javascript-typescript)`, `OpenAPI breaking changes (oasdiff)`
+   and `Workflow audit (actionlint, zizmor)`; no force push; no deletion.
+   Turn on private vulnerability reporting and Dependabot security updates.
 4. Add the repository secret `REPO_SETTINGS_TOKEN`: a fine-grained token of
-   this repository only with "Administration: Read-only". Put its expiry
-   date in the team calendar.
-5. Create `release` from `main`: `git push origin main:release`. If you
-   protect `release` as well, allow GitHub Actions to push to it (the
-   promotion fast-forwards it; `docs/operations/deploys.md`, "One-time
-   setup").
+   this repository only with "Administration: Read-only" and "Actions:
+   Read-only". Put its expiry date in the team calendar.
+5. Create `release` from `main`: `git push origin main:release`. Then
+   protect it like `main` with a ruleset whose only bypass is "Deploy keys",
+   and create the environment `production-release` (the reviewers and the
+   branch `main` of `.github/repository-settings.json`) with the secret
+   `RELEASE_DEPLOY_KEY` (`docs/operations/deploys.md`, "One-time setup", step 6).
 
 Check:
 
@@ -226,6 +227,7 @@ after you set it, `curl -fsS <production-api-url>/readyz` answers `ready`.
 | WhatsApp Embedded Signup, Instagram, Messenger | `META_APP_ID`, `META_APP_SECRET`, `META_VERIFY_TOKEN`, `META_EMBEDDED_SIGNUP_CONFIG_ID` | docs/LAUNCH.md 4.5; the webhook is `<production-api-url>/v1/channels/meta/webhook` |
 | SMS sign-in codes and phone numbers in the cabinet | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID`, `PHONE_NUMBER_PROVIDER` (`twilio`); optionally `PHONE_NUMBER_PRICE_MARKUP_PERCENT` in `workshop-backend` | docs/LAUNCH.md 4.3 and 4.6 |
 | Card payments in the EU, the US and Israel | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | docs/LAUNCH.md 4.7.2; the webhook is `<production-api-url>/v1/payments/stripe/webhook`; owners pay through Flitt until a later release opens the gate `stripe_payments`, not before 2026-11-22 |
+| The platform's budget stop and sign-in notices | optionally `PLATFORM_DAILY_SPEND_STOP_PERCENT` in `workshop-backend` (80–1000, 100 by default: at that share of `PLATFORM_DAILY_SPEND_BUDGET_USD` every assistant hands customers to the team until UTC midnight); `GEOIP_COUNTRY_DATABASE_PATH` (a GeoLite2-Country `.mmdb`: the new-country sign-in notice, else only new devices are told) | size the budget first (`docs/operations/runbooks/platform-brakes.md`) |
 
 Check:
 
@@ -254,7 +256,7 @@ rest. Names only: the values are yours.
 | environment `production-release` (required reviewers, `main` as its only branch) | none | `RELEASE_DEPLOY_KEY` (the private half of a deploy key with write access, docs/operations/deploys.md, "One-time setup") | `deploy-smoke.yml`, the promotion to `release` |
 | repository | `PRODUCTION_URL` (the production API's https address, as `PRODUCTION_API_URL`), `MONITORING_BUSINESS_ID` (a live business kept for the checks: open for a booking for one at 12:00 every day, its staff notifications off), `PRODUCTION_CABINET_URL` (optional) | `MONITORING_API_KEY` (an API key of that business with `bookings:write`) | `synthetics.yml`, every hour; a run without them fails and names what is missing |
 | repository | `STAGING_URL` (the staging API's https address) | `STAGING_SCAN_API_KEY` (an API key of a staging business that exists for the scan, every scope) | `zap-staging.yml`, every Sunday; never production |
-| repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` promotes by hand) | none | `deploy-smoke.yml` |
+| repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` asks for the approval only in a run started by hand, docs/operations/deploys.md) | none | `deploy-smoke.yml` |
 | repository | `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_PREFIX` (optional, `workshop/` by default) | none | `restore-drill.yml`: the Monday drill runs only once `BACKUP_S3_BUCKET` is set |
 | repository | `SENTRY_ORG`, `SENTRY_PROJECT` (step 7) | `SENTRY_AUTH_TOKEN` (step 7) | `ci.yml`, the cabinet's source maps |
 | repository | `LEGAL_TEXTS_FINAL` (`true` once the lawyer approved the legal texts, docs/legal/README.md) | none | `ci.yml` |
@@ -279,8 +281,9 @@ gh secret list
 gh workflow run deploy-smoke.yml -f environment=staging
 ```
 
-The staging run is green in all three jobs (smoke test, signed images,
-promotion to `release`); the signed-images job needs the CI run of that
+The staging run is green in all three jobs (smoke test, signed images, and
+the promotion to `release` once a reviewer of `production-release` approved
+it); the signed-images job needs the CI run of that
 commit on `main` (step 1). The next nightly `evals-nightly.yml` run plays
 the datasets instead of skipping them, and `contracts-live.yml` lists
 fewer skipped providers (`-rs` in its log).
@@ -398,6 +401,10 @@ Add the same pipeline check for staging, `<staging-api-url>/healthz/pipeline`,
 for the drill below. Link the monitor's public page from the status page's
 footer once it exists.
 
+Also the owner's monitors of `docs/operations/on-call.md` ("The owner's
+monitors"): certificate expiry of every public host, domain registration,
+Stripe, Flitt and the providers' budgets.
+
 Check: all three are up for a day. Then the drill: Render →
 `workshop-staging-worker` → Suspend. Within about seven minutes (five
 without a pulse, two failed checks) staging's pipeline check is down and
@@ -408,7 +415,7 @@ recovers.
 
 Who answers what, and how fast, is in `docs/operations/incident.md`:
 SEV1 at once, day or night; SEV2 within 30 minutes from 08:00 to 23:00
-Tbilisi time.
+Europe/Rome, every day (`docs/operations/on-call.md`).
 
 1. A weekly rota of a primary and a secondary, among the people who may
    roll back, restore and rotate keys. Keep it, with the phone numbers, in

@@ -1,4 +1,8 @@
-"""The call greeting: AI and recording disclosure, operator, languages and openers."""
+"""
+The call greeting of a business that records calls: AI and recording
+disclosure, operator, privacy notice, languages and openers (recording off:
+test_call_greeting_without_recording.py).
+"""
 
 import pytest
 
@@ -24,6 +28,7 @@ from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_RECORDING_NOTICE,
 )
 from tests.brain.brain_world import build_world
+from tests.brain.call_recording_settings import record_calls
 from tests.brain.business_setups import BusinessSetup
 from tests.brain.scripted_turns import scripted
 
@@ -34,37 +39,44 @@ from tests.brain.scripted_turns import scripted
         (
             None,
             "გამარჯობა! ეს არის Sakhli-ის AI-ასისტენტი. საუბარი იწერება. "
-            "თანამშრომელთან სასაუბროდ თქვით „ოპერატორი“.",
+            "თანამშრომელთან სასაუბროდ თქვით „ოპერატორი“. "
+            "კონფიდენციალურობის პოლიტიკა ჩვენს ვებგვერდზეა.",
         ),
         (
             "ru",
             "Здравствуйте! Это AI-ассистент «Sakhli». Разговор записывается. "
-            "Чтобы поговорить с сотрудником, скажите «оператор».",
+            "Чтобы поговорить с сотрудником, скажите «оператор». "
+            "Политика конфиденциальности — на нашей веб-странице.",
         ),
         (
             "en",
             "Hello! This is the AI assistant of Sakhli. The call is recorded. "
-            'To talk to a staff member, say "operator".',
+            'To talk to a staff member, say "operator". Our privacy notice is on '
+            "our web page.",
         ),
         (
             "he",
             "שלום! כאן עוזר ה-AI של Sakhli. השיחה מוקלטת. "
-            'כדי לדבר עם נציג, אמרו "נציג".',
+            'כדי לדבר עם נציג, אמרו "נציג". '
+            "הודעת הפרטיות שלנו נמצאת בדף האינטרנט שלנו.",
         ),
         (
             "ar",
             "مرحبًا! معك مساعد الذكاء الاصطناعي لدى Sakhli. يتم تسجيل المكالمة. "
-            'للتحدث مع أحد الموظفين، قل "موظف".',
+            'للتحدث مع أحد الموظفين، قل "موظف". '
+            "إشعار الخصوصية متاح على صفحتنا على الإنترنت.",
         ),
         (
             "sw",
             "Habari! Huyu ni msaidizi wa AI wa Sakhli. Simu hii inarekodiwa. "
-            "Ili kuzungumza na mfanyakazi, sema “opereta”.",
+            "Ili kuzungumza na mfanyakazi, sema “opereta”. "
+            "Taarifa yetu ya faragha iko kwenye ukurasa wetu wa wavuti.",
         ),
         (
             "ko",
             "안녕하세요! Sakhli의 AI 어시스턴트입니다. 이 통화는 녹음됩니다. "
-            "직원과 통화하시려면 “상담원”이라고 말씀해 주세요.",
+            "직원과 통화하시려면 “상담원”이라고 말씀해 주세요. "
+            "개인정보 처리방침은 저희 웹페이지에서 보실 수 있습니다.",
         ),
     ],
 )
@@ -74,6 +86,7 @@ def test_call_greeting_discloses_the_ai_recording_and_the_operator(
 ) -> None:
     # A business of the greeting's language alone: no other language to offer.
     world = build_world(scripted(), BusinessSetup(languages=(language or "ka",)))
+    record_calls(world)
 
     greeting = world.greeting.run(
         CallGreetingRequest(
@@ -88,6 +101,7 @@ def test_call_greeting_discloses_the_ai_recording_and_the_operator(
 
 def test_the_greeting_offers_the_other_languages_of_the_business() -> None:
     world = build_world(scripted())  # Georgian, Russian and English.
+    record_calls(world)
 
     def greeting(language: str) -> str:
         return str(
@@ -112,6 +126,7 @@ def test_the_greeting_offers_the_other_languages_of_the_business() -> None:
 
 def test_a_business_of_one_language_offers_none() -> None:
     world = build_world(scripted(), BusinessSetup(languages=("en",)))
+    record_calls(world)
 
     greeting = world.greeting.run(
         CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
@@ -124,6 +139,7 @@ def test_a_business_of_one_language_offers_none() -> None:
 
 def test_a_language_without_a_greeting_is_greeted_and_labelled_in_english() -> None:
     world = build_world(scripted())
+    record_calls(world)
 
     greeting = world.greeting.run(
         CallGreetingRequest(business_id=world.business.id, language=LanguageTag("yo"))
@@ -141,6 +157,7 @@ def test_recorded_calls_always_say_so_whatever_the_profile_says(
         scripted(),
         BusinessSetup(country_code=country if country != "ZZ" else "GE"),
     )
+    record_calls(world)
     profile = world.profile_repo.get_by_business(world.business.id)
     assert isinstance(profile, BusinessProfileDocument)
     profile.is_recording_notice_enabled = False
@@ -165,14 +182,16 @@ def test_recorded_calls_always_say_so_whatever_the_profile_says(
             "Hallo! Hier spricht der KI-Assistent von Sakhli. Das Gespräch wird "
             "aufgezeichnet. Wenn Sie das nicht möchten, sagen Sie es einfach, "
             "dann sprechen wir ohne Aufzeichnung weiter. Um mit einem Mitarbeiter "
-            "zu sprechen, sagen Sie „Mitarbeiter“.",
+            "zu sprechen, sagen Sie „Mitarbeiter“. Unsere Datenschutzhinweise "
+            "finden Sie auf unserer Webseite.",
         ),
         (
             "US",
             "en",
             "Hello! This is the AI assistant of Sakhli. The call is recorded. If "
             "you do not want it recorded, just say so and we will continue without "
-            'a recording. To talk to a staff member, say "operator".',
+            'a recording. To talk to a staff member, say "operator". Our privacy '
+            "notice is on our web page.",
         ),
     ],
 )
@@ -182,6 +201,7 @@ def test_all_party_consent_countries_let_the_caller_decline_the_recording(
     world = build_world(
         scripted(), BusinessSetup(country_code=country, languages=(language,))
     )
+    record_calls(world)
 
     greeting = world.greeting.run(
         CallGreetingRequest(
@@ -195,6 +215,7 @@ def test_all_party_consent_countries_let_the_caller_decline_the_recording(
 @pytest.mark.parametrize("country", ["GE", "IL"])
 def test_notice_countries_only_say_the_call_is_recorded(country: str) -> None:
     world = build_world(scripted(), BusinessSetup(country_code=country))
+    record_calls(world)
 
     greeting = world.greeting.run(
         CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
@@ -206,6 +227,7 @@ def test_notice_countries_only_say_the_call_is_recorded(country: str) -> None:
 
 def test_a_country_the_platform_does_not_know_asks_for_consent() -> None:
     world = build_world(scripted())
+    record_calls(world)
     world.business.country_code = CountryCode("ZZ")
     world.save_business(world.business)
 
@@ -218,6 +240,7 @@ def test_a_country_the_platform_does_not_know_asks_for_consent() -> None:
 
 def test_greeting_of_an_unknown_business_is_not_found() -> None:
     world = build_world(scripted())
+    record_calls(world)
 
     with pytest.raises(NotFoundError):
         world.greeting.run(CallGreetingRequest(business_id=BusinessId()))

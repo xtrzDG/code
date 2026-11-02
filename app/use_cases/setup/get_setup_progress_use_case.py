@@ -252,9 +252,7 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
                 and subscription.status is SubscriptionStatus.TRIALING
                 else None
             ),
-            phone_test_links=phone_test_links(
-                business, channels, self._app_settings.app_base_url, is_live
-            ),
+            phone_test_links=phone_test_links(channels, is_live),
             milestones=[*milestone_views(events), *after_hours_milestone(state)],
             apply=apply,
             guide=guide_view(

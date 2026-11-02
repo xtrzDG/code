@@ -17,7 +17,7 @@ export const returnVisitsIt: Translation<typeof returnVisitsEn> = {
   },
   settings: {
     title: "Messaggi di richiamo",
-    description: "Un messaggio per far tornare i clienti, sul loro canale e nella loro lingua. Non viene inviato nulla finché non lo attivi.",
+    description: "Un messaggio per far tornare i clienti, nella chat in cui hanno prenotato e nella loro lingua. Non viene inviato nulla finché non lo attivi.",
     toggle: "Invia messaggi di richiamo",
     rule: "Cosa inviare",
     daysAfter: "Giorni dopo l’ultima visita",
@@ -43,6 +43,8 @@ export const returnVisitsIt: Translation<typeof returnVisitsEn> = {
     cap: "Al massimo al mese",
     capHint: "Raggiunto questo numero, i messaggi si fermano per il resto del mese.",
     monthSent: { one: "{count} messaggio inviato questo mese, su {cap}", other: "{count} messaggi inviati questo mese, su {cap}" },
+    consent:
+      "Gli inviti vanno solo ai clienti che hanno accettato i messaggi promozionali (Clienti → un cliente → Messaggi promozionali) e solo nella chat in cui hanno fatto la prenotazione. Le prenotazioni fatte per telefono o nella chat del sito non ne ricevono.",
     honours:
       "Non lo ricevono mai i clienti che hanno scritto STOP, che sono nella lista “non contattare” o che sono bloccati. Un cliente riceve al massimo un messaggio di questo tipo ogni due settimane, e nessuno dopo aver prenotato di nuovo.",
     whatsapp:
@@ -79,7 +81,7 @@ export const returnVisitsIt: Translation<typeof returnVisitsEn> = {
     skipReasons: {
       opted_out: "ha chiesto di non ricevere messaggi",
       no_contact: "il cliente è sconosciuto o cancellato",
-      no_channel: "non c’è un canale per raggiungerlo",
+      no_channel: "la chat in cui ha prenotato non può riceverlo",
       window_closed: "la finestra di 24 ore è chiusa e non c’è un modello",
     },
     notSentBecause: "Non inviato: {reason}",

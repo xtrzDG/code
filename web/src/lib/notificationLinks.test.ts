@@ -4,8 +4,9 @@ import { businessIdOfLinkToken, linkTargetPath, type StaffLinkView } from "./not
 
 const BUSINESS_UUID = "c48682e1-394e-45ea-8ea8-a01b6d57cf40";
 
-function token(version = 1, extraBytes = 0): string {
-  const bytes = new Uint8Array(50 + extraBytes);
+/** A token of `version` whose signature has `signatureBytes` bytes (16 in version 2, 12 in version 1). */
+function token(version = 2, extraBytes = 0, signatureBytes = version === 1 ? 12 : 16): string {
+  const bytes = new Uint8Array(38 + signatureBytes + extraBytes);
   bytes[0] = version;
   const uuid = BUSINESS_UUID.replace(/-/g, "");
   for (let index = 0; index < 16; index += 1) {
@@ -25,13 +26,23 @@ const view = (patch: Partial<StaffLinkView>): StaffLinkView => ({
 
 describe("notification links", () => {
   it("name the business they were signed for", () => {
-    expect(token()).toHaveLength(67);
+    expect(token()).toHaveLength(72);
     expect(businessIdOfLinkToken(token())).toBe(`business_${BUSINESS_UUID}`);
+  });
+
+  it("still read the links of version 1, sent before the longer signature", () => {
+    expect(token(1)).toHaveLength(67);
+    expect(businessIdOfLinkToken(token(1))).toBe(`business_${BUSINESS_UUID}`);
   });
 
   it("refuse what is not a token", () => {
     expect(businessIdOfLinkToken("short")).toBeNull();
+    expect(businessIdOfLinkToken(token(2, 3))).toBeNull();
     expect(businessIdOfLinkToken(token(1, 3))).toBeNull();
+    // A version's byte with the other version's signature length, or an unknown version.
+    expect(businessIdOfLinkToken(token(2, 0, 12))).toBeNull();
+    expect(businessIdOfLinkToken(token(1, 0, 16))).toBeNull();
+    expect(businessIdOfLinkToken(token(3))).toBeNull();
     expect(businessIdOfLinkToken(`${token().slice(0, 60)}!@#$%^&`)).toBeNull();
     expect(businessIdOfLinkToken("A".repeat(65))).toBeNull();
   });

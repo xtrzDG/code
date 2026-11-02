@@ -257,12 +257,17 @@ past 1200».
    скрипт виджета, варианты входа, кабинет и тестовый чат через виджет.
 4. Если на staging всё зелёное, тот же коммит переносится в `release`, и его
    разворачивает рабочая версия; после неё проверка запускается ещё раз.
+   Перенос ждёт одобрения человека: его подтверждает один из обязательных
+   проверяющих окружения GitHub `production-release` (Review deployments),
+   и только тогда задача переносит коммит ключом развёртывания
+   `RELEASE_DEPLOY_KEY`.
    Перенос ждёт, пока рабочая версия закончит задачи с данными после
    выпуска (`scripts/check_data_tasks.sh` читает её `/readyz`): задайте
    переменной репозитория `PRODUCTION_API_URL` адрес рабочего API.
 
-Без staging переносите проверенный коммит сами:
-`git push origin <коммит>:release`. Настройка окружений GitHub, правила
+Без staging запустите Deploy smoke test вручную (Run workflow → staging) и
+подтвердите перенос в окружении `production-release`: прямой push в
+`release` защита ветки не пропускает. Настройка окружений GitHub, правила
 изменения данных между версиями, `workshop migrate-documents` и откат на
 прошлую версию — в `docs/operations/deploys.md`.
 
@@ -1853,9 +1858,17 @@ Telegram остаётся в приложении клиента — эти пл
   С версии 2026-11-02 cookie `aw_attr` ставится только после согласия в
   баннере сайта (выбор хранится в техническом cookie `aw_consent` 6 месяцев);
   юристу — проверить тексты баннера (`cookieConsent.*`) и то, что `aw_attr`
-  в странах ваших клиентов не требует большего. Версия 2026-10-13 добавила
+  в странах ваших клиентов не требует большего. Там же юрист проверяет
+  заявление о доступности (`accessibility.*`, страница
+  `/{locale}/accessibility`) и подтверждает, что AgID — надзорный орган для
+  этого сервиса. Версия 2026-10-13 добавила
   `aw_motion` (настройка «Меньше движения») и `aw_tz` (часовой пояс
   устройства).
+
+Не публикуются, но тоже ждут оператора: реестр обработки
+(`docs/legal/records-of-processing.md`, ст. 30 GDPR) — реквизиты оператора и
+контакт по вопросам данных; оценка воздействия (`docs/security/dpia.md`) —
+подпись владельца.
 
 Изменённый текст — новая версия: новые файлы с новой датой, а для договора
 ещё и новое значение `DPA_DOCUMENT_VERSION` (см. выше).
@@ -2018,8 +2031,13 @@ Read-only» (имя секрета — в SECURITY.md).
    рабочую ветку в `main`, сделайте `main` веткой по умолчанию (Settings →
    General → Default branch), защитите её, как требует
    `.github/repository-settings.json` (SECURITY.md, «Repository settings»),
-   положите секрет `REPO_SETTINGS_TOKEN` и создайте `release`:
-   `git push origin main:release`. Проверка:
+   положите секрет `REPO_SETTINGS_TOKEN` (права «Administration: Read-only» и
+   «Actions: Read-only») и создайте `release`: `git push origin main:release`;
+   защитите её набором правил, как `main`, с единственным обходом «Deploy
+   keys», и создайте окружение `production-release` (проверяющие и ветка
+   `main` из `.github/repository-settings.json`) с секретом
+   `RELEASE_DEPLOY_KEY` (`docs/operations/deploys.md`, «One-time setup»,
+   шаг 6). Проверка:
    `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` печатает
    `main`, ручной запуск `.github/workflows/repo-settings.yml` зелёный.
 2. **Staging** (`render.staging.yaml`, раздел 3): свои адреса, вход по почте,

@@ -37,8 +37,9 @@ class SetupQuery(ImmutableDTO):
 class PhoneTestLinkView(ImmutableDTO):
     """
     A link the owner opens on their phone (or as a QR code) to write to
-    their own assistant: the hosted website chat page or the Telegram bot.
-    `is_answering` is False until the assistant is live there.
+    their own assistant: the Telegram bot (the website chat is tried on the
+    share links' `hosted_chat_url`). `is_answering` is False until the
+    assistant is live there.
     """
 
     channel: ChannelKind

@@ -59,7 +59,10 @@ class TestCallConversations:
             setup.business.id, conversation.contact_id
         )
         assert contact is not None
-        assert contact.verified_phone_number == STRANGER
+        # A caller id proves nothing: the number is kept to call back, never
+        # as a verified phone.
+        assert contact.phone_number == STRANGER
+        assert contact.verified_phone_number is None
         # The call card shows the summary with the transcript.
         view = CallViewTransformer().transform(call)
         assert [(str(s.language), str(s.text)) for s in view.summaries] == [

@@ -102,9 +102,11 @@ version in force is the file with the latest date that is not after today
 effect on its date, so a new version needs no setting. The cabinet's code
 step says "By continuing, you accept…" with links to the terms and the privacy
 policy in force, and sign-in stores that version as the user's
-`accepted_terms_version` (never lowered). The cookie statement covers the
-functional cookies only; adding any analytics or marketing cookie needs a
-consent banner first.
+`accepted_terms_version` (never lowered). The cookie statement lists the
+technical cookies and `aw_attr`, which is set only after consent on the
+public site's banner (`aw_consent`, `web/src/server/consentCookie.ts`); a new
+cookie that needs consent must also be added to the banner's text, and
+`CONSENT_VERSION` raised so the banner asks again.
 
 The same rule applies as for the DPA: these are templates with fields in square
 brackets, listed as a launch blocker in [`docs/LAUNCH.md`](../LAUNCH.md).

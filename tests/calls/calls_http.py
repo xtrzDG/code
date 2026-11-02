@@ -61,6 +61,7 @@ def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
                     testbed.text_resolver,
                     testbed.sms_client,
                     testbed.wall_clock,
+                    testbed.assistant_version_repo,
                 )
             ),
             list_text_backs=wrap_use_case(

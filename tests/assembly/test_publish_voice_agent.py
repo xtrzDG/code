@@ -20,6 +20,7 @@ from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUs
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.assembly.assistant_tools import CONVERSATION_TOOLS
 from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
+from app.utilities.channels.voice_service import CALLER_ID_BOUND_TOOLS
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
@@ -67,11 +68,17 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
     assert spec.default_language == LanguageTag("ka")
     assert [greeting.language for greeting in spec.greetings] == spec.languages
     assert str(spec.greetings[0].text).startswith("[ka] AI assistant here")
-    # The version's tools, then decline_recording, which every call offers.
+    # The version's tools but those bound to the caller id (a caller id
+    # proves nobody), then decline_recording, which every call offers.
     assert [tool.name for tool in spec.tools] == [
-        *(tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS),
+        *(
+            tool
+            for tool in AssistantToolName
+            if tool not in CONVERSATION_TOOLS and tool not in CALLER_ID_BOUND_TOOLS
+        ),
         AssistantToolName.DECLINE_RECORDING,
     ]
+    assert AssistantToolName.CANCEL_BOOKING not in [tool.name for tool in spec.tools]
     assert (
         testbed.version(business.id, version.id).voice_agent_revision
         == VOICE_AGENT_REVISION

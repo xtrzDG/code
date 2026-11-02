@@ -60,11 +60,18 @@ export const test = base.extend<{ visualPage: void }>({
 
 export { expect };
 
-/** The theme and the language of the next page this context opens. */
+/**
+ * The answer of the public site's cookie banner (src/server/consentCookie.ts:
+ * version 1, rejected): the public pages are shot without the banner over them.
+ */
+const COOKIE_CHOICE = { name: "aw_consent", value: "1.denied" } as const;
+
+/** The theme, the language and the cookie choice of the next page this context opens. */
 export async function readAs(page: Page, theme: Theme, locale: Locale): Promise<void> {
   await page.context().addCookies([
     { name: "aw_theme", value: theme, url: WEB_URL, sameSite: "Lax" },
     { name: "aw_locale", value: locale, url: WEB_URL, sameSite: "Lax" },
+    { ...COOKIE_CHOICE, url: WEB_URL, sameSite: "Lax" },
   ]);
 }
 

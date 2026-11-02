@@ -11,6 +11,7 @@ check in the quarterly access review (`docs/security/access-review.md`).
 | --- | --- | --- | --- |
 | Founder (platform owner) | [name] | the paging service; [e-mail] | Render, GitHub organisation, every provider console, the registrar, the password manager vault; the final say on breach notices |
 | Deputy (second maintainer) | [name] | the paging service; [e-mail] | Render and GitHub (deploy, rollback, restore, key rotation); provider consoles read-only plus key rotation |
+| Privacy lead | [name; the founder until another person is named] | [phone in the paging service]; [e-mail] | the breach risk assessment, the Garante notification and the breach register (`docs/operations/incident.md`), the DPIA (`docs/security/dpia.md`) and the records of processing (`docs/legal/records-of-processing.md`) |
 | Rota primary and secondary | the week's rota | the paging service | as their roles above |
 | Security mailbox | `SECURITY_CONTACT_EMAIL` (`web/src/server/securityTxt.ts`) | read every working day | vulnerability reports (`SECURITY.md`) |
 | Support mailbox | `GET /v1/support/contacts` | read every working day | owners' questions, data subject requests passed on (DPA 11.3) |

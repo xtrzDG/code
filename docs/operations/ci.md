@@ -23,10 +23,10 @@ system dependencies and the cached packages all follow the image.
 | Job | What it does | Waits for | Expected |
 | --- | --- | --- | ---: |
 | `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
-| `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4) | pytest with coverage on four xdist workers, one part of a group each | — | ~4:15 (tests ~3:15) |
+| `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4; api-fuzz 1/1) | pytest with coverage on four xdist workers, one part of a group each; `Backend tests (api-fuzz 1/1)` runs `-m api_fuzz` alone (`tests/api_fuzz`: hypothesis over every documented operation, and hostile bodies), which the other parts leave out | — | ~4:15 (tests ~3:15) |
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
 | `web-build` | `npm ci`, `.next/cache` restored, `next build`, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
-| `web-checks` | check:intl, lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
+| `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
@@ -37,12 +37,12 @@ system dependencies and the cached packages all follow the image.
 The critical path is `web-build` → `visual` → `durations`: about 1:45 +
 5:00 + 0:20, about seven minutes (the slowest `e2e` shard ends some
 twenty seconds before `visual`). The backend path
-(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 20
-jobs run at the same time (ten shards, `visual`, six backend parts and
-three others: `backend-checks`, `web-checks` and `images` are still running
-when `web-build` ends), the 20 that GitHub runs at once for a free
-account: a new job that overlaps them would queue, so it goes after one of
-them or replaces one.
+(`backend-tests` → `coverage`) ends about 4:45 after the push. GitHub runs
+20 jobs at once for a free account; when `web-build` ends, ten shards,
+`visual`, seven backend parts (the API fuzz part is the seventh) and three
+others (`backend-checks`, `web-checks` and `images`) want to run, so one
+of them queues until a slot frees. A new job that overlaps them queues as
+well: it goes after one of them or replaces one.
 Wave 22's closing of a business brought the suite to about 2037 seconds,
 more than nine shards hold within their budget (9 × 225), so a tenth
 shard was added; branch protection requires only "CI passed (every
@@ -90,15 +90,19 @@ the floor of its part.
 - `repo-settings.yml` checks every morning that branch protection, private
   vulnerability reporting and Dependabot security updates are as
   `.github/repository-settings.json` expects (SECURITY.md, "Repository
-  settings"). The required checks there are `CI passed (every gate)`
-  (the last job of `ci.yml`, which always runs and fails unless every other
-  CI job succeeded: a required job that was skipped because a job it needs
-  failed would count as passed) and the jobs of `codeql.yml` and
-  `api-contract.yml`: renaming a job means changing that file and the
+  settings"), and the `production-release` and `backup-drill`
+  environments (reviewers, branch rule). The required checks there are
+  `CI passed (every gate)` (the last job of `ci.yml`, which always runs and
+  fails unless every other CI job succeeded: a required job that was
+  skipped because a job it needs failed would count as passed), the jobs of
+  `codeql.yml` (Python, JavaScript/TypeScript and `actions`, the workflows
+  themselves), `api-contract.yml` and `workflow-audit.yml` (`Workflow audit
+  (actionlint, zizmor)`, pinned by version and SHA-256): renaming a job means changing that file and the
   branch protection together (`tests/platform/test_supply_chain_workflows.py`
   and `tests/platform/test_release_paths.py` fail until both agree).
 - `automerge.yml` merges a green grouped Dependabot update after each of
-  the workflows that own a required check (CI, CodeQL, API contract) and
+  the workflows that own a required check (CI, CodeQL, API contract,
+  Workflow audit) and
   only once none of those checks is pending. Its merge, made with the
   workflow's token, pushes no event, so it then starts every workflow a
   push to `main` starts: CI (whose run on `main` publishes the signed
@@ -107,8 +111,10 @@ the floor of its part.
 ## Backend tests in parts
 
 `tests/conftest.py` marks the tests that reach Postgres (`postgres`); CI
-runs that group (`-m "postgres and not perf"`) and the rest
-(`-m "not postgres and not perf"`) in parts. With `TEST_PART=k/n` a run
+runs that group (`-m "postgres and not perf"`), the rest
+(`-m "not postgres and not perf and not api_fuzz"`) in parts, and the API
+fuzz tests (`-m api_fuzz`, marker of `tests/api_fuzz/conftest.py`) as one
+part of their own. With `TEST_PART=k/n` a run
 keeps, after `-m` chose the group, only the test files that
 `tests/part_plan.py` gives part k of n: every file of the group weighs the
 seconds its tests took in `tests/durations.json` (a file not measured yet
@@ -145,7 +151,9 @@ engine's libraries: the browser is the one of Playwright's image, pinned by
 digest in `web/scripts/visual-browser.mjs`, which the job pulls (about 1 GB)
 in the background while uv and npm install, and the pages are only looked
 at. On failure it keeps the expected, actual and diff PNG of every
-differing screen with the HTML report (`visual-report`).
+differing screen with the HTML report (`visual-report`). A failed `e2e`
+shard or `visual` run prints the failed tests' page snapshots and the
+API log's end into its own log (`.github/scripts/show-e2e-failures.sh`).
 
 ## End-to-end shards
 
@@ -180,7 +188,7 @@ shard's test step within four minutes. A long spec file is split so that
 no file holds more than about half a shard: the route tour runs as
 `tour-routes*.spec.ts` (all in the Tbilisi project, `e2e/support/tour.ts`),
 the audit of every section as `a11y-sections-en.spec.ts` and
-`a11y-sections-he.spec.ts` (`e2e/support/axe.ts`), the long texts as
+`a11y-sections-it.spec.ts` (`e2e/support/axe.ts`), the long texts as
 `pseudo-locale-ltr.spec.ts` and `pseudo-locale-rtl.spec.ts`
 (`e2e/support/long-texts.ts`).
 

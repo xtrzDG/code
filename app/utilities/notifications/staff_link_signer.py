@@ -2,13 +2,16 @@
 Signed, expiring notification links (`{CABINET_BASE_URL}/n/{token}`).
 
 A token is short enough for an SMS: version, business, target page and its
-id, expiry (whole seconds) and a truncated HMAC-SHA256 over all of them,
-base64url without padding (about 67 characters). It grants nothing by
-itself: the cabinet still signs the user in and checks their access to the
-business; the signature only proves the platform made the link and when it
-stops working. The key derives from ENCRYPTION_KEY with its own label, so
-it is never the key that encrypts channel secrets. After a key rotation a
-link signed with a previous key of the ring still opens until it expires.
+id, expiry (whole seconds) and an HMAC-SHA256 over all of them truncated to
+128 bits, base64url without padding (72 characters, token version 2). Links
+of version 1 (a 96-bit MAC, 67 characters) are still read until they
+expire, so nothing sent before the change stops opening early. It grants
+nothing by itself: the cabinet still signs the user in and checks their
+access to the business; the signature only proves the platform made the
+link and when it stops working. The key derives from ENCRYPTION_KEY with
+its own label, so it is never the key that encrypts channel secrets. After
+a key rotation a link signed with a previous key of the ring still opens
+until it expires.
 """
 
 import base64
@@ -35,9 +38,11 @@ from app.schemas.typings.value.prefixed_id import ValueReportId
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-TOKEN_VERSION: int = 1
+TOKEN_VERSION: int = 2
 KEY_LABEL: bytes = b"assistant-workshop/staff-notification-links/v1"
-SIGNATURE_LENGTH: int = 12
+# Bytes of the MAC by token version: 128 bits now, 96 for the links of
+# version 1, which are read until they expire and never signed again.
+SIGNATURE_LENGTHS: dict[int, int] = {TOKEN_VERSION: 16, 1: 12}
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # version, business uuid, target code, target uuid, expiry (seconds).
 PAYLOAD_FORMAT: str = "!B16sB16sI"
@@ -108,7 +113,9 @@ class StaffLinkSigner(StaffLinkSignerContract):
             target_id_bytes(claims),
             int(claims.expires_at) // MICROSECONDS_PER_SECOND,
         )
-        token: bytes = payload + self._signature(payload)
+        token: bytes = payload + sign_payload(
+            self._key, payload, SIGNATURE_LENGTHS[TOKEN_VERSION]
+        )
         return StaffLinkToken(base64.urlsafe_b64encode(token).rstrip(b"=").decode())
 
     def read(self, token: StaffLinkToken) -> StaffLinkClaims | None:
@@ -118,7 +125,10 @@ class StaffLinkSigner(StaffLinkSignerContract):
         except binascii.Error, ValueError:
             return None
 
-        if len(raw) != PAYLOAD_LENGTH + SIGNATURE_LENGTH:
+        signature_length: int | None = (
+            SIGNATURE_LENGTHS.get(raw[0]) if len(raw) > PAYLOAD_LENGTH else None
+        )
+        if signature_length is None or len(raw) != PAYLOAD_LENGTH + signature_length:
             return None
 
         # Only the one spelling this signer writes: another (the spare low
@@ -129,16 +139,16 @@ class StaffLinkSigner(StaffLinkSignerContract):
 
         payload, signature = raw[:PAYLOAD_LENGTH], raw[PAYLOAD_LENGTH:]
         if not any(
-            hmac.compare_digest(signature, sign_payload(key, payload))
+            hmac.compare_digest(signature, sign_payload(key, payload, signature_length))
             for key in self._verification_keys
         ):
             return None
 
-        version, business, code, target_id, expires = struct.unpack(
+        _version, business, code, target_id, expires = struct.unpack(
             PAYLOAD_FORMAT, payload
         )
         target: StaffLinkTarget | None = TARGETS_BY_CODE.get(code)
-        if version != TOKEN_VERSION or target is None:
+        if target is None:
             return None
 
         return build_claims(
@@ -148,12 +158,11 @@ class StaffLinkSigner(StaffLinkSignerContract):
             Microseconds(expires * MICROSECONDS_PER_SECOND),
         )
 
-    def _signature(self, payload: bytes) -> bytes:
-        return sign_payload(self._key, payload)
 
+def sign_payload(key: bytes, payload: bytes, length: int) -> bytes:
+    """The payload's HMAC-SHA256 truncated to `length` bytes (its version's)."""
 
-def sign_payload(key: bytes, payload: bytes) -> bytes:
-    return hmac.new(key, payload, hashlib.sha256).digest()[:SIGNATURE_LENGTH]
+    return hmac.new(key, payload, hashlib.sha256).digest()[:length]
 
 
 def target_id_bytes(claims: StaffLinkClaims) -> bytes:

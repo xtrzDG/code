@@ -1,7 +1,7 @@
 {
   "collection": "inbound_events",
   "document_type": "InboundEventDocument",
-  "schema_version": 8,
+  "schema_version": 9,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -226,6 +226,17 @@
               "channel_user_id": {
                 "type": "string"
               },
+              "client_ip_address": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
               "contact_name": {
                 "anyOf": [
                   {
@@ -398,7 +409,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "8",
+        "default": "9",
         "type": "string"
       },
       "status": {

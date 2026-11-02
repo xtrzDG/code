@@ -216,11 +216,13 @@ def test_phone_conversation_from_voice_calls_continues_in_chat_turns() -> None:
     world = build_world(scripted(say("კი, ხვალ 19:30-ზე გელოდებით.")))
     voice_call(world, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT)
 
+    # The call's contact is known by the number's PHONE identity (never by
+    # a verified phone: a caller id proves nothing).
     reply = world.send(
         "ხვალ მაგიდა მინდა",
         channel=ChannelKind.PHONE,
-        user_id="el_call_1",
-        phone=E164PhoneNumber("+995599123456"),
+        user_id="+995599123456",
+        phone=None,
     )
 
     assert reply.conversation_id == world.conversations()[0].id

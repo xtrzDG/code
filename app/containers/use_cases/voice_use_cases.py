@@ -113,7 +113,6 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         voice_webhook_adapter=adapters.voice_webhook_adapter,
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
-        text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         check_spend=spend_guard_use_cases.check_business_spend_use_case,
     )
@@ -217,6 +216,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
         assistant_tool_catalog=registries.assistant_tool_registry,
         voice_profile_registry=registries.voice_profile_registry,
+        call_settings_repo=repositories.call_settings_repo,
         app_settings=config.app_settings,
     )
     # Live voice agents set up before the current revision, set up again.

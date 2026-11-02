@@ -13,6 +13,9 @@ from app.contracts.repositories.brand_repositories import (
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
+from app.contracts.repositories.call_follow_up_repositories import (
+    CallSettingsRepoContract,
+)
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
@@ -23,6 +26,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.configurations.voice_agent_settings import VoiceAgentSettings
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.voice import LanguageVoiceProfile, VoiceAgentSpec, VoiceGreeting
 from app.schemas.typings.assistants.strings import VoiceAgentId
@@ -39,8 +43,9 @@ class VoiceAgentSources:
     Where a voice agent's parts come from besides its version: the greeting
     of each language, the tools' definitions, the staff phone of the
     transfer (the profile), the voice of each language, the business's
-    items and resources for the speech recognition, and the platform's
-    tuning (AppSettings.voice_agents).
+    items and resources for the speech recognition, whether the business
+    records calls (its call settings) and the platform's tuning
+    (AppSettings.voice_agents).
     """
 
     business_profile_repo: BusinessProfileRepoContract
@@ -50,6 +55,7 @@ class VoiceAgentSources:
     build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting]
     assistant_tool_catalog: AssistantToolCatalogContract
     voice_profile_registry: VoiceProfileRegistryContract
+    call_settings_repo: CallSettingsRepoContract
     app_settings: AppSettings
 
 
@@ -66,10 +72,14 @@ def build_voice_agent_spec(
     language of the version, the tools of `select_voice_agent_tools` behind
     the public base URL of the tool webhooks, the transfer to the
     profile's handoff phone in opening hours, the speech recognition's
-    keywords and the platform's model, temperature and turn timeout.
+    keywords, the platform's model, temperature and turn timeout, and
+    whether the voice is recorded (only while the business records calls).
     """
 
     tuning: VoiceAgentSettings = sources.app_settings.voice_agents
+    call_settings: CallSettingsDocument | None = (
+        sources.call_settings_repo.get_by_business(business.id)
+    )
     return VoiceAgentSpec(
         business_id=business.id,
         existing_agent_id=existing_agent_id,
@@ -107,6 +117,9 @@ def build_voice_agent_spec(
             version.languages,
         ),
         turn_timeout_seconds=tuning.turn_timeout_seconds,
+        is_recording_enabled=(
+            call_settings is not None and call_settings.is_recording_enabled
+        ),
     )
 
 

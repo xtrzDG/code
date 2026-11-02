@@ -82,9 +82,12 @@ Deploys happen only after the checks: the services of `render.yaml` follow
 the `release` branch and deploy a commit only when every GitHub check on it
 is green (`autoDeployTrigger: checksPass`). `render.staging.yaml` is the same
 environment as staging on `main`, with its own database and the group
-`workshop-staging` (`LLM_PROVIDER=scripted`: a rehearsal without a model).
+`workshop-staging` (`APP_ENV=production` with `LLM_PROVIDER=openai` and
+staging's own key, Turnstile widget, bucket and test seller: it passes the
+same startup checks as production, so it is a production rehearsal).
 After every deploy `.github/workflows/deploy-smoke.yml` runs
-`scripts/smoke.sh`; a green staging moves the commit to `release`. The rules
+`scripts/smoke.sh`; a green staging asks a reviewer of the GitHub
+environment `production-release` to move the commit to `release`. The rules
 for schema changes (expand first, contract later), the document migration
 and rollbacks are in [`docs/operations/deploys.md`](../operations/deploys.md)
 and [ADR 0007](../adr/0007-online-safe-migrations.md).

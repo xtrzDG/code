@@ -11,11 +11,13 @@ and 34, DPA section 12), and how the team learns from it. The objectives and ale
 | Severity | What it means | Examples | Respond | Owners told |
 | --- | --- | --- | --- | --- |
 | **SEV1** | Customers of many businesses get no answers, data is exposed, or money moves wrongly | the model provider is down (`llm_errors`), no worker runs, the database is lost, a personal data breach, double charges | at once, day or night; all hands | within 1 hour, then every 2 hours until resolved |
-| **SEV2** | A channel, a feature or some businesses are broken, or answers are slow | Meta or Telegram outage, dead jobs piling up, the inbound backlog over 2 minutes, a stuck worker, SMS pumping, a bad deploy | within 30 minutes during the day (08:00-23:00 Tbilisi), first thing otherwise | when it lasts over 30 minutes or an owner noticed |
+| **SEV2** | A channel, a feature or some businesses are broken, or answers are slow | Meta or Telegram outage, dead jobs piling up, the inbound backlog over 2 minutes, a stuck worker, SMS pumping, a bad deploy | within 30 minutes, 08:00-23:00 Europe/Rome every day (`docs/operations/on-call.md`), first thing otherwise | when it lasts over 30 minutes or an owner noticed |
 | **SEV3** | Degraded, with a workaround, or one business | tool errors of one calendar, a slow admin page, one channel's token expiring | next working day | the affected owner, if they need to act |
 
 When unsure, pick the higher severity; lowering it later costs nothing.
-A breach is always SEV1, even when it looks small.
+A breach is always SEV1, even when it looks small. Picking a severity in
+the first minute: the decision tree of `docs/operations/on-call.md`
+("Picking a severity").
 
 ## Roles
 
@@ -234,7 +236,8 @@ For the owner to send in its own name when its customers must be told
 Blameless: describe what the system and the process allowed, never who
 "should have". Store it in the team's drive as
 `postmortems/<yyyy-mm-dd>-<slug>.md` and link it from the incident's
-ticket.
+ticket. Its action items are tracked as `docs/operations/maintenance.md`
+("Postmortems") says.
 
 ```markdown
 # <Title> (<SEV>, <date>)

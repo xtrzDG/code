@@ -16,7 +16,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.assistant_tools import AssistantToolContext
 from app.schemas.dto.conversations import VoiceToolCallRequest
@@ -25,6 +25,7 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.shared.contact_activity import record_contact_seen
+from app.utilities.calls.call_contacts import find_or_create_call_contact
 from app.utilities.channels.caller_reachability import list_reachable_identities
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.voice_service import find_voice_refusal
@@ -39,9 +40,11 @@ class OpenVoiceConversationUseCase(
     call (concept section 7: the agent's tools are our webhooks).
 
     One conversation per provider call id, pinned to the version published
-    when the call started. The caller is the contact with the caller's phone
-    (or, for a withheld number, the one known by this call); the business
-    comes from the verified webhook, never from the agent's arguments. A
+    when the call started. The caller is the call-only contact of the
+    caller's number (or, for a withheld number, the one known by this call):
+    a caller id is no proof, so it never joins a contact a channel proved,
+    and the tools get no verified phone. The business comes from the
+    verified webhook, never from the agent's arguments. A
     call in progress keeps its tools; a new call is refused (ConflictError)
     while the phone assistant is off (business not live, no voice in the
     live version or the plan, phone number disconnected). The tools learn
@@ -132,7 +135,8 @@ class OpenVoiceConversationUseCase(
             contact_id=contact.id,
             contact_name=contact.name,
             contact_phone_number=contact.phone_number,
-            verified_phone_number=input_data.caller_phone_number,
+            # A caller id proves nothing: no booking is found by it.
+            verified_phone_number=None,
             conversation_id=conversation.id,
             channel=ChannelKind.PHONE,
             language=language,
@@ -164,46 +168,25 @@ class OpenVoiceConversationUseCase(
         call_user_id: ChannelUserId,
         now: Microseconds,
     ) -> ContactDocument:
-        contact: ContactDocument | None = None
-        if conversation is not None:
-            contact = self._contact_repo.get(business.id, conversation.contact_id)
+        """
+        The call's contact: the conversation's, else the call-only contact
+        of the caller's number or a new one (`find_or_create_call_contact`:
+        a caller id proves nobody, so no verified contact is ever joined).
+        """
 
-        if contact is None and request.caller_phone_number is not None:
-            # Only a contact whose phone a channel proved is the caller.
-            contact = self._contact_repo.find_by_verified_phone_number(
-                business.id, request.caller_phone_number
-            )
-
-        identity = ChannelIdentity(
-            channel=ChannelKind.PHONE,
-            channel_user_id=(
-                ChannelUserId(str(request.caller_phone_number))
-                if request.caller_phone_number is not None
-                else call_user_id
-            ),
+        contact: ContactDocument | None = (
+            None
+            if conversation is None
+            else self._contact_repo.get(business.id, conversation.contact_id)
         )
         if contact is None:
-            contact = self._contact_repo.find_by_channel_identity(
-                business.id, identity.channel, identity.channel_user_id
+            contact = find_or_create_call_contact(
+                self._contact_repo,
+                business.id,
+                request.caller_phone_number,
+                call_user_id,
+                now,
             )
-
-        if contact is None:
-            contact = ContactDocument(
-                business_id=business.id,
-                phone_number=request.caller_phone_number,
-                verified_phone_number=request.caller_phone_number,
-                channel_identities=[identity],
-                created_at=now,
-                updated_at=now,
-            )
-            self._contact_repo.save(contact)
-        elif (
-            request.caller_phone_number is not None
-            and contact.verified_phone_number != request.caller_phone_number
-        ):
-            contact.verified_phone_number = request.caller_phone_number
-            contact.updated_at = now
-            self._contact_repo.save(contact)
 
         return record_contact_seen(self._contact_repo, contact, now)
 
