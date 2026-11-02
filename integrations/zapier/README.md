@@ -47,7 +47,7 @@ Publishing needs a Zapier developer account, which this repository does
 not have yet; nothing here has been pushed to Zapier.
 
 ```sh
-npm install -g zapier-platform-cli@19.1.0
+npm install -g zapier-platform-cli@19.2.1
 cd integrations/zapier
 npm ci
 zapier login
@@ -58,8 +58,8 @@ zapier push
 ```
 
 `platformVersion` follows the pinned `zapier-platform-core` in
-`package.json`; raise both together. `overrides` holds `form-data` at
-4.0.6: core 19.1.0 pins 4.0.5, which has a CRLF injection in multipart
+`package.json`; the CLI above moves with it. `overrides` holds `form-data` at
+4.0.6: core 19.2.1 pins 4.0.5, which has a CRLF injection in multipart
 field names (GHSA-hmw2-7cc7-3qxx); drop the override once the core's own
 pin is 4.0.6 or later (`npm audit` after updating the lock). A new trigger or field is fine at any
 time; renaming a key breaks existing Zaps (it is the same rule as the

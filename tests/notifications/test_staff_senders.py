@@ -1,14 +1,21 @@
-"""Staff e-mail, SMS and WhatsApp notifications as their providers get them."""
+"""
+Staff e-mail, SMS, WhatsApp and device notifications as their providers get
+them.
+"""
 
 import pytest
 
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
+from app.facilitators.notifications.push_notification_sender_facilitator import (
+    PushNotificationSenderFacilitator,
+)
 from app.facilitators.notifications.staff_notification_sender_facilitator import (
     StaffNotificationSenderFacilitator,
     mask_address,
 )
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.outbound_messages import PushRecipient
 from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.exceptions.application_errors import (
     DeliveryNotConfiguredError,
@@ -28,10 +35,14 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioAccountSid,
 )
 from app.schemas.typings.messaging.strings import SmsMessageText
+from app.schemas.typings.notifications.strings import StaffAlertTitle
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.notifications.staff_delivery_keys import push_subscription_id
 from app.utilities.notifications.staff_providers import is_delivery_simulated
 from tests.channels.channels_settings import build_settings
 from tests.channels.testbed import ChannelsTestbed
+from tests.notifications.staff_alert_fakes import push_subscription_repo
 from tests.users.login_code_fakes import FakeMailer, FakeSms
 from tests.users.login_code_http import ScriptedProvider, json_response
 
@@ -167,3 +178,26 @@ def test_a_test_written_to_the_log_never_happens_in_production() -> None:
     assert is_delivery_simulated(development, ManagerContactChannel.TELEGRAM) is False
     for channel in ManagerContactChannel:
         assert is_delivery_simulated(production, channel) is False
+
+
+def test_without_web_push_a_device_reads_a_plain_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    business_id, user_id = BusinessId(), UserId()
+    recipient = PushRecipient(
+        subscription_id=push_subscription_id(
+            business_id, user_id, "https://push.example/device-1"
+        ),
+        user_id=user_id,
+        title=StaffAlertTitle("New booking"),
+    )
+    push = PushNotificationSenderFacilitator(push_subscription_repo(), None)
+
+    with pytest.raises(
+        DeliveryNotConfiguredError,
+        match=r"^Notifications on devices are not available right now\. "
+        r"Contact support\.$",
+    ):
+        push.send(business_id, recipient, BRIEF)
+    # The missing settings are for the operator's log, not the device's error.
+    assert "WEB_PUSH_VAPID_PUBLIC_KEY" in caplog.text

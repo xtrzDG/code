@@ -108,6 +108,23 @@ class TestStart:
         assert "not available right now" in no_signup.json()["message"]
         assert pages_still.status_code == 201
 
+    def test_every_step_without_the_app_refuses_in_plain_words(self) -> None:
+        world = MetaWorld(meta_settings(META_APP_ID=""))
+        state = "x" * 43
+
+        refusals = {
+            "pages": world.list_pages({"state": state, "code": CODE}),
+            "page": world.pick_page("messenger", {"state": state, "page_id": "4410"}),
+            "whatsapp": world.complete({"state": state, "code": CODE}),
+        }
+
+        for step, response in refusals.items():
+            assert response.status_code == 422, step
+            assert reason_codes(response.json()) == ["meta_not_configured"], step
+            message = response.json()["message"]
+            assert "not available right now: enter the details manually" in message
+            assert "server" not in message and "META_" not in message, step
+
     def test_the_owner_confirms_it_is_them_before_meta_opens(self) -> None:
         world = MetaWorld(step_up=NotConfirmedRecently())
 
