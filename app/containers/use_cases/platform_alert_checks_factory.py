@@ -8,6 +8,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
+from app.use_cases.admin.alerts.safety_alert_checks import PlatformSafetyAlertChecks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.alerts.voice_alert_checks import VoiceHealthAlertCheck
 
@@ -24,22 +25,24 @@ def platform_alert_checks_factory(
     burn rates over the service level slots (1163) and the freshest worker
     pulse (WORKER_DOWN, 1173), the audit log's hour of entries and the
     checks of its chains (1193), and the voice platform's API failures and
-    finished-call reports (VOICE_HEALTH).
+    finished-call reports (VOICE_HEALTH), the daily budget stop, the
+    periodic jobs' heartbeats and the daily payment reconciliation (1230).
     """
 
+    spend_guard = config.app_settings.provided.spend_guard.provided
+    spend_checks = Factory(
+        SpendAlertChecks,
+        usage_spend_repo=repositories.usage_spend_repo,
+        daily_budget_micro_usd=spend_guard.platform_daily_budget_micro_usd,
+        stop_percent=spend_guard.platform_spend_stop_percent,
+    )
     return Factory(
         PlatformAlertChecks,
         system_health_repo=repositories.system_health_repo,
         platform_activity_repo=repositories.platform_activity_repo,
         signal_counter=adapters.signal_counter,
         quality_totals_repo=repositories.quality_totals_repo,
-        spend_checks=Factory(
-            SpendAlertChecks,
-            usage_spend_repo=repositories.usage_spend_repo,
-            daily_budget_micro_usd=(
-                config.app_settings.provided.spend_guard.provided.platform_daily_budget_micro_usd
-            ),
-        ),
+        spend_checks=spend_checks,
         data_task_checks=data_task_use_cases.data_task_alert_checks,
         extra_checks=Factory(
             extra_alert_checks,
@@ -51,6 +54,13 @@ def platform_alert_checks_factory(
                 VoiceHealthAlertCheck,
                 signal_counter=adapters.signal_counter,
                 voice_activity_repo=repositories.voice_activity_repo,
+            ),
+            spend_checks=spend_checks,
+            safety_checks=Factory(
+                PlatformSafetyAlertChecks,
+                job_heartbeat_repo=repositories.periodic_job_heartbeat_repo,
+                reconciliation_repo=repositories.payment_reconciliation_repo,
+                release=config.app_settings.provided.release_version,
             ),
         ),
     )

@@ -81,10 +81,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           images=()
-          for reference in $(sed -n -E 's/^FROM ([^ ]+@sha256:[0-9a-f]{64}).*/\1/p' release/Dockerfile release/web/Dockerfile); do
+          while read -r reference; do
             docker pull --quiet "$reference" > /dev/null
             images+=("$reference=$(docker image inspect --format '{{.Created}}' "$reference")")
-          done
+          done < <(sed -n -E 's/^FROM ([^ ]+@sha256:[0-9a-f]{64}).*/\1/p' release/Dockerfile release/web/Dockerfile)
           uv run --no-project python -m scripts.image_age_report \
             --release-commit "$(git -C release log -1 --format=%cI)" \
             --summary "$GITHUB_STEP_SUMMARY" "${images[@]}"

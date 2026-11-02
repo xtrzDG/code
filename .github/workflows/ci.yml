@@ -459,7 +459,8 @@ jobs:
 
       # Fails on HIGH and CRITICAL vulnerabilities that have a fix,
       # misconfigurations and secrets; reviewed exceptions go to
-      # .trivyignore with a reason and an expiry date.
+      # .trivyignore with a reason and an expiry date. The action's installer
+      # (and syft's, below) checks the binary against its release checksums.
       - name: Scan the backend image (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -571,7 +572,8 @@ jobs:
       # the packages an earlier run of this workflow fetched and apt checked
       # against its signed index, and only this repository's own runs write
       # the cache. On a miss apt fetches them (with timeouts and retries) and
-      # the cache keeps them.
+      # the cache keeps them. The browser is the build the locked
+      # @playwright/test names, from Microsoft's CDN over TLS.
       - name: Name the runner image
         id: runner-image
         run: echo "name=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"

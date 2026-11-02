@@ -7,6 +7,12 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.platform_safety_factories import (
+    payment_reconciliation_use_cases,
+    platform_admin_check,
+    platform_pause_use_cases,
+    platform_spend_gauge,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.facilitators.spend_guard.spend_limit_notice_facilitator import (
@@ -81,7 +87,8 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
     The spend guard (migration 1142): a business's spend of its day against
     its limits before each model turn and call, the owner actions and API
     requests it limits, the websites allowed to show a chat, and the
-    platform's spend for the admin.
+    platform's spend for the admin; the platform's brakes (the global pause
+    and the daily budget stop) and the daily payment reconciliation (1230).
     """
 
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -99,6 +106,8 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         alert_settings=config.app_settings.provided.platform_alerts,
     )
+    # The platform's spend of the UTC day, read once a minute per process.
+    platform_spend_gauge = platform_spend_gauge(repositories, utilities)
     check_business_spend_use_case: Factory[
         UseCaseContract[SpendCheckRequest, SpendVerdict]
     ] = Factory(
@@ -111,6 +120,22 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         notices=spend_limit_notices,
         exchange_rate_registry=registries.exchange_rate_registry,
         settings=config.app_settings.provided.spend_guard,
+        platform_pause_repo=repositories.platform_pause_repo,
+        platform_spend_gauge=platform_spend_gauge,
+    )
+    platform_admin_check = platform_admin_check(repositories, registries, utilities)
+    get_platform_pause_use_case, set_platform_pause_use_case = platform_pause_use_cases(
+        config,
+        repositories,
+        utilities,
+        time_provider,
+        platform_admin_check,
+        platform_spend_gauge,
+    )
+    reconcile_payments_use_case, get_payment_reconciliation_use_case = (
+        payment_reconciliation_use_cases(
+            config, repositories, time_provider, platform_admin_check
+        )
     )
     admit_owner_action_use_case: Factory[
         UseCaseContract[OwnerActionAdmission, None]

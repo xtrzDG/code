@@ -34,3 +34,16 @@ class SpendGuardOrchestratorsContainer(containers.DeclarativeContainer):
     set_business_spend_limits_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.set_business_spend_limits_use_case
     )
+    # The platform's brakes and the daily payment reconciliation (1230).
+    get_platform_pause_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.get_platform_pause_use_case
+    )
+    set_platform_pause_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.set_platform_pause_use_case
+    )
+    reconcile_payments_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.reconcile_payments_use_case
+    )
+    get_payment_reconciliation_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.get_payment_reconciliation_use_case
+    )

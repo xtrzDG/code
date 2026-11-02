@@ -41,6 +41,7 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "GET /v1/public/bookings/{token}/slots": "a signed manage link",
     "POST /v1/public/bookings/{token}/cancel": "a signed manage link",
     "POST /v1/public/bookings/{token}/reschedule": "a signed manage link",
+    "POST /v1/public/bookings/{token}/marketing-consent": "a signed manage link",
     "GET /v1/public/reviews/{token}": "a signed review link",
     "GET /v1/public/ical/{token}.ics": "an unguessable feed token of a resource",
     "GET /v1/widget/{business_id}/config": "website chat; allowed origins, limits",

@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds, Seconds, WallClock
 from app.contracts.health import WorkerHeartbeatRepoContract
 from app.contracts.resilience import CircuitBreakerContract
 from app.contracts.storage import StorageScopeContract
+from app.gateways.worker.periodic_job_heartbeats import PeriodicJobHeartbeats
 from app.schemas.domain.jobs import (
     PeriodicJobResult,
     WorkerCircuitState,
@@ -38,6 +39,10 @@ class WorkerHeartbeatRecorder:
     tell how long ago a worker was last alive. A pulse that cannot be
     written (the database is down) is logged and skipped: the worker goes
     on, and the next tick tries again.
+
+    With `job_heartbeats`, the start registers every shared periodic job
+    and every beat records the jobs that succeeded since: the missed-run
+    alert's source (`PeriodicJobHeartbeats`).
     """
 
     def __init__(
@@ -48,7 +53,9 @@ class WorkerHeartbeatRecorder:
         release: ReleaseVersion | None,
         host_name: WorkerHostName | None = None,
         circuit_breaker: CircuitBreakerContract | None = None,
+        job_heartbeats: PeriodicJobHeartbeats | None = None,
     ) -> None:
+        self._job_heartbeats: PeriodicJobHeartbeats | None = job_heartbeats
         self._circuit_breaker: CircuitBreakerContract | None = circuit_breaker
         self._heartbeat_repo: WorkerHeartbeatRepoContract = heartbeat_repo
         self._storage_scope: StorageScopeContract = storage_scope
@@ -80,6 +87,8 @@ class WorkerHeartbeatRecorder:
             if int(deleted) > 0:
                 LOGGER.info("Purged %d old worker heartbeats", int(deleted))
 
+        if self._job_heartbeats is not None:
+            self._job_heartbeats.register(self._wall_clock.now_unix())
         self.beat([])
 
     def beat(self, periodic_results: Sequence[PeriodicJobResult]) -> None:
@@ -100,6 +109,9 @@ class WorkerHeartbeatRecorder:
                 self._heartbeat_repo.save(heartbeat)
         except ApplicationError as error:
             LOGGER.warning("Worker heartbeat was not written: %s", error)
+
+        if self._job_heartbeats is not None:
+            self._job_heartbeats.record(periodic_results)
 
     def _circuits(self, now: Microseconds) -> list[WorkerCircuitState]:
         if self._circuit_breaker is None:

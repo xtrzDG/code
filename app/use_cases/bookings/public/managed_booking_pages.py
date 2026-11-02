@@ -12,11 +12,13 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.booking_links import BookingManageTokenSignerContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.schemas.constants.bookings import ManagedBookingRefusalCode
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.sharing import ShareLinkKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.booking_manage import (
     BookingManageClaims,
     ManagedBookingAction,
@@ -83,6 +85,7 @@ class ManagedBookingPages:
     rate_limits: RequestRateLimitRegistryContract
     wall_clock: WallClock[Microseconds]
     cabinet_base_url: CabinetBaseUrl | None
+    contact_repo: ContactRepoContract
 
     def refuse_too_frequent(
         self,
@@ -197,7 +200,14 @@ class ManagedBookingPages:
             can_cancel=is_changeable,
             can_reschedule=is_changeable,
             is_over=self._now_seconds() >= int(booking.ends_at),
+            marketing_consent=self._has_marketing_consent(booking),
         )
+
+    def _has_marketing_consent(self, booking: BookingDocument) -> bool:
+        contact: ContactDocument | None = self.contact_repo.get(
+            booking.business_id, booking.contact_id
+        )
+        return contact is not None and contact.has_marketing_consent
 
     def _chat_links(self, guest_booking: GuestBooking) -> list[WidgetContactLinkView]:
         """

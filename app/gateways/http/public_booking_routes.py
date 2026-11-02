@@ -16,6 +16,7 @@ from app.gateways.http.strict_request_parsing import (
 from app.schemas.constants.bookings import ManagedBookingRefusalCode
 from app.schemas.dto.booking_manage import (
     BookingCalendarFile,
+    ManagedBookingConsentBody,
     ManagedBookingRequest,
     ManagedBookingSlots,
     ManagedBookingView,
@@ -50,6 +51,7 @@ CALENDAR_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
 type ManagedBookingOperator[Output] = OperatorContract[ManagedBookingRequest, Output]
 
 read_reschedule_body = build_json_body_dependency(RescheduleManagedBookingBody)
+read_consent_body = build_json_body_dependency(ManagedBookingConsentBody)
 
 
 def build_public_booking_router(
@@ -58,6 +60,7 @@ def build_public_booking_router(
     slots_operator: ManagedBookingOperator[ManagedBookingSlots],
     cancel_operator: ManagedBookingOperator[ManagedBookingView],
     reschedule_operator: ManagedBookingOperator[ManagedBookingView],
+    consent_operator: ManagedBookingOperator[ManagedBookingView],
 ) -> APIRouter:
     """
     Routes (public; the signed token of the guest's link is the key):
@@ -71,7 +74,11 @@ def build_public_booking_router(
         POST /v1/public/bookings/{token}/cancel
             cancel it (a customer request: staff are notified);
         POST /v1/public/bookings/{token}/reschedule  {"date", "time"}
-            move it; the answer carries the moved booking's new token.
+            move it; the answer carries the moved booking's new token;
+        POST /v1/public/bookings/{token}/marketing-consent
+                {"is_given", "text_version"}
+            the guest's marketing box, ticked (consent recorded with the
+            wording's version) or unticked (taken back).
     A forged or expired link and a link of a booking moved since are 404
     (reasons `link_invalid`, `link_expired`, `booking_changed`); a booking
     that cannot change any more is 409 (`not_active`, `already_started`,
@@ -145,6 +152,26 @@ def build_public_booking_router(
         return reschedule_operator.operate(
             manage_request(token, request).model_copy(
                 update={"date": body.date, "time": body.time}
+            )
+        )
+
+    @router.post(
+        f"{PUBLIC_BOOKING_PATH}/marketing-consent",
+        openapi_extra=describe_json_body(ManagedBookingConsentBody),
+    )
+    def change_managed_booking_consent(
+        token: str,
+        request: Request,
+        response: Response,
+        body: Annotated[ManagedBookingConsentBody, Depends(read_consent_body)],
+    ) -> ManagedBookingView:
+        response.headers.update(PRIVATE_PAGE_HEADERS)
+        return consent_operator.operate(
+            manage_request(token, request).model_copy(
+                update={
+                    "marketing_consent": body.is_given,
+                    "consent_text": body.text_version,
+                }
             )
         )
 

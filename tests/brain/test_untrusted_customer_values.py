@@ -135,3 +135,15 @@ def test_a_platform_text_that_names_the_guest_fences_the_name() -> None:
         "<customer_value>Nino</customer_value>! (Ninotchka is someone else)"
     )
     assert fence_value_in(confirmation, "  ") == confirmation
+
+
+def test_the_tags_of_a_repeated_value_never_reach_the_customer() -> None:
+    world = build_world(
+        scripted(say("Booked for <customer_value>Giorgi</customer_value>, see you!"))
+    )
+
+    reply = world.send("Book it", name="Giorgi")
+
+    assert reply.text is not None
+    assert reply.text.endswith("Booked for Giorgi, see you!")
+    assert "customer_value" not in str(world.messages(world.conversations()[0].id))

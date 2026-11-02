@@ -47,6 +47,7 @@ from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call
 from app.utilities.conversations.reply_choices_text import close_with_prompt
 from app.utilities.conversations.reply_latency import measure_reply_latency
 from app.utilities.conversations.stored_tool_calls import storable_tool_calls
+from app.utilities.conversations.untrusted_text import remove_block_tags
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
 )
@@ -251,14 +252,14 @@ def compose_reply_text(
 ) -> MessageText | None:
     """
     The reply as sent: the disclosure (and a messenger's privacy line)
-    first when due, then the model's text, closed by the prompt of the
-    options it offers.
+    first when due, then the model's text (without the tags of the blocks
+    it was shown), closed by the prompt of the options it offers.
     """
 
     if record.text is None:
         return None
 
-    body: str = close_with_prompt(str(record.text), record.choices)
+    body: str = close_with_prompt(remove_block_tags(str(record.text)), record.choices)
     lines: list[str] = [
         str(line)
         for line in (opening.disclosure, opening.privacy_line)

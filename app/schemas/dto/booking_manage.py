@@ -14,6 +14,7 @@ from app.schemas.constants.bookings import (
     BookingUnit,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.marketing_consent import MarketingConsentText
 from app.schemas.dto.channels.widget import WidgetContactLinkView
 from app.schemas.typings.bookings.booleans import (
     CanCancelManagedBooking,
@@ -45,6 +46,7 @@ from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import AddressText, BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.contacts.booleans import IsMarketingConsentGiven
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -94,13 +96,17 @@ class BookingConfirmationReceipt(ImmutableDTO):
 class ManagedBookingRequest(ImmutableDTO):
     """
     A guest's request through a manage link: the token from the address,
-    and for a move (or the free times of a day) the new local date and
-    time. The client address counts against the public rate limits.
+    for a move (or the free times of a day) the new local date and time,
+    and for the marketing box whether it is ticked and the version of the
+    wording it showed. The client address counts against the public rate
+    limits.
     """
 
     token: BookingManageToken
     date: LocalDate | None = None
     time: LocalTimeOfDay | None = None
+    marketing_consent: IsMarketingConsentGiven | None = None
+    consent_text: MarketingConsentText | None = None
     client_ip_address: ClientIpAddress | None = None
 
 
@@ -111,6 +117,8 @@ class ManagedBookingAction(ImmutableDTO):
     claims: BookingManageClaims
     date: LocalDate | None = None
     time: LocalTimeOfDay | None = None
+    marketing_consent: IsMarketingConsentGiven | None = None
+    consent_text: MarketingConsentText | None = None
     client_ip_address: ClientIpAddress | None = None
 
 
@@ -121,6 +129,16 @@ class RescheduleManagedBookingBody(ImmutableDTO):
     time: LocalTimeOfDay | None = None
 
 
+class ManagedBookingConsentBody(ImmutableDTO):
+    """
+    The marketing box of the page: ticked (`is_given`) or not, and the
+    version of the wording the page showed next to it.
+    """
+
+    is_given: IsMarketingConsentGiven
+    text_version: MarketingConsentText
+
+
 class ManagedBookingView(ImmutableDTO):
     """
     The guest's booking as the manage page shows it, in the business's
@@ -128,6 +146,8 @@ class ManagedBookingView(ImmutableDTO):
     sees the page). `token` is the link's current token (a move issues a
     new one); `language` is the guest's. `chat_links` are the ways to write
     to the business, the chat the booking was made in first.
+    `marketing_consent` is whether the guest agreed to marketing messages
+    and has not taken it back (the page's box, unticked until then).
     """
 
     token: BookingManageToken
@@ -152,6 +172,7 @@ class ManagedBookingView(ImmutableDTO):
     can_cancel: CanCancelManagedBooking = False
     can_reschedule: CanRescheduleManagedBooking = False
     is_over: IsManagedBookingOver = False
+    marketing_consent: IsMarketingConsentGiven = False
 
 
 class ManagedBookingSlots(ImmutableDTO):

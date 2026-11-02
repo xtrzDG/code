@@ -1,0 +1,113 @@
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.marketing_consent import (
+    MarketingConsentSource,
+    MarketingConsentText,
+    MarketingConsentWithdrawal,
+)
+from app.schemas.domain.bookings import BookingDocument
+from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.contacts import ContactDocument, MarketingConsent
+from app.schemas.dto.booking_manage import ManagedBookingAction, ManagedBookingView
+from app.schemas.exceptions.application_errors import (
+    ConflictError,
+    NotFoundError,
+    ValidationFailedError,
+)
+from app.schemas.typings.compliance.strings import (
+    AuditEntityName,
+    AuditEntityReference,
+)
+from app.use_cases.bookings.guest_booking import GuestBooking
+from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
+from app.utilities.bookings.manage_rate_limits import MANAGE_CHANGE_LIMITS
+
+CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
+GONE_MESSAGE: str = "The guest of this booking is no longer known."
+
+
+class ChangeManagedBookingConsentUseCase(
+    UseCaseContract[ManagedBookingAction, ManagedBookingView]
+):
+    """
+    The guest ticks or unticks the marketing box on their booking's page
+    (Codice privacy art. 130, GDPR art. 7). Ticking records the consent on
+    the booking's contact as the guest's own: the page, this booking, the
+    version of the wording the page showed and the moment; unticking takes
+    it back (as easy as giving it). Ticking again keeps the first consent.
+    The box is the guest's whatever the booking's state: a cancelled or
+    past booking's page still shows it while its link opens. Each change
+    is one atomic step on the contact as stored, counted against the
+    page's limits and audited (UPDATE of the contact, no actor: the
+    customer made it). A STOP still wins over a ticked box until START.
+    """
+
+    def __init__(
+        self,
+        pages: ManagedBookingPages,
+        card_repo: CustomerCardRepoContract,
+        audit_log_repo: AuditLogRepoContract,
+        wall_clock: WallClock[Microseconds],
+    ) -> None:
+        self._pages: ManagedBookingPages = pages
+        self._card_repo: CustomerCardRepoContract = card_repo
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: ManagedBookingAction) -> ManagedBookingView:
+        """
+        Raises:
+            ValidationFailedError: the box's state or wording is missing.
+            NotFoundError: the link's booking changed, or its guest is gone.
+            ConflictError: the guest's data was erased.
+        """
+
+        is_given: bool | None = input_data.marketing_consent
+        text: MarketingConsentText | None = input_data.consent_text
+        if is_given is None or text is None:
+            raise ValidationFailedError("Say whether the box is ticked, and its text.")
+
+        self._pages.refuse_too_frequent(input_data, MANAGE_CHANGE_LIMITS)
+        guest_booking: GuestBooking = self._pages.current(input_data.claims)
+        booking: BookingDocument = guest_booking.booking
+        now: Microseconds = self._wall_clock.now_unix()
+
+        def change(contact: ContactDocument) -> None:
+            if contact.erased_at is not None:
+                raise ConflictError("The guest's data was erased.")
+
+            consent: MarketingConsent | None = contact.marketing_consent
+            if is_given and not contact.has_marketing_consent:
+                contact.marketing_consent = MarketingConsent(
+                    given_at=now,
+                    source=MarketingConsentSource.BOOKING_PAGE,
+                    text_version=text,
+                    booking_id=booking.id,
+                )
+            elif not is_given and consent is not None:
+                contact.marketing_consent = consent.withdrawn(
+                    now, MarketingConsentWithdrawal.BOOKING_PAGE
+                )
+
+        changed: ContactDocument | None = self._card_repo.change_card(
+            booking.business_id, booking.contact_id, change
+        )
+        if changed is None:
+            raise NotFoundError(GONE_MESSAGE)
+
+        self._audit_log_repo.append(
+            AuditLogEntryDocument(
+                business_id=booking.business_id,
+                action=AuditAction.UPDATE,
+                entity=CONTACT_ENTITY,
+                entity_id=AuditEntityReference(str(changed.id)),
+                ip_address=input_data.client_ip_address,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        return self._pages.view(guest_booking, self._pages.token_for(booking))

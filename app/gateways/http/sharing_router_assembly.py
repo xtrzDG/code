@@ -38,5 +38,6 @@ def build_sharing_routers(
             slots_operator=booking_links.managed_booking_slots_operator(),
             cancel_operator=booking_links.cancel_managed_booking_operator(),
             reschedule_operator=booking_links.reschedule_managed_booking_operator(),
+            consent_operator=booking_links.change_managed_booking_consent_operator(),
         ),
     ]

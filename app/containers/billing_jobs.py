@@ -6,6 +6,7 @@ package and rented phone numbers' months are billed before the grace job
 looks for unpaid bills, seasonal pauses start or end before it looks at
 their subscriptions, and a declined automatic charge is tried again (days
 1, 3 and 6 of its grace) just before the grace job would act on it.
+The daily payment reconciliation with Flitt and Stripe comes last (1230).
 `periodic_jobs.py` places them in the worker's list.
 """
 
@@ -16,6 +17,7 @@ from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.phone_number_jobs import (
     bill_phone_number_rentals_job,
 )
+from app.gateways.worker.periodic.reconcile_payments import reconcile_payments_job
 from app.gateways.worker.periodic.subscription_lifecycle_jobs import (
     dunning_job,
     run_subscription_pauses_job,
@@ -73,5 +75,10 @@ def billing_job_specs(
             name=CHECK_PACKAGE_USAGE_JOB,
             interval_seconds=JobIntervalSeconds(DAY_SECONDS),
             operator=operators.billing.check_package_usage_operator,
+        ),
+        # Recent payments compared with Flitt and Stripe, once a day (1230).
+        Factory(
+            reconcile_payments_job,
+            operator=operators.spend_guard.reconcile_payments_operator,
         ),
     )

@@ -46,6 +46,8 @@ jobs:
       || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    # Reads only the event: no token needed.
+    permissions: {}
     outputs:
       environment: ${{ steps.pick.outputs.environment }}
       sha: ${{ steps.pick.outputs.sha }}

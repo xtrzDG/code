@@ -33,6 +33,10 @@ from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
 )
 from app.repositories.platform_monitor_repository import PlatformMonitorRepository
+from app.repositories.platform_safety_repositories import (
+    PaymentReconciliationRepository,
+    PeriodicJobHeartbeatRepository,
+)
 from app.repositories.quality_repositories import QualityTotalsRepository
 from app.repositories.service_level_repositories import ServiceLevelSlotRepository
 from app.repositories.spend_guard_repositories import UsageSpendRepository
@@ -50,6 +54,8 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
+from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.service_levels import ServiceLevelSlotDocument
@@ -70,6 +76,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 )
 from app.use_cases.admin.alerts.data_task_alert_checks import DataTaskAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
+from app.use_cases.admin.alerts.safety_alert_checks import PlatformSafetyAlertChecks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.alerts.voice_alert_checks import VoiceHealthAlertCheck
 from tests.compliance.audit_trail_store import AuditTrailStore
@@ -182,16 +189,24 @@ class OpsWorld:
         self.inbound_events = InMemoryDocumentCollectionAdapter[InboundEventDocument](
             InboundEventDocument
         )
+        # The periodic jobs' heartbeats and the payment reconciliations (1230).
+        self.job_heartbeats = PeriodicJobHeartbeatRepository(
+            InMemoryDocumentCollectionAdapter(PeriodicJobHeartbeatDocument)
+        )
+        self.reconciliations = PaymentReconciliationRepository(
+            InMemoryDocumentCollectionAdapter(PaymentReconciliationDocument)
+        )
 
     def checks(self) -> PlatformAlertChecks:
+        spend_checks = SpendAlertChecks(
+            UsageSpendRepository(self.usage_events), self.spend_budget
+        )
         return PlatformAlertChecks(
             system_health_repo=self.health_repo,
             platform_activity_repo=self.activity_repo,
             signal_counter=self.signals,
             quality_totals_repo=QualityTotalsRepository(self.quality_scores),
-            spend_checks=SpendAlertChecks(
-                UsageSpendRepository(self.usage_events), self.spend_budget
-            ),
+            spend_checks=spend_checks,
             data_task_checks=DataTaskAlertChecks(
                 self.data_task_registry, self.data_task_states
             ),
@@ -202,6 +217,10 @@ class OpsWorld:
                 self.audit.chains,
                 VoiceHealthAlertCheck(
                     self.signals, VoiceActivityRepository(self.inbound_events)
+                ),
+                spend_checks,
+                PlatformSafetyAlertChecks(
+                    self.job_heartbeats, self.reconciliations, release=None
                 ),
             ),
         )

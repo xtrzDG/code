@@ -20,7 +20,11 @@ from app.utilities.reply_guard.team_note_quotes import (
     find_transcript_notes,
 )
 
-FACTS: list[str] = ["Website: https://www.trattoria-da-mario.it/menu"]
+FACTS: list[str] = [
+    "Website: https://www.trattoria-da-mario.it/menu",
+    "Instagram: https://www.instagram.com/trattoria_da_mario/",
+    "Deposits: paypal.me/TrattoriaDaMario",
+]
 PLATFORM_HOSTS: list[str] = platform_link_hosts(
     ["https://app.workshop.example", None, "not a url ::"]
 )
@@ -62,7 +66,11 @@ def test_no_link_is_read_where_there_is_none(text: str) -> None:
         "https://maps.google.com/?q=Via+Roma+1",
         "https://www.google.com/maps/place/Trattoria",
         "https://buy.stripe.com/test_123",
-        "https://paypal.me/trattoria",
+        "https://pay.flitt.com/merchants/abc",
+        # A shared platform's page the business published, and below it.
+        "https://instagram.com/trattoria_da_mario",
+        "https://www.instagram.com/Trattoria_Da_Mario/reels/",
+        "https://paypal.me/trattoriadamario",
     ],
 )
 def test_published_platform_and_well_known_links_pass(link: str) -> None:
@@ -76,6 +84,16 @@ def test_published_platform_and_well_known_links_pass(link: str) -> None:
         "https://www.google.com/search?q=trattoria",
         "https://app.workshop.example.evil.com/r/1",
         "mario-sconti.it",
+        # Personal payment links pass only as the business published them.
+        "https://paypal.me/trattoria",
+        "https://revolut.me/mario-rossi",
+        # Another page of a shared platform the business is on.
+        "https://www.instagram.com/trattoria_da_mario_offerte",
+        "https://instagram.com/",
+        # One-letter hosts, shorteners and cheap domains are links too.
+        "t.me/sconti_mario",
+        "bit.ly/3xYzAbc",
+        "Mario-Sconti.xyz",
     ],
 )
 def test_other_links_are_foreign(link: str) -> None:

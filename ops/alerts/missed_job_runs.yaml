@@ -1,0 +1,17 @@
+# A periodic job stopped running, seen without Sentry Crons: every worker
+# registers the shared periodic jobs it knows when it starts and writes a
+# job's heartbeat after each success (periodic_job_heartbeats, 1230); the
+# heartbeat is due again after the job's interval plus its grace (a
+# quarter of the interval, at least 30 minutes). The figure is how many
+# jobs of the current release are past due. A lane no worker serves, a
+# job that fails every run or a worker stuck in one job all show here.
+code: missed_job_runs
+severity: sev2
+summary: A periodic job did not succeed within its interval and grace.
+measure: periodic jobs of the current release whose heartbeat is past due
+threshold: 0
+unit: count
+window_minutes: 5
+volume_floor: 0
+source: periodic_job_heartbeats (doc_due_by), migration 1230
+runbook: docs/operations/runbooks/missed-job-runs.md

@@ -188,6 +188,35 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             "voice-outage.md",
             volume_floor=3,
         ),
+        _rule(
+            PlatformAlertCode.SPEND_BUDGET_STOP,
+            IncidentSeverity.SEV1,
+            "Today's provider spend reached the daily budget stop; every "
+            "assistant hands customers to the team until UTC midnight.",
+            100,
+            AlertUnit.PERCENT,
+            DAY_MINUTES,
+            "platform-brakes.md",
+        ),
+        _rule(
+            PlatformAlertCode.MISSED_JOB_RUNS,
+            IncidentSeverity.SEV2,
+            "A periodic job did not succeed within its interval and grace.",
+            0,
+            AlertUnit.COUNT,
+            CHECK_INTERVAL_MINUTES,
+            "missed-job-runs.md",
+        ),
+        _rule(
+            PlatformAlertCode.PAYMENT_MISMATCH,
+            IncidentSeverity.SEV2,
+            "The daily reconciliation found payments whose status at Flitt or "
+            "Stripe differs from the platform's record.",
+            0,
+            AlertUnit.COUNT,
+            DAY_MINUTES,
+            "payment-mismatch.md",
+        ),
         *BURN_RATE_RULES,  # The SLOs' multi-window burn rates (1163).
         *AUDIT_ALERT_RULES,  # The audit log's anomalies and chains (1193).
     )

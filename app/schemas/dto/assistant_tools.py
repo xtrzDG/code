@@ -8,7 +8,7 @@ another tenant's data by asking (prompt-injection safety).
 """
 
 from base_pydantic_schemas import ImmutableDTO
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.bookings import LeadType, ResourceKind
@@ -96,13 +96,25 @@ class CheckAvailabilityToolInput(ImmutableDTO):
     nights: NightCount | None = None
 
 
+def blank_as_none(value: object) -> object:
+    """
+    An optional text the model left blank ("" or spaces) as not given: models
+    often fill an optional argument that way, and it means "none".
+    """
+
+    if isinstance(value, str) and value.strip() == "":
+        return None
+
+    return value
+
+
 class CreateBookingToolInput(ImmutableDTO):
     """
     create_booking: the confirmed details. A missing phone falls back to the
     phone the customer contacted us from. A service and a resource may be
     named by id or by name in any script. The name and the note are what the
     customer gave, within their limits (`CustomerGivenName`,
-    `AssistantBookingNote`).
+    `AssistantBookingNote`); a blank note is none.
     """
 
     name: CustomerGivenName
@@ -116,6 +128,11 @@ class CreateBookingToolInput(ImmutableDTO):
     duration_minutes: BookingDurationMinutes | None = None
     nights: NightCount | None = None
     notes: AssistantBookingNote | None = None
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def read_blank_as_none(cls, value: object) -> object:
+        return blank_as_none(value)
 
 
 class CancelBookingToolInput(ImmutableDTO):
@@ -145,7 +162,10 @@ class DeclineRecordingToolInput(ImmutableDTO):
 
 
 class CreateLeadToolInput(ImmutableDTO):
-    """create_lead: a request for a manager (banquet, group, corporate, ...)."""
+    """
+    create_lead: a request for a manager (banquet, group, corporate, ...); a
+    blank name or budget is none.
+    """
 
     lead_type: LeadType
     details: AssistantLeadDetails
@@ -154,6 +174,11 @@ class CreateLeadToolInput(ImmutableDTO):
     requested_date: LocalDate | None = None
     party_size: PartySize | None = None
     budget: AssistantLeadBudget | None = None
+
+    @field_validator("name", "budget", mode="before")
+    @classmethod
+    def read_blank_as_none(cls, value: object) -> object:
+        return blank_as_none(value)
 
 
 class HandoffToHumanToolInput(ImmutableDTO):
@@ -193,6 +218,11 @@ class JoinWaitlistToolInput(ImmutableDTO):
     party_size: PartySize | None = None
     nights: NightCount | None = None
     notes: AssistantBookingNote | None = None
+
+    @field_validator("name", "notes", mode="before")
+    @classmethod
+    def read_blank_as_none(cls, value: object) -> object:
+        return blank_as_none(value)
 
 
 class OfferChoicesToolInput(ImmutableDTO):

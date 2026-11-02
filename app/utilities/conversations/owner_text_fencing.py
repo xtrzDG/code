@@ -6,7 +6,7 @@ line in an `<owner_text>` block it cannot close: its angle and square
 brackets become look-alike ones and a leading "#" is dropped, so an owner's
 text can never pose as a section of the instruction, a platform line or a
 fence (the cabinet refuses such texts on save too,
-`OwnerInstructionText`).
+`OwnerRuleInstruction`, `OwnerToneInstruction`).
 """
 
 OWNER_TEXT_TAG: str = "owner_text"

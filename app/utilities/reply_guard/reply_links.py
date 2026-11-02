@@ -3,13 +3,15 @@ The links of a reply, vetted: a model may invent an address ("book at
 www.mario-pizza.it") or repeat one a customer or an imported page slipped
 in. A link passes when its host is one the business published (any link of
 the facts, the tool results, the platform's context and staff messages,
-with its subdomains), the platform's own (the booking and chat pages) or a
-well-known map or payment service (`link_hosts`); any other one is
-returned, as written, for the guard to hold the reply back.
+with its subdomains; on a shared platform such as Instagram or a link
+shortener only the published page and what is under it), the platform's
+own (the booking and chat pages) or a well-known map or checkout service
+(`link_hosts`); any other one is returned, as written, for the guard to
+hold the reply back.
 
 Links are found with a scheme ("https://..."), with "www." or as a bare
-domain of a common top-level domain ("mario-pizza.it/menu"); an e-mail
-address is not a link (the personal data check reads those).
+domain of a common top-level domain ("mario-pizza.it/menu", "t.me/mario");
+an e-mail address is not a link (the personal data check reads those).
 """
 
 import re
@@ -17,18 +19,26 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
-from app.utilities.reply_guard.link_hosts import WELL_KNOWN_LINKS
+from app.utilities.reply_guard.link_hosts import (
+    SHARED_PLATFORM_HOSTS,
+    WELL_KNOWN_LINKS,
+)
 
 SCHEME_LINK_PATTERN: re.Pattern[str] = re.compile(
     r"(?i)\b(?:https?://|www\.)[^\s<>\"'`]+"
 )
+# Generic and country domains links are written with, the link shorteners'
+# and the cheap ones of spam pages among them.
 COMMON_TOP_LEVEL_DOMAINS: str = (
     "com|net|org|info|biz|eu|it|de|fr|es|pt|nl|be|ch|at|uk|ie|pl|cz|sk|hu|ro|"
     "gr|se|no|dk|fi|ge|ru|ua|am|az|kz|il|tr|co|io|me|app|shop|store|online|"
-    "site|menu|restaurant|cafe|bar|hotel"
+    "site|menu|restaurant|cafe|bar|hotel|ly|gl|gle|gd|to|sh|ee|lt|lv|si|hr|"
+    "rs|bg|lu|mt|cy|li|sm|mc|us|ca|in|cn|jp|br|au|ai|gg|tv|fm|cc|ws|tk|xyz|"
+    "top|link|click|icu|vip|win|live|club|pro|page|website|space|tech|blog|"
+    "news|bio|world|today"
 )
 BARE_DOMAIN_PATTERN: re.Pattern[str] = re.compile(
-    r"(?<![@\w.-])((?:[a-z0-9][a-z0-9-]*[a-z0-9]\.)+"
+    r"(?i)(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+"
     rf"(?:{COMMON_TOP_LEVEL_DOMAINS}))(/[^\s<>\"'`]*)?(?![\w@-])"
 )
 # A host name: labels of letters, digits and hyphens (no spaces, no IPv6).
@@ -44,6 +54,18 @@ class FoundLink:
     text: str
     host: str
     path: str
+
+
+@dataclass(frozen=True)
+class LinkScope:
+    """
+    Where a reply's links may point (technical record): a host with its
+    subdomains, and the path its links must stay under (None: any path; ""
+    on a shared platform: its home page only).
+    """
+
+    host: str
+    path: str | None = None
 
 
 def find_links(text: str) -> list[FoundLink]:
@@ -94,25 +116,57 @@ def find_foreign_links(
     if not links:
         return []
 
-    allowed: list[str] = [
-        *WELL_KNOWN_LINKS,
-        *(host.casefold().removeprefix(WWW_PREFIX) for host in platform_hosts),
-        *(link.host for text in trusted_texts for link in find_links(text)),
+    allowed: list[LinkScope] = [
+        *(read_entry(entry) for entry in WELL_KNOWN_LINKS),
+        *(
+            LinkScope(host.casefold().removeprefix(WWW_PREFIX))
+            for host in platform_hosts
+        ),
+        *(published(link) for text in trusted_texts for link in find_links(text)),
     ]
     return list(
         dict.fromkeys(link.text for link in links if not is_allowed(link, allowed))
     )
 
 
-def is_allowed(link: FoundLink, allowed: Sequence[str]) -> bool:
-    """Whether an entry ("host" or "host/path") covers the link."""
+def read_entry(entry: str) -> LinkScope:
+    """A well-known entry ("host" or "host/path")."""
 
+    host, slash, path = entry.partition("/")
+    return LinkScope(host, f"/{path}" if slash else None)
+
+
+def published(link: FoundLink) -> LinkScope:
+    """
+    What a published link allows: its host, or on a shared platform only
+    its page (a business's Instagram page is not all of Instagram).
+    """
+
+    if not is_within(link.host, SHARED_PLATFORM_HOSTS):
+        return LinkScope(link.host)
+
+    return LinkScope(link.host, link.path.rstrip("/").casefold())
+
+
+def is_within(host: str, hosts: Iterable[str]) -> bool:
+    """Whether the host is one of the hosts or a subdomain of one."""
+
+    return any(host == known or host.endswith(f".{known}") for known in hosts)
+
+
+def is_allowed(link: FoundLink, allowed: Sequence[LinkScope]) -> bool:
+    """Whether an entry covers the link (its host, then its path)."""
+
+    path: str = link.path.rstrip("/").casefold()
     for entry in allowed:
-        entry_host, _, entry_path = entry.partition("/")
-        if not (link.host == entry_host or link.host.endswith(f".{entry_host}")):
+        if not is_within(link.host, [entry.host]):
             continue
 
-        if entry_path == "" or link.path.startswith(f"/{entry_path}"):
+        if (
+            entry.path is None
+            or path == entry.path
+            or (entry.path != "" and path.startswith(f"{entry.path}/"))
+        ):
             return True
 
     return False

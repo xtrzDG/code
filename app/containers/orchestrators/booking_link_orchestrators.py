@@ -70,3 +70,11 @@ class BookingLinkOrchestratorsContainer(containers.DeclarativeContainer):
         act=booking_link_use_cases.reschedule_managed_booking_use_case,
         storage_scope=utilities.storage_scope,
     )
+    change_managed_booking_consent_orchestrator: ManagedBookingOrchestration[
+        ManagedBookingView
+    ] = Factory(
+        ManagedBookingOrchestrator[ManagedBookingView],
+        open_link=booking_link_use_cases.open_booking_manage_link_use_case,
+        act=booking_link_use_cases.change_managed_booking_consent_use_case,
+        storage_scope=utilities.storage_scope,
+    )

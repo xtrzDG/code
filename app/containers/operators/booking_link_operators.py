@@ -34,3 +34,6 @@ class BookingLinkOperatorsContainer(containers.DeclarativeContainer):
     reschedule_managed_booking_operator = pipeline_operator(
         booking_link_pipelines.reschedule_managed_booking_pipeline, storage_scope
     )
+    change_managed_booking_consent_operator = pipeline_operator(
+        booking_link_pipelines.change_managed_booking_consent_pipeline, storage_scope
+    )

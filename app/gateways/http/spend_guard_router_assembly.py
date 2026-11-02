@@ -6,6 +6,9 @@ admin's spend, the widget's origin check and the generic request limits.
 from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.admin_platform_safety_routes import (
+    build_admin_platform_safety_router,
+)
 from app.gateways.http.admin_spend_routes import build_admin_spend_router
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
     AdmitRequest,
@@ -33,6 +36,15 @@ def build_spend_guard_routers(
             current_user=current_user,
             get_platform_spend=spend_guard.get_platform_spend_operator(),
             set_business_spend_limits=spend_guard.set_business_spend_limits_operator(),
+        ),
+        # The platform's brakes and the payment reconciliation (1230).
+        build_admin_platform_safety_router(
+            current_user=current_user,
+            get_platform_pause=spend_guard.get_platform_pause_operator(),
+            set_platform_pause=spend_guard.set_platform_pause_operator(),
+            get_payment_reconciliation=(
+                spend_guard.get_payment_reconciliation_operator()
+            ),
         ),
     ]
 

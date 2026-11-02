@@ -19,6 +19,9 @@ from app.schemas.typings.bookings.constrained_strings import BookingManageToken
 from app.use_cases.bookings.public.cancel_managed_booking_use_case import (
     CancelManagedBookingUseCase,
 )
+from app.use_cases.bookings.public.change_managed_booking_consent_use_case import (
+    ChangeManagedBookingConsentUseCase,
+)
 from app.use_cases.bookings.public.find_managed_booking_slots_use_case import (
     FindManagedBookingSlotsUseCase,
 )
@@ -63,6 +66,7 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
         rate_limits=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
         cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+        contact_repo=repositories.contact_repo,
     )
     open_booking_manage_link_use_case: Factory[
         UseCaseContract[BookingManageToken, BookingManageClaims]
@@ -103,4 +107,13 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
             reschedule_booking=booking_use_cases.reschedule_booking_use_case,
             send_confirmation=booking_use_cases.send_booking_confirmation_use_case,
         )
+    )
+    change_managed_booking_consent_use_case: ManagedBookingUseCase[
+        ManagedBookingView
+    ] = Factory(
+        ChangeManagedBookingConsentUseCase,
+        pages=managed_booking_pages,
+        card_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

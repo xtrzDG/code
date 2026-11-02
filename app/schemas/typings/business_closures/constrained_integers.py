@@ -21,6 +21,12 @@ class DeprovisionedItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class ErasedContactCount(BaseConstrainedTypedInt):
+    """How many erased customers the contact erasure ledger names."""
+
+    ge = 0
+
+
 class LedgerBusinessCount(BaseConstrainedTypedInt):
     """How many deleted businesses the deletion ledger names."""
 
@@ -36,6 +42,16 @@ class OffboardAfterDays(BaseConstrainedTypedInt):
 
     ge = 7
     le = 3650
+
+
+class RestoredContactCount(BaseConstrainedTypedInt):
+    """
+    Erased customers whose data a restored database holds again (the backup
+    is older than their erasure): the daily `reapply_contact_erasures`
+    erases them again.
+    """
+
+    ge = 0
 
 
 class ResurrectedRowCount(BaseConstrainedTypedInt):

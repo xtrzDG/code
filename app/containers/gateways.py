@@ -22,6 +22,7 @@ from app.containers.utilities import UtilitiesContainer
 from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
+from app.gateways.worker.periodic_job_heartbeats import PeriodicJobHeartbeats
 from app.gateways.worker.job_telemetry import JobTelemetry
 
 
@@ -58,6 +59,14 @@ class GatewaysContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         release=config.app_settings.provided.release_version,
         circuit_breaker=adapters.circuit_breaker,
+        # The periodic jobs' heartbeats, the missed-run alert's source (1230).
+        job_heartbeats=Factory(
+            PeriodicJobHeartbeats,
+            periodic_jobs=periodic_jobs,
+            heartbeat_repo=repositories.periodic_job_heartbeat_repo,
+            storage_scope=utilities.storage_scope,
+            release=config.app_settings.provided.release_version,
+        ),
     )
     # Pickup delays, dead jobs and the spans of queued jobs.
     job_telemetry: Factory[JobTelemetry] = Factory(

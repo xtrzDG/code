@@ -127,3 +127,44 @@ def test_a_handoff_summary_past_its_limit_is_refused() -> None:
     assert kept_is_error is False
     [command] = world.handoff.commands
     assert command.summary == "The guest asks to talk to a person."
+
+
+def test_blank_optional_texts_mean_none() -> None:
+    world = build_world(scripted())
+
+    _, booking_is_error = run_tool(
+        world, AssistantToolName.CREATE_BOOKING, {**BOOKING_ARGUMENTS, "notes": "  "}
+    )
+    _, lead_is_error = run_tool(
+        world,
+        AssistantToolName.CREATE_LEAD,
+        {**LEAD_ARGUMENTS, "name": "", "budget": ""},
+    )
+
+    assert (booking_is_error, lead_is_error) == (False, False)
+    [booking] = world.bookings.commands
+    [lead] = world.create_lead.commands
+    assert isinstance(booking, CreateBookingCommand)
+    assert booking.notes is None
+    assert (lead.contact_name, lead.budget) == (None, None)
+
+
+def test_a_refused_character_is_explained_without_the_pattern() -> None:
+    world = build_world(scripted())
+
+    result, _ = run_tool(
+        world,
+        AssistantToolName.CREATE_BOOKING,
+        {**BOOKING_ARGUMENTS, "name": "<b>Nino"},
+    )
+    date_result, _ = run_tool(
+        world,
+        AssistantToolName.CREATE_BOOKING,
+        {**BOOKING_ARGUMENTS, "date": "2026-13-45"},
+    )
+
+    assert result["error"].startswith("Invalid tool input: name: has characters")
+    assert "markup" in result["error"]
+    assert "pattern" not in result["error"]
+    # A format's pattern shows the model the format.
+    assert "should match pattern" in date_result["error"]

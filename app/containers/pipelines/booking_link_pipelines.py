@@ -29,3 +29,6 @@ class BookingLinkPipelinesContainer(containers.DeclarativeContainer):
     reschedule_managed_booking_pipeline = orchestrator_pipeline(
         booking_link_orchestrators.reschedule_managed_booking_orchestrator
     )
+    change_managed_booking_consent_pipeline = orchestrator_pipeline(
+        booking_link_orchestrators.change_managed_booking_consent_orchestrator
+    )

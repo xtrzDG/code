@@ -11,9 +11,15 @@ instructions:
   (`strip_customer_values`);
 - `<team_note>`: an internal note of the business's team, context only:
   the reply guard holds back a reply that quotes one (`team_note_quotes`).
+
+A model that repeats a fenced value (the guest's name of a booking's
+confirmation) may copy the tags too; they never reach the customer
+(`remove_block_tags`).
 """
 
 import re
+
+from app.utilities.conversations.owner_text_fencing import OWNER_TEXT_TAG
 
 UNTRUSTED_TAG: str = "untrusted"
 CUSTOMER_VALUE_TAG: str = "customer_value"
@@ -38,6 +44,10 @@ TEAM_NOTE_PATTERN: re.Pattern[str] = re.compile(
     rf"<{TEAM_NOTE_TAG}>(.*?)</{TEAM_NOTE_TAG}>", re.DOTALL
 )
 WITHHELD_VALUE: str = "(customer value)"
+BLOCK_TAG_PATTERN: re.Pattern[str] = re.compile(
+    rf"(?i)</?(?:{UNTRUSTED_TAG}|{CUSTOMER_VALUE_TAG}|{TEAM_NOTE_TAG}|"
+    rf"{OWNER_TEXT_TAG})>"
+)
 
 
 def wrap_untrusted(text: str) -> str:
@@ -90,3 +100,9 @@ def find_team_notes(text: str) -> list[str]:
     """The team notes written in `text` (a context line, a transcript turn)."""
 
     return TEAM_NOTE_PATTERN.findall(text)
+
+
+def remove_block_tags(text: str) -> str:
+    """A model's text without the tags of the blocks it was shown."""
+
+    return BLOCK_TAG_PATTERN.sub("", text)

@@ -47,7 +47,7 @@ DRAFT = CalendarEventDraft(
 )
 ACCESS = CalendarAccessToken("access-xyz")
 # RFC 7636 appendix B: this verifier's S256 challenge is E9Melhoa2Owv....
-VERIFIER: str = "dBjftJeZ4CVP-mJ92K9pmMHUfBKy8Q6fH0T6GF9Kd3k"
+VERIFIER: str = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 
 
 class TestGoogleCalendarClient:

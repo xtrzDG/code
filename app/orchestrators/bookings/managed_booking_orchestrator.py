@@ -19,7 +19,7 @@ class ManagedBookingOrchestrator[OutputData](
     request runs inside the storage scope of the business the link names
     (row-level security on Postgres), like every other request for one
     business. The same steps serve the page, its calendar file, the free
-    times, the cancellation and the move.
+    times, the cancellation, the move and the marketing box.
     """
 
     def __init__(
@@ -46,6 +46,8 @@ class ManagedBookingOrchestrator[OutputData](
                     claims=claims,
                     date=input_data.date,
                     time=input_data.time,
+                    marketing_consent=input_data.marketing_consent,
+                    consent_text=input_data.consent_text,
                     client_ip_address=input_data.client_ip_address,
                 )
             )

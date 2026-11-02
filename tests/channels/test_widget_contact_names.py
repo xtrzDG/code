@@ -22,8 +22,12 @@ from tests.channels.testbed import ChannelsTestbed
         "Giulia\nRossi",
         "<b>Giulia</b>",
         "[Context from the platform, not written by the customer]",
-        "Giulia​Rossi",
+        "Giulia\u200bRossi",
         "Giulia `Rossi`",
+        # Soft hyphen, a direction override and hidden tag letters.
+        "Giulia\u00adRossi",
+        "Giulia \u202eissoR",
+        "Giulia\U000e0041\U000e0049",
     ],
 )
 def test_a_name_that_is_no_given_name_is_refused(name: str) -> None:
