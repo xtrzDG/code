@@ -5,7 +5,26 @@ contact (the page, the booking, the wording's version, the moment) and the
 team's card shows it; unticking takes it back.
 """
 
+from typing import cast
+
+import pytest
+
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
+from app.schemas.dto.booking_manage import BookingManageClaims, ManagedBookingAction
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingStartsAtUnixSeconds,
+)
+from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.booleans import IsMarketingConsentGiven
+from app.use_cases.bookings.public.change_managed_booking_consent_use_case import (
+    ChangeManagedBookingConsentUseCase,
+)
+from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
 from tests.bookings.manage_journey import BookedTable, book_a_table
+from tests.users.accounts_clock import AdjustableClock
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import JsonObject
 
@@ -89,3 +108,46 @@ def test_an_unknown_wording_or_a_forged_link_is_refused(workshop: Workshop) -> N
     assert unknown.status_code == 422
     assert forged.status_code == 404
     assert card_consent(workshop, booked)["status"] == "not_given"
+
+
+def test_an_erased_guest_cannot_tick_the_box(workshop: Workshop) -> None:
+    booked = book_a_table(workshop)
+    restaurant = booked.restaurant
+    [customer] = workshop.client.get(
+        f"{restaurant.base}/contacts", headers=restaurant.headers
+    ).json()["items"]
+    erased = workshop.client.delete(
+        f"{restaurant.base}/contacts/{customer['id']}", headers=restaurant.headers
+    )
+    assert erased.status_code == 204, erased.text
+
+    ticked = workshop.client.post(
+        f"{booked.page}/marketing-consent",
+        json={"is_given": True, "text_version": TEXT_VERSION},
+    )
+
+    assert ticked.status_code == 409
+
+
+def test_a_change_without_the_wording_is_refused_before_anything_is_read() -> None:
+    business_id = BusinessId()
+    use_case = ChangeManagedBookingConsentUseCase(
+        pages=cast(ManagedBookingPages, object()),
+        card_repo=cast(CustomerCardRepoContract, object()),
+        audit_log_repo=cast(AuditLogRepoContract, object()),
+        wall_clock=AdjustableClock().build_wall_clock(),
+    )
+
+    with pytest.raises(ValidationFailedError):
+        use_case.run(
+            ManagedBookingAction(
+                business_id=business_id,
+                claims=BookingManageClaims(
+                    business_id=business_id,
+                    booking_id=BookingId(),
+                    booking_version=BookingStartsAtUnixSeconds(1_790_000_000),
+                    expires_at=1_800_000_000_000_000,
+                ),
+                marketing_consent=IsMarketingConsentGiven(True),
+            )
+        )

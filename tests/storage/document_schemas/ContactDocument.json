@@ -1,7 +1,7 @@
 {
   "collection": "contacts",
   "document_type": "ContactDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -125,6 +125,104 @@
         ],
         "default": null
       },
+      "marketing_consent": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "booking_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^booking_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "given_at": {
+                "type": "integer"
+              },
+              "recorded_by": {
+                "anyOf": [
+                  {
+                    "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "source": {
+                "enum": [
+                  "booking_page",
+                  "in_person"
+                ],
+                "type": "string"
+              },
+              "text_version": {
+                "enum": [
+                  "2026-11-02"
+                ],
+                "type": "string"
+              },
+              "withdrawal": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "booking_page",
+                      "in_person",
+                      "stop"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "withdrawn_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "withdrawn_by": {
+                "anyOf": [
+                  {
+                    "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "given_at",
+              "source",
+              "text_version"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "name": {
         "anyOf": [
           {
@@ -167,7 +265,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "tags": {

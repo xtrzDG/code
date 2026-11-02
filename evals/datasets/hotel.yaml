@@ -1,14 +1,13 @@
 # Evaluation dataset of the hotel niche: Rustaveli Terrace Hotel in ka, ru, en, he, ar, it.
-# Eight scenarios per language; Italian (the first market's language) is
-# written by guests although the business does not list it. `customer` and
-# `assistant` are the reference conversation the scripted model plays (the
-# seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, Italian (the first market's language)
+# among them. `customer` and `assistant` are the reference conversation the
+# scripted model plays (the seeded cassettes); a live model improvises from
+# the persona and goal and is scored by `expect` (evals/README.md describes
+# every field).
 niche: hotel
 business:
   name: Rustaveli Terrace Hotel
-  languages: [ka, ru, en, he, ar]
+  languages: [ka, ru, en, he, ar, it]
   prices: {standard_room: '180', family_room: '260', airport_transfer: '60'}
   answers: {check_in_time: 'Check-in from 14:00, check-out until 12:00.', breakfast: 'Breakfast from 08:00 to 10:30 is included in every room rate.'}
 scenarios:

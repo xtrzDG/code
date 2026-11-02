@@ -10,6 +10,13 @@ class OtpAttemptCount(BaseConstrainedTypedInt):
     le = 100
 
 
+class OtpDestinationCount(BaseConstrainedTypedInt):
+    """How many different phones and e-mails login codes were asked for."""
+
+    ge = 0
+    le = 1_000_000
+
+
 class OtpLifetimeSeconds(BaseConstrainedTypedInt):
     """How long a one-time login code stays valid, in seconds."""
 

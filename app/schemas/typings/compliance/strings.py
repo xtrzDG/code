@@ -15,6 +15,13 @@ class ClientIpAddress(BaseTypedString):
     """IP address of the caller as reported by the transport."""
 
 
+class ClientNetwork(BaseTypedString):
+    """
+    The network a caller's address counts in: an IPv4 address as is, the
+    /64 of an IPv6 address ("2001:db8:1:2::/64").
+    """
+
+
 class LegalDocumentMarkdown(BaseTypedString):
     """Full text of a legal document (e.g. the DPA) in Markdown."""
 

@@ -48,6 +48,8 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.utilities.billing.dunning_texts",
     "app.utilities.billing.win_back_texts",
     "app.utilities.deposits.deposit_refund_texts",
+    "app.use_cases.deposits.payment_page_notice_texts",
+    "app.utilities.security.sign_in_notice_texts",
     "app.utilities.integrations.webhook_disabled_texts",
     "app.utilities.calls.voice_fallback_texts",
     "app.utilities.calendar_sync.booking_system_writes",

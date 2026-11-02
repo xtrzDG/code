@@ -9,10 +9,12 @@ from app.contracts.login_protection import (
 )
 from app.contracts.registries import LoginCodeSendLockRegistryContract
 from app.contracts.repositories.user_repositories import OtpChallengeRepoContract
+from app.contracts.sign_in_alerts import SignInCodeSprayAlertFacilitatorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.users import OtpChallengeDocument
+from app.schemas.dto.sign_in_alerts import SignInCodeSprayAlert
 from app.schemas.dto.login_protection import LoginCodeDestination, SendLoginCodeCommand
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.login_errors import LoginCodeCapReachedError
@@ -65,7 +67,11 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
         send_lock_registry: LoginCodeSendLockRegistryContract,
         bot_check: BotCheckFacilitatorContract,
         cap_alerts: LoginCodeCapAlertFacilitatorContract,
+        spray_alerts: SignInCodeSprayAlertFacilitatorContract | None = None,
     ) -> None:
+        self._spray_alerts: SignInCodeSprayAlertFacilitatorContract | None = (
+            spray_alerts
+        )
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._otp_delivery_facilitator: OtpDeliveryFacilitatorContract = (
             otp_delivery_facilitator
@@ -109,7 +115,8 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
             created_at=now,
             updated_at=now,
         )
-        self._reserve_send(challenge, destination)
+        recent: list[OtpChallengeDocument] = self._reserve_send(challenge, destination)
+        self._report_spray([*recent, challenge], destination)
         try:
             delivery_channel: OtpDeliveryChannel = deliver_login_code(
                 self._otp_delivery_facilitator,
@@ -136,22 +143,40 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
         self,
         challenge: OtpChallengeDocument,
         destination: LoginCodeDestination,
-    ) -> None:
-        """Check the limits and reserve the send together, before any provider."""
+    ) -> list[OtpChallengeDocument]:
+        """
+        Check the limits and reserve the send together, before any
+        provider; returns the challenges of the hour the limits saw.
+        """
 
         try:
             with self._send_lock_registry.lock():
+                recent: list[OtpChallengeDocument] = self._list_recent_challenges()
                 refuse_over_login_code_limits(
-                    self._list_recent_challenges(),
-                    destination,
-                    self._wall_clock,
-                    self._app_settings,
+                    recent, destination, self._wall_clock, self._app_settings
                 )
                 self._otp_challenge_repo.save(challenge)
+                return recent
         except LoginCodeCapReachedError as error:
             # Outside the lock: the alert may send e-mails.
             self._cap_alerts.report_cap_reached(error.alert)
             raise
+
+    def _report_spray(
+        self,
+        recent: list[OtpChallengeDocument],
+        destination: LoginCodeDestination,
+    ) -> None:
+        """Outside the lock: the alert may send e-mails."""
+
+        if self._spray_alerts is None:
+            return
+
+        spray: SignInCodeSprayAlert | None = find_code_spray(
+            recent, destination.client_ip_address
+        )
+        if spray is not None:
+            self._spray_alerts.report_code_spray(spray)
 
     def _list_recent_challenges(self) -> list[OtpChallengeDocument]:
         return self._otp_challenge_repo.list_created_since(

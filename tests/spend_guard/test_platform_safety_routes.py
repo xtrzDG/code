@@ -18,7 +18,7 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
-from app.repositories.business_repository import BusinessRepository
+from app.repositories.business_repositories import BusinessRepository
 from app.repositories.platform_safety_repositories import (
     PaymentReconciliationRepository,
 )
