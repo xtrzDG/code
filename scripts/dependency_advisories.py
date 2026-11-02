@@ -147,6 +147,12 @@ def due(advisory: Advisory, seen: datetime.date) -> datetime.date:
     )
 
 
+def cell(text: str) -> str:
+    """Text for a Markdown table cell: npm ranges hold `||`, a column break."""
+
+    return " ".join(text.split()).replace("|", "\\|")
+
+
 def table(
     advisories: Sequence[Advisory], seen: dict[str, datetime.date], today: datetime.date
 ) -> list[str]:
@@ -159,8 +165,9 @@ def table(
         deadline = due(each, seen[each.key])
         late = " **(overdue)**" if deadline < today else ""
         lines.append(
-            f"| {deadline.isoformat()}{late} | {each.severity} | `{each.lockfile}`"
-            f" | {each.package} | {each.identifier} | {each.affected} | {each.fix} |"
+            f"| {deadline.isoformat()}{late} | {cell(each.severity)}"
+            f" | `{cell(each.lockfile)}` | {cell(each.package)}"
+            f" | {cell(each.identifier)} | {cell(each.affected)} | {cell(each.fix)} |"
         )
     return lines
 
@@ -177,8 +184,8 @@ def body(
         "Remediation deadline from the day an advisory was first reported:"
         ' critical 2 days, high 7, moderate 30, low 90 (SECURITY.md, "Triage'
         ' of automated findings"). Fix first: upgrade, or replace the package;'
-        " an accepted advisory is recorded with its reason. A critical or high"
-        " one past its deadline turns the nightly audit red.",
+        " one that cannot be fixed yet gets a comment here with the reason. A"
+        " critical or high one past its deadline turns the nightly audit red.",
         "",
         *table(advisories, seen, today),
         "",

@@ -76,8 +76,7 @@ class TestReplays:
         notify(setup, zadarma_form(pbx_call_id="in_1790856000.1"))
 
         copies = [
-            notify(setup, zadarma_form(pbx_call_id="in_1790856000.2"))
-            for _ in range(3)
+            notify(setup, zadarma_form(pbx_call_id="in_1790856000.2")) for _ in range(3)
         ]
 
         assert [copy.json()["status"] for copy in copies] == ["ignored"] * 3

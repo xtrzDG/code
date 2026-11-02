@@ -115,10 +115,14 @@ def test_a_get_with_a_body_is_refused_before_reading(
         )
 
     assert response.status_code == 413
-    lines = [r for r in caplog.records if r.name == "app.security"]
-    assert [(r.security_event, r.path, r.reason) for r in lines] == [
-        ("request_body_refused", "reading", "declared_too_large")
+    lines = [
+        dict(record.__dict__["log_fields"])
+        for record in caplog.records
+        if record.name == "app.security"
     ]
+    assert [
+        (line["security_event"], line["path"], line["reason"]) for line in lines
+    ] == [("request_body_refused", "reading", "declared_too_large")]
 
 
 def test_a_body_within_the_limit_is_read() -> None:

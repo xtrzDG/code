@@ -59,6 +59,17 @@ def test_a_configured_model_needs_its_providers_key(variable: str) -> None:
 def test_a_fallback_without_its_key_is_no_reason_to_refuse() -> None:
     # It is skipped with a warning instead (test_llm_key_rules.py).
     assert problems_with({"LLM_FALLBACK_MODEL_ID": "claude-sonnet-5-5"}) == []
+    assert problems_with({"LLM_FALLBACK_MODEL_ID": "off"}) == []
+
+
+@pytest.mark.parametrize("model_id", ["scripted", "mistral-large"])
+def test_a_fallback_production_could_never_call_is_refused(model_id: str) -> None:
+    # Production's router has no scripted model: failover would silently
+    # be off.
+    assert problems_with({"LLM_FALLBACK_MODEL_ID": model_id}) == [
+        f"LLM_FALLBACK_MODEL_ID={model_id} is not a model of OpenAI or Anthropic: "
+        "name one of theirs, or off."
+    ]
 
 
 @pytest.mark.parametrize(

@@ -5,9 +5,12 @@ budget, an encryption key and the seller its invoices name.
 """
 
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.configurations.seller_settings import DEFAULT_SELLER_LEGAL_NAME
 from app.schemas.constants.observability import LogFormat
 from app.schemas.constants.storage import RecordingStorageKind
 from app.schemas.typings.platform.strings import ProductionSettingProblem
+
+SELLER_LEGAL_NAME: str = "SELLER_LEGAL_NAME"
 
 
 def find_platform_problems(settings: AppSettings) -> list[ProductionSettingProblem]:
@@ -65,6 +68,21 @@ def find_seller_problems(settings: AppSettings) -> list[ProductionSettingProblem
         )
         for variable_name in settings.development_default_variables
     ]
+    is_placeholder_name: bool = (
+        str(settings.seller.legal_name).strip().casefold()
+        == DEFAULT_SELLER_LEGAL_NAME.casefold()
+    )
+    if is_placeholder_name and SELLER_LEGAL_NAME not in {
+        str(variable_name) for variable_name in settings.development_default_variables
+    }:
+        # Written out (a copied .env.example): still the placeholder.
+        problems.append(
+            ProductionSettingProblem(
+                "SELLER_LEGAL_NAME is the development placeholder "
+                f'"{DEFAULT_SELLER_LEGAL_NAME}": name the registered company '
+                "with its legal form."
+            )
+        )
     if settings.seller.address is None:
         problems.append(
             ProductionSettingProblem(

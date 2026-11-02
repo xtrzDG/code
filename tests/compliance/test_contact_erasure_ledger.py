@@ -22,6 +22,7 @@ from app.schemas.dto.business_closures.contact_erasure_ledger import (
 )
 from app.schemas.dto.compliance import ContactErasureResult, ContactRecords
 from app.schemas.dto.jobs import JobTick, QueuedJobInput
+from app.schemas.dto.storage import StorageScope
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ValidationFailedError,
@@ -59,7 +60,9 @@ def record_of(business_id: BusinessId, erased_at: int = 1) -> ContactErasureReco
 
 
 def reapply(
-    tenants: TwoTenants, ledger: InMemoryContactErasureLedgerAdapter
+    tenants: TwoTenants,
+    ledger: InMemoryContactErasureLedgerAdapter,
+    scope: StorageScopeContext | None = None,
 ) -> ReapplyContactErasuresUseCase:
     testbed = tenants.testbed
     return ReapplyContactErasuresUseCase(
@@ -69,7 +72,7 @@ def reapply(
         eraser=testbed.contact_data_eraser,
         audit_log_repo=testbed.audit_log_repo,
         wall_clock=testbed.clock.build_wall_clock(),
-        storage_scope=StorageScopeContext(),
+        storage_scope=StorageScopeContext() if scope is None else scope,
     )
 
 
@@ -170,6 +173,29 @@ def test_a_restore_brings_an_erased_customer_back_and_the_job_erases_them() -> N
     assert int(reapply(tenants, ledger).run(TICK).processed_count) == 0
     neighbour = testbed.contact_repo.get(business_id, tenants.neighbour.contact.id)
     assert neighbour is not None and neighbour.erased_at is None
+
+
+def test_each_erasure_runs_in_the_storage_scope_of_its_business(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenants = seed_two_tenants()
+    testbed = tenants.testbed
+    ledger = erase_and_record(tenants)
+    restore_from_before(tenants)
+    scope = StorageScopeContext()
+    erase = testbed.contact_data_eraser.erase
+    scopes: list[StorageScope] = []
+
+    def erase_in_scope(records: ContactRecords, now: Microseconds) -> object:
+        scopes.append(scope.current())
+        return erase(records, now)
+
+    monkeypatch.setattr(testbed.contact_data_eraser, "erase", erase_in_scope)
+
+    assert int(reapply(tenants, ledger, scope).run(TICK).processed_count) == 1
+    assert scopes == [StorageScope.for_business(tenants.business.id)]
+    # The job itself names no business: it leaves the caller's scope as it was.
+    assert scope.current() == StorageScope.unscoped()
 
 
 def test_a_still_erased_or_unknown_customer_is_left_alone() -> None:

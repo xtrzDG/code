@@ -337,9 +337,15 @@ where document ->> 'job_name' = 'reapply_contact_erasures'
 ```
 
 The drill's "Erasure ledger" line says how many customers that run will
-erase. The one gap is an erasure in the minutes between its database
-write and its record reaching the bucket: a record that never arrived
-stays among the dead jobs on `/admin/system` (retry it there).
+erase. Two gaps remain. The queued job lives in the database, so an
+erasure whose record had not reached the bucket yet (normally seconds,
+the batch worker's next claim) is lost with the database it was made in,
+audit entry included; after a point-in-time recovery, look for
+`DELETE /v1/businesses/{id}/contacts/{contact id}` answered 204 in the
+API's request log of the lost minutes and erase those customers again
+(the owner, Customers → the customer → Data requests). A record the
+bucket kept refusing stays among the dead jobs on `/admin/system`: retry
+it there.
 
 **Checks after either path.** `GET /readyz` answers 200 (database reached,
 every migration applied); `scripts/smoke.sh` against the API passes; an

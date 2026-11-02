@@ -38,14 +38,10 @@ class Aged:
 
 
 def timestamp(value: str) -> datetime.datetime:
-    """An RFC 3339 time (Docker's `Created` has nanoseconds and a Z)."""
+    """An RFC 3339 time (Docker's `Created` has nanoseconds and a Z; git's
+    committer time an offset, east or west of UTC)."""
 
-    text = value.strip().replace("Z", "+00:00")
-    whole, dot, rest = text.partition(".")
-    if dot:
-        fraction, sign, zone = rest.partition("+")
-        text = f"{whole}.{fraction[:6]}{sign}{zone}"
-    parsed = datetime.datetime.fromisoformat(text)
+    parsed = datetime.datetime.fromisoformat(value.strip())
     if parsed.tzinfo is None:
         raise ValueError(f"{value!r} names no time zone")
     return parsed

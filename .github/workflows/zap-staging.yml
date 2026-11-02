@@ -13,7 +13,10 @@ name: ZAP active scan (staging)
 # Setup: the repository variable STAGING_URL (the staging API's https
 # address) and the secret STAGING_SCAN_API_KEY (an API key of a business
 # that exists for the scan, with every scope; Settings → Integrations → API
-# keys in staging's cabinet). A run without them fails and names what is
+# keys in staging's cabinet). The scan writes bookings, leads and webhooks
+# with made-up contacts: give that business no connected channel and no
+# staff notifications, so nothing it writes reaches a real phone or
+# mailbox. A run without them fails and names what is
 # missing: a scan that skips itself proves nothing. schedule-watch.yml opens
 # an issue when this has not succeeded for 8 days.
 on:

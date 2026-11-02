@@ -3,9 +3,10 @@
  * page (lib/bookingPage/texts.ts). The wording is a legal text: the
  * version the guest saw is stored with their consent
  * (`MARKETING_CONSENT_TEXT_VERSION`, the API's MarketingConsentText), so a
- * changed wording is a new version on both sides. Each text names the STOP
- * word of its language, as the campaign messages do. `{business}` is
- * filled in.
+ * changed wording is a new version on both sides. Each note names the STOP
+ * word of its language, as the campaign messages do, and says to reply it
+ * to those messages: they only ever arrive in a messenger, where STOP is
+ * read (never in the website chat or by phone). `{business}` is filled in.
  */
 
 import { primaryLanguage } from "@/lib/hostedChat/language";
@@ -24,77 +25,77 @@ export interface MarketingConsentTexts {
 export const MARKETING_CONSENT_TEXTS: Readonly<Record<string, MarketingConsentTexts>> = {
   en: {
     label: "I'd like to get news, offers and invitations to come back from {business} in the chat where I made this booking.",
-    note: "Optional. You can untick it at any time, or reply STOP in that chat.",
+    note: "Optional. You can untick it at any time, or reply STOP to any of these messages.",
     failed: "Your choice was not saved. Please try again.",
   },
   it: {
     label: "Desidero ricevere da {business} novità, offerte e inviti a tornare nella chat in cui ho fatto questa prenotazione.",
-    note: "Facoltativo. Puoi togliere la spunta in qualsiasi momento o rispondere STOP in quella chat.",
+    note: "Facoltativo. Puoi togliere la spunta in qualsiasi momento o rispondere STOP a uno qualsiasi di questi messaggi.",
     failed: "La tua scelta non è stata salvata. Riprova.",
   },
   de: {
     label: "Ich möchte von {business} Neuigkeiten, Angebote und Einladungen zu einem erneuten Besuch in dem Chat erhalten, in dem ich diese Buchung gemacht habe.",
-    note: "Freiwillig. Sie können das Häkchen jederzeit entfernen oder in diesem Chat mit STOPP antworten.",
+    note: "Freiwillig. Sie können das Häkchen jederzeit entfernen oder auf jede dieser Nachrichten mit STOPP antworten.",
     failed: "Ihre Auswahl wurde nicht gespeichert. Bitte versuchen Sie es erneut.",
   },
   fr: {
     label: "Je souhaite recevoir de {business} des nouvelles, des offres et des invitations à revenir dans la conversation où j'ai fait cette réservation.",
-    note: "Facultatif. Vous pouvez décocher la case à tout moment ou répondre STOP dans cette conversation.",
+    note: "Facultatif. Vous pouvez décocher la case à tout moment ou répondre STOP à n'importe lequel de ces messages.",
     failed: "Votre choix n'a pas été enregistré. Veuillez réessayer.",
   },
   es: {
     label: "Quiero recibir de {business} novedades, ofertas e invitaciones para volver en el chat donde hice esta reserva.",
-    note: "Opcional. Puedes desmarcarlo en cualquier momento o responder STOP en ese chat.",
+    note: "Opcional. Puedes desmarcarlo en cualquier momento o responder STOP a cualquiera de estos mensajes.",
     failed: "Tu elección no se ha guardado. Inténtalo de nuevo.",
   },
   pt: {
     label: "Quero receber de {business} novidades, ofertas e convites para voltar na conversa em que fiz esta reserva.",
-    note: "Opcional. Pode desmarcar a qualquer momento ou responder PARAR nessa conversa.",
+    note: "Opcional. Pode desmarcar a qualquer momento ou responder PARAR a qualquer uma destas mensagens.",
     failed: "A sua escolha não foi guardada. Tente novamente.",
   },
   pl: {
     label: "Chcę otrzymywać od {business} nowości, oferty i zaproszenia do ponownej wizyty na czacie, w którym złożono tę rezerwację.",
-    note: "Dobrowolne. Możesz w każdej chwili odznaczyć to pole lub odpisać STOP na tym czacie.",
+    note: "Dobrowolne. Możesz w każdej chwili odznaczyć to pole lub odpisać STOP na dowolną z tych wiadomości.",
     failed: "Twój wybór nie został zapisany. Spróbuj ponownie.",
   },
   tr: {
     label: "{business} işletmesinden bu rezervasyonu yaptığım sohbette haberler, teklifler ve tekrar gelme davetleri almak istiyorum.",
-    note: "İsteğe bağlı. İşareti istediğiniz zaman kaldırabilir veya o sohbette DUR yazabilirsiniz.",
+    note: "İsteğe bağlı. İşareti istediğiniz zaman kaldırabilir veya bu mesajlardan herhangi birine DUR yazabilirsiniz.",
     failed: "Seçiminiz kaydedilmedi. Lütfen tekrar deneyin.",
   },
   ru: {
     label: "Я хочу получать от {business} новости, предложения и приглашения прийти снова в чате, где сделано это бронирование.",
-    note: "Необязательно. Снять отметку можно в любой момент или ответить СТОП в этом чате.",
+    note: "Необязательно. Снять отметку можно в любой момент или ответить СТОП на любое из этих сообщений.",
     failed: "Ваш выбор не сохранён. Попробуйте ещё раз.",
   },
   uk: {
     label: "Я хочу отримувати від {business} новини, пропозиції та запрошення прийти знову в чаті, де зроблено це бронювання.",
-    note: "Необов'язково. Зняти позначку можна будь-коли або надіслати СТОП у цьому чаті.",
+    note: "Необов'язково. Зняти позначку можна будь-коли або відповісти СТОП на будь-яке з цих повідомлень.",
     failed: "Ваш вибір не збережено. Спробуйте ще раз.",
   },
   kk: {
     label: "Мен {business} жаңалықтарын, ұсыныстарын және қайта келуге шақыруларын осы брондау жасалған чатта алғым келеді.",
-    note: "Міндетті емес. Белгіні кез келген уақытта алып тастауға немесе сол чатта СТОП деп жазуға болады.",
+    note: "Міндетті емес. Белгіні кез келген уақытта алып тастауға немесе осы хабарламалардың кез келгеніне СТОП деп жауап беруге болады.",
     failed: "Таңдауыңыз сақталмады. Қайталап көріңіз.",
   },
   ka: {
     label: "თანახმა ვარ, {business} მომწეროს სიახლეები, შეთავაზებები და ხელახლა მოსვლის მოწვევები იმ ჩატში, სადაც ეს ჯავშანი გაკეთდა.",
-    note: "არასავალდებულოა. მონიშვნის მოხსნა ნებისმიერ დროს შეგიძლიათ, ან უპასუხეთ იმავე ჩატში: სტოპ.",
+    note: "არასავალდებულოა. მონიშვნის მოხსნა ნებისმიერ დროს შეგიძლიათ, ან უპასუხეთ ამ შეტყობინებებიდან ნებისმიერს: სტოპ.",
     failed: "თქვენი არჩევანი ვერ შეინახა. სცადეთ ხელახლა.",
   },
   hy: {
     label: "Ցանկանում եմ, որ {business} ինձ ուղարկի նորություններ, առաջարկներ և կրկին այցելելու հրավերներ այն զրույցում, որտեղ կատարվել է այս ամրագրումը։",
-    note: "Կամընտիր է։ Նշումը կարող եք հանել ցանկացած պահի կամ այդ զրույցում պատասխանել ՍՏՈՊ։",
+    note: "Կամընտիր է։ Նշումը կարող եք հանել ցանկացած պահի կամ այս հաղորդագրություններից որևէ մեկին պատասխանել ՍՏՈՊ։",
     failed: "Ձեր ընտրությունը չպահպանվեց։ Խնդրում ենք կրկին փորձել։",
   },
   he: {
     label: "אשמח לקבל מ-{business} עדכונים, מבצעים והזמנות לחזור בצ'אט שבו בוצעה ההזמנה הזו.",
-    note: "לא חובה. אפשר לבטל את הסימון בכל עת או להשיב עצור באותו צ'אט.",
+    note: "לא חובה. אפשר לבטל את הסימון בכל עת או להשיב עצור לכל אחת מההודעות האלה.",
     failed: "הבחירה לא נשמרה. נסו שוב.",
   },
   ar: {
     label: "أرغب في تلقّي الأخبار والعروض ودعوات العودة من {business} في المحادثة التي أجريت فيها هذا الحجز.",
-    note: "اختياري. يمكنك إلغاء التحديد في أي وقت أو الرد بكلمة توقف في تلك المحادثة.",
+    note: "اختياري. يمكنك إلغاء التحديد في أي وقت أو الرد بكلمة توقف على أي من هذه الرسائل.",
     failed: "لم يُحفظ اختيارك. يُرجى المحاولة مرة أخرى.",
   },
 };

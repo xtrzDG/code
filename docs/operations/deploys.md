@@ -35,10 +35,10 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   without a person: only the promote job of `.github/workflows/deploy-smoke.yml`
   moves it, forward only, to a commit of `main` that passed on staging, once
   a reviewer of the environment `production-release` approved the run
-  (Review deployments). The repository variable
-  `PROMOTE_AFTER_STAGING_SMOKE=false` leaves that request out: run Deploy
-  smoke test → staging by hand, then approve. The promotion waits for
-  production's post-deploy data tasks (`scripts/check_data_tasks.sh`).
+  (Review deployments). `PROMOTE_AFTER_STAGING_SMOKE=false` (repository
+  variable) leaves that request out: run Deploy smoke test → staging by hand
+  once staging runs main's newest commit (that run promotes it), then
+  approve. The promotion waits for production's data tasks (`scripts/check_data_tasks.sh`).
 - API, worker and cabinet of one environment follow the same branch, so
   they always deploy the same commit. Never deploy one of them from another
   commit by hand: the worker runs the same document and job code as the API.

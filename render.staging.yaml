@@ -51,7 +51,8 @@ envVarGroups:
         value: eu
       - key: LLM_PROVIDER
         value: openai
-      # A test environment's budget: the spend_budget alert fires at $4.
+      # A test environment's budget: the spend_budget alert fires at $4, and
+      # at $5 the assistants stop calling the model until UTC midnight.
       - key: PLATFORM_DAILY_SPEND_BUDGET_USD
         value: "5"
 

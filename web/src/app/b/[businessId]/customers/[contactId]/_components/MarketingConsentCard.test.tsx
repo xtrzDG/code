@@ -9,6 +9,7 @@ import type { Query } from "@/api/useQuery";
 import { BusinessProvider } from "@/components/business/BusinessContext";
 import type { Locale } from "@/i18n/config";
 import { ok } from "@/test/fakeApi";
+import { marketingConsentTexts } from "@/app/r/[token]/_components/marketingConsent/consentTexts";
 import { renderInLocale, textsIn } from "@/test/render";
 
 import type { CustomerDetail } from "../../_lib/customerModel";
@@ -115,13 +116,36 @@ describe("MarketingConsentCard: whether marketing may reach the customer", () =>
     expect(screen.getByRole("button", { name: t("customers.consent.record") })).toBeTruthy();
   });
 
-  it("never says agreed while messages to the customer are stopped", () => {
+  it("never says agreed while messages to the customer are stopped, and records nothing new then", () => {
     const t = textsIn("en").t;
-    renderCard({ status: "stopped", given_at: GIVEN_AT, source: "booking_page", text_version: "2026-11-02" });
+    renderCard({ status: "stopped" });
 
     expect(screen.getByText(t("customers.consent.stopped"))).toBeTruthy();
     expect(screen.queryByText(/Agreed on/)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("still takes back a consent recorded before messages were stopped", async () => {
+    const t = textsIn("en").t;
+    vi.mocked(api.PATCH).mockReturnValue(
+      ok({ contact_id: "contact_a", marketing_consent: { status: "stopped", given_at: GIVEN_AT, withdrawn_at: GIVEN_AT, withdrawal: "in_person" } }) as never,
+    );
+    renderCard({ status: "stopped", given_at: GIVEN_AT, source: "booking_page", text_version: "2026-11-02" });
+    expect(screen.queryByText(/Agreed on/)).toBeNull();
+    expect(screen.queryByRole("button", { name: t("customers.consent.record") })).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: t("customers.consent.withdraw") }));
+
+    expect(api.PATCH).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ body: { marketing_consent: false } }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: t("customers.consent.withdraw") })).toBeNull());
+    expect(screen.queryByRole("button", { name: t("customers.consent.record") })).toBeNull();
+    expect(screen.getByText(t("customers.consent.stopped"))).toBeTruthy();
+  });
+
+  it("shows the team the very wording of the booking page's box", () => {
+    for (const locale of ["en", "it"] as const) {
+      expect(textsIn(locale).t("customers.consent.wording")).toBe(`${locale === "en" ? "“" : "«"}${marketingConsentTexts(locale).label}${locale === "en" ? "”" : "»"}`);
+    }
   });
 
   it("is not shown for an erased customer", () => {

@@ -9,17 +9,22 @@ name: Synthetic checks (production)
 #   (MONITORING_BUSINESS_ID): a visitor's message and the assistant's
 #   answer, which proves the worker and the model answer (one answer a run);
 # - a booking created and cancelled again through the public API with the
-#   monitoring business's API key (scripts/synthetic_booking.py).
+#   monitoring business's API key (scripts/synthetic_booking.py). Only
+#   when the API contract of the code production runs (the `release`
+#   branch's web/openapi.json) has every operation of that round trip:
+#   otherwise the step fails without writing, since a booking production
+#   cannot cancel would stay behind every hour.
 #
 # A failed scheduled run opens the issue "Production synthetic check
-# failed" or comments on the open one (docs/operations/incident.md decides
-# what follows). Setup: repository variables PRODUCTION_URL (the production
-# API's https address, as PRODUCTION_API_URL), MONITORING_BUSINESS_ID (a
-# live business kept for these checks, open for a booking for one at 12:00
-# every day) and optionally PRODUCTION_CABINET_URL; the secret
-# MONITORING_API_KEY (an API key of that business with bookings:write). A
-# run without them fails and names what is missing: a check that skips
-# itself proves nothing.
+# failed" or, at most once a day, comments on the open one
+# (docs/operations/incident.md decides what follows). Setup: repository
+# variables PRODUCTION_URL (the production API's https address, as
+# PRODUCTION_API_URL), MONITORING_BUSINESS_ID (a live business kept for
+# these checks, open for a booking for one at 12:00 every day, with its
+# staff notifications off) and optionally PRODUCTION_CABINET_URL; the
+# secret MONITORING_API_KEY (an API key of that business with
+# bookings:write). A run without them fails and names what is missing: a
+# check that skips itself proves nothing.
 on:
   schedule:
     # Minute 41 of every hour.
@@ -72,12 +77,25 @@ jobs:
           SMOKE_WAIT_SECONDS: "30"
         run: scripts/smoke.sh "$PRODUCTION_URL" ${PRODUCTION_CABINET_URL:+"$PRODUCTION_CABINET_URL"}
 
+      # The code production runs, for its API contract (web/openapi.json).
+      - name: Production's API contract (the release branch)
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: release
+          path: release
+          persist-credentials: false
+          sparse-checkout: web/openapi.json
+          sparse-checkout-cone-mode: false
+
       - name: A booking created and cancelled
         if: ${{ !cancelled() }}
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
           MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: uv run --no-project python -m scripts.synthetic_booking "$PRODUCTION_URL"
+        run: >-
+          uv run --no-project python -m scripts.synthetic_booking
+          --contract release/web/openapi.json "$PRODUCTION_URL"
 
   report:
     name: Open or update the issue
@@ -98,7 +116,14 @@ jobs:
           number="$(gh issue list --state open --search "in:title \"${title}\"" --json number,title \
             --jq "map(select(.title == \"${title}\")) | .[0].number // empty")"
           if [ -n "$number" ]; then
-            gh issue comment "$number" --body "Failed again: ${RUN_URL}"
+            # One comment a day while it keeps failing, not one an hour.
+            latest="$(gh issue view "$number" --json createdAt,comments \
+              --jq '[.createdAt, .comments[].createdAt] | max')"
+            if [ "$(date -u -d "$latest" +%s)" -gt "$(date -u -d '23 hours ago' +%s)" ]; then
+              echo "Issue #${number} was updated within the last day: ${RUN_URL}"
+              exit 0
+            fi
+            gh issue comment "$number" --body "Still failing: ${RUN_URL}"
             exit 0
           fi
           cat > "$RUNNER_TEMP/body.md" <<BODY

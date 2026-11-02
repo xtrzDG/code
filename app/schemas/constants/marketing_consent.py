@@ -44,8 +44,8 @@ class MarketingConsentText(StrEnum):
     dictionaries), in English: "I'd like to get news, offers and
     invitations to come back from {business} in the chat where I made this
     booking." The page adds: "Optional. You can untick it at any time, or
-    reply STOP in that chat." A changed wording is a new value (behind a
-    release gate, like every new stored value).
+    reply STOP to any of these messages." A changed wording is a new value
+    (behind a release gate, like every new stored value).
     """
 
     V2026_11_02 = "2026-11-02"

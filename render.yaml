@@ -69,8 +69,10 @@ envVarGroups:
       - key: DEFAULT_DATA_REGION
         value: eu
       # Whole dollars a UTC day the platform plans to spend on providers; the
-      # spend_budget alert fires at 80 %. Production refuses to start without
-      # a budget: raise it with the number of live businesses.
+      # spend_budget alert fires at 80 %, and at
+      # PLATFORM_DAILY_SPEND_STOP_PERCENT (100 %) every assistant stops
+      # calling the model until UTC midnight. Production refuses to start
+      # without a budget: raise it with the number of live businesses.
       - key: PLATFORM_DAILY_SPEND_BUDGET_USD
         value: "50"
 

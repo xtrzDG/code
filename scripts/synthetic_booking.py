@@ -4,7 +4,8 @@ The booking round trip of production's synthetic checks
 monitoring business's API key (MONITORING_API_KEY):
 
     MONITORING_API_KEY=awk_... uv run --no-project python -m \\
-        scripts.synthetic_booking https://api.example.com
+        scripts.synthetic_booking --contract release/web/openapi.json \\
+        https://api.example.com
 
 1. GET  /v1/public-api/me                      the key opens the monitoring business
 2. POST /v1/public-api/bookings                a booking for one, 28 days ahead
@@ -15,9 +16,13 @@ monitoring business's API key (MONITORING_API_KEY):
 5. GET  /v1/public-api/bookings/{id}           and stays cancelled
 
 The monitoring business must take a booking for one at that time every day.
-A booking that could not be cancelled is named, to cancel it by hand. Exit
-codes: 0 every step passed, 1 a step failed, 2 wrong usage (no key, not an
-https address).
+Nothing is written unless `--contract`, the OpenAPI document of the code
+production runs (the `release` branch's web/openapi.json, which CI keeps
+equal to the code), has every one of these operations: a booking that the
+API cannot cancel would be left behind in production every hour. A booking
+that could not be cancelled is named, to cancel it by hand. Exit codes: 0
+every step passed, 1 a step failed or production's API lacks one, 2 wrong
+usage (no key, not an https address, no readable contract).
 """
 
 import argparse
@@ -27,6 +32,7 @@ import json
 import os
 import sys
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlsplit
 
@@ -40,6 +46,13 @@ BOOKING_TIME: str = "12:00"
 TIMEOUT_SECONDS: float = 20.0
 CANCELLED: str = "cancelled"
 CONTACT_NAME: str = "Synthetic check"
+# What the round trip calls, as the contract names it.
+ROUND_TRIP_OPERATIONS: tuple[tuple[str, str], ...] = (
+    ("get", "/v1/public-api/me"),
+    ("post", "/v1/public-api/bookings"),
+    ("get", "/v1/public-api/bookings/{booking_id}"),
+    ("post", "/v1/public-api/bookings/{booking_id}/cancel"),
+)
 
 
 class StepFailed(Exception):
@@ -117,6 +130,25 @@ def booking_request(today: datetime.date) -> dict[str, Any]:
     }
 
 
+def missing_operations(contract: Path) -> list[str]:
+    """The round trip's operations the contract lacks; ValueError if unreadable."""
+
+    try:
+        document: object = json.loads(contract.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError(f"{contract}: unreadable ({error})") from error
+    fields = cast(dict[str, object], document) if isinstance(document, dict) else {}
+    paths: object = fields.get("paths")
+    if not isinstance(paths, dict):
+        raise ValueError(f"{contract}: not an OpenAPI document")
+    operations = cast(dict[str, object], paths)
+    return [
+        f"{method.upper()} {path}"
+        for method, path in ROUND_TRIP_OPERATIONS
+        if method not in cast(dict[str, object], operations.get(path) or {})
+    ]
+
+
 def round_trip(api: Api, today: datetime.date, run_id: str) -> None:
     status, me = api.call("GET", "/v1/public-api/me")
     expect("the monitoring key opens its business", status, 200, me)
@@ -150,6 +182,12 @@ def main(
 ) -> int:
     parser = argparse.ArgumentParser(description="Production's booking round trip.")
     parser.add_argument("api_url", help="the production API's https address")
+    parser.add_argument(
+        "--contract",
+        type=Path,
+        required=True,
+        help="the OpenAPI document of the code production runs",
+    )
     parsed = parser.parse_args(arguments)
     key = os.environ.get(KEY_VARIABLE, "")
     api_url: str = parsed.api_url
@@ -157,10 +195,24 @@ def main(
     if not key or address.scheme != "https" or not address.hostname:
         print(
             f"::error::Usage: {KEY_VARIABLE}=awk_... python -m"
-            " scripts.synthetic_booking https://<production API>",
+            " scripts.synthetic_booking --contract <openapi.json>"
+            " https://<production API>",
             file=sys.stderr,
         )
         return EXIT_USAGE
+    try:
+        missing = missing_operations(parsed.contract)
+    except ValueError as error:
+        print(f"::error::Production's API contract: {error}", file=sys.stderr)
+        return EXIT_USAGE
+    if missing:
+        print(
+            f"::error::Production's API lacks {', '.join(missing)}"
+            f" ({parsed.contract}): no booking was created, since it could not be"
+            " cancelled again. The round trip runs once production has them.",
+            file=sys.stderr,
+        )
+        return EXIT_FAILED
     run_id = os.environ.get(RUN_VARIABLE) or datetime.datetime.now(
         datetime.UTC
     ).strftime("%Y%m%d%H%M%S")

@@ -60,8 +60,10 @@ model provider or kind of personal data, and at least once a year.
 - **Rights.** Export and erasure of one customer
   (`app/use_cases/compliance/export_contact_data_use_case.py`,
   `delete_contact_data_use_case.py`, after a fresh sign-in); objection to
-  marketing by unticking the box, telling the team, or STOP in any chat,
-  which also takes the consent back for good (`consent_after_save` in
+  marketing by unticking the box, telling the team, or STOP in a
+  messenger (where the campaign's messages arrive: `PROACTIVE_CHANNELS`,
+  `app/use_cases/shared/proactive_routes.py`), which also takes the
+  consent back for good (`consent_after_save` in
   `app/utilities/customers/customer_card.py`). An erasure stays done after
   a restore from backup (the erasure ledger, below).
 - **Retention.** Every period with the job that enforces it, sign-in-code

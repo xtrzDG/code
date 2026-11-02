@@ -9,6 +9,18 @@ import re
 
 import pytest
 
+from app.schemas.constants.environment import DeploymentEnvironment
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
+from app.utilities.config_helpers.production.production_problems import (
+    find_production_problems,
+)
+from tests.platform.connection_budget import (
+    API_COMMAND,
+    WORKER_COMMAND,
+    blueprint_services,
+)
 from tests.platform.deployment_variables import (
     DEPLOYMENT_VARIABLES,
     PRODUCTION_REQUIRED_VARIABLES,
@@ -22,6 +34,7 @@ from tests.platform.environment_sources import (
     cabinet_variables,
     read,
 )
+from tests.platform.production_settings import PRODUCTION_ENVIRONMENT
 
 SERVICE_BLOCK: re.Pattern[str] = re.compile(
     r"^  - type: (?P<kind>\w+)\n    name: (?P<name>\S+)\n(?P<body>(?:    .*\n|\n)*?)"
@@ -128,6 +141,28 @@ def test_every_backend_service_runs_as_production_with_what_it_requires(
     assert (
         "workshop-cabinet" not in services or "SITE_URL" in services["workshop-cabinet"]
     )
+
+
+@pytest.mark.parametrize("blueprint_path", ["render.yaml", "render.staging.yaml"])
+def test_no_value_a_blueprint_writes_is_one_production_refuses(
+    blueprint_path: str,
+) -> None:
+    # The values each Blueprint writes itself (its env group's included)
+    # over a complete production environment, as if the dashboard filled
+    # the rest: the API and every worker pass production's checks, so a
+    # Blueprint can never bring back the scripted model, local recordings,
+    # text logs or a zero budget.
+    serving = [
+        service
+        for service in blueprint_services(blueprint_path)
+        if service.command in (API_COMMAND, WORKER_COMMAND)
+    ]
+
+    assert len(serving) >= 2
+    for service in serving:
+        settings = assemble_app_settings({**PRODUCTION_ENVIRONMENT, **service.values})
+        assert settings.environment is DeploymentEnvironment.PRODUCTION, service.name
+        assert find_production_problems(settings) == [], service.name
 
 
 def test_the_staging_worker_copies_the_staging_api() -> None:

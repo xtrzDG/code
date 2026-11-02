@@ -5,6 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
@@ -50,6 +54,7 @@ def build_admin_partner_router(
     add_partner_code: OperatorContract[AddPartnerCodeCommand, PartnerAdminView],
     get_payout_report: OperatorContract[PayoutReportQuery, PayoutReportView],
     mark_payout_paid: OperatorContract[MarkPayoutPaidCommand, PayoutReceipt],
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (bearer token; platform admins, changes audited):
@@ -64,7 +69,8 @@ def build_admin_partner_router(
         GET /v1/admin/partners/payouts?month=YYYY-MM
             the month's commissions per partner and currency
         POST /v1/admin/partners/{partner_id}/payouts
-            the partner was paid the month's commissions (reference kept)
+            the partner was paid the month's commissions (reference kept;
+            an Idempotency-Key makes a retry get the first answer back)
     """
 
     router = APIRouter(tags=["admin"], responses=standard_error_responses())
@@ -146,6 +152,7 @@ def build_admin_partner_router(
 
     @router.post(
         "/v1/admin/partners/{partner_id}/payouts",
+        dependencies=[Depends(idempotent)],
         openapi_extra=describe_json_body(MarkPayoutPaidRequest),
     )
     def post_payout(

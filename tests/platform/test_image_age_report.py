@@ -61,6 +61,20 @@ def test_a_release_older_than_a_quarter_fails(tmp_path: Path) -> None:
     assert "::error::release (the commit production runs) is 124 days old" in output
 
 
+def test_times_west_of_utc_are_read(tmp_path: Path) -> None:
+    # git's %cI keeps the committer's offset; Docker may add nanoseconds.
+    code, _, _, summary = age(
+        tmp_path,
+        f"{PYTHON}=2026-10-27T20:12:45.123456789-07:00",
+        "--release-commit",
+        "2026-10-30T07:00:00-05:00",
+    )
+
+    assert code == EXIT_FRESH
+    assert f"| `{PYTHON}` | 2026-10-27 | 5 | fresh |" in summary
+    assert "| 2026-10-30 | 3 | fresh |" in summary
+
+
 @pytest.mark.parametrize(
     "arguments",
     [

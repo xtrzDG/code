@@ -87,6 +87,7 @@ here, and nothing else is. A new variable goes to its settings section,
 | `SPEND_HARD_LIMIT_MULTIPLE` | 15: the hard daily limit (not below the soft one). Beyond it the assistant stops answering by itself until midnight: new conversations go to the team's inbox and the voice agent takes no calls; the log records `spend_limit_reached`. An admin sets a client's own limit with `PUT /v1/admin/clients/{business_id}/spend-limits` |
 | `SPEND_SOFT_LIMIT_MODEL_ID` | empty: beyond the soft limit, a small model of the same provider (`gpt-5-nano`, `claude-haiku-4-5`); a model of another provider is ignored (the conversation's history is in its provider's format) |
 | `PLATFORM_DAILY_SPEND_BUDGET_USD` | empty: no budget (`production` refuses to start without one above 0; `render.yaml` sets 50). Whole dollars the platform plans to spend on providers per UTC day; at 80 % the alert `spend_budget` fires (`ops/alerts/spend_budget.yaml`) |
+| `PLATFORM_DAILY_SPEND_STOP_PERCENT` | 100: at this share of `PLATFORM_DAILY_SPEND_BUDGET_USD` (80–1000 %) every assistant stops calling the model until UTC midnight (customers are handed to the team, calls go to the forwarding number) and the alert `spend_budget_stop` fires (`ops/alerts/spend_budget_stop.yaml`); without a budget there is no stop |
 | `CALL_MAX_DURATION_SECONDS` | 600: the longest call of the voice agent (60–7200 s); written into the ElevenLabs agent when it is created and updated |
 | `CALL_SILENCE_END_SECONDS` | 30: after this many seconds of silence the agent hangs up (5–600) |
 | `API_REQUESTS_PER_USER_PER_MINUTE` | 600: requests per sliding minute per signed-in person; beyond it 429 with `Retry-After` |
@@ -180,8 +181,8 @@ tests, CI, `docker-compose.yml` and the preview stand never ask. Refused:
 - no Turnstile keys or Cloudflare's test keys, `SMTP_SECURITY=none`, no
   provider that carries login codes;
 - `LLM_PROVIDER=scripted`, no `OPENAI_API_KEY`, a configured model whose
-  provider's key is missing (a fallback model without its key is only
-  skipped, with one warning);
+  provider's key is missing, a scripted or unknown `LLM_FALLBACK_MODEL_ID`
+  (a fallback model without its key is only skipped, with one warning);
 - Stripe test-mode or publishable keys, Flitt's test merchant or its
   published key, half a pair (`FLITT_*`, `GOOGLE_OAUTH_*`), an enabled
   feature without the secret that verifies its webhooks
@@ -189,7 +190,8 @@ tests, CI, `docker-compose.yml` and the preview stand never ask. Refused:
   `ELEVENLABS_WEBHOOK_SECRET`);
 - `LOG_FORMAT=text`, no `PLATFORM_DAILY_SPEND_BUDGET_USD` above 0, the seller
   on the development defaults (`SELLER_LEGAL_NAME`, `SELLER_COUNTRY_CODE`,
-  `SELLER_TIME_ZONE`) or without `SELLER_ADDRESS`, and a VAT-registered
+  `SELLER_TIME_ZONE` unset, or the placeholder name "Assistant Workshop"
+  written out) or without `SELLER_ADDRESS`, and a VAT-registered
   seller whose country has no known rate.
 
 Everywhere, also outside production: an unknown `APP_ENV`, `CORS_ALLOWED_ORIGINS=*`

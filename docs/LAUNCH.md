@@ -1516,7 +1516,12 @@ API, и воркер. Чаще всего могут понадобиться:
   (null — вернуть лимит тарифа; 0 — остановить модель сразу).
   Порядок действий при всплеске — `docs/operations/runbooks/spend-spike.md`.
 - `PLATFORM_DAILY_SPEND_BUDGET_USD` — дневной бюджет платформы в долларах;
-  на 80 % срабатывает алерт `spend_budget`. Алерт `spend_spike` (сегодня
+  на 80 % срабатывает алерт `spend_budget`, а на
+  `PLATFORM_DAILY_SPEND_STOP_PERCENT` (по умолчанию 100 %) все помощники
+  перестают обращаться к модели до полуночи UTC (клиентов передают команде,
+  звонки уходят на номер переадресации) и срабатывает алерт
+  `spend_budget_stop`. Без бюджета больше нуля рабочая версия не
+  запускается (`render.yaml` задаёт 50). Алерт `spend_spike` (сегодня
   больше трёх средних дней прошлой недели) работает и без бюджета. Сегодняшние
   расходы по провайдерам видны на главной странице админки.
 - `CALL_MAX_DURATION_SECONDS`, `CALL_SILENCE_END_SECONDS` — голосовой агент
@@ -1994,12 +1999,14 @@ Read-only» (имя секрета — в SECURITY.md).
 `TURNSTILE_SECRET_KEY` или это тестовые ключи Cloudflare; `SMTP_SECURITY=none`;
 ни одного провайдера кодов входа; `LLM_PROVIDER=scripted`, нет
 `OPENAI_API_KEY` (голосовые и импорт меню по фото всегда идут в OpenAI) или
-ключа провайдера настроенной модели; тестовые ключи Stripe (`sk_test_`,
+ключа провайдера настроенной модели, `LLM_FALLBACK_MODEL_ID` со scripted или
+неизвестной моделью; тестовые ключи Stripe (`sk_test_`,
 `rk_test_`, `pk_`), тестовый мерчант Flitt; включённая функция без секрета
 проверки вебхуков (`STRIPE_WEBHOOK_SECRET`, `META_APP_SECRET` и
 `META_VERIFY_TOKEN`, `ELEVENLABS_WEBHOOK_SECRET`); `LOG_FORMAT=text`; нет
 `PLATFORM_DAILY_SPEND_BUDGET_USD` больше нуля; не заданы `SELLER_LEGAL_NAME`,
-`SELLER_ADDRESS`, `SELLER_COUNTRY_CODE`, `SELLER_TIME_ZONE`. Неизвестное
+`SELLER_ADDRESS`, `SELLER_COUNTRY_CODE`, `SELLER_TIME_ZONE` или в
+`SELLER_LEGAL_NAME` осталась заглушка разработки «Assistant Workshop». Неизвестное
 значение `APP_ENV` (например, `prod`) не запускается нигде, а на Render
 (переменная `RENDER` задана самим Render) не запускается и пустой `APP_ENV`.
 `render.yaml` и `render.staging.yaml` задают или спрашивают всё это сами.

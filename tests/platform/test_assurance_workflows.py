@@ -154,7 +154,17 @@ def test_production_is_checked_hourly_and_unconfigured_runs_fail() -> None:
     assert "exit 1" in str(first["run"]) and "::error::" in str(first["run"])
     assert 'scripts/smoke.sh "$PRODUCTION_URL"' in run
     assert "scripts.synthetic_booking" in run
-    assert document["jobs"]["report"]["permissions"] == {"issues": "write"}
+    # The booking is made only when production's own contract can cancel it.
+    [contract] = [
+        step for step in job["steps"] if step.get("with", {}).get("ref") == "release"
+    ]
+    assert contract["with"]["path"] == "release"
+    assert contract["with"]["persist-credentials"] is False
+    assert "--contract release/web/openapi.json" in run
+    report = document["jobs"]["report"]
+    assert report["permissions"] == {"issues": "write"}
+    # A lasting failure comments once a day, not every hour.
+    assert "23 hours ago" in script(report) and "gh issue comment" in script(report)
 
 
 def tracked_files() -> list[str]:

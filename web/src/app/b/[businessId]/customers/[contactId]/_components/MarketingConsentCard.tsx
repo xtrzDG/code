@@ -6,7 +6,8 @@
  * and the team's record of a consent the customer gave or took back in
  * person. Recording asks first and shows the wording the customer agrees
  * to; taking it back does not. While messages to the customer are stopped
- * (STOP, the suppression list, a block) the card never says "agreed".
+ * (STOP, the suppression list, a block) the card never says "agreed", but
+ * a consent still recorded can be taken back.
  */
 
 import { useState } from "react";
@@ -43,6 +44,11 @@ export function MarketingConsentCard({ detail, naming }: { detail: Query<Custome
     return null;
   }
   const consent = data.marketing_consent ?? { status: "not_given" as const };
+  // Recorded and not taken back: also while messages are stopped (a block
+  // lifted later would bring it back), so the team can still record that
+  // the customer took it back.
+  const isActive =
+    consent.status === "agreed" || (consent.status === "stopped" && Boolean(consent.given_at) && !consent.withdrawn_at);
 
   const change = async (isGiven: boolean) => {
     const result = await record.run(isGiven);
@@ -86,7 +92,7 @@ export function MarketingConsentCard({ detail, naming }: { detail: Query<Custome
             ))}
           </ul>
         )}
-        {consent.status === "agreed" ? (
+        {isActive ? (
           <Button variant="secondary" isLoading={record.isPending} onClick={() => void change(false)}>
             {t("customers.consent.withdraw")}
           </Button>

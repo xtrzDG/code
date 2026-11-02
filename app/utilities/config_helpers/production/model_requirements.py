@@ -54,6 +54,16 @@ def find_model_problems(settings: AppSettings) -> list[ProductionSettingProblem]
         )
         if problem is not None:
             problems.append(problem)
+    fallback: LlmModelId | None = settings.reply_speed.llm_fallback_model_id
+    if fallback is not None and not is_provider_model(fallback):
+        # Production's router has no scripted model: failover would be off
+        # without a word (a fallback merely missing its key only warns).
+        problems.append(
+            ProductionSettingProblem(
+                f"LLM_FALLBACK_MODEL_ID={fallback} is not a model of OpenAI or "
+                "Anthropic: name one of theirs, or off."
+            )
+        )
 
     return problems
 
@@ -76,8 +86,7 @@ def model_problem(
 ) -> ProductionSettingProblem | None:
     """Why production cannot call a configured model; None when it can."""
 
-    provider: LlmProvider | None = resolve_llm_provider(model_id)
-    if provider is None or provider is LlmProvider.SCRIPTED:
+    if not is_provider_model(model_id):
         return ProductionSettingProblem(
             f"{variable_name}={model_id} is not a model of OpenAI or Anthropic."
         )
@@ -94,3 +103,10 @@ def model_problem(
     return ProductionSettingProblem(
         f"{variable_name}={model_id} needs {key_variable}, which is not set."
     )
+
+
+def is_provider_model(model_id: LlmModelId) -> bool:
+    """A model OpenAI or Anthropic serves (not the scripted one, not unknown)."""
+
+    provider: LlmProvider | None = resolve_llm_provider(model_id)
+    return provider is not None and provider is not LlmProvider.SCRIPTED

@@ -51,9 +51,10 @@ class ChangeManagedBookingConsentUseCase(
     it back (as easy as giving it). Ticking again keeps the first consent.
     The box is the guest's whatever the booking's state: a cancelled or
     past booking's page still shows it while its link opens. Each change
-    is one atomic step on the contact as stored, counted against the
-    page's limits and audited (UPDATE of the contact, no actor: the
-    customer made it). A STOP still wins over a ticked box until START.
+    is one atomic step on the contact as stored, counted against the box's
+    own limits (`MANAGE_CONSENT_LIMITS`, never the cancellation's and the
+    move's) and audited (UPDATE of the contact, no actor: the customer
+    made it). A STOP still wins over a ticked box until START.
     """
 
     def __init__(

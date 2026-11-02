@@ -14225,14 +14225,15 @@ export interface components {
          * MarketingConsentText
          * @description The versions of the consent wording, by the day each took effect; the
          *     version a customer agreed to is stored with their consent, so the exact
-         *     text stays provable. 2026-11-02, the booking page
+         *     text stays provable. 2026-11-02, the booking page's box
          *     (`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,
-         *     15 languages) and the card's record of a consent given in person
-         *     (`customers.consent.*` of the cabinet's dictionaries): "Send me news,
-         *     offers and invitations to come back from {business}, in the chat this
-         *     booking was made in. I can take this back at any time here or by
-         *     replying STOP." A changed wording is a new value (behind a release
-         *     gate, like every new stored value).
+         *     15 languages, the STOP word in each) and the card's record of a
+         *     consent given in person (`customers.consent.wording` of the cabinet's
+         *     dictionaries), in English: "I'd like to get news, offers and
+         *     invitations to come back from {business} in the chat where I made this
+         *     booking." The page adds: "Optional. You can untick it at any time, or
+         *     reply STOP to any of these messages." A changed wording is a new value
+         *     (behind a release gate, like every new stored value).
          * @enum {string}
          */
         MarketingConsentText: "2026-11-02";
@@ -24348,6 +24349,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -59071,14 +59074,15 @@ export interface operations {
                      * MarketingConsentText
                      * @description The versions of the consent wording, by the day each took effect; the
                      *     version a customer agreed to is stored with their consent, so the exact
-                     *     text stays provable. 2026-11-02, the booking page
+                     *     text stays provable. 2026-11-02, the booking page's box
                      *     (`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,
-                     *     15 languages) and the card's record of a consent given in person
-                     *     (`customers.consent.*` of the cabinet's dictionaries): "Send me news,
-                     *     offers and invitations to come back from {business}, in the chat this
-                     *     booking was made in. I can take this back at any time here or by
-                     *     replying STOP." A changed wording is a new value (behind a release
-                     *     gate, like every new stored value).
+                     *     15 languages, the STOP word in each) and the card's record of a
+                     *     consent given in person (`customers.consent.wording` of the cabinet's
+                     *     dictionaries), in English: "I'd like to get news, offers and
+                     *     invitations to come back from {business} in the chat where I made this
+                     *     booking." The page adds: "Optional. You can untick it at any time, or
+                     *     reply STOP to any of these messages." A changed wording is a new value
+                     *     (behind a release gate, like every new stored value).
                      * @enum {string}
                      */
                     text_version: "2026-11-02";

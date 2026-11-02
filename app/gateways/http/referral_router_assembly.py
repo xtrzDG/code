@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.admin_partner_routes import build_admin_partner_router
+from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.referral_routes import build_referral_router
 from app.gateways.http.user_authentication import CurrentUserDependency
 
@@ -32,5 +33,6 @@ def build_referral_routers(
             add_partner_code=referrals.add_partner_code_operator(),
             get_payout_report=referrals.get_payout_report_operator(),
             mark_payout_paid=referrals.mark_payout_paid_operator(),
+            idempotent=idempotency_of(operators, current_user),
         ),
     ]

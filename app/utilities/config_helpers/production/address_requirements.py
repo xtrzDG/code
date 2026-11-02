@@ -84,7 +84,8 @@ def address_problem(name: str, address: str) -> ProductionSettingProblem | None:
     """Why an address cannot serve production; None when it can."""
 
     parts = urlsplit(address)
-    host: str = (parts.hostname or "").lower()
+    # A fully qualified name may end in a dot ("localhost.").
+    host: str = (parts.hostname or "").lower().rstrip(".")
     if parts.scheme.lower() != HTTPS_SCHEME:
         return ProductionSettingProblem(
             f"{name} must be an https address in production, got {address}."

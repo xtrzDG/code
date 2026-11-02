@@ -106,6 +106,8 @@ def test_plain_http_addresses_are_refused(variable: str, address: str) -> None:
         "https://[::1]:8443",
         "https://0.0.0.0",
         "https://api.localhost",
+        "https://LocalHost.:8443",
+        "https://[::ffff:127.0.0.1]",
     ],
 )
 def test_this_machine_never_serves_production(address: str) -> None:
@@ -142,6 +144,17 @@ def test_cloudflares_test_keys_are_refused(
     )
 
     assert problem.startswith(f"{named} is one of Cloudflare's test keys")
+
+
+@pytest.mark.parametrize("written_out", ["Assistant Workshop", " assistant workshop "])
+def test_the_development_seller_name_written_out_is_refused(written_out: str) -> None:
+    # A copied .env.example names the placeholder: still no company.
+    [problem] = problems_with({"SELLER_LEGAL_NAME": written_out})
+
+    assert problem.startswith(
+        'SELLER_LEGAL_NAME is the development placeholder "Assistant Workshop"'
+    )
+    assert problems_with({"SELLER_LEGAL_NAME": "Assistant Workshop S.r.l."}) == []
 
 
 def test_every_problem_is_reported_at_once_and_names_no_secret() -> None:

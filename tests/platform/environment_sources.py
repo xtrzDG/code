@@ -37,8 +37,11 @@ SDK_VARIABLES: frozenset[str] = frozenset({"OPENAI_API_KEY", "ANTHROPIC_API_KEY"
 # RENDER=true on every service (APP_ENV may then not be missing).
 PLATFORM_MARKER_VARIABLES: frozenset[str] = frozenset({"RENDER"})
 
-# Set by Next.js itself (`next build`, `next start`), never by people.
-NEXT_JS_VARIABLES: frozenset[str] = frozenset({"NODE_ENV", "NEXT_RUNTIME"})
+# Set by Next.js itself (`next build`, `next start`), never by people
+# (NEXT_PHASE is "phase-production-build" while `next build` runs).
+NEXT_JS_VARIABLES: frozenset[str] = frozenset(
+    {"NODE_ENV", "NEXT_RUNTIME", "NEXT_PHASE"}
+)
 
 
 def read(relative_path: str) -> str:

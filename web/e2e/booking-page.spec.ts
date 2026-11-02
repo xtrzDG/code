@@ -180,7 +180,7 @@ test("the guest's marketing box is unticked until they tick it, and stays as the
   await page.goto(booked.path);
   const box = page.getByRole("checkbox", { name: /news, offers and invitations to come back from/ });
   await expect(box).not.toBeChecked();
-  await expect(page.getByText("Optional. You can untick it at any time, or reply STOP in that chat.")).toBeVisible();
+  await expect(page.getByText("Optional. You can untick it at any time, or reply STOP to any of these messages.")).toBeVisible();
 
   await box.check();
   await expect(box).toBeChecked();

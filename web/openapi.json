@@ -20523,7 +20523,7 @@
         "type": "string"
       },
       "MarketingConsentText": {
-        "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages) and the card's record of a consent given in person\n(`customers.consent.*` of the cabinet's dictionaries): \"Send me news,\noffers and invitations to come back from {business}, in the chat this\nbooking was made in. I can take this back at any time here or by\nreplying STOP.\" A changed wording is a new value (behind a release\ngate, like every new stored value).",
+        "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page's box\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages, the STOP word in each) and the card's record of a\nconsent given in person (`customers.consent.wording` of the cabinet's\ndictionaries), in English: \"I'd like to get news, offers and\ninvitations to come back from {business} in the chat where I made this\nbooking.\" The page adds: \"Optional. You can untick it at any time, or\nreply STOP to any of these messages.\" A changed wording is a new value\n(behind a release gate, like every new stored value).",
         "enum": [
           "2026-11-02"
         ],
@@ -42533,6 +42533,24 @@
             "schema": {
               "title": "Partner Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -98204,7 +98222,7 @@
                     "type": "boolean"
                   },
                   "text_version": {
-                    "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages) and the card's record of a consent given in person\n(`customers.consent.*` of the cabinet's dictionaries): \"Send me news,\noffers and invitations to come back from {business}, in the chat this\nbooking was made in. I can take this back at any time here or by\nreplying STOP.\" A changed wording is a new value (behind a release\ngate, like every new stored value).",
+                    "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page's box\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages, the STOP word in each) and the card's record of a\nconsent given in person (`customers.consent.wording` of the cabinet's\ndictionaries), in English: \"I'd like to get news, offers and\ninvitations to come back from {business} in the chat where I made this\nbooking.\" The page adds: \"Optional. You can untick it at any time, or\nreply STOP to any of these messages.\" A changed wording is a new value\n(behind a release gate, like every new stored value).",
                     "enum": [
                       "2026-11-02"
                     ],

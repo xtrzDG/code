@@ -191,10 +191,10 @@ neither does a missing one.
 | Storage | no `DATABASE_URL` (in-memory storage; `/readyz` is then never ready either); `RECORDINGS_STORAGE` other than `s3` (set `RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`, `RECORDINGS_S3_BUCKET`, `RECORDINGS_S3_ACCESS_KEY_ID`, `RECORDINGS_S3_SECRET_ACCESS_KEY`); no `ENCRYPTION_KEY`, the public one of `docker-compose.yml` or one shorter than 32 characters |
 | Addresses | `APP_BASE_URL`, `CABINET_BASE_URL` or `CORS_ALLOWED_ORIGINS` unset; any of them, `OPENAI_BASE_URL`, `ELEVENLABS_API_BASE_URL`, `LANGFUSE_HOST`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `RECORDINGS_S3_ENDPOINT_URL` or `BACKUP_S3_ENDPOINT_URL` on `http://` or localhost; `CORS_ALLOWED_ORIGINS=*` (refused everywhere) |
 | Sign-in | no `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`, or Cloudflare's test keys; `SMTP_SECURITY=none`; no provider that carries login codes (Twilio, `TELEGRAM_GATEWAY_API_TOKEN`, WhatsApp, SMTP); `OTP_LOG_CODES` on |
-| Models | `LLM_PROVIDER=scripted`; no `OPENAI_API_KEY` (voice notes and the menu photo import always use OpenAI); `ANTHROPIC_API_KEY` missing for `LLM_PROVIDER=anthropic` or a configured Anthropic model (`LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID`, `LLM_SUMMARY_MODEL_ID`, `LLM_VERIFIER_MODEL_ID`, `SPEND_SOFT_LIMIT_MODEL_ID`). A fallback model (`LLM_FALLBACK_MODEL_ID`) without its key is skipped with one warning instead |
+| Models | `LLM_PROVIDER=scripted`; no `OPENAI_API_KEY` (voice notes and the menu photo import always use OpenAI); `ANTHROPIC_API_KEY` missing for `LLM_PROVIDER=anthropic` or a configured Anthropic model (`LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID`, `LLM_SUMMARY_MODEL_ID`, `LLM_VERIFIER_MODEL_ID`, `SPEND_SOFT_LIMIT_MODEL_ID`); `LLM_FALLBACK_MODEL_ID` naming the scripted or an unknown model. A fallback model without its key is skipped with one warning instead |
 | Payments and webhooks | `STRIPE_SECRET_KEY` in test mode (`sk_test_`, `rk_test_`), a publishable key or without `STRIPE_WEBHOOK_SECRET`; Flitt's test merchant `1549901`, its published key, or `FLITT_MERCHANT_ID` without `FLITT_SECRET_KEY` (or the reverse); `META_APP_ID`, `META_EMBEDDED_SIGNUP_CONFIG_ID` or `WHATSAPP_SYSTEM_USER_TOKEN` without `META_APP_SECRET` and `META_VERIFY_TOKEN`; `ELEVENLABS_API_KEY` without `ELEVENLABS_WEBHOOK_SECRET`; `GOOGLE_OAUTH_CLIENT_ID` without `GOOGLE_OAUTH_CLIENT_SECRET` (or the reverse) |
 | Operations | `LOG_FORMAT=text` (leave it unset: JSON); no `PLATFORM_DAILY_SPEND_BUDGET_USD` above 0 (`render.yaml` sets 50 in `workshop-backend`); `SEED_DEMO_DATA` or `EMBEDDED_WORKER` on |
-| Seller | `SELLER_LEGAL_NAME`, `SELLER_ADDRESS`, `SELLER_COUNTRY_CODE` or `SELLER_TIME_ZONE` unset (development's Italian "Assistant Workshop" is no company); `PLATFORM_VAT_REGISTERED=true` for a country without a known rate (Italy 22 %, Georgia 18 %) |
+| Seller | `SELLER_LEGAL_NAME`, `SELLER_ADDRESS`, `SELLER_COUNTRY_CODE` or `SELLER_TIME_ZONE` unset, or `SELLER_LEGAL_NAME` written out as development's placeholder "Assistant Workshop" (no company); `PLATFORM_VAT_REGISTERED=true` for a country without a known rate (Italy 22 %, Georgia 18 %) |
 
 The cabinet (`workshop-cabinet`) never takes its canonical address from a
 request: without `SITE_URL` a production build names only a localhost
@@ -243,7 +243,7 @@ the address with `META_VERIFY_TOKEN` ("Verify and save").
 ## 5. GitHub environments, variables and secrets
 
 Every secret and variable the workflows read. Settings → Environments for
-the three environments, Settings → Secrets and variables → Actions for the
+the four environments, Settings → Secrets and variables → Actions for the
 rest. Names only: the values are yours.
 
 | Where | Variables | Secrets | Read by |
@@ -251,6 +251,9 @@ rest. Names only: the values are yours.
 | environment `staging` | `API_URL`, `CABINET_URL`, `SMOKE_WIDGET_BUSINESS_ID` (step 2); `SMOKE_EXPECT_REPLY` stays empty (a real model answers staging's test chat, any answer passes) | none | `deploy-smoke.yml` |
 | environment `production` | `API_URL`, `CABINET_URL` (no smoke business unless one real model answer per deploy is wanted) | none | `deploy-smoke.yml` |
 | environment `backup-drill` | none | `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY` (the drill's read-only key), `BACKUP_AGE_IDENTITY` (the drill's private age key), `SENTRY_DSN` (the backend project) | `restore-drill.yml`, production job |
+| environment `production-release` (required reviewers, `main` as its only branch) | none | `RELEASE_DEPLOY_KEY` (the private half of a deploy key with write access, docs/operations/deploys.md, "One-time setup") | `deploy-smoke.yml`, the promotion to `release` |
+| repository | `PRODUCTION_URL` (the production API's https address, as `PRODUCTION_API_URL`), `MONITORING_BUSINESS_ID` (a live business kept for the checks: open for a booking for one at 12:00 every day, its staff notifications off), `PRODUCTION_CABINET_URL` (optional) | `MONITORING_API_KEY` (an API key of that business with `bookings:write`) | `synthetics.yml`, every hour; a run without them fails and names what is missing |
+| repository | `STAGING_URL` (the staging API's https address) | `STAGING_SCAN_API_KEY` (an API key of a staging business that exists for the scan, every scope) | `zap-staging.yml`, every Sunday; never production |
 | repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` promotes by hand) | none | `deploy-smoke.yml` |
 | repository | `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_PREFIX` (optional, `workshop/` by default) | none | `restore-drill.yml`: the Monday drill runs only once `BACKUP_S3_BUCKET` is set |
 | repository | `SENTRY_ORG`, `SENTRY_PROJECT` (step 7) | `SENTRY_AUTH_TOKEN` (step 7) | `ci.yml`, the cabinet's source maps |
@@ -266,10 +269,11 @@ service, which starts the smoke test (`docs/operations/deploys.md`,
 Check:
 
 ```bash
-gh api 'repos/{owner}/{repo}/environments' --jq '.environments[].name'   # backup-drill, production, staging
+gh api 'repos/{owner}/{repo}/environments' --jq '.environments[].name'   # backup-drill, production, production-release, staging
 gh variable list --env staging
 gh variable list --env production
 gh secret list --env backup-drill
+gh secret list --env production-release
 gh variable list
 gh secret list
 gh workflow run deploy-smoke.yml -f environment=staging

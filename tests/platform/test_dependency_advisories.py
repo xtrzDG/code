@@ -163,6 +163,17 @@ def test_the_fix_names_a_major_upgrade(tmp_path: Path) -> None:
     assert "| jsdom@30.1.3 (a major) |" in body
 
 
+def test_a_range_with_alternatives_stays_in_its_cell(tmp_path: Path) -> None:
+    # npm writes "<2.0.1 || >=3.0.0 <3.0.2": unescaped, `|` starts a column.
+    split = {**UNDICI, "via": [{**UNDICI["via"][0], "range": "<7.0.1 || >=7.1.0"}]}
+    report = {**NPM_FINDING, "vulnerabilities": {"undici": split}}
+    _, _, body = audit(tmp_path, npm=report)
+    [row] = [line for line in body.splitlines() if line.startswith("| 2026-11-09")]
+
+    assert "| <7.0.1 \\|\\| >=7.1.0 |" in row
+    assert row.replace("\\|", "").count("|") == 8
+
+
 @pytest.mark.parametrize(
     ("pip", "npm"),
     [

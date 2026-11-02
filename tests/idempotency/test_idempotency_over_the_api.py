@@ -21,6 +21,7 @@ IDEMPOTENT_OPERATIONS: set[str] = {
     "POST /v1/admin/clients/{business_id}/plan",
     "POST /v1/admin/clients/{business_id}/setup-fee-waiver",
     "POST /v1/admin/clients/{business_id}/trial-extension",
+    "POST /v1/admin/partners/{partner_id}/payouts",
     "POST /v1/assistants",
     "POST /v1/brands",
     "POST /v1/brands/{brand_id}/locations/clone",
