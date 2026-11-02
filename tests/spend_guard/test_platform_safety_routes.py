@@ -38,7 +38,9 @@ def operator[InputData, OutputData](
 
 
 def client_as(world: PauseWorld, user_id: UserId) -> TestClient:
-    async def current_user(request: Request, authorization: str | None = None) -> UserId:
+    async def current_user(
+        request: Request, authorization: str | None = None
+    ) -> UserId:
         del request, authorization
         return user_id
 

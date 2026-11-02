@@ -4,7 +4,7 @@
 
 ## Risk
 
-<!-- One of HIGH, MEDIUM, LOW (docs/security/change-risk.md) and one line of why. When unsure, the higher one. -->
+<!-- One of HIGH, MEDIUM, LOW (docs/security/change-risk.md) and one line of why. With the `risk:high` label it is HIGH. When unsure, the higher one. -->
 
 Risk: 
 

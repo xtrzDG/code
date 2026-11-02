@@ -102,8 +102,7 @@ def test_a_consent_taken_back_in_person_says_who_and_how() -> None:
 
     assert card.marketing_consent.status is MarketingConsentStatus.WITHDRAWN
     assert card.marketing_consent.withdrawal is MarketingConsentWithdrawal.IN_PERSON
-    consent = stored(bed, giorgi.id).marketing_consent
-    assert consent is not None and consent.withdrawn_by == bed.owner_id
+    assert card.marketing_consent.withdrawn_by == bed.owner_id
     # Taking back what is taken back changes nothing; agreeing again is new.
     assert record(bed, giorgi.id, False, bed.staff_id) == card
     renewed = record(bed, giorgi.id, True, bed.staff_id).marketing_consent

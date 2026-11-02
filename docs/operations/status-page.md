@@ -6,7 +6,7 @@ how the team speaks to every owner during an incident
 
 ## The public status page
 
-`/status` (cabinet, public, `ka`/`ru`/`en`) reads `GET /v1/platform/status`:
+`/status` (cabinet, public, `en`/`it`) reads `GET /v1/platform/status`:
 
 - **Components**: website chat (`chat`), WhatsApp/Instagram/Messenger
   (`meta`), Telegram, phone calls (`voice`) and the cabinet with its
@@ -72,7 +72,7 @@ be hidden.
 ## Help center and support contacts
 
 - Articles: `docs/help/<language>/<slug>.md` (format in
-  `docs/help/README.md`), the same slugs in `en`, `ru` and `ka`
+  `docs/help/README.md`), the same slugs in `en` and `it`
   (`tests/help/test_help_articles.py`). The image copies them (Dockerfile).
 - The "?" beside a page's title opens the page's article in a drawer
   (`web/src/lib/help/helpTopics.ts`); `/help` lists and searches them.

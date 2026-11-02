@@ -6,7 +6,7 @@ import { IconX } from "@/components/icons";
 import { Button } from "@/components/ui";
 
 import { OPEN_COOKIE_SETTINGS_EVENT, type OpenCookieSettingsEvent } from "./consentEvents";
-import { saveConsent, type ConsentChoice } from "./saveConsent";
+import { hasAnsweredHere, rememberArrival, saveConsent, type ConsentChoice } from "./saveConsent";
 
 export interface ConsentBannerTexts {
   title: string;
@@ -31,13 +31,17 @@ export interface ConsentBannerTexts {
  * elements clear of it.
  */
 export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTexts; initiallyOpen: boolean }) {
-  const [isOpen, setOpen] = useState(initiallyOpen);
+  // A page brought back from the router's cache was rendered before an answer given since.
+  const [isOpen, setOpen] = useState(() => initiallyOpen && !hasAnsweredHere());
   const [isSaving, setSaving] = useState(false);
   const [hasFailed, setFailed] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
   const region = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
+
+  // The first page of the visit, for an acceptance given later on another page.
+  useEffect(() => rememberArrival(), []);
 
   // WCAG 2.4.11: a field the keyboard reaches never hides behind the box,
   // the page scrolls it above (scroll-padding follows the box's height).
@@ -100,6 +104,7 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
       className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 outline-none sm:p-4"
+      data-cookie-consent=""
       data-testid="cookie-consent"
     >
       {/* Only the box takes clicks: the page around it stays usable. */}

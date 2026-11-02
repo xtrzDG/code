@@ -45,6 +45,14 @@ test("the platform admin reads the system page and records a data breach that no
   await expect(navigation.getByRole("link", { name: texts.nav })).toHaveAttribute("aria-current", "page");
 
   await expect(admin.getByRole("region", { name: texts.alerts.title })).toBeVisible();
+  // The platform's brakes: the assistants answer and, for a SUPER admin,
+  // "Pause every assistant" is offered (not pressed: it would pause the
+  // shared e2e API for every other spec). The e2e API sets no daily budget.
+  const brakes = admin.getByRole("region", { name: en.platformBrakes.brakes.title });
+  await expect(brakes.getByText(en.platformBrakes.brakes.states.running)).toBeVisible();
+  await expect(brakes.getByText(en.platformBrakes.brakes.noBudget)).toBeVisible();
+  await expect(brakes.getByRole("button", { name: en.platformBrakes.brakes.pause })).toBeVisible();
+  await expect(admin.getByRole("region", { name: en.platformBrakes.reconciliation.title })).toBeVisible();
   await expect(admin.getByRole("region", { name: texts.workers.title })).toBeVisible();
   const lanes = admin.getByRole("region", { name: texts.lanes.title });
   // The ops lane joins once the release gate ops_lane opens: until then no

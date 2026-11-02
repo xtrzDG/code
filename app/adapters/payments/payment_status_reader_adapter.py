@@ -91,9 +91,7 @@ class PaymentStatusReaderAdapter(PaymentStatusReaderAdapterContract):
                 status = STRIPE_INVOICE_STATUSES.get(str(invoice.get("status")))
                 is_first_payment = False
             elif str(reference).startswith(STRIPE_SESSION_PREFIX):
-                session = self._stripe_client.retrieve_checkout_session(
-                    str(reference)
-                )
+                session = self._stripe_client.retrieve_checkout_session(str(reference))
                 status = read_session_status(session)
                 is_first_payment = True
             else:

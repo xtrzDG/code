@@ -97,6 +97,9 @@ def test_ordinary_owner_texts_are_saved_as_written() -> None:
 def test_the_primitives_hold_their_limits() -> None:
     assert OwnerRuleInstruction("x" * 300) == "x" * 300
     assert OwnerToneInstruction("x" * 200) == "x" * 200
+    # A Persian word written with its zero-width non-joiner.
+    persian = "\u0645\u06cc\u200c\u062e\u0648\u0627\u0647\u0645"
+    assert OwnerRuleInstruction(persian) == persian
     for too_long, primitive in (
         ("x" * 301, OwnerRuleInstruction),
         ("x" * 201, OwnerToneInstruction),

@@ -8,6 +8,7 @@ team's card shows it; unticking takes it back.
 from typing import cast
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
@@ -24,9 +25,9 @@ from app.use_cases.bookings.public.change_managed_booking_consent_use_case impor
 )
 from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
 from tests.bookings.manage_journey import BookedTable, book_a_table
-from tests.users.accounts_clock import AdjustableClock
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import JsonObject
+from tests.users.accounts_clock import AdjustableClock
 
 TEXT_VERSION: str = "2026-11-02"
 
@@ -146,7 +147,7 @@ def test_a_change_without_the_wording_is_refused_before_anything_is_read() -> No
                     business_id=business_id,
                     booking_id=BookingId(),
                     booking_version=BookingStartsAtUnixSeconds(1_790_000_000),
-                    expires_at=1_800_000_000_000_000,
+                    expires_at=Microseconds(1_800_000_000_000_000),
                 ),
                 marketing_consent=IsMarketingConsentGiven(True),
             )

@@ -2,8 +2,8 @@
 The secrets inventory (docs/security/secrets-inventory.md) lists every
 secret the code reads: the backend's settings and SDKs, the cabinet's
 server, the workflows' secrets. Each row names its purpose, owner, store,
-rotation period (at most a year) and procedure, and names a variable that
-still exists.
+rotation period (at most a year) and procedure, names a variable that
+still exists, and a secret the workflows read names GitHub as its store.
 """
 
 import re
@@ -33,6 +33,8 @@ VARIABLE: re.Pattern[str] = re.compile(r"`([A-Z][A-Z0-9_]*)`")
 SECRET_COLUMNS: int = 6
 ROTATION: re.Pattern[str] = re.compile(r"(\d+) months|on exposure|with its role")
 LONGEST_ROTATION_MONTHS: int = 12
+# A "Stored in" cell that says the secret is (also) a GitHub secret.
+GITHUB_STORE: re.Pattern[str] = re.compile(r"GitHub|repository secret")
 
 
 def code_secrets() -> set[str]:
@@ -55,6 +57,19 @@ def test_every_secret_the_code_reads_is_in_the_inventory() -> None:
 
     assert len(secrets) > 40
     assert sorted(secrets - listed_secrets()) == [], f"Add these secrets to {INVENTORY}"
+
+
+def test_every_secret_the_workflows_read_is_stored_in_github() -> None:
+    stores = {
+        name: row[3] for row in secret_rows() for name in VARIABLE.findall(row[0])
+    }
+    in_workflows = {name for name in workflow_secrets() if SECRET_NAME.search(name)}
+
+    assert len(in_workflows) > 15
+    assert (
+        sorted(name for name in in_workflows if not GITHUB_STORE.search(stores[name]))
+        == []
+    )
 
 
 def test_every_listed_secret_is_still_read_somewhere() -> None:

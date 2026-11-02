@@ -22,6 +22,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
+from app.utilities.observability.log_formatting import read_line_fields
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
@@ -37,7 +38,9 @@ class RecordingJobPipeline(PipelineContract[QueuedJobInput, JobReport]):
         return JobReport()
 
 
-def job_of(business_id: BusinessId | None, payload: dict[str, object]) -> QueuedJobInput:
+def job_of(
+    business_id: BusinessId | None, payload: dict[str, object]
+) -> QueuedJobInput:
     return QueuedJobInput(
         job_id=QueuedJobId(),
         job_name=JobName("summarize_conversation"),
@@ -78,7 +81,7 @@ def test_a_job_whose_payload_names_another_business_is_refused_and_logged(
 
     assert pipeline.scopes == []
     [line] = [record for record in caplog.records if record.name == "app.security"]
-    fields: dict[str, object] = getattr(line, "log_fields")
+    fields: dict[str, object] = read_line_fields(line)
     assert fields["security_event"] == JOB_TENANT_MISMATCH
     assert fields["path"] == "queued_job:summarize_conversation"
     assert fields["job_id"] == str(job.job_id)

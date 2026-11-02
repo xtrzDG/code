@@ -37,7 +37,7 @@ When none of these applies, keep a short note of why you decided no DPIA is need
 | Risk | What we do | What you can do |
 | --- | --- | --- |
 | The assistant gives wrong information (prices, allergens) | answers only from your facts; replies are checked before they are sent | keep your knowledge up to date; review the questions it could not answer |
-| Health details in booking notes | they stay in your business's data, encrypted backups only, never used to train models | tell the assistant not to ask about health; set a shorter retention |
+| Health details in booking notes | kept only with your business's data and its encrypted backups; never used to train models | tell the assistant not to ask about health; set a shorter retention |
 | Call recordings | off until you turn them on; callers hear a notice; encrypted with your business's key | keep them off unless you need them; choose a short retention |
 | Data outside the EU | the model and the voice run in the EU; other providers only with safeguards (DPA section 7) | leave channels you do not need switched off |
 | Quality review of a sample of conversations | phone numbers and e-mail addresses removed first | turn it off in **Settings → [Privacy](cabinet:settings/privacy)** |

@@ -20532,7 +20532,7 @@
       },
       "MarketingConsentView": {
         "additionalProperties": false,
-        "description": "The customer's marketing consent as the card shows it: the status\n(STOPPED whatever was recorded while they said STOP, are on the\nsuppression list or blocked), and what was recorded: when, where, by\nwhom (None: the customer), the wording's version, and when and how it\nwas taken back.",
+        "description": "The customer's marketing consent as the card shows it: the status\n(STOPPED whatever was recorded while they said STOP, are on the\nsuppression list or blocked), and what was recorded: when, where, by\nwhom (None: the customer), the wording's version, and when, how and by\nwhom it was taken back.",
         "properties": {
           "given_at": {
             "anyOf": [
@@ -20600,6 +20600,17 @@
               }
             ],
             "title": "Withdrawn At"
+          },
+          "withdrawn_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn By"
           }
         },
         "title": "MarketingConsentView",

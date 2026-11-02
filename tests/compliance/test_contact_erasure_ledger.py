@@ -39,18 +39,22 @@ from app.use_cases.compliance.record_contact_erasure_use_case import (
     RECORD_CONTACT_ERASURE_JOB,
     RecordContactErasureUseCase,
 )
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.backups.backup_fakes import InMemoryBackupBucket
 from tests.compliance.two_tenants import TwoTenants, command, seed_two_tenants
 
 PREFIX: BackupObjectPrefix = BackupObjectPrefix("workshop/")
 TICK: JobTick = JobTick(
-    job_name=JobName("reapply_contact_erasures"), scheduled_at=1_790_000_000_000_000
+    job_name=JobName("reapply_contact_erasures"),
+    scheduled_at=Microseconds(1_790_000_000_000_000),
 )
 
 
 def record_of(business_id: BusinessId, erased_at: int = 1) -> ContactErasureRecord:
     return ContactErasureRecord(
-        business_id=business_id, contact_id=ContactId(), erased_at=erased_at
+        business_id=business_id,
+        contact_id=ContactId(),
+        erased_at=Microseconds(erased_at),
     )
 
 
@@ -65,13 +69,16 @@ def reapply(
         eraser=testbed.contact_data_eraser,
         audit_log_repo=testbed.audit_log_repo,
         wall_clock=testbed.clock.build_wall_clock(),
+        storage_scope=StorageScopeContext(),
     )
 
 
 def erase_and_record(tenants: TwoTenants) -> InMemoryContactErasureLedgerAdapter:
     """The owner's erasure, and its queued job run into a ledger."""
 
-    tenants.testbed.delete_contact_data.run(command(tenants, tenants.visitor.contact.id))
+    tenants.testbed.delete_contact_data.run(
+        command(tenants, tenants.visitor.contact.id)
+    )
     ledger = InMemoryContactErasureLedgerAdapter()
     [job] = tenants.testbed.erasure_ledger_queue.jobs
     RecordContactErasureUseCase(ledger).run(
@@ -97,7 +104,9 @@ def test_an_erasure_queues_its_ledger_record_for_the_batch_worker() -> None:
     tenants = seed_two_tenants()
     tenants.testbed.clock.advance(5)
 
-    tenants.testbed.delete_contact_data.run(command(tenants, tenants.visitor.contact.id))
+    tenants.testbed.delete_contact_data.run(
+        command(tenants, tenants.visitor.contact.id)
+    )
 
     [job] = tenants.testbed.erasure_ledger_queue.jobs
     assert (job.name, job.business_id, job.lane) == (
@@ -181,7 +190,9 @@ def test_one_failing_erasure_never_stops_the_others_but_fails_the_run(
     neighbour = tenants.neighbour.contact
     ledger.record(
         ContactErasureRecord(
-            business_id=tenants.business.id, contact_id=neighbour.id, erased_at=9
+            business_id=tenants.business.id,
+            contact_id=neighbour.id,
+            erased_at=Microseconds(9),
         )
     )
     erase = testbed.contact_data_eraser.erase
@@ -237,6 +248,6 @@ def test_the_in_memory_ledger_keeps_the_first_record() -> None:
     first = record_of(BusinessId(), 5)
 
     ledger.record(first)
-    ledger.record(first.model_copy(update={"erased_at": 9}))
+    ledger.record(first.model_copy(update={"erased_at": Microseconds(9)}))
 
     assert ledger.read_all() == [first]

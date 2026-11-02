@@ -4,11 +4,12 @@
  * (components/consent): stored in the technical `aw_consent` cookie for
  * six months (server/consentCookie.ts). Accepting also keeps where the
  * visitor came from (`aw_attr`) unless they have it already or are signed
- * in: the page they accepted on (`page`, its path and query) and the page
- * before it (`referrer`, the browser's document.referrer), checked like
- * the proxy's first visit. Rejecting drops `aw_attr`. Answers 204; 403 for
- * another site (no site may answer for the visitor), 413 over 4 KB, 422
- * for anything but a choice.
+ * in: the public page their visit began on (`page`, its path and query)
+ * and another site's page before it (`referrer`), checked like the
+ * proxy's first visit (components/consent/saveConsent.ts sends them).
+ * Rejecting drops `aw_attr`. Answers 204; 403 for another site (no site
+ * may answer for the visitor), 413 over 4 KB, 422 for anything but a
+ * choice.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -40,7 +41,7 @@ function parseJson(text: string): unknown {
   }
 }
 
-/** The page the visitor accepted on, on this site; null for anything else. */
+/** The page of this site the visit began on; null for anything else. */
 function acceptedOn(page: string | undefined, request: NextRequest): URL | null {
   if (!page?.startsWith("/") || page.startsWith("//")) {
     return null;

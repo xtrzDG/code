@@ -25,6 +25,7 @@ from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform_status.prefixed_id import AnnouncementId
 from app.schemas.typings.referrals.prefixed_id import PartnerId
 from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.security.platform_admin_ids import derive_platform_admin_id
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.platform.authorization_requests import HTTP_METHODS, PATH_PARAMETER
@@ -51,6 +52,7 @@ WELL_FORMED_IDS: dict[str, str] = {
     "announcement_id": str(AnnouncementId()),
     "invoice_id": str(InvoiceId()),
     "job_id": str(QueuedJobId()),
+    "member_user_id": str(UserId()),
     "niche_key": "restaurant",
     "note_id": str(ClientNoteId()),
     "partner_id": str(PartnerId()),

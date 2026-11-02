@@ -1,13 +1,14 @@
 """
 The operations documents stay true and current: every path and link they
-name exists, every runbook is in the index, every sub-processor of the
+name exists, every runbook is in the index once, every sub-processor of the
 registry is in the vendor register with an exit plan and a console the
 offboarding removes, the register's yearly review and the yearly tabletop
-are not overdue, the on-call hours are Italian time, and every alert the
-product objectives name exists.
+are not overdue (nor dated ahead), the on-call hours are Italian time, and
+every alert the product objectives name exists.
 """
 
 import re
+from collections import Counter
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
@@ -68,7 +69,13 @@ REGISTER_NAME_OF: dict[str, str] = {
 WITHOUT_CONSOLE: frozenset[str] = frozenset({"Web push services"})
 CRITICALITY: frozenset[str] = frozenset({"critical", "high", "medium", "low"})
 LONGEST_GAP: timedelta = timedelta(days=366)
+# A planned tabletop gets a month to be recorded once its day has passed.
+OVERDUE_PLAN: timedelta = timedelta(days=31)
+PLANNED: str = "(planned)"
 ISO_DATE: re.Pattern[str] = re.compile(r"\b(20[0-9]{2}-[01][0-9]-[0-3][0-9])\b")
+# The cabinet and the help center speak English and Italian; the languages
+# of the first market before Italy are gone.
+FORMER_LANGUAGES: re.Pattern[str] = re.compile(r"`(?:ru|ka)`|\b(?:Russian|Georgian)\b")
 PRODUCT_OBJECTIVES: tuple[str, ...] = (
     "Calls answered",
     "Voice latency",
@@ -99,11 +106,13 @@ def test_every_path_and_link_of_the_documents_exists(document: str) -> None:
     assert broken_links(path) == []
 
 
-def test_every_runbook_is_in_the_index() -> None:
+def test_every_runbook_is_in_the_index_once() -> None:
     index = read("docs/operations/runbooks/README.md")
     runbooks = {path.name for path in RUNBOOKS.glob("*.md")} - {"README.md"}
+    listed = Counter(re.findall(r"^\| \[[a-z-]+\]\(([a-z-]+\.md)\)", index, re.M))
 
     assert sorted(name for name in runbooks if f"]({name})" not in index) == []
+    assert sorted(name for name, count in listed.items() if count > 1) == []
 
 
 def test_every_sub_processor_is_in_the_vendor_register() -> None:
@@ -145,15 +154,28 @@ def test_the_vendor_register_was_reviewed_within_a_year() -> None:
     match = re.search(r"^Reviewed: ([0-9]{4}-[0-9]{2}-[0-9]{2})\.", register, re.M)
 
     assert match is not None
-    assert today() - date.fromisoformat(match.group(1)) <= LONGEST_GAP
+    reviewed = date.fromisoformat(match.group(1))
+    assert reviewed <= today(), "a review cannot be dated ahead"
+    assert today() - reviewed <= LONGEST_GAP
 
 
 def test_a_tabletop_was_held_or_is_planned_within_a_year() -> None:
     record = section(read("docs/operations/tabletop.md"), "Record")
-    dates = [date.fromisoformat(row[0][:10]) for row in table_rows(record)]
+    rows = [
+        (date.fromisoformat(row[0][:10]), PLANNED in row[0])
+        for row in table_rows(record)
+    ]
+    held = [day for day, is_planned in rows if not is_planned]
+    planned = [day for day, is_planned in rows if is_planned]
 
-    assert dates, "record the exercise or plan the next one"
-    assert today() - max(dates) <= LONGEST_GAP
+    assert rows, "record the exercise or plan the next one"
+    assert all(day <= today() for day in held), "a held exercise lies ahead"
+    assert all(today() - day <= OVERDUE_PLAN for day in planned), (
+        "a planned exercise has passed: record it, or plan it again"
+    )
+    assert any(today() - day <= LONGEST_GAP for day in held) or any(
+        day - today() <= LONGEST_GAP for day in planned
+    )
 
 
 def test_the_incident_hours_are_italian_time() -> None:
@@ -165,6 +187,11 @@ def test_the_incident_hours_are_italian_time() -> None:
         assert "Europe/Rome" in read(document), document
     for document in DOCUMENTS:
         assert "Tbilisi" not in read(document), document
+
+
+def test_the_documents_name_only_todays_languages() -> None:
+    for document in DOCUMENTS:
+        assert FORMER_LANGUAGES.search(read(document)) is None, document
 
 
 def test_the_product_objectives_page_through_existing_alerts() -> None:

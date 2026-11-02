@@ -11,6 +11,9 @@ from typed_time_provider import Microseconds
 from app.contracts.repositories.spend_guard_repositories import (
     UsageSpendRepoContract,
 )
+from app.schemas.configurations.spend_guard_settings import (
+    DEFAULT_PLATFORM_SPEND_STOP_PERCENT,
+)
 from app.schemas.dto.platform_alerts import AlertObservation, PlatformAlertRule
 from app.schemas.dto.spend_guard import PlatformSpendFigures
 from app.schemas.typings.monitoring.constrained_integers import (
@@ -18,9 +21,6 @@ from app.schemas.typings.monitoring.constrained_integers import (
     AlertThreshold,
 )
 from app.schemas.typings.monitoring.strings import AlertDetailText
-from app.schemas.configurations.spend_guard_settings import (
-    DEFAULT_PLATFORM_SPEND_STOP_PERCENT,
-)
 from app.schemas.typings.spend.constrained_integers import (
     PlatformDailySpendBudgetMicroUsd,
     PlatformSpendStopPercent,
@@ -29,6 +29,9 @@ from app.utilities.spend.platform_spend import WEEK_DAYS, read_platform_spend
 from app.utilities.spend.spend_notice_texts import describe_usd
 
 MICRO_USD_PER_USD: int = 1_000_000
+DEFAULT_STOP_PERCENT: PlatformSpendStopPercent = PlatformSpendStopPercent(
+    DEFAULT_PLATFORM_SPEND_STOP_PERCENT
+)
 
 
 class SpendAlertChecks:
@@ -43,9 +46,7 @@ class SpendAlertChecks:
         self,
         usage_spend_repo: UsageSpendRepoContract,
         daily_budget_micro_usd: PlatformDailySpendBudgetMicroUsd | None,
-        stop_percent: PlatformSpendStopPercent = PlatformSpendStopPercent(
-            DEFAULT_PLATFORM_SPEND_STOP_PERCENT
-        ),
+        stop_percent: PlatformSpendStopPercent = DEFAULT_STOP_PERCENT,
     ) -> None:
         self._usage: UsageSpendRepoContract = usage_spend_repo
         self._budget: PlatformDailySpendBudgetMicroUsd | None = daily_budget_micro_usd

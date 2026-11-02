@@ -29,7 +29,7 @@ means the data stays in the EU (Render, Frankfurt; EU buckets).
 | --- | --- | --- | --- | --- | --- |
 | Customer contact details | name, phone, messenger ids, e-mail | P | Confidential | Postgres; backups | Meta (WhatsApp, Instagram, Messenger: Meta Platforms Ireland, onward to the US under the EU-US Data Privacy Framework and SCCs); Telegram (outside the EEA, no SCCs offered: only when the business turns the channel on and the customer writes there); Twilio (text-back SMS: US, Twilio's Binding Corporate Rules); Google Calendar (names in events: Google Ireland, DPF and SCCs) |
 | Conversation content | messages, voice notes, transcripts, the team's notes | P | Confidential (Restricted when it reveals health) | Postgres; Langfuse EU (30 days) | the messenger the customer chose (as above); Anthropic, US, SCCs: only sampled conversations with phones and e-mails removed, from 2026-11-05 and only where the business allows quality sampling |
-| Call audio and recordings | the call stream, recordings | P | Restricted | EU object storage, sealed with the business's key | none (ElevenLabs EU residency; Zadarma carries audio in transit, location in the vendor register) |
+| Call audio and recordings | the call stream, recordings | P | Restricted | EU object storage, sealed with the business's key | none from ElevenLabs (EU residency); Zadarma carries the audio and the callers' numbers in transit, and its location is still an owner action of the vendor register (its contract) |
 | Booking and request details | dates, party size, services, notes (allergies possible) | P | Confidential (Restricted for health notes) | Postgres | Google Calendar when connected (Google Ireland, DPF and SCCs); notifications by e-mail (EU provider) and SMS (Twilio, BCRs) |
 | Owner and staff accounts | name, phone, e-mail, Telegram chat id, devices, IP addresses | C | Confidential | Postgres | Twilio (login codes: BCRs); Cloudflare Turnstile (IP and browser signals on risky sign-ins: DPF and SCCs); Telegram (alerts to staff chats, chosen by the business) |
 | Sign-in material | sessions, sign-in-code challenges, TOTP seeds, recovery codes, passkey keys | C | Restricted | Postgres, sealed or hashed | none (the code itself travels by SMS, WhatsApp or e-mail as above) |
@@ -56,8 +56,9 @@ start otherwise (`tests/legal/test_processor_uses.py`).
 | Second sign-in steps and passkey challenges | 24 hours | `purge_stale_rows` | same module |
 | Expired sessions | until their idle or absolute expiry, then the next run | `purge_stale_rows` | `app/utilities/security/session_expiry.py` |
 | Delivery logs (outbox messages) | 30 days | `purge_stale_rows` | `DELIVERY_RETENTION_SECONDS` |
-| Webhook receipts and inbox events | 30 days | `purge_stale_rows` | `CHANNEL_RECEIPT_RETENTION_SECONDS` |
+| Webhook receipts and inbox events | 30 days | `purge_stale_rows` | `CHANNEL_RECEIPT_RETENTION_SECONDS` (receipts), `DELIVERY_RETENTION_SECONDS` (inbox events) |
 | Outbound webhook delivery log | 30 days | `purge_webhook_deliveries`, daily | `app/utilities/integrations/webhook_schedule.py` |
+| Facebook sign-ins of the Channels page (the owner's Facebook token while a page is picked) | 15 minutes, then removed by the next daily run | `purge_stale_rows` | `STATE_LIFETIME_SECONDS` in `app/use_cases/channels/meta_connection/meta_states.py` |
 | Missed calls | 90 days (sooner with the conversation) | `purge_stale_rows` | `MISSED_CALL_RETENTION_SECONDS` |
 | Conversations, notes, transcripts | the business's choice, 30 days to 10 years; 730 days by default | `purge_expired_personal_data`, daily | `DEFAULT_CONVERSATION_RETENTION_DAYS` in `app/schemas/domain/business_privacy_settings.py` |
 | Records of model calls (and their Langfuse traces) | 30 days by default, never more | `purge_expired_personal_data` | `DEFAULT_LLM_TURN_RETENTION_DAYS` |

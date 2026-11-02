@@ -109,4 +109,5 @@ register; DPA section 8 publishes it.
 With the measures above the residual risks are low, except health
 details, which each business that receives them weighs in its own DPIA.
 No prior consultation of the Garante (article 36) is needed. Sign-off:
-the privacy lead (`docs/operations/contacts.md`), [name, date].
+the privacy lead (the founder unless `docs/operations/contacts.md` names
+another person), [name, date].

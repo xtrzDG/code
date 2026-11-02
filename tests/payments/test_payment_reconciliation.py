@@ -39,6 +39,7 @@ from app.use_cases.billing.reconciliation.payment_mismatch_rules import find_mis
 from app.use_cases.billing.reconciliation.reconcile_payments_use_case import (
     ReconcilePaymentsUseCase,
 )
+from app.utilities.observability.log_formatting import read_line_fields
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.payments.reconciliation_fakes import NOW, FakeStatusReader, payment_order
 from tests.spend_guard.platform_pause_world import PauseWorld
@@ -48,6 +49,7 @@ from tests.storage.builders import build_business as build_country_business
 
 def build_business() -> BusinessDocument:
     return build_country_business(COUNTRY_SAMPLES[0], UserId())
+
 
 APPROVED, DECLINED = PaymentStatus.APPROVED, PaymentStatus.DECLINED
 
@@ -145,7 +147,7 @@ def test_a_lost_notification_is_found_kept_and_logged_without_card_data(
     assert mismatch.kind is PaymentMismatchKind.PAID_AT_PROVIDER
     assert mismatch.recorded_status is PaymentStatus.CREATED
     (line,) = [r for r in caplog.records if r.name == "app.payments"]
-    fields: dict[str, object] = line.log_fields
+    fields: dict[str, object] = read_line_fields(line)
     assert fields["payment_event"] == PAYMENT_RECONCILIATION_MISMATCH
     assert fields["payment_order_id"] == str(lost.id)
     assert fields["provider_status"] == "approved"

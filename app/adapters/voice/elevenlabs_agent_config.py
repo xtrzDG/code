@@ -67,13 +67,11 @@ TRANSFER_CONDITION: str = (
     f"'{OPEN_NOW_YES}'. Otherwise never transfer: use handoff_to_human so a "
     "colleague calls back."
 )
-# Signed URLs only: no allowed host, and a connection without an origin is
-# refused too. Phone calls through the business's number are not affected.
-AGENT_AUTH: JsonObject = {
-    "enable_auth": True,
-    "allowlist": [],
-    "require_origin_header": True,
-}
+# Signed URLs only (no allowed host): a web or WebSocket conversation needs
+# one made with the platform's API key. Phone calls through the business's
+# number are not affected. No origin header is required: any client can
+# send one, and the signed URL is already the proof.
+AGENT_AUTH: JsonObject = {"enable_auth": True, "allowlist": []}
 
 
 # Appended to the phone instruction: what the call-initiation webhook fills

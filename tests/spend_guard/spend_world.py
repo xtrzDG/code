@@ -21,10 +21,10 @@ from app.contracts.repositories.spend_guard_repositories import (
 from app.facilitators.spend_guard.spend_limit_notice_facilitator import (
     SpendLimitNoticeFacilitator,
 )
-from app.repositories.billing_repositories import UsageEventRepository
 from app.registries.limits.platform_spend_gauge_registry import (
     PlatformSpendGaugeRegistry,
 )
+from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.platform_safety_repositories import PlatformPauseRepository
 from app.repositories.spend_guard_repositories import (

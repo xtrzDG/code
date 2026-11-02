@@ -7,6 +7,7 @@ database: the deleted businesses (deleted again) and the erased customers
 from pathlib import Path
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.adapters.backup.age_backup_cipher_adapter import AgeBackupCipherAdapter
 from app.adapters.business_closures.in_memory_contact_erasure_ledger_adapter import (
@@ -67,12 +68,14 @@ def test_the_drill_hands_both_ledgers_to_the_restored_database(work: Path) -> No
     scratch = FakeScratchDatabase(facts())
     deletions = InMemoryDeletionLedgerMirrorAdapter()
     deleted = DeletionLedgerRecord(
-        business_id=BusinessId(), deletion_id=BusinessDeletionId(), started_at=1
+        business_id=BusinessId(),
+        deletion_id=BusinessDeletionId(),
+        started_at=Microseconds(1),
     )
     deletions.record(deleted)
     erasures = InMemoryContactErasureLedgerAdapter()
     erased = ContactErasureRecord(
-        business_id=BusinessId(), contact_id=ContactId(), erased_at=2
+        business_id=BusinessId(), contact_id=ContactId(), erased_at=Microseconds(2)
     )
     erasures.record(erased)
 

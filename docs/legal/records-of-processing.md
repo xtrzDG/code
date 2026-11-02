@@ -10,7 +10,8 @@ are in `docs/security/data-classification.md`.
 
 **Controller / processor:** [operator name, address, VAT number].
 **Contact for data protection:** [privacy contact e-mail]; the privacy
-lead of `docs/operations/contacts.md`. **Representative in the EU:** not
+lead (the founder unless `docs/operations/contacts.md` names another
+person). **Representative in the EU:** not
 needed (established in the EU) [or name].
 
 ## A. The platform as controller

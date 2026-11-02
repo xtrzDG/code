@@ -223,22 +223,23 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
     )
     # The erasures' ledger outside the database (the backup bucket).
-    contact_erasure_ledger: Singleton[ContactErasureLedgerAdapterContract] = (
-        Singleton(build_contact_erasure_ledger, settings=config.app_settings)
+    contact_erasure_ledger: Singleton[ContactErasureLedgerAdapterContract] = Singleton(
+        build_contact_erasure_ledger, settings=config.app_settings
     )
     record_contact_erasure_use_case: Factory[
         UseCaseContract[QueuedJobInput, JobReport]
     ] = Factory(RecordContactErasureUseCase, ledger=contact_erasure_ledger)
-    reapply_contact_erasures_use_case: Factory[
-        UseCaseContract[JobTick, JobReport]
-    ] = Factory(
-        ReapplyContactErasuresUseCase,
-        ledger=contact_erasure_ledger,
-        contact_repo=repositories.contact_repo,
-        collect_contact_records=collect_contact_records_use_case,
-        eraser=contact_data_eraser,
-        audit_log_repo=repositories.audit_log_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
+    reapply_contact_erasures_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            ReapplyContactErasuresUseCase,
+            ledger=contact_erasure_ledger,
+            contact_repo=repositories.contact_repo,
+            collect_contact_records=collect_contact_records_use_case,
+            eraser=contact_data_eraser,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+            storage_scope=utilities.storage_scope,
+        )
     )
     purge_expired_message_media_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]

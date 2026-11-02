@@ -14,14 +14,17 @@ from scripts.entry_points.access_classes import (
     OWNER,
     PUBLIC,
     HttpEntryPoint,
+    UnclassifiedRouteError,
 )
 
 ROOT: Path = Path(__file__).resolve().parents[2]
 CABINET_APP: Path = ROOT / "web" / "src" / "app"
-# `export async function POST(` or `export { forward as GET, ... }`.
+# `export async function POST(` or `export { forward as GET, ... }`: every
+# method a route handler may export.
+HANDLER_METHODS: str = "GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS"
 METHOD_EXPORTS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"export (?:async )?(?:function|const) (GET|POST|PUT|PATCH|DELETE)\b"),
-    re.compile(r"\bforward as (GET|POST|PUT|PATCH|DELETE)\b"),
+    re.compile(rf"export (?:async )?(?:function|const) ({HANDLER_METHODS})\b"),
+    re.compile(rf"\bforward as ({HANDLER_METHODS})\b"),
 )
 SIGN_IN_STEP: str = "a sign-in step, forwarded to the API's operation and its limits"
 # The route of each handler (folder path, route groups dropped): its access
@@ -75,10 +78,6 @@ CABINET_ROUTES: dict[str, tuple[str, str, str]] = {
 }
 
 
-class UnclassifiedRouteError(ValueError):
-    """A route handler of the cabinet that CABINET_ROUTES does not name."""
-
-
 def route_path(handler: Path, app_directory: Path) -> str:
     """`/api/auth/start` of `.../app/api/auth/start/route.ts`."""
 
@@ -98,7 +97,9 @@ def handler_methods(handler: Path) -> list[str]:
 def cabinet_entry_points(app_directory: Path = CABINET_APP) -> list[HttpEntryPoint]:
     """
     Raises:
-        UnclassifiedRouteError: a route handler CABINET_ROUTES does not name.
+        UnclassifiedRouteError: a route handler CABINET_ROUTES does not name,
+            or one whose exported methods are not recognised (it would
+            otherwise drop out of the inventory unseen).
     """
 
     found: list[HttpEntryPoint] = []
@@ -109,9 +110,15 @@ def cabinet_entry_points(app_directory: Path = CABINET_APP) -> list[HttpEntryPoi
                 f"{handler} is not classified: add {path!r} to CABINET_ROUTES "
                 "in scripts/entry_points/cabinet_routes.py"
             )
+        methods: list[str] = handler_methods(handler)
+        if not methods:
+            raise UnclassifiedRouteError(
+                f"{handler} exports no method the inventory recognises: export "
+                "each one as `export async function GET(` or `forward as GET`"
+            )
         access, scope, protected_by = CABINET_ROUTES[path]
         found.extend(
             HttpEntryPoint(method, path, access, scope, protected_by)
-            for method in handler_methods(handler)
+            for method in methods
         )
     return sorted(found, key=lambda entry: entry.key)

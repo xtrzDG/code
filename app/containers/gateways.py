@@ -22,8 +22,8 @@ from app.containers.utilities import UtilitiesContainer
 from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
-from app.gateways.worker.periodic_job_heartbeats import PeriodicJobHeartbeats
 from app.gateways.worker.job_telemetry import JobTelemetry
+from app.gateways.worker.periodic_job_heartbeats import PeriodicJobHeartbeats
 
 
 class GatewaysContainer(containers.DeclarativeContainer):

@@ -31,7 +31,8 @@ class OwnerRuleInstruction(BaseConstrainedTypedString):
     min_length = 1
     max_length = 300
     # Invisible: the characters `CustomerGivenName` refuses (controls, soft
-    # hyphen, zero-width, direction and format marks, tag letters).
+    # hyphen, zero-width, direction and format marks, tag letters; the
+    # zero-width joiners of Persian or Indic words stay allowed inside).
     pattern = (
         r"^[^\s#<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
         r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]"

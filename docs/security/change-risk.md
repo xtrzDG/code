@@ -6,16 +6,20 @@ differential review: a second person reads what the change does to the
 trust boundaries, not only whether the code is tidy.
 `tests/legal/test_change_risk.py` keeps this list in step with
 `.github/CODEOWNERS` (every path the owners must approve is HIGH here) and
-checks that every path below exists.
+with the `risk:high` label, and checks that every path below exists.
 
 ## Classes
 
-**HIGH** when the change touches any of these, or does any of the things
-after the list:
+**HIGH** when the pull request carries the `risk:high` label, which
+`.github/workflows/risk-labels.yml` sets by itself from the paths of
+`.github/labeler.yml` (sign-in, keys, payments, webhooks, tenant
+isolation, the assistant's tools, CI and images); when it touches any of
+these; or when it does any of the things after the list:
 
 - `app/gateways/http/user_authentication.py`, `app/gateways/http/api_key_authentication.py`
   and `app/use_cases/authorize_business_access_use_case.py`,
-  `app/use_cases/authorize_support_access_use_case.py`: who is let in;
+  `app/use_cases/authorize_support_access_use_case.py`,
+  `app/utilities/brands/brand_access.py`: who is let in;
 - `app/adapters/security/`, `app/utilities/security/`: keys, ciphers,
   signed links, sessions, admin permissions;
 - `app/repositories/business_scoped_repository.py`, `app/utilities/storage/`
@@ -29,8 +33,10 @@ after the list:
   security measures and the texts the businesses accepted;
 - `app/repositories/audit/` and `app/use_cases/compliance/`: the audit log,
   exports and erasure;
-- `tests/platform/route_access_tables.py`, `tests/platform/authorization_tables.py`:
-  the reviewed exceptions of the authorization tests;
+- `tests/platform/route_access_tables.py`, `tests/platform/authorization_tables.py`,
+  `tests/platform/brand_matrix_checks.py`: the reviewed exceptions of the
+  authorization tests, and `scripts/entry_points/`: how the entry-point
+  inventory classifies what those tables do not name;
 - `web/src/server/`: the cabinet's server (session cookie, proxy, CSP);
 - `.github/`, `Dockerfile`, `web/Dockerfile`, `docker/`, `render.yaml`,
   `.importlinter`, `bandit-baseline.json`, `.gitleaksignore`,
@@ -62,9 +68,12 @@ When unsure, pick the higher class.
 
 ## Differential review of a HIGH change
 
-The reviewer is not the author and is a code owner of the paths touched.
-They answer these in the pull request, each with "yes", "no" or "n/a" and a
-line of why:
+The reviewer is not the author and is a code owner of the paths touched;
+when the author is the only code owner (one owner today, `.github/CODEOWNERS`),
+the deputy of `docs/operations/contacts.md` reviews, and the owner approves
+only after the answers are in. A pull request an AI agent wrote counts as
+written by the person who ran the agent. The reviewer answers these in the
+pull request, each with "yes", "no" or "n/a" and a line of why:
 
 1. **Entry points**: does the diff of `docs/security/entry-points.json`
    add or weaken one? Is each new open entry point in

@@ -24,12 +24,13 @@ from app.schemas.typings.localization.constrained_strings import (
 
 # The EU member states: a staff mobile abroad (a seasonal manager on a
 # Romanian number) is fine there, any other country is not.
-EU_COUNTRY_CODES: frozenset[str] = frozenset(
-    {
+EU_COUNTRY_CODES: frozenset[CountryCode] = frozenset(
+    CountryCode(code)
+    for code in (
         "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR",
         "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI",
         "SK",
-    }
+    )
 )  # fmt: skip
 # Only people answer a transfer: mobiles and landlines.
 TRANSFERABLE_NUMBER_TYPES: frozenset[int] = frozenset(

@@ -14,8 +14,12 @@ Nobody else reads production secrets (`docs/security/access-review.md`).
 
 **Rotation.** At most every 12 months, and at once when a secret may have
 been exposed or someone who could read it leaves
-(`docs/operations/offboarding.md`). Each rotation is a line in the log at
-the end. The checks of the quarterly access review include the dates.
+(`docs/operations/offboarding.md`). The rows marked "on exposure" are the
+exception: rotating them breaks what they protect (the suppression list's
+digests, every push subscription) or they are public by design (the
+Sentry DSN), so a departure alone does not rotate them; a suspected leak
+does, as an incident. Each rotation is a line in the
+log at the end. The checks of the quarterly access review include the dates.
 
 **Never** in git (gitleaks in CI, `SECURITY.md`), chat, e-mail, tickets or
 the browser bundle (`NEXT_PUBLIC_*` holds no secret). In production the
@@ -39,13 +43,13 @@ setting and on a missing, public or short `ENCRYPTION_KEY`
 | Secret | Purpose | Owner | Stored in | Rotate | Procedure |
 | --- | --- | --- | --- | --- | --- |
 | `ENCRYPTION_KEY`, `ENCRYPTION_KEYS` | seals channel, calendar and TOTP secrets; signs booking, notification and chat-stream links; derives Telegram webhook secrets and recording keys | platform owner | env group `workshop-backend`, escrow in the vault | 12 months | `docs/operations/backup-restore.md`, "Key rotation": new key first in the ring, re-seal from `/admin/security`, retire after links and recordings aged out; dual-key throughout |
-| `SUPPRESSION_LIST_KEY` | HMAC key of the suppression list digests | platform owner | env group `workshop-backend` | on exposure | A new key makes every stored digest unmatchable, so it is not rotated on a schedule; a leak reveals no identity by itself (a digest can only be tested against a known identity). On exposure: incident first (`docs/operations/incident.md`) |
+| `SUPPRESSION_LIST_KEY` | HMAC key of the suppression list digests | platform owner | env group `workshop-backend` (generated once, `render.yaml`) | on exposure | A new key makes every stored digest unmatchable, and the customers who said STOP could be written to again; there is no re-keying job, so it is never rotated on a schedule or on a departure. A leak reveals no identity by itself (a digest can only be tested against a known identity). On exposure: incident first (`docs/operations/incident.md`), where the founder weighs keeping the key against starting the list again and records the decision |
 | `DATABASE_URL` | the migration role (tables' owner): migrations, backups, audit purges | platform owner | `workshop-db` (`fromDatabase`) | 12 months | Render's database credentials; every service reads it through `fromDatabase` and picks it up on redeploy |
 | `DATABASE_URL_TENANT`, `DATABASE_URL_PLATFORM` | the API's and workers' row-level-security roles | platform owner | `workshop-api`, read by the workers `fromService` | 12 months | `\password workshop_tenant_app` (and `_platform_app`) as the migration role, then the new URL on `workshop-api` in the maintenance window (`docs/operations/deploys.md`, "Database roles") |
 | `LIVE_EVENTS_DATABASE_URL` | a direct connection for `LISTEN` | platform owner | `workshop-api` when set | with its role | as `DATABASE_URL_TENANT` |
 | `RESTORE_CHECK_DATABASE_URL` | scratch server of the restore drill (never production) | platform owner | the drill's throwaway Postgres in CI (no secret); a scratch server's role when run by hand | 12 months | new password of the scratch server's role, set where the drill runs |
 | `METRICS_TOKEN` | reads `/metrics` of the API and workers | platform owner | `workshop-api` (Render `generateValue`) | 12 months | generate a new value on Render, update the scraper (Grafana) right after the redeploy |
-| `OPENAI_API_KEY`, `EMBEDDINGS_API_KEY` | the language model and embeddings (EU project) | platform owner | `workshop-api` | 12 months | create a key in the EU project, set it, redeploy, delete the old key after `llm_errors` stays quiet for an hour |
+| `OPENAI_API_KEY`, `EMBEDDINGS_API_KEY` | the language model and embeddings (EU project) | platform owner | `workshop-api`; a separate key for the nightly evals in GitHub (`evals-nightly.yml`) | 12 months | create a key in the EU project, set it, redeploy, delete the old key after `llm_errors` stays quiet for an hour; the evals' key the same way in GitHub |
 | `ANTHROPIC_API_KEY` | the second model provider | platform owner | `workshop-api`; a separate key for the evals in GitHub | 12 months | as OpenAI (a key per environment, never shared) |
 | `ELEVENLABS_API_KEY` | the voice platform's API (agents, calls) | platform owner | `workshop-api` | 12 months | new scoped key in the console, set, redeploy, revoke the old one; `voice_health` must stay quiet |
 | `ELEVENLABS_WEBHOOK_SECRET` | HMAC of post-call and initiation webhooks | platform owner | `workshop-api` | 12 months | single secret: change it in the console and on Render together in the maintenance window; deliveries in between are refused (`docs/operations/runbooks/voice-outage.md`) |
@@ -54,7 +58,7 @@ setting and on a missing, public or short `ENCRYPTION_KEY`
 | `WHATSAPP_SYSTEM_USER_TOKEN`, `WHATSAPP_OTP_ACCESS_TOKEN` | the platform's WhatsApp sender (notifications, login codes) | platform owner | `workshop-api` | 12 months (Meta's maximum when shorter) | new system-user token in Business Manager, set, redeploy, revoke the old one |
 | `TELEGRAM_PLATFORM_BOT_TOKEN` | the platform bot (alerts, owner notifications) | platform owner | `workshop-api` | 12 months | `/revoke` in BotFather, set the new token; the webhook is registered again at the API's start |
 | `TELEGRAM_GATEWAY_API_TOKEN` | login codes through Telegram | platform owner | `workshop-api` | 12 months | new token in the Gateway account, set, redeploy |
-| `TWILIO_AUTH_TOKEN` | SMS and the voice fallback; signs Twilio's callbacks | platform owner | `workshop-api` | 12 months | Twilio's secondary auth token: create, set, redeploy, then promote it (Twilio keeps both valid until promotion) |
+| `TWILIO_AUTH_TOKEN` | SMS and the voice fallback; signs Twilio's callbacks | platform owner | `workshop-api` | 12 months | in the maintenance window: create Twilio's secondary auth token, set it, redeploy, and promote it as soon as the deploy is live. API calls accept both tokens until the promotion, but Twilio signs its callbacks with the primary one only, so the voice fallback's callbacks are refused between the deploy and the promotion |
 | `ZADARMA_API_KEY`, `ZADARMA_API_SECRET` | telephony API and its notification signatures | platform owner | `workshop-api` | 12 months | regenerate in the Zadarma cabinet and set both in the maintenance window |
 | `FLITT_SECRET_KEY` | Flitt payments and their signatures | platform owner | `workshop-api` | 12 months | new key in the Flitt merchant portal, set at once (single secret: maintenance window) |
 | `STRIPE_SECRET_KEY` | Stripe API (restricted key) | platform owner | `workshop-api` | 12 months | roll the restricted key in the dashboard with an expiry of 24 hours, set, redeploy |

@@ -58,16 +58,24 @@ from tests.analytics.metric_events import DAY, at_day
             ),
             "referral",
         ),
-        # A chat page names no source of its own (it never starts the
-        # attribution: it shows no cookie banner); the referring site counts.
+        # A first touch on a business's chat page (the banner accepted on
+        # the public site before): ahead of the referring site.
         (
             SignupAttribution(
                 landing_path=LandingPath("/c/salobie-bia"),
                 referrer_host=ReferrerHost("www.instagram.com"),
             ),
-            "instagram.com",
+            "hosted_chat",
         ),
-        (SignupAttribution(landing_path=LandingPath("/c/salobie-bia")), "direct"),
+        # The chat page's "Powered by" link names itself with its tag.
+        (
+            SignupAttribution(
+                source_tag=SignupSourceTag("powered_by"),
+                landing_path=LandingPath("/it"),
+            ),
+            "powered_by",
+        ),
+        (SignupAttribution(landing_path=LandingPath("/it/for/hotel")), "direct"),
         (
             SignupAttribution(referrer_host=ReferrerHost("www.instagram.com")),
             "instagram.com",

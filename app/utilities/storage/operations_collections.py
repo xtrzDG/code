@@ -7,7 +7,8 @@ indicators in five-minute slots and hourly rows (1163); the post-deploy
 data tasks' state (1164); the marks of the platform's watchers
 (1173); the platform admin's overrides of the niche templates' texts
 (1221); the global pause, the periodic jobs' heartbeats and the daily
-payment reconciliations (1230). Part of DOCUMENT_COLLECTIONS (document_collection_catalog.py).
+payment reconciliations (1230). Part of DOCUMENT_COLLECTIONS
+(document_collection_catalog.py).
 """
 
 from app.schemas.domain.client_standings import ClientStandingDocument

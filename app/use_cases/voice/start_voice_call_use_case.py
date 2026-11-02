@@ -38,6 +38,7 @@ from app.schemas.dto.voice_webhooks import (
     CallInitiationWebhookRequest,
 )
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.channels.strings import CallLocalTimeText, CallNextDaysText
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -184,7 +185,7 @@ class StartVoiceCallUseCase(
         profile: BusinessProfileDocument | None = (
             self._business_profile_repo.get_by_business(business.id)
         )
-        is_open_now: bool = self._is_open_now(business, profile, now_seconds)
+        is_open_now: IsOpenNow = self._is_open_now(business, profile, now_seconds)
         return CallInitiationData(
             business_id=business.id,
             first_message=MessageText(
@@ -225,7 +226,7 @@ class StartVoiceCallUseCase(
         business: BusinessDocument,
         profile: BusinessProfileDocument | None,
         now_seconds: int,
-    ) -> bool:
+    ) -> IsOpenNow:
         """Inside the business's opening hours (special days included)."""
 
         if profile is None or profile.hours == []:

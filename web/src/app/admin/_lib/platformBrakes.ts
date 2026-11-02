@@ -9,7 +9,6 @@ import type { Schema } from "@/api/types";
 
 export type PlatformBrakes = Schema<"PlatformPauseView">;
 export type PaymentReconciliation = Schema<"PaymentReconciliationView">;
-export type PaymentMismatch = Schema<"PaymentMismatchView">;
 
 /** How the assistants stand: answering, paused by an admin, or stopped by the budget. */
 export type BrakeState = "running" | "paused" | "stopped";

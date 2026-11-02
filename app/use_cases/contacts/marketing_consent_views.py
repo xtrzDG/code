@@ -43,6 +43,7 @@ def consent_view(
         recorded_by=consent.recorded_by,
         withdrawn_at=consent.withdrawn_at,
         withdrawal=consent.withdrawal,
+        withdrawn_by=consent.withdrawn_by,
     )
 
 

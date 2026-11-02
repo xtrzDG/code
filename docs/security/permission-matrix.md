@@ -49,9 +49,11 @@ at each request, so a change takes effect at the next one.
 Every operation under `/v1/businesses/{business_id}`, grouped by the path's
 first segment. "Members" are staff, an agency and a regional manager
 assigned to the location; the owner (and a brand owner) may use every
-operation. A stranger gets 404 on all of them, as if the business did not
-exist; platform support reads only during an open look and changes only
-with the owner's consent.
+operation. An agency also uses the owner-only operations of building and
+publishing the assistant, and none that copies customers' data out. A
+stranger gets 404 on all of them, as if the business did not exist;
+platform support reads only during an open look and changes only with the
+owner's consent.
 
 | Area | Operations | Owner only | Members may read | Members may change |
 | --- | ---: | ---: | ---: | ---: |

@@ -30,5 +30,7 @@ def test_the_stop_share_is_read_from_the_environment() -> None:
 
 @pytest.mark.parametrize("value", ["79", "1001", "0"])
 def test_a_stop_below_the_warning_or_absurdly_high_is_refused(value: str) -> None:
-    with pytest.raises(ValidationFailedError, match="PLATFORM_DAILY_SPEND_STOP_PERCENT"):
+    with pytest.raises(
+        ValidationFailedError, match="PLATFORM_DAILY_SPEND_STOP_PERCENT"
+    ):
         read_spend_guard_settings({"PLATFORM_DAILY_SPEND_STOP_PERCENT": value})

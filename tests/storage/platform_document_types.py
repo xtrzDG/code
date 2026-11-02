@@ -43,9 +43,12 @@ from app.schemas.domain.niche_texts import (
 )
 from app.schemas.domain.partners import PartnerDocument
 from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
+from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
+from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
+from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.referrals import ReferralCodeDocument, ReferralDocument
 from app.schemas.domain.service_levels import (
@@ -129,5 +132,11 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # The niche templates' texts are the same for every business (1221).
         NicheTextDraftDocument,
         NicheTextReleaseDocument,
+        # The platform's brakes and watchers (1230): the global pause, the
+        # periodic jobs' heartbeats, the daily payment reconciliation (its
+        # mismatches name businesses; the result belongs to none).
+        PlatformPauseDocument,
+        PeriodicJobHeartbeatDocument,
+        PaymentReconciliationDocument,
     }
 )

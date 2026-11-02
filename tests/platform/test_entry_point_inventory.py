@@ -7,6 +7,7 @@ agrees with the reviewed tables the authorization tests prove, every
 webhook names its signature, and every cabinet route handler is classified.
 """
 
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -24,15 +25,22 @@ from scripts.entry_point_inventory import (
 )
 from scripts.entry_points.access_classes import (
     ACCESS_CLASSES,
+    ACCOUNT,
     CUSTOMER,
     OWNER,
+    PLATFORM_ADMIN,
     PUBLIC,
     SIGNED_WEBHOOK,
+    UnclassifiedRouteError,
 )
-from scripts.entry_points.api_routes import BRAND_PREFIX, BUSINESS_PREFIX, is_under
+from scripts.entry_points.api_routes import (
+    BRAND_PREFIX,
+    BUSINESS_PREFIX,
+    classify,
+    is_under,
+)
 from scripts.entry_points.cabinet_routes import (
     CABINET_ROUTES,
-    UnclassifiedRouteError,
     cabinet_entry_points,
     route_path,
 )
@@ -44,6 +52,8 @@ ROOT: Path = Path(__file__).resolve().parents[2]
 OPEN_CLASSES: frozenset[str] = frozenset({PUBLIC, SIGNED_WEBHOOK, CUSTOMER})
 SIGNATURE_WORDS: tuple[str, ...] = ("signature", "secret", "token", "handshake")
 PATH_PATTERN: re.Pattern[str] = re.compile(r"`((?:[\w.-]+/)+[\w.-]*)`")
+API_DESCRIPTION: Path = ROOT / "web" / "openapi.json"
+HTTP_METHODS: tuple[str, ...] = ("get", "put", "post", "delete", "patch", "options")
 # Today's numbers; fewer means entry points were lost to the inventory.
 MINIMUM_API_OPERATIONS: int = 400
 MINIMUM_PERIODIC_JOBS: int = 40
@@ -72,6 +82,35 @@ def test_every_api_operation_is_listed_once_with_a_known_class(
     assert [key for key, count in keys.items() if count > 1] == []
     assert {entry.access for entry in inventory.api} <= set(ACCESS_CLASSES)
     assert {entry.access for entry in inventory.cabinet} <= set(ACCESS_CLASSES)
+
+
+def test_every_operation_of_the_api_description_is_listed(
+    inventory: Inventory,
+) -> None:
+    paths = json.loads(API_DESCRIPTION.read_text("utf-8"))["paths"]
+    documented = {
+        f"{method.upper()} {path}"
+        for path, item in paths.items()
+        for method in HTTP_METHODS
+        if method in item
+    }
+
+    assert sorted(documented - {entry.key for entry in inventory.api}) == []
+
+
+def test_an_operation_no_reviewed_table_classifies_stops_the_inventory() -> None:
+    assert classify("GET", "/v1/me/sessions").access == ACCOUNT
+    assert classify("POST", "/v1/businesses").access == ACCOUNT
+    for path in ("/v1/unreviewed", "/v1/businesses-unreviewed", "/v1/brands/join"):
+        with pytest.raises(UnclassifiedRouteError, match="ACCOUNT_PREFIXES"):
+            classify("GET", path)
+
+
+def test_only_the_website_chat_answers_preflights_without_a_token() -> None:
+    assert classify("OPTIONS", "/v1/widget/{business_id}/config").access == PUBLIC
+    assert classify("OPTIONS", "/v1/admin/team").access == PLATFORM_ADMIN
+    with pytest.raises(UnclassifiedRouteError):
+        classify("OPTIONS", "/v1/unreviewed")
 
 
 def test_the_open_operations_are_exactly_the_reviewed_ones(
@@ -138,6 +177,23 @@ def test_a_new_cabinet_route_must_be_classified(tmp_path: Path) -> None:
         cabinet_entry_points(tmp_path)
 
 
+def test_every_method_a_cabinet_route_exports_is_listed(tmp_path: Path) -> None:
+    handler = tmp_path / "api" / "consent" / "route.ts"
+    handler.parent.mkdir(parents=True)
+    handler.write_text(
+        "export function HEAD() {}\nexport async function OPTIONS() {}\n",
+        encoding="utf-8",
+    )
+
+    assert [entry.key for entry in cabinet_entry_points(tmp_path)] == [
+        "HEAD /api/consent",
+        "OPTIONS /api/consent",
+    ]
+    handler.write_text("export { handler as POST };\n", encoding="utf-8")
+    with pytest.raises(UnclassifiedRouteError, match="exports no method"):
+        cabinet_entry_points(tmp_path)
+
+
 def test_the_jobs_and_the_commands_are_listed(inventory: Inventory) -> None:
     periodic = [str(job["name"]) for job in inventory.periodic_jobs]
     queued = [str(job["name"]) for job in inventory.queued_jobs]
@@ -150,6 +206,9 @@ def test_the_jobs_and_the_commands_are_listed(inventory: Inventory) -> None:
     assert {"workshop api", "workshop worker", "workshop backup"} <= set(commands)
     assert commands["workshop backup"]["run_by_render"] == [
         "workshop-backup (cron, 17 1 * * *)"
+    ]
+    assert commands["workshop migrate"]["run_by_render"] == [
+        "workshop-api (before each deploy)"
     ]
     for item in commands.values():
         module = ROOT.joinpath(*str(item["module"]).split(".")).with_suffix(".py")

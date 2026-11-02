@@ -42,6 +42,18 @@ def test_a_blank_name_means_none(name: str | None) -> None:
     assert read_contact_name(raw) is None
 
 
+@pytest.mark.parametrize(
+    "name",
+    # Persian and Sinhala names written with a zero-width (non-)joiner.
+    [
+        "\u0639\u0644\u06cc\u200c\u0631\u0636\u0627",
+        "\u0dc1\u0dca\u200d\u0dbb\u0dd3 Lal",
+    ],
+)
+def test_a_name_written_with_a_joiner_is_kept(name: str) -> None:
+    assert read_contact_name(WidgetContactNameInput(name)) == name
+
+
 def test_a_name_is_kept_without_its_surrounding_spaces() -> None:
     name = read_contact_name(WidgetContactNameInput("  Giulia Rossi  "))
 

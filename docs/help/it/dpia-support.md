@@ -38,7 +38,7 @@ Se nessuna di queste condizioni si applica, conserva una breve nota datata che s
 | Rischio | Cosa facciamo noi | Cosa puoi fare tu |
 | --- | --- | --- |
 | L'assistente dà informazioni sbagliate (prezzi, allergeni) | risponde solo in base alle tue informazioni; le risposte vengono controllate prima dell'invio | tieni aggiornate le tue informazioni; rivedi le domande a cui non ha saputo rispondere |
-| Dati sulla salute nelle note delle prenotazioni | restano nei dati della tua attività, solo in backup cifrati, mai usati per addestrare modelli | chiedi all'assistente di non fare domande sulla salute; imposta una conservazione più breve |
+| Dati sulla salute nelle note delle prenotazioni | restano solo tra i dati della tua attività e nei suoi backup cifrati; non vengono mai usati per addestrare modelli | chiedi all'assistente di non fare domande sulla salute; imposta una conservazione più breve |
 | Registrazioni delle chiamate | disattivate finché non le attivi; chi chiama sente un avviso; cifrate con la chiave della tua attività | lasciale disattivate se non ti servono; scegli una conservazione breve |
 | Dati fuori dall'UE | il modello e la voce funzionano nell'UE; gli altri fornitori solo con garanzie adeguate (articolo 7 del DPA) | lascia disattivati i canali che non usi |
 | Controllo di qualità su un campione di conversazioni | numeri di telefono e indirizzi e-mail vengono rimossi prima | disattivalo in **Impostazioni → [Privacy](cabinet:settings/privacy)** |

@@ -2,7 +2,8 @@
 How often and how far ahead customers book: a contact's daily cap, the
 caps of anonymous bookings per client network and per business, and the
 booking horizon; an owner's test counts against none of them. A place
-held for an unpaid deposit is free once the hold ran out.
+held for an unpaid deposit stays taken until the deposit sweep releases
+it.
 """
 
 import pytest
@@ -22,6 +23,7 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.deposits.constrained_integers import DepositDueMinor
 from app.schemas.typings.deposits.prefixed_id import DepositRequestId
+from app.use_cases.bookings import booking_limits
 from app.use_cases.bookings.booking_limits import (
     MAX_ANONYMOUS_BOOKINGS_PER_NETWORK_PER_DAY,
     MAX_BOOKING_HORIZON_DAYS,
@@ -102,6 +104,39 @@ def test_anonymous_bookings_are_capped_per_client_network() -> None:
     )
 
 
+def test_anonymous_bookings_are_capped_per_business(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Two a day stand in for the real cap; a caller id is anonymous too.
+    monkeypatch.setattr(
+        booking_limits, "MAX_ANONYMOUS_BOOKINGS_PER_BUSINESS_PER_DAY", 2
+    )
+    restaurant = Restaurant()
+    for index in range(2):
+        caller = restaurant.world.add_contact(restaurant.business)
+        restaurant.book(
+            booking_on(
+                restaurant,
+                DAYS[index],
+                contact_id=caller.id,
+                source_channel=ChannelKind.PHONE,
+            )
+        )
+
+    stranger = restaurant.world.add_contact(restaurant.business)
+    with pytest.raises(RateLimitedError):
+        restaurant.book(
+            booking_on(
+                restaurant,
+                DAYS[2],
+                contact_id=stranger.id,
+                source_channel=ChannelKind.WEB_CHAT,
+            )
+        )
+    # A customer of a messenger proves their account: not held up.
+    restaurant.book(booking_on(restaurant, DAYS[2], contact_id=stranger.id))
+
+
 def test_customers_book_at_most_the_horizon_ahead() -> None:
     restaurant = Restaurant()
 
@@ -125,12 +160,13 @@ def test_customers_book_at_most_the_horizon_ahead() -> None:
     assert staff_view.timezone == restaurant.business.timezone
 
 
-@pytest.mark.parametrize(
-    ("hold_ends_in_seconds", "is_free"), [(-60, True), (600, False)]
-)
-def test_an_unpaid_hold_that_ran_out_frees_its_place(
-    hold_ends_in_seconds: int, is_free: bool
+@pytest.mark.parametrize("hold_ends_in_seconds", [-60, 600])
+def test_a_place_held_for_a_deposit_stays_taken_until_the_hold_is_released(
+    hold_ends_in_seconds: int,
 ) -> None:
+    # Only the deposit sweep frees a lapsed hold, under the business lock and
+    # against "Paid": a place freed earlier could be booked twice when staff
+    # mark the late deposit paid.
     restaurant = Restaurant()
     held = restaurant.book(booking_on(restaurant, DAYS[0], party_size=8)).booking
     stored = restaurant.world.booking_repo.get(restaurant.business.id, held.id)
@@ -148,12 +184,7 @@ def test_an_unpaid_hold_that_ran_out_frees_its_place(
     restaurant.world.booking_repo.save(stored)
     other = restaurant.world.add_contact(restaurant.business)
 
-    if is_free:
+    with pytest.raises(ConflictError):
         restaurant.book(
             booking_on(restaurant, DAYS[0], party_size=8, contact_id=other.id)
         )
-    else:
-        with pytest.raises(ConflictError):
-            restaurant.book(
-                booking_on(restaurant, DAYS[0], party_size=8, contact_id=other.id)
-            )

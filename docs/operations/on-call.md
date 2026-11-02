@@ -61,7 +61,9 @@ calls is SEV1), never lower a breach.
    addresses in `docs/operations/contacts.md`) and note its number in the
    timeline; check its status page every 30 minutes.
 4. A breach: the founder decides about the notices to the businesses
-   within the 48 hours of DPA 12.1; each business notifies the Garante.
+   within the 48 hours of DPA 12.1; each business notifies its own
+   supervisory authority (the Garante in Italy), and the platform notifies
+   the Garante itself for its own data (`docs/operations/contacts.md`).
 
 ## The owner's monitors
 
@@ -73,12 +75,12 @@ review (`docs/security/access-review.md`).
 | --- | --- | --- | --- |
 | TLS certificate expiry of every public host (API, cabinet, website chat, status page) | the uptime monitor's certificate check | under 21 days left (Render's managed certificates renew well before that, so this means a renewal failed) | `runbooks/dns-outage.md`, "Certificates" |
 | Domain registration | the registrar's auto-renew and expiry e-mails | under 60 days left, or auto-renew off | renew at once; the founder holds the registrar account |
-| Stripe | the Stripe dashboard's e-mail alerts: disputes, failed payouts, Radar's elevated fraud rate, a webhook endpoint failing | any | a failing webhook: `runbooks/delivery-failures.md`; fraud: pause deposits for the affected businesses |
+| Stripe | the Stripe dashboard's e-mail alerts: disputes, failed payouts, Radar's elevated fraud rate, a webhook endpoint failing | any | a failing webhook: `runbooks/payment-mismatch.md` (what the lost notifications changed; resend them from the dashboard) and the webhook secret's row of `docs/security/secrets-inventory.md`; fraud: pause deposits for the affected businesses |
 | Flitt | the merchant portal's notifications: chargebacks, settlement failures, a callback failing | any | as Stripe |
 | Provider budgets | budget and usage e-mails of OpenAI, Anthropic, ElevenLabs, Twilio, Zadarma | the monthly budget's 50%, 80% and 100% | `runbooks/spend-spike.md` |
 | Meta app | the developer dashboard's alerts (webhook failures, app review, policy) | any | `runbooks/meta-outage.md` |
 | Uptime | `/readyz`, `/healthz/pipeline` and `/status`, every minute from the EU | two failures in a row | `runbooks/render-outage.md`, `runbooks/worker-down.md` |
-| Scheduled jobs | Sentry Crons (every periodic job, the backup) | a run missed or failed | `runbooks/stuck-worker.md`; the backup: `docs/operations/backup-restore.md` |
+| Scheduled jobs | Sentry Crons (every periodic job, the backup) | a run missed or failed | `runbooks/missed-job-runs.md` (the platform's own `missed_job_runs` alert sees the same without Sentry), `runbooks/stuck-worker.md`; the backup: `docs/operations/backup-restore.md` |
 | Schedules of the repository | `schedule-watch.yml` issues | a guard without a scheduled run in 8 days | the issue names the workflow |
 
 ## Handover

@@ -7,6 +7,7 @@ from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
 )
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.telephony import CallFallbackAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.calls import MissedCallReason, MissedCallSource
@@ -18,6 +19,8 @@ from app.schemas.dto.calls.call_fallback import (
 )
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.use_cases.voice.call_admission import is_blocked_caller
 from app.utilities.channels.channel_phone_numbers import parse_messaging_phone_number
 from app.utilities.channels.voice_service import find_transfer_phone_number
 
@@ -39,7 +42,9 @@ class RouteCallFallbackUseCase(
     comes from that very phone, was forwarded from it or that phone is the
     line itself, which would ring in a loop) the call ends and is a missed
     call of the line (NOT_STARTED) with its text-back. A business that is
-    gone: the call ends.
+    gone: the call ends. So does a call from a number staff blocked
+    (`is_blocked_caller`), which the voice agent refused: it reaches
+    nobody and is no missed call.
     """
 
     def __init__(
@@ -47,10 +52,12 @@ class RouteCallFallbackUseCase(
         call_fallback_adapter: CallFallbackAdapterContract,
         business_repo: BusinessRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
+        contact_repo: ContactRepoContract,
         phone_number_parser: PhoneNumberParserContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._call_fallback_adapter: CallFallbackAdapterContract = call_fallback_adapter
+        self._contact_repo: ContactRepoContract = contact_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -74,6 +81,22 @@ class RouteCallFallbackUseCase(
                 reply=self._call_fallback_adapter.end_call(),
                 called_at=now,
                 business_id=input_data.business_id,
+            )
+
+        if is_blocked_caller(
+            self._contact_repo,
+            business,
+            self._parse(business, report.caller_number),
+        ):
+            logger.info(
+                "Fallback call %s comes from a blocked number; it was ended.",
+                report.provider_call_id,
+            )
+            return CallFallbackPlan(
+                reply=self._call_fallback_adapter.end_call(),
+                called_at=now,
+                business_id=business.id,
+                is_caller_blocked=True,
             )
 
         transfer: E164PhoneNumber | None = find_transfer_phone_number(
@@ -123,14 +146,20 @@ class RouteCallFallbackUseCase(
             report.forwarded_from,
             report.assistant_number,
         ):
-            number: E164PhoneNumber | None = (
-                None
-                if raw_number is None
-                else parse_messaging_phone_number(
-                    self._phone_number_parser, str(raw_number), business.country_code
-                )
-            )
+            number: E164PhoneNumber | None = self._parse(business, raw_number)
             if number is not None and str(number) == str(transfer):
                 return True
 
         return False
+
+    def _parse(
+        self, business: BusinessDocument, raw_number: RawPhoneNumberInput | None
+    ) -> E164PhoneNumber | None:
+        """A number the carrier reported, read with the business country as hint."""
+
+        if raw_number is None:
+            return None
+
+        return parse_messaging_phone_number(
+            self._phone_number_parser, str(raw_number), business.country_code
+        )

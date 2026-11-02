@@ -41,8 +41,10 @@ Start at the top: the first steps cut access to customers' data.
       host).
 - [ ] **Shared secrets they could read**: rotate every secret of
       `docs/security/secrets-inventory.md` whose store they could open (all
-      of them for someone with Render access); log each one in its rotation
-      log.
+      of them for someone with Render access), except the rows marked "on
+      exposure" (`SUPPRESSION_LIST_KEY`, the push keys, the Sentry DSN):
+      those only when the departure is on bad terms or a copy is suspected,
+      as an incident. Log each rotation in the inventory's rotation log.
 - [ ] **The ops chat and paging**: remove them from the Telegram group of
       `PLATFORM_ALERT_TELEGRAM_CHAT_IDS`, the addresses of
       `PLATFORM_ALERT_EMAILS`, the paging rota and the uptime monitor.

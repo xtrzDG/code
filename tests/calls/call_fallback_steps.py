@@ -87,6 +87,7 @@ def build_fallback_client(testbed: ChannelsTestbed) -> TestClient:
                         adapter,
                         testbed.business_repo,
                         testbed.profile_repo,
+                        testbed.contact_repo,
                         testbed.phone_number_parser,
                         testbed.wall_clock,
                     ),

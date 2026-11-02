@@ -57,10 +57,12 @@ incident (`docs/operations/incident.md`).
 
 ## Postmortems
 
-Every SEV1 and SEV2, any incident that spent over 20% of a budget, and
-every tabletop finding gets a written postmortem within 5 working days,
-with the template of `docs/operations/incident.md`. It is blameless: it
-names what made the mistake possible, not who made it.
+Every SEV1 and SEV2, and any incident that spent over 20% of a budget,
+gets a written postmortem within 5 working days, with the template of
+`docs/operations/incident.md`. It is blameless: it names what made the
+mistake possible, not who made it. A tabletop's findings need no
+postmortem: they are action items, tracked the same way
+(`docs/operations/tabletop.md`).
 
 - Each action item has an owner and a due date, and is a GitHub issue with
   the label `postmortem`; the postmortem links the issues.
@@ -69,5 +71,8 @@ names what made the mistake possible, not who made it.
   written in the issue.
 - When a postmortem changes a threshold, a runbook or this calendar, the
   pull request links the postmortem.
-- Postmortems of breaches are kept with the breach register the GDPR asks
-  the controller and the processor to document (Art. 33(5)).
+- Postmortems of breaches are kept with the breach register: the one the
+  platform keeps as controller of its own data (accounts, billing,
+  security; Art. 33(5)), and the record of each notice it sent a business
+  as its processor (Art. 33(2), DPA 12.1), which the business needs for its
+  own register.

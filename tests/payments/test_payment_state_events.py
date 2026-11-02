@@ -12,6 +12,7 @@ from app.use_cases.billing.payment_state_events import (
     PAYMENT_ORDER_OPENED,
     PAYMENT_STATE_CHANGED,
 )
+from app.utilities.observability.log_formatting import read_line_fields
 from tests.billing.paid_world import build_trial, checkout, payment_order
 
 CARD_FIELDS: frozenset[str] = frozenset(
@@ -21,7 +22,7 @@ CARD_FIELDS: frozenset[str] = frozenset(
 
 def payment_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, object]]:
     return [
-        getattr(record, "log_fields")
+        read_line_fields(record)
         for record in caplog.records
         if record.name == "app.payments"
     ]

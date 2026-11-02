@@ -10,8 +10,8 @@ from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.customers import CustomerListFilter, CustomerStanding
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.customers.customer_timeline import CustomerTimelineEntry
 from app.schemas.dto.customers.customer_card import MarketingConsentView
+from app.schemas.dto.customers.customer_timeline import CustomerTimelineEntry
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.constrained_integers import (
     BookingStartsAtUnixSeconds,

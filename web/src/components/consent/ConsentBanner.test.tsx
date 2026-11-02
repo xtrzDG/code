@@ -1,9 +1,19 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CookieSettingsButton } from "./CookieSettingsButton";
-import { ConsentBanner, type ConsentBannerTexts } from "./ConsentBanner";
+import type { ConsentBanner as ConsentBannerComponent, ConsentBannerTexts } from "./ConsentBanner";
+import type { CookieSettingsButton as CookieSettingsButtonComponent } from "./CookieSettingsButton";
+
+/** A fresh banner module per test: an answer given in one test is kept for that page load. */
+let ConsentBanner: typeof ConsentBannerComponent;
+let CookieSettingsButton: typeof CookieSettingsButtonComponent;
+
+beforeEach(async () => {
+  vi.resetModules();
+  ({ ConsentBanner } = await import("./ConsentBanner"));
+  ({ CookieSettingsButton } = await import("./CookieSettingsButton"));
+});
 
 const TEXTS: ConsentBannerTexts = {
   title: "Cookies on this site",
@@ -54,6 +64,19 @@ describe("the cookie banner", () => {
     expect(sentChoice(fetchMock)).toMatchObject({ choice: "granted", page: "/" });
   });
 
+  it("stays closed on a page brought back from the router's cache after the answer (the Back button)", async () => {
+    stubConsentRoute();
+    const { unmount } = render(<ConsentBanner texts={TEXTS} initiallyOpen />);
+    await userEvent.click(screen.getByRole("button", { name: TEXTS.reject }));
+    await waitFor(() => expect(screen.queryByRole("region", { name: TEXTS.title })).toBeNull());
+    unmount();
+
+    // The cached page was rendered while the question was open.
+    render(<ConsentBanner texts={TEXTS} initiallyOpen />);
+
+    expect(screen.queryByRole("region", { name: TEXTS.title })).toBeNull();
+  });
+
   it("treats Reject, the close button and Escape alike: a rejection", async () => {
     for (const close of [
       () => userEvent.click(screen.getByRole("button", { name: TEXTS.reject })),
@@ -64,7 +87,10 @@ describe("the cookie banner", () => {
       },
     ]) {
       const fetchMock = stubConsentRoute();
-      const { unmount } = render(<ConsentBanner texts={TEXTS} initiallyOpen />);
+      // Each way of closing on a page load of its own.
+      vi.resetModules();
+      const { ConsentBanner: Banner } = await import("./ConsentBanner");
+      const { unmount } = render(<Banner texts={TEXTS} initiallyOpen />);
 
       await close();
 

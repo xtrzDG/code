@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.contact_erasure_ledger import ContactErasureLedgerAdapterContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -29,16 +30,16 @@ CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
 
 class ReapplyContactErasuresUseCase(UseCaseContract[JobTick, JobReport]):
     """
-    Periodic job "reapply_contact_erasures" (daily, platform pool, the
-    batch worker): a database restored from a backup (a point-in-time
-    recovery, the off-site backup) older than a customer's erasure holds
-    that customer's data again. Every erasure the ledger outside the
-    database names (`ContactErasureLedgerAdapterContract`) whose contact is
-    back with its data is erased again (`ContactDataEraser`, the same
-    erasure as the owner's), audited as DELETE of the contact without an
-    actor; a contact still erased, or gone with its business, is left
-    alone. One erasure failing never stops the others; the run then fails,
-    so it is retried the next day and the failure is reported.
+    Periodic job "reapply_contact_erasures" (daily, the batch worker): a
+    database restored from a backup (a point-in-time recovery, the
+    off-site backup) older than a customer's erasure holds that customer's
+    data again. Every erasure the ledger outside the database names
+    (`ContactErasureLedgerAdapterContract`) whose contact is back with its
+    data is erased again (`ContactDataEraser`, the same erasure as the
+    owner's), inside the storage scope of the record's business, audited
+    as DELETE of the contact without an actor; a contact still erased, or
+    gone with its business, is left alone. One erasure failing never stops
+    the others; the run then fails, so it is retried and reported.
     """
 
     def __init__(
@@ -49,7 +50,9 @@ class ReapplyContactErasuresUseCase(UseCaseContract[JobTick, JobReport]):
         eraser: ContactDataEraser,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        storage_scope: StorageScopeContract,
     ) -> None:
+        self._storage_scope: StorageScopeContract = storage_scope
         self._ledger: ContactErasureLedgerAdapterContract = ledger
         self._contact_repo: ContactRepoContract = contact_repo
         self._collect_contact_records: UseCaseContract[
@@ -65,7 +68,8 @@ class ReapplyContactErasuresUseCase(UseCaseContract[JobTick, JobReport]):
         failed: int = 0
         for record in self._ledger.read_all():
             try:
-                erased += int(self._erase_again(record))
+                with self._storage_scope.scoped_to_business(record.business_id):
+                    erased += int(self._erase_again(record))
             except Exception:  # noqa: BLE001 - one erasure never stops the others
                 failed += 1
                 logger.exception(

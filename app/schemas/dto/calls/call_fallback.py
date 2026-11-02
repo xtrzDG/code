@@ -9,6 +9,7 @@ from typed_time_provider import Microseconds
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import WebhookSignatureHeader
+from app.schemas.typings.contacts.booleans import IsContactBlocked
 from app.schemas.typings.conversations.strings import ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
@@ -52,7 +53,9 @@ class CallFallbackPlan(ImmutableDTO):
     `transfer_phone_number`, or a missed call (`missed_call`) when nobody
     can take it. `looping_phone_number` is the staff phone on duty that was
     not rung because the call came from it, was forwarded from it or is
-    that very line (ringing it would loop).
+    that very line (ringing it would loop). `is_caller_blocked`: the
+    caller's number is one staff blocked, so the call just ends (no staff
+    phone rings, no missed call, no notice).
     """
 
     reply: CallFallbackReply
@@ -61,6 +64,7 @@ class CallFallbackPlan(ImmutableDTO):
     transfer_phone_number: E164PhoneNumber | None = None
     looping_phone_number: E164PhoneNumber | None = None
     missed_call: MissedCallReport | None = None
+    is_caller_blocked: IsContactBlocked = False
 
 
 class FallbackDialOutcome(ImmutableDTO):

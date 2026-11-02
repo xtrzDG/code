@@ -570,7 +570,7 @@
   "commands": [
     {"name": "workshop api", "access": "operator_shell", "module": "app.main", "summary": "HTTP entry point (uvicorn factory)", "run_by_render": ["workshop-api (web)"]},
     {"name": "workshop worker", "access": "operator_shell", "module": "app.worker_main", "summary": "Background worker entry point", "run_by_render": ["workshop-worker (worker)", "workshop-batch-worker (worker)"]},
-    {"name": "workshop migrate", "access": "operator_shell", "module": "app.gateways.cli.migrate", "summary": "Apply the SQL migrations in `migrations/` to the database in DATABASE_URL.", "run_by_render": []},
+    {"name": "workshop migrate", "access": "operator_shell", "module": "app.gateways.cli.migrate", "summary": "Apply the SQL migrations in `migrations/` to the database in DATABASE_URL.", "run_by_render": ["workshop-api (before each deploy)"]},
     {"name": "workshop migrate-documents", "access": "operator_shell", "module": "app.gateways.cli.migrate_documents", "summary": "Rewrite stored documents of older schema versions in the current shape.", "run_by_render": []},
     {"name": "workshop backfill-lookup", "access": "operator_shell", "module": "app.gateways.cli.backfill_lookup", "summary": "Fill trigger-kept lookup columns for rows written before their migration.", "run_by_render": []},
     {"name": "workshop seed-load", "access": "operator_shell", "module": "app.gateways.cli.seed_load", "summary": "Store a load-test dataset and write the manifest the load tests read.", "run_by_render": []},

@@ -32,9 +32,9 @@ which runbook is `../dependency-map.md`.
 | [dns-outage](dns-outage.md) | DNS or TLS errors of the uptime monitor, the certificate expiry monitor | SEV1 |
 | [sms-outage](sms-outage.md) | `outbound_failures` with Twilio errors, owners without SMS codes | SEV2 |
 | [email-outage](email-outage.md) | `outbound_failures` with SMTP errors, owners without e-mail codes | SEV2 |
-| [missed-job-runs](missed-job-runs.md) | `missed_job_runs` | SEV2 |
-| [payment-mismatch](payment-mismatch.md) | `payment_mismatch` | SEV2 |
-| [platform-brakes](platform-brakes.md) | `spend_budget_stop`, a global pause | SEV1 |
+| [platform-brakes](platform-brakes.md) | `spend_budget_stop`; pausing every assistant (Admin → System) | SEV1 |
+| [missed-job-runs](missed-job-runs.md) | `missed_job_runs` (periodic job heartbeats, no Sentry needed) | SEV2 |
+| [payment-mismatch](payment-mismatch.md) | `payment_mismatch` (the daily reconciliation with Flitt and Stripe) | SEV2 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
 the providers' circuits, queue lanes and dead letters, channels in ERROR, the last backup. Each

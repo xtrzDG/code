@@ -49,7 +49,7 @@ provider incident and write its number in the timeline.
 | --- | --- | --- |
 | Garante per la protezione dei dati personali (Italy) | a personal data breach where the platform is controller (accounts, billing, security data): within 72 hours; for the businesses' data each business notifies, the platform helps (DPA 12.2) | the online data breach procedure on https://servizi.gpdp.it; Piazza Venezia 11, 00187 Roma; protocollo@pec.gpdp.it; +39 06 696771 |
 | The lead authority of another country | a breach of a business outside Italy | the business notifies its own authority; the platform gives it the DPA 12.1 notice |
-| CSIRT Italia (Agenzia per la cybersicurezza nazionale) | a significant incident, only once the platform is in scope of NIS2 (D.Lgs. 138/2024; assessed in the regulatory register) | https://www.csirt.gov.it |
+| CSIRT Italia (Agenzia per la cybersicurezza nazionale) | a significant incident, only once the platform is in scope of NIS2 (D.Lgs. 138/2024); the assessment is still open (`docs/security/readiness-checklist.json`, GOV-08, the regulatory applicability register) | https://www.csirt.gov.it |
 | Polizia Postale e delle Comunicazioni | fraud, extortion, a compromise by a known attacker | https://www.commissariatodips.it |
 
 Every notice to an authority is recorded in the incident's timeline with

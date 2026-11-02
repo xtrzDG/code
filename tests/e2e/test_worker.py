@@ -28,6 +28,7 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.business_closure_jobs import (
     OFFBOARD_UNPAID_BUSINESSES_JOB,
     QUEUE_BUSINESS_DELETIONS_JOB,
+    REAPPLY_CONTACT_ERASURES_JOB,
     REAPPLY_DELETION_LEDGER_JOB,
 )
 from app.gateways.worker.periodic.calendar_sync import SYNC_CALENDARS_JOB
@@ -109,6 +110,9 @@ from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.compliance.record_contact_erasure_use_case import (
+    RECORD_CONTACT_ERASURE_JOB,
+)
 from app.use_cases.knowledge.website_import.start_website_import_use_case import (
     IMPORT_WEBSITE_JOB,
 )
@@ -200,6 +204,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (QUEUE_BUSINESS_DELETIONS_JOB, 3_600),
         (OFFBOARD_UNPAID_BUSINESSES_JOB, 86_400),
         (REAPPLY_DELETION_LEDGER_JOB, 86_400),
+        (REAPPLY_CONTACT_ERASURES_JOB, 86_400),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -224,13 +229,14 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SEND_PLATFORM_ALERT_JOB,
         SUMMARIZE_CONVERSATION_JOB,
         ERASE_PROCESSOR_COPIES_JOB,
+        RECORD_CONTACT_ERASURE_JOB,
         OFFER_FREED_PLACE_JOB,
         EXPAND_INCIDENT_JOB,
         DELIVER_WEBHOOK_JOB,
         WRITE_BOOKING_SYSTEM_BOOKING_JOB,
         DELETE_BUSINESS_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (47, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (48, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush, the end of the waitlist's expired holds and the
     # deposits' holds and reminders.

@@ -30,6 +30,7 @@ function booking(fields: Partial<View>): View {
     can_cancel: true,
     can_reschedule: true,
     is_over: false,
+    marketing_consent: false,
     ...fields,
   };
 }

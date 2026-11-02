@@ -172,11 +172,7 @@ class TestAgentCreation:
 
         agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
         platform = agent["platform_settings"]
-        assert platform["auth"] == {
-            "enable_auth": True,
-            "allowlist": [],
-            "require_origin_header": True,
-        }
+        assert platform["auth"] == {"enable_auth": True, "allowlist": []}
         assert platform["call_limits"] == {
             "agent_concurrency_limit": MAX_CONCURRENT_CALLS,
             "daily_limit": MAX_DAILY_CALLS,

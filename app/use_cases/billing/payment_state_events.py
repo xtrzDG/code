@@ -61,7 +61,9 @@ def log_payment_state_change(
             purpose=payment_order.purpose.value,
             status_before=status_before.value,
             status_after=payment_order.status.value,
-            notified_status="card" if notified_status is None else notified_status.value,
+            notified_status="card"
+            if notified_status is None
+            else notified_status.value,
             outcome=outcome.value,
             is_initial_payment_settled=int(payment_order.is_initial_payment_settled),
         ),

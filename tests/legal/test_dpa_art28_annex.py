@@ -23,6 +23,7 @@ from tests.legal.governance_documents import (
 
 ANNEX = DEFAULT_LEGAL_DOCUMENTS_DIRECTORY / "drafts" / "dpa-art28-annex.md"
 DUTIES: tuple[str, ...] = tuple(f"({letter})" for letter in "abcdefgh")
+SECOND_SUBPARAGRAPH: str = "(h), second subparagraph"
 CLAUSE: re.Pattern[str] = re.compile(r"^(?P<number>[0-9]+\.[0-9]+)\. ", re.MULTILINE)
 CITED: re.Pattern[str] = re.compile(r"\b[0-9]+\.[0-9]+\b")
 
@@ -47,6 +48,9 @@ def test_every_duty_of_article_28_3_has_a_row_with_its_clauses() -> None:
     duties = {row[0].split(",")[0] for row in rows}
 
     assert set(DUTIES) <= duties
+    # The duty to warn of an unlawful instruction closes Article 28(3)
+    # "with regard to point (h)".
+    assert SECOND_SUBPARAGRAPH in {row[0] for row in rows}
     for row in rows:
         assert len(row) == 5 and all(row), row
         assert CITED.findall(row[2]), row

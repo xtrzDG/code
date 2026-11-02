@@ -25,6 +25,9 @@ from app.schemas.typings.privacy.constrained_integers import (
     ConversationRetentionDays,
     LlmTurnRetentionDays,
 )
+from app.use_cases.channels.meta_connection.meta_states import (
+    STATE_LIFETIME_SECONDS,
+)
 from app.use_cases.idempotency.claim_idempotency_key_use_case import (
     IDEMPOTENCY_KEY_LIFETIME,
 )
@@ -51,7 +54,8 @@ from tests.legal.governance_documents import (
 )
 
 CLASSIFICATION: str = "docs/security/data-classification.md"
-HOUR: int = 60 * 60
+MINUTE: int = 60
+HOUR: int = 60 * MINUTE
 DAY: int = 24 * HOUR
 DAYS_PER_YEAR: int = 365
 RECORDING_DEFAULT: int = int(
@@ -79,6 +83,8 @@ EXPECTED_PERIODS: dict[str, str] = {
     "Outbound webhook delivery log": (
         f"{webhook_schedule.DELIVERY_RETENTION_SECONDS // DAY} days"
     ),
+    "Facebook sign-ins of the Channels page (the owner's Facebook token while "
+    "a page is picked)": f"{STATE_LIFETIME_SECONDS // MINUTE} minutes",
     "Missed calls": f"{MISSED_CALL_RETENTION_SECONDS // DAY} days",
     "Conversations, notes, transcripts": (
         f"{bound(ConversationRetentionDays.ge)} days to "
@@ -95,6 +101,26 @@ EXPECTED_PERIODS: dict[str, str] = {
     "Web vitals": f"{WEB_VITAL_RETENTION_SECONDS // DAY} days",
     "Audit log": f"at least {int(MINIMUM_AUDIT_RETENTION_DAYS)} days",
     "A business that stopped paying": f"{DEFAULT_OFFBOARD_AFTER_DAYS} days",
+}
+# The constants each retention row must name where it says it is defined.
+DEFINED_BY: dict[str, tuple[str, ...]] = {
+    "Sign-in-code challenges": ("OTP_CHALLENGE_RETENTION_SECONDS",),
+    "Delivery logs (outbox messages)": ("DELIVERY_RETENTION_SECONDS",),
+    "Webhook receipts and inbox events": (
+        "CHANNEL_RECEIPT_RETENTION_SECONDS",
+        "DELIVERY_RETENTION_SECONDS",
+    ),
+    "Missed calls": ("MISSED_CALL_RETENTION_SECONDS",),
+    "Conversations, notes, transcripts": ("DEFAULT_CONVERSATION_RETENTION_DAYS",),
+    "Records of model calls (and their Langfuse traces)": (
+        "DEFAULT_LLM_TURN_RETENTION_DAYS",
+    ),
+    "Full business exports": ("DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES",),
+    "Idempotency keys": ("IDEMPOTENCY_KEY_LIFETIME",),
+    "Finished queued jobs": ("FINISHED_JOB_RETENTION_DAYS",),
+    "Web vitals": ("WEB_VITAL_RETENTION_SECONDS",),
+    "Audit log": ("MINIMUM_AUDIT_RETENTION_DAYS",),
+    "A business that stopped paying": ("DEFAULT_OFFBOARD_AFTER_DAYS",),
 }
 # Vendors a transfer cell may name, as the vendor register names them.
 VENDORS: tuple[str, ...] = (
@@ -114,6 +140,8 @@ VENDORS: tuple[str, ...] = (
     "Render",
 )
 UNFINISHED: tuple[str, ...] = ("[", "to be confirmed", "TBD", "?")
+# "`purge_web_vitals`, daily": the interval the job is registered with.
+CADENCES: dict[str, int] = {"hourly": HOUR, "daily": DAY}
 
 
 def retention_rows() -> dict[str, list[str]]:
@@ -134,6 +162,17 @@ def test_every_retention_period_is_the_one_the_code_uses() -> None:
         assert period in rows[label][1], (label, rows[label][1], period)
 
 
+def test_every_retention_row_names_the_constants_its_purge_uses() -> None:
+    rows = retention_rows()
+
+    # One row states one period for receipts and inbox events: split it
+    # when their purges stop agreeing.
+    assert CHANNEL_RECEIPT_RETENTION_SECONDS == DELIVERY_RETENTION_SECONDS
+    for label, constants in DEFINED_BY.items():
+        for constant in constants:
+            assert f"`{constant}`" in rows[label][3], (label, constant)
+
+
 def test_every_purge_job_named_is_a_job_of_the_worker() -> None:
     inventory = json.loads(read("docs/security/entry-points.json"))
     jobs = {str(job["name"]) for job in inventory["periodic_jobs"]} | {
@@ -148,6 +187,24 @@ def test_every_purge_job_named_is_a_job_of_the_worker() -> None:
 
     assert len(named) >= 8
     assert sorted(named - jobs) == []
+
+
+def test_every_purge_runs_as_often_as_the_classification_says() -> None:
+    inventory = json.loads(read("docs/security/entry-points.json"))
+    every = {
+        str(job["name"]): int(job["every_seconds"])
+        for job in inventory["periodic_jobs"]
+    }
+    stated = [
+        (cell.split("`")[1], seconds)
+        for row in retention_rows().values()
+        for cell in [row[2]]
+        for word, seconds in CADENCES.items()
+        if cell.startswith("`") and f", {word}" in cell
+    ]
+
+    assert len(stated) >= 8
+    assert [(job, period) for job, period in stated if every.get(job) != period] == []
 
 
 def test_every_category_has_its_transfers_filled_in() -> None:

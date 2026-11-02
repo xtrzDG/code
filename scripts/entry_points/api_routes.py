@@ -11,6 +11,8 @@ application and the reviewed tables of the route tests:
   (proven by `tests/platform/test_brand_authorization_matrix.py`).
 
 This module only reads those tables; the tests decide whether they hold.
+An operation none of them classifies (and outside `ACCOUNT_PREFIXES`)
+stops the inventory instead of getting a class by default.
 """
 
 from collections.abc import Iterator, Sequence
@@ -29,6 +31,7 @@ from scripts.entry_points.access_classes import (
     SIGNED_WEBHOOK,
     STAFF,
     HttpEntryPoint,
+    UnclassifiedRouteError,
 )
 from tests.platform.authorization_tables import OWNER_ONLY_OPERATIONS
 from tests.platform.brand_matrix_checks import BRAND_OWNER_ONLY
@@ -50,6 +53,9 @@ WEBHOOK_PREFIXES: tuple[str, ...] = (
 )
 # ... and these a business's customers' (chat, signed links).
 CUSTOMER_PREFIXES: tuple[str, ...] = ("/v1/public/", "/v1/widget/{business_id}/")
+# The website chat's CORS preflights; an OPTIONS route anywhere else is
+# classified like any other operation.
+PREFLIGHT_PREFIX: str = "/v1/widget/"
 # Operations outside the business prefix that act for one business's owner.
 OWNER_OPERATIONS_ELSEWHERE: dict[str, str] = {
     "GET /v1/business-exports/{business_id}/{export_id}/download": (
@@ -59,6 +65,17 @@ OWNER_OPERATIONS_ELSEWHERE: dict[str, str] = {
         "the session of the owner who started connecting (signed OAuth state)"
     ),
 }
+# A signed-in person's own account: these prefixes, and the two lists of
+# their businesses and brands (creating one included). Anything else
+# outside the tables above is unclassified, never "account" by default.
+ACCOUNT_PREFIXES: tuple[str, ...] = (
+    "/v1/assistants",
+    "/v1/auth",
+    "/v1/me",
+    "/v1/partner",
+    "/v1/telemetry",
+)
+ACCOUNT_PATHS: frozenset[str] = frozenset({"/v1/brands", "/v1/businesses"})
 NOT_IN_PRODUCTION: str = "not served in production"
 PREFLIGHT: str = "CORS preflight of the website chat: no data"
 SESSION: str = "cabinet session token"
@@ -108,7 +125,7 @@ def classify_open(method: str, path: str) -> HttpEntryPoint | None:
     """An entry point the reviewed tables let answer without a token."""
 
     key: str = f"{method} {path}"
-    if method == "OPTIONS":
+    if method == "OPTIONS" and path.startswith(PREFLIGHT_PREFIX):
         return HttpEntryPoint(method, path, PUBLIC, "none", PREFLIGHT)
 
     if key in PUBLIC_OPERATIONS:
@@ -129,7 +146,12 @@ def classify_open(method: str, path: str) -> HttpEntryPoint | None:
 
 
 def classify(method: str, path: str) -> HttpEntryPoint:
-    """The access class of one operation of the API."""
+    """
+    The access class of one operation of the API.
+
+    Raises:
+        UnclassifiedRouteError: an operation no reviewed table classifies.
+    """
 
     key: str = f"{method} {path}"
     opened: HttpEntryPoint | None = classify_open(method, path)
@@ -149,7 +171,13 @@ def classify(method: str, path: str) -> HttpEntryPoint:
     if is_under(path, BRAND_PREFIX):
         role = OWNER if key in BRAND_OWNER_ONLY else STAFF
         return HttpEntryPoint(method, path, role, "brand", BRAND_SESSION)
-    return HttpEntryPoint(method, path, ACCOUNT, "own account", SESSION)
+    if path in ACCOUNT_PATHS or any(is_under(path, p) for p in ACCOUNT_PREFIXES):
+        return HttpEntryPoint(method, path, ACCOUNT, "own account", SESSION)
+    raise UnclassifiedRouteError(
+        f"{key} is not classified: give it an access class in "
+        "scripts/entry_points/api_routes.py (ACCOUNT_PREFIXES for a person's "
+        "own account) or in the reviewed tables of tests/platform/"
+    )
 
 
 def api_entry_points(application: FastAPI) -> list[HttpEntryPoint]:

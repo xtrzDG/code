@@ -28,6 +28,8 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.spend_guard import UsageKindTotal
 from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.typings.businesses.booleans import IsOpenNow
+from app.schemas.typings.contacts.booleans import IsContactBlocked
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.channels.voice_service import (
     MAX_DAILY_CALL_MINUTES,
@@ -52,27 +54,42 @@ DAILY_MINUTES_REFUSAL: str = (
 )
 
 
+def is_blocked_caller(
+    contact_repo: ContactRepoContract,
+    business: BusinessDocument,
+    caller_phone_number: E164PhoneNumber | None,
+) -> IsContactBlocked:
+    """
+    The number belongs to a contact of the business staff blocked (proved
+    by a channel or given); a withheld number never does.
+    """
+
+    if caller_phone_number is None:
+        return False
+
+    contacts: list[ContactDocument | None] = [
+        contact_repo.find_by_verified_phone_number(business.id, caller_phone_number),
+        contact_repo.find_by_phone_number(business.id, caller_phone_number),
+    ]
+    return any(
+        contact is not None and contact.block is not None for contact in contacts
+    )
+
+
 def refuse_blocked_caller(
     contact_repo: ContactRepoContract,
     business: BusinessDocument,
     caller_phone_number: E164PhoneNumber | None,
 ) -> None:
     """
-    Refuse a call from a number staff blocked: a contact of the business
-    with that phone (proved by a channel or given) and a block.
+    Refuse a call from a number staff blocked (`is_blocked_caller`); the
+    line's fallback does not put it through to staff either.
 
     Raises:
         ConflictError: the number is blocked.
     """
 
-    if caller_phone_number is None:
-        return
-
-    contacts: list[ContactDocument | None] = [
-        contact_repo.find_by_verified_phone_number(business.id, caller_phone_number),
-        contact_repo.find_by_phone_number(business.id, caller_phone_number),
-    ]
-    if any(contact is not None and contact.block is not None for contact in contacts):
+    if is_blocked_caller(contact_repo, business, caller_phone_number):
         raise ConflictError(BLOCKED_CALLER_REFUSAL)
 
 
@@ -107,7 +124,7 @@ def find_call_transfer_number(
     business: BusinessDocument,
     profile: BusinessProfileDocument | None,
     call_settings: CallSettingsDocument | None,
-    is_open_now: bool,
+    is_open_now: IsOpenNow,
 ) -> E164PhoneNumber | None:
     """
     The staff number this call may be put through to: only while the

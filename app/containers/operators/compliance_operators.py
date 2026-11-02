@@ -42,12 +42,12 @@ class ComplianceOperatorsContainer(containers.DeclarativeContainer):
     delete_contact_data_operator = pipeline_operator(
         compliance_pipelines.delete_contact_data_pipeline, storage_scope
     )
-    # The erasures' ledger: the queued job in the erasure's business, the
-    # daily re-application across every business (platform-wide).
+    # The erasures' ledger: the queued job in the erasure's business; the
+    # daily re-application names no business and enters each record's.
     record_contact_erasure_operator = pipeline_operator(
         compliance_pipelines.record_contact_erasure_pipeline, storage_scope
     )
-    reapply_contact_erasures_operator = platform_pipeline_operator(
+    reapply_contact_erasures_operator = pipeline_operator(
         compliance_pipelines.reapply_contact_erasures_pipeline, storage_scope
     )
     get_dpa_document_operator = pipeline_operator(

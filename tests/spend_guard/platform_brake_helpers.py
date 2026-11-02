@@ -43,7 +43,9 @@ def pause(world: SpendWorld, is_paused: bool = True) -> None:
     )
 
 
-def spend_elsewhere(world: SpendWorld, cost_micro_usd: int, at: datetime = NOON) -> None:
+def spend_elsewhere(
+    world: SpendWorld, cost_micro_usd: int, at: datetime = NOON
+) -> None:
     """Spend of another business: only the platform's sum sees it."""
 
     moment = micros(at)

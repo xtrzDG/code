@@ -191,6 +191,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         call_fallback_adapter=adapters.calls.call_fallback_adapter,
         business_repo=repositories.business_repo,
         business_profile_repo=repositories.business_profile_repo,
+        contact_repo=repositories.contact_repo,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
     )

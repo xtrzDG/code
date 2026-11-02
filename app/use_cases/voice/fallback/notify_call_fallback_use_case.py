@@ -33,7 +33,8 @@ class NotifyCallFallbackUseCase(
     (add a phone for calls that need a person). Queued in the outbox of
     staff alerts for the owners' devices and the staff contacts (a link to
     Channels), at most once an hour per business: while the voice platform
-    is down every call falls back, and one notice says it.
+    is down every call falls back, and one notice says it. A blocked
+    caller's call is refused on purpose: no notice.
     """
 
     def __init__(
@@ -49,6 +50,9 @@ class NotifyCallFallbackUseCase(
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
 
     def run(self, input_data: CallFallbackPlan) -> DeliveredNotificationCount:
+        if input_data.is_caller_blocked:
+            return DeliveredNotificationCount(0)
+
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )

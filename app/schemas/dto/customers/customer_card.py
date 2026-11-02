@@ -78,8 +78,8 @@ class MarketingConsentView(ImmutableDTO):
     The customer's marketing consent as the card shows it: the status
     (STOPPED whatever was recorded while they said STOP, are on the
     suppression list or blocked), and what was recorded: when, where, by
-    whom (None: the customer), the wording's version, and when and how it
-    was taken back.
+    whom (None: the customer), the wording's version, and when, how and by
+    whom it was taken back.
     """
 
     status: MarketingConsentStatus = MarketingConsentStatus.NOT_GIVEN
@@ -89,6 +89,7 @@ class MarketingConsentView(ImmutableDTO):
     recorded_by: UserId | None = None
     withdrawn_at: Microseconds | None = None
     withdrawal: MarketingConsentWithdrawal | None = None
+    withdrawn_by: UserId | None = None
 
 
 class CustomerCardView(ImmutableDTO):

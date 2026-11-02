@@ -8,6 +8,7 @@ forwards it to the staff phone); resuming lets the model answer again.
 import pytest
 
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.spend import SpendLevel
 from app.schemas.dto.spend_guard import SpendCheckRequest, SpendVerdict
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -77,17 +78,18 @@ def test_a_paused_platform_refuses_calls_at_their_start(
 ) -> None:
     spend = build_spend_world()
     pause(spend)
-    monkeypatch.setattr(
-        test_voice_caps, "FixedSpendCheck", lambda _level: RecordingRealCheck(spend)
-    )
+
+    def real_check(level: SpendLevel) -> RecordingRealCheck:
+        """The voice test's fixed check, replaced by the spend world's real one."""
+
+        del level
+        return RecordingRealCheck(spend)
+
+    monkeypatch.setattr(test_voice_caps, "FixedSpendCheck", real_check)
 
     with pytest.raises(ConflictError):
-        test_voice_caps.start_call(
-            build_voice_setup(), test_voice_caps.SpendLevel.NORMAL
-        )
+        test_voice_caps.start_call(build_voice_setup(), SpendLevel.NORMAL)
 
     pause(spend, is_paused=False)
-    answered = test_voice_caps.start_call(
-        build_voice_setup(), test_voice_caps.SpendLevel.NORMAL
-    )
+    answered = test_voice_caps.start_call(build_voice_setup(), SpendLevel.NORMAL)
     assert len(answered.requests) == 1

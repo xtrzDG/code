@@ -79,21 +79,36 @@ def module_summary(module: str) -> str:
     return " ".join(paragraph.split()).rstrip(":")
 
 
+def command_role(command: object) -> str | None:
+    """`migrate` of `workshop migrate --dry-run`; None for another command."""
+
+    text: str = str(command or "")
+    if not text.startswith(COMMAND_PREFIX):
+        return None
+    return text.removeprefix(COMMAND_PREFIX).split()[0]
+
+
 def render_services(blueprint: Path = RENDER_BLUEPRINT) -> dict[str, list[str]]:
-    """The Render services of each image command, with cron schedules."""
+    """
+    The Render services of each image command: the service's own command
+    (with a cron's schedule) and the command it runs before each deploy.
+    """
 
     loaded = cast(dict[str, object], yaml.safe_load(blueprint.read_text("utf-8")))
     services = cast(list[dict[str, object]], loaded.get("services", []))
     found: dict[str, list[str]] = {}
     for service in services:
-        command: str = str(service.get("dockerCommand", ""))
-        if not command.startswith(COMMAND_PREFIX):
-            continue
-        schedule: object = service.get("schedule")
-        kind: str = str(service.get("type"))
-        described: str = f"{kind}, {schedule}" if schedule is not None else kind
-        role: str = command.removeprefix(COMMAND_PREFIX).split()[0]
-        found.setdefault(role, []).append(f"{service['name']} ({described})")
+        role: str | None = command_role(service.get("dockerCommand"))
+        if role is not None:
+            schedule: object = service.get("schedule")
+            kind: str = str(service.get("type"))
+            described: str = f"{kind}, {schedule}" if schedule is not None else kind
+            found.setdefault(role, []).append(f"{service['name']} ({described})")
+        before_deploy: str | None = command_role(service.get("preDeployCommand"))
+        if before_deploy is not None:
+            found.setdefault(before_deploy, []).append(
+                f"{service['name']} (before each deploy)"
+            )
     return found
 
 

@@ -13,8 +13,7 @@ test path exists.
 
 | Duty | Article 28(3) | DPA clauses | How the service meets it | Evidence |
 | --- | --- | --- | --- | --- |
-| (a) | Processes only on documented instructions, including for transfers to third countries; informs the controller of a legal requirement to process otherwise | 2.3, 6.1, 7.2 | The business's settings in the cabinet are its instructions; data reach a sub-processor only for the purposes the registry names, and production refuses to start otherwise | `app/registries/legal/processor_use_catalog.py`, `app/utilities/legal/processor_coverage.py`, `tests/legal/test_processor_uses.py` |
-| (a), second subparagraph | Tells the controller when an instruction infringes the law | 2.4 | Support raises it with the owner in writing (`docs/operations/contacts.md`) | the support record |
+| (a) | Processes only on documented instructions, including for transfers to third countries; informs the controller of a legal requirement to process otherwise (not yet in the text: see the gaps) | 2.3, 6.1, 7.2 | The business's settings in the cabinet are its instructions; data reach a sub-processor only for the purposes the registry names, and production refuses to start otherwise | `app/registries/legal/processor_use_catalog.py`, `app/utilities/legal/processor_coverage.py`, `tests/legal/test_processor_uses.py` |
 | (b) | Persons authorised to process are bound by confidentiality | 6.1 | Contracts of the platform team carry a confidentiality clause; access is least-privilege and reviewed each quarter | `docs/security/access-review.md`, `docs/operations/offboarding.md` |
 | (c) | Takes the measures of Article 32 | 6.1, 9.1 | Section 9 is generated from the security measure registry, each measure naming its code | `app/registries/legal/security_measures_data.py`, `tests/legal/test_security_measures.py`, `docs/security/threat-model.md` |
 | (d) | Engages another processor only with prior authorisation and under the same obligations (Article 28(2) and (4)) | 8.1, 8.2, 8.3 | The sub-processor list is kept in code; an addition is announced to every owner 30 days ahead and the business may object or leave | `app/registries/legal/subprocessor_registry.py`, `app/use_cases/legal/send_subprocessor_notices_use_case.py`, `tests/legal/test_subprocessor_notices.py`, `docs/operations/vendor-register.md` |
@@ -22,6 +21,7 @@ test path exists.
 | (f) | Assists with Articles 32 to 36: security, breach notification, DPIA and prior consultation | 6.1, 9.1, 12.1, 12.2 | Breach notices to every owner within 48 hours through the incident tool; the DPIA support pack for businesses (help article "DPIA support") | `docs/operations/incident.md`, `docs/operations/runbooks/data-breach.md`, `docs/help/en/dpia-support.md`, `docs/help/it/dpia-support.md` |
 | (g) | Deletes or returns all personal data at the end of the services, and deletes existing copies | 4.1, 11.2, 13.3 | The owner exports the whole business, then closes it; 30 days later the business is deleted in stages, the sub-processors' copies with it, and a deletion certificate is issued; backups age out (30 daily, 12 monthly copies) and a restore re-applies the deletions | `app/use_cases/businesses/closure/close_business_use_case.py`, `app/use_cases/businesses/deletion/delete_business_use_case.py`, `tests/business_closures/test_business_deletion_journey.py`, `tests/business_closures/test_ledger_reapplied.py` |
 | (h) | Makes available all information to demonstrate compliance and allows audits | 6.1, 10.1 | The audit log in the cabinet, this annex, the security measures, the sub-processor list and the vendor attestations; an audit once a year on notice | `app/use_cases/compliance/list_audit_log_use_case.py`, `tests/compliance/test_audit_log.py` |
+| (h), second subparagraph | Tells the controller at once when, in its opinion, an instruction infringes data protection law | 2.4 | Support raises it with the owner in writing (`docs/operations/contacts.md`) | the support record |
 
 ## Other paragraphs of Article 28
 
@@ -33,10 +33,14 @@ test path exists.
 
 ## Gaps for the next DPA version
 
-These do not leave a duty uncovered, but the text lags the service or
-still has open fields; collect them for the next version and the lawyer's
-review:
+The first one leaves part of a duty without a clause; the others are text
+that lags the service or still has open fields. Collect them for the next
+version and the lawyer's review:
 
+- (a) also asks the processor to tell the controller, before processing, of
+  a Union or Member State law that requires processing outside the
+  instructions, unless that law forbids telling. Neither 2.3 nor 6.1 says
+  so: add it to 2.3.
 - 13.3 says deletion after the end happens "through support (the cabinet
   does not offer this yet)": the cabinet now offers closing and deleting a
   business with a deletion certificate (row (g)).

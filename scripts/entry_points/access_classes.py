@@ -61,6 +61,10 @@ ACCESS_CLASSES: dict[str, str] = {
 }
 
 
+class UnclassifiedRouteError(ValueError):
+    """An entry point none of the reviewed tables gives an access class."""
+
+
 @dataclass(frozen=True)
 class HttpEntryPoint:
     """One HTTP method of one route and who may call it."""
