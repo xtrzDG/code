@@ -39,6 +39,7 @@ from app.utilities.channels.widget_rate_limits import (
 # The latest answer a bad rating is about is among the newest messages.
 LATEST_ANSWER_LOOKBACK: KeysetReadLimit = KeysetReadLimit(10)
 NOTHING_TO_RATE: str = "There is no answer to rate yet."
+from app.use_cases.channels.widget_visitor_keys import readable_conversations
 
 
 class RateWidgetConversationUseCase(
@@ -102,15 +103,19 @@ class RateWidgetConversationUseCase(
         business: BusinessDocument = require_open_widget_chat(
             self._business_repo, self._channel_repo, input_data.business_id
         )
-        conversations: list[ConversationDocument] = [
-            conversation
-            for conversation in self._conversation_repo.list_by_channel_user(
-                business.id,
-                ChannelKind.WEB_CHAT,
-                ChannelUserId(str(request.session_key)),
-            )
-            if not conversation.is_sandbox
-        ]
+        # An idle visitor key rates nothing from before its idle gap.
+        conversations: list[ConversationDocument] = readable_conversations(
+            [
+                conversation
+                for conversation in self._conversation_repo.list_by_channel_user(
+                    business.id,
+                    ChannelKind.WEB_CHAT,
+                    ChannelUserId(str(request.session_key)),
+                )
+                if not conversation.is_sandbox
+            ],
+            now,
+        )
         conversation, answer_id = self._rated(conversations, request.message_id)
         self._conversation_review_repo.set_customer_rating(
             business.id,

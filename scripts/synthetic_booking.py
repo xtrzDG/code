@@ -152,7 +152,8 @@ def main(
     parser.add_argument("api_url", help="the production API's https address")
     parsed = parser.parse_args(arguments)
     key = os.environ.get(KEY_VARIABLE, "")
-    address = urlsplit(parsed.api_url)
+    api_url: str = parsed.api_url
+    address = urlsplit(api_url)
     if not key or address.scheme != "https" or not address.hostname:
         print(
             f"::error::Usage: {KEY_VARIABLE}=awk_... python -m"
@@ -165,7 +166,7 @@ def main(
     ).strftime("%Y%m%d%H%M%S")
     try:
         round_trip(
-            Api(parsed.api_url, key, transport),
+            Api(api_url, key, transport),
             datetime.datetime.now(datetime.UTC).date(),
             run_id,
         )

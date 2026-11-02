@@ -18,7 +18,7 @@ from app.contracts.widget_poll_reads import WidgetPollReadAdapterContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.conversations import MessageDocument
+from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.channels.widget import WidgetMessagesQuery, WidgetMessagesView
 from app.schemas.dto.channels.widget_poll_reads import WidgetPollRead
 from app.schemas.dto.message_positions import MessagePosition
@@ -38,6 +38,7 @@ from app.use_cases.channels.widget_message_window import (
 )
 from app.use_cases.channels.widget_poll_answers import build_widget_answer
 from app.use_cases.channels.widget_poll_reading import read_poll_through_repositories
+from app.use_cases.channels.widget_visitor_keys import readable_conversations
 from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_rate_limits import (
@@ -79,7 +80,10 @@ class GetWidgetMessagesUseCase(
     stops answering polls within that time, one switched on answers at
     once), so the use case is a singleton of the container.
 
-    A visitor without a conversation gets nothing and no position. When
+    A visitor without a conversation gets nothing and no position, and so
+    does one whose key idled for `VISITOR_KEY_IDLE_DAYS` (the key expires on
+    the server: `widget_visitor_keys`; used again after the gap, it reads
+    only what came after). When
     the newest messages hold the cursor and reach back past it, the answer
     is the whole chat's (`widget_message_window`); only a longer backlog,
     an unknown cursor or none reads the whole chat (in a read session).
@@ -135,7 +139,7 @@ class GetWidgetMessagesUseCase(
             raise AccessDeniedError("This chat is not available on this website.")
 
         self._require_open_chat(input_data.business_id, now)
-        return self._answer(input_data, read)
+        return self._answer(input_data, read, now)
 
     def _read(self, input_data: WidgetMessagesQuery) -> WidgetPollRead:
         visitor = ChannelUserId(str(input_data.session_key))
@@ -156,15 +160,21 @@ class GetWidgetMessagesUseCase(
             )
 
     def _answer(
-        self, input_data: WidgetMessagesQuery, read: WidgetPollRead
+        self, input_data: WidgetMessagesQuery, read: WidgetPollRead, now: Microseconds
     ) -> WidgetMessagesView:
-        if not read.conversations:
+        # An idle visitor key reads nothing from before its idle gap.
+        readable: list[ConversationDocument] = readable_conversations(
+            read.conversations, now
+        )
+        if not readable:
             return WidgetMessagesView(items=[])
 
-        # Conversations come newest first: the first one is the current one.
-        is_handed_off: bool = read.conversations[0].status is ConversationStatus.HANDOFF
-        settled: tuple[list[MessageDocument], MessageId] | None = settle_from_newest(
-            read, input_data.after
+        # Newest first: the first one is the current one.
+        is_handed_off: bool = readable[0].status is ConversationStatus.HANDOFF
+        settled: tuple[list[MessageDocument], MessageId] | None = (
+            settle_from_newest(read, input_data.after)
+            if len(readable) == len(read.conversations)
+            else None
         )
         if settled is not None:
             later, latest_id = settled
@@ -176,7 +186,7 @@ class GetWidgetMessagesUseCase(
             messages: list[MessageDocument] = sorted(
                 (
                     message
-                    for conversation in read.conversations
+                    for conversation in readable
                     for message in self._message_repo.list_by_conversation(
                         input_data.business_id, conversation.id
                     )

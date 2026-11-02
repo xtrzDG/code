@@ -47,8 +47,12 @@ def test_the_definition_is_the_public_api_with_its_writes() -> None:
 
 
 def test_event_streams_are_left_out() -> None:
-    stream = {"responses": {"200": {"content": {"text/event-stream": {}}}}}
-    plain = {"responses": {"200": {"content": {"application/json": {}}}}}
+    stream: dict[str, Any] = {
+        "responses": {"200": {"content": {"text/event-stream": {}}}}
+    }
+    plain: dict[str, Any] = {
+        "responses": {"200": {"content": {"application/json": {}}}}
+    }
     source: dict[str, Any] = {
         "openapi": "3.1.0",
         "info": {"title": "API", "version": "1"},
