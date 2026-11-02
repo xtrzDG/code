@@ -16,6 +16,7 @@ from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
 from app.schemas.domain.passkeys import PasskeyChallengeDocument
 from app.schemas.dto.mfa import SessionAssurance, SessionAssuranceView
 from app.schemas.dto.passkeys import VerifyPasskeyStepUpCommand
+from app.schemas.dto.sessions import SessionProof
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.users.mfa.mfa_check_limits import (
@@ -26,6 +27,7 @@ from app.use_cases.users.passkeys.passkey_challenges import take_passkey_challen
 from app.use_cases.users.passkeys.start_passkey_step_up_use_case import (
     NO_SESSION_MESSAGE,
 )
+from app.use_cases.users.sessions.session_proofs import record_proof
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 
@@ -38,7 +40,10 @@ class VerifyPasskeyStepUpUseCase(
     counts as two factors and may do sensitive actions for
     STEP_UP_MAX_AGE_SECONDS again. Checks share the per-person and
     per-network budget of authenticator codes; the challenge is taken
-    once; a refused answer leaves the session as it was.
+    once; a refused answer leaves the session as it was. A one-factor
+    session is not raised in place: the answer carries a one-time rotation
+    ticket, and only the token it swaps in gets the two factors
+    (session_proofs.py).
     """
 
     def __init__(
@@ -88,9 +93,17 @@ class VerifyPasskeyStepUpUseCase(
         self._assertion.verify(
             challenge, input_data.credential, input_data.client_ip_address, now
         )
-        self._user_session_repo.record_authentication(
-            assurance.session_id, AuthLevel.TWO_FACTOR, now
+        proof: SessionProof = record_proof(
+            self._session_assurance,
+            self._user_session_repo,
+            input_data.user_id,
+            AuthLevel.TWO_FACTOR,
+            now,
         )
+        if not proof.is_recorded and proof.rotation_ticket is None:
+            # The session ended or rotated meanwhile: its old token proves nothing.
+            raise AuthenticationRequiredError(NO_SESSION_MESSAGE)
+
         return SessionAssuranceView(
             auth_level=AuthLevel.TWO_FACTOR,
             authenticated_at=now,
@@ -99,5 +112,6 @@ class VerifyPasskeyStepUpUseCase(
                 + int(self._app_settings.step_up_max_age_seconds)
                 * MICROSECONDS_PER_SECOND
             ),
-            is_level_raised=assurance.auth_level is not AuthLevel.TWO_FACTOR,
+            is_level_raised=proof.rotation_ticket is not None,
+            rotation_ticket=proof.rotation_ticket,
         )

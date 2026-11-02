@@ -33,6 +33,9 @@ from app.use_cases.businesses.business_view_sources import business_view_source
 # Changes one member on the business as stored now; False when it changes
 # nothing (the member already has what was asked).
 type MemberChange = Callable[[BusinessDocument, BusinessMember], bool]
+# Runs once the change is allowed, before it is stored, with the business
+# as read (an owner promotion ends the member's sessions there first).
+type BeforeMemberChange = Callable[[BusinessDocument], None]
 
 
 class MemberCommand(Protocol):
@@ -60,7 +63,9 @@ class MemberMutationGuard:
     business as stored now, so a change saved meanwhile (settings, another
     member) is kept, and a real change is audited. An owner whose own
     ownership was the access is checked again on the stored business: one
-    removed or demoted meanwhile changes nothing.
+    removed or demoted meanwhile changes nothing. `before_change` runs
+    once the change is allowed (owner access, a recent sign-in), before it
+    is stored.
     """
 
     def __init__(
@@ -100,6 +105,7 @@ class MemberMutationGuard:
         command: MemberCommand,
         change: MemberChange,
         action: AuditAction,
+        before_change: BeforeMemberChange | None = None,
     ) -> BusinessView:
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
@@ -109,6 +115,8 @@ class MemberMutationGuard:
             )
         )
         self._step_up.require_recent_authentication()
+        if before_change is not None:
+            before_change(business)
         # A brand owner is not on the team; their access is the brand's.
         owner_by_membership: bool = is_direct_owner(business, command.user_id)
         now: Microseconds = self._wall_clock.now_unix()

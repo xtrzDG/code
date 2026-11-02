@@ -92,6 +92,7 @@ from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 
 class AssemblyAutotestWiring(AssemblyScriptedModels):
@@ -238,11 +239,16 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.start_autotest_run_use_case,
             self.enqueue_autotest_run_use_case,
         )
+        # No brake holds until a test sets one.
+        self.platform_brakes = SetPlatformBrakes()
         self.resume_autotest_run_use_case = ResumeAutotestRunUseCase(
             self.business_repo,
             self.version_repo,
             self.run_repo,
             plan_scenarios,
+            self.platform_brakes,
+            self.autotest_events,
+            self.wall_clock,
         )
         self.abandon_autotest_run_use_case = AbandonAutotestRunUseCase(
             self.version_repo,

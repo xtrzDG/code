@@ -24081,8 +24081,13 @@
       },
       "PasskeyAddedView": {
         "additionalProperties": false,
-        "description": "The new passkey; with the person's first second factor, a new set of\nrecovery codes too (shown once).",
+        "description": "The new passkey; with the person's first second factor, a new set of\nrecovery codes too (shown once). When that first factor raised the\nrequest's one-factor session to two factors (`is_level_raised`),\n`rotation_ticket` lets this client swap the session's token (POST\n/v1/auth/session/rotate): only the new token carries the two factors.",
         "properties": {
+          "is_level_raised": {
+            "default": false,
+            "title": "Is Level Raised",
+            "type": "boolean"
+          },
           "passkey": {
             "$ref": "#/components/schemas/PasskeyView"
           },
@@ -24095,6 +24100,20 @@
             },
             "title": "Recovery Codes",
             "type": "array"
+          },
+          "rotation_ticket": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 32,
+                "pattern": "^[A-Za-z0-9_\\-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation Ticket"
           }
         },
         "required": [
@@ -28480,8 +28499,13 @@
       },
       "RecoveryCodesView": {
         "additionalProperties": false,
-        "description": "A new set of recovery codes, shown once: only their hashes are kept.",
+        "description": "A new set of recovery codes, shown once: only their hashes are kept.\nWhen a new authenticator raised the request's one-factor session to two\nfactors (`is_level_raised`), `rotation_ticket` lets this client swap the\nsession's token (POST /v1/auth/session/rotate): only the new token\ncarries the two factors.",
         "properties": {
+          "is_level_raised": {
+            "default": false,
+            "title": "Is Level Raised",
+            "type": "boolean"
+          },
           "recovery_codes": {
             "items": {
               "maxLength": 14,
@@ -28491,6 +28515,20 @@
             },
             "title": "Recovery Codes",
             "type": "array"
+          },
+          "rotation_ticket": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 32,
+                "pattern": "^[A-Za-z0-9_\\-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation Ticket"
           }
         },
         "required": [
@@ -29389,6 +29427,24 @@
         "title": "RolloutView",
         "type": "object"
       },
+      "RotateSessionRequest": {
+        "additionalProperties": false,
+        "description": "The one-time ticket the proof that raised the session to two factors\nanswered (a step-up, a new authenticator or first passkey), held only\nby the client that made it.\n\nExample: {\"rotation_ticket\": \"q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d\"}.",
+        "properties": {
+          "rotation_ticket": {
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_\\-]+$",
+            "title": "Rotation Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rotation_ticket"
+        ],
+        "title": "RotateSessionRequest",
+        "type": "object"
+      },
       "ScheduleExceptionList": {
         "additionalProperties": false,
         "description": "Schedule exceptions ordered by date.",
@@ -29760,7 +29816,7 @@
       },
       "SessionAssuranceView": {
         "additionalProperties": false,
-        "description": "How the session is signed in now, and until when it may do sensitive\nactions. `is_level_raised`: this proof raised it from one factor to\ntwo, so the cabinet swaps its token (POST /v1/auth/session/rotate) and\na token copied before never gains the level.",
+        "description": "How the session is signed in now, and until when it may do sensitive\nactions. `is_level_raised`: this proof raised it from one factor to\ntwo; the proof then waits for the swap of its token (POST\n/v1/auth/session/rotate with `rotation_ticket`, which only this client\nreceives): the new token carries the two factors and the proof, the\nold one stays one factor and winds down, so a token copied before\nnever gains them.",
         "properties": {
           "auth_level": {
             "$ref": "#/components/schemas/AuthLevel"
@@ -29773,6 +29829,20 @@
             "default": false,
             "title": "Is Level Raised",
             "type": "boolean"
+          },
+          "rotation_ticket": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 32,
+                "pattern": "^[A-Za-z0-9_\\-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation Ticket"
           },
           "step_up_valid_until": {
             "title": "Step Up Valid Until",
@@ -46265,6 +46335,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

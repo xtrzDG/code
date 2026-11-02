@@ -14,6 +14,7 @@ from app.schemas.typings.handoffs.strings import ManagerContactAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.utilities.channels.transfer_destinations import find_transfer_refusal
 from app.utilities.notifications.quiet_hours import is_valid_quiet_hours
 from app.utilities.security.email_addresses import parse_email_address
 
@@ -39,7 +40,16 @@ def validate_manager_contact(
     phone_number_parser: PhoneNumberParserContract,
     contact_input: ManagerContactInput,
     business: BusinessDocument,
+    position: int = 0,
 ) -> ManagerContact:
+    """
+    The manager contact as stored, `position` being its place in the
+    request's list (named in a refusal of its address).
+
+    Raises:
+        ValidationFailedError: a rule of the contact is broken.
+    """
+
     if contact_input.name.strip() == "":
         raise ValidationFailedError("Manager name must not be empty.")
 
@@ -61,7 +71,7 @@ def validate_manager_contact(
         )
 
     address: ManagerContactAddress = validate_contact_address(
-        phone_number_parser, contact_input, business
+        phone_number_parser, contact_input, business, position
     )
     return ManagerContact(
         name=contact_input.name,
@@ -97,7 +107,15 @@ def validate_contact_address(
     phone_number_parser: PhoneNumberParserContract,
     contact_input: ManagerContactInput,
     business: BusinessDocument,
+    position: int = 0,
 ) -> ManagerContactAddress:
+    """
+    The address in its stored form. A WhatsApp or SMS number is also a
+    destination calls may be put through to (a transfer, the fallback
+    dial: `find_transfer_phone_number`), so it must be one
+    `find_transfer_refusal` allows, as the profile's handoff phone must.
+    """
+
     match contact_input.channel:
         case ManagerContactChannel.TELEGRAM:
             chat_id: str = contact_input.address.strip()
@@ -116,4 +134,12 @@ def validate_contact_address(
                 RawPhoneNumberInput(str(contact_input.address)),
                 business.country_code,
             )
+            refusal: str | None = find_transfer_refusal(
+                phone_number.e164, business.country_code
+            )
+            if refusal is not None:
+                raise ValidationFailedError(
+                    f"manager_contacts[{position}].address: {refusal}"
+                )
+
             return ManagerContactAddress(str(phone_number.e164))

@@ -1,10 +1,12 @@
 """Autosave of the profile: change only the fields sent, on every edit."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.domain.profiles import BusinessAddress, BusinessLink, OpeningInterval
 from app.schemas.dto.profiles.business_profile import (
+    RECORDING_NOTICE_DEPRECATION,
     BookingRulesInput,
     ContactsInput,
     ProfileAnswerInput,
@@ -45,7 +47,9 @@ class ProfilePatch(ImmutableDTO):
     tone: ToneText | None = None
     links: list[BusinessLink] | None = None
     answers: list[ProfileAnswerInput] | None = None
-    is_recording_notice_enabled: IsRecordingNoticeEnabled | None = None
+    is_recording_notice_enabled: IsRecordingNoticeEnabled | None = Field(
+        default=None, deprecated=RECORDING_NOTICE_DEPRECATION
+    )
 
 
 class PatchProfileCommand(ImmutableDTO):

@@ -78,9 +78,10 @@ def find_or_create_call_contact(
     """
     The call-only contact of the caller's number, else a new contact with
     the number as its phone (staff call it back) and no verified phone.
-    A number some proven contact also holds as a PHONE identity (a missed
-    call's text-back) gives the new contact the call's own id instead, so
-    later calls from it find nobody either.
+    A number some proven contact also holds as a PHONE identity (stored by
+    earlier releases' text-backs; a text-back adds none now) gives the new
+    contact the call's own id instead, so later calls from it find nobody
+    either.
     """
 
     identity = ChannelIdentity(

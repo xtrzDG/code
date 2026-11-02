@@ -4,8 +4,13 @@ turns two-factor sign-in on (recovery codes once, other sessions end);
 removing the last one turns it off again, everywhere.
 """
 
+from app.schemas.typings.mfa.constrained_strings import TotpSecret
 from tests.e2e.harness import Workshop, bearer
-from tests.users.mfa.mfa_api import RESEND_WAIT_SECONDS, reason_codes
+from tests.users.mfa.mfa_api import (
+    RESEND_WAIT_SECONDS,
+    reason_codes,
+    rotate_if_raised,
+)
 from tests.users.passkeys.passkey_api import (
     OWNER_EMAIL,
     add_passkey,
@@ -24,6 +29,8 @@ def test_a_first_passkey_turns_on_two_factor_sign_in(workshop: Workshop) -> None
     authenticator = new_authenticator()
 
     added = add_passkey(workshop, token, authenticator)
+    before_swap = workshop.client.get("/v1/me/security", headers=bearer(token))
+    token = rotate_if_raised(workshop, token, added.json())
     security = workshop.client.get("/v1/me/security", headers=bearer(token))
     listed = workshop.client.get("/v1/me/passkeys", headers=bearer(token))
     other = workshop.client.get("/v1/me", headers=bearer(other_token))
@@ -34,6 +41,8 @@ def test_a_first_passkey_turns_on_two_factor_sign_in(workshop: Workshop) -> None
     assert passkey["transports"] == ["internal", "hybrid"]
     assert passkey["clone_suspected_at"] is None
     assert len(added.json()["recovery_codes"]) == 10
+    assert added.json()["is_level_raised"] is True
+    assert before_swap.json()["auth_level"] == "one_factor"
     assert security.json()["passkey_count"] == 1
     assert security.json()["auth_level"] == "two_factor"
     assert security.json()["recovery_codes_left"] == 10
@@ -58,6 +67,11 @@ def test_another_passkey_keeps_the_codes_and_the_other_sessions(
 
     assert added.status_code == 201, added.text
     assert added.json()["recovery_codes"] == []
+    # The session already counts as two factors: nothing to swap.
+    assert (added.json()["is_level_raised"], added.json()["rotation_ticket"]) == (
+        False,
+        None,
+    )
     assert added.json()["passkey"]["name"] == "Work laptop"
     # Newest first.
     assert [item["name"] for item in listed.json()["items"]] == [
@@ -165,3 +179,30 @@ def test_a_passkey_is_renamed_and_removed_by_its_person_only(
     assert security.json()["passkey_count"] == 0
     assert security.json()["recovery_codes_left"] == 0
     assert security.json()["auth_level"] == "one_factor"
+
+
+def test_an_authenticator_on_a_two_factor_session_swaps_nothing(
+    workshop: Workshop,
+) -> None:
+    token, _ = sign_up_with_passkey(workshop, new_authenticator())
+
+    started = workshop.client.post("/v1/me/mfa/totp", headers=bearer(token))
+    workshop.authenticators.secrets[OWNER_EMAIL] = TotpSecret(
+        str(started.json()["secret"])
+    )
+    confirmed = workshop.client.post(
+        "/v1/me/mfa/totp/confirm",
+        json={"code": workshop.authenticators.code_for(OWNER_EMAIL, workshop.clock)},
+        headers=bearer(token),
+    )
+
+    assert confirmed.status_code == 200, confirmed.text
+    assert (
+        confirmed.json()["is_level_raised"],
+        confirmed.json()["rotation_ticket"],
+    ) == (
+        False,
+        None,
+    )
+    security = workshop.client.get("/v1/me/security", headers=bearer(token)).json()
+    assert (security["auth_level"], security["totp_status"]) == ("two_factor", "active")

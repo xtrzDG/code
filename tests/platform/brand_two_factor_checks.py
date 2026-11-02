@@ -19,6 +19,7 @@ from httpx2 import Response
 
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from tests.e2e.harness import bearer
 from tests.platform.authorization_checks import Expectation, expect_error
 from tests.platform.authorization_world import Headers
 from tests.platform.brand_matrix_checks import BRAND_OWNER_ONLY, check_brand_refusals
@@ -104,11 +105,13 @@ def check_brand_owner_actions_need_two_factors(brand: BrandWorld) -> list[str]:
     if locked.get(brand.location_c) is not True or locked.get(brand.world.business_b):
         failures.append(f"dashboard should lock C only: {locked}")
 
-    set_up_authenticator(brand.world.workshop, token_of(co_owner), CO_OWNER_PHONE)
+    raised, _ = set_up_authenticator(
+        brand.world.workshop, token_of(co_owner), CO_OWNER_PHONE
+    )
     changed = client.put(
         f"{base}/knowledge/{SHARED_KEY}",
         json={"kind": "faq", "title": "Parking", "body": "Free after 18:00."},
-        headers=co_owner,
+        headers=bearer(raised),
     )
     return failures + problem_of("with two factors", changed, expect_status(200))
 

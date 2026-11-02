@@ -92,7 +92,7 @@ def test_a_wrong_or_already_used_authenticator_code_is_refused(
 
 def test_a_recovery_code_works_once(workshop: Workshop) -> None:
     token, _ = workshop.sign_in_with_phone(OWNER)
-    codes = set_up_authenticator(workshop, token, OWNER)
+    _, codes = set_up_authenticator(workshop, token, OWNER)
 
     first = second_step(
         workshop, login_code_step(workshop, OWNER), recovery_code=codes[0]

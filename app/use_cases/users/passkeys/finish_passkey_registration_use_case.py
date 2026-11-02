@@ -17,17 +17,18 @@ from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
 from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
 from app.schemas.dto.passkeys import FinishPasskeyRegistrationCommand, PasskeyAddedView
+from app.schemas.dto.sessions import SessionProof
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.use_cases.shared.second_factors import has_second_factor
 from app.use_cases.shared.session_sweeps import own_session
 from app.use_cases.users.mfa.mfa_records import audit_mfa_change
-from app.use_cases.users.mfa.session_level import record_session_level
 from app.use_cases.users.passkeys.passkey_challenges import take_passkey_challenge
 from app.use_cases.users.passkeys.passkey_records import PASSKEY_ENTITY, passkey_view
 from app.use_cases.users.passkeys.passkey_registration import (
     add_passkey,
     start_second_factor,
 )
+from app.use_cases.users.sessions.session_proofs import record_proof
 
 
 class FinishPasskeyRegistrationUseCase(
@@ -36,10 +37,13 @@ class FinishPasskeyRegistrationUseCase(
     """
     The browser's new passkey is checked against the person's registration
     challenge (taken once) and stored. As the person's first second
-    factor it also brings a new set of recovery codes (shown once), their
-    session counts as signed in with two factors from now on, and every
-    other session ends (signed in without it). Audited as MFA_CHANGED.
-    From the next sign-in on, the passkey is asked after the login code.
+    factor it also brings a new set of recovery codes (shown once), and
+    every other session ends (signed in without it); the current
+    one-factor session is not raised in place: the answer carries a
+    one-time rotation ticket (`is_level_raised`), and the token it swaps
+    in (POST /v1/auth/session/rotate) counts as two factors
+    (session_proofs.py). Audited as MFA_CHANGED. From the next sign-in on,
+    the passkey is asked after the login code.
     """
 
     def __init__(
@@ -86,8 +90,9 @@ class FinishPasskeyRegistrationUseCase(
             now,
         )
         codes: list[RecoveryCode] = []
+        proof: SessionProof = SessionProof()
         if is_first_factor:
-            record_session_level(
+            proof = record_proof(
                 self._session_assurance,
                 self._user_session_repo,
                 input_data.user_id,
@@ -110,4 +115,9 @@ class FinishPasskeyRegistrationUseCase(
             input_data.client_ip_address,
             now,
         )
-        return PasskeyAddedView(passkey=passkey_view(passkey), recovery_codes=codes)
+        return PasskeyAddedView(
+            passkey=passkey_view(passkey),
+            recovery_codes=codes,
+            is_level_raised=proof.rotation_ticket is not None,
+            rotation_ticket=proof.rotation_ticket,
+        )

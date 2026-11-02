@@ -25,31 +25,36 @@ from app.utilities.security.access_tokens import (
     hash_access_token,
 )
 from app.utilities.security.session_expiry import is_session_over
+from app.utilities.security.session_rotation_tickets import (
+    grace_end,
+    hash_rotation_ticket,
+)
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
-# How long the old token still answers the requests already on their way
-# with it, as a one-factor session that can confirm nothing; without this
-# such a request would be refused and the cabinet would drop the new cookie.
-ROTATION_GRACE_SECONDS: int = 30
 NO_SESSION_MESSAGE: str = "Sign in again."
-NOT_RECENT_MESSAGE: str = "Confirm it is you first; then the session gets a new token."
+NO_TICKET_MESSAGE: str = (
+    "This session cannot get a new token: confirm it is you again first."
+)
 
 
 class RotateSessionUseCase(UseCaseContract[RotateSessionCommand, LoginSessionView]):
     """
-    A fresh token for the request's session right after a step-up (POST
-    /v1/auth/session/rotate, called by the cabinet's server when a step-up
-    raised the session to two factors): a new session with a new random
-    token takes over everything of the old one (level, last proof, device,
-    expiries, creation), so a token copied before the step-up never gains
-    its level. The old session ends: for ROTATION_GRACE_SECONDS it still
-    answers the requests already on their way, as one factor without a
-    recent proof (what it was before the step-up), then it expires. The
-    token is returned once, as at sign-in.
+    A fresh token for the request's session right after a proof raised it
+    to two factors (POST /v1/auth/session/rotate with the one-time
+    rotation ticket that proof answered: a step-up, a new authenticator or
+    a first passkey; session_proofs.py). The ticket is taken once, within
+    ROTATION_TICKET_TTL_SECONDS, and only with the token of the session it
+    was issued to; in the same atomic step the old session winds down:
+    one factor, no proof, over after ROTATION_GRACE_SECONDS (the requests
+    already on their way), and it never takes a proof or a ticket again.
+    A new session with a new random token carries the rest (device,
+    expiries, creation) and the two factors with the ticket's proof, so a
+    token copied before or after the proof never gains them. The token is
+    returned once, as at sign-in.
 
-    Only a session whose person proved it is them within
-    STEP_UP_MAX_AGE_SECONDS rotates; another is refused (409) and keeps
-    its token.
+    Without a matching ticket (none, a used or expired one, another
+    session's, or a proof older than STEP_UP_MAX_AGE_SECONDS) the session
+    keeps its token and is refused (409).
     """
 
     def __init__(
@@ -88,53 +93,48 @@ class RotateSessionUseCase(UseCaseContract[RotateSessionCommand, LoginSessionVie
         ):
             raise AuthenticationRequiredError(NO_SESSION_MESSAGE)
 
-        if not self._is_recently_proven(current, now):
-            raise ConflictError(NOT_RECENT_MESSAGE)
+        if not self._is_recent(current.rotation_proven_at, now):
+            raise ConflictError(NO_TICKET_MESSAGE)
+
+        before: UserSessionDocument | None = (
+            self._user_session_repo.take_rotation_ticket(
+                current.id,
+                hash_rotation_ticket(input_data.rotation_ticket),
+                now,
+                grace_end(now),
+            )
+        )
+        if before is None or before.rotation_proven_at is None:
+            raise ConflictError(NO_TICKET_MESSAGE)
 
         access_token: AccessToken = generate_access_token()
-        rotated = current.model_copy(
+        rotated: UserSessionDocument = before.model_copy(
             update={
                 "id": UserSessionId(),
                 "token_hash": hash_access_token(access_token),
+                "auth_level": AuthLevel.TWO_FACTOR,
+                "authenticated_at": before.rotation_proven_at,
+                "rotation_ticket_hash": None,
+                "rotation_ticket_expires_at": None,
+                "rotation_proven_at": None,
+                "rotated_at": None,
                 "updated_at": now,
             }
         )
         self._user_session_repo.save(rotated)
-        self._user_session_repo.save(winding_down(current, now))
         return LoginSessionView(
             access_token=access_token,
             expires_at=rotated.expires_at,
             user=self._user_view_transformer.transform(user),
             is_new_user=IsNewUser(False),
-            auth_level=rotated.auth_level or AuthLevel.ONE_FACTOR,
+            auth_level=AuthLevel.TWO_FACTOR,
         )
 
-    def _is_recently_proven(
-        self, session: UserSessionDocument, now: Microseconds
-    ) -> bool:
-        if session.authenticated_at is None:
+    def _is_recent(self, proven_at: Microseconds | None, now: Microseconds) -> bool:
+        if proven_at is None:
             return False
 
         max_age: int = (
             int(self._app_settings.step_up_max_age_seconds) * MICROSECONDS_PER_SECOND
         )
-        return 0 <= int(now) - int(session.authenticated_at) <= max_age
-
-
-def winding_down(
-    session: UserSessionDocument, now: Microseconds
-) -> UserSessionDocument:
-    """The old session for its last seconds: one factor, no proof, then over."""
-
-    ends_at = Microseconds(int(now) + ROTATION_GRACE_SECONDS * MICROSECONDS_PER_SECOND)
-    return session.model_copy(
-        update={
-            "auth_level": AuthLevel.ONE_FACTOR,
-            "authenticated_at": None,
-            "expires_at": min(session.expires_at, ends_at),
-            "idle_expires_at": ends_at
-            if session.idle_expires_at is None
-            else min(session.idle_expires_at, ends_at),
-            "updated_at": now,
-        }
-    )
+        return 0 <= int(now) - int(proven_at) <= max_age

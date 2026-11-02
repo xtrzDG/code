@@ -161,6 +161,9 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         plan_autotest_scenarios=plan_autotest_scenarios_use_case,
+        platform_brakes=facilitators.platform_brakes,
+        live_events=facilitators.event_publisher,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     abandon_autotest_run_use_case: Factory[
         UseCaseContract[AutotestRunFailure, None]

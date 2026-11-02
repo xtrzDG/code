@@ -238,6 +238,13 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             business_view_transformer=transformers.business_view_transformer,
         )
     )
+    owner_promotion_sweep: Factory[OwnerPromotionSweep] = Factory(
+        OwnerPromotionSweep,
+        user_session_repo=repositories.user_session_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     invite_staff_use_case: Factory[
         UseCaseContract[InviteStaffCommand, BusinessView]
     ] = Factory(
@@ -251,6 +258,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
+        owner_promotions=owner_promotion_sweep,
     )
     member_mutation_guard: Factory[MemberMutationGuard] = Factory(
         MemberMutationGuard,
@@ -268,13 +276,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ChangeMemberRoleUseCase,
         member_mutations=member_mutation_guard,
-        owner_promotions=Factory(
-            OwnerPromotionSweep,
-            user_session_repo=repositories.user_session_repo,
-            audit_log_repo=repositories.audit_log_repo,
-            storage_scope=utilities.storage_scope,
-            wall_clock=time_provider.microsecond_wall_clock,
-        ),
+        owner_promotions=owner_promotion_sweep,
     )
     remove_member_use_case: Factory[
         UseCaseContract[RemoveMemberCommand, BusinessView]

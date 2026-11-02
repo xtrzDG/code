@@ -13,10 +13,18 @@ const ROTATED = {
   recovery_codes: [],
 };
 
-function rotate(headers: Record<string, string> = {}): NextRequest {
+const TICKET = "q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d";
+
+function rotate(headers: Record<string, string> = {}, body: string = JSON.stringify({ rotation_ticket: TICKET })): NextRequest {
   return new NextRequest(ROTATE, {
     method: "POST",
-    headers: { cookie: "aw_session=old-token", "sec-fetch-site": "same-origin", ...headers },
+    headers: {
+      cookie: "aw_session=old-token",
+      "sec-fetch-site": "same-origin",
+      "content-type": "application/json",
+      ...headers,
+    },
+    body,
   });
 }
 
@@ -40,6 +48,8 @@ describe("POST /api/auth/session/rotate", () => {
     expect(url).toMatch(/\/v1\/auth\/session\/rotate$/);
     expect(init.method).toBe("POST");
     expect(new Headers(init.headers).get("authorization")).toBe("Bearer old-token");
+    expect(new Headers(init.headers).get("content-type")).toBe("application/json");
+    expect(JSON.parse(String(init.body))).toEqual({ rotation_ticket: TICKET });
     expect(response.headers.get("set-cookie")).toContain("fresh-token");
     const body = (await response.json()) as Record<string, unknown>;
     expect(body.auth_level).toBe("two_factor");
@@ -47,7 +57,7 @@ describe("POST /api/auth/session/rotate", () => {
   });
 
   it("passes a refusal on and keeps the cookie, unless the session is gone", async () => {
-    vi.stubGlobal("fetch", answering(409, { error: "conflict", message: "Confirm it is you first." }));
+    vi.stubGlobal("fetch", answering(409, { error: "conflict", message: "Confirm it is you again first." }));
     const kept = await POST(rotate());
     vi.stubGlobal("fetch", answering(401, { error: "authentication_required", message: "Sign in again." }));
     const gone = await POST(rotate());
@@ -56,6 +66,22 @@ describe("POST /api/auth/session/rotate", () => {
     expect(kept.headers.get("set-cookie")).toBeNull();
     expect(gone.status).toBe(401);
     expect(gone.headers.get("set-cookie")).toContain("aw_session=;");
+  });
+
+  it("asks nothing without a well-formed ticket", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const answers = await Promise.all(
+      ["", "{}", "not json", JSON.stringify({ rotation_ticket: "short" }), JSON.stringify({ rotation_ticket: 42 })].map(
+        (body) => POST(rotate({}, body)),
+      ),
+    );
+    const tooLarge = await POST(rotate({}, JSON.stringify({ rotation_ticket: TICKET, pad: "x".repeat(400) })));
+
+    expect([...answers, tooLarge].map((answer) => answer.status)).toEqual([422, 422, 422, 422, 422, 422]);
+    expect(answers[0]?.headers.get("set-cookie")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("asks nothing without a session or for another site", async () => {

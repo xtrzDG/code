@@ -98,8 +98,7 @@ class TestTextBackConversations:
         setup.testbed.run_worker()
 
         assert (
-            setup.testbed.contact_repo.get(setup.business.id, setup.contact.id)
-            == known
+            setup.testbed.contact_repo.get(setup.business.id, setup.contact.id) == known
         )
         [missed] = missed_calls(setup)
         assert missed.conversation_id is not None

@@ -1,10 +1,13 @@
 """
 Sections that differ in the phone instruction (concept section 7).
 
-On the phone the platform's greeting carries the AI disclosure and the
-recording notice, facts are written as they are said, links are never read
-aloud, and answers are short spoken sentences. Everything else is shared
-with the chat instruction.
+On the phone the platform's greeting carries the AI disclosure (and the
+recording notice while the business records calls), facts are written as
+they are said, links are never read aloud, answers are short spoken
+sentences, and a caller's existing bookings are not touched: the caller id
+proves nobody's identity, so the voice agent has no tool that reads or
+changes them (`CALLER_ID_BOUND_TOOLS`). Everything else is shared with the
+chat instruction.
 """
 
 from collections.abc import Sequence
@@ -12,6 +15,7 @@ from collections.abc import Sequence
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.domain.assistants import BusinessFact
 from app.utilities.assembly.instruction_sections import (
+    build_booking_section,
     build_fact_section_from_rows,
     build_role_section,
 )
@@ -19,7 +23,20 @@ from app.utilities.assembly.spoken_facts import SpokenFactTable, speak_facts
 
 PHONE_DISCLOSURE: str = (
     "The greeting of every call already says that you are the AI assistant of "
-    "the business and that the call is recorded, so do not repeat it."
+    "the business, so do not repeat it."
+)
+# What replaces cancel_booking, reschedule_booking and list_my_bookings on
+# the phone (the tool webhook refuses them with the same advice).
+PHONE_EXISTING_BOOKING_RULES: tuple[str, ...] = (
+    "- On a call the caller's number does not prove who is calling, so you "
+    "cannot look up, cancel or move an existing booking. Never say whether a "
+    "booking exists: offer to pass the request to a colleague with "
+    "handoff_to_human, who calls back the number on the booking.",
+)
+# Nothing reaches a caller in writing unless a tool result says so.
+NO_TEXT_PROMISE_RULE: str = (
+    "Never promise a text message, an SMS or a written confirmation unless a "
+    "tool result says that one is sent."
 )
 
 
@@ -45,16 +62,15 @@ def build_spoken_fact_section(
 ) -> list[str]:
     """
     The fact table as it is said on the phone. Rows that are only a link are
-    named instead, as links the caller can get by text message when the
-    version can send links.
+    named instead, as links send_link can offer when the version can send
+    links (whether one is texted is the tool result's to say).
     """
 
     table: SpokenFactTable = speak_facts(facts)
     lines: list[str] = build_fact_section_from_rows(table.rows, tools)
     if table.link_labels and AssistantToolName.SEND_LINK in tools:
         lines.append(
-            "- Links the caller can get as a text message with send_link: "
-            + ", ".join(table.link_labels)
+            "- Links you can offer with send_link: " + ", ".join(table.link_labels)
         )
 
     return lines
@@ -75,6 +91,7 @@ def build_phone_answer_format_section(
         "them. Say phone numbers slowly, digit by digit, and repeat the digits "
         "back for confirmation.",
         "Never read a link or a web address aloud.",
+        NO_TEXT_PROMISE_RULE,
     ]
     if AssistantToolName.SEND_LINK in tools:
         lines.append(
@@ -86,3 +103,24 @@ def build_phone_answer_format_section(
         )
 
     return lines
+
+
+def build_phone_booking_section(
+    tools: Sequence[AssistantToolName],
+    country_name: str,
+    timezone_name: str,
+    has_sister_locations: bool,
+) -> list[str]:
+    """
+    The booking section of the voice agent's tools (`tools` without
+    CALLER_ID_BOUND_TOOLS): new bookings as in the chat, existing ones
+    passed to a colleague.
+    """
+
+    return build_booking_section(
+        tools,
+        country_name,
+        timezone_name,
+        has_sister_locations=has_sister_locations,
+        existing_booking_rules=PHONE_EXISTING_BOOKING_RULES,
+    )

@@ -2,7 +2,8 @@
 
 /**
  * The authenticator app: its state, setting it up (QR code, first code,
- * then the recovery codes once) and turning it off.
+ * then the recovery codes once; a one-factor session swaps its token for a
+ * two-factor one first, rotateSession.ts) and turning it off.
  */
 
 import { useState } from "react";
@@ -13,6 +14,7 @@ import { unwrap } from "@/api/result";
 import type { AccountSecurityView, TotpEnrollmentView } from "@/api/types";
 import { AuthenticatorSetup } from "@/components/security/AuthenticatorSetup";
 import { RecoveryCodesPanel } from "@/components/security/RecoveryCodesPanel";
+import { rotateSessionIfRaised } from "@/components/security/rotateSession";
 import {
   Badge,
   Button,
@@ -66,6 +68,8 @@ export function AuthenticatorCard({
       const answer = await unwrap(
         api.POST("/v1/me/mfa/totp/confirm", { body: { code } }),
       );
+      // Only the swapped-in token carries the two factors the app just gave.
+      await rotateSessionIfRaised(answer);
       setEnrollment(null);
       setCodes(answer.recovery_codes);
       toast.success(t("security.app.turnedOn"));

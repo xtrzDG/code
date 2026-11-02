@@ -13,7 +13,7 @@ from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
 from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.dto.mfa import ConfirmTotpCommand, RecoveryCodesView
-from app.schemas.dto.sessions import SessionSweep
+from app.schemas.dto.sessions import SessionProof, SessionSweep
 from app.schemas.exceptions.application_errors import ConflictError
 from app.use_cases.shared.session_sweeps import end_sessions, own_session
 from app.use_cases.users.mfa.mfa_records import (
@@ -22,7 +22,7 @@ from app.use_cases.users.mfa.mfa_records import (
     issue_recovery_codes,
 )
 from app.use_cases.users.mfa.second_factor_check import SecondFactorCheck
-from app.use_cases.users.mfa.session_level import record_session_level
+from app.use_cases.users.sessions.session_proofs import record_proof
 
 NOTHING_TO_CONFIRM_MESSAGE: str = (
     "There is no authenticator being set up. Start setting it up again."
@@ -34,12 +34,17 @@ class ConfirmTotpEnrollmentUseCase(
 ):
     """
     The first code from the app turns the new authenticator on. The person
-    gets a new set of recovery codes (shown once), their current session
-    counts as signed in with two factors from now on, and every other
-    session of theirs ends: a device signed in before the authenticator
-    existed signs in again with it (SESSION_REVOKED with the count). The
-    change is audited as MFA_CHANGED. From the next sign-in on, the app's
-    code is asked after the login code.
+    gets a new set of recovery codes (shown once), and every other session
+    of theirs ends: a device signed in before the authenticator existed
+    signs in again with it (SESSION_REVOKED with the count). The change is
+    audited as MFA_CHANGED. From the next sign-in on, the app's code is
+    asked after the login code.
+
+    A current session that counted as one factor is not raised in place:
+    the answer says so (`is_level_raised`) and carries a one-time rotation
+    ticket, and the token it swaps in (POST /v1/auth/session/rotate)
+    counts as two factors; a session that already had two factors records
+    the proof (session_proofs.py).
     """
 
     def __init__(
@@ -74,7 +79,7 @@ class ConfirmTotpEnrollmentUseCase(
         recovery_codes = issue_recovery_codes(
             self._recovery_code_repo, input_data.user_id, now
         )
-        record_session_level(
+        proof: SessionProof = record_proof(
             self._session_assurance,
             self._user_session_repo,
             input_data.user_id,
@@ -102,4 +107,8 @@ class ConfirmTotpEnrollmentUseCase(
             input_data.client_ip_address,
             now,
         )
-        return RecoveryCodesView(recovery_codes=recovery_codes)
+        return RecoveryCodesView(
+            recovery_codes=recovery_codes,
+            is_level_raised=proof.rotation_ticket is not None,
+            rotation_ticket=proof.rotation_ticket,
+        )

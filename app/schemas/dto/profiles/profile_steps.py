@@ -10,6 +10,7 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemUpsertInput,
 )
 from app.schemas.dto.profiles.business_profile import (
+    RECORDING_NOTICE_DEPRECATION,
     BookingRulesInput,
     BusinessProfileView,
     ContactsInput,
@@ -90,13 +91,16 @@ class FaqAndHandoffStepInput(ImmutableDTO):
 
 class ChannelsStepInput(ImmutableDTO):
     """
-    Step 6: links the assistant may send and the call recording notice.
+    Step 6: links the assistant may send (and the old call recording
+    notice, which has no effect: the call settings record calls).
 
     Channels themselves are connected in the channels section.
     """
 
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
-    is_recording_notice_enabled: IsRecordingNoticeEnabled = True
+    is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
+        default=True, deprecated=RECORDING_NOTICE_DEPRECATION
+    )
     answers: list[ProfileAnswerInput] = Field(default_factory=list[ProfileAnswerInput])
 
 

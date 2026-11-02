@@ -70,7 +70,7 @@ def held_ticket(
     proven_at: Microseconds,
     expires_at: Microseconds,
 ) -> SessionChange:
-    """A rotation ticket waiting on a session that has not rotated (the last one wins)."""
+    """A rotation ticket waiting on a session not rotated yet (the newest wins)."""
 
     def hold(session: UserSessionDocument) -> UserSessionDocument | None:
         if session.rotated_at is not None:

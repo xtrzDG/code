@@ -1,6 +1,6 @@
 """
-Account → Security: setting up an authenticator (the session becomes
-two-factor), recovery codes shown once and regenerated, removing the
+Account → Security: setting up an authenticator (the session's token is
+swapped for a two-factor one), recovery codes shown once and regenerated, removing the
 authenticator; every change is in the audit log as MFA_CHANGED.
 """
 
@@ -12,6 +12,7 @@ from tests.users.mfa.mfa_api import (
     login_code_step,
     mfa_changes,
     reason_codes,
+    rotate_if_raised,
     second_step,
     set_up_authenticator,
     wrong_code_for,
@@ -39,6 +40,9 @@ def test_setting_up_an_authenticator_makes_the_session_two_factor(
     confirmed = workshop.client.post(
         "/v1/me/mfa/totp/confirm", json={"code": code}, headers=headers
     )
+    # The session is raised only under the token its ticket swaps in.
+    old_token = workshop.client.get(SECURITY_URL, headers=headers).json()
+    headers = bearer(rotate_if_raised(workshop, token, confirmed.json()))
     after = workshop.client.get(SECURITY_URL, headers=headers).json()
     again = workshop.client.post("/v1/me/mfa/totp", headers=headers)
 
@@ -56,6 +60,8 @@ def test_setting_up_an_authenticator_makes_the_session_two_factor(
     assert pending["totp_status"] == "pending"
     assert confirmed.status_code == 200, confirmed.text
     assert len(confirmed.json()["recovery_codes"]) == 10
+    assert confirmed.json()["is_level_raised"] is True
+    assert old_token["auth_level"] == "one_factor"
     assert after["totp_status"] == "active"
     assert after["totp_confirmed_at"] is not None
     assert after["recovery_codes_left"] == 10
@@ -66,7 +72,7 @@ def test_setting_up_an_authenticator_makes_the_session_two_factor(
 
 def test_new_recovery_codes_replace_the_old_ones(workshop: Workshop) -> None:
     token, session = workshop.sign_in_with_phone(OWNER)
-    old_codes = set_up_authenticator(workshop, token, OWNER)
+    token, old_codes = set_up_authenticator(workshop, token, OWNER)
 
     renewed = workshop.client.post("/v1/me/mfa/recovery-codes", headers=bearer(token))
     new_codes: list[str] = renewed.json()["recovery_codes"]
@@ -89,7 +95,7 @@ def test_new_recovery_codes_replace_the_old_ones(workshop: Workshop) -> None:
 
 def test_removing_the_authenticator_ends_the_second_step(workshop: Workshop) -> None:
     token, session = workshop.sign_in_with_phone(OWNER)
-    set_up_authenticator(workshop, token, OWNER)
+    token, _ = set_up_authenticator(workshop, token, OWNER)
     headers = bearer(token)
 
     removed = workshop.client.delete("/v1/me/mfa/totp", headers=headers)

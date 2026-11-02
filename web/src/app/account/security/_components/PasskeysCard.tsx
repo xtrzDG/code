@@ -3,7 +3,8 @@
 /**
  * Passkeys: the person's list (name, when added and last used, synced or
  * not, refused as a copy), adding one with the device's authenticator
- * (the first second factor also answers recovery codes, shown once),
+ * (the first second factor also answers recovery codes, shown once, and
+ * swaps the one-factor session's token for a two-factor one first),
  * renaming and removing. Adding and removing may first ask to confirm it
  * is you (the step-up dialog is global).
  */
@@ -15,6 +16,7 @@ import { toApiError } from "@/api/errors";
 import { unwrap } from "@/api/result";
 import type { PasskeyListView, PasskeyView } from "@/api/types";
 import { RecoveryCodesPanel } from "@/components/security/RecoveryCodesPanel";
+import { rotateSessionIfRaised } from "@/components/security/rotateSession";
 import { Alert, Button, Card, ConfirmDialog, Modal, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { createPasskey, PasskeyCeremonyError } from "@/lib/security/passkeyCeremony";
@@ -63,6 +65,8 @@ export function PasskeysCard({
           },
         }),
       );
+      // The first second factor: only the swapped-in token carries the two factors.
+      await rotateSessionIfRaised(added);
       if (added.recovery_codes && added.recovery_codes.length > 0) {
         // The first second factor: the codes come first, the toast once they are put away.
         setCodes(added.recovery_codes);

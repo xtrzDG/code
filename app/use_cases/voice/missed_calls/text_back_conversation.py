@@ -4,9 +4,9 @@ it like any WhatsApp message, and the assistant (and staff) see what was
 sent, because the text-back is its first message (written by the business).
 
 A caller id proves nobody's identity, so the conversation belongs to the
-WhatsApp account of the number (WhatsApp delivers only to the number's
-real owner, whose reply proves it), never to a contact found by a
-verified phone, a given phone or earlier calls from the number.
+WhatsApp account of the number (WhatsApp delivers only to whoever holds
+the number, and their reply comes from that account), never to a contact
+found by a verified phone, a given phone or earlier calls from the number.
 """
 
 from datetime import timedelta
@@ -118,11 +118,11 @@ def resolve_caller(
     """
     The number's WhatsApp customer, else a new contact known by that
     WhatsApp account alone, with the number kept to call back and no
-    verified phone (WhatsApp proves it when they reply). No contact gains
-    an identity here: a call-only contact never gets the WhatsApp account
-    (`is_call_only_contact`), and the WhatsApp contact never gets the
-    number's PHONE identity, so later calls from the number keep their own
-    call-only contact (`find_or_create_call_contact`).
+    verified phone (only a channel that proves a phone sets one). No
+    contact gains an identity here: a call-only contact never gets the
+    WhatsApp account (`is_call_only_contact`), and the WhatsApp contact
+    never gets the number's PHONE identity, so later calls from the number
+    keep their own call-only contact (`find_or_create_call_contact`).
     """
 
     contact: ContactDocument | None = find_caller_contact(

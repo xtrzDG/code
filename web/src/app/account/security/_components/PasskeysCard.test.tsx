@@ -25,6 +25,7 @@ function answer(data: unknown): never {
 }
 
 const ADDED_AT = Date.UTC(2026, 8, 1, 9) * 1000;
+const TICKET = "q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d";
 
 const LIST: PasskeyListView = {
   is_available: true,
@@ -136,10 +137,14 @@ describe("PasskeysCard", () => {
 
   it("shows the first second factor's recovery codes first, and says the passkey was added once they are put away", async () => {
     withWebAuthn();
+    const rotations = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", rotations);
     const codes = Array.from({ length: 10 }, (_, index) => `test-code-000${index}`);
     vi.mocked(api.POST)
       .mockReturnValueOnce(answer({ passkey_challenge_id: "challenge_1", options: {} }))
-      .mockReturnValueOnce(answer({ passkey: LIST.items?.[0], recovery_codes: codes }));
+      .mockReturnValueOnce(
+        answer({ passkey: LIST.items?.[0], recovery_codes: codes, is_level_raised: true, rotation_ticket: TICKET }),
+      );
     vi.mocked(api.GET).mockReturnValue(answer(LIST));
     vi.mocked(createPasskey).mockResolvedValue({} as never);
     renderInLocale(<Card list={{ ...LIST, items: [] }} />, { locale: "en" });
@@ -152,10 +157,19 @@ describe("PasskeysCard", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: t("common.done") }));
 
     expect(await screen.findByText(t("passkeys.added"))).toBeTruthy();
+    // The raised session swapped its token before the list was read again.
+    expect(rotations).toHaveBeenCalledWith("/api/auth/session/rotate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rotation_ticket: TICKET }),
+    });
+    expect(rotations.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(api.GET).mock.invocationCallOrder[0] ?? 0);
   });
 
   it("says a further passkey was added at once", async () => {
     withWebAuthn();
+    const rotations = vi.fn();
+    vi.stubGlobal("fetch", rotations);
     vi.mocked(api.POST)
       .mockReturnValueOnce(answer({ passkey_challenge_id: "challenge_2", options: {} }))
       .mockReturnValueOnce(answer({ passkey: LIST.items?.[0], recovery_codes: null }));
@@ -168,5 +182,6 @@ describe("PasskeysCard", () => {
 
     expect(await screen.findByText(t("passkeys.added"))).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(rotations).not.toHaveBeenCalled();
   });
 });

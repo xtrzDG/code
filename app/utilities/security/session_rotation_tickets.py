@@ -42,7 +42,8 @@ def hash_rotation_ticket(ticket: SessionRotationTicket) -> SessionRotationTicket
 
 
 def ticket_expiry(now: Microseconds) -> Microseconds:
-    return Microseconds(int(now) + ROTATION_TICKET_TTL_SECONDS * MICROSECONDS_PER_SECOND)
+    ttl: int = ROTATION_TICKET_TTL_SECONDS * MICROSECONDS_PER_SECOND
+    return Microseconds(int(now) + ttl)
 
 
 def grace_end(now: Microseconds) -> Microseconds:

@@ -76,6 +76,7 @@ from tests.channels.channels_inbox import ChannelsInbox
 from tests.channels.recording_storage_fakes import InMemoryRecordingStorage
 from tests.notifications.staff_alert_fakes import build_staff_alerts
 from tests.privacy.suppression_doubles import build_suppression_list
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 
 class RecordingSmsClient(SmsMessagingClientContract):
@@ -129,6 +130,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
         self.assistant_settings_repo = AssistantSettingsRepository(
             InMemoryDocumentCollectionAdapter(AssistantSettingsDocument)
         )
+        self.platform_brakes = SetPlatformBrakes()
         self.summarize_call = SummarizeCallUseCase(
             self.business_repo,
             self.call_repo,
@@ -146,6 +148,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.conversation_repo,
             self.conversation_repo,
             self.assistant_settings_repo,
+            self.platform_brakes,
         )
         self.register_missed_call = RegisterMissedCallUseCase(
             self.business_repo,

@@ -43,6 +43,14 @@ from app.schemas.typings.profiles.strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 
+# The profile's recording notice says nothing to callers any more: whether
+# calls are recorded, and so announced, is the call settings' (Settings →
+# Calls, `is_recording_enabled`). The field is still accepted and returned.
+RECORDING_NOTICE_DEPRECATION: str = (
+    "Has no effect: whether calls are recorded and announced is set in the "
+    "call settings (is_recording_enabled)."
+)
+
 
 class BusinessProfileQuery(ImmutableDTO):
     """Read the profile of a business."""
@@ -70,7 +78,9 @@ class BusinessProfileView(ImmutableDTO):
     tone: ToneText | None = None
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     niche_answers: list[ProfileAnswer] = Field(default_factory=list[ProfileAnswer])
-    is_recording_notice_enabled: IsRecordingNoticeEnabled
+    is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
+        deprecated=RECORDING_NOTICE_DEPRECATION
+    )
     is_saved: IsProfileSaved
     updated_at: Microseconds | None = None
 
@@ -142,7 +152,9 @@ class ProfileInput(ImmutableDTO):
     tone: ToneText | None = None
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     answers: list[ProfileAnswerInput] = Field(default_factory=list[ProfileAnswerInput])
-    is_recording_notice_enabled: IsRecordingNoticeEnabled = True
+    is_recording_notice_enabled: IsRecordingNoticeEnabled = Field(
+        default=True, deprecated=RECORDING_NOTICE_DEPRECATION
+    )
 
 
 class SaveProfileCommand(ImmutableDTO):

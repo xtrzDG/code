@@ -1,7 +1,7 @@
 {
   "collection": "user_sessions",
   "document_type": "UserSessionDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -85,8 +85,52 @@
         ],
         "default": null
       },
+      "rotated_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rotation_proven_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rotation_ticket_expires_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rotation_ticket_hash": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "token_hash": {

@@ -23,6 +23,7 @@ from app.schemas.dto.mfa import (
     SessionAssuranceView,
     VerifyStepUpCommand,
 )
+from app.schemas.dto.sessions import SessionProof
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ValidationFailedError,
@@ -37,6 +38,7 @@ from app.use_cases.users.otp_login.login_challenge_consumption import (
     INVALID_CODE_MESSAGE,
     consume_login_challenge,
 )
+from app.use_cases.users.sessions.session_proofs import record_proof
 from app.utilities.security.two_factor_policy import wrong_code
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -61,6 +63,12 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
     StartStepUpUseCase sent to their own phone or e-mail (a code sent to
     anyone else's is refused), one factor. Checks are limited per person
     and per client network; the session stays valid whatever the outcome.
+
+    A proof that would raise a one-factor session to two factors is not
+    written on the session: the answer carries a one-time rotation ticket
+    for this client alone, and the two factors and the proof go to the
+    token it swaps in (POST /v1/auth/session/rotate; session_proofs.py).
+    A session that ended or rotated meanwhile is refused (401).
     """
 
     def __init__(
@@ -123,9 +131,13 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
         else:
             self._check_login_code(user, input_data, now)
 
-        self._user_session_repo.record_authentication(
-            assurance.session_id, auth_level, now
+        proof: SessionProof = record_proof(
+            self._session_assurance, self._user_session_repo, user.id, auth_level, now
         )
+        if not proof.is_recorded and proof.rotation_ticket is None:
+            # The session ended or rotated meanwhile: its old token proves nothing.
+            raise AuthenticationRequiredError(NO_SESSION_MESSAGE)
+
         return SessionAssuranceView(
             auth_level=auth_level,
             authenticated_at=now,
@@ -134,8 +146,8 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
                 + int(self._app_settings.step_up_max_age_seconds)
                 * MICROSECONDS_PER_SECOND
             ),
-            is_level_raised=auth_level is AuthLevel.TWO_FACTOR
-            and assurance.auth_level is not AuthLevel.TWO_FACTOR,
+            is_level_raised=proof.rotation_ticket is not None,
+            rotation_ticket=proof.rotation_ticket,
         )
 
     def _check_login_code(

@@ -64,8 +64,11 @@ class UpdateBusinessSettingsUseCase(
     Languages follow the creation rules; when the default language drops out
     of a new language list, the first language becomes the default. Manager
     contacts are validated per channel: a numeric Telegram chat id, a phone
-    number of any country for WhatsApp and SMS (stored as E.164, national
-    formats read in the business country), an e-mail address for e-mail.
+    number for WhatsApp and SMS (stored as E.164, national formats read in
+    the business country) that calls may also be put through to (a mobile
+    or landline of the business's country or the EU, never a premium or
+    satellite range: `find_transfer_refusal`, refused with the field
+    named), an e-mail address for e-mail.
     The owner may only pause a live assistant (its voice agent is removed
     once the pause is stored) and resume a paused one (the published version
     is activated again, with the launch conditions and a new voice agent);
@@ -170,8 +173,11 @@ class UpdateBusinessSettingsUseCase(
                     self._phone_number_parser,
                     contact_input,
                     business,
+                    position,
                 )
-                for contact_input in limit_manager_contacts(changes.manager_contacts)
+                for position, contact_input in enumerate(
+                    limit_manager_contacts(changes.manager_contacts)
+                )
             ]
             contacts_audit_entry = AuditLogEntryDocument(
                 business_id=business.id,

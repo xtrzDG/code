@@ -5,6 +5,10 @@ from app.transformers.assembly.phone_instruction_transformer import (
     PhoneInstructionTransformer,
 )
 from app.utilities.assembly.assistant_tools import select_assistant_tools
+from app.utilities.assembly.phone_instruction_sections import (
+    NO_TEXT_PROMISE_RULE,
+    PHONE_EXISTING_BOOKING_RULES,
+)
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.test_assistant_instruction import build_instruction_source
 from tests.assembly.testbed import AssemblyTestbed
@@ -22,6 +26,10 @@ PHONE_SECTION_TITLES: list[str] = [
     "# Answer format",
     "# Example exchanges",
 ]
+
+
+def section(prompt: str, title: str) -> list[str]:
+    return prompt.split(title + "\n")[1].split("\n\n")[0].splitlines()
 
 
 def assemble_phone_prompt(testbed: AssemblyTestbed) -> str:
@@ -59,6 +67,9 @@ def test_the_greeting_carries_the_disclosure_on_the_phone() -> None:
     assert "The greeting of every call already says that you are the AI" in prompt
     assert "say honestly that you are an AI assistant" in prompt
     assert "first reply of every conversation" not in prompt
+    # Calls are recorded only when the owner turns it on (Settings → Calls):
+    # the instruction no longer claims that the greeting says so.
+    assert "recorded" not in prompt
 
 
 def test_facts_are_written_the_way_they_are_said() -> None:
@@ -78,12 +89,18 @@ def test_links_are_never_in_the_phone_instruction() -> None:
     prompt = assemble_phone_prompt(AssemblyTestbed())
 
     assert "https://" not in prompt
+    # The facts used to say the caller "can get" these links "as a text
+    # message": a promise only send_link's result may make (a caller known
+    # by nothing but the caller id gets no text after the call).
     assert (
-        "- Links the caller can get as a text message with send_link: Location on "
-        "the map, Menu link, Online booking page"
+        "- Links you can offer with send_link: Location on the map, Menu link, "
+        "Online booking page"
     ) in prompt
+    assert "as a text message" not in prompt
     assert "Never read a link or a web address aloud." in prompt
-    assert 'say "I will text you the link"' in prompt
+    assert 'When its result has "texted_after_call": true, say "I will text you' in (
+        prompt
+    )
     assert "never promise a message" in prompt
 
 
@@ -101,7 +118,9 @@ def test_without_send_link_links_are_simply_left_out() -> None:
 
     assert "https://" not in prompt
     assert "send_link" not in prompt
+    assert "texted_after_call" not in prompt
     assert "Never read a link or a web address aloud." in prompt
+    assert NO_TEXT_PROMISE_RULE in prompt
 
 
 def test_the_phone_keeps_every_shared_rule() -> None:
@@ -110,9 +129,38 @@ def test_the_phone_keeps_every_shared_rule() -> None:
     chat_prompt = str(version.prompt_text)
     phone_prompt = str(version.phone_prompt_text)
 
-    for title in ("# Bookings", "# Handing off to a human", "# Never", "# Emergencies"):
+    # The bookings section differs since the voice agent has no tool bound
+    # to the caller id (test_existing_bookings_go_to_a_colleague).
+    for title in ("# Handing off to a human", "# Never", "# Emergencies"):
         chat_section = chat_prompt.split(title + "\n")[1].split("\n\n")[0]
         assert title + "\n" + chat_section in phone_prompt
+
+
+def test_existing_bookings_go_to_a_colleague() -> None:
+    testbed = AssemblyTestbed()
+    version = testbed.assemble(seed_georgian_restaurant(testbed).id)
+    chat_bookings = section(str(version.prompt_text), "# Bookings")
+    phone_prompt = str(version.phone_prompt_text)
+    phone_bookings = section(phone_prompt, "# Bookings")
+
+    # The voice agent is built without these tools: its prompt never names them.
+    for tool in ("list_my_bookings", "cancel_booking", "reschedule_booking"):
+        assert tool in str(version.prompt_text)
+        assert tool not in phone_prompt
+    assert PHONE_EXISTING_BOOKING_RULES[0] in phone_bookings
+    # Every other rule is the chat's, but for the three about bookings made.
+    assert [line for line in chat_bookings if line not in phone_bookings] == [
+        "- Before you create, move or cancel a booking, repeat the date, time, "
+        "number of people and name back to the customer and wait for a clear "
+        "confirmation.",
+        "- Use cancel_booking and reschedule_booking to change existing bookings.",
+        "- When customers ask about their own bookings, call list_my_bookings.",
+    ]
+    assert [line for line in phone_bookings if line not in chat_bookings] == [
+        "- Before you create a booking, repeat the date, time, number of people "
+        "and name back to the customer and wait for a clear confirmation.",
+        PHONE_EXISTING_BOOKING_RULES[0],
+    ]
 
 
 def test_the_phone_answers_in_short_spoken_sentences() -> None:

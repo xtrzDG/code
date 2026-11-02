@@ -66,6 +66,8 @@ describe("StepUpForm: a passkey person confirms with a second factor, never a lo
   });
 });
 
+const ROTATION_TICKET = "q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d";
+
 describe("StepUpForm: a confirmation that raised the session to two factors swaps its token", () => {
   const rotations = vi.fn(async () => new Response(null, { status: 200 }));
 
@@ -85,6 +87,7 @@ describe("StepUpForm: a confirmation that raised the session to two factors swap
     answerStepUp({ method: "totp", passkey_available: false } as StepUpChallengeView, {
       ...VERIFIED,
       is_level_raised: isLevelRaised,
+      rotation_ticket: isLevelRaised ? ROTATION_TICKET : null,
     });
     renderInLocale(<StepUpForm />);
     await userEvent.type(await screen.findByLabelText(t("mfa.stepUp.code")), "123456");
@@ -95,7 +98,11 @@ describe("StepUpForm: a confirmation that raised the session to two factors swap
     await confirmWithAuthenticator(true);
 
     await waitFor(() => expect(settleStepUp).toHaveBeenCalledWith(true));
-    expect(rotations).toHaveBeenCalledWith("/api/auth/session/rotate", { method: "POST" });
+    expect(rotations).toHaveBeenCalledWith("/api/auth/session/rotate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rotation_ticket: ROTATION_TICKET }),
+    });
     expect(rotations.mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(settleStepUp).mock.invocationCallOrder[0] ?? 0,
     );

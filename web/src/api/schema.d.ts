@@ -15659,12 +15659,22 @@ export interface components {
         /**
          * PasskeyAddedView
          * @description The new passkey; with the person's first second factor, a new set of
-         *     recovery codes too (shown once).
+         *     recovery codes too (shown once). When that first factor raised the
+         *     request's one-factor session to two factors (`is_level_raised`),
+         *     `rotation_ticket` lets this client swap the session's token (POST
+         *     /v1/auth/session/rotate): only the new token carries the two factors.
          */
         PasskeyAddedView: {
+            /**
+             * Is Level Raised
+             * @default false
+             */
+            is_level_raised: boolean;
             passkey: components["schemas"]["PasskeyView"];
             /** Recovery Codes */
             recovery_codes?: string[];
+            /** Rotation Ticket */
+            rotation_ticket?: string | null;
         };
         /**
          * PasskeyAssertionOptionsView
@@ -17373,10 +17383,21 @@ export interface components {
         /**
          * RecoveryCodesView
          * @description A new set of recovery codes, shown once: only their hashes are kept.
+         *     When a new authenticator raised the request's one-factor session to two
+         *     factors (`is_level_raised`), `rotation_ticket` lets this client swap the
+         *     session's token (POST /v1/auth/session/rotate): only the new token
+         *     carries the two factors.
          */
         RecoveryCodesView: {
+            /**
+             * Is Level Raised
+             * @default false
+             */
+            is_level_raised: boolean;
             /** Recovery Codes */
             recovery_codes: string[];
+            /** Rotation Ticket */
+            rotation_ticket?: string | null;
         };
         /**
          * ReferralProgramView
@@ -17748,6 +17769,18 @@ export interface components {
             settles_at?: number | null;
         };
         /**
+         * RotateSessionRequest
+         * @description The one-time ticket the proof that raised the session to two factors
+         *     answered (a step-up, a new authenticator or first passkey), held only
+         *     by the client that made it.
+         *
+         *     Example: {"rotation_ticket": "q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d"}.
+         */
+        RotateSessionRequest: {
+            /** Rotation Ticket */
+            rotation_ticket: string;
+        };
+        /**
          * ScheduleExceptionList
          * @description Schedule exceptions ordered by date.
          */
@@ -17912,8 +17945,11 @@ export interface components {
          * SessionAssuranceView
          * @description How the session is signed in now, and until when it may do sensitive
          *     actions. `is_level_raised`: this proof raised it from one factor to
-         *     two, so the cabinet swaps its token (POST /v1/auth/session/rotate) and
-         *     a token copied before never gains the level.
+         *     two; the proof then waits for the swap of its token (POST
+         *     /v1/auth/session/rotate with `rotation_ticket`, which only this client
+         *     receives): the new token carries the two factors and the proof, the
+         *     old one stays one factor and winds down, so a token copied before
+         *     never gains them.
          */
         SessionAssuranceView: {
             auth_level: components["schemas"]["AuthLevel"];
@@ -17924,6 +17960,8 @@ export interface components {
              * @default false
              */
             is_level_raised: boolean;
+            /** Rotation Ticket */
+            rotation_ticket?: string | null;
             /** Step Up Valid Until */
             step_up_valid_until: number;
         };
@@ -26896,7 +26934,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateSessionRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

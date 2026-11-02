@@ -6,6 +6,7 @@ from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
@@ -39,6 +40,9 @@ from app.schemas.dto.calls.call_summaries import (
 from app.schemas.dto.notifications.staff_alerts import StaffAlertBrief
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.handoffs.constrained_integers import (
+    DeliveredNotificationCount,
+)
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
 from app.use_cases.voice.summaries.call_memory import CallMemory
@@ -81,6 +85,10 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
     (customer memory on, summaries to staff on or off). A caller who
     declined the recording is summarized from the transcript without
     identifiers.
+
+    While a platform brake holds (the global pause, the daily budget stop)
+    the model is not asked: staff still get the call's report, without a
+    summary (as when the model is unavailable), and no memory is written.
     """
 
     def __init__(
@@ -103,6 +111,7 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         conversation_repo: ConversationRepoContract,
         conversation_memory_repo: ConversationMemoryRepoContract,
         assistant_settings_repo: AssistantSettingsRepoContract,
+        platform_brakes: PlatformBrakeRegistryContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._call_repo: CallRepoContract = call_repo
@@ -120,6 +129,7 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._memory: CallMemory = CallMemory(
             conversation_repo,
             conversation_memory_repo,
@@ -145,6 +155,15 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         )
         if business is None or call is None:
             return CallSummaryOutcome()
+
+        if self._platform_brakes.current_brake(self._wall_clock.now_unix()) is not None:
+            self._announce(call)
+            if not self._is_enabled(business):
+                return CallSummaryOutcome()
+
+            return CallSummaryOutcome(
+                notified_count=self._notify(business, call, input_data)
+            )
 
         conversation: ConversationDocument | None = self._memory.find_conversation(
             business, recorded
@@ -172,6 +191,19 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
                 conversation, draft.memory
             )
         self._announce(call)
+        return CallSummaryOutcome(
+            is_generated=is_generated,
+            notified_count=self._notify(business, call, input_data),
+            is_remembered=is_remembered,
+        )
+
+    def _notify(
+        self,
+        business: BusinessDocument,
+        call: CallDocument,
+        input_data: CallSummaryRequest,
+    ) -> DeliveredNotificationCount:
+        """The call's report to every staff recipient (once each)."""
 
         facts: CallReportTextInput = build_call_report_facts(
             business,
@@ -181,7 +213,7 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
                 self._contact_repo, self._booking_repo, self._phone_number_parser
             ),
         )
-        notified = self._staff_alerts.alert(
+        return self._staff_alerts.alert(
             business,
             call_report_alert(
                 business,
@@ -196,11 +228,6 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
                 self._report_text_transformer,
                 self._report_brief_transformer,
             ),
-        )
-        return CallSummaryOutcome(
-            is_generated=is_generated,
-            notified_count=notified,
-            is_remembered=is_remembered,
         )
 
     def _announce(self, call: CallDocument) -> None:

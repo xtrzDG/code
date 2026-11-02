@@ -6,17 +6,18 @@ from app.contracts.repositories.assistant_repositories import (
     AutotestRunRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
-from app.schemas.constants.live_events import LiveEventKind
-from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.constants.assistants import AutotestRunStatus
+from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.dto.assistants.autotest_runs import AutotestRunFailure
+from app.use_cases.autotests.run_give_up import give_up_run
 
 
 class AbandonAutotestRunUseCase(UseCaseContract[AutotestRunFailure, None]):
     """
     The worker gave up on an autotest run: the run is marked ERRORED and a
     version still TESTING because of it gets back the status it had before,
-    so the owner can run the autotests again instead of waiting forever.
+    so the owner can run the autotests again instead of waiting forever
+    (run_give_up.py).
     """
 
     def __init__(
@@ -41,29 +42,10 @@ class AbandonAutotestRunUseCase(UseCaseContract[AutotestRunFailure, None]):
         if run is None or run.status is not AutotestRunStatus.RUNNING:
             return
 
-        now: Microseconds = self._wall_clock.now_unix()
-        run.status = AutotestRunStatus.ERRORED
-        run.updated_at = now
-        self._autotest_run_repo.save(run)
-        self._restore_version(run, now)
-        self._live_events.publish(
-            run.business_id,
-            LiveEventKind.AUTOTEST_PROGRESS,
-            (run.id, run.assistant_version_id),
+        give_up_run(
+            self._assistant_version_repo,
+            self._autotest_run_repo,
+            self._live_events,
+            run,
+            self._wall_clock.now_unix(),
         )
-
-    def _restore_version(self, run: AutotestRunDocument, now: Microseconds) -> None:
-        version: AssistantVersionDocument | None = self._assistant_version_repo.get(
-            run.business_id,
-            run.assistant_version_id,
-        )
-        if (
-            version is None
-            or version.status is not AssistantVersionStatus.TESTING
-            or version.autotest_run_id != run.id
-        ):
-            return
-
-        version.status = run.previous_version_status or AssistantVersionStatus.DRAFT
-        version.updated_at = now
-        self._assistant_version_repo.save(version)

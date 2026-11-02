@@ -16,6 +16,7 @@ from app.schemas.dto.passkey_ceremonies import (
     PasskeyRequestOptionsView,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.mfa.booleans import IsSessionLevelRaised
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.mfa.prefixed_id import MfaChallengeId
 from app.schemas.typings.passkeys.booleans import (
@@ -26,7 +27,10 @@ from app.schemas.typings.passkeys.booleans import (
 )
 from app.schemas.typings.passkeys.constrained_strings import PasskeyName
 from app.schemas.typings.passkeys.prefixed_id import PasskeyChallengeId, PasskeyId
-from app.schemas.typings.users.constrained_strings import SessionUserAgent
+from app.schemas.typings.users.constrained_strings import (
+    SessionRotationTicket,
+    SessionUserAgent,
+)
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -100,11 +104,16 @@ class FinishPasskeyRegistrationCommand(ImmutableDTO):
 class PasskeyAddedView(ImmutableDTO):
     """
     The new passkey; with the person's first second factor, a new set of
-    recovery codes too (shown once).
+    recovery codes too (shown once). When that first factor raised the
+    request's one-factor session to two factors (`is_level_raised`),
+    `rotation_ticket` lets this client swap the session's token (POST
+    /v1/auth/session/rotate): only the new token carries the two factors.
     """
 
     passkey: PasskeyView
     recovery_codes: list[RecoveryCode] = Field(default_factory=list[RecoveryCode])
+    is_level_raised: IsSessionLevelRaised = False
+    rotation_ticket: SessionRotationTicket | None = None
 
 
 class RenamePasskeyRequest(ImmutableDTO):

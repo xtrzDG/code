@@ -29,7 +29,7 @@ def test_the_owner_requires_two_factor_sign_in_of_the_team(
     one_factor = workshop.client.put(
         f"{base}/security", json={"require_mfa_for_members": True}, headers=owner
     )
-    set_up_authenticator(workshop, token, GEORGIAN_OWNER_PHONE)
+    owner = bearer(set_up_authenticator(workshop, token, GEORGIAN_OWNER_PHONE)[0])
     turned_on = workshop.client.put(
         f"{base}/security", json={"require_mfa_for_members": True}, headers=owner
     )
@@ -37,7 +37,7 @@ def test_the_owner_requires_two_factor_sign_in_of_the_team(
     staff_changes = workshop.client.put(
         f"{base}/security", json={"require_mfa_for_members": False}, headers=staff
     )
-    set_up_authenticator(workshop, staff_token, STAFF_PHONE)
+    staff = bearer(set_up_authenticator(workshop, staff_token, STAFF_PHONE)[0])
     staff_allowed = workshop.client.get(base, headers=staff)
     seen_by_owner = workshop.client.get(f"{base}/security", headers=owner)
 

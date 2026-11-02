@@ -134,6 +134,8 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         conversation_repo=repositories.conversation_repo,
         conversation_memory_repo=repositories.conversation_repo,
         assistant_settings_repo=repositories.assistant_settings_repo,
+        # No model call while a platform brake holds.
+        platform_brakes=facilitators.platform_brakes,
     )
 
     # --- Callers who did not get through and their text-backs.

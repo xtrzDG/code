@@ -1,3 +1,9 @@
+import logging
+
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
@@ -5,6 +11,7 @@ from app.contracts.repositories.assistant_repositories import (
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
+from app.schemas.constants.spend import PlatformBrake
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.assistants.autotest_runs import (
@@ -20,7 +27,10 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.autotests.run_give_up import give_up_run
 from app.utilities.assembly.fact_formatting import find_example_mobile_number
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan]):
@@ -29,6 +39,12 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
     RUNNING run (the scenarios the owner asked for). A run that is no longer
     RUNNING (finished or given up) yields a plan without scenarios, so a
     repeated job changes nothing.
+
+    A run queued before a platform brake (the global pause, the daily
+    budget stop) that starts while it holds is skipped: it plays no model
+    turn, ends ERRORED (could not be completed) and its version gets back
+    the status it had (run_give_up.py), so the owner can run it again once
+    the brake lifts; the plan has no scenarios.
 
     Raises:
         ValidationFailedError: the job has no business or a broken payload.
@@ -44,7 +60,13 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
             AutotestPlanningRequest,
             AutotestScenarioPlanning,
         ],
+        platform_brakes: PlatformBrakeRegistryContract,
+        live_events: EventPublisherFacilitatorContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
+        self._live_events: EventPublisherFacilitatorContract = live_events
+        self._wall_clock: WallClock[Microseconds] = wall_clock
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
@@ -81,7 +103,7 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
             )
 
         scenarios: list[AutotestScenario] = []
-        if run.status is AutotestRunStatus.RUNNING:
+        if run.status is AutotestRunStatus.RUNNING and not self._is_braked(run):
             scenarios = self._plan_autotest_scenarios.run(
                 AutotestPlanningRequest(
                     business=business,
@@ -105,3 +127,26 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
             customer_phone_number=find_example_mobile_number(business.country_code),
             started_at=run.created_at,
         )
+
+    def _is_braked(self, run: AutotestRunDocument) -> bool:
+        """A brake holds as the run starts: it is given up, not played."""
+
+        now: Microseconds = self._wall_clock.now_unix()
+        brake: PlatformBrake | None = self._platform_brakes.current_brake(now)
+        if brake is None:
+            return False
+
+        LOGGER.warning(
+            "Autotest run %s of business %s skipped: platform brake %s.",
+            run.id,
+            run.business_id,
+            brake.value,
+        )
+        give_up_run(
+            self._assistant_version_repo,
+            self._autotest_run_repo,
+            self._live_events,
+            run,
+            now,
+        )
+        return True

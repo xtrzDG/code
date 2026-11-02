@@ -1,77 +1,68 @@
 """
-A fresh token after a step-up: the session keeps its level, device and
-expiries under a new token; the old token answers the requests already on
-their way for 30 seconds, as one factor without a proof, then ends; only a
-session that proved itself within the step-up window rotates.
+A fresh token after a proof raised a one-factor session to two factors:
+the proof is not written on the session but waits as a one-time rotation
+ticket for the client that made it. With the ticket (once, while it is
+fresh, with the token of its own session) that client gets a new token
+carrying the two factors, the proof, the device and the expiries; the old
+token stays one factor without a proof, answers 30 seconds more, then
+ends, and never takes a proof or a ticket again.
 """
 
 import pytest
 
 from app.schemas.constants.mfa import AuthLevel
-from app.schemas.domain.users import UserSessionDocument
-from app.schemas.dto.sessions import RotateSessionCommand
+from app.schemas.dto.sessions import RotateSessionCommand, SessionProof
 from app.schemas.dto.users import LoginSessionView
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ConflictError,
 )
-from app.transformers.users.user_view_transformer import UserViewTransformer
-from app.use_cases.users.sessions.rotate_session_use_case import (
+from app.schemas.typings.users.constrained_strings import SessionRotationTicket
+from app.utilities.security.session_rotation_tickets import (
     ROTATION_GRACE_SECONDS,
-    RotateSessionUseCase,
+    ROTATION_TICKET_TTL_SECONDS,
+    generate_rotation_ticket,
 )
-from app.utilities.security.access_tokens import hash_access_token
-from tests.users.access.session_steps import (
-    HOME_IP,
-    IPHONE_SAFARI,
-    MINUTE,
-    check,
-    in_session,
+from tests.users.access.rotation_steps import (
+    as_request,
+    may_confirm_sensitive_actions,
+    prove,
+    raise_level,
+    rotate,
+    rotation,
+    stored,
 )
+from tests.users.access.session_steps import HOME_IP, IPHONE_SAFARI, MINUTE, check
 from tests.users.accounts_phones import GEORGIA_MOBILE, ISRAEL_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
-def rotation(testbed: AccountsTestbed) -> RotateSessionUseCase:
-    return RotateSessionUseCase(
-        user_repo=testbed.user_repo,
-        user_session_repo=testbed.user_session_repo,
-        session_assurance=testbed.session_assurance,
-        user_view_transformer=UserViewTransformer(),
-        app_settings=testbed.settings,
-        wall_clock=testbed.clock.build_wall_clock(),
-    )
+def signed_in_long_ago(testbed: AccountsTestbed) -> LoginSessionView:
+    """A one-factor session whose sign-in no longer confirms anything."""
 
-
-def stored(testbed: AccountsTestbed, session: LoginSessionView) -> UserSessionDocument:
-    found = testbed.user_session_repo.find_by_token_hash(
-        hash_access_token(session.access_token)
-    )
-    assert found is not None
-    return found
-
-
-def rotate(testbed: AccountsTestbed, session: LoginSessionView) -> LoginSessionView:
-    return in_session(
-        testbed,
-        session,
-        lambda: rotation(testbed).run(RotateSessionCommand(user_id=session.user.id)),
-    )
-
-
-def test_a_stepped_up_session_gets_a_new_token_and_the_old_one_ends() -> None:
-    testbed = build_accounts_testbed()
     signed_in = testbed.sign_in_with_phone(
         GEORGIA_MOBILE, user_agent=IPHONE_SAFARI, client_ip=HOME_IP
     )
-    before = stored(testbed, signed_in)
-    testbed.clock.advance(2 * MINUTE)
-    stepped_up_at = testbed.clock.build_wall_clock().now_unix()
-    testbed.user_session_repo.record_authentication(
-        before.id, AuthLevel.TWO_FACTOR, stepped_up_at
-    )
+    testbed.clock.advance(int(testbed.settings.step_up_max_age_seconds) + MINUTE)
+    return signed_in
 
-    rotated = rotate(testbed, signed_in)
+
+def test_only_the_rotated_token_carries_the_raised_level() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = signed_in_long_ago(testbed)
+    before = stored(testbed, signed_in)
+    proven_at = testbed.clock.build_wall_clock().now_unix()
+
+    ticket = raise_level(testbed, signed_in)
+    # Until the swap the old token is what it was: one factor, an old proof.
+    waiting = testbed.authenticate_user.run(check(signed_in))
+    assert (waiting.auth_level, waiting.authenticated_at) == (
+        AuthLevel.ONE_FACTOR,
+        before.authenticated_at,
+    )
+    assert not may_confirm_sensitive_actions(testbed, signed_in)
+    before = stored(testbed, signed_in)
+    rotated = rotate(testbed, signed_in, ticket)
 
     after = stored(testbed, rotated)
     assert rotated.access_token != signed_in.access_token
@@ -83,78 +74,140 @@ def test_a_stepped_up_session_gets_a_new_token_and_the_old_one_ends() -> None:
     assert after.id != before.id
     assert (after.auth_level, after.authenticated_at) == (
         AuthLevel.TWO_FACTOR,
-        stepped_up_at,
+        proven_at,
     )
-    assert (after.expires_at, after.idle_expires_at) == (
+    assert (after.expires_at, after.idle_expires_at, rotated.expires_at) == (
         before.expires_at,
         before.idle_expires_at,
+        before.expires_at,
     )
     assert (after.user_agent, after.created_ip, after.created_at) == (
         before.user_agent,
         before.created_ip,
         before.created_at,
     )
-    assert rotated.expires_at == before.expires_at
-    assert testbed.authenticate_user.run(check(rotated)).session_id == after.id
-    # The old token, for the requests already on their way: what it was
-    # before the step-up (one factor, nothing it may confirm), then over.
+    assert after.rotation_ticket_hash is None
+    assert may_confirm_sensitive_actions(testbed, rotated)
     winding = testbed.authenticate_user.run(check(signed_in))
     assert (winding.session_id, winding.auth_level, winding.authenticated_at) == (
         before.id,
         AuthLevel.ONE_FACTOR,
         None,
     )
+    assert not may_confirm_sensitive_actions(testbed, signed_in)
     testbed.clock.advance(ROTATION_GRACE_SECONDS)
     with pytest.raises(AuthenticationRequiredError):
         testbed.authenticate_user.run(check(signed_in))
     assert testbed.authenticate_user.run(check(rotated)).session_id == after.id
 
 
-def test_a_session_without_a_recent_proof_keeps_its_token() -> None:
+def test_rotating_without_the_ticket_is_refused() -> None:
     testbed = build_accounts_testbed()
-    signed_in = testbed.sign_in_with_phone(GEORGIA_MOBILE)
-    testbed.clock.advance(int(testbed.settings.step_up_max_age_seconds) + MINUTE)
+    signed_in = signed_in_long_ago(testbed)
+    issued = raise_level(testbed, signed_in)
 
     with pytest.raises(ConflictError):
-        rotate(testbed, signed_in)
+        rotate(testbed, signed_in, generate_rotation_ticket())
+
+    # The guessed ticket burnt nothing: the real one still swaps the token.
+    assert stored(testbed, signed_in).auth_level is AuthLevel.ONE_FACTOR
+    assert rotate(testbed, signed_in, issued).auth_level is AuthLevel.TWO_FACTOR
+
+
+def test_a_session_that_proved_nothing_cannot_rotate() -> None:
+    testbed = build_accounts_testbed()
+    # Even right after sign-in: no raising proof, no ticket.
+    signed_in = testbed.sign_in_with_phone(GEORGIA_MOBILE)
+
+    with pytest.raises(ConflictError):
+        rotate(testbed, signed_in, generate_rotation_ticket())
 
     assert testbed.authenticate_user.run(check(signed_in)).user_id == (
         signed_in.user.id
     )
 
 
-def test_rotating_needs_the_person_s_own_session() -> None:
+def test_a_ticket_is_used_once() -> None:
     testbed = build_accounts_testbed()
-    mine = testbed.sign_in_with_phone(GEORGIA_MOBILE)
-    theirs = testbed.sign_in_with_phone(ISRAEL_MOBILE)
+    signed_in = signed_in_long_ago(testbed)
+    ticket = raise_level(testbed, signed_in)
+    rotated = rotate(testbed, signed_in, ticket)
 
-    with pytest.raises(AuthenticationRequiredError):
-        rotation(testbed).run(RotateSessionCommand(user_id=mine.user.id))
-    with pytest.raises(AuthenticationRequiredError):
-        in_session(
-            testbed,
-            theirs,
-            lambda: rotation(testbed).run(RotateSessionCommand(user_id=mine.user.id)),
-        )
-    assert testbed.authenticate_user.run(check(mine)).user_id == mine.user.id
+    with pytest.raises(ConflictError):
+        rotate(testbed, signed_in, ticket)
+    with pytest.raises(ConflictError):
+        rotate(testbed, rotated, ticket)
+
+    assert len(testbed.user_session_repo.list_by_user(signed_in.user.id)) == 2
 
 
-def test_the_old_token_cannot_rotate_once_the_session_rotated() -> None:
+def test_a_ticket_belongs_to_its_session_and_expires() -> None:
     testbed = build_accounts_testbed()
-    signed_in = testbed.sign_in_with_phone(GEORGIA_MOBILE)
-    testbed.user_session_repo.record_authentication(
-        stored(testbed, signed_in).id,
-        AuthLevel.TWO_FACTOR,
+    phone = signed_in_long_ago(testbed)
+    laptop = testbed.sign_in_with_phone(GEORGIA_MOBILE)
+    ticket = raise_level(testbed, phone)
+
+    with pytest.raises(ConflictError):
+        rotate(testbed, laptop, ticket)
+    testbed.clock.advance(ROTATION_TICKET_TTL_SECONDS)
+    with pytest.raises(ConflictError):
+        rotate(testbed, phone, ticket)
+
+    assert stored(testbed, phone).auth_level is AuthLevel.ONE_FACTOR
+    assert stored(testbed, laptop).auth_level is AuthLevel.ONE_FACTOR
+
+
+def test_the_old_token_takes_no_proof_once_the_session_rotated() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = signed_in_long_ago(testbed)
+    rotate(testbed, signed_in, raise_level(testbed, signed_in))
+
+    # A copy of the old token: neither a second ticket nor a proof sticks.
+    assert prove(testbed, signed_in) == SessionProof()
+    assert prove(testbed, signed_in, AuthLevel.ONE_FACTOR) == SessionProof()
+    winding = testbed.authenticate_user.run(check(signed_in))
+    assert (winding.auth_level, winding.authenticated_at) == (
+        AuthLevel.ONE_FACTOR,
+        None,
+    )
+
+
+def test_a_lowered_session_loses_its_ticket() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = signed_in_long_ago(testbed)
+    ticket: SessionRotationTicket = raise_level(testbed, signed_in)
+    # The person removes their last second factor before the swap.
+    testbed.user_session_repo.set_level_for_user(
+        signed_in.user.id,
+        AuthLevel.ONE_FACTOR,
         testbed.clock.build_wall_clock().now_unix(),
     )
-    rotated = rotate(testbed, signed_in)
 
-    # A copy of the token from before the step-up never gets a token of
-    # the raised level of its own, during its last seconds either.
     with pytest.raises(ConflictError):
-        rotate(testbed, signed_in)
+        rotate(testbed, signed_in, ticket)
 
-    assert testbed.authenticate_user.run(check(rotated)).auth_level is (
-        AuthLevel.TWO_FACTOR
-    )
-    assert len(testbed.user_session_repo.list_by_user(signed_in.user.id)) == 2
+
+def test_a_two_factor_session_records_its_proof_in_place() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = signed_in_long_ago(testbed)
+    rotated = rotate(testbed, signed_in, raise_level(testbed, signed_in))
+    testbed.clock.advance(int(testbed.settings.step_up_max_age_seconds) + MINUTE)
+
+    proof = prove(testbed, rotated)
+
+    assert proof == SessionProof(is_recorded=True)
+    assert may_confirm_sensitive_actions(testbed, rotated)
+
+
+def test_rotating_needs_the_person_s_own_session() -> None:
+    testbed = build_accounts_testbed()
+    mine = signed_in_long_ago(testbed)
+    theirs = testbed.sign_in_with_phone(ISRAEL_MOBILE)
+    ticket = raise_level(testbed, mine)
+    command = RotateSessionCommand(user_id=mine.user.id, rotation_ticket=ticket)
+
+    with pytest.raises(AuthenticationRequiredError):
+        rotation(testbed).run(command)
+    with pytest.raises(AuthenticationRequiredError):
+        as_request(testbed, theirs, lambda: rotation(testbed).run(command))
+    assert rotate(testbed, mine, ticket).auth_level is AuthLevel.TWO_FACTOR

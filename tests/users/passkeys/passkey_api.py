@@ -9,7 +9,7 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from tests.e2e.harness import Workshop, bearer
 from tests.e2e.harness_settings import CABINET_ORIGIN, JsonObject
-from tests.users.mfa.mfa_api import login_code_step
+from tests.users.mfa.mfa_api import login_code_step, rotate_if_raised
 from tests.users.passkeys.software_authenticator import SoftwareAuthenticator
 
 OWNER_EMAIL: str = "owner@cafe.example"
@@ -45,13 +45,18 @@ def add_passkey(
 def sign_up_with_passkey(
     workshop: Workshop, authenticator: SoftwareAuthenticator, email: str = OWNER_EMAIL
 ) -> tuple[str, JsonObject]:
-    """A new owner who added a passkey: their session token and the answer."""
+    """
+    A new owner who added a passkey (their first second factor, so the
+    cabinet swaps the raised session's token): the token from now on and
+    the answer.
+    """
 
     token, _ = workshop.sign_in_with_email(email)
     added = add_passkey(workshop, token, authenticator)
     assert added.status_code == 201, added.text
     added_body: JsonObject = added.json()
-    return token, added_body
+    assert added_body["is_level_raised"] is True
+    return rotate_if_raised(workshop, token, added_body), added_body
 
 
 def passkey_options(workshop: Workshop, step: JsonObject) -> Response:

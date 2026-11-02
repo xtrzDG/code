@@ -50,6 +50,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from tests.brain.brain_world import CUSTOMER_PHONE, BrainWorld
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 
 class SilentStaff:
@@ -177,5 +178,6 @@ def summarize_call(
         world.conversation_repo,
         world.conversation_repo,
         world.memory.settings_repo,
+        SetPlatformBrakes(),
     )
     return use_case.run(CallSummaryRequest(call=finished.call, transcript=transcript))

@@ -263,6 +263,12 @@ class AccountsUserUseCases(AccountsRepositories):
             remove_voice_agent=self.voice_agent_removals,
             resume_assistant=self.assistant_resumptions,
         )
+        self.owner_promotions = OwnerPromotionSweep(
+            self.user_session_repo,
+            self.audit_log_repo,
+            StorageScopeContext(),
+            wall_clock,
+        )
         self.invite_staff = InviteStaffUseCase(
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
@@ -273,6 +279,7 @@ class AccountsUserUseCases(AccountsRepositories):
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
             step_up=self.step_up,
+            owner_promotions=self.owner_promotions,
         )
         member_mutations = MemberMutationGuard(
             authorize_business_access=self.authorize_business_access,
@@ -285,12 +292,6 @@ class AccountsUserUseCases(AccountsRepositories):
             step_up=self.step_up,
         )
         self.remove_member = RemoveMemberUseCase(member_mutations=member_mutations)
-        self.owner_promotions = OwnerPromotionSweep(
-            self.user_session_repo,
-            self.audit_log_repo,
-            StorageScopeContext(),
-            wall_clock,
-        )
         self.change_member_role = ChangeMemberRoleUseCase(
             member_mutations=member_mutations, owner_promotions=self.owner_promotions
         )

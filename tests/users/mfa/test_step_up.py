@@ -87,7 +87,7 @@ def test_an_authenticator_confirms_and_the_confirmation_expires(
     workshop: Workshop,
 ) -> None:
     token, _, business_id = sign_in_and_create_restaurant(workshop)
-    set_up_authenticator(workshop, token, GEORGIAN_OWNER_PHONE)
+    token, _ = set_up_authenticator(workshop, token, GEORGIAN_OWNER_PHONE)
     workshop.clock.advance(STEP_UP_SECONDS + 1)
 
     started = workshop.client.post("/v1/auth/step-up", headers=bearer(token))

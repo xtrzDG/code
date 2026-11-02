@@ -92,8 +92,9 @@ class TestWhatsApp:
         assert contact is not None
         # This used to store the caller id as a verified phone and as a
         # PHONE identity. A caller id proves nothing: the number is kept to
-        # call back, WhatsApp proves it when the customer replies, and
-        # later calls from it keep a call-only contact of their own.
+        # call back, the customer is known by the WhatsApp account the
+        # text-back reached, and later calls from the number keep a
+        # call-only contact of their own.
         assert contact.phone_number == "+995599765432"
         assert contact.verified_phone_number is None
         assert [str(identity.channel) for identity in contact.channel_identities] == [

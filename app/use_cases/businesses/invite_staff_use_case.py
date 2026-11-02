@@ -27,10 +27,13 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.users.strings import UserDisplayName
 from app.use_cases.businesses.business_view_sources import business_view_source
+from app.use_cases.businesses.owner_promotion_sweep import OwnerPromotionSweep
 from app.use_cases.shared.team_invitations import (
     clean_display_name,
     find_or_create_invited_user,
 )
+
+ALREADY_A_MEMBER_MESSAGE: str = "This person is already a member of the business."
 
 
 class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
@@ -40,7 +43,13 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
 
     A person without an account gets an unverified one in the business's
     owner language; they confirm it by signing in with a code. Existing
-    accounts are reused unchanged. The new membership is audited.
+    accounts are reused unchanged and join at once (there is no acceptance
+    step). The new membership is audited.
+
+    An existing account made an owner signs in again, as with a promotion
+    (OwnerPromotionSweep): every session of theirs ends before the
+    membership is stored (a sweep that fails stores nothing, and a retry
+    sweeps again) and once more after it (a session opened in between).
     """
 
     def __init__(
@@ -60,8 +69,10 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
         ],
         wall_clock: WallClock[Microseconds],
         step_up: StepUpGuardContract,
+        owner_promotions: OwnerPromotionSweep,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
+        self._owner_promotions: OwnerPromotionSweep = owner_promotions
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -102,11 +113,16 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
             now,
         )
 
+        is_owner: bool = invitation.role is BusinessMemberRole.OWNER
+        if is_owner:
+            # Refused before the sweep: a member's sessions stay as they are.
+            refuse_a_member(business, staff_user)
+            self._end_sessions(staff_user, input_data)
+
         def add_member(current: BusinessDocument) -> None:
             # Checked and added on the business as stored now, so a change
             # saved meanwhile (settings, another member) is kept.
-            if any(member.user_id == staff_user.id for member in current.members):
-                raise ConflictError("This person is already a member of the business.")
+            refuse_a_member(current, staff_user)
 
             current.members = [
                 *current.members,
@@ -127,8 +143,22 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
                 updated_at=now,
             )
         )
+        if is_owner:
+            self._end_sessions(staff_user, input_data)
         return self._business_view_transformer.transform(
             business_view_source(
                 business, input_data.user_id, self._user_repo, self._brand_repo
             )
         )
+
+    def _end_sessions(
+        self, invited: UserDocument, input_data: InviteStaffCommand
+    ) -> None:
+        self._owner_promotions.end_sessions_of(
+            invited.id, input_data.user_id, input_data.client_ip_address
+        )
+
+
+def refuse_a_member(business: BusinessDocument, invited: UserDocument) -> None:
+    if any(member.user_id == invited.id for member in business.members):
+        raise ConflictError(ALREADY_A_MEMBER_MESSAGE)

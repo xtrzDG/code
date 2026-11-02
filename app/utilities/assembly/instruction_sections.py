@@ -167,15 +167,24 @@ SISTER_LOCATION_RULE: str = (
 )
 
 
+CHANGE_BOOKINGS_RULE: str = (
+    "- Use cancel_booking and reschedule_booking to change existing bookings."
+)
+
+
 def build_booking_section(
     tools: Sequence[AssistantToolName],
     country_name: str,
     timezone_name: str,
     has_sister_locations: bool = False,
+    existing_booking_rules: Sequence[str] | None = None,
 ) -> list[str]:
     """
     Booking procedure, or how a request is taken when the version cannot
-    book; a brand's location also offers its sister locations.
+    book; a brand's location also offers its sister locations. Existing
+    bookings are changed with cancel_booking and reschedule_booking when
+    the tools have them; a channel without them (the phone) gives its own
+    `existing_booking_rules`.
     """
 
     phone_rule: str = (
@@ -196,17 +205,29 @@ def build_booking_section(
             time_rule,
         ]
 
+    changes_bookings: bool = (
+        AssistantToolName.CANCEL_BOOKING in tools
+        or AssistantToolName.RESCHEDULE_BOOKING in tools
+    )
+    if existing_booking_rules is None:
+        existing_booking_rules = [CHANGE_BOOKINGS_RULE] if changes_bookings else []
+
     return [
         "# Bookings",
         "- Always call check_availability before create_booking.",
         "- Collect the customer's name, phone number, number of people, date and time.",
         phone_rule,
-        "- Before you create, move or cancel a booking, repeat the date, time, "
-        "number of people and name back to the customer and wait for a clear "
-        "confirmation.",
+        "- Before you "
+        + (
+            "create, move or cancel a booking"
+            if changes_bookings
+            else "create a booking"
+        )
+        + ", repeat the date, time, number of people and name back to the customer "
+        "and wait for a clear confirmation.",
         "- Follow the booking rules in the facts: maximum party size, minimum "
         "notice, deposit and cancellation policy.",
-        "- Use cancel_booking and reschedule_booking to change existing bookings.",
+        *existing_booking_rules,
         *(rule for tool, rule in OPTIONAL_BOOKING_RULES if tool in tools),
         *([SISTER_LOCATION_RULE] if has_sister_locations else []),
         time_rule,

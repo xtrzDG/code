@@ -1,7 +1,8 @@
 """
 Steps of the two-factor tests over the real API: the login code step
-alone, setting up an authenticator in Account → Security, sessions made
-before two-factor sign-in existed, and reading refusals.
+alone, setting up an authenticator in Account → Security (with the token
+swap that follows a raised session), sessions made before two-factor
+sign-in existed, and reading refusals.
 """
 
 from typing import Any
@@ -21,6 +22,7 @@ from tests.e2e.harness_settings import JsonObject
 
 DAY_MICROSECONDS: int = 24 * 3600 * 1_000_000
 STEP_UP_SECONDS: int = 600
+ROTATE_PATH: str = "/v1/auth/session/rotate"
 # A new login code to the same address waits this long (resend throttle).
 RESEND_WAIT_SECONDS: int = 31
 
@@ -55,8 +57,14 @@ def second_step(workshop: Workshop, answer: JsonObject, **codes: str) -> Respons
     )
 
 
-def set_up_authenticator(workshop: Workshop, token: str, identity: str) -> list[str]:
-    """Account → Security: a new authenticator; returns its recovery codes."""
+def set_up_authenticator(
+    workshop: Workshop, token: str, identity: str
+) -> tuple[str, list[str]]:
+    """
+    Account → Security: a new authenticator, then the token swap the
+    cabinet makes when it raised the session (rotate_if_raised); returns
+    the session's token from now on and the recovery codes.
+    """
 
     started = workshop.client.post("/v1/me/mfa/totp", headers=bearer(token))
     assert started.status_code == 200, started.text
@@ -69,7 +77,30 @@ def set_up_authenticator(workshop: Workshop, token: str, identity: str) -> list[
         headers=bearer(token),
     )
     assert confirmed.status_code == 200, confirmed.text
-    return [str(code) for code in confirmed.json()["recovery_codes"]]
+    answer: JsonObject = confirmed.json()
+    codes: list[str] = [str(code) for code in answer["recovery_codes"]]
+    return rotate_if_raised(workshop, token, answer), codes
+
+
+def rotate_if_raised(workshop: Workshop, token: str, answer: JsonObject) -> str:
+    """
+    What the cabinet does after a proof: when it raised the session
+    (`is_level_raised`), swap the token with the answer's rotation ticket
+    (POST /v1/auth/session/rotate). The token to use from now on.
+    """
+
+    if not answer.get("is_level_raised"):
+        assert answer.get("rotation_ticket") is None
+        return token
+
+    rotated = workshop.client.post(
+        ROTATE_PATH,
+        json={"rotation_ticket": answer["rotation_ticket"]},
+        headers=bearer(token),
+    )
+    assert rotated.status_code == 200, rotated.text
+    assert rotated.json()["auth_level"] == "two_factor"
+    return str(rotated.json()["access_token"])
 
 
 def wrong_code_for(code: str) -> str:

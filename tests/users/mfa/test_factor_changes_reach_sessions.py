@@ -117,7 +117,7 @@ def test_a_new_authenticator_ends_every_other_session(workshop: Workshop) -> Non
     workshop.clock.advance(RESEND_WAIT_SECONDS)
     token_c, _ = workshop.sign_in_with_phone(OWNER)
 
-    set_up_authenticator(workshop, token_a, OWNER)
+    token_a, _ = set_up_authenticator(workshop, token_a, OWNER)
     a_me = workshop.client.get("/v1/me", headers=bearer(token_a))
     b_me = workshop.client.get("/v1/me", headers=bearer(token_b))
     c_me = workshop.client.get("/v1/me", headers=bearer(token_c))
@@ -137,7 +137,7 @@ def test_nothing_is_audited_when_no_other_session_exists(
 ) -> None:
     token, _ = workshop.sign_in_with_phone(OWNER)
 
-    set_up_authenticator(workshop, token, OWNER)
+    token, _ = set_up_authenticator(workshop, token, OWNER)
     renewed = workshop.client.post("/v1/me/mfa/recovery-codes", headers=bearer(token))
 
     assert renewed.status_code == 200
