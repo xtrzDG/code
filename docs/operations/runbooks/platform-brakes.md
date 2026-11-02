@@ -34,9 +34,11 @@ round of a tool loop and every call start consults:
 - owners' costly actions (menu import, starting a website import,
   starting autotests, alias suggestions, renting a number) get 409
   `platform_brake` with the detail `paused` or `budget_stop`, which the
-  cabinet words in English and Italian; the test chat is not refused (its
-  turns go to the team like customers'), and searching numbers and asking
-  the team for one still work;
+  cabinet words in English and Italian; a number rental is refused before
+  the carrier is asked, and one the carrier already sold when a brake
+  starts is recorded and counted as usual; the test chat is not refused
+  (its turns go to the team like customers'), and searching numbers and
+  asking the team for one still work;
 - nothing of a business changes: resuming (or UTC midnight, for the
   budget stop) restores every assistant at once.
 

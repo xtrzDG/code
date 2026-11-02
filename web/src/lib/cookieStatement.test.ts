@@ -98,7 +98,21 @@ function widgetSource(): string {
 /** The keys the widget keeps directly in one storage (not in the conversation's own storage). */
 function keysKeptIn(source: string, storage: "localStorageOrNull" | "sessionStorageOrNull"): string[] {
   const pattern = new RegExp(`\\(${storage}\\(\\), storagePrefix \\+ "([a-z-]+)"`, "g");
-  return [...new Set([...source.matchAll(pattern)].map((match) => match[1]))].sort();
+  return [...new Set([...source.matchAll(pattern)].map((match) => match[1] ?? ""))].sort();
+}
+
+/** The widget's other uses of one storage: those that do not name their key in place, trimmed. */
+function otherUsesOf(source: string, storage: "localStorageOrNull" | "sessionStorageOrNull"): string[] {
+  return source
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.includes(`${storage}()`) &&
+        !line.includes(`${storage}(), storagePrefix + "`) &&
+        !line.startsWith(`function ${storage}()`),
+    )
+    .sort();
 }
 
 /** CONVERSATION_IDLE_EXPIRY_MS of the widget, in hours. */
@@ -139,6 +153,17 @@ describe("the cookie statement's storage section", () => {
     expect(keysKeptIn(widget, "sessionStorageOrNull")).toEqual(["open"]);
     // The visit source (data-source, ?src=, ?utm_source=) is kept for the tab too.
     expect(widget).toMatch(/function loadVisitSource\(\) \{\s*var storage = sessionStorageOrNull\(\);/);
+    // Nothing else reaches either storage: the conversation's own choice of
+    // storage, the removal of an older copy and the visit source are all.
+    const conversationChoice = "return isPageMode ? sessionStorageOrNull() : localStorageOrNull();";
+    expect(otherUsesOf(widget, "localStorageOrNull")).toEqual(
+      [conversationChoice, "forgetConversationOn(localStorageOrNull());"].sort(),
+    );
+    expect(otherUsesOf(widget, "sessionStorageOrNull")).toEqual(
+      [conversationChoice, "var storage = sessionStorageOrNull();"].sort(),
+    );
+    expect(widget.split("window.localStorage").length - 1).toBe(1);
+    expect(widget.split("window.sessionStorage").length - 1).toBe(1);
     for (const text of statement.values()) {
       const section = storageSection(text);
       expect(section).toContain("Only the language you chose and the answers you rated stay in local storage.");

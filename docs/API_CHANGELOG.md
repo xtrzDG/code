@@ -131,7 +131,10 @@ that follows the description already handles as errors.
   …/assistant-versions/{version_id}/autotests`), an alias suggestion
   (`POST …/knowledge/{item_id}/aliases/suggest`) or renting a number
   (`POST …/phone-line/number`) answers 409 with reason `platform_brake`
-  (detail `paused` or `budget_stop`). Saving the profile (`PUT·PATCH
+  (detail `paused` or `budget_stop`), and an autotest run queued before a
+  brake that the worker reaches while it holds plays nothing and reads as
+  `errored` (`GET …/autotest-run`; run it again once the brake lifts).
+  Saving the profile (`PUT·PATCH
   …/profile`, `PUT …/profile/steps/{step}`) refuses (422) a
   `handoff_phone_number` calls may not be put through to: not a mobile or
   landline of the business's country or the EU, or a premium, shared-cost

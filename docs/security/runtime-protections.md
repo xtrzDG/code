@@ -69,8 +69,8 @@ moves.
   (`tests/users/access/test_admin_role_sessions.py`); so does a member
   made an owner of a business, and an existing account invited directly
   as an owner (it joins at once): the sweep runs before the change is
-  stored and again after it, so a failed sweep stores nothing and a retry
-  sweeps again (`app/use_cases/businesses/owner_promotion_sweep.py`,
+  stored and again after it, so a failed first sweep stores nothing and a
+  retry sweeps again (`app/use_cases/businesses/owner_promotion_sweep.py`,
   `app/use_cases/businesses/invite_staff_use_case.py`;
   `tests/businesses/test_owner_promotion_sessions.py`,
   `tests/businesses/test_owner_invitation_sessions.py`).
