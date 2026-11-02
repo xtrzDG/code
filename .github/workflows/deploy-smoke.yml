@@ -178,8 +178,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          reviewers="$(gh api "repos/${GITHUB_REPOSITORY}/environments/production-release" \
-            --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')"
+          if ! reviewers="$(gh api "repos/${GITHUB_REPOSITORY}/environments/production-release" \
+              --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')"; then
+            echo "::error::The protection rules of production-release cannot be read: nothing is promoted."
+            exit 1
+          fi
           if [ "${reviewers:-0}" -lt 1 ]; then
             echo "::error::The environment production-release has no required reviewers: nothing reaches production without a person's approval (docs/operations/deploys.md)."
             exit 1

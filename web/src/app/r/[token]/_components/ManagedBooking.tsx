@@ -12,6 +12,7 @@ import type { BookingPageTexts } from "@/lib/bookingPage/texts";
 
 import { BookingContacts } from "./BookingContacts";
 import { BookingFacts } from "./BookingFacts";
+import { MarketingConsentBox } from "./marketingConsent/MarketingConsentBox";
 import { ReschedulePanel } from "./ReschedulePanel";
 
 type View = Schema<"ManagedBookingView">;
@@ -40,8 +41,9 @@ function CalendarIcon() {
 /**
  * The guest's booking behind the link: what it is, a calendar file, a
  * move to another free time, a cancellation (confirmed in a dialog) and
- * the ways to write to the business. A move issues a new link: the page's
- * address follows it.
+ * the ways to write to the business, and the guest's own (unticked) box
+ * for the business's marketing messages. A move issues a new link: the
+ * page's address follows it.
  */
 export function ManagedBooking({
   initialView,
@@ -188,6 +190,13 @@ export function ManagedBooking({
       ) : null}
 
       <BookingContacts links={view.chat_links ?? []} texts={texts} />
+
+      <MarketingConsentBox
+        view={view}
+        language={language}
+        onChanged={setView}
+        onProblem={(failure) => report(null, failure)}
+      />
 
       <dialog ref={dialog} className="bp-dialog" aria-labelledby="bp-cancel-title" aria-describedby="bp-cancel-text">
         <h2 id="bp-cancel-title">{texts.cancelTitle}</h2>
