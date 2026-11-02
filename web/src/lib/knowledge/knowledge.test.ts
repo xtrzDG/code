@@ -197,6 +197,8 @@ describe("menu import", () => {
     expect(menuMediaType("menu.csv", "application/vnd.ms-excel")).toBe("text/csv");
     expect(menuMediaType("menu.txt", "text/plain;charset=utf-8")).toBe("text/plain");
     expect(menuMediaType("photo.heic", "image/heic")).toBeNull();
+    expect(menuMediaType("menu.html", "text/html")).toBeNull();
+    expect(menuMediaType("menu.htm", "")).toBeNull();
     expect(menuMediaType("menu", "")).toBeNull();
   });
 

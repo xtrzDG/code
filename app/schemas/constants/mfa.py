@@ -37,3 +37,17 @@ class TotpFactorStatus(StrEnum):
 
     PENDING = "pending"
     ACTIVE = "active"
+
+
+class SecurityChange(StrEnum):
+    """
+    A change to how a person proves it is them, which they are told about
+    on their devices and by e-mail (an authenticator app or a passkey added
+    or removed, a new set of recovery codes). Notices only (never stored).
+    """
+
+    TOTP_ADDED = "totp_added"
+    TOTP_REMOVED = "totp_removed"
+    PASSKEY_ADDED = "passkey_added"
+    PASSKEY_REMOVED = "passkey_removed"
+    RECOVERY_CODES_RENEWED = "recovery_codes_renewed"

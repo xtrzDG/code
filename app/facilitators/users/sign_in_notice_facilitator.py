@@ -7,12 +7,17 @@ from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.ip_countries import IpCountryLookupAdapterContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.notification_utilities import StaffLinkSignerContract
-from app.contracts.notifications import StaffAlertFacilitatorContract
+from app.contracts.notifications import (
+    StaffAlertFacilitatorContract,
+    StaffAlertTextsContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.constants.mfa import SecurityChange
 from app.schemas.constants.notifications import StaffLinkTarget, StaffTextStyle
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
@@ -24,6 +29,7 @@ from app.schemas.dto.notifications.staff_alerts import (
 )
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.dto.sessions import SessionDevice
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import CountryCode
@@ -31,7 +37,11 @@ from app.schemas.typings.notifications.constrained_strings import (
     PushNotificationTag,
     StaffAlertSubject,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.notifications.cabinet_links import build_cabinet_link, link_expiry
+from app.utilities.security.security_change_notice_texts import (
+    SecurityChangeNoticeTexts,
+)
 from app.utilities.security.sign_in_notice_texts import SignInNoticeTexts
 from app.utilities.security.user_agents import describe_device, is_same_device
 
@@ -58,6 +68,10 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
     - People who sign in by e-mail also get it by e-mail through the
       outbox, once.
 
+    A change to how the person proves it is them (a second factor added or
+    removed, new recovery codes) is told the same way, every time, with
+    the address it came from.
+
     Every notice links to Account → Security, where the session is ended.
     Never raises.
     """
@@ -73,7 +87,9 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         ip_countries: IpCountryLookupAdapterContract | None = None,
+        user_repo: UserRepoContract | None = None,
     ) -> None:
+        self._user_repo: UserRepoContract | None = user_repo
         self._ip_countries: IpCountryLookupAdapterContract | None = ip_countries
         self._business_repo: BusinessRepoContract = business_repo
         self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
@@ -106,9 +122,31 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
             ):
                 return
 
-            self._notify(user, session, device, new_country)
+            texts = SignInNoticeTexts(
+                self._resolver, device, session.created_ip, new_country
+            )
+            self._tell(user, texts, f"sign_in:{session.id}")
         except Exception:
             logger.exception("The new-device notice of user %s failed.", user.id)
+
+    def notice_security_change(
+        self,
+        user_id: UserId,
+        change: SecurityChange,
+        client_ip_address: ClientIpAddress | None,
+    ) -> None:
+        try:
+            user: UserDocument | None = (
+                None if self._user_repo is None else self._user_repo.get(user_id)
+            )
+            if user is None:
+                return
+
+            texts = SecurityChangeNoticeTexts(self._resolver, change, client_ip_address)
+            now: int = int(self._wall_clock.now_unix())
+            self._tell(user, texts, f"security_change:{user.id}-{now}")
+        except Exception:
+            logger.exception("The security-change notice of user %s failed.", user_id)
 
     def _new_country(
         self,
@@ -133,12 +171,8 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
 
         return country
 
-    def _notify(
-        self,
-        user: UserDocument,
-        session: UserSessionDocument,
-        device: SessionDevice,
-        new_country: CountryCode | None,
+    def _tell(
+        self, user: UserDocument, texts: StaffAlertTextsContract, key: str
     ) -> None:
         businesses: list[BusinessDocument] = sorted(
             self._business_repo.list_by_member(user.id),
@@ -147,17 +181,14 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         if not businesses:
             return
 
-        texts = SignInNoticeTexts(
-            self._resolver, device, session.created_ip, new_country
-        )
-        subject = StaffAlertSubject(f"sign_in:{session.id}")
+        subject = StaffAlertSubject(key)
         for business in businesses:
             self._staff_alerts.alert(
                 business,
                 StaffAlert(
                     business_id=business.id,
                     target=StaffLinkTarget.ACCOUNT_SECURITY,
-                    tag=PushNotificationTag(f"sign_in:{session.id}"),
+                    tag=PushNotificationTag(key),
                     subject=subject,
                     is_urgent=True,
                     recipient_user_ids=[user.id],
@@ -172,7 +203,7 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         self,
         user: UserDocument,
         business: BusinessDocument,
-        texts: SignInNoticeTexts,
+        texts: StaffAlertTextsContract,
         subject: StaffAlertSubject,
     ) -> None:
         contact = ManagerContact(

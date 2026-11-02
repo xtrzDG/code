@@ -1,6 +1,7 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
+from app.schemas.constants.storage import DatabaseSslMode
 from app.schemas.typings.platform.constrained_integers import DatabasePoolSize
 from app.schemas.typings.platform.strings import DatabaseUrl
 
@@ -15,8 +16,12 @@ class DatabaseRoleSettings(ImmutableDTO):
     (DB_PLATFORM_POOL_SIZE; the tenant pool keeps DB_POOL_SIZE). Without
     the two addresses both pools are one pool on DATABASE_URL (local
     development and tests only: production refuses to start so).
+
+    `default_ssl_mode` (PGSSLMODE) is libpq's sslmode for every address
+    that names none, the pools' and the backup's pg_dump alike.
     """
 
     tenant_url: DatabaseUrl | None = Field(default=None, repr=False)
     platform_url: DatabaseUrl | None = Field(default=None, repr=False)
     platform_pool_size: DatabasePoolSize = DatabasePoolSize(8)
+    default_ssl_mode: DatabaseSslMode | None = None

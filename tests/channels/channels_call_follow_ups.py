@@ -19,6 +19,9 @@ from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.orchestrators.channels.post_call_follow_ups import PostCallFollowUps
 from app.orchestrators.voice.missed_call_orchestrator import MissedCallOrchestrator
 from app.registries.localization.country_registry import CountryRegistry
+from app.registries.localization.high_cost_phone_number_registry import (
+    HighCostPhoneNumberRegistry,
+)
 from app.repositories.assistant_settings_repository import (
     AssistantSettingsRepository,
 )
@@ -60,6 +63,9 @@ from app.use_cases.voice.missed_calls.register_missed_call_use_case import (
 )
 from app.use_cases.voice.missed_calls.send_text_back_use_case import (
     SendTextBackUseCase,
+)
+from app.use_cases.voice.missed_calls.text_back_destinations import (
+    TextBackSmsDestinations,
 )
 from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
 from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
@@ -114,6 +120,11 @@ class ChannelsCallFollowUps(ChannelsInbox):
         self.country_registry = CountryRegistry(
             self.language_registry, self.wall_clock, DataRegion.EU, []
         )
+        self.text_back_sms_destinations = TextBackSmsDestinations(
+            HighCostPhoneNumberRegistry([]),
+            self.country_registry,
+            self.phone_number_parser,
+        )
         self.call_staff_alerts = build_staff_alerts(
             self.staff_notifier, self.text_resolver, self.wall_clock
         )
@@ -164,6 +175,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.sms_client,
             self.wall_clock,
             self.suppression_list,
+            self.text_back_sms_destinations,
         )
         self.missed_calls = MissedCallOrchestrator(
             self.register_missed_call,
@@ -190,7 +202,9 @@ class ChannelsCallFollowUps(ChannelsInbox):
                 unit_of_work=None,
                 text_resolver=self.text_resolver,
             ),
-            TextBackSms(self.sms_client, self.text_resolver),
+            TextBackSms(
+                self.sms_client, self.text_resolver, self.text_back_sms_destinations
+            ),
             self.live_events,
             self.wall_clock,
         )

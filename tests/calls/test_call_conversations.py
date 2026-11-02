@@ -155,7 +155,11 @@ class TestTextBackConversations:
         report_missed_call(setup)
         [missed] = missed_calls(setup)
         assert missed.caller_phone_number is not None
-        sms = TextBackSms(None, setup.testbed.text_resolver)
+        sms = TextBackSms(
+            None,
+            setup.testbed.text_resolver,
+            setup.testbed.text_back_sms_destinations,
+        )
         whatsapp = TextBackWhatsApp(
             channel_repo=setup.testbed.channel_repo,
             outbound_message_repo=setup.testbed.outbound_message_repo,

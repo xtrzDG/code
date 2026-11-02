@@ -19,7 +19,7 @@ from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
+from app.schemas.constants.mfa import AuthLevel, SecurityChange, TotpFactorStatus
 from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.domain.users import UserDocument
@@ -104,6 +104,7 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         self._security_audit: SignInSecurityAudit = SignInSecurityAudit(
             audit_log_repo, user_repo, app_settings
         )
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -193,5 +194,8 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
             TOTP_FACTOR_ENTITY,
             input_data.client_ip_address,
             now,
+        )
+        self._sign_in_notices.notice_security_change(
+            user.id, SecurityChange.TOTP_ADDED, input_data.client_ip_address
         )
         return codes

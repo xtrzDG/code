@@ -8,7 +8,9 @@ from app.contracts.repositories.mfa_repositories import (
 from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.mfa import SecurityChange
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.dto.mfa import MfaChangeCommand
 from app.schemas.exceptions.application_errors import NotFoundError
@@ -39,7 +41,9 @@ class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         passkey_repo: PasskeyRepoContract,
+        sign_in_notices: SignInNoticeFacilitatorContract,
     ) -> None:
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
@@ -70,4 +74,9 @@ class RemoveTotpFactorUseCase(UseCaseContract[MfaChangeCommand, None]):
             client_ip_address=input_data.client_ip_address,
             now=now,
             has_factor_left=has_passkey,
+        )
+        self._sign_in_notices.notice_security_change(
+            input_data.user_id,
+            SecurityChange.TOTP_REMOVED,
+            input_data.client_ip_address,
         )

@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.integration_repositories import ApiKeyRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
@@ -28,7 +29,8 @@ class CreateApiKeyUseCase(UseCaseContract[CreateApiKeyCommand, CreatedApiKey]):
     token (`awk_<prefix>_<secret>`) shown this once; only its scrypt digest
     and its prefix are stored, so a leaked database holds no usable key. At
     most MAX_API_KEYS active keys (409 `api_key_limit_reached`). Owners
-    only; audited.
+    only, after a recent sign-in or confirmation (step-up: a key outlives
+    the session that made it); audited.
     """
 
     def __init__(
@@ -39,6 +41,7 @@ class CreateApiKeyUseCase(UseCaseContract[CreateApiKeyCommand, CreatedApiKey]):
         api_key_repo: ApiKeyRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -46,6 +49,7 @@ class CreateApiKeyUseCase(UseCaseContract[CreateApiKeyCommand, CreatedApiKey]):
         self._api_key_repo: ApiKeyRepoContract = api_key_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._step_up: StepUpGuardContract = step_up
 
     def run(self, input_data: CreateApiKeyCommand) -> CreatedApiKey:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -55,6 +59,7 @@ class CreateApiKeyUseCase(UseCaseContract[CreateApiKeyCommand, CreatedApiKey]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         refuse_when_full(self._api_key_repo, business.id)
         now: Microseconds = self._wall_clock.now_unix()
         token, prefix = new_api_key()

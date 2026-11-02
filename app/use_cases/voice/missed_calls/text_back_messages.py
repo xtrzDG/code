@@ -19,12 +19,18 @@ from app.schemas.constants.calls import (
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
-from app.schemas.exceptions.application_errors import DeliveryNotConfiguredError
+from app.schemas.exceptions.application_errors import (
+    DeliveryNotConfiguredError,
+    ValidationFailedError,
+)
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.messaging.strings import SmsMessageText
+from app.use_cases.voice.missed_calls.text_back_destinations import (
+    TextBackSmsDestinations,
+)
 from app.utilities.calls.text_back_texts import TEXT_BACK_SMS_TEXT
 from app.utilities.deliveries.retry_policy import (
     RETRYABLE_FAILURES,
@@ -39,15 +45,25 @@ def is_retryable_failure(error: ApplicationError) -> bool:
 
 
 class TextBackSms:
-    """The SMS leg of a text-back, from the platform's sender."""
+    """
+    The SMS leg of a text-back, from the platform's sender, only to the
+    numbers `TextBackSmsDestinations` allows.
+    """
 
     def __init__(
         self,
         sms_client: SmsMessagingClientContract | None,
         text_resolver: LocalizedTextResolverContract,
+        destinations: TextBackSmsDestinations,
     ) -> None:
         self._sms_client: SmsMessagingClientContract | None = sms_client
         self._text_resolver: LocalizedTextResolverContract = text_resolver
+        self._destinations: TextBackSmsDestinations = destinations
+
+    def can_reach(self, business: BusinessDocument, caller: E164PhoneNumber) -> bool:
+        """An SMS may go to the caller (a provider aside)."""
+
+        return self._destinations.allows(business, caller)
 
     def send(
         self,
@@ -59,6 +75,12 @@ class TextBackSms:
 
         if self._sms_client is None:
             raise DeliveryNotConfiguredError("No SMS provider is configured.")
+
+        if not self.can_reach(business, caller):
+            raise ValidationFailedError(
+                "Text-back SMS never go to this number (a premium, satellite, "
+                "landline or foreign range)."
+            )
 
         text: str = str(
             self._text_resolver.resolve(TEXT_BACK_SMS_TEXT, missed.language)

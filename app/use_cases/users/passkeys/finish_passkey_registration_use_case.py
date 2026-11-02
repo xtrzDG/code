@@ -12,8 +12,9 @@ from app.contracts.repositories.passkey_repositories import (
 )
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.mfa import AuthLevel
+from app.schemas.constants.mfa import AuthLevel, SecurityChange
 from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
 from app.schemas.domain.passkeys import PasskeyChallengeDocument, PasskeyDocument
 from app.schemas.dto.passkeys import FinishPasskeyRegistrationCommand, PasskeyAddedView
@@ -57,7 +58,9 @@ class FinishPasskeyRegistrationUseCase(
         session_assurance: SessionAssuranceContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        sign_in_notices: SignInNoticeFacilitatorContract,
     ) -> None:
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._challenge_repo: PasskeyChallengeRepoContract = challenge_repo
         self._ceremony: PasskeyCeremonyAdapterContract = ceremony
@@ -114,6 +117,11 @@ class FinishPasskeyRegistrationUseCase(
             PASSKEY_ENTITY,
             input_data.client_ip_address,
             now,
+        )
+        self._sign_in_notices.notice_security_change(
+            input_data.user_id,
+            SecurityChange.PASSKEY_ADDED,
+            input_data.client_ip_address,
         )
         return PasskeyAddedView(
             passkey=passkey_view(passkey),

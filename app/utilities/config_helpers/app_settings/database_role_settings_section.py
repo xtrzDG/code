@@ -1,13 +1,18 @@
-"""DATABASE_URL_TENANT, DATABASE_URL_PLATFORM, DB_PLATFORM_POOL_SIZE: the two pools."""
+"""
+DATABASE_URL_TENANT, DATABASE_URL_PLATFORM, DB_PLATFORM_POOL_SIZE: the two
+pools; PGSSLMODE: libpq's sslmode for addresses that name none.
+"""
 
 from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.configurations.database_role_settings import DatabaseRoleSettings
+from app.schemas.constants.storage import DatabaseSslMode
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.platform.constrained_integers import DatabasePoolSize
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
+    optional_setting,
     optional_text,
     parse_setting,
     read_integer,
@@ -70,6 +75,9 @@ def read_database_role_settings(
                     default_platform_pool_size,
                 ),
                 DatabasePoolSize,
+            ),
+            default_ssl_mode=optional_setting(
+                environment_variables, "PGSSLMODE", DatabaseSslMode
             ),
         )
     )

@@ -95,6 +95,7 @@ class PasskeyUseCaseFactories:
             session_assurance=given.session_assurance,
             audit_log_repo=given.audit_log_repo,
             wall_clock=given.wall_clock,
+            sign_in_notices=given.sign_in_notices,
         )
 
     def rename_passkey(self) -> UseCaseContract[RenamePasskeyCommand, PasskeyView]:
@@ -113,6 +114,7 @@ class PasskeyUseCaseFactories:
             step_up=given.step_up,
             audit_log_repo=given.audit_log_repo,
             wall_clock=given.wall_clock,
+            sign_in_notices=given.sign_in_notices,
         )
 
     # --- The second step of a sign-in, and an admin's first factor there.

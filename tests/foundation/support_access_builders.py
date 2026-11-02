@@ -34,7 +34,7 @@ from app.repositories.support_access_grant_repository import (
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.access import BusinessAccessMode, SupportAccessKind
-from app.schemas.constants.mfa import AuthLevel
+from app.schemas.constants.mfa import AuthLevel, SecurityChange
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
@@ -43,6 +43,7 @@ from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.notifications.staff_alerts import StaffAlert, StaffAlertBrief
 from app.schemas.typings.access.constrained_strings import SupportAccessReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
@@ -166,6 +167,7 @@ class RecordingSignInNotices(SignInNoticeFacilitatorContract):
 
     def __init__(self) -> None:
         self.noticed: list[tuple[UserId, UserSessionId, int]] = []
+        self.changes: list[tuple[UserId, SecurityChange]] = []
 
     def notice_new_device(
         self,
@@ -174,6 +176,14 @@ class RecordingSignInNotices(SignInNoticeFacilitatorContract):
         other_sessions: Sequence[UserSessionDocument],
     ) -> None:
         self.noticed.append((user.id, session.id, len(other_sessions)))
+
+    def notice_security_change(
+        self,
+        user_id: UserId,
+        change: SecurityChange,
+        client_ip_address: ClientIpAddress | None,
+    ) -> None:
+        self.changes.append((user_id, change))
 
 
 class RecordingStaffAlerts(StaffAlertFacilitatorContract):

@@ -445,8 +445,9 @@ jobs:
           docker run --detach --name api --publish 8000:8000 \
             --env APP_ENV=development --env LLM_PROVIDER=scripted \
             assistant-workshop-backend:ci api
-          # The checks that run after every deploy (docs/operations/deploys.md).
-          if ! SMOKE_WAIT_SECONDS=30 scripts/smoke.sh http://127.0.0.1:8000; then
+          # The checks that run after every deploy (docs/operations/deploys.md);
+          # APP_ENV=development serves /docs, which production hides.
+          if ! SMOKE_WAIT_SECONDS=30 SMOKE_ALLOW_API_DOCS=1 scripts/smoke.sh http://127.0.0.1:8000; then
             docker logs api
             exit 1
           fi

@@ -11,5 +11,5 @@
   ],
   "reporters": ["console", "json"],
   "output": ".jscpd-report",
-  "threshold": 1.36
+  "threshold": 1.31
 }

@@ -200,9 +200,9 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # A sign-in from a new device or country: the person's devices and e-mail.
     sign_in_notice_facilitator: Singleton[SignInNoticeFacilitator] = Singleton(
         SignInNoticeFacilitator,
+        user_repo=repositories.user_repo,
         business_repo=repositories.business_repo,
         staff_alerts=staff_alert_facilitator,
         manager_notifier=manager_notification_facilitator,

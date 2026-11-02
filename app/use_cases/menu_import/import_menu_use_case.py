@@ -17,27 +17,16 @@ from app.schemas.dto.menu_import import (
 from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
+from app.use_cases.menu_import.menu_upload_checks import check_menu_upload
 from app.utilities.knowledge.imported_drafts import build_draft
 from app.utilities.knowledge.imported_item_views import build_imported_item_view
-
-UPLOAD_MEDIA_TYPES: frozenset[str] = frozenset(
-    {
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "application/pdf",
-        "text/plain",
-        "text/csv",
-        "text/html",
-    }
-)
-
 
 class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
     """
     Read a menu or price list from a photo, PDF, text or link (concept
-    section 3) into knowledge item drafts.
+    section 3) into knowledge item drafts. An uploaded file must be what
+    its type says, by its first bytes (`menu_upload_checks`); a web page
+    comes by its link, never as an upload.
 
     Drafts are inactive (the assistant does not use them) until the owner
     confirms them, carry the model's confidence and the id of this import
@@ -123,10 +112,5 @@ def validate_import_request(request: MenuImportRequest) -> None:
             "Send either a menu file (data_base64) or a link (url), not both."
         )
 
-    if not has_file:
-        return
-
-    if str(request.media_type) not in UPLOAD_MEDIA_TYPES:
-        raise ValidationFailedError(
-            "A menu file must be a JPEG, PNG, WebP or GIF photo, a PDF or text."
-        )
+    if request.data_base64 is not None:
+        check_menu_upload(request.media_type, request.data_base64)

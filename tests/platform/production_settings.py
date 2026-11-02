@@ -26,6 +26,8 @@ PRODUCTION_ENVIRONMENT: dict[str, str] = {
     "DATABASE_URL": "postgresql://workshop:fake@db.internal:5432/workshop",
     "DATABASE_URL_TENANT": "postgresql://tenant:fake@db.internal:5432/workshop",
     "DATABASE_URL_PLATFORM": "postgresql://platform:fake@db.internal:5432/workshop",
+    # libpq's default sslmode for the addresses above (render.yaml sets it).
+    "PGSSLMODE": "require",
     "ENCRYPTION_KEY": "a-production-test-key-of-forty-characters",
     "LLM_PROVIDER": "openai",
     "OPENAI_API_KEY": "openai-fake-key",

@@ -53,6 +53,11 @@ databases:
 envVarGroups:
   - name: workshop-backend
     envVars:
+      # Every database connection requires TLS (libpq's default for the
+      # addresses below, which name no sslmode; pg_dump of the backup too):
+      # production refuses to start with an address that does not.
+      - key: PGSSLMODE
+        value: require
       - key: APP_ENV
         value: production
       - key: ENCRYPTION_KEY

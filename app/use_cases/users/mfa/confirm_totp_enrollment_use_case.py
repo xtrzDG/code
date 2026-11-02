@@ -8,8 +8,9 @@ from app.contracts.repositories.mfa_repositories import (
 )
 from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
+from app.schemas.constants.mfa import AuthLevel, SecurityChange, TotpFactorStatus
 from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.dto.mfa import ConfirmTotpCommand, RecoveryCodesView
@@ -56,7 +57,9 @@ class ConfirmTotpEnrollmentUseCase(
         session_assurance: SessionAssuranceContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        sign_in_notices: SignInNoticeFacilitatorContract,
     ) -> None:
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
         self._user_session_repo: UserSessionRepoContract = user_session_repo
@@ -106,6 +109,9 @@ class ConfirmTotpEnrollmentUseCase(
             TOTP_FACTOR_ENTITY,
             input_data.client_ip_address,
             now,
+        )
+        self._sign_in_notices.notice_security_change(
+            input_data.user_id, SecurityChange.TOTP_ADDED, input_data.client_ip_address
         )
         return RecoveryCodesView(
             recovery_codes=recovery_codes,

@@ -5,6 +5,7 @@ from app.contracts.repositories.compliance_repositories import AuditLogRepoContr
 from app.contracts.repositories.integration_repositories import (
     WebhookEndpointRepoContract,
 )
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.integrations import WebhookEndpointStatus
@@ -38,8 +39,8 @@ class UpdateWebhookEndpointUseCase(
     """
     The owner changes an endpoint: its address (checked as when it was
     added), note or events, pauses it or switches it on again (an endpoint
-    switched off for failures starts counting from zero). Owners only;
-    audited.
+    switched off for failures starts counting from zero). Owners only,
+    after a recent sign-in or confirmation (step-up); audited.
     """
 
     def __init__(
@@ -51,6 +52,7 @@ class UpdateWebhookEndpointUseCase(
         poster: WebhookPosterContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -59,6 +61,7 @@ class UpdateWebhookEndpointUseCase(
         self._poster: WebhookPosterContract = poster
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._step_up: StepUpGuardContract = step_up
 
     def run(self, input_data: UpdateWebhookEndpointCommand) -> WebhookEndpointView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -68,6 +71,7 @@ class UpdateWebhookEndpointUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         change: WebhookEndpointChange = input_data.change
         if change.status is WebhookEndpointStatus.DISABLED:
             raise ValidationFailedError("An endpoint is paused or switched on.")

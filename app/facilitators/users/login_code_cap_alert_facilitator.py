@@ -1,5 +1,4 @@
 import logging
-import threading
 
 import sentry_sdk
 from typed_time_provider import Microseconds, WallClock
@@ -7,15 +6,16 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.login_protection import LoginCodeCapAlertFacilitatorContract
 from app.contracts.messaging_clients import EmailSenderClientContract
 from app.contracts.monitoring import SignalCounterAdapterContract
+from app.facilitators.users.hourly_admin_alerts import (
+    HourlyAlertGate,
+    email_platform_admins,
+)
 from app.schemas.constants.monitoring import PlatformSignal
 from app.schemas.constants.users import LoginCodeCap
 from app.schemas.dto.login_protection import LoginCodeCapAlert
-from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.messaging.strings import EmailBodyText, EmailSubject
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
 logger: logging.Logger = logging.getLogger(__name__)
-ALERT_INTERVAL_MICROSECONDS: int = 60 * 60 * 1_000_000
 CAP_DESCRIPTIONS: dict[LoginCodeCap, str] = {
     LoginCodeCap.COUNTRY: (
         "login codes to phones of one country (OTP_SENDS_PER_COUNTRY_PER_HOUR)"
@@ -60,15 +60,13 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         self._signal_counter: SignalCounterAdapterContract | None = signal_counter
         self._email_client: EmailSenderClientContract | None = email_client
         self._platform_admin_emails: list[EmailAddress] = platform_admin_emails
-        self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._last_alerts: dict[str, int] = {}
-        self._lock: threading.Lock = threading.Lock()
+        self._alert_gate: HourlyAlertGate = HourlyAlertGate(wall_clock)
 
     def report_cap_reached(self, alert: LoginCodeCapAlert) -> None:
         if self._signal_counter is not None:
             self._signal_counter.count(PlatformSignal.OTP_CAP_TRIP)
 
-        if not self._claim_alert(alert):
+        if not self._alert_gate.claim(f"{alert.cap.value}:{alert.country_code or ''}"):
             return
 
         summary: str = describe_alert(alert)
@@ -78,35 +76,13 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         except Exception:  # noqa: BLE001 - alerting must never fail the caller
             logger.exception("Sentry capture of a login code cap alert failed")
 
-        self._email_platform_admins(summary)
-
-    def _claim_alert(self, alert: LoginCodeCapAlert) -> bool:
-        """True for the first alert of this cap and country within an hour."""
-
-        key: str = f"{alert.cap.value}:{alert.country_code or ''}"
-        now: int = int(self._wall_clock.now_unix())
-        with self._lock:
-            last: int | None = self._last_alerts.get(key)
-            if last is not None and now - last < ALERT_INTERVAL_MICROSECONDS:
-                return False
-
-            self._last_alerts[key] = now
-            return True
-
-    def _email_platform_admins(self, summary: str) -> None:
-        if self._email_client is None:
-            return
-
-        for recipient in self._platform_admin_emails:
-            try:
-                self._email_client.send_email(
-                    recipient=recipient,
-                    subject=EmailSubject(f"[Assistant Workshop] {summary}"),
-                    text_body=EmailBodyText(f"{summary}\n\n{WHAT_TO_CHECK}\n"),
-                    html_body=None,
-                )
-            except ExternalServiceError as error:
-                logger.error("Login code cap alert e-mail failed: %s", error)
+        email_platform_admins(
+            self._email_client,
+            self._platform_admin_emails,
+            summary,
+            WHAT_TO_CHECK,
+            logger,
+        )
 
 
 def describe_alert(alert: LoginCodeCapAlert) -> str:

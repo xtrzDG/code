@@ -9,6 +9,7 @@ import pytest
 from tests.platform.environment_sources import ROOT
 from tests.platform.smoke_server import (
     BUSINESS_ID,
+    CABINET_SCRIPT,
     REPLY,
     SECURITY_TXT,
     FakeDeployment,
@@ -27,6 +28,7 @@ def run_smoke(
     *arguments: str,
     business_id: str = "",
     expected_reply: str = "",
+    allow_api_docs: str = "",
 ) -> subprocess.CompletedProcess[str]:
     environment = {
         **{
@@ -38,6 +40,7 @@ def run_smoke(
         "SMOKE_REPLY_SECONDS": "10",
         "SMOKE_WIDGET_BUSINESS_ID": business_id,
         "SMOKE_EXPECT_REPLY": expected_reply,
+        "SMOKE_ALLOW_API_DOCS": allow_api_docs,
         # Local requests never go through a proxy.
         "NO_PROXY": "127.0.0.1",
         "no_proxy": "127.0.0.1",
@@ -63,12 +66,14 @@ def test_a_healthy_deployment_passes_every_check() -> None:
         )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.splitlines()[:7] == [
+    assert result.stdout.splitlines()[:9] == [
         "ok    GET /healthz",
         "ok    GET /readyz",
         "ok    GET /widget.js",
         "ok    GET /v1/auth/login-options",
+        "ok    API hides /.git/HEAD /.git/config /docs /redoc /openapi.json",
         "ok    GET cabinet /login",
+        "ok    cabinet hides /.git/HEAD and its source maps",
         "ok    GET cabinet /.well-known/security.txt",
         "ok    GET widget config",
     ]
@@ -136,6 +141,54 @@ def test_a_cabinet_without_its_security_contact_fails(
 
     assert result.returncode == 1
     assert message in result.stderr
+
+
+@pytest.mark.parametrize(
+    "published",
+    [
+        "/.git/HEAD",
+        "/.git/config",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/cabinet/.git/HEAD",
+        f"{CABINET_SCRIPT}.map",
+    ],
+)
+def test_a_release_that_publishes_what_it_must_not_fails(published: str) -> None:
+    deployment = FakeDeployment(published=frozenset({published}))
+    with running_deployment(deployment) as url:
+        result = run_smoke(url, f"{url}/cabinet")
+
+    assert result.returncode == 1
+    assert f"{published} answered 200: a release must not publish it" in (
+        result.stderr
+    )
+    # What leaked is never copied into the log.
+    assert "refs/heads/main" not in result.stdout + result.stderr
+
+
+def test_development_api_docs_may_be_allowed_but_never_git() -> None:
+    docs = FakeDeployment(published=frozenset({"/docs", "/openapi.json"}))
+    git = FakeDeployment(published=frozenset({"/.git/HEAD"}))
+    with running_deployment(docs) as url:
+        allowed = run_smoke(url, allow_api_docs="1")
+    with running_deployment(git) as url:
+        refused = run_smoke(url, allow_api_docs="1")
+
+    assert allowed.returncode == 0, allowed.stdout + allowed.stderr
+    assert "ok    API hides /.git/HEAD /.git/config\n" in allowed.stdout
+    assert refused.returncode == 1
+    assert "/.git/HEAD answered 200" in refused.stderr
+
+
+def test_a_cabinet_page_without_a_script_fails() -> None:
+    deployment = FakeDeployment(login_page="<html>login</html>")
+    with running_deployment(deployment) as url:
+        result = run_smoke(url, f"{url}/cabinet")
+
+    assert result.returncode == 1
+    assert "cabinet /login loads no /_next/static script" in result.stderr
 
 
 def test_an_unreachable_deployment_and_a_wrong_business_fail() -> None:

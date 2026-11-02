@@ -21,7 +21,7 @@ from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.mfa import AuthLevel
+from app.schemas.constants.mfa import AuthLevel, SecurityChange
 from app.schemas.constants.passkeys import PasskeyCeremonyPurpose
 from app.schemas.domain.passkeys import PasskeyChallengeDocument
 from app.schemas.domain.users import UserDocument
@@ -89,6 +89,7 @@ class FinishPasskeyEnrollmentUseCase(
         self._rate_limit_registry: RequestRateLimitRegistryContract = (
             rate_limit_registry
         )
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -146,6 +147,9 @@ class FinishPasskeyEnrollmentUseCase(
             PASSKEY_ENTITY,
             input_data.client_ip_address,
             now,
+        )
+        self._sign_in_notices.notice_security_change(
+            user.id, SecurityChange.PASSKEY_ADDED, input_data.client_ip_address
         )
         consume_mfa_challenge(self._mfa_challenge_repo, step, now)
         return self._sign_in.open_session(

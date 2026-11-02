@@ -20,6 +20,11 @@ SECURITY_TXT: str = (
     "Expires: 2027-07-01T00:00:00Z\n"
     "Canonical: https://app.workshop.test/.well-known/security.txt\n"
 )
+CABINET_SCRIPT: str = "/_next/static/chunks/main-app-4f1c.js"
+LOGIN_PAGE: str = (
+    f'<html><head><script src="{CABINET_SCRIPT}?dpl=1" async></script></head>'
+    "<body>login</body></html>"
+)
 
 
 @dataclass
@@ -34,6 +39,9 @@ class FakeDeployment:
     is_ready: bool = True
     # `checks.data_tasks` of /readyz; None leaves the line out (an older release).
     data_tasks: dict[str, object] | None = None
+    login_page: str = LOGIN_PAGE
+    # Paths a broken release publishes (they answer 200 instead of 404).
+    published: frozenset[str] = frozenset()
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
@@ -42,7 +50,9 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             path: str = self.path.split("?", 1)[0]
-            if path == "/healthz":
+            if path in deployment.published:
+                self.answer_text(200, "ref: refs/heads/main", "text/plain")
+            elif path == "/healthz":
                 self.answer(200, {"status": "ok"})
             elif path == "/readyz":
                 checks: dict[str, object] = (
@@ -64,7 +74,9 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
                     200, {"configured_channels": deployment.configured_channels}
                 )
             elif path == "/cabinet/login":
-                self.answer_text(200, "<html>login</html>", "text/html")
+                self.answer_text(200, deployment.login_page, "text/html")
+            elif path == CABINET_SCRIPT:
+                self.answer_text(200, "self.x = 1;", "text/javascript")
             elif path == "/cabinet/.well-known/security.txt":
                 self.answer_text(200, deployment.security_txt, "text/plain")
             elif path == f"{WIDGET_PREFIX}/config":

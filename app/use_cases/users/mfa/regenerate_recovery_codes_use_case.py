@@ -11,7 +11,9 @@ from app.contracts.session_assurance import (
     SessionAssuranceContract,
     StepUpGuardContract,
 )
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.mfa import SecurityChange
 from app.schemas.constants.users import SessionSweepReason
 from app.schemas.dto.mfa import MfaChangeCommand, RecoveryCodesView
 from app.schemas.dto.sessions import SessionSweep
@@ -55,7 +57,9 @@ class RegenerateRecoveryCodesUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         passkey_repo: PasskeyRepoContract,
+        sign_in_notices: SignInNoticeFacilitatorContract,
     ) -> None:
+        self._sign_in_notices: SignInNoticeFacilitatorContract = sign_in_notices
         self._passkey_repo: PasskeyRepoContract = passkey_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
@@ -94,5 +98,10 @@ class RegenerateRecoveryCodesUseCase(
             input_data.client_ip_address,
             now,
             lowered,
+        )
+        self._sign_in_notices.notice_security_change(
+            input_data.user_id,
+            SecurityChange.RECOVERY_CODES_RENEWED,
+            input_data.client_ip_address,
         )
         return RecoveryCodesView(recovery_codes=codes)

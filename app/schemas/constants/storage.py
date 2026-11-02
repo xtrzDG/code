@@ -95,3 +95,19 @@ class RecordingStorageKind(StrEnum):
 
     LOCAL = "local"
     OBJECT_STORAGE = "s3"
+
+
+class DatabaseSslMode(StrEnum):
+    """
+    libpq's `sslmode` of a Postgres connection, in the address
+    (`?sslmode=require`) or as the default for addresses that name none
+    (PGSSLMODE). Only REQUIRE, VERIFY_CA and VERIFY_FULL refuse a
+    connection without TLS; the others may talk in clear text.
+    """
+
+    DISABLE = "disable"
+    ALLOW = "allow"
+    PREFER = "prefer"
+    REQUIRE = "require"
+    VERIFY_CA = "verify-ca"
+    VERIFY_FULL = "verify-full"

@@ -12,6 +12,9 @@ from app.schemas.typings.platform.strings import ProductionSettingProblem
 from app.utilities.config_helpers.production.address_requirements import (
     find_address_problems,
 )
+from app.utilities.config_helpers.production.database_tls_requirements import (
+    find_database_tls_problems,
+)
 from app.utilities.config_helpers.production.model_requirements import (
     find_model_problems,
 )
@@ -31,6 +34,7 @@ def find_production_problems(settings: AppSettings) -> list[ProductionSettingPro
 
     return [
         *find_platform_problems(settings),
+        *find_database_tls_problems(settings),
         *find_address_problems(settings),
         *find_sign_in_problems(settings),
         *find_model_problems(settings),

@@ -64,8 +64,10 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     again when it was delivered (the missed call is SENT and the WhatsApp
     conversation the caller's reply continues in opens) or refused for
     good (an unknown template, a number without WhatsApp, a broken
-    connection): then, when SMS is on, an SMS from the platform's sender
-    follows. A temporary SMS failure is tried again by the job queue (the
+    connection): then, when SMS is on and may go to the caller's number
+    (`TextBackSmsDestinations`; else the text-back is SKIPPED with
+    NO_CHANNEL, or FAILED after WhatsApp refused it), an SMS from the
+    platform's sender follows. A temporary SMS failure is tried again by the job queue (the
     last attempt gives up); a message hours late is not queued. Only a
     QUEUED missed call is sent, so a job that runs again sends nothing
     twice.
@@ -164,7 +166,7 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         LOGGER.warning(
             "WhatsApp text-back of %s was refused: %s", missed.id, outbound.last_error
         )
-        return self._refused(settings, missed, outbound.last_error)
+        return self._refused(business, settings, missed, outbound.last_error)
 
     def _queue_whatsapp(
         self,
@@ -182,17 +184,25 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             self._whatsapp.queue(business, missed, caller, template, now)
         except ApplicationError as error:
             LOGGER.warning("WhatsApp text-back of %s failed: %s", missed.id, error)
-            return self._refused(settings, missed, describe_delivery_error(error))
+            return self._refused(
+                business, settings, missed, describe_delivery_error(error)
+            )
 
         return missed
 
     def _refused(
         self,
+        business: BusinessDocument,
         settings: CallSettingsDocument | None,
         missed: MissedCallDocument,
         error: DeliveryErrorText | None,
     ) -> MissedCallDocument:
-        if settings is not None and settings.is_sms_fallback_enabled:
+        if (
+            settings is not None
+            and settings.is_sms_fallback_enabled
+            and missed.caller_phone_number is not None
+            and self._sms.can_reach(business, missed.caller_phone_number)
+        ):
             return self._settle.switch_to_sms(missed, error)
 
         return self._settle.fail(missed, error)
@@ -229,6 +239,10 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         caller: E164PhoneNumber,
         job: QueuedJobInput,
     ) -> None:
+        if not self._sms.can_reach(business, caller):
+            self._settle.skip(missed, TextBackSkipReason.NO_CHANNEL)
+            return
+
         try:
             self._sms.send(business, missed, caller)
         except ApplicationError as error:

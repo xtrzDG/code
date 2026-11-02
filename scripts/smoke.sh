@@ -10,10 +10,15 @@
 #                                       migrations and pool are fine)
 #   2. GET  /widget.js                  serves the website widget
 #   3. GET  /v1/auth/login-options      sign-in works and names its channels
-#   4. GET  <cabinet>/login             the cabinet answers (if its URL is given)
+#   4. nothing a release must not publish answers 2xx: /.git/HEAD,
+#      /.git/config, /docs, /redoc, /openapi.json of the API
+#      (SMOKE_ALLOW_API_DOCS=1 skips the three docs paths: APP_ENV=development
+#      serves them), and of the cabinet /.git/HEAD and the source map of
+#      the first script its /login page loads
+#   5. GET  <cabinet>/login             the cabinet answers (if its URL is given)
 #      GET  <cabinet>/.well-known/security.txt  names the security mailbox
 #                                       and its https Canonical address
-#   5. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
+#   6. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
 #      (only when set): config, one visitor message, an assistant answer
 #      (in the response, or polled from GET .../messages); with
 #      SMOKE_EXPECT_REPLY the answer must contain that text.
@@ -26,7 +31,7 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,25p' "$0" >&2
+  sed -n '2,30p' "$0" >&2
   exit 2
 fi
 
@@ -48,6 +53,19 @@ fail() {
     printf '      response: %s\n' "$(head -c 500 "$body_file")" >&2
   fi
   exit 1
+}
+
+# refuse_published BASE PATH: fail when BASE PATH answers 2xx, which it
+# must not (the body is not printed: it may hold what must stay hidden).
+refuse_published() {
+  local status
+  status="$(request GET "$1$2")"
+  case "$status" in
+    2??)
+      : >"$body_file"
+      fail "GET $1$2 answered $status: a release must not publish it"
+      ;;
+  esac
 }
 
 # request METHOD URL [JSON_BODY] [HEADER]: the status code; the body goes to
@@ -121,11 +139,32 @@ status="$(request GET "$api_url/v1/auth/login-options")"
   || fail "GET /v1/auth/login-options has no configured_channels"
 pass "GET /v1/auth/login-options"
 
-# 4. The cabinet.
+# 4. What a release must not publish (SEC-06).
+hidden_paths=(/.git/HEAD /.git/config)
+if [ "${SMOKE_ALLOW_API_DOCS:-}" != "1" ]; then
+  hidden_paths+=(/docs /redoc /openapi.json)
+fi
+for path in "${hidden_paths[@]}"; do
+  refuse_published "$api_url" "$path"
+done
+pass "API hides ${hidden_paths[*]}"
+
+# 5. The cabinet.
 if [ -n "$cabinet_url" ]; then
   status="$(request GET "$cabinet_url/login")"
   [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
   pass "GET cabinet /login"
+
+  # Source maps go to the error tracker only (deleted after the upload).
+  script_url="$(grep -Eo '(https?://[^"'"'"' ]+)?/_next/static/[^"'"'"' ?#]+\.js' \
+    "$body_file" | head -n 1 || true)"
+  [ -n "$script_url" ] || fail "cabinet /login loads no /_next/static script"
+  if [[ "$script_url" == /* ]]; then
+    script_url="$(printf '%s' "$cabinet_url" | sed -E 's#^(https?://[^/]+).*#\1#')$script_url"
+  fi
+  refuse_published "$cabinet_url" /.git/HEAD
+  refuse_published "$script_url" .map
+  pass "cabinet hides /.git/HEAD and its source maps"
 
   # RFC 9116: reports reach the platform's mailbox (SECURITY_CONTACT_EMAIL)
   # and the file names its own address (SITE_URL), SECURITY.md.
@@ -139,7 +178,7 @@ if [ -n "$cabinet_url" ]; then
   pass "GET cabinet /.well-known/security.txt"
 fi
 
-# 5. A test chat through the website widget.
+# 6. A test chat through the website widget.
 if [ -z "$business_id" ]; then
   printf 'skip  test chat (SMOKE_WIDGET_BUSINESS_ID is not set)\n'
   exit 0

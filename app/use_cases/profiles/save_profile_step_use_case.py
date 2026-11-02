@@ -33,16 +33,11 @@ from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
 from app.utilities.knowledge.niche_answers import merge_niche_answers
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
-from app.utilities.knowledge.owner_instructions import (
-    check_rule_instructions,
-    check_tone_instruction,
-)
+from app.utilities.knowledge.owner_instructions import owner_rules, owner_tone
 from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
     check_address,
-    check_rules,
-    check_tone,
     parse_contacts,
     validate_links,
 )
@@ -136,15 +131,9 @@ class SaveProfileStepUseCase(
                 knowledge_inputs = [
                     faq_entry_to_upsert_input(entry) for entry in step_input.faq
                 ]
-                profile.handoff_rules = check_rule_instructions(
-                    check_rules(step_input.handoff_rules, subject="handoff"),
-                    subject="handoff",
-                )
-                profile.forbidden = check_rule_instructions(
-                    check_rules(step_input.forbidden, subject="forbidden"),
-                    subject="forbidden",
-                )
-                profile.tone = check_tone_instruction(check_tone(step_input.tone))
+                profile.handoff_rules = owner_rules(step_input.handoff_rules, "handoff")
+                profile.forbidden = owner_rules(step_input.forbidden, "forbidden")
+                profile.tone = owner_tone(step_input.tone)
             case ChannelsStepInput():
                 step = ProfileWizardStep.CHANNELS
                 store_profile_links(profile, validate_links(step_input.links))

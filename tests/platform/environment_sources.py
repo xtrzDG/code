@@ -34,8 +34,9 @@ LAUNCH_GUIDE: str = "docs/LAUNCH.md"
 SDK_VARIABLES: frozenset[str] = frozenset({"OPENAI_API_KEY", "ANTHROPIC_API_KEY"})
 
 # Variables without an underscore that the assembler reads: Render sets
-# RENDER=true on every service (APP_ENV may then not be missing).
-PLATFORM_MARKER_VARIABLES: frozenset[str] = frozenset({"RENDER"})
+# RENDER=true on every service (APP_ENV may then not be missing); libpq
+# reads PGSSLMODE for addresses that name no sslmode (production checks it).
+PLATFORM_MARKER_VARIABLES: frozenset[str] = frozenset({"RENDER", "PGSSLMODE"})
 
 # Set by Next.js itself (`next build`, `next start`), never by people
 # (NEXT_PHASE is "phase-production-build" while `next build` runs).

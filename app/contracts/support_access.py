@@ -5,11 +5,13 @@ from typing import Protocol
 
 from app.contracts.facilitator_contract import FacilitatorContract
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.mfa import SecurityChange
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 from app.schemas.domain.users import UserDocument, UserSessionDocument
 from app.schemas.dto.support_access import SupportAccessEnding
 from app.schemas.typings.access.prefixed_id import SupportAccessGrantId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -64,5 +66,19 @@ class SignInNoticeFacilitatorContract(FacilitatorContract, Protocol):
         live sessions uses (their devices with notifications on and their
         sign-in e-mail), with a link to Account → Security. A first
         sign-in, or one from a known device, tells nobody. Never raises.
+        """
+        raise NotImplementedError
+
+    def notice_security_change(
+        self,
+        user_id: UserId,
+        change: SecurityChange,
+        client_ip_address: ClientIpAddress | None,
+    ) -> None:
+        """
+        Tell the person that how they prove it is them changed (a second
+        factor added or removed, new recovery codes), the same way as a
+        new-device sign-in, so a change they did not make is seen at once.
+        Never raises.
         """
         raise NotImplementedError

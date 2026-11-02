@@ -5,6 +5,7 @@ from app.contracts.repositories.integration_repositories import (
     WebhookEndpointRepoContract,
 )
 from app.contracts.secret_cipher import SecretCipherAdapterContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
@@ -30,7 +31,8 @@ class RotateWebhookSecretUseCase(
     """
     The owner gives an endpoint a new signing secret (a leaked one, a new
     receiver): every request from now on is signed with it, and it is
-    shown this once. Owners only; audited.
+    shown this once. Owners only, after a recent sign-in or confirmation
+    (step-up); audited.
     """
 
     def __init__(
@@ -42,6 +44,7 @@ class RotateWebhookSecretUseCase(
         cipher: SecretCipherAdapterContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -50,6 +53,7 @@ class RotateWebhookSecretUseCase(
         self._cipher: SecretCipherAdapterContract = cipher
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._step_up: StepUpGuardContract = step_up
 
     def run(self, input_data: WebhookEndpointCommand) -> CreatedWebhookEndpoint:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -59,6 +63,7 @@ class RotateWebhookSecretUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         secret, hint = new_signing_secret()
         sealed = self._cipher.encrypt(ChannelSecret(str(secret)))
         now: Microseconds = self._wall_clock.now_unix()

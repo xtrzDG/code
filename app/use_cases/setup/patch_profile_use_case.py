@@ -29,16 +29,11 @@ from app.schemas.typings.profiles.strings import (
     ToneText,
 )
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
-from app.utilities.knowledge.owner_instructions import (
-    check_rule_instructions,
-    check_tone_instruction,
-)
+from app.utilities.knowledge.owner_instructions import owner_rules, owner_tone
 from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
     check_address,
-    check_rules,
-    check_tone,
     validate_links,
 )
 from app.utilities.knowledge.profile_views import (
@@ -118,13 +113,13 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
         )
         # The owner's texts join the assistant's instruction: checked as
         # instructions here too, like a wizard step.
-        handoff_rules: list[HandoffRuleText] = check_rule_instructions(
-            check_rules(patch.handoff_rules or [], subject="handoff"), "handoff"
+        handoff_rules: list[HandoffRuleText] = owner_rules(
+            patch.handoff_rules or [], "handoff"
         )
-        forbidden: list[ForbiddenRuleText] = check_rule_instructions(
-            check_rules(patch.forbidden or [], subject="forbidden"), "forbidden"
+        forbidden: list[ForbiddenRuleText] = owner_rules(
+            patch.forbidden or [], "forbidden"
         )
-        tone: ToneText | None = check_tone_instruction(check_tone(patch.tone))
+        tone: ToneText | None = owner_tone(patch.tone)
         links: list[BusinessLink] = validate_links(patch.links or [])
         answer_changes: dict[QuestionKey, ProfileAnswer | None] = (
             normalize_answer_changes(

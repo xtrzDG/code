@@ -54,8 +54,9 @@ class TextBackSkipReason(StrEnum):
     asked for no more messages. ALREADY_TEXTED: the caller got one in the
     last day. DAILY_LIMIT: the business reached its daily number of
     text-backs. IN_CONVERSATION: the caller is already writing with the
-    business. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it.
-    NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was
+    business. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it
+    (an SMS never goes to a premium, satellite, landline or foreign
+    number). NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was
     hidden. TOO_LATE: the call is too long ago to text about it now.
     """
 

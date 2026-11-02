@@ -79,13 +79,6 @@
     },
     {
       "files": [
-        "app/use_cases/bookings/create_booking_use_case.py",
-        "app/use_cases/bookings/reschedule_booking_use_case.py"
-      ],
-      "count": 1
-    },
-    {
-      "files": [
         "app/use_cases/brands/remove_brand_location_use_case.py",
         "app/use_cases/brands/remove_brand_member_use_case.py"
       ],

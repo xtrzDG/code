@@ -37,11 +37,13 @@ const MEDIA_TYPES_BY_EXTENSION: Record<string, string> = {
   pdf: "application/pdf",
   txt: "text/plain",
   csv: "text/csv",
-  htm: "text/html",
-  html: "text/html",
 };
 
-/** Media types the menu reader accepts for uploads. */
+/**
+ * Media types the menu reader accepts for uploads. A web page is imported
+ * by its link, never uploaded: the API checks each file's first bytes and
+ * refuses HTML.
+ */
 const MENU_UPLOAD_MEDIA_TYPES: readonly string[] = [...new Set(Object.values(MEDIA_TYPES_BY_EXTENSION))];
 
 /** `accept` of the file input. */

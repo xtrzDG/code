@@ -130,6 +130,7 @@ class PublicApiUseCasesContainer(containers.DeclarativeContainer):
         api_key_repo=repositories.api_key_repo,
         audit_log_repo=audit,
         wall_clock=wall_clock,
+        step_up=utilities.step_up_guard,
     )
     revoke_api_key_use_case: Reads[ApiKeyCommand, None] = Factory(
         RevokeApiKeyUseCase,

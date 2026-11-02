@@ -76,6 +76,9 @@ from app.use_cases.voice.missed_calls.register_missed_call_use_case import (
 from app.use_cases.voice.missed_calls.send_text_back_use_case import (
     SendTextBackUseCase,
 )
+from app.use_cases.voice.missed_calls.text_back_destinations import (
+    TextBackSmsDestinations,
+)
 from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
 from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
 from app.use_cases.voice.summaries.summarize_call_use_case import (
@@ -139,6 +142,12 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
     )
 
     # --- Callers who did not get through and their text-backs.
+    text_back_sms_destinations: Factory[TextBackSmsDestinations] = Factory(
+        TextBackSmsDestinations,
+        high_cost_registry=registries.high_cost_phone_number_registry,
+        country_registry=registries.country_registry,
+        phone_number_parser=utilities.phone_number_parser,
+    )
     find_missed_voice_call_use_case: Factory[
         UseCaseContract[StoredFinishedCall, MissedCallReport | None]
     ] = Factory(FindMissedVoiceCallUseCase)
@@ -173,6 +182,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
         suppression_list=facilitators.suppression_list,
+        sms_destinations=text_back_sms_destinations,
     )
     notify_missed_call_use_case: Factory[
         UseCaseContract[RegisteredMissedCall | None, DeliveredNotificationCount]
@@ -234,6 +244,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
                 TextBackSms,
                 sms_client=adapters.guarded_sms_sender,
                 text_resolver=utilities.localized_text_resolver,
+                destinations=text_back_sms_destinations,
             ),
             live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,

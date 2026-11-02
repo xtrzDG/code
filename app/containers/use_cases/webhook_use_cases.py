@@ -116,6 +116,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         cipher=adapters.secret_cipher,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        step_up=utilities.step_up_guard,
     )
     update_webhook_endpoint_use_case: Factory[
         UseCaseContract[UpdateWebhookEndpointCommand, WebhookEndpointView]
@@ -126,6 +127,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         poster=clients.webhook_poster,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        step_up=utilities.step_up_guard,
     )
     rotate_webhook_secret_use_case: Factory[
         UseCaseContract[WebhookEndpointCommand, CreatedWebhookEndpoint]
@@ -136,6 +138,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         cipher=adapters.secret_cipher,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        step_up=utilities.step_up_guard,
     )
     delete_webhook_endpoint_use_case: Factory[
         UseCaseContract[WebhookEndpointCommand, None]

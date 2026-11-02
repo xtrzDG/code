@@ -22,6 +22,7 @@ from app.schemas.typings.profiles.strings import (
     HandoffRuleText,
     ToneText,
 )
+from app.utilities.knowledge.profile_sections import check_rules, check_tone
 
 REFUSAL_DETAIL: str = (
     "must be one line without < > [ ] { } ` characters and must not start with #."
@@ -68,3 +69,20 @@ def check_tone_instruction(tone: ToneText | None) -> ToneText | None:
         raise ValidationFailedError(f"The tone {REFUSAL_DETAIL}") from error
 
     return tone
+
+
+def owner_rules[RuleText: (HandoffRuleText, ForbiddenRuleText)](
+    rules: Sequence[RuleText], subject: str
+) -> list[RuleText]:
+    """
+    The rules as stored: without blanks and repeats (`check_rules`), each
+    readable as an instruction (`check_rule_instructions`).
+    """
+
+    return check_rule_instructions(check_rules(rules, subject=subject), subject=subject)
+
+
+def owner_tone(tone: ToneText | None) -> ToneText | None:
+    """The tone as stored: None when blank, readable as an instruction."""
+
+    return check_tone_instruction(check_tone(tone))

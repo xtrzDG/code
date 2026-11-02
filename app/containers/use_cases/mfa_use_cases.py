@@ -215,6 +215,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         session_assurance=utilities.session_assurance,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        sign_in_notices=facilitators.sign_in_notice_facilitator,
     )
     remove_totp_factor_use_case: Factory[UseCaseContract[MfaChangeCommand, None]] = (
         Factory(
@@ -225,6 +226,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
             step_up=utilities.step_up_guard,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            sign_in_notices=facilitators.sign_in_notice_facilitator,
             passkey_repo=repositories.passkey_repo,
         )
     )
@@ -239,6 +241,7 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         step_up=utilities.step_up_guard,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        sign_in_notices=facilitators.sign_in_notice_facilitator,
         passkey_repo=repositories.passkey_repo,
     )
 

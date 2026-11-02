@@ -45,6 +45,9 @@ from app.use_cases.voice.missed_calls.missed_call_business import (
 from app.use_cases.voice.missed_calls.text_back_conversation import (
     find_caller_contact,
 )
+from app.use_cases.voice.missed_calls.text_back_destinations import (
+    TextBackSmsDestinations,
+)
 from app.use_cases.voice.missed_calls.text_back_rules import (
     DAY_WINDOW,
     choose_text_back_channel,
@@ -79,7 +82,9 @@ class RegisterMissedCallUseCase(
 
     Not texted (SKIPPED, with the reason): text-backs off, a hidden
     number, an assistant that is not live, a report hours late, no
-    channel, a number staff blocked or whose customer opted out (STOP, on
+    channel (an SMS goes only to numbers `TextBackSmsDestinations` allows,
+    never to the premium, satellite or foreign ranges a spoofed caller id
+    can name), a number staff blocked or whose customer opted out (STOP, on
     any contact holding the number or the suppression list, which outlives
     an erasure) or already writes with the business in a messenger, and a
     caller texted in the last day (one per caller per day, at most 200 per
@@ -104,6 +109,7 @@ class RegisterMissedCallUseCase(
         sms_client: SmsMessagingClientContract | None,
         wall_clock: WallClock[Microseconds],
         suppression_list: SuppressionListContract,
+        sms_destinations: TextBackSmsDestinations,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
@@ -118,6 +124,7 @@ class RegisterMissedCallUseCase(
         self._sms_client: SmsMessagingClientContract | None = sms_client
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._suppression_list: SuppressionListContract = suppression_list
+        self._sms_destinations: TextBackSmsDestinations = sms_destinations
 
     def run(self, input_data: MissedCallReport) -> RegisteredMissedCall | None:
         business: BusinessDocument | None = find_missed_call_business(
@@ -223,7 +230,8 @@ class RegisterMissedCallUseCase(
             find_business_channel(
                 self._channel_repo, business.id, ChannelKind.WHATSAPP
             ),
-            self._sms_client is not None,
+            self._sms_client is not None
+            and self._sms_destinations.allows(business, caller),
         )
         if channel is None:
             return TextBackSkipReason.NO_CHANNEL
