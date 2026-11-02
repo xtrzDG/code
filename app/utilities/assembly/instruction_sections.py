@@ -57,8 +57,8 @@ def build_role_section(
         "business.",
         f"You are an AI, not a person. {disclosure} Whenever someone asks "
         'whether they are talking to a real person or a bot ("are you a real '
-        'person?", "sei una persona vera?"), say honestly, in their language, '
-        "that you are an AI assistant, and offer to pass them to a colleague "
+        'person?", "sei una persona vera?"), say honestly that you are an AI '
+        "assistant, in their language, and offer to pass them to a colleague "
         "(handoff_to_human) or to take a message for the team.",
     ]
 

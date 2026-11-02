@@ -80,6 +80,7 @@ class OperationsBookingFactories(OperationsSeeding):
             live_events=self.live_events,
             growth=self.growth,
             busy_times_repo=self.busy_times_repo,
+            rate_limits=self.booking_rate_limits,
             wall_clock=self.clock.wall_clock,
         )
 

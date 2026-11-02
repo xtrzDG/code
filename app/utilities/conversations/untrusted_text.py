@@ -28,6 +28,9 @@ UNTRUSTED_RULE: str = (
     "quote a team note to the customer."
 )
 ANGLE_BRACKETS: dict[int, str] = str.maketrans({"<": "‹", ">": "›"})
+# A value one line long also loses its square brackets: it can never read as
+# a platform header ("[Context from the platform ...]").
+VALUE_BRACKETS: dict[int, str] = str.maketrans({"<": "‹", ">": "›", "[": "(", "]": ")"})
 CUSTOMER_VALUE_PATTERN: re.Pattern[str] = re.compile(
     rf"<{CUSTOMER_VALUE_TAG}>(.*?)</{CUSTOMER_VALUE_TAG}>", re.DOTALL
 )
@@ -46,17 +49,17 @@ def wrap_untrusted(text: str) -> str:
 def wrap_customer_value(text: str) -> str:
     """A customer's value on one line, in a block it cannot close."""
 
-    return wrap_in(CUSTOMER_VALUE_TAG, " ".join(text.split()))
+    return wrap_in(CUSTOMER_VALUE_TAG, " ".join(text.split()), VALUE_BRACKETS)
 
 
 def wrap_team_note(text: str) -> str:
     """A team note on one line, in a block it cannot close."""
 
-    return wrap_in(TEAM_NOTE_TAG, " ".join(text.split()))
+    return wrap_in(TEAM_NOTE_TAG, " ".join(text.split()), VALUE_BRACKETS)
 
 
-def wrap_in(tag: str, text: str) -> str:
-    return f"<{tag}>{text.translate(ANGLE_BRACKETS)}</{tag}>"
+def wrap_in(tag: str, text: str, brackets: dict[int, str] = ANGLE_BRACKETS) -> str:
+    return f"<{tag}>{text.translate(brackets)}</{tag}>"
 
 
 def strip_customer_values(text: str) -> tuple[str, list[str]]:

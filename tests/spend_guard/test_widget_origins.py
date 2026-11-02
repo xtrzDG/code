@@ -18,6 +18,7 @@ from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.repositories.spend_guard_repositories import BusinessLimitsRepository
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import TextDirection
 from app.schemas.domain.business_limits import BusinessLimitsDocument
 from app.schemas.dto.channels.widget_handoff import (
@@ -91,10 +92,33 @@ def test_a_site_matches_with_or_without_www_and_scheme_but_not_another_port() ->
     assert is_origin_allowed(WidgetPageOrigin("https://any.ge"), [], [CABINET])
 
 
-def test_the_platforms_own_pages_are_the_cabinet_and_the_api() -> None:
+def test_the_platforms_own_pages_are_the_cabinet_and_the_api_outside_production() -> (
+    None
+):
     assert platform_page_origins(
-        CABINET, "https://api.workshop.example/", ["https://app.workshop.example"]
+        CABINET,
+        "https://api.workshop.example/",
+        ["https://app.workshop.example"],
+        DeploymentEnvironment.DEVELOPMENT,
     ) == [CABINET, "https://api.workshop.example"]
+
+
+def test_production_lets_no_api_page_show_a_chat() -> None:
+    # The cabinet's live preview is its hosted chat page; production serves
+    # no widget demo page on the API, so the API's origin gets no bypass.
+    origins = platform_page_origins(
+        CABINET,
+        "https://api.workshop.example/",
+        ["https://app.workshop.example"],
+        DeploymentEnvironment.PRODUCTION,
+    )
+
+    assert origins == [CABINET]
+    assert not is_origin_allowed(
+        WidgetPageOrigin("https://api.workshop.example"),
+        [PublicBaseUrl("https://cafe.ge")],
+        [str(origin) for origin in origins],
+    )
 
 
 class RecordingHandoff(OperatorContract[WidgetHandoffCommand, WidgetHandoffView]):

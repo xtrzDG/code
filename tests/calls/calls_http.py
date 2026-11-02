@@ -46,7 +46,9 @@ def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
                     testbed.authorize_business_access,
                     testbed.call_settings_repo,
                     testbed.channel_repo,
+                    testbed.profile_repo,
                     testbed.text_resolver,
+                    testbed.country_registry,
                     testbed.sms_client,
                 )
             ),
@@ -55,8 +57,10 @@ def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
                     testbed.authorize_business_access,
                     testbed.call_settings_repo,
                     testbed.channel_repo,
+                    testbed.profile_repo,
                     testbed.audit_log_repo,
                     testbed.text_resolver,
+                    testbed.country_registry,
                     testbed.sms_client,
                     testbed.wall_clock,
                 )

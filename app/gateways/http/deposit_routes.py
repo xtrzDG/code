@@ -5,6 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
@@ -66,6 +70,7 @@ def build_deposit_router(
     get_deposit: OperatorContract[DepositRequestQuery, DepositRequestView],
     mark_paid: OperatorContract[MarkDepositPaidCommand, DepositRequestView],
     get_report: OperatorContract[DepositReportQuery, DepositReport],
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (all require a bearer token):
@@ -90,6 +95,8 @@ def build_deposit_router(
                     staff saw the money: PAID, the booking confirmed
                     (owners and staff; audited; 409 status_changed once the
                     hold ran out)
+    Adding a payment page and marking a deposit paid take an
+    Idempotency-Key: a retry gets the first answer back.
         GET    /v1/businesses/{business_id}/deposit-report?days=7-366
                     deposits collected and the no-show rate with and
                     without a deposit (owners)
@@ -124,6 +131,7 @@ def build_deposit_router(
         f"{B}/deposit-settings/payment-links",
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(PaymentLinkInput),
+        dependencies=[Depends(idempotent)],
     )
     def add_payment_link(
         business_id: str,
@@ -183,7 +191,9 @@ def build_deposit_router(
             )
         )
 
-    @router.post(f"{B}/deposits/{{deposit_id}}/paid")
+    @router.post(
+        f"{B}/deposits/{{deposit_id}}/paid", dependencies=[Depends(idempotent)]
+    )
     def mark_deposit_paid(
         business_id: str,
         deposit_id: str,

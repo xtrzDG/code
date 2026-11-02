@@ -5,6 +5,9 @@ from datetime import datetime
 from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
 )
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -16,6 +19,9 @@ from app.facilitators.notifications.staff_alert_facilitator import (
     StaffAlertFacilitator,
 )
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
+)
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
 from app.repositories.attention_count_repository import AttentionCountRepository
 from app.repositories.billing_repositories import (
@@ -180,6 +186,10 @@ class OperationsStore:
         self.staff_alerts: StaffAlertFacilitator = self.rebuild_staff_alerts()
         self.calendar_sync = RecordingCalendarSync()
         self.lock_registry = BusinessLockRegistry(InMemoryAdvisoryLockAdapter())
+        # The daily caps of customer bookings (`booking_limits`).
+        self.booking_rate_limits = RequestRateLimitRegistry(
+            InMemoryRateLimitBucketAdapter()
+        )
         self.waitlist_entry_repo = WaitlistEntryRepository(
             InMemoryDocumentCollectionAdapter(WaitlistEntryDocument)
         )

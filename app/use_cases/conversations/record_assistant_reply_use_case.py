@@ -6,13 +6,16 @@ from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.reply_locks import ReplyLockRegistryContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessProfileRepoContract,
+)
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import (
     ConversationStatus,
     MessageAuthor,
@@ -30,22 +33,20 @@ from app.schemas.typings.conversations.constrained_integers import (
 )
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
+from app.use_cases.conversations.reply_disclosure import (
+    ReplyDisclosure,
+    ReplyOpening,
+)
 from app.use_cases.conversations.reply_usage import (
     record_reply_usage,
     total_verifier_cost,
 )
 from app.utilities.channels.widget_live_signals import announce_widget_reply
-from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
-    AI_DISCLOSURE,
-)
-from app.utilities.conversations.assistant_texts.business_name_placeholder import (
-    fill_business_name,
-)
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
 from app.utilities.conversations.reply_choices_text import close_with_prompt
 from app.utilities.conversations.reply_latency import measure_reply_latency
 from app.utilities.conversations.stored_tool_calls import storable_tool_calls
-from app.utilities.deliveries.holding_replies import derive_holding_message_id
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
 )
@@ -66,7 +67,9 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     (`reply_language`; phone calls disclose in the call greeting), unless
     the "one moment" of this slow turn already said it: the reply of an
     inbox message is decided and stored under the reply's lock, which the
-    holding message takes too, so the customer hears the disclosure once. The
+    holding message takes too, so the customer hears the disclosure once;
+    in a messenger the line of the business's privacy notice follows
+    (`ReplyDisclosure`). The
     outbound message keeps the tool calls, model, tokens and cost (from the
     model price table, the claim check's verifier included) and what the
     reply guard did (verdict, reasons, flagged values, checked claims; only
@@ -90,15 +93,20 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         wall_clock: WallClock[Microseconds],
         reply_locks: ReplyLockRegistryContract,
         metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
+        business_profile_repo: BusinessProfileRepoContract | None = None,
+        cabinet_base_url: CabinetBaseUrl | None = None,
     ) -> None:
+        self._disclosure: ReplyDisclosure = ReplyDisclosure(
+            message_repo,
+            localized_text_resolver,
+            business_profile_repo,
+            cabinet_base_url,
+        )
         self._reply_locks: ReplyLockRegistryContract = reply_locks
         self._metrics: ServiceMetricsContract = metrics
         self._message_repo: MessageRepoContract = message_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
-        self._localized_text_resolver: LocalizedTextResolverContract = (
-            localized_text_resolver
-        )
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
 
@@ -122,10 +130,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         # The id the inbox chose: the reply it sends is this one.
         reply_id: MessageId = turn.reply_message_id or MessageId()
         with self._reply_lock(turn):
-            disclosure: MessageText | None = self._find_disclosure(
-                turn, input_data.text
-            )
-            text: MessageText | None = compose_reply_text(input_data, disclosure)
+            opening: ReplyOpening = self._disclosure.open(turn, input_data.text)
+            text: MessageText | None = compose_reply_text(input_data, opening)
             if text is not None:
                 self._store_reply(input_data, reply_id, text, choices, cost, now)
 
@@ -157,7 +163,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         return AssistantReply(
             conversation_id=conversation.id,
             text=text,
-            disclosure_text=disclosure,
+            disclosure_text=opening.disclosure,
             language=turn.reply_language,
             is_handed_off=is_handed_off,
             guard_verdict=input_data.guard_verdict,
@@ -239,59 +245,26 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             )
         )
 
-    def _find_disclosure(
-        self,
-        turn: PreparedTurn,
-        text: MessageText | None,
-    ) -> MessageText | None:
-        """
-        The AI disclosure that opens the first chat reply, if due: not when
-        this turn's "one moment" was the first thing the assistant said
-        (it carried the disclosure).
-        """
-
-        if (
-            text is None
-            or not turn.is_first_reply
-            or turn.conversation.channel is ChannelKind.PHONE
-            or self._holding_spoke_first(turn)
-        ):
-            return None
-
-        return MessageText(
-            fill_business_name(
-                self._localized_text_resolver.resolve(
-                    AI_DISCLOSURE, turn.reply_language
-                ),
-                str(turn.business.name),
-            )
-        )
-
-    def _holding_spoke_first(self, turn: PreparedTurn) -> bool:
-        return (
-            turn.reply_message_id is not None
-            and self._message_repo.get(
-                turn.business.id, derive_holding_message_id(turn.reply_message_id)
-            )
-            is not None
-        )
-
 
 def compose_reply_text(
-    record: ReplyRecord, disclosure: MessageText | None
+    record: ReplyRecord, opening: ReplyOpening
 ) -> MessageText | None:
     """
-    The reply as sent: the disclosure first when due, then the model's
-    text, closed by the prompt of the options it offers.
+    The reply as sent: the disclosure (and a messenger's privacy line)
+    first when due, then the model's text, closed by the prompt of the
+    options it offers.
     """
 
     if record.text is None:
         return None
 
     body: str = close_with_prompt(str(record.text), record.choices)
-    return MessageText(
-        body if disclosure is None else f"{disclosure}{DISCLOSURE_SEPARATOR}{body}"
-    )
+    lines: list[str] = [
+        str(line)
+        for line in (opening.disclosure, opening.privacy_line)
+        if line is not None
+    ]
+    return MessageText(DISCLOSURE_SEPARATOR.join([*lines, body]))
 
 
 def guard_verdict_of(record: ReplyRecord) -> ReplyGuardVerdict | None:

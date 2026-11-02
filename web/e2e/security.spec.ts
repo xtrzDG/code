@@ -13,6 +13,7 @@ import { BUSINESS_PAGES, setupPath } from "../src/lib/navigation";
 
 import { uniqueEmail } from "./support/api";
 import { expectStrictPolicy, policyViolations, watchPolicyViolations } from "./support/csp";
+import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { emulateCapableDesktop } from "./support/heroScene";
 import { waitForNetworkQuiet } from "./support/network";
@@ -183,12 +184,25 @@ test.describe("violation reports", () => {
 
 test.describe("the BFF", () => {
   test("refuses a body over its limit with 413", async ({ page, owner }) => {
+    // A write names the site as its Origin, as the cabinet's own pages do (server/sameOrigin.ts).
     const response = await page.request.patch(`/api/backend/v1/businesses/${owner.businessId}`, {
       data: { name: "x".repeat(300 * 1024) },
+      headers: { origin: WEB_URL },
     });
 
     expect(response.status()).toBe(413);
     expect((await response.json()).error).toBe("payload_too_large");
+  });
+
+  test("refuses a write from another site, or one that names no origin at all", async ({ page, owner }) => {
+    const path = `/api/backend/v1/businesses/${owner.businessId}`;
+
+    const foreign = await page.request.patch(path, { data: { name: "Forged" }, headers: { origin: "https://evil.example" } });
+    const silent = await page.request.patch(path, { data: { name: "Forged" } });
+
+    expect(foreign.status()).toBe(403);
+    expect((await foreign.json()).error).toBe("forbidden_origin");
+    expect(silent.status()).toBe(403);
   });
 });
 

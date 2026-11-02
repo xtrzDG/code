@@ -88,7 +88,7 @@ export const en = {
     sendCode: "Get a code",
     sendingCode: "Sending…",
     codeTitle: "Enter the code",
-    /** Where the code went, by channel ("по почте", "в WhatsApp"). */
+    /** Where the code went, by channel ("by e-mail", "on WhatsApp"). */
     codeSentTo: {
       email: "We sent a 6-digit code to {destination} by e-mail.",
       sms: "We sent a 6-digit code to {destination} by SMS.",

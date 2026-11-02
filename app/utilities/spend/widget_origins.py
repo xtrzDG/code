@@ -5,7 +5,8 @@ origins, the origin a widget request came from, and whether it may.
 A site matches with or without "www." and whatever its scheme (the http and
 https pages of one host are one site); an origin with a port matches only
 that port. The cabinet's own origins (the hosted chat page and the live
-preview) and the API's (the widget demo page) always may; a request without
+preview) always may, and outside production the API's too (its widget demo
+page, served there only); a request without
 Origin and Referer is no web page embedding the chat (a server, a script:
 the per-address limits bound those) and passes too.
 """
@@ -13,6 +14,7 @@ the per-address limits bound those) and passes too.
 from collections.abc import Iterable
 from urllib.parse import SplitResult, urlsplit
 
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.spend.constrained_strings import (
@@ -121,15 +123,20 @@ def platform_page_origins(
     cabinet_base_url: str | None,
     app_base_url: str | None,
     cabinet_origins: Iterable[str],
+    environment: DeploymentEnvironment,
 ) -> list[PublicBaseUrl]:
     """
     The platform's own pages that always may show a chat: the cabinet
     (CABINET_BASE_URL and CORS_ALLOWED_ORIGINS: the hosted chat page and the
-    live preview) and the API (APP_BASE_URL: the widget demo page).
+    live preview) and, outside production, the API (APP_BASE_URL: the
+    widget demo page, which production does not serve).
     """
 
+    api_origin: str | None = (
+        None if environment is DeploymentEnvironment.PRODUCTION else app_base_url
+    )
     origins: list[PublicBaseUrl] = []
-    for address in (cabinet_base_url, app_base_url, *cabinet_origins):
+    for address in (cabinet_base_url, api_origin, *cabinet_origins):
         parts = None if address is None else split_origin(str(address))
         if parts is not None and format_origin(*parts) not in origins:
             origins.append(PublicBaseUrl(format_origin(*parts)))

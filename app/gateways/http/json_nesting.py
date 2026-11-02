@@ -30,7 +30,9 @@ TOO_DEEP_MESSAGE: str = (
 JSON_BODY_START: frozenset[int] = frozenset(b"[{")
 
 
-def json_nesting_depth(raw_body: bytes, stop_above: int = MAX_JSON_NESTING_DEPTH) -> int:
+def json_nesting_depth(
+    raw_body: bytes, stop_above: int = MAX_JSON_NESTING_DEPTH
+) -> int:
     """
     The deepest nesting of arrays and objects in `raw_body`; counting
     stops once it passes `stop_above`.

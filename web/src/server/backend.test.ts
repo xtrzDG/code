@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { loginPath, safeNextPath, sectionFromPathname, isProtectedPath } from "@/lib/navigation";
 
@@ -6,9 +6,9 @@ import {
   buildBackendPath,
   buildUpstreamHeaders,
   dateFromMicroseconds,
+  BackendUrlMissingError,
+  callBackend,
   getBackendUrl,
-  isCookieSecure,
-  isCrossSiteRequest,
   pickResponseHeaders,
   sanitizeRequestId,
   trustedForwardedFor,
@@ -125,35 +125,44 @@ describe("BFF path and headers", () => {
   });
 });
 
-describe("CSRF guard", () => {
-  it("lets reads and same-origin writes through", () => {
-    expect(isCrossSiteRequest("GET", new Headers({ origin: "https://evil.example" }))).toBe(false);
-    expect(isCrossSiteRequest("POST", new Headers({ origin: "https://cabinet.example", host: "cabinet.example" }))).toBe(false);
-    expect(isCrossSiteRequest("POST", new Headers({ host: "cabinet.example" }))).toBe(false);
-  });
-
-  it("refuses cross-site writes", () => {
-    expect(isCrossSiteRequest("POST", new Headers({ origin: "https://evil.example", host: "cabinet.example" }))).toBe(true);
-    expect(isCrossSiteRequest("DELETE", new Headers({ "sec-fetch-site": "cross-site" }))).toBe(true);
-    expect(
-      isCrossSiteRequest(
-        "PUT",
-        new Headers({ origin: "https://cabinet.example", host: "internal:3000", "x-forwarded-host": "cabinet.example" }),
-      ),
-    ).toBe(false);
-  });
-});
-
 describe("configuration", () => {
-  it("reads BACKEND_URL without a trailing slash", () => {
-    expect(getBackendUrl({})).toBe("http://localhost:8000");
-    expect(getBackendUrl({ BACKEND_URL: "https://api.example.com/" })).toBe("https://api.example.com");
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
-  it("makes cookies Secure in production unless switched off", () => {
-    expect(isCookieSecure({ NODE_ENV: "production" })).toBe(true);
-    expect(isCookieSecure({ NODE_ENV: "development" })).toBe(false);
-    expect(isCookieSecure({ NODE_ENV: "production", COOKIE_SECURE: "false" })).toBe(false);
+  it("reads BACKEND_URL without a trailing slash", () => {
+    expect(getBackendUrl({ BACKEND_URL: "https://api.example.com/" })).toBe("https://api.example.com");
+    expect(getBackendUrl({ NODE_ENV: "production", BACKEND_URL: "http://workshop-api:8000" })).toBe("http://workshop-api:8000");
+  });
+
+  it("falls back to localhost:8000 only in development, the tests and the build", () => {
+    expect(getBackendUrl({})).toBe("http://localhost:8000");
+    expect(getBackendUrl({ NODE_ENV: "development", BACKEND_URL: "  " })).toBe("http://localhost:8000");
+    expect(getBackendUrl({ NODE_ENV: "test" })).toBe("http://localhost:8000");
+    expect(getBackendUrl({ NODE_ENV: "production", NEXT_PHASE: "phase-production-build" })).toBe("http://localhost:8000");
+  });
+
+  it("fails loudly in production without BACKEND_URL, logging it once", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    expect(() => getBackendUrl({ NODE_ENV: "production" })).toThrow(BackendUrlMissingError);
+    expect(() => getBackendUrl({ NODE_ENV: "production", BACKEND_URL: "" })).toThrow(/BACKEND_URL is not set/);
+
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(String(logged.mock.calls[0]?.[0])).toContain("BACKEND_URL is not set");
+  });
+
+  it("never calls localhost:8000 from a production server without BACKEND_URL", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("BACKEND_URL", "");
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const fetched = vi.fn();
+    vi.stubGlobal("fetch", fetched);
+
+    await expect(callBackend("/v1/me", { headers: new Headers() })).rejects.toThrow(BackendUrlMissingError);
+    expect(fetched).not.toHaveBeenCalled();
   });
 
   it("reads API microseconds", () => {

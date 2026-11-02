@@ -107,6 +107,7 @@ class GridWorld:
         return self.world.reschedule_booking().run(
             RescheduleBookingCommand(
                 business_id=self.business.id,
+                actor_id=UserId(),
                 booking_id=booking.id,
                 new_date=LocalDate(date),
                 new_time=None if time is None else LocalTimeOfDay(time),

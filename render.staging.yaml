@@ -1,6 +1,9 @@
 # Render Blueprint of the staging environment (Frankfurt, EU), the gate in
 # front of production (render.yaml): the same image, commands and settings,
-# with its own database, its own env group and the scripted language model.
+# with its own database, its own env group and its own keys. It runs with
+# APP_ENV=production, so it passes exactly the checks production does
+# (docs/operations/go-live.md, "Production refuses to start"): a real model,
+# Turnstile, object storage, a spend budget, a seller and https addresses.
 #
 #   workshop-staging-db       managed Postgres 16, only for staging
 #   workshop-staging-api      the API; migrations run before every deploy
@@ -13,15 +16,17 @@
 # and, if that passes, fast-forwards the `release` branch production deploys
 # (docs/operations/deploys.md).
 #
-# LLM_PROVIDER=scripted: every assistant answer is one fixed sentence
-# (app/adapters/llm/offline_llm_adapter.py), so staging costs nothing per
-# message, never sends a conversation to a model provider and gives the
-# smoke test's chat a known answer. Autotest checks fail there by design.
+# LLM_PROVIDER=openai with staging's own OpenAI project and key (EU data
+# residency, a small budget): production refuses the scripted model, so a
+# rehearsal with it would prove nothing. Staging holds test data only; the
+# smoke test's chat is one real model answer per deploy (leave
+# SMOKE_EXPECT_REPLY empty: any answer passes).
 #
 # Create it with Render -> New -> Blueprint -> this repository, Blueprint
 # path `render.staging.yaml`. Secrets are `sync: false`: fill in what
-# staging uses (its own addresses, one sign-in channel, ideally e-mail), and
-# never production's keys or ENCRYPTION_KEY.
+# staging uses (its own addresses, one sign-in channel, ideally e-mail, its
+# own Turnstile widget, bucket and OpenAI key, a test seller), and never
+# production's keys or ENCRYPTION_KEY.
 
 databases:
   - name: workshop-staging-db
@@ -45,7 +50,10 @@ envVarGroups:
       - key: DEFAULT_DATA_REGION
         value: eu
       - key: LLM_PROVIDER
-        value: scripted
+        value: openai
+      # A test environment's budget: the spend_budget alert fires at $4.
+      - key: PLATFORM_DAILY_SPEND_BUDGET_USD
+        value: "5"
 
 services:
   - type: web
@@ -104,6 +112,40 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: PLATFORM_ADMIN_EMAILS
+        sync: false
+      # staging's own OpenAI project (EU data residency) and its key
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_PROJECT_ID
+        sync: false
+      # staging's own Turnstile widget (live keys: test keys are refused)
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      # recordings, customer files and exports in staging's own EU bucket,
+      # with a key limited to it (production refuses local storage)
+      - key: RECORDINGS_STORAGE
+        value: s3
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        sync: false
+      - key: RECORDINGS_S3_REGION
+        sync: false
+      - key: RECORDINGS_S3_BUCKET
+        sync: false
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        sync: false
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        sync: false
+      # a test seller for staging's invoices (e.g. "Workshop Staging",
+      # IT, Europe/Rome)
+      - key: SELLER_LEGAL_NAME
+        sync: false
+      - key: SELLER_ADDRESS
+        sync: false
+      - key: SELLER_COUNTRY_CODE
+        sync: false
+      - key: SELLER_TIME_ZONE
         sync: false
       # login codes by e-mail (a test mailbox is enough)
       - key: SMTP_HOST
@@ -187,6 +229,76 @@ services:
           type: web
           name: workshop-staging-api
           envVarKey: PLATFORM_ADMIN_EMAILS
+      - key: OPENAI_API_KEY
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: OPENAI_API_KEY
+      - key: OPENAI_PROJECT_ID
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: OPENAI_PROJECT_ID
+      - key: TURNSTILE_SITE_KEY
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: TURNSTILE_SITE_KEY
+      - key: TURNSTILE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: TURNSTILE_SECRET_KEY
+      - key: RECORDINGS_STORAGE
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_STORAGE
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_S3_ENDPOINT_URL
+      - key: RECORDINGS_S3_REGION
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_S3_REGION
+      - key: RECORDINGS_S3_BUCKET
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_S3_BUCKET
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_S3_ACCESS_KEY_ID
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: RECORDINGS_S3_SECRET_ACCESS_KEY
+      - key: SELLER_LEGAL_NAME
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SELLER_LEGAL_NAME
+      - key: SELLER_ADDRESS
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SELLER_ADDRESS
+      - key: SELLER_COUNTRY_CODE
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SELLER_COUNTRY_CODE
+      - key: SELLER_TIME_ZONE
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SELLER_TIME_ZONE
       - key: SMTP_HOST
         fromService:
           type: web
@@ -243,6 +355,10 @@ services:
         sync: false
       - key: COOKIE_SECURE
         value: "true"
+      # the public address of the staging cabinet (https://...): canonical
+      # links, sitemap.xml and robots.txt name it, never the request's Host
+      - key: SITE_URL
+        sync: false
       # the security mailbox (security@<your domain>): the first Contact of
       # /.well-known/security.txt; the deploy smoke test checks it is there
       - key: SECURITY_CONTACT_EMAIL

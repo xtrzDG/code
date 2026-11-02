@@ -254,7 +254,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             check_device=notifications.check_device_operator(),
             resolve_link=notifications.resolve_staff_link_operator(),
         ),
-        build_widget_script_router(),
+        build_widget_script_router(app_container.config.app_settings().environment),
         *build_health_routers(operators),
         build_widget_error_router(platform.report_widget_error_operator()),
         *build_launch_routers(operators, current_user),

@@ -1,9 +1,12 @@
 """
 Texts of the invoice and receipt PDFs and the receipt e-mail in every
-language whose texts are reviewed (English, Russian and Georgian; other
-languages, Hebrew and German drafts among them, read English): an issued
-document is kept as printed, so it never carries a draft. Placeholders in
-braces are filled by the layout. The VAT notes want an accountant's sign-off before VAT
+language whose texts are reviewed (English; Italian once its catalog's
+review is done, until then it reads English): an issued document is kept
+as printed, so it never carries a draft. Placeholders in braces are filled
+by the layout. The VAT line and notes name no country: `{rate}` is the
+seller country's rate (`app/registries/billing/tax_policy_catalog.py`) in
+the reader's format ("VAT 22%", "IVA 22%" for an Italian seller), `{country}`
+the seller's country. They want an accountant's sign-off before VAT
 registration (docs/LAUNCH.md).
 """
 

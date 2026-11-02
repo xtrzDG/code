@@ -231,6 +231,7 @@
       // Remembered so this tab does not take its own write for another tab's.
       state.storedHistory = JSON.stringify(stored);
       storageSet(localStorageOrNull(), storagePrefix + "history", state.storedHistory);
+      storageSet(localStorageOrNull(), storagePrefix + "history-at", String(Date.now()));
     }
 
     function text(key) {

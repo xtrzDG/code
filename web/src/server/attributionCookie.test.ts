@@ -3,12 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ATTRIBUTION_COOKIE, decodeAttribution, encodeAttribution } from "@/lib/attribution";
 
-import { forgetAttribution, rememberFirstVisit, withSignupAttribution } from "./attributionCookie";
+import { forgetAttribution, readAttributionCookie, rememberFirstVisit, withSignupAttribution } from "./attributionCookie";
 
 const NOW_MS = 1_791_100_000_000;
+const CONSENTED = "aw_consent=1.granted";
 
-function visit(url: string, headers: Record<string, string> = {}): NextRequest {
-  return new NextRequest(url, { headers });
+/** A page view; `consent` false leaves out the visitor's acceptance (aw_consent). */
+function visit(url: string, headers: Record<string, string> = {}, consent = true): NextRequest {
+  const cookie = [consent ? CONSENTED : "", headers.cookie ?? ""].filter(Boolean).join("; ");
+  return new NextRequest(url, { headers: { ...headers, ...(cookie ? { cookie } : {}) } });
 }
 
 afterEach(() => {
@@ -30,6 +33,27 @@ describe("attribution cookie", () => {
       landing_path: "/",
       first_seen_at: NOW_MS * 1000,
     });
+  });
+
+  it("is never set without the visitor's consent, and one already there is dropped", () => {
+    for (const cookie of ["", "aw_consent=1.denied", "aw_consent=0.granted"]) {
+      const response = NextResponse.next();
+      rememberFirstVisit(visit("https://workshop.example/?utm_source=google", cookie ? { cookie } : {}, false), response, NOW_MS);
+      expect(response.cookies.get(ATTRIBUTION_COOKIE), cookie).toBeUndefined();
+    }
+
+    const response = NextResponse.next();
+    rememberFirstVisit(visit("https://workshop.example/en", { cookie: `${ATTRIBUTION_COOKIE}=old` }, false), response, NOW_MS);
+    expect(response.cookies.get(ATTRIBUTION_COOKIE)).toMatchObject({ value: "", maxAge: 0 });
+  });
+
+  it("goes to the sign-in only while the consent stands", () => {
+    const value = encodeAttribution({ utm_source: "instagram" });
+
+    expect(readAttributionCookie(visit("https://workshop.example/api/auth/verify", { cookie: `${ATTRIBUTION_COOKIE}=${value}` }))).toBe(value);
+    expect(
+      readAttributionCookie(visit("https://workshop.example/api/auth/verify", { cookie: `${ATTRIBUTION_COOKIE}=${value}` }, false)),
+    ).toBeUndefined();
   });
 
   it("keeps the first touch, and is not set for signed-in people, other pages or redirects", () => {
@@ -64,7 +88,7 @@ describe("attribution cookie", () => {
   it("is dropped after the sign-in", () => {
     const response = NextResponse.json({});
 
-    forgetAttribution(response);
+    forgetAttribution(response, null);
 
     expect(response.cookies.get(ATTRIBUTION_COOKIE)).toMatchObject({ value: "", maxAge: 0 });
   });

@@ -60,7 +60,9 @@
  * Before the first message the business's top questions are one tap away;
  * "Talk to a person" passes the conversation to staff (POST .../handoff),
  * "New conversation" starts over under a new visitor key, and the footer
- * says it is an AI assistant that can make mistakes, with the privacy notice.
+ * says it is an AI assistant that can make mistakes, with the privacy notice
+ * and the accessibility statement. A conversation idle for a day is
+ * forgotten on the device (its transcript and its visitor key).
  * The paperclip sends photos (JPEG, PNG, WebP) and the microphone, held
  * down, records a voice message (MediaRecorder; hidden in browsers without
  * one): each file is uploaded on its own (POST .../attachments, the visitor
@@ -82,6 +84,8 @@
   var ATTACHMENTS_PATH = "/v1/widget/{business_id}/attachments";
   var RATING_PATH = "/v1/widget/{business_id}/rating";
   var ERRORS_PATH = "/v1/widget/errors";
+  // Opens the platform's accessibility statement in the visitor's language.
+  var ACCESSIBILITY_PATH = "/widget/accessibility";
   var SCRIPT_FILE_NAME = "/widget.js";
 
   var MAX_MESSAGE_LENGTH = 4000;
@@ -142,6 +146,18 @@
   // A handoff or an exchange in the last 24 hours keeps an open panel
   // polling: staff can write to any website chat.
   var HANDOFF_MEMORY_MS = 24 * 60 * 60 * 1000;
+  // A conversation idle this long is over: its transcript, position and
+  // visitor key leave the device's storage when the widget loads.
+  var CONVERSATION_IDLE_EXPIRY_MS = 24 * 60 * 60 * 1000;
+  var CONVERSATION_STORAGE_KEYS = [
+    "session",
+    "history",
+    "history-at",
+    "cursor",
+    "handoff",
+    "handoff-at",
+    "activity-at"
+  ];
   // A 429 without a readable Retry-After waits this long; a longer one is
   // capped (the API asks for at most a minute).
   var RATE_LIMIT_DEFAULT_WAIT_MS = 10000;

@@ -86,6 +86,9 @@
     return row;
   }
 
+  // A message is text: its words are text nodes, and only an http(s)
+  // address in it becomes a link (a new tab without a handle on this page,
+  // no referrer, no endorsement). Markup, javascript: and data: stay text.
   function appendLinkedText(parent, messageText) {
     var lastIndex = 0;
     var match;
@@ -95,17 +98,32 @@
       if (match.index > lastIndex) {
         parent.appendChild(document.createTextNode(messageText.slice(lastIndex, match.index)));
       }
-      var link = document.createElement("a");
-      link.href = url;
-      link.textContent = url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer nofollow";
-      parent.appendChild(link);
+      if (isSafeWebLink(url)) {
+        var link = document.createElement("a");
+        link.href = url;
+        link.textContent = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer nofollow";
+        parent.appendChild(link);
+      } else {
+        parent.appendChild(document.createTextNode(url));
+      }
       lastIndex = match.index + url.length;
       URL_PATTERN.lastIndex = lastIndex;
     }
     if (lastIndex < messageText.length) {
       parent.appendChild(document.createTextNode(messageText.slice(lastIndex)));
+    }
+  }
+
+  // Whether an address opens a web page (http or https), as the browser
+  // itself reads it.
+  function isSafeWebLink(url) {
+    try {
+      var parsed = new URL(url);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch (error) {
+      return false;
     }
   }
 

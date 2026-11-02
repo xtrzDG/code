@@ -40,6 +40,7 @@ def save_call_settings(
     template_name: str | None = TEMPLATE_NAME,
     is_summary_enabled: bool = True,
     is_sms_fallback_enabled: bool = True,
+    is_recording_enabled: bool = False,
 ) -> CallSettingsDocument:
     now = setup.testbed.clock.now_microseconds()
     settings = CallSettingsDocument(
@@ -51,6 +52,7 @@ def save_call_settings(
             None if template_name is None else WhatsAppTemplateName(template_name)
         ),
         is_sms_fallback_enabled=is_sms_fallback_enabled,
+        is_recording_enabled=is_recording_enabled,
         created_at=now,
         updated_at=now,
     )
@@ -141,10 +143,13 @@ def zadarma_form(
     caller_id: str = CALLER,
     called_did: str = ASSISTANT_LINE,
     duration: str = "25",
+    call_start: str = "2026-10-01 13:59:35",
 ) -> dict[str, str]:
     return {
         "event": event,
-        "call_start": "2026-10-03 15:20:00",
+        # The testbed's clock is 2026-10-01 12:00 UTC: 25 s before it, in
+        # the PBX's time zone (Rome, UTC+2).
+        "call_start": call_start,
         "pbx_call_id": pbx_call_id,
         "caller_id": caller_id,
         "called_did": called_did,

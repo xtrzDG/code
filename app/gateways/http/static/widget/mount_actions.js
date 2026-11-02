@@ -68,33 +68,6 @@
       return { row: row, person: person, label: label, error: error };
     }
 
-    function buildFooter() {
-      var row = el("p", "aw-footer");
-      var note = el("span", "");
-      row.appendChild(note);
-      var privacy = null;
-      if (typeof config.privacy_url === "string" && WEB_LINK_PATTERN.test(config.privacy_url)) {
-        row.appendChild(document.createTextNode(" · "));
-        privacy = el("a", "aw-privacy");
-        privacy.href = config.privacy_url;
-        privacy.target = "_blank";
-        privacy.rel = "noopener noreferrer";
-        row.appendChild(privacy);
-      }
-      // "Powered by" with the business's referral code (gone on Plus when
-      // the owner turned it off: the config then has no link).
-      var powered = null;
-      if (typeof config.powered_by_url === "string" && WEB_LINK_PATTERN.test(config.powered_by_url)) {
-        row.appendChild(document.createTextNode(" · "));
-        powered = el("a", "aw-powered");
-        powered.href = config.powered_by_url;
-        powered.target = "_blank";
-        powered.rel = "noopener";
-        row.appendChild(powered);
-      }
-      return { row: row, note: note, privacy: privacy, powered: powered };
-    }
-
     // The texts of the parts above in the interface language.
     function applyChromeLanguage() {
       restartButton.setAttribute("aria-label", text("newChat"));
@@ -110,13 +83,7 @@
       confirm.no.textContent = text("cancel");
       starters.row.setAttribute("aria-label", text("suggestions"));
       actions.label.textContent = text("person");
-      footer.note.textContent = text("footer");
-      if (footer.privacy) {
-        footer.privacy.textContent = text("privacy");
-      }
-      if (footer.powered) {
-        footer.powered.textContent = text("poweredBy");
-      }
+      applyFooterLanguage();
     }
 
     // Chips: the options of the assistant's last reply until the visitor

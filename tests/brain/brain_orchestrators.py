@@ -8,6 +8,7 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
 )
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.registries import CountryRegistryContract
 from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
     ConversationTurnOrchestrator,
@@ -63,8 +64,10 @@ from tests.privacy.suppression_doubles import build_suppression_list
 @dataclass(frozen=True)
 class GuardOptions:
     """
-    The reply guard's claim check (off), the injection brake limit and the
-    spend guard (none).
+    The reply guard's claim check (off), the injection brake limit, the
+    spend guard of the turn (none) and of its later model rounds (none),
+    the country registry the emergency number comes from (none) and the
+    platform's addresses its links may use.
     """
 
     claim_check: ClaimCheckFacilitatorContract = field(
@@ -72,6 +75,9 @@ class GuardOptions:
     )
     injection_flag_limit: InjectionFlagLimit = InjectionFlagLimit(3)
     spend_check: SpendCheck | None = None
+    round_spend_check: SpendCheck | None = None
+    country_registry: CountryRegistryContract | None = None
+    platform_base_urls: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -133,6 +139,9 @@ def build_brain_orchestrators(
             max_output_tokens=LlmMaxOutputTokens(4000),
             effort=LlmEffort.LOW,
             tool_round_limit=tool_round_limit,
+            country_registry=options.country_registry,
+            platform_base_urls=options.platform_base_urls,
+            check_spend=options.round_spend_check,
         ),
         handoff_to_human=tools.handoff,
         record_reply=RecordAssistantReplyUseCase(
@@ -143,6 +152,7 @@ def build_brain_orchestrators(
             live_events=live_events,
             wall_clock=wall_clock,
             reply_locks=ReplyLockRegistry(InMemoryAdvisoryLockAdapter()),
+            business_profile_repo=repos.profile_repo,
         ),
         localized_text_resolver=texts,
         storage_scope=storage_scope,

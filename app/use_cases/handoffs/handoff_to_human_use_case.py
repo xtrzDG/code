@@ -53,6 +53,11 @@ from app.use_cases.shared.operations_support import (
     display_phone,
 )
 from app.use_cases.shared.staff_alerts import StaffAlertTexts, handoff_alert
+from app.utilities.conversations.contact_daily_caps import (
+    MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY,
+    count_made_since,
+    daily_window_start,
+)
 
 
 class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
@@ -68,7 +73,11 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
     handoff stays
     PENDING until one is delivered (NOTIFIED) or they fail
     (NOTIFICATION_FAILED); it is NOTIFICATION_FAILED at once when no contact
-    can be reached. Sandbox handoffs notify nobody and stay PENDING.
+    can be reached. Sandbox handoffs notify nobody and stay PENDING, and so
+    does a contact's handoff past MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY in
+    24 hours (`contact_daily_caps`): it joins the team's queue and silences
+    the assistant, but nobody is alerted again, so an anonymous visitor
+    cannot flood staff with alerts.
 
     The customer is told, in their language, that a colleague replies soon
     (during opening hours, or when hours are unknown) or when the business
@@ -161,7 +170,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         conversation.updated_at = now
         self._conversation_repo.save(conversation)
 
-        if not input_data.is_sandbox:
+        if not input_data.is_sandbox and self._alerts_staff(business, input_data, now):
             queued: DeliveredNotificationCount = self._notify_staff(
                 business, input_data, handoff
             )
@@ -195,6 +204,24 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
                 )
             ),
         )
+
+    def _alerts_staff(
+        self, business: BusinessDocument, command: HandoffCommand, now: Microseconds
+    ) -> bool:
+        """Whether the contact's handoffs of the last 24 hours (this one too) fit."""
+
+        since: Microseconds = daily_window_start(now)
+        made: int = count_made_since(
+            self._conversation_repo.list_by_contact(
+                business.id, command.contact_id, last_message_from=since
+            ),
+            lambda conversation_id: self._handoff_repo.list_by_conversation(
+                business.id, conversation_id
+            ),
+            command.contact_id,
+            since,
+        )
+        return made <= MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY
 
     def _notify_staff(
         self,

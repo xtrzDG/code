@@ -83,6 +83,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             lead_repo=repositories.lead_repo,
             contact_repo=repositories.contact_repo,
+            conversation_repo=repositories.conversation_repo,
             audit_log_repo=repositories.audit_log_repo,
             phone_number_parser=utilities.phone_number_parser,
             staff_notification_transformer=transformers.new_lead_notification_transformer,

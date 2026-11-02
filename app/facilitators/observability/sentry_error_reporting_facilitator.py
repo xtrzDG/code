@@ -41,8 +41,10 @@ class SentryErrorReportingFacilitator(
 ):
     """
     Reports unexpected errors, and the website widget's errors, to Sentry
-    without personal data: request bodies, users and breadcrumbs are
-    removed before sending (conversations contain customers' personal data,
+    without personal data: no default PII, no local variables of a frame,
+    no breadcrumbs, and the `before_send` hook removes request bodies,
+    headers, cookies, query strings, users and extra data and masks e-mails
+    and phones in messages (conversations contain customers' personal data,
     which must stay in the EU processing chain described by the concept).
 
     Every report names the deployed build (`release`) and carries the log
@@ -80,6 +82,8 @@ class SentryErrorReportingFacilitator(
             environment=str(environment),
             release=None if release is None else str(release),
             send_default_pii=False,
+            include_local_variables=False,
+            max_breadcrumbs=0,
             max_request_body_size="never",
             traces_sample_rate=float(traces_sample_rate),
             traces_sampler=build_trace_sampler(traces_sample_rate),

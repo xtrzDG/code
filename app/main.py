@@ -216,9 +216,9 @@ def check_dpa_document(app_container: AppContainer) -> None:
 
 def report_login_code_channels(app_container: AppContainer) -> None:
     """
-    Log which channels can carry login codes. In production without any
-    provider nobody can sign in, so that is logged as an error (each sign-in
-    attempt then fails with HTTP 502 and the same explanation).
+    Log which channels can carry login codes. Without any provider nobody
+    can sign in: production refuses to start before (`run_startup_checks`),
+    elsewhere it is a warning (codes go to the log there).
     """
 
     settings: AppSettings = app_container.config.app_settings()

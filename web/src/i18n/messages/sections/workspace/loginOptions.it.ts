@@ -7,6 +7,6 @@ export const loginOptionsIt: Translation<typeof loginOptionsEn> = {
   channelLabel: "Invia il codice tramite",
   noPhoneChannels: "Al momento non è possibile inviare codici di accesso ai numeri di telefono di questo paese.",
   useEmail: "Accedi con l'e-mail",
-  nothingAvailable: "L'accesso non è temporaneamente disponibile: non c'è ancora un modo per inviare i codici di accesso. Riprova più tardi.",
+  nothingAvailable: "L'accesso non è temporaneamente disponibile. Riprova più tardi.",
   restricted: "La registrazione non è disponibile in questo paese.",
 };

@@ -68,6 +68,11 @@ envVarGroups:
         value: "10.0.0.0/8"
       - key: DEFAULT_DATA_REGION
         value: eu
+      # Whole dollars a UTC day the platform plans to spend on providers; the
+      # spend_budget alert fires at 80 %. Production refuses to start without
+      # a budget: raise it with the number of live businesses.
+      - key: PLATFORM_DAILY_SPEND_BUDGET_USD
+        value: "50"
 
 services:
   - type: web
@@ -156,9 +161,12 @@ services:
         sync: false
       - key: PLATFORM_ADMIN_PHONE_NUMBERS
         sync: false
-      # openai (default: gpt-5-mini in an EU data-residency project) or anthropic
+      # openai (default: gpt-5-mini in an EU data-residency project) or
+      # anthropic; production refuses scripted and a provider without its key
       - key: LLM_PROVIDER
         sync: false
+      # needed with either provider: voice notes and the menu photo import
+      # always use OpenAI
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_PROJECT_ID
@@ -202,7 +210,8 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
-      # bot check of risky login code requests (Cloudflare Turnstile)
+      # bot check of risky login code requests (Cloudflare Turnstile): the
+      # widget's live keys; production refuses to start without them
       - key: TURNSTILE_SITE_KEY
         sync: false
       - key: TURNSTILE_SECRET_KEY
@@ -229,10 +238,12 @@ services:
       # numbers owners take in the cabinet: twilio, or empty (docs/LAUNCH.md 4.6)
       - key: PHONE_NUMBER_PROVIDER
         sync: false
-      # call recordings: s3 = encrypted in an EU bucket (docs/LAUNCH.md 4.6);
-      # empty: they stay with ElevenLabs
+      # call recordings, customer files and export archives: encrypted in an
+      # EU bucket (docs/LAUNCH.md 4.6). Production refuses local storage (a
+      # deploy wipes an instance's disk), so the RECORDINGS_S3_* below are
+      # required
       - key: RECORDINGS_STORAGE
-        sync: false
+        value: s3
       - key: RECORDINGS_S3_ENDPOINT_URL
         sync: false
       - key: RECORDINGS_S3_REGION
@@ -296,8 +307,15 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      # the seller on invoices (SELLER_LEGAL_NAME, SELLER_COUNTRY_CODE and
-      # PLATFORM_VAT_REGISTERED have defaults; docs/LAUNCH.md 4.7.1)
+      # the seller on invoices (docs/LAUNCH.md 4.7.1): production refuses to
+      # start without its legal name, address, country (IT) and time zone
+      # (Europe/Rome); PLATFORM_VAT_REGISTERED defaults to false
+      - key: SELLER_LEGAL_NAME
+        sync: false
+      - key: SELLER_COUNTRY_CODE
+        sync: false
+      - key: SELLER_TIME_ZONE
+        sync: false
       - key: SELLER_TAX_ID
         sync: false
       - key: SELLER_ADDRESS
@@ -705,6 +723,21 @@ services:
           type: web
           name: workshop-api
           envVarKey: STRIPE_WEBHOOK_SECRET
+      - key: SELLER_LEGAL_NAME
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_LEGAL_NAME
+      - key: SELLER_COUNTRY_CODE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_COUNTRY_CODE
+      - key: SELLER_TIME_ZONE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_TIME_ZONE
       - key: SELLER_TAX_ID
         fromService:
           type: web
@@ -1153,6 +1186,21 @@ services:
           type: web
           name: workshop-api
           envVarKey: STRIPE_WEBHOOK_SECRET
+      - key: SELLER_LEGAL_NAME
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_LEGAL_NAME
+      - key: SELLER_COUNTRY_CODE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_COUNTRY_CODE
+      - key: SELLER_TIME_ZONE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_TIME_ZONE
       - key: SELLER_TAX_ID
         fromService:
           type: web

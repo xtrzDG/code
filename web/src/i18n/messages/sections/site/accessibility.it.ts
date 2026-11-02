@@ -28,8 +28,8 @@ export const accessibilityIt: Translation<typeof accessibilityEn> = {
   },
   methodTitle: "Come è stata redatta questa dichiarazione",
   methodText:
-    "Si basa su una valutazione effettuata dal fornitore stesso, non su una verifica di un esperto indipendente. Controlli automatici con lo strumento axe-core, secondo le sue regole WCAG 2.0, 2.1 e 2.2 ai livelli A e AA, vengono eseguiti nei test automatici del servizio sulle pagine pubbliche, sulla pagina di chat, sulla chat per siti web, sulla pagina di prenotazione e sulle pagine dell'area riservata (le pagine pubbliche e quelle dell'area riservata sia con il tema chiaro sia con quello scuro). Gli strumenti automatici trovano solo una parte dei possibili problemi.",
-  dateText: "Questa dichiarazione è stata redatta il {date}. Viene rivista almeno una volta all'anno e ogni volta che il servizio cambia in modo significativo.",
+    "Si basa su una valutazione effettuata dal fornitore stesso, non su una verifica di un esperto indipendente. Lo strumento axe-core controlla automaticamente le pagine pubbliche, la pagina di chat, la chat per siti web, la pagina di prenotazione e le pagine dell'area riservata secondo le sue regole WCAG 2.0, 2.1 e 2.2 ai livelli A e AA (le pagine pubbliche e quelle dell'area riservata sia con il tema chiaro sia con quello scuro). Gli strumenti automatici trovano solo una parte dei possibili problemi.",
+  dateText: "Questa dichiarazione è stata redatta il {date} e viene rivista almeno una volta all'anno e ogni volta che il servizio cambia in modo significativo.",
   feedbackTitle: "Feedback e recapiti",
   feedbackText:
     "Se incontri una barriera, o ti serve qualcosa del servizio in un altro formato, indicaci la pagina e cosa non ha funzionato. Rispondiamo entro 30 giorni.",
@@ -42,5 +42,5 @@ export const accessibilityIt: Translation<typeof accessibilityEn> = {
   enforcementLink: "Segnala ad AgID (form.agid.gov.it)",
   technologiesTitle: "Tecnologie utilizzate",
   technologiesText:
-    "Il servizio si basa su HTML, CSS, JavaScript e WAI-ARIA ed è pensato per le versioni attuali di Chrome, Edge, Firefox e Safari, su computer e telefono.",
+    "Il servizio si basa su HTML, CSS, JavaScript e WAI-ARIA ed è pensato per Chrome, Edge, Firefox e Safari aggiornati, su computer e telefono.",
 };

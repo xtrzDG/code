@@ -18,11 +18,11 @@
 #      (in the response, or polled from GET .../messages); with
 #      SMOKE_EXPECT_REPLY the answer must contain that text.
 #
-# Staging runs the scripted model (LLM_PROVIDER=scripted), so its test chat
-# costs nothing; set SMOKE_EXPECT_REPLY="staging server" there. Leave
-# SMOKE_WIDGET_BUSINESS_ID unset for production unless a real model answer
-# per deploy is wanted. Needs bash, curl and python3. Exit codes: 0 all
-# passed, 1 a check failed, 2 wrong usage.
+# Staging rehearses production with a real model (render.staging.yaml), so
+# its test chat is one model answer per deploy; leave SMOKE_EXPECT_REPLY
+# empty there (any answer passes). Leave SMOKE_WIDGET_BUSINESS_ID unset for
+# production unless that answer is wanted too. Needs bash, curl, python3.
+# Exit codes: 0 all passed, 1 a check failed, 2 wrong usage.
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then

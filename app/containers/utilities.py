@@ -89,12 +89,14 @@ class UtilitiesContainer(containers.DeclarativeContainer):
         previous_keys=config.app_settings.provided.previous_encryption_keys,
     )
     # The platform's own pages, which may always show a business's chat (the
-    # cabinet's hosted chat page and preview, the API's demo page).
+    # cabinet's hosted chat page and preview; the API's demo page outside
+    # production only).
     widget_platform_origins: Singleton[list[PublicBaseUrl]] = Singleton(
         platform_page_origins,
         cabinet_base_url=config.app_settings.provided.cabinet_base_url,
         app_base_url=config.app_settings.provided.app_base_url,
         cabinet_origins=config.app_settings.provided.cors_allowed_origins,
+        environment=config.app_settings.provided.environment,
     )
     # Tickets of the website chat's live stream (the visitor key never goes
     # into its address); the key derives from ENCRYPTION_KEYS as well.

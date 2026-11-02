@@ -1,6 +1,7 @@
   // --- visitor identity and history (localStorage, never cookies) ---------
 
   function loadSessionKey() {
+    forgetIdleConversation();
     var storage = localStorageOrNull();
     var key = storageGet(storage, storagePrefix + "session");
     if (key && SESSION_KEY_PATTERN.test(key)) {
@@ -16,6 +17,30 @@
     var key = "v1_" + randomString(32);
     storageSet(localStorageOrNull(), storagePrefix + "session", key);
     return key;
+  }
+
+  // A conversation idle for CONVERSATION_IDLE_EXPIRY_MS is over: its
+  // transcript, position and visitor key leave the device (the API would
+  // hand the old messages back to the old key). A history saved before
+  // its time was stamped starts the idle clock now.
+  function forgetIdleConversation() {
+    var storage = localStorageOrNull();
+    var lastAt = Math.max(
+      Number(storageGet(storage, storagePrefix + "activity-at")) || 0,
+      Number(storageGet(storage, storagePrefix + "history-at")) || 0
+    );
+    if (lastAt === 0) {
+      if (storageGet(storage, storagePrefix + "history")) {
+        storageSet(storage, storagePrefix + "history-at", String(Date.now()));
+      }
+      return;
+    }
+    if (Date.now() - lastAt <= CONVERSATION_IDLE_EXPIRY_MS) {
+      return;
+    }
+    CONVERSATION_STORAGE_KEYS.forEach(function (name) {
+      storageRemove(storage, storagePrefix + name);
+    });
   }
 
   function clearConversationState() {
@@ -193,6 +218,17 @@
       // Storage blocked (privacy mode): keep the value in memory.
     }
     return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
+  }
+
+  function storageRemove(storage, key) {
+    delete memoryStorage[key];
+    try {
+      if (storage) {
+        storage.removeItem(key);
+      }
+    } catch (error) {
+      // Storage blocked: nothing was kept there.
+    }
   }
 
   function storageSet(storage, key, value) {

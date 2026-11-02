@@ -2,7 +2,9 @@
 Platform admin: actions on a client's account (R13), each with the admin's
 reason and an ADMIN_* entry in the client's audit log. They need a role
 that manages billing (SUPER or BILLING; support gets 403) and a recent
-sign-in (step-up).
+sign-in (step-up). Each takes an Idempotency-Key (the cabinet sends one
+with every POST): a retried grant, discount or payment is answered with the
+first answer instead of being applied twice.
 """
 
 from typing import Annotated
@@ -10,6 +12,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -60,6 +66,7 @@ def build_admin_account_action_router(
     mark_invoice_paid_operator: ActionOperator[MarkInvoicePaidCommand],
     override_plan_operator: ActionOperator[OverridePlanCommand],
     current_user: CurrentUserDependency,
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (bearer token of a SUPER or BILLING platform admin, step-up):
@@ -71,13 +78,15 @@ def build_admin_account_action_router(
                                     {"method", "reference", "reason"}
         POST …/plan                 {"plan_key", "billing_period"?, "reason"}
     (… is /v1/admin/clients/{business_id}); each answers what the audit log
-    recorded.
+    recorded, and a retry with the same Idempotency-Key that answer again.
     """
 
     router = APIRouter(tags=["admin"], responses=standard_error_responses())
+    once = [Depends(idempotent)]
 
     @router.post(
         f"{CLIENT_PATH}/trial-extension",
+        dependencies=once,
         openapi_extra=describe_json_body(ExtendTrialBody),
     )
     def extend_trial(
@@ -96,7 +105,9 @@ def build_admin_account_action_router(
         )
 
     @router.post(
-        f"{CLIENT_PATH}/discount", openapi_extra=describe_json_body(GiveDiscountBody)
+        f"{CLIENT_PATH}/discount",
+        dependencies=once,
+        openapi_extra=describe_json_body(GiveDiscountBody),
     )
     def give_discount(
         request: Request,
@@ -114,7 +125,9 @@ def build_admin_account_action_router(
         )
 
     @router.post(
-        f"{CLIENT_PATH}/credits", openapi_extra=describe_json_body(GrantCreditBody)
+        f"{CLIENT_PATH}/credits",
+        dependencies=once,
+        openapi_extra=describe_json_body(GrantCreditBody),
     )
     def grant_credit(
         request: Request,
@@ -133,6 +146,7 @@ def build_admin_account_action_router(
 
     @router.post(
         f"{CLIENT_PATH}/setup-fee-waiver",
+        dependencies=once,
         openapi_extra=describe_json_body(AdminReasonBody),
     )
     def waive_setup_fee(
@@ -152,6 +166,7 @@ def build_admin_account_action_router(
 
     @router.post(
         f"{CLIENT_PATH}/invoices/{{invoice_id}}/manual-payment",
+        dependencies=once,
         openapi_extra=describe_json_body(MarkInvoicePaidBody),
     )
     def mark_invoice_paid(
@@ -172,7 +187,9 @@ def build_admin_account_action_router(
         )
 
     @router.post(
-        f"{CLIENT_PATH}/plan", openapi_extra=describe_json_body(OverridePlanBody)
+        f"{CLIENT_PATH}/plan",
+        dependencies=once,
+        openapi_extra=describe_json_body(OverridePlanBody),
     )
     def override_plan(
         request: Request,

@@ -38,7 +38,11 @@ test("the chat page opens the business's chat in English at its current address,
   await expect(page.getByRole("heading", { level: 1, name: business.name })).toBeVisible();
   await expect(page.getByRole("button", { name: "Talk to a person" })).toBeVisible();
   await expect(page.getByText("AI assistant · can make mistakes")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", new RegExp(`/c/${business.slug}/privacy$`));
+  // The widget's own footer links the notice; so does the page's foot (hosted-chat-a11y.spec.ts).
+  await expect(page.locator("[data-assistant-workshop-chat]").getByRole("link", { name: "Privacy" })).toHaveAttribute(
+    "href",
+    new RegExp(`/c/${business.slug}/privacy$`),
+  );
 
   // The visitor key stays in the browser, never in the address.
   const sessionKey = await page.evaluate((id) => localStorage.getItem(`aw-chat:${id}:session`), business.id);

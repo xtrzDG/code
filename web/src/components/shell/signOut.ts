@@ -8,7 +8,7 @@
  */
 
 /** Empty this site's local and session storage; a browser that blocks storage has nothing to empty. */
-export function clearSiteStorage(): void {
+function clearSiteStorage(): void {
   for (const storage of [() => window.localStorage, () => window.sessionStorage]) {
     try {
       storage().clear();

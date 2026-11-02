@@ -110,6 +110,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
         busy_times_repo=repositories.calendar_busy_times_repo,
+        rate_limits=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     cancel_booking_use_case: Factory[

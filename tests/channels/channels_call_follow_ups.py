@@ -8,6 +8,9 @@ SMS client).
 import threading
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -19,14 +22,10 @@ from app.registries.localization.country_registry import CountryRegistry
 from app.repositories.assistant_settings_repository import (
     AssistantSettingsRepository,
 )
-from app.repositories.call_follow_up_repositories import (
-    CallSettingsRepository,
-    MissedCallRepository,
-)
+from app.repositories.call_follow_up_repositories import MissedCallRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import DataRegion
 from app.schemas.domain.assistant_settings import AssistantSettingsDocument
-from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
@@ -104,9 +103,6 @@ class ChannelsCallFollowUps(ChannelsInbox):
             MissedCallDocument
         )
         self.missed_call_repo = MissedCallRepository(self.missed_call_collection)
-        self.call_settings_repo = CallSettingsRepository(
-            InMemoryDocumentCollectionAdapter(CallSettingsDocument)
-        )
         # The summaries the scripted model writes, in order; none left: the
         # provider fails.
         self.summary_answers: list[str] = []
@@ -204,7 +200,10 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.voice_webhook_adapter, self.wall_clock
         )
         self.read_pbx_missed_call = ReadPbxMissedCallUseCase(
-            ZadarmaPbxWebhookAdapter(self.settings), self.wall_clock
+            ZadarmaPbxWebhookAdapter(
+                self.settings, InMemoryRateLimitBucketAdapter(), self.wall_clock
+            ),
+            self.wall_clock,
         )
 
     def post_call_follow_ups(self) -> PostCallFollowUps:

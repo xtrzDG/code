@@ -6,7 +6,7 @@ change:
 | Client | Routes | Who updates it | Rule |
 | --- | --- | --- | --- |
 | Owner cabinet (`web/`) | `/v1/...` (cabinet, catalog, auth, admin) | we, in the same pull request | additive within `/v1` |
-| Website widget | `/widget.js`, `/widget/demo`, `/v1/widget/{business_id}/config`, `/v1/widget/{business_id}/messages` | nobody: the snippet is pasted on customers' sites and cached by browsers and CDNs | **frozen** |
+| Website widget | `/widget.js`, `/widget/demo` (development and tests only), `/v1/widget/{business_id}/config`, `/v1/widget/{business_id}/messages` | nobody: the snippet is pasted on customers' sites and cached by browsers and CDNs | **frozen** |
 | Integrations (Zapier, customers' scripts) | `/v1/public-api/*` (tag `public-api`) and the webhook requests we send | customers, at their own pace | **frozen** (below) |
 | Platforms | `/v1/channels/telegram/{channel_id}/webhook`, `/v1/channels/telegram-platform/webhook`, `/v1/channels/meta/webhook`, `/v1/payments/flitt/webhook`, `/v1/voice/tools/{tool_name}`, `/v1/voice/webhooks/*`, `/v1/integrations/google-calendar/callback` | registered once at Telegram, Meta, Flitt, ElevenLabs and Google | **frozen** |
 

@@ -21,18 +21,23 @@ import {
   READINESS_TONES,
   templateNameError,
   textBackReadiness,
+  transferReadiness,
   turnedOffText,
   type CallSettingsBody,
   type CallSettingsForm,
   type CallSettingsView,
 } from "../../_lib/calls";
 import type { CallSettingsState } from "../../_lib/useCallSettings";
+import { RecordingCard } from "./RecordingCard";
+import { TransferCard } from "./TransferCard";
 
 /**
- * The owner's choices: a summary after every call, and the message to a
+ * The owner's choices: a summary after every call, the message to a
  * caller who did not get through (which template, whether an SMS may
- * follow), with what such a caller would get right now. Every change
- * saves itself; switching something off offers Undo for a few seconds.
+ * follow) with what such a caller would get right now, the recording of
+ * calls with what callers hear about it, and the staff notice transfers
+ * need. Every change saves itself; switching something off offers Undo
+ * for a few seconds.
  */
 export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsView; state: CallSettingsState }) {
   const { t } = useI18n();
@@ -135,6 +140,35 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
           <p className="text-sm text-ink-muted">{t("callSettings.textBack.rules")}</p>
         </div>
       </Card>
+
+      <RecordingCard
+        notices={form.stored.recording_notices ?? []}
+        switchRow={
+          <SwitchRow
+            label={t("callSettings.recording.toggle")}
+            checked={values.isRecordingEnabled}
+            status={form.fieldState("isRecordingEnabled")}
+            onRetry={form.retry}
+            onChange={(isRecordingEnabled) => form.update("isRecordingEnabled", isRecordingEnabled)}
+          />
+        }
+      />
+
+      <TransferCard
+        readiness={transferReadiness(values, form.stored)}
+        phoneNumber={form.stored.transfer_phone_number ?? null}
+        confirmedAt={values.isStaffTransferConfirmed ? (form.stored.staff_transfer_confirmed_at ?? null) : null}
+        switchRow={
+          <SwitchRow
+            label={t("callSettings.transfers.confirm")}
+            hint={t("callSettings.transfers.confirmHint")}
+            checked={values.isStaffTransferConfirmed}
+            status={form.fieldState("isStaffTransferConfirmed")}
+            onRetry={form.retry}
+            onChange={(confirmed) => form.update("isStaffTransferConfirmed", confirmed)}
+          />
+        }
+      />
     </div>
   );
 }

@@ -84,7 +84,11 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         Factory(
             ConversationTurnOrchestrator,
             prepare_turn=conversation_use_cases.prepare_conversation_turn_use_case,
-            generate_reply=conversation_use_cases.generate_assistant_reply_use_case,
+            # Past the hard spend limit no further model round is asked.
+            generate_reply=Factory(
+                conversation_use_cases.generate_assistant_reply_use_case,
+                check_spend=spend_guard_use_cases.check_business_spend_use_case,
+            ),
             handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
             record_reply=conversation_use_cases.record_assistant_reply_use_case,
             localized_text_resolver=utilities.localized_text_resolver,

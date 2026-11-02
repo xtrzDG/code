@@ -76,7 +76,9 @@ def missing_verification_secrets(
             settings.whatsapp_system_user_token,
         )
     )
-    meta_cause: str = "META_APP_ID or WHATSAPP_SYSTEM_USER_TOKEN"
+    meta_cause: str = (
+        "META_APP_ID, META_EMBEDDED_SIGNUP_CONFIG_ID or WHATSAPP_SYSTEM_USER_TOKEN"
+    )
     gaps: list[tuple[bool, str, str, str]] = [
         (
             settings.payments.stripe_secret_key is not None
@@ -113,16 +115,6 @@ def missing_verification_secrets(
             "ELEVENLABS_WEBHOOK_SECRET",
             "ELEVENLABS_API_KEY",
             "the voice agent's calls and tools are verified with it",
-        ),
-        (
-            (settings.zadarma_api_key is None) != (settings.zadarma_api_secret is None),
-            "ZADARMA_API_SECRET"
-            if settings.zadarma_api_secret is None
-            else "ZADARMA_API_KEY",
-            "ZADARMA_API_KEY"
-            if settings.zadarma_api_secret is None
-            else "ZADARMA_API_SECRET",
-            "Zadarma signs its requests and notifications with the pair",
         ),
         (
             (settings.google_oauth_client_id is None)

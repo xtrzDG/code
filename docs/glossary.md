@@ -48,8 +48,8 @@ read in their messages.
 
 ## Words customers read
 
-The website chat (`widget.js`, the hosted chat page `/c/{slug}`, the
-`/widget/demo` page), the assistant's first message and the platform's
+The website chat (`widget.js`, the hosted chat page `/c/{slug}`; in
+development also the `/widget/demo` page), the assistant's first message and the platform's
 notices to customers are read by the business's customers, not by staff.
 They come in the customers' languages (the widget speaks 30), whatever the
 owner's interface language. There the assistant is an **"AI-ассистент"**,

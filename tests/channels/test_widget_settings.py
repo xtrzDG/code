@@ -9,6 +9,7 @@ from typed_time_provider import Microseconds
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.widget_script_routes import build_widget_script_router
 from app.schemas.constants.channels import ChannelKind, WidgetPosition
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.typings.assistants.constrained_integers import (
@@ -198,7 +199,9 @@ class TestWidgetDemoPreview:
 def build_demo_client() -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
-    http_application.include_router(build_widget_script_router())
+    http_application.include_router(
+        build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)
+    )
     return TestClient(http_application)
 
 

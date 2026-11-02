@@ -5,7 +5,15 @@ import { publicPageRests, sitemapEntries } from "./sitemap";
 describe("sitemap", () => {
   it("lists the home and the niches, and the legal pages only once they are final", () => {
     expect(publicPageRests(["restaurant", "hotel"], false)).toEqual(["", "/for/restaurant", "/for/hotel"]);
-    expect(publicPageRests([], true)).toEqual(["", "/terms", "/privacy", "/dpa", "/security", "/contact"]);
+    expect(publicPageRests([], true)).toEqual(["", "/terms", "/privacy", "/cookies", "/dpa", "/security", "/accessibility", "/contact"]);
+    expect(sitemapEntries("https://app.example.com", publicPageRests([], true)).map((entry) => entry.url)).toEqual(
+      expect.arrayContaining([
+        "https://app.example.com/en/cookies",
+        "https://app.example.com/it/cookies",
+        "https://app.example.com/en/accessibility",
+        "https://app.example.com/it/accessibility",
+      ]),
+    );
   });
 
   it("gives every page in every language with the others as alternates", () => {

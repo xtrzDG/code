@@ -221,6 +221,7 @@ def build_booking_routes(
         return reschedule_booking.operate(
             RescheduleBookingCommand(
                 business_id=business.id,
+                actor_id=user_id,
                 booking_id=parse_path_id(booking_id, BookingId, "Booking"),
                 new_date=body.new_date,
                 new_time=body.new_time,

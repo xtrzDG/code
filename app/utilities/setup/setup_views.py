@@ -34,11 +34,6 @@ from app.schemas.typings.setup.strings import (
     SetupStepDescription,
     SetupStepTitle,
 )
-from app.utilities.channels.channel_endpoints import (
-    DEMO_BUSINESS_PARAMETER,
-    WIDGET_DEMO_PATH,
-    join_public_url,
-)
 from app.utilities.setup.setup_steps import STEP_MINUTES, StepState
 from app.utilities.setup.setup_texts import (
     ACTION_LABELS,
@@ -46,10 +41,7 @@ from app.utilities.setup.setup_texts import (
     STEP_TITLES,
 )
 
-# The demo page's parameter that forces the widget's interface language.
-DEMO_LANGUAGE_PARAMETER: str = "language"
 TELEGRAM_LINK_PREFIX: str = "https://t.me/"
-SECURE_SCHEME: str = "https://"
 
 
 def action_view(
@@ -101,31 +93,20 @@ def phone_test_links(
 ) -> list[PhoneTestLinkView]:
     """
     Links the owner opens on their phone (or scans as a QR code) to write to
-    their own assistant: the hosted website chat page (on a public HTTPS
-    server) and the Telegram bot, for channels that are connected. They
-    answer once the assistant is live.
+    their own assistant: the Telegram bot, once connected. It answers once
+    the assistant is live. The website chat is tried on its hosted chat
+    page, whose link comes with the share links (`hosted_chat_url`), not on
+    the API's widget demo page (development only); `app_base_url` is no
+    longer read.
     """
 
+    del business, app_base_url
     links: list[PhoneTestLinkView] = []
     connected: dict[ChannelKind, ChannelDocument] = {
         channel.kind: channel
         for channel in channels
         if channel.status is ChannelStatus.CONNECTED
     }
-    base: str = "" if app_base_url is None else str(app_base_url)
-    if ChannelKind.WEB_CHAT in connected and base.startswith(SECURE_SCHEME):
-        demo_page: str = join_public_url(base, WIDGET_DEMO_PATH)
-        links.append(
-            PhoneTestLinkView(
-                channel=ChannelKind.WEB_CHAT,
-                url=PhoneTestUrl(
-                    f"{demo_page}?{DEMO_BUSINESS_PARAMETER}={business.id}"
-                    f"&{DEMO_LANGUAGE_PARAMETER}={business.default_language}"
-                ),
-                is_answering=is_live,
-            )
-        )
-
     telegram: ChannelDocument | None = connected.get(ChannelKind.TELEGRAM)
     bot: TelegramBotUsername | None = (
         None if telegram is None else read_bot_username(telegram)

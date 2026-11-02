@@ -45,20 +45,20 @@ class TestCallInitiation:
             "type": "conversation_initiation_client_data",
             "conversation_config_override": {
                 "agent": {
-                    "first_message": "[ka] AI assistant of Funicular VR.",
+                    # The greeting, then where the privacy notice is.
+                    "first_message": "[ka] AI assistant of Funicular VR. "
+                    "კონფიდენციალურობის პოლიტიკა ჩვენს ვებგვერდზეა.",
                     "language": "ka",
                 }
             },
             # No opening hours in the profile: never put through to staff.
-            # The caller's contact has no verified phone yet: not known.
             "dynamic_variables": {
                 "is_open_now": "no",
+                "transfer_number": "none",
                 "local_now": "Thursday 2026-10-01 16:00",
                 "next_days": "Fri 2026-10-02, Sat 2026-10-03, Sun 2026-10-04, "
                 "Mon 2026-10-05, Tue 2026-10-06, Wed 2026-10-07, Thu 2026-10-08",
                 "timezone": "Asia/Tbilisi",
-                "caller_name": "unknown",
-                "upcoming_booking": "none",
             },
         }
         [greeting_request] = setup.testbed.call_greeting.requests

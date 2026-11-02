@@ -1,5 +1,5 @@
 /**
- * Automated accessibility audit (axe-core, WCAG 2.1 A and AA rules) of the
+ * Automated accessibility audit (axe-core, WCAG 2.2 A and AA rules) of the
  * setup, the businesses, sign-in, the offline page, the account menu (its
  * Reduce motion setting) and the phone layout in both themes and in Italian:
  * no serious or critical violation is allowed. Every section of a business

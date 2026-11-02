@@ -15,6 +15,8 @@ import {
   TEXT_BACK_CHANNEL_LABELS,
   TEXT_BACK_STATUS_LABELS,
   textBackReadiness,
+  TRANSFER_READINESS_TEXTS,
+  transferReadiness,
   turnedOffText,
   type CallSettingsView,
 } from "./calls";
@@ -27,6 +29,11 @@ const VIEW: CallSettingsView = {
   is_whatsapp_connected: false,
   is_sms_available: true,
   template_previews: [],
+  is_recording_enabled: false,
+  recording_notices: [],
+  is_staff_transfer_confirmed: false,
+  staff_transfer_confirmed_at: null,
+  transfer_phone_number: null,
 };
 
 describe("the call settings form", () => {
@@ -38,6 +45,8 @@ describe("the call settings form", () => {
       isTextBackEnabled: false,
       templateName: "missed_call",
       isSmsFallbackEnabled: true,
+      isRecordingEnabled: false,
+      isStaffTransferConfirmed: false,
     });
     expect(callSettingsBody({ ...form, templateName: "  missed_call_v2 " }).text_back_template_name).toBe("missed_call_v2");
     expect(callSettingsBody({ ...form, templateName: "   " }).text_back_template_name).toBeNull();
@@ -50,6 +59,35 @@ describe("the call settings form", () => {
     expect(isSameCallSettings({ ...form, templateName: " " }, VIEW)).toBe(true);
     expect(isSameCallSettings({ ...form, isTextBackEnabled: true }, VIEW)).toBe(false);
     expect(isSameCallSettings({ ...form, templateName: "missed_call" }, VIEW)).toBe(false);
+    expect(isSameCallSettings({ ...form, isRecordingEnabled: true }, VIEW)).toBe(false);
+    expect(isSameCallSettings({ ...form, isStaffTransferConfirmed: true }, VIEW)).toBe(false);
+  });
+
+  it("saves the recording switch and the staff notice of transfers", () => {
+    const form = callSettingsForm({ ...VIEW, is_recording_enabled: true, is_staff_transfer_confirmed: true });
+
+    expect(form.isRecordingEnabled).toBe(true);
+    expect(form.isStaffTransferConfirmed).toBe(true);
+    expect(callSettingsBody(form)).toMatchObject({ is_recording_enabled: true, is_staff_transfer_confirmed: true });
+    expect(callSettingsBody({ ...form, isRecordingEnabled: false }).is_recording_enabled).toBe(false);
+  });
+
+  it("puts callers through only with a staff number and the owner's confirmation", () => {
+    const form = callSettingsForm(VIEW);
+    const withNumber: CallSettingsView = { ...VIEW, transfer_phone_number: "+393471234567" };
+
+    expect(transferReadiness(form, VIEW)).toBe("noNumber");
+    expect(transferReadiness({ ...form, isStaffTransferConfirmed: true }, VIEW)).toBe("noNumber");
+    expect(transferReadiness(form, withNumber)).toBe("unconfirmed");
+    expect(transferReadiness({ ...form, isStaffTransferConfirmed: true }, withNumber)).toBe("ready");
+  });
+
+  it("offers Undo when recording or transfers are switched off", () => {
+    const form = { ...callSettingsForm(VIEW), isRecordingEnabled: true, isStaffTransferConfirmed: true };
+
+    expect(turnedOffText(form, { ...form, isRecordingEnabled: false })).toBe("callSettings.recording.turnedOff");
+    expect(turnedOffText(form, { ...form, isStaffTransferConfirmed: false })).toBe("callSettings.transfers.turnedOff");
+    expect(turnedOffText({ ...form, isRecordingEnabled: false }, form)).toBeNull();
   });
 
   it("accepts only names Meta accepts", () => {
@@ -62,7 +100,14 @@ describe("the call settings form", () => {
 });
 
 describe("the Undo of a save", () => {
-  const on = { isSummaryEnabled: true, isTextBackEnabled: true, templateName: "", isSmsFallbackEnabled: true };
+  const on = {
+    isSummaryEnabled: true,
+    isTextBackEnabled: true,
+    templateName: "",
+    isSmsFallbackEnabled: true,
+    isRecordingEnabled: false,
+    isStaffTransferConfirmed: false,
+  };
 
   it("is offered when something was switched off, and names it", () => {
     expect(turnedOffText(on, { ...on, isTextBackEnabled: false })).toBe("callSettings.textBack.turnedOff");
@@ -101,6 +146,9 @@ describe("the labels", () => {
   it("exist in every language", () => {
     const keys = [
       ...Object.values(READINESS_TEXTS),
+      ...Object.values(TRANSFER_READINESS_TEXTS),
+      "callSettings.recording.turnedOff" as const,
+      "callSettings.transfers.turnedOff" as const,
       ...Object.values(TEXT_BACK_STATUS_LABELS),
       ...Object.values(TEXT_BACK_CHANNEL_LABELS),
       ...Object.values(MISSED_CALL_REASON_LABELS),

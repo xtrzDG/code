@@ -1,5 +1,4 @@
 import pytest
-from pydantic import ValidationError
 
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
@@ -39,7 +38,8 @@ def test_channel_settings_are_read_from_the_environment() -> None:
     ],
 )
 def test_malformed_channel_settings_are_refused(variable: str, value: str) -> None:
-    with pytest.raises((ValueError, ValidationError)):
+    # The error names the variable, so the deploy log says what to fix.
+    with pytest.raises(ValidationFailedError, match=variable):
         assemble_app_settings({variable: value})
 
 

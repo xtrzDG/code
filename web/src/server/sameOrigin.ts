@@ -4,8 +4,9 @@
  *  - a write (POST, PUT, PATCH, DELETE) must come from the cabinet's own
  *    pages: `Sec-Fetch-Site: same-origin`, or, from a browser that does not
  *    send it, an Origin equal to the site's (SITE_URL, or the address the
- *    request came in on). A write with neither header is refused, and so
- *    is any other Sec-Fetch-Site (a sibling subdomain is `same-site`);
+ *    request came in on, which another site's page cannot change). A write
+ *    with neither header is refused, and so is any other Sec-Fetch-Site (a
+ *    sibling subdomain is `same-site`);
  *  - a read is let through, except an audited export (a CSV, a business's
  *    archive, a customer's data): a link or a fetch from another site
  *    (`cross-site`, `same-site`, or another Origin) would make the owner's
@@ -15,9 +16,28 @@
  * here (they go to the API itself, or are the cabinet's own fetches).
  */
 
-import { requestOrigin, siteOrigin } from "./siteOrigin";
+import { siteOrigin } from "./siteOrigin";
 
 type Env = Record<string, string | undefined>;
+
+/** A host name with an optional port, nothing else ("app.example.com:8443"). */
+const HOST_PATTERN = /^[A-Za-z0-9.-]+(?::[0-9]{1,5})?$/;
+
+/**
+ * The origin the request came in on, as the cabinet's own proxy reports it
+ * (X-Forwarded-Host and -Proto, else Host): a page of another site cannot
+ * make the visitor's browser send another Host, so an Origin equal to it is
+ * the site's own. Null for a host that is not a plain host name.
+ */
+function requestOrigin(headers: Headers): string | null {
+  const host = (headers.get("x-forwarded-host") ?? headers.get("host") ?? "").split(",")[0]?.trim().toLowerCase() ?? "";
+  if (!HOST_PATTERN.test(host)) {
+    return null;
+  }
+  const forwardedProto = headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto === "https" || forwardedProto === "http" ? forwardedProto : "http";
+  return `${protocol}://${host}`;
+}
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "OPTIONS"]);
 

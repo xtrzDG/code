@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { IconX } from "@/components/icons";
 import { Button } from "@/components/ui";
 
-import { OPEN_COOKIE_SETTINGS_EVENT } from "./consentEvents";
+import { OPEN_COOKIE_SETTINGS_EVENT, type OpenCookieSettingsEvent } from "./consentEvents";
 import { saveConsent, type ConsentChoice } from "./saveConsent";
 
 export interface ConsentBannerTexts {
@@ -27,7 +27,8 @@ export interface ConsentBannerTexts {
  * button that rejects. It shows until the visitor answers (the server
  * renders it open while `aw_consent` holds no answer) and again from the
  * footer's "Cookie settings". After an answer focus returns to the button
- * that reopened it, if any.
+ * that reopened it, if any; while it is open the page keeps focused
+ * elements clear of it.
  */
 export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTexts; initiallyOpen: boolean }) {
   const [isOpen, setOpen] = useState(initiallyOpen);
@@ -35,11 +36,33 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
   const [hasFailed, setFailed] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
   const region = useRef<HTMLElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
+  // WCAG 2.4.11: a field the keyboard reaches never hides behind the box,
+  // the page scrolls it above (scroll-padding follows the box's height).
   useEffect(() => {
-    const reopen = () => {
-      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const element = box.current;
+    if (!isOpen || element === null) {
+      return;
+    }
+    const root = document.documentElement;
+    const pad = () => {
+      root.style.scrollPaddingBottom = `${element.getBoundingClientRect().height + 24}px`;
+    };
+    pad();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(pad);
+    observer?.observe(element);
+    return () => {
+      observer?.disconnect();
+      root.style.scrollPaddingBottom = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const reopen = (event: Event) => {
+      const named = (event as OpenCookieSettingsEvent).detail?.opener ?? null;
+      opener.current = named ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
       setFailed(false);
       setOpen(true);
       requestAnimationFrame(() => region.current?.focus());
@@ -76,10 +99,11 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
       tabIndex={-1}
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
-      className="fixed inset-x-0 bottom-0 z-50 p-3 outline-none sm:p-4"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 outline-none sm:p-4"
       data-testid="cookie-consent"
     >
-      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-line-strong bg-surface p-4 text-ink shadow-lg sm:p-5">
+      {/* Only the box takes clicks: the page around it stays usable. */}
+      <div ref={box} className="pointer-events-auto mx-auto w-full max-w-3xl rounded-2xl border border-line-strong bg-surface p-4 text-ink shadow-lg sm:p-5">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1 space-y-1.5">
             <h2 id={titleId} className="text-base font-semibold text-ink">

@@ -56,6 +56,7 @@ class OperationsWorld(OperationsBookingFactories):
             business_repo=self.business_repo,
             lead_repo=self.lead_repo,
             contact_repo=self.contact_repo,
+            conversation_repo=self.conversation_repo,
             audit_log_repo=self.audit_repo,
             phone_number_parser=self.phone_parser,
             staff_notification_transformer=NewLeadNotificationTransformer(

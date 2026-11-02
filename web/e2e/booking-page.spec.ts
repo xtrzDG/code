@@ -16,6 +16,7 @@ import { bookThroughWebChat, bookingDate, chatAnswers, dayAfter } from "./suppor
 import { DEMO_RESTAURANT, signInAsDemoOwner } from "./support/demo";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 /** "Thursday, October 8, 2026": a calendar day's name in English. */
 function fullDate(isoDate: string): string {
@@ -27,10 +28,10 @@ function shortDate(isoDate: string): string {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${isoDate}T12:00:00Z`));
 }
 
-/** Serious and critical WCAG 2.1 A/AA violations on the page (axe-core). */
+/** Serious and critical WCAG 2.2 A/AA violations on the page (axe-core, WCAG_TAGS). */
 async function seriousViolations(page: Page): Promise<string[]> {
   await waitForNetworkQuiet(page);
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
     .map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`);
@@ -60,6 +61,11 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   await expect(page.getByRole("link", { name: "Open in maps" })).toHaveAttribute("href", "https://mtsvane-ezo.example/map");
   const contacts = page.getByRole("region", { name: "Write to us" });
   await expect(contacts.getByRole("link", { name: "Chat" })).toHaveAttribute("href", /\/c\/[A-Za-z0-9_-]+$/);
+  // At the foot: the business's privacy notice (its chat's) and the accessibility statement.
+  const links = page.getByTestId("customer-page-links");
+  await expect(links.getByRole("link", { name: "Privacy notice" })).toHaveAttribute("href", /\/c\/[A-Za-z0-9_-]+\/privacy$/);
+  await expect(links.getByRole("link", { name: "Accessibility" })).toHaveAttribute("href", "/en/accessibility");
+  await expect(page.getByTestId("cookie-consent")).toHaveCount(0);
 
   const download = page.waitForEvent("download");
   await page.getByRole("link", { name: "Add to calendar" }).click();

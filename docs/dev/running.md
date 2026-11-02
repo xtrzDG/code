@@ -137,8 +137,12 @@ tokens with one `ENCRYPTION_KEY`; the default in `docker-compose.yml` is
 public and fit for this machine only. Before connecting real channels set
 your own in `.env` (for example `python -c "import secrets;
 print(secrets.token_urlsafe(32))"`) and never change it afterwards; with
-`APP_ENV=production` the API refuses the default. `API_PORT` and `WEB_PORT`
-change the ports (`APP_BASE_URL` and `CABINET_BASE_URL` follow them).
+`APP_ENV=production` the API refuses the default (and every other
+development setting of the file: `docs/dev/environment.md`, "Production
+refuses to start"). `API_PORT` and `WEB_PORT` change the ports
+(`APP_BASE_URL`, `CABINET_BASE_URL` and the cabinet's `SITE_URL` follow
+them); both are published on `127.0.0.1` only, so another machine on the
+network cannot reach the stack.
 Sign-ins through the local cabinet all come from the container's one
 address, so Compose raises the per-address code limit to 100 an hour.
 `docker compose down -v` deletes the data as well. A step-by-step guide with

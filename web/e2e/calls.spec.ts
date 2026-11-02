@@ -1,7 +1,9 @@
 /**
  * Settings → Calls: the owner turns text-backs on with a WhatsApp template
  * (a name Meta would refuse is caught first) and sees what a caller who
- * did not get through would get; the latest text-backs list each caller
+ * did not get through would get; recording stays off until the owner
+ * turns it on, and transfers wait for the owner's confirmation of the
+ * staff notice; the latest text-backs list each caller
  * with what was sent; the call card shows the summary in the reader's
  * language. Missed calls only come from the telephony line, so the list
  * and the card are served by the test.
@@ -86,6 +88,28 @@ test("switching text-backs off saves at once and offers Undo", async ({ page, ow
   await expect(toggle).toHaveAttribute("aria-checked", "true");
   await page.reload();
   await expect(toggle).toHaveAttribute("aria-checked", "true");
+});
+
+test("recording is off until the owner turns it on, and transfers wait for the staff notice", async ({ page, owner }) => {
+  await page.goto(`/b/${owner.businessId}/settings/calls`);
+  const recording = page.getByRole("switch", { name: calls.recording.toggle });
+  await expect(recording).toHaveAttribute("aria-checked", "false");
+  // What callers hear: the recording sentence and where the privacy notice is.
+  await expect(page.getByText(/privacy notice is on our web page/).first()).toBeVisible();
+
+  const recorded = nextSave(page, "/call-settings");
+  await recording.click();
+  await recorded;
+  const confirm = page.getByRole("switch", { name: calls.transfers.confirm });
+  await expect(confirm).toHaveAttribute("aria-checked", "false");
+  const confirmed = nextSave(page, "/call-settings");
+  await confirm.click();
+  await confirmed;
+
+  await page.reload();
+  await expect(recording).toHaveAttribute("aria-checked", "true");
+  await expect(confirm).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByText(calls.transfers.confirmedOn.split("{date}")[0])).toBeVisible();
 });
 
 test("the latest text-backs say what each caller got", async ({ page, owner }) => {

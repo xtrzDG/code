@@ -9,7 +9,7 @@ from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
-from tests.calls.call_steps import add_staff_chat
+from tests.calls.call_steps import add_staff_chat, save_call_settings
 from tests.channels.post_call_steps import post_call_payload, process_call, stored_calls
 from tests.channels.voice_setup import VoiceSetup, build_voice_setup
 
@@ -56,6 +56,7 @@ def test_the_audio_is_deleted_and_the_transcript_redacted() -> None:
 
 def test_a_call_whose_caller_did_not_decline_keeps_its_recording() -> None:
     setup = build_voice_setup()
+    save_call_settings(setup, is_recording_enabled=True)
 
     process_call(setup, declined_payload(declined=False))
 
@@ -68,6 +69,7 @@ def test_a_call_whose_caller_did_not_decline_keeps_its_recording() -> None:
 
 def test_a_later_report_of_the_call_keeps_it_declined() -> None:
     setup = build_voice_setup()
+    save_call_settings(setup, is_recording_enabled=True)
     process_call(setup, declined_payload())
     changed = declined_payload(declined=False)
     changed["data"]["metadata"]["call_duration_secs"] = 96
@@ -118,6 +120,7 @@ def test_the_inbox_keeps_no_raw_report_of_a_declined_call() -> None:
 
 def test_the_inbox_keeps_the_report_of_a_call_whose_caller_did_not_decline() -> None:
     setup = build_voice_setup()
+    save_call_settings(setup, is_recording_enabled=True)
 
     process_call(setup, declined_payload(declined=False))
 

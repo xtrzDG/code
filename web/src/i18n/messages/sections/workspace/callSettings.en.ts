@@ -1,7 +1,8 @@
 /**
  * `callSettings.*` texts of Settings → Calls (summaries after calls,
- * messages to callers who did not get through, the WhatsApp template text
- * and the latest text-backs), in English: the reference that it is typed against.
+ * messages to callers who did not get through, the recording of calls,
+ * transfers to staff, the WhatsApp template text and the latest
+ * text-backs), in English: the reference that it is typed against.
  */
 
 export const callSettingsEn = {
@@ -38,6 +39,32 @@ export const callSettingsEn = {
     whatsappMissing: "WhatsApp is not connected.",
     connectWhatsapp: "Connect WhatsApp",
     smsMissing: "SMS is not available right now. Contact support.",
+  },
+  recording: {
+    title: "Call recording",
+    description:
+      "Off unless you turn it on. When it is on, the audio of each call is kept for listening in the call's card, for as long as Settings → Privacy says. When it is off, the audio is deleted right after the call and the transcript is kept without phone, card and account numbers or e-mail addresses.",
+    toggle: "Record calls",
+    noticeTitle: "What callers hear at the start of every call",
+    noticeHint: "The greeting says this whether or not you record, so callers always know where to read how their call is processed. Where the law asks for consent, callers may say no and the call goes on without a recording.",
+    turnedOff: "Call recording is off",
+  },
+  transfers: {
+    title: "Transfers to staff",
+    description:
+      "While you are open, a caller who asks for a person is put through to your staff number. After the transfer the voice platform may still process the call, so Italian labour law (art. 4 of the Workers' Statute) asks that the staff who take these calls are told beforehand. We keep nothing of the staff part of the call: no transcript, summary or recording.",
+    confirm: "The staff who take transferred calls have been told",
+    confirmHint: "Without this confirmation nobody is put through: the assistant takes a message and a colleague calls back.",
+    confirmedOn: "Confirmed on {date}",
+    number: "Staff number for transfers",
+    numberRule: "Only a mobile or landline of your country or another EU country, never a premium, shared-cost or satellite number.",
+    openContacts: "Staff numbers",
+    turnedOff: "Transfers to staff are off",
+    readiness: {
+      ready: "Callers who ask for a person are put through while you are open.",
+      unconfirmed: "Nobody is put through yet: confirm that your staff have been told.",
+      noNumber: "No staff number calls can be put through to. Add a mobile in Settings → Notifications.",
+    },
   },
   template: {
     title: "Template text",

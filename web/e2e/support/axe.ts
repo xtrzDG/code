@@ -1,7 +1,8 @@
 /**
- * The cabinet's accessibility audit (axe-core, WCAG 2.1 A and AA rules): no
- * serious or critical violation is allowed. What axe cannot judge (reading
- * order, meaning of texts) is checked by hand; see web/README.md.
+ * The cabinet's accessibility audit (axe-core, the rules of WCAG 2.0, 2.1
+ * and 2.2 at levels A and AA: WCAG_TAGS, which every spec that runs axe
+ * uses): no serious or critical violation is allowed. What axe cannot
+ * judge (reading order, meaning of texts) needs a person; see web/README.md.
  *
  * The audit of every section in both themes runs once per language, each
  * in a spec file of its own (a11y-sections-*.spec.ts), so that CI can put
@@ -15,6 +16,13 @@ import type { Page } from "@playwright/test";
 import { WEB_URL } from "./env";
 import { expect, test } from "./fixtures";
 import { waitForNetworkQuiet } from "./network";
+
+/**
+ * The axe rule tags of the audit: WCAG 2.0, 2.1 and 2.2, levels A and AA
+ * (WCAG 2.2 adds AA rules only, such as the target size of 2.5.8). The
+ * accessibility statement (/[locale]/accessibility) names this target.
+ */
+export const WCAG_TAGS: readonly string[] = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 /** Every section of a business, as the owner opens it. */
 const OWNER_PAGES = [
@@ -43,7 +51,7 @@ const OWNER_PAGES = [
 
 /** Serious and critical violations of a page, one line each. */
 export async function seriousViolations(page: Page): Promise<string[]> {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
     .map(

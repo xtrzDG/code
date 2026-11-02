@@ -7,8 +7,11 @@ promotes only what passed on staging (docs/operations/deploys.md).
 import json
 import re
 
+import pytest
+
 from tests.platform.deployment_variables import (
     DEPLOYMENT_VARIABLES,
+    PRODUCTION_REQUIRED_VARIABLES,
     REQUIRED_BACKEND_VARIABLES,
     REQUIRED_CABINET_VARIABLES,
     render_services,
@@ -55,7 +58,7 @@ def test_production_deploys_only_checked_commits_of_release() -> None:
         assert "    autoDeployTrigger: checksPass\n" in body, name
 
 
-def test_staging_mirrors_production_on_main_with_the_scripted_model() -> None:
+def test_staging_mirrors_production_on_main_with_a_real_model() -> None:
     staging = services_of("render.staging.yaml")
     blueprint: str = read("render.staging.yaml")
 
@@ -72,7 +75,11 @@ def test_staging_mirrors_production_on_main_with_the_scripted_model() -> None:
     assert "healthCheckPath: /readyz" in staging["workshop-staging-api"]
     assert "maxShutdownDelaySeconds: 30" in staging["workshop-staging-api"]
     assert "maxShutdownDelaySeconds: 60" in staging["workshop-staging-worker"]
-    assert re.search(r"- key: LLM_PROVIDER\n\s+value: scripted\n", blueprint)
+    # Production refuses the scripted model, so its rehearsal answers with
+    # OpenAI (staging's own project and key).
+    assert re.search(r"- key: LLM_PROVIDER\n\s+value: openai\n", blueprint)
+    assert "scripted\n" not in blueprint
+    assert re.search(r"- key: RECORDINGS_STORAGE\n\s+value: s3\n", blueprint)
     # Its own database and env group: nothing of production is shared.
     assert "workshop-db" not in blueprint.replace("workshop-staging-db", "")
     assert "fromGroup: workshop-backend" not in blueprint
@@ -86,9 +93,41 @@ def test_staging_sets_known_variables_and_what_a_deployment_needs() -> None:
 
     for name, variables in services.items():
         assert variables - known == set(), name
-    assert api >= REQUIRED_BACKEND_VARIABLES | {"PORT", "LLM_PROVIDER"}
+    assert api >= REQUIRED_BACKEND_VARIABLES | PRODUCTION_REQUIRED_VARIABLES | {"PORT"}
     assert services["workshop-staging-worker"] == api - {"PORT"}
-    assert services["workshop-staging-cabinet"] >= REQUIRED_CABINET_VARIABLES
+    assert services["workshop-staging-cabinet"] >= REQUIRED_CABINET_VARIABLES | {
+        "SITE_URL"
+    }
+
+
+@pytest.mark.parametrize("blueprint_path", ["render.yaml", "render.staging.yaml"])
+def test_every_backend_service_runs_as_production_with_what_it_requires(
+    blueprint_path: str,
+) -> None:
+    # APP_ENV comes from the env group every backend service reads, so none
+    # of them falls back to development (on Render a missing APP_ENV refuses
+    # to start), and each has every variable production refuses to start
+    # without, as a value or for the dashboard to ask.
+    blueprint: str = read(blueprint_path)
+    groups: str = blueprint.split("\nenvVarGroups:\n", 1)[1].split("\nservices:\n")[0]
+    services = render_services(blueprint_path)
+    backend: dict[str, set[str]] = {
+        name: variables
+        for name, variables in services.items()
+        if "-cabinet" not in name and "-backup" not in name
+    }
+
+    assert re.search(r"- key: APP_ENV\n\s+value: production\n", groups)
+    assert backend
+    for name, body in services_of(blueprint_path).items():
+        assert ("fromGroup:" in body) == ("-cabinet" not in name), name
+    for name, variables in backend.items():
+        assert (
+            variables >= REQUIRED_BACKEND_VARIABLES | PRODUCTION_REQUIRED_VARIABLES
+        ), name
+    assert (
+        "workshop-cabinet" not in services or "SITE_URL" in services["workshop-cabinet"]
+    )
 
 
 def test_the_staging_worker_copies_the_staging_api() -> None:

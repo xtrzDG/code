@@ -159,15 +159,10 @@ def read_call_language(metadata: JsonObject, data: JsonObject) -> LanguageTag | 
     return None if raw_language is None else from_voice_platform_language(raw_language)
 
 
-def read_transfer_outcome(items: list[JsonObject]) -> CallTransferOutcome:
-    """
-    Whether the caller the agent put through to staff got a person: the
-    transfer's tool result is an error or says nobody answered, or the
-    caller went on talking to the agent afterwards (UNANSWERED); a transfer
-    without either is CONNECTED.
-    """
+def find_transfer_item(items: list[JsonObject]) -> int | None:
+    """The position of the transcript item that put the caller through, if any."""
 
-    start: int | None = next(
+    return next(
         (
             index
             for index, item in enumerate(items)
@@ -176,6 +171,34 @@ def read_transfer_outcome(items: list[JsonObject]) -> CallTransferOutcome:
         ),
         None,
     )
+
+
+def items_before_staff(
+    items: list[JsonObject], outcome: CallTransferOutcome
+) -> list[JsonObject]:
+    """
+    The transcript items up to the transfer when a person took it: what
+    follows is the staff member's conversation (Italian labour law protects
+    it, Statuto dei Lavoratori art. 4), so it is never read on; every item
+    of any other call.
+    """
+
+    start: int | None = find_transfer_item(items)
+    if outcome is not CallTransferOutcome.CONNECTED or start is None:
+        return items
+
+    return items[: start + 1]
+
+
+def read_transfer_outcome(items: list[JsonObject]) -> CallTransferOutcome:
+    """
+    Whether the caller the agent put through to staff got a person: the
+    transfer's tool result is an error or says nobody answered, or the
+    caller went on talking to the agent afterwards (UNANSWERED); a transfer
+    without either is CONNECTED.
+    """
+
+    start: int | None = find_transfer_item(items)
     if start is None:
         return CallTransferOutcome.NOT_TRANSFERRED
 

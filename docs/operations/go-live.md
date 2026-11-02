@@ -98,15 +98,26 @@ repo-settings.yml has no successful run in 8 days" with the green run.
 1. Render → New → Blueprint → this repository, Blueprint path
    `render.staging.yaml`: `workshop-staging-db` (`basic-256mb`) and the API,
    worker and cabinet on `starter`, all in Frankfurt, all following `main`.
-   The env group `workshop-staging` sets `APP_ENV` to `production` and
-   `LLM_PROVIDER` to `scripted`, and generates its own `ENCRYPTION_KEY`.
+   The env group `workshop-staging` sets `APP_ENV` to `production`,
+   `LLM_PROVIDER` to `openai` and `PLATFORM_DAILY_SPEND_BUDGET_USD` to 5 and
+   generates its own `ENCRYPTION_KEY`; the API sets `RECORDINGS_STORAGE` to
+   `s3`: staging passes exactly the checks production does ("Production
+   refuses to start" below).
 2. Fill in what the Blueprint asks for. `workshop-staging-api`:
    `APP_BASE_URL`, `CABINET_BASE_URL`, `CORS_ALLOWED_ORIGINS`,
    `PLATFORM_ADMIN_EMAILS`, the e-mail sign-in (`SMTP_HOST`, `SMTP_PORT`,
-   `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`) and
-   `SENTRY_DSN` (step 7). `workshop-staging-cabinet`: `BACKEND_URL` (the
-   API's internal address with `http://` and port 8000),
-   `SECURITY_CONTACT_EMAIL` and `SENTRY_DSN`. Never production's keys.
+   `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`),
+   staging's own OpenAI project (`OPENAI_API_KEY`, `OPENAI_PROJECT_ID`; a
+   small monthly limit), its own Turnstile widget (`TURNSTILE_SITE_KEY`,
+   `TURNSTILE_SECRET_KEY`; live keys), its own EU bucket
+   (`RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`,
+   `RECORDINGS_S3_BUCKET`, `RECORDINGS_S3_ACCESS_KEY_ID`,
+   `RECORDINGS_S3_SECRET_ACCESS_KEY`), a test seller (`SELLER_LEGAL_NAME`,
+   `SELLER_ADDRESS`, `SELLER_COUNTRY_CODE` `IT`, `SELLER_TIME_ZONE`
+   `Europe/Rome`) and `SENTRY_DSN` (step 7). `workshop-staging-cabinet`:
+   `BACKEND_URL` (the API's internal address with `http://` and port 8000),
+   `SITE_URL` (its own https address), `SECURITY_CONTACT_EMAIL` and
+   `SENTRY_DSN`. Never production's keys.
 3. The first deploy of the API and the worker stops with "Production
    connects with two roles": create the roles (step 3), set
    `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on
@@ -119,7 +130,7 @@ Check:
 
 ```bash
 curl -fsS <staging-api-url>/readyz                                  # "status": "ready"
-SMOKE_WIDGET_BUSINESS_ID=<smoke-business-id> SMOKE_EXPECT_REPLY="staging server" \
+SMOKE_WIDGET_BUSINESS_ID=<smoke-business-id> \
   scripts/smoke.sh <staging-api-url> <staging-cabinet-url>          # every check passes
 ```
 
@@ -164,6 +175,33 @@ select workshop.enable_knowledge_embeddings();                  -- t (idempotent
 `GET /readyz` answers `ready` only while both pools answer, and the API
 refuses to start with a role that is a superuser, may bypass row-level
 security or sits in the wrong group.
+
+## Production refuses to start
+
+With `APP_ENV=production` (both Blueprints set it in the env group of every
+backend service) the API and every worker check their settings before they
+serve and stop with one error that lists each problem by its variable
+(`app/gateways/startup_checks.py`, `run_startup_checks`). Render then keeps
+the previous deploy serving; the deploy log names what to set. An unknown
+`APP_ENV` (`prod`) never starts, and on Render (Render sets `RENDER` itself)
+neither does a missing one.
+
+| Area | Refused in production |
+| --- | --- |
+| Storage | no `DATABASE_URL` (in-memory storage; `/readyz` is then never ready either); `RECORDINGS_STORAGE` other than `s3` (set `RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`, `RECORDINGS_S3_BUCKET`, `RECORDINGS_S3_ACCESS_KEY_ID`, `RECORDINGS_S3_SECRET_ACCESS_KEY`); no `ENCRYPTION_KEY`, the public one of `docker-compose.yml` or one shorter than 32 characters |
+| Addresses | `APP_BASE_URL`, `CABINET_BASE_URL` or `CORS_ALLOWED_ORIGINS` unset; any of them, `OPENAI_BASE_URL`, `ELEVENLABS_API_BASE_URL`, `LANGFUSE_HOST`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `RECORDINGS_S3_ENDPOINT_URL` or `BACKUP_S3_ENDPOINT_URL` on `http://` or localhost; `CORS_ALLOWED_ORIGINS=*` (refused everywhere) |
+| Sign-in | no `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`, or Cloudflare's test keys; `SMTP_SECURITY=none`; no provider that carries login codes (Twilio, `TELEGRAM_GATEWAY_API_TOKEN`, WhatsApp, SMTP); `OTP_LOG_CODES` on |
+| Models | `LLM_PROVIDER=scripted`; no `OPENAI_API_KEY` (voice notes and the menu photo import always use OpenAI); `ANTHROPIC_API_KEY` missing for `LLM_PROVIDER=anthropic` or a configured Anthropic model (`LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID`, `LLM_SUMMARY_MODEL_ID`, `LLM_VERIFIER_MODEL_ID`, `SPEND_SOFT_LIMIT_MODEL_ID`). A fallback model (`LLM_FALLBACK_MODEL_ID`) without its key is skipped with one warning instead |
+| Payments and webhooks | `STRIPE_SECRET_KEY` in test mode (`sk_test_`, `rk_test_`), a publishable key or without `STRIPE_WEBHOOK_SECRET`; Flitt's test merchant `1549901`, its published key, or `FLITT_MERCHANT_ID` without `FLITT_SECRET_KEY` (or the reverse); `META_APP_ID`, `META_EMBEDDED_SIGNUP_CONFIG_ID` or `WHATSAPP_SYSTEM_USER_TOKEN` without `META_APP_SECRET` and `META_VERIFY_TOKEN`; `ELEVENLABS_API_KEY` without `ELEVENLABS_WEBHOOK_SECRET`; `GOOGLE_OAUTH_CLIENT_ID` without `GOOGLE_OAUTH_CLIENT_SECRET` (or the reverse) |
+| Operations | `LOG_FORMAT=text` (leave it unset: JSON); no `PLATFORM_DAILY_SPEND_BUDGET_USD` above 0 (`render.yaml` sets 50 in `workshop-backend`); `SEED_DEMO_DATA` or `EMBEDDED_WORKER` on |
+| Seller | `SELLER_LEGAL_NAME`, `SELLER_ADDRESS`, `SELLER_COUNTRY_CODE` or `SELLER_TIME_ZONE` unset (development's Italian "Assistant Workshop" is no company); `PLATFORM_VAT_REGISTERED=true` for a country without a known rate (Italy 22 %, Georgia 18 %) |
+
+The cabinet (`workshop-cabinet`) never takes its canonical address from a
+request: without `SITE_URL` a production build names only a localhost
+address it was reached on, else `http://localhost:3000`. Set `SITE_URL`.
+
+Check: the first deploy of a new service lists what is missing in its log;
+after you set it, `curl -fsS <production-api-url>/readyz` answers `ready`.
 
 ## 4. Production on Render (`render.yaml`)
 
@@ -210,7 +248,7 @@ rest. Names only: the values are yours.
 
 | Where | Variables | Secrets | Read by |
 | --- | --- | --- | --- |
-| environment `staging` | `API_URL`, `CABINET_URL`, `SMOKE_WIDGET_BUSINESS_ID` (step 2), `SMOKE_EXPECT_REPLY` (`staging server`) | none | `deploy-smoke.yml` |
+| environment `staging` | `API_URL`, `CABINET_URL`, `SMOKE_WIDGET_BUSINESS_ID` (step 2); `SMOKE_EXPECT_REPLY` stays empty (a real model answers staging's test chat, any answer passes) | none | `deploy-smoke.yml` |
 | environment `production` | `API_URL`, `CABINET_URL` (no smoke business unless one real model answer per deploy is wanted) | none | `deploy-smoke.yml` |
 | environment `backup-drill` | none | `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY` (the drill's read-only key), `BACKUP_AGE_IDENTITY` (the drill's private age key), `SENTRY_DSN` (the backend project) | `restore-drill.yml`, production job |
 | repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` promotes by hand) | none | `deploy-smoke.yml` |

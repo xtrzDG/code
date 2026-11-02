@@ -10,7 +10,7 @@ import { renderInLocale, textsIn } from "@/test/render";
 import { ValueReadyCard } from "./ValueReadyCard";
 
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
-vi.mock("@/components/setup/QrImage", () => ({ QrImage: ({ label }: { label: string }) => <img alt={label} /> }));
+vi.mock("@/components/setup/QrImage", () => ({ QrImage: ({ label }: { label: string }) => <span role="img" aria-label={label} /> }));
 
 const business = { id: "business_1", viewer_role: "owner", status: "live", currency_code: "EUR", timezone: "Europe/Rome" } as unknown as BusinessView;
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;

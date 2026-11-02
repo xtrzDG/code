@@ -212,12 +212,14 @@ class WidgetSnippetQuery(ImmutableDTO):
 
 class WidgetSnippetView(ImmutableDTO):
     """
-    Embed code the owner pastes into the website, and the page that shows
-    the widget as visitors see it (it accepts `color`, `position` and
-    `language` to preview unsaved choices).
+    Embed code the owner pastes into the website.
+
+    `demo_url` is deprecated: the API's widget demo page is served in
+    development and tests only (404 in production); owners preview the
+    widget on the hosted chat page (the share links' `hosted_chat_url`).
     """
 
     business_id: BusinessId
     script_url: WidgetScriptUrl
     snippet: WidgetEmbedSnippet
-    demo_url: WidgetDemoUrl
+    demo_url: WidgetDemoUrl = Field(deprecated=True)

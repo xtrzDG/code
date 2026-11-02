@@ -9,6 +9,7 @@ from app.gateways.http.admin_account_action_routes import (
 from app.gateways.http.admin_client_story_routes import (
     build_admin_client_story_router,
 )
+from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.user_authentication import CurrentUserDependency
 
 
@@ -28,6 +29,7 @@ def build_admin_client_routers(
             mark_invoice_paid_operator=actions.mark_invoice_paid_operator(),
             override_plan_operator=actions.override_plan_operator(),
             current_user=current_user,
+            idempotent=idempotency_of(operators, current_user),
         ),
         build_admin_client_story_router(
             list_notes_operator=actions.list_client_notes_operator(),

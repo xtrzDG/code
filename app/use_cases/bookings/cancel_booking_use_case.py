@@ -45,9 +45,10 @@ from app.use_cases.bookings.booking_requesters import (
     StaffRequester,
     customer_contact_of,
     customer_phone_of,
-    identify_requester,
+    requester_of,
     staff_actor_of,
 )
+from app.use_cases.bookings.booking_results import confirmed_change
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     booking_unit_of,
@@ -72,7 +73,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
     Cancel a booking found by id, or by the customer's contact or phone and
     date (model tool cancel_booking and the cabinet).
 
-    Who asks decides the authority (`identify_requester`): a customer (the
+    Who asks decides the authority (`requester_of`): a customer (the
     command's contact or phone) cancels only their own booking, never from
     a phone call, and staff are notified; a staff member (`actor_id`, from
     the cabinet) cancels any booking by its id and may undo it for a short
@@ -132,12 +133,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: CancelBookingCommand) -> BookingResult:
-        requester: BookingRequester = identify_requester(
-            input_data.actor_id,
-            input_data.contact_id,
-            input_data.contact_phone_number,
-            input_data.source_channel,
-        )
+        requester: BookingRequester = requester_of(input_data)
         inputs: SchedulingInputs = load_scheduling_inputs(
             self._business_repo,
             self._business_profile_repo,
@@ -218,19 +214,10 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 isinstance(requester, StaffRequester),
             )
 
-        return BookingResult(
-            booking=view,
-            confirmation_text=self._confirmation_transformer.transform(
-                BookingMessageInput(
-                    business_name=inputs.business.name,
-                    booking=view,
-                    booking_unit=booking_unit_of(resource),
-                    language=input_data.language,
-                    cancellation_policy=(
-                        None
-                        if inputs.rules is None
-                        else inputs.rules.cancellation_policy
-                    ),
-                )
-            ),
+        return confirmed_change(
+            self._confirmation_transformer,
+            inputs,
+            view,
+            booking_unit_of(resource),
+            input_data.language,
         )

@@ -50,7 +50,9 @@ from app.use_cases.voice.finished_call.call_activity import (
     list_call_bookings,
 )
 from app.use_cases.voice.finished_call.call_business_lookup import find_call_business
-from app.use_cases.voice.finished_call.call_staff_part import keeps_call_recording
+from app.use_cases.voice.finished_call.call_recording_policy import (
+    keeps_call_recording,
+)
 from app.use_cases.voice.finished_call.call_usage_events import (
     build_transfer_usage_event,
     build_voice_usage_event,

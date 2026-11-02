@@ -45,6 +45,30 @@ REQUIRED_BACKEND_VARIABLES: frozenset[str] = frozenset(
     }
 )
 REQUIRED_CABINET_VARIABLES: frozenset[str] = frozenset({"BACKEND_URL", "COOKIE_SECURE"})
+# What production refuses to start without (`check_production_requirements`,
+# docs/operations/go-live.md, "Production refuses to start") beyond the
+# above: both Blueprints set each one, as a value or for the dashboard to ask.
+PRODUCTION_REQUIRED_VARIABLES: frozenset[str] = frozenset(
+    {
+        "DATABASE_URL_TENANT",
+        "DATABASE_URL_PLATFORM",
+        "LLM_PROVIDER",
+        "OPENAI_API_KEY",
+        "TURNSTILE_SITE_KEY",
+        "TURNSTILE_SECRET_KEY",
+        "RECORDINGS_STORAGE",
+        "RECORDINGS_S3_ENDPOINT_URL",
+        "RECORDINGS_S3_REGION",
+        "RECORDINGS_S3_BUCKET",
+        "RECORDINGS_S3_ACCESS_KEY_ID",
+        "RECORDINGS_S3_SECRET_ACCESS_KEY",
+        "PLATFORM_DAILY_SPEND_BUDGET_USD",
+        "SELLER_LEGAL_NAME",
+        "SELLER_ADDRESS",
+        "SELLER_COUNTRY_CODE",
+        "SELLER_TIME_ZONE",
+    }
+)
 
 # .env.example variables without a default value that the Render API may
 # leave out; the Blueprint asks for every other one when it is created.
@@ -64,8 +88,9 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # The default follows APP_ENV (json in production) and THREADPOOL_SIZE.
         "LOG_FORMAT",
         "DB_POOL_SIZE",
-        # Render sets RENDER_GIT_COMMIT itself on every service; APP_RELEASE
-        # names the build on other platforms.
+        # Render sets RENDER and RENDER_GIT_COMMIT itself on every service;
+        # APP_RELEASE names the build on other platforms.
+        "RENDER",
         "RENDER_GIT_COMMIT",
         "APP_RELEASE",
         # Render's database is a direct connection, so LISTEN works on
@@ -92,9 +117,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # The image has the Postgres client on the PATH.
         "POSTGRES_CLIENT_BIN_DIRECTORY",
         # The spend guard: the cheaper model follows LLM_PROVIDER (its cheap
-        # model); no budget alert until the team sets a daily budget.
+        # model).
         "SPEND_SOFT_LIMIT_MODEL_ID",
-        "PLATFORM_DAILY_SPEND_BUDGET_USD",
         # `workshop api` sets the directory of several uvicorn processes,
         # and each entry point names its process's traces (workshop-api,
         # workshop-worker) when no name is set.

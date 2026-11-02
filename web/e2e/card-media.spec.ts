@@ -16,6 +16,7 @@ import { expect, test } from "./support/fixtures";
 import { CONVERSATION_ID, HOUR_US, conversationCard, openCard, serveCard, silentWav, type ConversationDetail } from "./support/conversation-card";
 import { en } from "./support/messages";
 import { findOverflow } from "./support/overflow";
+import { WCAG_TAGS } from "./support/axe";
 
 const VOICE_ID = "media_5a1d2c3b-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
 const PHOTO_ID = "media_6b2e3d4c-5f6a-4b7c-9d8e-0f1a2b3c4d5e";
@@ -133,7 +134,7 @@ test("a photo opens full size, a place links to the map, a sticker says why it w
 
   const results = await new AxeBuilder({ page })
     .include("[data-transcript]")
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .withTags([...WCAG_TAGS])
     .analyze();
   expect(results.violations).toEqual([]);
 });

@@ -39,7 +39,7 @@ function post(body: BodyInit, headers: Record<string, string> = {}): NextRequest
   return new NextRequest(URL_BASE, {
     method: "PATCH",
     body,
-    headers: { "content-type": "application/json", cookie: "aw_session=tok", ...headers },
+    headers: { "content-type": "application/json", cookie: "aw_session=tok", "sec-fetch-site": "same-origin", ...headers },
     // Node's fetch needs half-duplex for a streamed body.
     duplex: "half",
   });
@@ -83,5 +83,64 @@ describe("relayToBackend body limits", () => {
 
     expect(response.status).toBe(413);
     expect((await response.json()).error).toBe("payload_too_large");
+  });
+});
+
+describe("relayToBackend cross-site guard", () => {
+  it("refuses a write that is not from the site's own pages, before the API hears of it", async () => {
+    const received = stubApi();
+    const cases: Record<string, string>[] = [
+      { "sec-fetch-site": "cross-site", origin: "https://evil.example" },
+      { "sec-fetch-site": "same-site" },
+      // Neither Fetch Metadata nor an Origin.
+      { "sec-fetch-site": "" },
+    ];
+    for (const headers of cases) {
+      const request = new NextRequest(URL_BASE, {
+        method: "PATCH",
+        body: "{}",
+        headers: Object.fromEntries(Object.entries({ "content-type": "application/json", cookie: "aw_session=tok", ...headers }).filter(([, value]) => value !== "")),
+      });
+
+      const response = await relayToBackend(request, "/v1/businesses/biz_1/profile", { useSession: true });
+
+      expect(response.status, JSON.stringify(headers)).toBe(403);
+      expect((await response.json()).error).toBe("forbidden_origin");
+    }
+    expect(received).toEqual([]);
+  });
+
+  it("lets a write with the site's own Origin through", async () => {
+    const received = stubApi();
+    const request = new NextRequest(URL_BASE, {
+      method: "POST",
+      body: "{}",
+      headers: { "content-type": "application/json", cookie: "aw_session=tok", host: "cabinet.example", "x-forwarded-proto": "https", origin: "https://cabinet.example" },
+    });
+
+    const response = await relayToBackend(request, "/v1/businesses/biz_1/profile", { useSession: true });
+
+    expect(response.status).toBe(200);
+    expect(received).toEqual([2]);
+  });
+
+  it("refuses an audited export another site opens, and serves the cabinet's own download", async () => {
+    stubApi();
+    const exportUrl = "https://cabinet.example/api/backend/v1/businesses/biz_1/exports/bookings";
+    const path = "/v1/businesses/biz_1/exports/bookings";
+
+    const foreign = await relayToBackend(
+      new NextRequest(exportUrl, { headers: { cookie: "aw_session=tok", "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate" } }),
+      path,
+      { useSession: true },
+    );
+    const own = await relayToBackend(
+      new NextRequest(exportUrl, { headers: { cookie: "aw_session=tok", "sec-fetch-site": "same-origin" } }),
+      path,
+      { useSession: true },
+    );
+
+    expect(foreign.status).toBe(403);
+    expect(own.status).toBe(200);
   });
 });

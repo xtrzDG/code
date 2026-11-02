@@ -39,7 +39,7 @@ function privacyNoticeOf(lookup: ManagedBookingLookup): string | null {
   if (lookup.kind !== "found") {
     return null;
   }
-  const chat = lookup.view.chat_links.find((link) => link.kind === "hosted_chat");
+  const chat = (lookup.view.chat_links ?? []).find((link) => link.kind === "hosted_chat");
   return chat ? privacyNoticeOfChat(chat.url) : null;
 }
 

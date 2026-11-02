@@ -86,11 +86,16 @@ test("an owner who is not a partner gets no portal", async ({ page, owner, conso
   await expect(page.getByText(en.errors.notFoundTitle)).toBeVisible();
 });
 
-test("a visitor's ref survives the redirect to the site in their language", async ({ browser }) => {
+test("a visitor's ref survives the redirect to the site in their language, kept once they accept it", async ({ browser }) => {
   const context = await browser.newContext({ locale: "en-US" });
   const page = await context.newPage();
   await page.goto("/?ref=invite-code-01&src=invite");
-  await expect(page).toHaveURL(/\/(en|ka|ru)\?ref=invite-code-01/);
+  await expect(page).toHaveURL(/\/(en|it)\?ref=invite-code-01/);
+  // Nothing is kept before the visitor answers the cookie banner (server/consentCookie.ts).
+  expect((await context.cookies()).map((cookie) => cookie.name)).not.toContain("aw_attr");
+
+  await page.getByTestId("cookie-consent").getByRole("button", { name: en.cookieConsent.accept, exact: true }).click();
+  await expect(page.getByTestId("cookie-consent")).toBeHidden();
 
   const cookies = await context.cookies();
   const attribution = cookies.find((cookie) => cookie.name === "aw_attr");

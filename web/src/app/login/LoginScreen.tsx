@@ -14,7 +14,7 @@ import { SecondStepForm } from "./_components/SecondStepForm";
 import { useLoginFlow } from "./_lib/useLoginFlow";
 
 /** The public documents the sign-in card links to, under the "about" link. */
-const LOGIN_LEGAL_PAGES: readonly LegalPage[] = ["terms", "privacy", "security", "contact"];
+const LOGIN_LEGAL_PAGES = ["terms", "privacy", "security", "contact"] as const satisfies readonly LegalPage[];
 
 /**
  * Sign-in by phone (any country) or e-mail with a 6-digit code. New

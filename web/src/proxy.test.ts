@@ -146,3 +146,59 @@ describe("proxy on the hosted chat page", () => {
     expect(response.headers.get("x-middleware-request-x-aw-hosted-chat")).toBeNull();
   });
 });
+
+describe("proxy and the cookie choice", () => {
+  it("keeps where a visitor came from only after they accepted it", async () => {
+    const before = await proxy(new NextRequest("https://app.example.com/it?utm_source=newsletter"));
+    const after = await proxy(
+      new NextRequest("https://app.example.com/it?utm_source=newsletter", { headers: { cookie: "aw_consent=1.granted" } }),
+    );
+
+    expect(before.cookies.get("aw_attr")).toBeUndefined();
+    expect(after.cookies.get("aw_attr")?.value).toBeTruthy();
+  });
+
+  it("drops an attribution cookie kept without consent, or after it was withdrawn", async () => {
+    for (const cookie of ["aw_attr=old", "aw_attr=old; aw_consent=1.denied"]) {
+      const response = await proxy(new NextRequest("https://app.example.com/it", { headers: { cookie } }));
+
+      expect(response.cookies.get("aw_attr"), cookie).toMatchObject({ value: "", maxAge: 0 });
+    }
+  });
+});
+
+describe("proxy and the session cookie in production", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("never takes a session from the cookie's old name, and drops that cookie", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("BACKEND_URL", "http://api.internal:8000");
+
+    const response = await proxy(new NextRequest("https://app.example.com/businesses", { headers: { cookie: "aw_session=planted" } }));
+
+    // No session: sign in first.
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.example.com/login");
+    expect(response.cookies.get("aw_session")).toMatchObject({ value: "", maxAge: 0 });
+    expect(response.cookies.get("__Host-aw_session")).toBeUndefined();
+  });
+
+  it("keeps the session cookie Secure on a real host even with COOKIE_SECURE=false", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("COOKIE_SECURE", "false");
+    vi.stubEnv("BACKEND_URL", "http://api.internal:8000");
+
+    const real = await proxy(new NextRequest("https://app.example.com/businesses", { headers: { cookie: "aw_session=tok" } }));
+    const local = await proxy(
+      new NextRequest("http://localhost:3010/login", { headers: { cookie: "aw_session=tok", host: "localhost:3010" } }),
+    );
+
+    // On the real host the plain-HTTP name is not the session: sign in first.
+    expect(real.status).toBe(307);
+    // On this machine over plain HTTP it is (the e2e suite): a signed-in user leaves the sign-in page.
+    expect(local.status).toBe(307);
+    expect(local.headers.get("location")).toBe("http://localhost:3010/businesses");
+  });
+});

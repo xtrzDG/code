@@ -59,7 +59,10 @@ def test_a_returning_customer_is_greeted_with_their_booking() -> None:
     )
     assert "welcome them back, by name when it is known" in turn
     assert "- Saturday 2026-10-03 20:00, Table 4, 4 people, status confirmed" in turn
-    assert "<untrusted>Asked whether the restaurant has a terrace.</untrusted>" in turn
+    assert (
+        "<customer_value>Asked whether the restaurant has a terrace.</customer_value>"
+        in turn
+    )
     # The booking's date, time and guests come from the platform: the reply
     # guard lets the greeting through as written (after the AI disclosure).
     assert reply.text is not None
@@ -138,7 +141,7 @@ def test_team_notes_reach_the_memory_only_when_the_owner_shares_them() -> None:
 
     turn: str = user_turn_text(last_request(world).transcript[0])
     assert "Internal notes of the business's team about them" in turn
-    assert "<untrusted>Prefers the window table</untrusted>" in turn
+    assert "<team_note>Prefers the window table</team_note>" in turn
     assert "2 earlier conversations" in turn
 
 

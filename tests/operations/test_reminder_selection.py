@@ -14,6 +14,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.reminder_scene import ReminderScene
 
 
@@ -170,6 +171,7 @@ def test_rescheduled_booking_gets_a_new_reminder() -> None:
     scene.world.reschedule_booking().run(
         RescheduleBookingCommand(
             business_id=scene.business.id,
+            actor_id=UserId(),
             booking_id=booking.id,
             new_date=LocalDate("2026-10-06"),
             new_time=LocalTimeOfDay("18:00"),

@@ -113,3 +113,14 @@ def network_key(scope_label: str, client_address: str | None) -> str:
         return f"{scope_label}:unknown"
 
     return f"{scope_label}:{describe_client_network(ClientIpAddress(client_address))}"
+
+
+# One security line a minute per refusing key, so a flood of refused
+# requests does not become a flood of log lines.
+REFUSAL_LOG_LINES: FloodBudget = FloodBudget(per_minute=1)
+
+
+def is_first_line_this_minute(key: str) -> bool:
+    """Whether a refusal of `key` is the first worth a log line this minute."""
+
+    return REFUSAL_LOG_LINES.spend(key).is_admitted

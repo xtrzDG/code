@@ -54,6 +54,15 @@ from app.schemas.typings.bookings.constrained_integers import (
     NightCount,
 )
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.bookings.booking_limits import refuse_beyond_horizon
+from app.use_cases.bookings.booking_requesters import (
+    BookingRequester,
+    CustomerRequester,
+    customer_contact_of,
+    customer_phone_of,
+    requester_of,
+)
+from app.use_cases.bookings.booking_results import confirmed_change
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     find_resource,
@@ -69,10 +78,7 @@ from app.use_cases.bookings.booking_versions import (
 from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
 from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
 from app.use_cases.bookings.moved_placements import dropped_place, place_moved_booking
-from app.use_cases.bookings.reschedule_candidates import (
-    booked_offer,
-    reprice_stay,
-)
+from app.use_cases.bookings.reschedule_candidates import booked_offer, reprice_stay
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement
@@ -100,7 +106,9 @@ class RescheduleBookingUseCase(
     requests follow the online-booking notice and notify staff; cabinet
     moves (booking id only) do not. The confirmation quotes the profile's
     cancellation policy. Places held for other waiting customers count as
-    taken, and the place the booking leaves goes to the waitlist.
+    taken, and the place the booking leaves goes to the waitlist. Who asks
+    decides the authority (`requester_of`, as for cancelling); a
+    customer cannot move a booking past the horizon (`booking_limits`).
     """
 
     def __init__(
@@ -156,6 +164,7 @@ class RescheduleBookingUseCase(
         self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: RescheduleBookingCommand) -> BookingResult:
+        requester: BookingRequester = requester_of(input_data)
         inputs: SchedulingInputs = load_scheduling_inputs(
             self._business_repo,
             self._business_profile_repo,
@@ -164,10 +173,7 @@ class RescheduleBookingUseCase(
             input_data.business_id,
             self._busy_times_repo,
         )
-        is_customer_request: bool = (
-            input_data.contact_id is not None
-            or input_data.contact_phone_number is not None
-        )
+        is_customer_request: bool = isinstance(requester, CustomerRequester)
         old_date: date | None = (
             None
             if input_data.old_date is None
@@ -179,6 +185,9 @@ class RescheduleBookingUseCase(
         )
         now: Microseconds = self._wall_clock.now_unix()
         now_seconds: int = microseconds_to_seconds(int(now))
+        if is_customer_request:
+            refuse_beyond_horizon(new_date, inputs.zone, now_seconds)
+
         with self._lock_registry.lock_for(input_data.business_id):
             booking: BookingDocument = find_target_booking(
                 self._booking_repo,
@@ -186,8 +195,8 @@ class RescheduleBookingUseCase(
                 input_data.business_id,
                 inputs.zone,
                 input_data.booking_id,
-                input_data.contact_id,
-                input_data.contact_phone_number,
+                customer_contact_of(requester),
+                customer_phone_of(requester),
                 old_date,
                 now_seconds,
                 is_sandbox=input_data.is_sandbox,
@@ -282,19 +291,10 @@ class RescheduleBookingUseCase(
             self._calendar_sync.sync(booking)
             notice_if_freed(self._growth, before, booking, now, not is_customer_request)
 
-        return BookingResult(
-            booking=view,
-            confirmation_text=self._confirmation_transformer.transform(
-                BookingMessageInput(
-                    business_name=inputs.business.name,
-                    booking=view,
-                    booking_unit=placement.resource.booking_unit,
-                    language=input_data.language,
-                    cancellation_policy=(
-                        None
-                        if inputs.rules is None
-                        else inputs.rules.cancellation_policy
-                    ),
-                )
-            ),
+        return confirmed_change(
+            self._confirmation_transformer,
+            inputs,
+            view,
+            placement.resource.booking_unit,
+            input_data.language,
         )

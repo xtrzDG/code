@@ -53,10 +53,14 @@ seconds; polling waits as well. The API's greeting is translated into every
 language of the widget's interface (a test compares the lists). Tabs of one
 site share one history: each takes over what the others saved. A site with a
 strict CSP must allow the API's address in `script-src` and `connect-src`.
-`GET /widget/demo?business_id=…` shows the widget as on a website even while
-the chat is off (a preview for the owner and for UI tests); its `color`,
-`position`, `theme` (`light`/`dark`) and `lang` (or `language`, any of the
-widget's languages) show a choice not saved yet.
+`GET /widget/demo?business_id=…` (development and tests only; 404 in
+production) shows the widget as on a website even while the chat is off, for
+developers and UI tests; its `color`, `position`, `theme` (`light`/`dark`)
+and `lang` (or `language`, any of the widget's languages) show a choice not
+saved yet. Owners preview and try the widget on the hosted chat page
+(`/c/{address}`, the cabinet's live preview is `/c/{address}?preview=1`). Only
+outside production does the API's own origin (`APP_BASE_URL`) pass the
+widget's site check with the cabinet's.
 
 ## The live stream
 

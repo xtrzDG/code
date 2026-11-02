@@ -19,6 +19,7 @@ import { NICHES_ADMIN_EMAIL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import { trackRequests, waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 const texts = en.adminNiches;
 const CODE_LABEL = "Quali animali curi?";
@@ -94,7 +95,7 @@ test("an admin rewords a question in Italian, new owners read it, and the code t
   await tunnelQuestion(browser, request, CODE_LABEL);
 
   await waitForNetworkQuiet(admin);
-  const results = await new AxeBuilder({ page: admin }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page: admin }).withTags([...WCAG_TAGS]).analyze();
   const serious = results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical");
   expect(serious.map((violation) => violation.id)).toEqual([]);
   await context.close();

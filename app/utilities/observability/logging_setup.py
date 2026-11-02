@@ -1,6 +1,7 @@
 """
 Logging of the API and worker processes: one handler on the root logger in
-the configured format (LOG_FORMAT), which uvicorn's own loggers use too.
+the configured format (LOG_FORMAT; production refuses `text`), which
+uvicorn's own loggers use too.
 """
 
 import logging
@@ -8,6 +9,7 @@ import sys
 from typing import TextIO
 
 from app.schemas.constants.observability import LogFormat
+from app.utilities.observability.contact_log_masking import ContactDetailsLogFilter
 from app.utilities.observability.log_formatting import (
     JsonLogFormatter,
     LogContextFilter,
@@ -31,12 +33,15 @@ def configure_logging(
 ) -> logging.Handler:
     """
     Send every log line (application, uvicorn, libraries) to one stream in
-    `log_format` with the log context; INFO and above by default. Calling it
+    `log_format` with the log context, phone numbers and e-mail addresses
+    masked (`ContactDetailsLogFilter`); INFO and above by default. Calling it
     again replaces the handler it installed before. Returns the handler.
     """
 
     handler = logging.StreamHandler(sys.stderr if stream is None else stream)
     handler.addFilter(LogContextFilter())
+    # After the context: the masked copy carries the context fields too.
+    handler.addFilter(ContactDetailsLogFilter())
     handler.setFormatter(
         JsonLogFormatter() if log_format is LogFormat.JSON else TextLogFormatter()
     )

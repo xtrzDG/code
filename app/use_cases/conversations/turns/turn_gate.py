@@ -1,6 +1,6 @@
 """
 Whether the assistant answers a message: a blocked customer, handoffs, the
-injection brake and the hourly limit.
+injection brake, the hourly limit and the length of a conversation.
 """
 
 from datetime import timedelta
@@ -26,6 +26,11 @@ from app.use_cases.conversations.turns.injection_brake import choose_injection_g
 from app.use_cases.shared.turn_time import to_microseconds
 
 CONTACT_LIMIT_WINDOW: timedelta = timedelta(hours=1)
+# Customer messages one conversation is answered for. A real conversation
+# ends long before; past it the assistant closes politely and stays silent
+# until a new conversation starts (24 hours without a message), while the
+# team still sees every message in the inbox.
+MAX_CONVERSATION_MESSAGES: int = 150
 
 
 def choose_turn_gate(
@@ -42,9 +47,10 @@ def choose_turn_gate(
     """
     A customer the owner blocked hears nothing (Customers → block). Staff
     own a conversation in HANDOFF (silence in chat, a call-back promise on
-    the phone); a contact who keeps trying prompt injection, or is past the
-    hourly per-contact limit, is answered once with a stop message, then
-    the assistant stays silent.
+    the phone); a contact who keeps trying prompt injection, is past the
+    hourly per-contact limit or wrote MAX_CONVERSATION_MESSAGES messages in
+    this conversation is answered once with a polite stop message, then the
+    assistant stays silent.
     """
 
     if contact.block is not None and not conversation.is_sandbox:
@@ -72,11 +78,22 @@ def choose_turn_gate(
     recent_message_count: int = count_recent_inbound_messages(
         conversation_repo, message_repo, business, contact, now
     )
-    if recent_message_count == int(contact_message_limit):
-        return TurnGate.LIMIT_NOTICE
-
-    if recent_message_count > int(contact_message_limit):
+    conversation_message_count: int = int(
+        message_repo.count_by_conversation(
+            business.id, conversation.id, MessageDirection.INBOUND
+        )
+    )
+    if (
+        recent_message_count > int(contact_message_limit)
+        or conversation_message_count > MAX_CONVERSATION_MESSAGES
+    ):
         return TurnGate.LIMIT_SILENCE
+
+    if (
+        recent_message_count == int(contact_message_limit)
+        or conversation_message_count == MAX_CONVERSATION_MESSAGES
+    ):
+        return TurnGate.LIMIT_NOTICE
 
     return TurnGate.ANSWER
 

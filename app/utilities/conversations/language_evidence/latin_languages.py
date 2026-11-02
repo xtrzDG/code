@@ -89,7 +89,7 @@ LATIN_LANGUAGE_EVIDENCE: dict[str, LanguageEvidence] = {
         words(
             "il lo la gli le e è che di un una per con ciao buongiorno buonasera "
             "grazie vorrei tavolo domani sera quanto costa prenotare sono non "
-            "prezzo persone aperto posso"
+            "prezzo persone aperto posso sei scusi vera vero siete avete aiuto ci"
         ),
     ),
     "pt": LanguageEvidence(

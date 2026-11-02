@@ -236,13 +236,17 @@ class TestCurrentCallBlock:
         )
         assert variables == {
             "is_open_now",
+            "transfer_number",
             "local_now",
             "next_days",
             "timezone",
-            "caller_name",
-            "upcoming_booking",
         }
         assert all("{{" + variable + "}}" in prompt for variable in variables)
+        # A caller id proves nobody's identity: no booking is read out or
+        # changed on the phone, and an emergency is sent to 112 first.
+        assert "{{caller_name}}" not in prompt
+        assert "never cancel or move one on the phone" in prompt
+        assert "hang up and call the emergency number" in prompt
         assert "into a YYYY-MM-DD date from these lines before you call a tool" in (
             prompt
         )

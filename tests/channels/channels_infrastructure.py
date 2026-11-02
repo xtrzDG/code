@@ -34,6 +34,7 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
+from app.repositories.call_follow_up_repositories import CallSettingsRepository
 from app.repositories.call_repository import CallRepository
 from app.repositories.channel_repositories import ManagerTelegramLinkRepository
 from app.repositories.conversation_repositories import (
@@ -50,6 +51,7 @@ from app.repositories.knowledge_repositories import (
     ResourceRepository,
     ScheduleExceptionRepository,
 )
+from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.user_repositories import UserRepository
 from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.configurations.app_settings import AppSettings
@@ -57,6 +59,7 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -128,8 +131,11 @@ class ChannelsInfrastructure:
         self.handoff_repo = HandoffRepository(
             InMemoryDocumentCollectionAdapter(HandoffDocument)
         )
-        self.usage_event_repo = UsageEventRepository(
-            InMemoryDocumentCollectionAdapter(UsageEventDocument)
+        usage_events = InMemoryDocumentCollectionAdapter(UsageEventDocument)
+        self.usage_event_repo = UsageEventRepository(usage_events)
+        self.usage_spend_repo = UsageSpendRepository(usage_events)
+        self.call_settings_repo = CallSettingsRepository(
+            InMemoryDocumentCollectionAdapter(CallSettingsDocument)
         )
         self.audit_log_repo = audit_log_repository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)

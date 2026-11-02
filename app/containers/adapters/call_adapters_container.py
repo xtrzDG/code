@@ -93,7 +93,10 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
         time_provider,
     )
     pbx_webhook_adapter: Singleton[ZadarmaPbxWebhookAdapter] = Singleton(
-        ZadarmaPbxWebhookAdapter, app_settings=config.app_settings
+        ZadarmaPbxWebhookAdapter,
+        app_settings=config.app_settings,
+        buckets=rate_limit_buckets,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     # The call fallback of rented numbers (Twilio's VoiceFallbackUrl).
     call_fallback_adapter: Singleton[TwilioCallFallbackAdapter] = Singleton(

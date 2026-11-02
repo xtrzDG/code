@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 
 from app.adapters.voice.elevenlabs_call_analysis import read_call_analysis
 from app.adapters.voice.elevenlabs_post_call_reading import (
+    items_before_staff,
     read_call_language,
     read_called_tools,
     read_cost,
@@ -17,7 +18,11 @@ from app.adapters.voice.elevenlabs_post_call_reading import (
 )
 from app.contracts.channels import VoiceWebhookAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.calls import MissedCallReason, MissedCallSource
+from app.schemas.constants.calls import (
+    CallTransferOutcome,
+    MissedCallReason,
+    MissedCallSource,
+)
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.dto.voice_webhooks import (
     FinishedCallReport,
@@ -124,7 +129,15 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
         phone_call: JsonObject = read_object(metadata, "phone_call") or {}
         dynamic_variables: JsonObject = read_dynamic_variables(data)
         agent_id: str | None = read_text(data, "agent_id")
-        transcript_items: list[JsonObject] = read_objects(data, "transcript")
+        all_items: list[JsonObject] = read_objects(data, "transcript")
+        transfer_outcome: CallTransferOutcome = read_transfer_outcome(all_items)
+        # A call a person took after a transfer is read without the staff
+        # part: no transcript lines and no evaluation (made of the whole
+        # call) of it.
+        transcript_items: list[JsonObject] = items_before_staff(
+            all_items, transfer_outcome
+        )
+        is_staff_part_cut: bool = len(transcript_items) < len(all_items)
         return FinishedCallReport(
             provider_call_id=ProviderCallId(conversation_id),
             agent_id=None if agent_id is None else VoiceAgentId(agent_id),
@@ -144,8 +157,8 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
             language=read_call_language(metadata, data),
             has_recording=data.get("has_audio") is not False,
             transfer_offset_seconds=read_transfer_offset(transcript_items),
-            transfer_outcome=read_transfer_outcome(transcript_items),
-            analysis=read_call_analysis(data),
+            transfer_outcome=transfer_outcome,
+            analysis=None if is_staff_part_cut else read_call_analysis(data),
         )
 
     def parse_call_start_failure(self, body: bytes) -> MissedCallReport | None:

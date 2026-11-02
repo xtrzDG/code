@@ -13,6 +13,7 @@ from app.schemas.typings.bookings.constrained_integers import BookingSearchBound
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.knowledge.constrained_integers import BufferMinutes
+from app.utilities.deposits.booking_deposit_state import is_held_for_deposit
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     local_day_start_microseconds,
@@ -47,14 +48,20 @@ def bookings_not_over_on(
     still run then), by start time: every booking that can overlap a time
     on the date or a stay from it (one indexed range read, however many
     past bookings the business has), with the waitlist's live holds as
-    unsaved bookings of their places.
+    unsaved bookings of their places. A place held for a deposit whose
+    hold ran out unpaid is free at once, even before the deposit sweep
+    releases its booking (`has_lapsed_hold`).
     """
 
     day_start: int = microseconds_to_seconds(
         local_day_start_microseconds(local_date, zone)
     )
     bound = BookingSearchBoundSeconds(max(day_start - LONGEST_BUFFER_SECONDS, 0))
-    bookings: list[BookingDocument] = booking_repo.list_ending_after(business_id, bound)
+    bookings: list[BookingDocument] = [
+        booking
+        for booking in booking_repo.list_ending_after(business_id, bound)
+        if not has_lapsed_hold(booking, held.now)
+    ]
     places: list[BookingDocument] = held.growth.held_places(
         business_id, bound, held.now, held.holder
     )
@@ -62,3 +69,13 @@ def bookings_not_over_on(
         return bookings
 
     return sorted([*bookings, *places], key=lambda booking: int(booking.starts_at))
+
+
+def has_lapsed_hold(booking: BookingDocument, now: Microseconds) -> bool:
+    """An unconfirmed booking held for its deposit after the hold ran out."""
+
+    if not is_held_for_deposit(booking) or booking.deposit is None:
+        return False
+
+    expires_at: Microseconds | None = booking.deposit.hold_expires_at
+    return expires_at is not None and int(expires_at) <= int(now)

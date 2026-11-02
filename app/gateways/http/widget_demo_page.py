@@ -1,4 +1,7 @@
-"""The body of the website chat demo page (/widget/demo) in the reader's language."""
+"""
+The body of the website chat demo page (/widget/demo, development and tests
+only) in the reader's language.
+"""
 
 import html
 

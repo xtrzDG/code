@@ -83,21 +83,17 @@ def profile(updated_at: Microseconds) -> BusinessProfileDocument:
     )
 
 
-def test_the_website_chat_link_needs_a_public_https_api() -> None:
+def test_the_website_chat_gets_no_widget_demo_link() -> None:
+    # Its hosted chat page comes with the share links; the API's demo page
+    # is for development only and answers 404 in production.
     web_chat = [channel(ChannelKind.WEB_CHAT)]
 
     secure = phone_test_links(
         BUSINESS, web_chat, PublicBaseUrl("https://api.example/"), is_live=False
     )
-    local = phone_test_links(
-        BUSINESS, web_chat, PublicBaseUrl("http://localhost:8000"), is_live=True
-    )
     unset = phone_test_links(BUSINESS, web_chat, None, is_live=True)
 
-    assert [str(link.url) for link in secure] == [
-        f"https://api.example/widget/demo?business_id={BUSINESS.id}&language=ka"
-    ]
-    assert local == []
+    assert secure == []
     assert unset == []
 
 

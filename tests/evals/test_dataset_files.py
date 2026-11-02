@@ -1,9 +1,9 @@
 """
 The committed datasets cover every niche in ka/ru/en with the eight core
-scenarios (and four niches in he/ar), and the language scenarios of the
-four biggest niches: guests writing German, French, Turkish, Ukrainian,
-Armenian or Spanish, and Georgian, Russian or Armenian typed in Latin
-letters. The deeper flows and the attacks are in test_dataset_depth.py.
+scenarios (four niches in he/ar, the restaurant in Italian too), and the
+language scenarios of the four biggest niches: guests writing German,
+French, Turkish, Ukrainian, Armenian or Spanish, and Georgian, Russian or
+Armenian typed in Latin letters. The deeper flows and the attacks are in test_dataset_depth.py.
 """
 
 from collections import Counter
@@ -22,6 +22,9 @@ BASE_LANGUAGES: set[str] = {"ka", "ru", "en"}
 RTL_LANGUAGES: set[str] = {"he", "ar"}
 RTL_NICHES: set[str] = {"restaurant", "hotel", "beauty_salon", "clinic"}
 LANGUAGE_NICHES: set[str] = RTL_NICHES
+# The first market's language, mirroring the English core scenarios.
+ITALIAN: str = "it"
+ITALIAN_NICHES: set[str] = {"restaurant"}
 LANGUAGE_SCENARIO_KINDS: set[AutotestScenarioKind] = {
     AutotestScenarioKind.FOREIGN_LANGUAGE,
     AutotestScenarioKind.TRANSLITERATED,
@@ -72,6 +75,9 @@ def test_eight_core_scenarios_per_language(dataset: EvalDataset) -> None:
     expected: set[str] = set(BASE_LANGUAGES)
     if dataset.niche.value in RTL_NICHES:
         expected |= RTL_LANGUAGES
+
+    if dataset.niche.value in ITALIAN_NICHES:
+        expected.add(ITALIAN)
 
     assert set(counts) == expected
     assert set(counts.values()) == {SCENARIOS_PER_LANGUAGE}

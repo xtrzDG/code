@@ -27,6 +27,7 @@ from app.gateways.http.widget_script_routes import (
     STATIC_DIRECTORY,
     build_widget_script_router,
 )
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
     WidgetMessageText,
@@ -50,7 +51,9 @@ from tests.e2e.harness import start_workshop
 def build_client() -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
-    http_application.include_router(build_widget_script_router())
+    http_application.include_router(
+        build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)
+    )
     return TestClient(http_application)
 
 
@@ -105,7 +108,7 @@ class TestWidgetScriptRoute:
 
     def test_cabinet_cors_allow_list_does_not_apply_to_the_script(self) -> None:
         http_application = build_http_application(
-            routers=[build_widget_script_router()],
+            routers=[build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)],
             error_reporter=_SilentErrorReporter(),
             cors_allowed_origins=[PublicBaseUrl("https://cabinet.example")],
         )

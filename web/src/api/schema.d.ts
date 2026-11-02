@@ -8859,6 +8859,16 @@ export interface components {
          */
         CallGuardVerdict: "clean" | "flagged" | "handed_off";
         /**
+         * CallNoticePreview
+         * @description What a caller hears about the recording and the privacy notice.
+         */
+        CallNoticePreview: {
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+        };
+        /**
          * CallOutcome
          * @description Result extracted from a finished phone call.
          * @enum {string}
@@ -8868,23 +8878,42 @@ export interface components {
          * CallSettingsView
          * @description The settings with what they rely on: whether the business's WhatsApp
          *     number is connected, whether the platform can send SMS, and the
-         *     text-back in each language of the business.
+         *     text-back in each language of the business; the recording with the
+         *     notice callers hear in each language (`recording_notices`), and the
+         *     staff number transfers go to (None: no allowed staff number) with the
+         *     owner's confirmation of the staff notice (who confirmed it, when).
          */
         CallSettingsView: {
+            /**
+             * Is Recording Enabled
+             * @default false
+             */
+            is_recording_enabled: boolean;
             /** Is Sms Available */
             is_sms_available: boolean;
             /** Is Sms Fallback Enabled */
             is_sms_fallback_enabled: boolean;
+            /**
+             * Is Staff Transfer Confirmed
+             * @default false
+             */
+            is_staff_transfer_confirmed: boolean;
             /** Is Summary Enabled */
             is_summary_enabled: boolean;
             /** Is Text Back Enabled */
             is_text_back_enabled: boolean;
             /** Is Whatsapp Connected */
             is_whatsapp_connected: boolean;
+            /** Recording Notices */
+            recording_notices?: components["schemas"]["CallNoticePreview"][];
+            /** Staff Transfer Confirmed At */
+            staff_transfer_confirmed_at?: number | null;
             /** Template Previews */
             template_previews?: components["schemas"]["TextBackTemplatePreview"][];
             /** Text Back Template Name */
             text_back_template_name?: string | null;
+            /** Transfer Phone Number */
+            transfer_phone_number?: string | null;
         };
         /**
          * CallSummary
@@ -11824,11 +11853,16 @@ export interface components {
         /**
          * FeedbackTemplatePreview
          * @description The feedback request in one language: the body to register as the
-         *     WhatsApp template (its one parameter {{1}} is the business name) and
-         *     how a customer reads it.
+         *     WhatsApp template (its one parameter {{1}} is the business name).
+         *
+         *     `example` is deprecated: the cabinet no longer shows the request as a
+         *     customer would read it; it is still filled for clients of `/v1`.
          */
         FeedbackTemplatePreview: {
-            /** Example */
+            /**
+             * Example
+             * @deprecated
+             */
             example: string;
             /** Language */
             language: string;
@@ -11928,7 +11962,8 @@ export interface components {
          *     - profile_gaps: the blocking gap kinds ("no_opening_hours", ...);
          *     - staff_contact: "no_handoff_contact" while nobody receives handoffs;
          *     - autotests: the version status, then the latest run's status;
-         *     - voice_configuration: the missing server settings ("APP_BASE_URL").
+         *     - voice_configuration: none (which settings are missing is logged for
+         *       the operator, never shown to the owner).
          */
         GoLiveCheck: {
             code: components["schemas"]["GoLiveCheckCode"];
@@ -19823,14 +19858,19 @@ export interface components {
         };
         /**
          * WidgetSnippetView
-         * @description Embed code the owner pastes into the website, and the page that shows
-         *     the widget as visitors see it (it accepts `color`, `position` and
-         *     `language` to preview unsaved choices).
+         * @description Embed code the owner pastes into the website.
+         *
+         *     `demo_url` is deprecated: the API's widget demo page is served in
+         *     development and tests only (404 in production); owners preview the
+         *     widget on the hosted chat page (the share links' `hosted_chat_url`).
          */
         WidgetSnippetView: {
             /** Business Id */
             business_id: string;
-            /** Demo Url */
+            /**
+             * Demo Url
+             * @deprecated
+             */
             demo_url: string;
             /** Script Url */
             script_url: string;
@@ -33798,11 +33838,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Is Recording Enabled */
+                    is_recording_enabled?: boolean | null;
                     /**
                      * Is Sms Fallback Enabled
                      * @default true
                      */
                     is_sms_fallback_enabled?: boolean;
+                    /** Is Staff Transfer Confirmed */
+                    is_staff_transfer_confirmed?: boolean | null;
                     /**
                      * Is Summary Enabled
                      * @default true

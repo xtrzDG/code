@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.widget_script_routes import build_widget_script_router
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.utilities.channels.channel_endpoints import WIDGET_DEMO_PATH
 from tests.channels.widget_script_source import (
     BUSINESS_ID,
@@ -22,7 +23,9 @@ from tests.channels.widget_script_source import (
 def demo(params: dict[str, str]) -> tuple[str, dict[str, str | None]]:
     http_application = FastAPI()
     install_error_handlers(http_application)
-    http_application.include_router(build_widget_script_router())
+    http_application.include_router(
+        build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)
+    )
     response = TestClient(http_application).get(
         WIDGET_DEMO_PATH, params={"business_id": BUSINESS_ID, **params}
     )

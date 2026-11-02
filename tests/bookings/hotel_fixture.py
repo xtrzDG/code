@@ -36,6 +36,7 @@ from app.schemas.typings.knowledge.strings import (
     ServiceReference,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.knowledge.get_price_use_case import GetPriceUseCase
 from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.operations.operations_world import OperationsWorld
@@ -152,6 +153,7 @@ class GuestHouse:
     ) -> RescheduleBookingCommand:
         return RescheduleBookingCommand(
             business_id=self.business.id,
+            actor_id=UserId(),
             booking_id=booking_id,
             new_date=LocalDate(day),
             language=LanguageTag("en"),

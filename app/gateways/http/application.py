@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 
-from fastapi import APIRouter, FastAPI, Request, Response
+from fastapi import APIRouter, Depends, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.types import Lifespan
 
@@ -18,6 +18,7 @@ from app.gateways.http.idempotency.response_recorder import install_idempotency
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
     AdmitRequest,
     AnonymousRequestLimitMiddleware,
+    admit_anonymous_request,
 )
 from app.gateways.http.middleware.body_size_limit_middleware import (
     BodySizeLimitMiddleware,
@@ -108,6 +109,9 @@ def build_http_application(
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else "/openapi.json",
         generate_unique_id_function=readable_operation_id,
+        # Counts a request with an unchecked Authorization header against
+        # its address once its route is known (the middleware below).
+        dependencies=[Depends(admit_anonymous_request)],
     )
     install_error_handlers(http_application)
     # Innermost: keeps the answers of requests with an Idempotency-Key.
@@ -156,9 +160,7 @@ def build_http_application(
 
     if anonymous_request_admission is not None:
         http_application.add_middleware(
-            AnonymousRequestLimitMiddleware,
-            admit=anonymous_request_admission,
-            routes=lambda: http_application.routes,
+            AnonymousRequestLimitMiddleware, admit=anonymous_request_admission
         )
 
     # Before anything reads a webhook's body (its route, the body limit).

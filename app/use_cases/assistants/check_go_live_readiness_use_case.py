@@ -59,7 +59,9 @@ TRIAL_AT_GO_LIVE_DETAIL: str = "trial_at_go_live"
 APP_BASE_URL_SETTING: str = "APP_BASE_URL"
 # What the owner reads when voice agents cannot be set up here; the missing
 # settings are logged for the operator.
-VOICE_UNAVAILABLE_MESSAGE: str = "Phone calls are not available right now. Contact support."
+VOICE_UNAVAILABLE_MESSAGE: str = (
+    "Phone calls are not available right now. Contact support."
+)
 VOICE_UNAVAILABLE_WARNING: str = (
     "Phone calls are not available right now, so this version goes live "
     "without answering calls."
@@ -283,6 +285,8 @@ class CheckGoLiveReadinessUseCase(
             is_ok=False,
             is_blocking=is_production,
             message=GoLiveCheckMessage(
-                VOICE_UNAVAILABLE_MESSAGE if is_production else VOICE_UNAVAILABLE_WARNING
+                VOICE_UNAVAILABLE_MESSAGE
+                if is_production
+                else VOICE_UNAVAILABLE_WARNING
             ),
         )

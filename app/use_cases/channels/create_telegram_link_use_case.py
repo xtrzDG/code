@@ -89,8 +89,7 @@ class CreateTelegramLinkUseCase(
                 "Telegram link not created: TELEGRAM_PLATFORM_BOT_TOKEN is missing."
             )
             raise ExternalServiceError(
-                "Telegram notifications are not available right now. "
-                "Contact support."
+                "Telegram notifications are not available right now. Contact support."
             )
 
         manager_name = input_data.request.name

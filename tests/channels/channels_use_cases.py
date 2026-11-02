@@ -143,6 +143,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.handoff_repo,
             self.usage_event_repo,
             self.audit_log_repo,
+            self.call_settings_repo,
             self.phone_number_parser,
             self.wall_clock,
         )

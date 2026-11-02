@@ -1,8 +1,10 @@
 """
 The AI disclosure: the assistant says it is an AI assistant of the business.
 
-It exists for every language with text support: the disclosure is legally
-required.
+It exists for every language the platform reads customers in
+(`language_evidence`: every official language of the EU the detector
+knows among them), as Art. 50(1) of the EU AI Act requires from 2 August
+2026: the disclosure is legally required.
 
 Every text exists for the languages businesses launch with; resolution
 falls back to the base language and then English. `{business}` is replaced
@@ -66,4 +68,21 @@ AI_DISCLOSURE: LocalizedText = build_localized_text(
     ur="السلام علیکم! میں {business} کا AI معاون ہوں۔",
     uz="Assalomu alaykum! Men {business} AI yordamchisiman.",
     vi="Xin chào! Tôi là trợ lý AI của {business}.",
+    am="ሰላም! እኔ የ{business} AI ረዳት ነኝ።",
+    bo="བཀྲ་ཤིས་བདེ་ལེགས། ང་ནི་{business}ཀྱི་AIརོགས་རམ་པ་ཡིན།",
+    dv="އައްސަލާމު ޢަލައިކުމް! އަހަރެންނަކީ {business} ގެ AI އެސިސްޓެންޓެވެ.",
+    gu="નમસ્તે! હું {business}નો AI સહાયક છું.",
+    km="សួស្តី! ខ្ញុំជាជំនួយការ AI របស់ {business}។",
+    kn="ನಮಸ್ಕಾರ! ನಾನು {business} ನ AI ಸಹಾಯಕ.",
+    lo="ສະບາຍດີ! ຂ້ອຍແມ່ນຜູ້ຊ່ວຍ AI ຂອງ {business}.",
+    ml="നമസ്കാരം! ഞാൻ {business}-ന്റെ AI സഹായിയാണ്.",
+    mr="नमस्कार! मी {business} चा AI सहाय्यक आहे.",
+    my="မင်္ဂလာပါ။ ကျွန်ုပ်သည် {business} ၏ AI လက်ထောက် ဖြစ်ပါသည်။",
+    ne="नमस्ते! म {business} को AI सहायक हुँ।",
+    pa="ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ {business} ਦਾ AI ਸਹਾਇਕ ਹਾਂ।",
+    si="ආයුබෝවන්! මම {business} හි AI සහායකයා වෙමි.",
+    ta="வணக்கம்! நான் {business} இன் AI உதவியாளர்.",
+    te="నమస్కారం! నేను {business} యొక్క AI సహాయకుడిని.",
+    # Odia: "or" is a keyword of Python.
+    **{"or": "ନମସ୍କାର! ମୁଁ {business}ର AI ସହାୟକ।"},
 )

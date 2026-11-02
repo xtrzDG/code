@@ -1,4 +1,7 @@
-"""The website chat widget script and its demo page (static, no business data)."""
+"""
+The website chat widget script and, outside production, its demo page
+(static, no business data).
+"""
 
 import hashlib
 import html
@@ -18,6 +21,7 @@ from app.gateways.http.widget_demo_page import (
 )
 from app.gateways.http.widget_script_assembly import assemble_widget_script
 from app.schemas.constants.channels import WidgetPosition, WidgetTheme
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetAccentColor
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -55,12 +59,17 @@ DEMO_SCRIPT_RELATIVE_URL: str = ".." + WIDGET_SCRIPT_PATH
 DEMO_FORM_ACTION: str = WIDGET_DEMO_PATH.rsplit("/", 1)[-1]
 
 
-def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> APIRouter:
+def build_widget_script_router(
+    environment: DeploymentEnvironment,
+    static_directory: Path = STATIC_DIRECTORY,
+) -> APIRouter:
     """
     Routes (public, no bearer token):
         GET /widget.js                       the chat widget (any site may load
                                              it; HEAD too)
-        GET /widget/demo?business_id=...     a page that embeds the widget;
+        GET /widget/demo?business_id=...     development and tests only (404 in
+                                             production): a page that embeds
+                                             the widget;
                                              optional `lang` (or `language`)
                                              forces the interface language,
                                              any of the widget's text
@@ -71,8 +80,9 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
 
     The script is assembled from its parts once, when the router is built,
     and served with an ETag over the assembled text; the demo page shows the
-    widget even while the chat is switched off (a preview for owners), so the
-    widget can be checked before going live.
+    widget even while the chat is switched off, so a developer can check it
+    before going live. Owners preview the widget on the cabinet's hosted
+    chat page (/c/{address}?preview=1), so production serves no demo page.
     """
 
     script_body: bytes = assemble_widget_script(static_directory).encode("utf-8")
@@ -99,6 +109,9 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
             media_type=WIDGET_SCRIPT_MEDIA_TYPE,
             headers=headers,
         )
+
+    if environment is DeploymentEnvironment.PRODUCTION:
+        return router
 
     @router.get(WIDGET_DEMO_PATH, include_in_schema=False)
     def get_widget_demo(

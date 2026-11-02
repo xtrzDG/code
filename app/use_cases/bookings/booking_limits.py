@@ -15,7 +15,6 @@ counters, taken only for a booking about to be saved (a taken time costs
 nothing); an owner's test (sandbox) counts against none of them.
 """
 
-from dataclasses import dataclass
 from datetime import date
 from zoneinfo import ZoneInfo
 
@@ -23,14 +22,13 @@ from typed_time_provider import Microseconds
 
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.bookings import BookingDocument
 from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.exceptions.application_errors import (
     RateLimitedError,
     ValidationFailedError,
 )
-from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import (
     RateWindowSeconds,
     RequestsPerWindow,
@@ -58,16 +56,6 @@ DAILY_CAP_MESSAGE: str = (
 )
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class CustomerBooking:
-    """A customer booking about to be saved, as the daily caps count it."""
-
-    business_id: BusinessId
-    contact_id: ContactId
-    source_channel: ChannelKind
-    client_ip_address: ClientIpAddress | None = None
-
-
 def refuse_beyond_horizon(local_date: date, zone: ZoneInfo, now_seconds: int) -> None:
     """
     Raises:
@@ -79,8 +67,14 @@ def refuse_beyond_horizon(local_date: date, zone: ZoneInfo, now_seconds: int) ->
         raise ValidationFailedError(HORIZON_MESSAGE)
 
 
-def daily_counters(booking: CustomerBooking) -> list[RateLimitCounter]:
-    """The contact's counter, and for an anonymous booking its network's and the business's."""
+def daily_counters(
+    booking: BookingDocument,
+    client_ip_address: ClientIpAddress | None,
+) -> list[RateLimitCounter]:
+    """
+    The contact's counter, and for an anonymous booking its network's (when
+    known) and the business's.
+    """
 
     counters: list[RateLimitCounter] = [
         RateLimitCounter(
@@ -91,8 +85,8 @@ def daily_counters(booking: CustomerBooking) -> list[RateLimitCounter]:
     if booking.source_channel not in ANONYMOUS_CHANNELS:
         return counters
 
-    if booking.client_ip_address is not None:
-        network: str = describe_client_network(booking.client_ip_address)
+    if client_ip_address is not None:
+        network: str = describe_client_network(client_ip_address)
         counters.append(
             RateLimitCounter(
                 key=RateLimitKey(f"booking-create:anonymous:network:{network}"),
@@ -102,7 +96,9 @@ def daily_counters(booking: CustomerBooking) -> list[RateLimitCounter]:
 
     counters.append(
         RateLimitCounter(
-            key=RateLimitKey(f"booking-create:anonymous:business:{booking.business_id}"),
+            key=RateLimitKey(
+                f"booking-create:anonymous:business:{booking.business_id}"
+            ),
             limit=RequestsPerWindow(MAX_ANONYMOUS_BOOKINGS_PER_BUSINESS_PER_DAY),
         )
     )
@@ -111,18 +107,23 @@ def daily_counters(booking: CustomerBooking) -> list[RateLimitCounter]:
 
 def count_customer_booking(
     rate_limits: RequestRateLimitRegistryContract,
-    booking: CustomerBooking,
+    booking: BookingDocument,
+    client_ip_address: ClientIpAddress | None,
     now: Microseconds,
 ) -> None:
     """
-    Count the booking against every daily cap it falls under, or none.
+    Count a customer's booking about to be saved against every daily cap
+    it falls under, or none; an owner's test (sandbox) counts nowhere.
 
     Raises:
         RateLimitedError: a cap is used up (with the seconds until a place
             frees up).
     """
 
-    counters: list[RateLimitCounter] = daily_counters(booking)
+    if booking.is_sandbox:
+        return
+
+    counters: list[RateLimitCounter] = daily_counters(booking, client_ip_address)
     refused_key: RateLimitKey | None = rate_limits.try_acquire_all(
         counters, DAY_WINDOW, now
     )

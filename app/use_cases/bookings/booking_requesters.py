@@ -14,6 +14,7 @@ call is refused with what the agent should offer instead.
 from dataclasses import dataclass
 
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.dto.bookings import CancelBookingCommand, RescheduleBookingCommand
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -51,11 +52,8 @@ class CustomerRequester:
 type BookingRequester = StaffRequester | CustomerRequester
 
 
-def identify_requester(
-    actor_id: UserId | None,
-    contact_id: ContactId | None,
-    phone_number: E164PhoneNumber | None,
-    source_channel: ChannelKind | None,
+def requester_of(
+    command: CancelBookingCommand | RescheduleBookingCommand,
 ) -> BookingRequester:
     """
     The requester a cancel or reschedule command names.
@@ -65,16 +63,18 @@ def identify_requester(
             or a customer asks in a call.
     """
 
-    if actor_id is not None:
-        return StaffRequester(actor_id=actor_id)
+    if command.actor_id is not None:
+        return StaffRequester(actor_id=command.actor_id)
 
-    if contact_id is None and phone_number is None:
+    if command.contact_id is None and command.contact_phone_number is None:
         raise AccessDeniedError(NO_REQUESTER_MESSAGE)
 
-    if source_channel in CALLER_ID_CHANNELS:
+    if command.source_channel in CALLER_ID_CHANNELS:
         raise AccessDeniedError(CALLER_ID_MESSAGE)
 
-    return CustomerRequester(contact_id=contact_id, phone_number=phone_number)
+    return CustomerRequester(
+        contact_id=command.contact_id, phone_number=command.contact_phone_number
+    )
 
 
 def customer_contact_of(requester: BookingRequester) -> ContactId | None:
@@ -86,9 +86,7 @@ def customer_contact_of(requester: BookingRequester) -> ContactId | None:
 def customer_phone_of(requester: BookingRequester) -> E164PhoneNumber | None:
     """The phone the customer's channel proved; None for staff."""
 
-    return (
-        requester.phone_number if isinstance(requester, CustomerRequester) else None
-    )
+    return requester.phone_number if isinstance(requester, CustomerRequester) else None
 
 
 def staff_actor_of(requester: BookingRequester) -> UserId | None:

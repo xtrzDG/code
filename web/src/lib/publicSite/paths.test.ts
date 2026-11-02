@@ -18,7 +18,8 @@ describe("public site paths", () => {
     expect(nichePath("it", "beauty_salon")).toBe("/it/for/beauty_salon");
     expect(nichePath("en", "a b")).toBe("/en/for/a%20b");
     expect(legalPath("en", "privacy")).toBe("/en/privacy");
-    expect(LEGAL_PAGES).toContain("contact");
+    expect(LEGAL_PAGES).toEqual(["terms", "privacy", "cookies", "dpa", "security", "accessibility", "contact"]);
+    expect(legalPath("it", "accessibility")).toBe("/it/accessibility");
     expect(isLegalPage("dpa")).toBe(true);
     expect(isLegalPage("refunds")).toBe(false);
   });
@@ -38,6 +39,9 @@ describe("public site paths", () => {
   it("sends a legal page without a language to the reader's", () => {
     expect(localizedRedirectPath("/privacy", "it")).toBe("/it/privacy");
     expect(localizedRedirectPath("/terms/", "it")).toBe("/it/terms");
+    expect(localizedRedirectPath("/cookies", "it")).toBe("/it/cookies");
+    expect(localizedRedirectPath("/accessibility", "en")).toBe("/en/accessibility");
+    expect(localizedRedirectPath("/accessibility/", "it")).toBe("/it/accessibility");
     expect(localizedRedirectPath("/login", "en")).toBeNull();
     expect(localizedRedirectPath("/", "en")).toBeNull();
   });

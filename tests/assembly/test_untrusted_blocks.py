@@ -50,13 +50,18 @@ def test_imported_facts_are_wrapped_and_the_rule_explains_them() -> None:
 
     assert UNTRUSTED_RULE in lines
     assert "- Menu item: Khinkali: 1.20 GEL" in lines
-    assert f"- Menu item: Khinkali: {wrap_untrusted(INJECTED_BODY)}" in lines
+    # The imported title is the page's text too.
+    assert (
+        f"- {wrap_untrusted('Menu item: Khinkali')}: {wrap_untrusted(INJECTED_BODY)}"
+        in lines
+    )
 
 
 def test_spoken_facts_wrap_imported_values_too() -> None:
     lines = build_spoken_fact_section([fact(INJECTED_BODY, is_imported=True)], [])
 
     assert any(line.endswith("</untrusted>") for line in lines)
+    assert f"- {wrap_untrusted('Menu item: Khinkali')}: " in "\n".join(lines)
 
 
 def test_items_imported_from_a_website_become_imported_facts() -> None:

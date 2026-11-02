@@ -11,6 +11,7 @@ network, reason), a flood once when it starts.
 """
 
 import time
+from collections.abc import Mapping
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -54,10 +55,16 @@ class WebhookAdmissionMiddleware:
         self,
         app: ASGIApp,
         clock: MonotonicClock = time.monotonic,
+        per_minute: Mapping[str, int] | None = None,
     ) -> None:
+        """`per_minute` overrides the budget of a provider (tests)."""
+
         self.app: ASGIApp = app
+        overrides: Mapping[str, int] = per_minute or {}
         self._budgets: dict[WebhookRoute, FloodBudget] = {
-            route: FloodBudget(route.per_minute, clock=clock)
+            route: FloodBudget(
+                overrides.get(route.provider, route.per_minute), clock=clock
+            )
             for route in WEBHOOK_ROUTES
         }
 

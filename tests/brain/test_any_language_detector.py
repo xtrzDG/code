@@ -195,3 +195,16 @@ def test_a_business_language_of_a_single_language_script_wins_ties() -> None:
     assert detect("আমি কাল টেবিল চাই", version_languages=assamese_business).language == (
         "as"
     )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Scusi, sei una persona vera?",
+        "sei una persona vera?",
+        "Aiuto! Un signore si è sentito male, cosa facciamo?",
+        "Avete un tavolo per due stasera?",
+    ],
+)
+def test_short_italian_questions_are_not_read_as_spanish(text: str) -> None:
+    assert detect(text).language == "it"

@@ -22,6 +22,7 @@ import { createAssistant, createBusiness } from "./support/api";
 import { addPlace, berlinDate, bookByHand, bookingNow } from "./support/calendar";
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
+import { WCAG_TAGS } from "./support/axe";
 
 test.describe.configure({ timeout: 120_000 });
 
@@ -32,7 +33,7 @@ const ONE_HOUR = 56;
 const offerFor = (page: Page, name: string) => page.getByText(calendar.move.tell.title.replace("{name}", name));
 
 async function seriousViolations(page: Page): Promise<string[]> {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
   return results.violations
     .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
     .map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`);

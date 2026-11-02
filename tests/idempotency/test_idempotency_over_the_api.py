@@ -15,11 +15,19 @@ type JsonObject = dict[str, Any]
 
 KEY: str = "0c6f3a4e-2b1d-4e8f-9a7c-5d3b2e1f0a9c"
 IDEMPOTENT_OPERATIONS: set[str] = {
+    "POST /v1/admin/clients/{business_id}/credits",
+    "POST /v1/admin/clients/{business_id}/discount",
+    "POST /v1/admin/clients/{business_id}/invoices/{invoice_id}/manual-payment",
+    "POST /v1/admin/clients/{business_id}/plan",
+    "POST /v1/admin/clients/{business_id}/setup-fee-waiver",
+    "POST /v1/admin/clients/{business_id}/trial-extension",
     "POST /v1/assistants",
     "POST /v1/brands",
     "POST /v1/brands/{brand_id}/locations/clone",
     "POST /v1/businesses/{business_id}/bookings",
     "POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages",
+    "POST /v1/businesses/{business_id}/deposit-settings/payment-links",
+    "POST /v1/businesses/{business_id}/deposits/{deposit_id}/paid",
     "POST /v1/businesses/{business_id}/billing/checkout",
     "POST /v1/businesses/{business_id}/billing/payment-method",
     "POST /v1/businesses/{business_id}/billing/subscribe",

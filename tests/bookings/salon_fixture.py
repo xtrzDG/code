@@ -160,6 +160,7 @@ class Salon:
         return self.world.reschedule_booking().run(
             RescheduleBookingCommand(
                 business_id=self.business.id,
+                actor_id=UserId(),
                 booking_id=booking_id,
                 new_date=LocalDate(day),
                 new_time=LocalTimeOfDay(time),

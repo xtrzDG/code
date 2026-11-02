@@ -25,8 +25,8 @@ export const accessibilityEn = {
   },
   methodTitle: "How this statement was prepared",
   methodText:
-    "It is based on a self-assessment by the provider, not on an audit by an independent expert. Automated checks with the axe-core tool, against its WCAG 2.0, 2.1 and 2.2 rules at levels A and AA, run in the service's automated tests on the public pages, the chat page, the website chat, the booking page and the cabinet's pages (the public pages and the cabinet's in both the light and the dark theme). Automated tools find only part of the possible problems.",
-  dateText: "This statement was prepared on {date}. It is reviewed at least once a year and whenever the service changes significantly.",
+    "It is based on a self-assessment by the provider, not on an audit by an independent expert. The axe-core tool automatically checks the public pages, the chat page, the website chat, the booking page and the cabinet's pages against its WCAG 2.0, 2.1 and 2.2 rules at levels A and AA (the public pages and the cabinet's in both the light and the dark theme). Automated tools find only part of the possible problems.",
+  dateText: "This statement was prepared on {date} and is reviewed at least once a year and whenever the service changes significantly.",
   feedbackTitle: "Feedback and contact",
   feedbackText:
     "If you meet a barrier, or need something from the service in another format, tell us which page it was and what went wrong. We answer within 30 days.",

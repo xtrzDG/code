@@ -14,6 +14,8 @@ from app.gateways.http.middleware.body_size_limit_middleware import (
     DEFAULT_BODY_LIMIT_BYTES,
     MENU_IMPORT_BODY_LIMIT_BYTES,
     POST_CALL_BODY_LIMIT_BYTES,
+    READING_BODY_LIMIT_BYTES,
+    TELEPHONY_FORM_BODY_LIMIT_BYTES,
     WEBHOOK_BODY_LIMIT_BYTES,
     BodySizeLimitMiddleware,
     find_body_limit,
@@ -41,6 +43,10 @@ def build_client() -> tuple[TestClient, SilentErrorReporter]:
     @router.post("/v1/echo")
     def echo(body: Annotated[bytes, Depends(read_raw_request_body)]) -> dict[str, int]:
         return {"length": len(body)}
+
+    @router.get("/v1/echo-read")
+    def echo_read() -> dict[str, str]:
+        return {"read": "yes"}
 
     @router.post("/v1/channels/meta/webhook")
     async def webhook(request: Request) -> dict[str, int]:
@@ -77,10 +83,34 @@ def chunks(total: int, size: int = 64 * KIBIBYTE) -> Iterator[bytes]:
         ("/v1/voice/webhooks/post-call", POST_CALL_BODY_LIMIT_BYTES),
         ("/v1/businesses/biz_1/knowledge/import", MENU_IMPORT_BODY_LIMIT_BYTES),
         ("/v1/businesses/biz_1/knowledge/import/confirm", DEFAULT_BODY_LIMIT_BYTES),
+        ("/v1/telephony/zadarma/notifications", TELEPHONY_FORM_BODY_LIMIT_BYTES),
+        (
+            "/v1/telephony/twilio/voice-fallback/biz_1/dial-status",
+            TELEPHONY_FORM_BODY_LIMIT_BYTES,
+        ),
+        ("/v1/payments/stripe/webhook", WEBHOOK_BODY_LIMIT_BYTES),
     ],
 )
 def test_every_route_has_its_body_limit(path: str, limit: int) -> None:
     assert find_body_limit(path) == limit
+
+
+@pytest.mark.parametrize("method", ["GET", "HEAD", "OPTIONS", "get"])
+def test_a_request_that_only_reads_may_carry_no_real_body(method: str) -> None:
+    assert find_body_limit("/v1/voice/webhooks/post-call", method) == (
+        READING_BODY_LIMIT_BYTES
+    )
+    assert find_body_limit("/v1/me", method) == READING_BODY_LIMIT_BYTES
+
+
+def test_a_get_with_a_body_is_refused_before_reading() -> None:
+    client, _ = build_client()
+
+    response = client.request(
+        "GET", "/v1/echo-read", content=b"x" * (READING_BODY_LIMIT_BYTES + 1)
+    )
+
+    assert response.status_code == 413
 
 
 def test_a_body_within_the_limit_is_read() -> None:
@@ -111,7 +141,9 @@ def test_a_streamed_body_is_counted_and_stopped_at_the_limit() -> None:
 
     refused = client.post("/v1/echo", content=chunks(DEFAULT_BODY_LIMIT_BYTES * 2))
     webhook = client.post(
-        "/v1/channels/meta/webhook", content=chunks(DEFAULT_BODY_LIMIT_BYTES * 2)
+        "/v1/channels/meta/webhook",
+        content=chunks(DEFAULT_BODY_LIMIT_BYTES * 2),
+        headers={"X-Hub-Signature-256": "sha256=" + "0" * 64},
     )
 
     assert refused.status_code == 413

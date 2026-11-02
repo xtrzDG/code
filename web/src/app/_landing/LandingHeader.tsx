@@ -18,24 +18,24 @@ export function LandingHeader({ t, home = "" }: { t: Translator["t"]; home?: str
     <>
       <ConsentBannerSlot />
       <TopBar
-      actions={
-        <>
-          <nav aria-label={t("landing.nav.label")} className="me-2 hidden items-center lg:flex">
-            <a href={`${home}#how`} className={linkClass}>
-              {t("landing.nav.how")}
-            </a>
-            <a href={`${home}#pricing`} className={linkClass}>
-              {t("landing.nav.pricing")}
-            </a>
-            <a href={`${home}#faq`} className={linkClass}>
-              {t("landing.nav.faq")}
-            </a>
-          </nav>
-          <CabinetButtonLink href={LOGIN_PATH} size="sm" variant="secondary" className="max-[359px]:hidden">
-            {t("landing.nav.signIn")}
-          </CabinetButtonLink>
-        </>
-      }
+        actions={
+          <>
+            <nav aria-label={t("landing.nav.label")} className="me-2 hidden items-center lg:flex">
+              <a href={`${home}#how`} className={linkClass}>
+                {t("landing.nav.how")}
+              </a>
+              <a href={`${home}#pricing`} className={linkClass}>
+                {t("landing.nav.pricing")}
+              </a>
+              <a href={`${home}#faq`} className={linkClass}>
+                {t("landing.nav.faq")}
+              </a>
+            </nav>
+            <CabinetButtonLink href={LOGIN_PATH} size="sm" variant="secondary" className="max-[359px]:hidden">
+              {t("landing.nav.signIn")}
+            </CabinetButtonLink>
+          </>
+        }
       />
     </>
   );

@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.deposit_routes import build_deposit_router
+from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.return_visit_routes import build_return_visit_router
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.gateways.http.waitlist_routes import build_waitlist_router
@@ -40,5 +41,6 @@ def build_growth_routers(
             get_deposit=growth.get_deposit_request_operator(),
             mark_paid=growth.mark_deposit_paid_operator(),
             get_report=growth.get_deposit_report_operator(),
+            idempotent=idempotency_of(operators, current_user),
         ),
     ]

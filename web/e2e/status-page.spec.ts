@@ -19,6 +19,7 @@ import { API_URL, STATUS_ADMIN_EMAIL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 const texts = en.adminStatus;
 const status = en.platformStatus;
@@ -84,7 +85,7 @@ test("an announced outage shows on the status page and over the cabinet until it
     // A fresh platform has measured a day or two: the row says since when, never "100 %" or "0 %".
     await expect(telegram.getByText(new RegExp(`^${status.observingSince.replace("{date}", ".+")}$`))).toBeVisible();
     await expect(telegram).not.toContainText("%");
-    const audit = await new AxeBuilder({ page: visitor }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    const audit = await new AxeBuilder({ page: visitor }).withTags([...WCAG_TAGS]).analyze();
     expect(audit.violations).toEqual([]);
 
     // An owner: over every page, and an outage cannot be hidden.

@@ -35,6 +35,7 @@ from app.use_cases.bookings.availability_slots import (
     is_open_for,
     nearest_time_slots,
 )
+from app.use_cases.bookings.booking_limits import refuse_beyond_horizon
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
@@ -81,6 +82,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
     With a requested time, up to five slots nearest to it are returned;
     otherwise the first ten. For each time the best-fitting resource is
     offered. Real queries count real bookings; sandbox queries count all.
+    A customer asks at most the booking horizon ahead (`booking_limits`).
 
     The full-day view (`full_day`, staff picking a time in the cabinet)
     lists every free slot of the date for every resource that seats the
@@ -152,6 +154,11 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             ensure_party_size_allowed(input_data.party_size, inputs.rules)
 
         local_date: date = parse_local_date(input_data.date)
+        now: Microseconds = self._wall_clock.now_unix()
+        now_seconds: int = microseconds_to_seconds(int(now))
+        if not input_data.full_day:
+            refuse_beyond_horizon(local_date, inputs.zone, now_seconds)
+
         items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
             input_data.business_id
         )
@@ -168,8 +175,6 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 is_duration_override_allowed=input_data.full_day,
             ),
         )
-        now: Microseconds = self._wall_clock.now_unix()
-        now_seconds: int = microseconds_to_seconds(int(now))
         request = PlacementRequest(
             local_date=local_date,
             minute_of_day=None,

@@ -11,6 +11,8 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.widget_demo_page import EXAMPLE_ACCENT_COLOR, demo_page_language
 from app.gateways.http.widget_demo_texts import WIDGET_DEMO_TEXTS
 from app.gateways.http.widget_script_routes import build_widget_script_router
+from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.dto.channels.widget import WidgetSnippetView
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_endpoints import WIDGET_DEMO_PATH
 from tests.channels.widget_script_source import BUSINESS_ID, parse_script_tags
@@ -19,7 +21,9 @@ from tests.channels.widget_script_source import BUSINESS_ID, parse_script_tags
 def build_client() -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
-    http_application.include_router(build_widget_script_router())
+    http_application.include_router(
+        build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)
+    )
     return TestClient(http_application)
 
 
@@ -108,3 +112,27 @@ class TestPagePalette:
 
         assert "closing &lt;/body&gt; tag" in response.text
         assert "&lt;your API address&gt;/widget.js" in response.text
+
+
+def test_production_serves_the_script_but_no_demo_page() -> None:
+    # Owners preview the widget on the cabinet's hosted chat page; the API's
+    # demo page is for development and tests only.
+    http_application = FastAPI()
+    install_error_handlers(http_application)
+    http_application.include_router(
+        build_widget_script_router(DeploymentEnvironment.PRODUCTION)
+    )
+    client = TestClient(http_application)
+
+    assert (
+        client.get(WIDGET_DEMO_PATH, params={"business_id": BUSINESS_ID}).status_code
+        == 404
+    )
+    assert client.get(WIDGET_DEMO_PATH).status_code == 404
+    assert client.get("/widget.js").status_code == 200
+
+
+def test_the_snippets_demo_link_is_deprecated() -> None:
+    schema = WidgetSnippetView.model_json_schema(mode="serialization")
+
+    assert schema["properties"]["demo_url"]["deprecated"] is True

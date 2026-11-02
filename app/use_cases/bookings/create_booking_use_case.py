@@ -11,6 +11,7 @@ from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
     BusinessLockRegistryContract,
 )
+from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -25,7 +26,6 @@ from app.contracts.repositories.knowledge_repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
@@ -41,11 +41,12 @@ from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )
-from app.schemas.typings.bookings.constrained_integers import (
-    BookingEndsAtUnixSeconds,
-    BookingStartsAtUnixSeconds,
-)
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.bookings.booking_creation import build_new_booking
+from app.use_cases.bookings.booking_limits import (
+    count_customer_booking,
+    refuse_beyond_horizon,
+)
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
@@ -98,6 +99,8 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
     booking. Places held for other waiting customers count as taken; a
     booking of the customer's own held place, or one after a rebooking
     invitation, is marked as the waitlist's or the campaign's (`origin`).
+    The date is at most the booking horizon ahead, and the booking counts
+    against the customer's daily caps (`booking_limits`).
     """
 
     def __init__(
@@ -124,8 +127,10 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         live_events: EventPublisherFacilitatorContract,
         growth: GrowthBookingsFacilitatorContract,
         busy_times_repo: CalendarBusyTimesRepoContract,
+        rate_limits: RequestRateLimitRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._rate_limits: RequestRateLimitRegistryContract = rate_limits
         self._growth: GrowthBookingsFacilitatorContract = growth
         self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
         self._business_repo: BusinessRepoContract = business_repo
@@ -168,6 +173,10 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             self._contact_repo, input_data.business_id, input_data.contact_id
         )
         local_date: date = parse_local_date(input_data.date)
+        now: Microseconds = self._wall_clock.now_unix()
+        refuse_beyond_horizon(
+            local_date, inputs.zone, microseconds_to_seconds(int(now))
+        )
         items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
             input_data.business_id
         )
@@ -187,7 +196,6 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             input_data.party_size,
             "; pass the request to a manager",
         )
-        now: Microseconds = self._wall_clock.now_unix()
         with self._lock_registry.lock_for(input_data.business_id):
             placement: Placement = place_booking(
                 candidates,
@@ -230,25 +238,11 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                 input_data.nights,
                 inputs,
             )
-            booking = BookingDocument(
-                business_id=input_data.business_id,
-                resource_id=placement.resource.id,
-                contact_id=contact.id,
-                conversation_id=input_data.conversation_id,
-                starts_at=BookingStartsAtUnixSeconds(placement.starts_at),
-                ends_at=BookingEndsAtUnixSeconds(placement.ends_at),
-                party_size=input_data.party_size,
-                status=BookingStatus.CONFIRMED,
-                source_channel=input_data.source_channel,
-                notes=input_data.notes,
-                is_sandbox=input_data.is_sandbox,
-                language=input_data.language,
-                service_item_id=booked.service_item_id,
-                buffer_minutes=choice.buffer_minutes,
-                value_minor=booked.value_minor,
-                currency_code=booked.currency_code,
-                created_at=now,
-                updated_at=now,
+            booking: BookingDocument = build_new_booking(
+                input_data, placement, contact.id, choice.buffer_minutes, booked, now
+            )
+            count_customer_booking(
+                self._rate_limits, booking, input_data.client_ip_address, now
             )
             booking.origin = self._growth.attribute(booking, now)
             self._booking_repo.save(booking)

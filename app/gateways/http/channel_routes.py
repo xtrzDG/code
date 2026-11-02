@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import PlainTextResponse
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.network_budget_dependency import build_network_budget
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.serialized_json_response import serialized_json_response
 from app.gateways.http.strict_request_parsing import (
@@ -61,6 +62,13 @@ from app.utilities.spend.widget_origins import page_origin_of
 
 WIDGET_CONFIG_PATH: str = "/v1/widget/{business_id}/config"
 WIDGET_MESSAGES_PATH: str = "/v1/widget/{business_id}/messages"
+# Every page load of a site with the chat reads its config once: an office
+# behind one address opens a few dozen pages a minute, a script thousands.
+WIDGET_CONFIG_REQUESTS_PER_MINUTE: int = 120
+WIDGET_CONFIG_REFUSAL: str = "Too many chat configuration requests; try again soon."
+# The same for every visitor of a business: browsers (and caches keyed by
+# the page's origin, which decides the 403) keep it for a minute.
+WIDGET_CONFIG_CACHE_CONTROL: str = "public, max-age=60"
 
 read_widget_message_body = build_json_body_dependency(WidgetMessageRequest)
 
@@ -97,6 +105,9 @@ def build_channel_router(
                                                           Instagram messages
         POST /v1/channels/telegram-platform/webhook       staff bot updates
         GET  /v1/widget/{business_id}/config              public widget config
+                                                          (cacheable for 60 s;
+                                                          120 a minute per
+                                                          client network)
         POST /v1/widget/{business_id}/messages            widget visitor message
                                                           (202: a worker answers;
                                                           the widget polls)
@@ -110,6 +121,9 @@ def build_channel_router(
 
     router = APIRouter(tags=["channels"], responses=standard_error_responses())
     guarded = [] if widget_origin_guard is None else [Depends(widget_origin_guard)]
+    config_budget = build_network_budget(
+        "widget-config", WIDGET_CONFIG_REQUESTS_PER_MINUTE, WIDGET_CONFIG_REFUSAL
+    )
 
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)
     def receive_telegram_webhook(
@@ -180,9 +194,11 @@ def build_channel_router(
             headers=WIDGET_CORS_HEADERS,
         )
 
-    @router.get(WIDGET_CONFIG_PATH, dependencies=guarded)
+    @router.get(WIDGET_CONFIG_PATH, dependencies=[Depends(config_budget), *guarded])
     def get_widget_config(business_id: str, response: Response) -> WidgetConfigView:
         response.headers.update(WIDGET_CORS_HEADERS)
+        response.headers["Cache-Control"] = WIDGET_CONFIG_CACHE_CONTROL
+        response.headers["Vary"] = "Origin"
         return widget_config_operator.operate(
             parse_path_identifier(business_id, BusinessId, "Chat")
         )

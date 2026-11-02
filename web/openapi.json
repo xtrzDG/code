@@ -7470,6 +7470,29 @@
         "title": "CallGuardVerdict",
         "type": "string"
       },
+      "CallNoticePreview": {
+        "additionalProperties": false,
+        "description": "What a caller hears about the recording and the privacy notice.",
+        "properties": {
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "CallNoticePreview",
+        "type": "object"
+      },
       "CallOutcome": {
         "description": "Result extracted from a finished phone call.",
         "enum": [
@@ -7485,14 +7508,24 @@
       },
       "CallSettingsView": {
         "additionalProperties": false,
-        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business.",
+        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business; the recording with the\nnotice callers hear in each language (`recording_notices`), and the\nstaff number transfers go to (None: no allowed staff number) with the\nowner's confirmation of the staff notice (who confirmed it, when).",
         "properties": {
+          "is_recording_enabled": {
+            "default": false,
+            "title": "Is Recording Enabled",
+            "type": "boolean"
+          },
           "is_sms_available": {
             "title": "Is Sms Available",
             "type": "boolean"
           },
           "is_sms_fallback_enabled": {
             "title": "Is Sms Fallback Enabled",
+            "type": "boolean"
+          },
+          "is_staff_transfer_confirmed": {
+            "default": false,
+            "title": "Is Staff Transfer Confirmed",
             "type": "boolean"
           },
           "is_summary_enabled": {
@@ -7506,6 +7539,24 @@
           "is_whatsapp_connected": {
             "title": "Is Whatsapp Connected",
             "type": "boolean"
+          },
+          "recording_notices": {
+            "items": {
+              "$ref": "#/components/schemas/CallNoticePreview"
+            },
+            "title": "Recording Notices",
+            "type": "array"
+          },
+          "staff_transfer_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Transfer Confirmed At"
           },
           "template_previews": {
             "items": {
@@ -7527,6 +7578,20 @@
               }
             ],
             "title": "Text Back Template Name"
+          },
+          "transfer_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transfer Phone Number"
           }
         },
         "required": [
@@ -14857,9 +14922,10 @@
       },
       "FeedbackTemplatePreview": {
         "additionalProperties": false,
-        "description": "The feedback request in one language: the body to register as the\nWhatsApp template (its one parameter {{1}} is the business name) and\nhow a customer reads it.",
+        "description": "The feedback request in one language: the body to register as the\nWhatsApp template (its one parameter {{1}} is the business name).\n\n`example` is deprecated: the cabinet no longer shows the request as a\ncustomer would read it; it is still filled for clients of `/v1`.",
         "properties": {
           "example": {
+            "deprecated": true,
             "title": "Example",
             "type": "string"
           },
@@ -15090,7 +15156,7 @@
       },
       "GoLiveCheck": {
         "additionalProperties": false,
-        "description": "One launch condition and what was found.\n\nA failed `is_blocking` check stops publishing; a failed non-blocking one\nis only a warning (voice without ElevenLabs in development). `details`\nqualify it by code:\n\n- subscription_or_trial: the subscription status, or \"none\";\n- dpa: the agreement version to accept;\n- profile_gaps: the blocking gap kinds (\"no_opening_hours\", ...);\n- staff_contact: \"no_handoff_contact\" while nobody receives handoffs;\n- autotests: the version status, then the latest run's status;\n- voice_configuration: the missing server settings (\"APP_BASE_URL\").",
+        "description": "One launch condition and what was found.\n\nA failed `is_blocking` check stops publishing; a failed non-blocking one\nis only a warning (voice without ElevenLabs in development). `details`\nqualify it by code:\n\n- subscription_or_trial: the subscription status, or \"none\";\n- dpa: the agreement version to accept;\n- profile_gaps: the blocking gap kinds (\"no_opening_hours\", ...);\n- staff_contact: \"no_handoff_contact\" while nobody receives handoffs;\n- autotests: the version status, then the latest run's status;\n- voice_configuration: none (which settings are missing is logged for\n  the operator, never shown to the owner).",
         "properties": {
           "code": {
             "$ref": "#/components/schemas/GoLiveCheckCode"
@@ -35071,13 +35137,14 @@
       },
       "WidgetSnippetView": {
         "additionalProperties": false,
-        "description": "Embed code the owner pastes into the website, and the page that shows\nthe widget as visitors see it (it accepts `color`, `position` and\n`language` to preview unsaved choices).",
+        "description": "Embed code the owner pastes into the website.\n\n`demo_url` is deprecated: the API's widget demo page is served in\ndevelopment and tests only (404 in production); owners preview the\nwidget on the hosted chat page (the share links' `hosted_chat_url`).",
         "properties": {
           "business_id": {
             "title": "Business Id",
             "type": "string"
           },
           "demo_url": {
+            "deprecated": true,
             "maxLength": 2048,
             "minLength": 14,
             "pattern": "^https?://[^\\s/]+(/[^\\s]*)?/widget/demo\\?business_id=[^\\s&]+$",
@@ -57975,12 +58042,34 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The owner's choices: summaries to staff after every call, a message\nto a caller who did not get through (on WhatsApp, in the approved\ntemplate `text_back_template_name`, else by SMS when allowed).",
+                "description": "The owner's choices: summaries to staff after every call, a message\nto a caller who did not get through (on WhatsApp, in the approved\ntemplate `text_back_template_name`, else by SMS when allowed), the\nrecording of the calls (`is_recording_enabled`) and the confirmation\nthat staff taking transferred calls were told the voice platform may\nprocess them (`is_staff_transfer_confirmed`); these two stay as they\nare when the request leaves them out (null).",
                 "properties": {
+                  "is_recording_enabled": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Recording Enabled"
+                  },
                   "is_sms_fallback_enabled": {
                     "default": true,
                     "title": "Is Sms Fallback Enabled",
                     "type": "boolean"
+                  },
+                  "is_staff_transfer_confirmed": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Staff Transfer Confirmed"
                   },
                   "is_summary_enabled": {
                     "default": true,

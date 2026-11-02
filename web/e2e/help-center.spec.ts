@@ -14,6 +14,7 @@ import { SUPPORT_TELEGRAM, WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 const help = en.helpCenter;
 const tips = en.coachMarks;
@@ -115,7 +116,7 @@ test.describe("on a phone", () => {
         await page.goto(path);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
         await waitForNetworkQuiet(page);
-        const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+        const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
         expect(results.violations, path).toEqual([]);
         expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(390);
       }

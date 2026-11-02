@@ -13,6 +13,8 @@ transfers (Settings → Calls) and the staff number is an allowed
 destination (`find_transfer_phone_number`).
 """
 
+from datetime import timedelta
+
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
@@ -39,6 +41,7 @@ from app.utilities.scheduling.zoned_time import (
     to_local_moment,
 )
 
+ONE_DAY: timedelta = timedelta(days=1)
 BLOCKED_CALLER_REFUSAL: str = (
     "The caller's number is blocked by the business: the voice assistant does "
     "not take the call."
@@ -91,7 +94,7 @@ def refuse_past_daily_minutes(
     totals: list[UsageKindTotal] = usage_spend_repo.sum_business(
         business.id,
         Microseconds(local_day_start_microseconds(local_date, zone)),
-        now,
+        Microseconds(local_day_start_microseconds(local_date + ONE_DAY, zone)),
     )
     voice_seconds: int = sum(
         int(total.quantity) for total in totals if total.kind is UsageKind.VOICE_SECONDS

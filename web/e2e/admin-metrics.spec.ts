@@ -13,6 +13,7 @@ import { METRICS_ADMIN_EMAIL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 const texts = en.adminMetrics;
 
@@ -92,7 +93,7 @@ test.describe("on a phone", () => {
       await expect(page.getByRole("region", { name: texts.funnel.title })).toBeVisible();
       await waitForNetworkQuiet(page);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+      const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
       const serious = results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical");
       expect(serious.map((violation) => violation.id)).toEqual([]);
     });

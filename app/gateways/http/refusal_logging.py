@@ -8,7 +8,7 @@ one line per route and client network a minute, not one per request).
 from fastapi import Request
 from fastapi.routing import APIRoute
 
-from app.gateways.http.middleware.flood_budgets import FloodBudget
+from app.gateways.http.middleware.flood_budgets import is_first_line_this_minute
 from app.gateways.http.middleware.webhook_deliveries import (
     WebhookRoute,
     find_webhook_route,
@@ -26,16 +26,12 @@ TOO_MANY_REQUESTS: int = 429
 CLIENT_ERROR: int = 400
 SERVER_ERROR: int = 500
 UNMATCHED_ROUTE: str = "unmatched"
-# One rate-limit line per route and client network a minute.
-_RATE_LIMIT_LINES: FloodBudget = FloodBudget(per_minute=1)
 
 
 def log_refusal(request: Request, status: int, error_code: str) -> None:
     """The security line of an error answer, when it is one worth a line."""
 
-    client_address: str | None = (
-        None if request.client is None else request.client.host
-    )
+    client_address: str | None = None if request.client is None else request.client.host
     webhook: WebhookRoute | None = find_webhook_route(request.url.path)
     if webhook is not None and CLIENT_ERROR <= status < SERVER_ERROR:
         log_security_event(
@@ -57,8 +53,8 @@ def log_refusal(request: Request, status: int, error_code: str) -> None:
             client_address=client_address,
             status=status,
         )
-    elif status == TOO_MANY_REQUESTS and (
-        _RATE_LIMIT_LINES.spend(f"{path}:{client_address}").is_admitted
+    elif status == TOO_MANY_REQUESTS and is_first_line_this_minute(
+        f"{path}:{client_address}"
     ):
         log_security_event(
             RATE_LIMIT_TRIGGERED,

@@ -17,6 +17,7 @@ import { en } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 import { findOverflow, usePseudoLocale } from "./support/overflow";
 import { PROFILE_SECTIONS, saveState, templatePattern } from "./support/profile";
+import { WCAG_TAGS } from "./support/axe";
 
 const offer = en.tunnelOffer.offer;
 const compact = en.profileEdit.offer.compact;
@@ -146,7 +147,7 @@ test("every section passes the accessibility audit", async ({ page, owner }) => 
       await page.goto(`/b/${owner.businessId}/assistant/profile${path}`);
       await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
       await waitForNetworkQuiet(page);
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+      const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
       const serious = results.violations
         .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
         .map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`);

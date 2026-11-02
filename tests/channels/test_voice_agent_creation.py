@@ -7,6 +7,10 @@ import pytest
 
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.utilities.channels.voice_service import (
+    MAX_CONCURRENT_CALLS,
+    MAX_DAILY_CALLS,
+)
 from tests.channels.channels_settings import build_settings
 from tests.channels.testbed import ChannelsTestbed
 from tests.channels.voice_agent_specs import (
@@ -135,22 +139,50 @@ class TestAgentCreation:
         transfer = agent_config["prompt"]["built_in_tools"]["transfer_to_number"]
         assert transfer["params"]["system_tool_type"] == "transfer_to_number"
         [destination] = transfer["params"]["transfers"]
+        # Never a number fixed in the agent: the call's transfer_number,
+        # which the call-initiation webhook sets only while open.
         assert destination["transfer_destination"] == {
-            "type": "phone",
-            "phone_number": "+995599000111",
+            "type": "phone_dynamic_variable",
+            "phone_number": "transfer_number",
         }
+        assert "+995599000111" not in json.dumps(agent)
         assert "{{is_open_now}}" in destination["condition"]
+        assert "{{transfer_number}}" in destination["condition"]
         assert "handoff_to_human" in destination["condition"]
         assert agent_config["dynamic_variables"] == {
             "dynamic_variable_placeholders": {
                 "is_open_now": "no",
+                "transfer_number": "none",
                 "local_now": "unknown",
                 "next_days": "unknown",
                 "timezone": "unknown",
-                "caller_name": "unknown",
-                "upcoming_booking": "none",
             }
         }
+
+    def test_the_agent_starts_no_conversation_without_a_signed_url(self) -> None:
+        testbed = ChannelsTestbed()
+        testbed.elevenlabs_transport.respond(
+            "POST", r"^/v1/convai/agents/create$", {"agent_id": "agent_auth"}
+        )
+
+        provisioner(testbed).upsert_agent(build_spec(tools=[]))
+
+        agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
+        platform = agent["platform_settings"]
+        assert platform["auth"] == {
+            "enable_auth": True,
+            "allowlist": [],
+            "require_origin_header": True,
+        }
+        assert platform["call_limits"] == {
+            "agent_concurrency_limit": MAX_CONCURRENT_CALLS,
+            "daily_limit": MAX_DAILY_CALLS,
+            "bursting_enabled": False,
+        }
+        # Phone calls still start through the call-initiation webhook.
+        assert platform["overrides"][
+            "enable_conversation_initiation_client_data_from_webhook"
+        ]
 
     def test_brazilian_portuguese_uses_the_regional_code(self) -> None:
         testbed = ChannelsTestbed()

@@ -14,6 +14,7 @@ import { API_URL, PLATFORM_ADMIN_EMAIL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en, it } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
+import { WCAG_TAGS } from "./support/axe";
 
 const texts = en.adminAudit;
 const chain = en.auditChain;
@@ -101,7 +102,7 @@ test.describe("on a phone", () => {
       await expect(page.getByRole("region", { name: texts.chains.title }).getByText(texts.chains.platform)).toBeVisible();
       await waitForNetworkQuiet(page);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+      const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
       const serious = results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical");
       expect(serious.map((violation) => violation.id)).toEqual([]);
     });

@@ -48,7 +48,7 @@ def test_the_call_summary_reaches_the_next_chat_turns_context() -> None:
 
     turn: str = user_turn_text(requests_of(world)[-1].transcript[0])
     assert "Returning customer: 1 earlier conversation with the business" in turn
-    assert f"(phone): <untrusted>{MEMORY}</untrusted>" in turn
+    assert f"(phone): <customer_value>{MEMORY}</customer_value>" in turn
 
 
 def test_the_memory_is_written_once() -> None:

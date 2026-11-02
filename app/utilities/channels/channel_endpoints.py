@@ -15,8 +15,9 @@ VOICE_TOOL_PATH_TEMPLATE: str = "/v1/voice/tools/{tool_name}"
 VOICE_CALL_INITIATION_PATH: str = "/v1/voice/webhooks/conversation-initiation"
 VOICE_POST_CALL_PATH: str = "/v1/voice/webhooks/post-call"
 WIDGET_SCRIPT_PATH: str = "/widget.js"
+# The widget's demo page: development and tests only (404 in production).
 WIDGET_DEMO_PATH: str = "/widget/demo"
-# Query parameters of the demo page (the cabinet's live preview link).
+# The business query parameter of the demo page.
 DEMO_BUSINESS_PARAMETER: str = "business_id"
 # Attribute of the embed <script> tag that names the business; widget.js
 # reads the same attribute.

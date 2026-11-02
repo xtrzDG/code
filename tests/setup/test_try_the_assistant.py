@@ -3,7 +3,6 @@
 from typing import Any
 
 from tests.e2e.harness import Workshop
-from tests.e2e.harness_settings import API_BASE_URL
 from tests.e2e.journeys import BUSINESS_BOT_TOKEN
 from tests.setup.launch_steps import (
     NewAssistant,
@@ -89,7 +88,7 @@ def test_staff_test_only_versions_the_owner_built(workshop: Workshop) -> None:
     assert version_numbers(workshop, assistant) == [1]
 
 
-def test_phone_links_open_the_website_chat_and_the_telegram_bot(
+def test_phone_links_open_the_telegram_bot_not_the_widget_demo_page(
     workshop: Workshop,
 ) -> None:
     assistant = create_assistant(workshop)
@@ -110,27 +109,15 @@ def test_phone_links_open_the_website_chat_and_the_telegram_bot(
     go_live(workshop, assistant)
     after = read_setup(workshop, assistant)
 
+    # The website chat is tried on its hosted chat page (the share links'
+    # hosted_chat_url), never on the API's development-only demo page.
     assert step_statuses(before)["channels"] == "done"
     assert before["phone_test_links"] == [
-        {
-            "channel": "web_chat",
-            "url": f"{API_BASE_URL}/widget/demo?business_id="
-            f"{assistant.business_id}&language=ka",
-            "is_answering": False,
-        },
         {
             "channel": "telegram",
             "url": "https://t.me/workshop_bot",
             "is_answering": False,
         },
     ]
-    assert [link["is_answering"] for link in after["phone_test_links"]] == [
-        True,
-        True,
-    ]
-    demo = workshop.client.get(
-        "/widget/demo",
-        params={"business_id": assistant.business_id, "language": "ka"},
-    )
-    assert demo.status_code == 200
-    assert assistant.business_id in demo.text
+    assert [link["is_answering"] for link in after["phone_test_links"]] == [True]
+    assert "/widget/demo" not in str(after)

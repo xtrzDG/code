@@ -6,7 +6,10 @@ from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.booking_repositories import LeadRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.conversation_repositories import (
+    ContactRepoContract,
+    ConversationRepoContract,
+)
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import LeadStatus
@@ -27,6 +30,7 @@ from app.schemas.dto.notifications.staff_alerts import (
     StaffAlertBriefInput,
 )
 from app.schemas.dto.operations.message_texts import LeadStaffNotificationInput
+from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
@@ -40,6 +44,11 @@ from app.use_cases.shared.operations_support import (
 )
 from app.use_cases.shared.request_tracking import track_request
 from app.use_cases.shared.staff_alerts import StaffAlertTexts, lead_alert
+from app.utilities.conversations.contact_daily_caps import (
+    MAX_LEADS_PER_CONTACT_PER_DAY,
+    count_made_since,
+    daily_window_start,
+)
 
 
 class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
@@ -50,7 +59,10 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
     subscribed device in their language, with a link to the conversation.
     Notification failures never lose the lead. The lead's conversation
     joins the team inbox's "Requests" view and, when the business asked for
-    it, is assigned automatically.
+    it, is assigned automatically. A contact makes at most
+    MAX_LEADS_PER_CONTACT_PER_DAY real requests in 24 hours
+    (`contact_daily_caps`): one more is refused (RateLimitedError, the
+    model's tool hears it), so an anonymous visitor cannot flood the team.
     """
 
     def __init__(
@@ -58,6 +70,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         business_repo: BusinessRepoContract,
         lead_repo: LeadRepoContract,
         contact_repo: ContactRepoContract,
+        conversation_repo: ConversationRepoContract,
         audit_log_repo: AuditLogRepoContract,
         phone_number_parser: PhoneNumberParserContract,
         staff_notification_transformer: TransformerContract[
@@ -75,6 +88,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         self._business_repo: BusinessRepoContract = business_repo
         self._lead_repo: LeadRepoContract = lead_repo
         self._contact_repo: ContactRepoContract = contact_repo
+        self._conversation_repo: ConversationRepoContract = conversation_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._staff_notification_transformer: TransformerContract[
@@ -101,6 +115,9 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
             self._contact_repo, business.id, input_data.contact_id
         )
         now: Microseconds = self._wall_clock.now_unix()
+        if not input_data.is_sandbox:
+            self._refuse_past_daily_cap(business, contact, now)
+
         lead = LeadDocument(
             business_id=business.id,
             contact_id=contact.id,
@@ -137,6 +154,27 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
 
         track_request(lead, self._refresh_open_request, self._auto_assign)
         return view
+
+    def _refuse_past_daily_cap(
+        self, business: BusinessDocument, contact: ContactDocument, now: Microseconds
+    ) -> None:
+        since: Microseconds = daily_window_start(now)
+        made: int = count_made_since(
+            self._conversation_repo.list_by_contact(
+                business.id, contact.id, last_message_from=since
+            ),
+            lambda conversation_id: self._lead_repo.list_by_conversation(
+                business.id, conversation_id
+            ),
+            contact.id,
+            since,
+        )
+        if made >= MAX_LEADS_PER_CONTACT_PER_DAY:
+            raise RateLimitedError(
+                f"This customer already made {made} requests today; the team "
+                "has them. Do not create another one: tell the customer that "
+                "a colleague will get back to them."
+            )
 
     def _notify_staff(
         self,

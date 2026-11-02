@@ -43,6 +43,7 @@ def test_bookings_are_announced_when_made_moved_or_changed() -> None:
             business_id=restaurant.business.id,
             booking_id=booking.id,
             language=LanguageTag("en"),
+            actor_id=UserId(),
         )
     )
     manual = restaurant.world.create_manual_booking().run(

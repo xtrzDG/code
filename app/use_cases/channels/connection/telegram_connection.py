@@ -66,7 +66,9 @@ def connect_telegram(
     bot_token: ChannelSecret = read_bot_token(request.bot_token)
     encryption_key: PlatformSecret | None = app_settings.encryption_key
     if encryption_key is None:
-        logger.warning("Telegram cannot be connected: ENCRYPTION_KEY is not configured.")
+        logger.warning(
+            "Telegram cannot be connected: ENCRYPTION_KEY is not configured."
+        )
         raise ExternalServiceError(CONNECT_UNAVAILABLE_TEXT)
 
     webhook_url: ChannelWebhookUrl = build_webhook_url(

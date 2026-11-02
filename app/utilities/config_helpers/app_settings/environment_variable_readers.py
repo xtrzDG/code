@@ -97,17 +97,23 @@ def read_list(
     default_value: str,
 ) -> list[str]:
     """
-    Upper-cased comma-separated items; a blank value is unset (the default
-    applies, so an empty field of a deployment form never turns a list off),
-    and `none` is the empty list.
+    Upper-cased comma-separated items; a value without any (blank, or only
+    commas) is unset, so the default applies and an empty field of a
+    deployment form never turns a list off; `none` is the empty list.
     """
 
     raw_value: str = environment_variables.get(variable_name, "").strip()
     if raw_value.lower() == EMPTY_LIST_VALUE:
         return []
 
+    return split_upper_items(raw_value) or split_upper_items(default_value)
+
+
+def split_upper_items(raw_value: str) -> list[str]:
+    """The non-blank comma-separated items, upper-cased."""
+
     items: list[str] = []
-    for raw_item in (raw_value or default_value).split(","):
+    for raw_item in raw_value.split(","):
         item: str = raw_item.strip().upper()
         if item != "":
             items.append(item)

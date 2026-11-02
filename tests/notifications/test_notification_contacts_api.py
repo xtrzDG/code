@@ -56,12 +56,16 @@ def test_the_owner_sees_each_contact_and_checks_it() -> None:
         assert (status, email["is_simulated"]) == (200, True)
         assert email["delivery"]["status"] == "delivered"  # type: ignore[index]
 
-        # WhatsApp without the template cannot deliver: the reason is shown.
+        # WhatsApp without the template cannot deliver: a plain reason is
+        # shown, the missing settings stay in the log.
         status, whatsapp = check(restaurant, str(contacts["Levan"]["key"]))
         assert status == 200
         assert whatsapp["delivery"]["status"] == "dead"  # type: ignore[index]
         assert whatsapp["is_simulated"] is False
-        assert "WHATSAPP_NOTIFICATION" in str(whatsapp["delivery"])
+        assert whatsapp["delivery"]["last_error"] == (  # type: ignore[index]
+            "WhatsApp notifications are not available right now. Contact support."
+        )
+        assert "WHATSAPP_NOTIFICATION" not in str(whatsapp["delivery"])
 
         after = contacts_by_name(restaurant)
         assert after["Nino"]["delivery"]["status"] == "delivered"

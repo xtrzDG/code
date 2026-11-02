@@ -29,6 +29,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 )
 from app.schemas.typings.messaging.strings import SmsMessageText
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.notifications.staff_providers import is_delivery_simulated
 from tests.channels.channels_settings import build_settings
 from tests.channels.testbed import ChannelsTestbed
 from tests.users.login_code_fakes import FakeMailer, FakeSms
@@ -154,3 +155,15 @@ def test_twilio_refusals_say_whether_to_retry(
         client.send_sms(E164PhoneNumber("+995555000222"), SmsMessageText("Hi"))
 
     assert type(raised.value) is kind
+
+
+def test_a_test_written_to_the_log_never_happens_in_production() -> None:
+    # The "written to the server log" toast follows is_simulated: outside
+    # production only, for e-mail and SMS without a provider.
+    development = build_settings()
+    production = build_settings(APP_ENV="production")
+
+    assert is_delivery_simulated(development, ManagerContactChannel.EMAIL) is True
+    assert is_delivery_simulated(development, ManagerContactChannel.TELEGRAM) is False
+    for channel in ManagerContactChannel:
+        assert is_delivery_simulated(production, channel) is False

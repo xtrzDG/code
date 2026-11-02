@@ -33,6 +33,10 @@ LAUNCH_GUIDE: str = "docs/LAUNCH.md"
 # the SDK takes it from the environment. Set like any other variable.
 SDK_VARIABLES: frozenset[str] = frozenset({"OPENAI_API_KEY", "ANTHROPIC_API_KEY"})
 
+# Variables without an underscore that the assembler reads: Render sets
+# RENDER=true on every service (APP_ENV may then not be missing).
+PLATFORM_MARKER_VARIABLES: frozenset[str] = frozenset({"RENDER"})
+
 # Set by Next.js itself (`next build`, `next start`), never by people.
 NEXT_JS_VARIABLES: frozenset[str] = frozenset({"NODE_ENV", "NEXT_RUNTIME"})
 
@@ -50,7 +54,10 @@ def assembler_variables() -> set[str]:
         for node in ast.walk(ast.parse(module_path.read_text(encoding="utf-8")))
         if isinstance(node, ast.Constant)
         and isinstance(node.value, str)
-        and VARIABLE_NAME.fullmatch(node.value) is not None
+        and (
+            VARIABLE_NAME.fullmatch(node.value) is not None
+            or node.value in PLATFORM_MARKER_VARIABLES
+        )
     }
 
 

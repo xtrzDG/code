@@ -85,7 +85,14 @@ UNDOCUMENTED_ROUTES: dict[str, str] = {
     "/healthz/pipeline": "whether the worker pulses: no business data",
     "/metrics": "METRICS_TOKEN (tests/e2e/test_service_metrics.py)",
     "/widget.js": "the public website chat script",
-    "/widget/demo": "the widget's demo page (development data only)",
+    "/widget/accessibility": (
+        "a redirect to the public accessibility statement "
+        "(tests/channels/test_widget_footer_links.py)"
+    ),
+    "/widget/demo": (
+        "the widget's demo page; not served in production "
+        "(tests/channels/test_widget_demo_page.py)"
+    ),
 }
 # Prefixes whose operations need the platform admin role on top of a token.
 ADMIN_PREFIX: str = "/v1/admin/"

@@ -6,14 +6,18 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.dto.bookings import CancelBookingCommand, RescheduleBookingCommand
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.operations_world import OperationsWorld
 
 PHONE: str = "+995555123456"
+# The staff member a cabinet change comes from (a change naming no customer).
+STAFF_ID: UserId = UserId()
 
 
 class BookedRestaurant:
@@ -66,15 +70,24 @@ class BookedRestaurant:
         phone: str | None = None,
         day: str | None = None,
         language: str = "ru",
+        as_staff: bool | None = None,
+        channel: ChannelKind | None = None,
     ) -> str:
+        """By staff when it names no customer (unless `as_staff` says)."""
+
+        is_staff: bool = (
+            as_staff if as_staff is not None else contact_id is None and phone is None
+        )
         result = self.world.cancel_booking().run(
             CancelBookingCommand(
                 business_id=self.business.id,
                 booking_id=booking_id,
                 contact_id=contact_id,
                 contact_phone_number=None if phone is None else E164PhoneNumber(phone),
+                source_channel=channel,
                 date=None if day is None else LocalDate(day),
                 language=LanguageTag(language),
+                actor_id=STAFF_ID if is_staff else None,
             )
         )
         return str(result.confirmation_text)
@@ -87,12 +100,19 @@ class BookedRestaurant:
         contact_id: ContactId | None = None,
         old_date: str | None = None,
         language: str = "en",
+        as_staff: bool | None = None,
+        channel: ChannelKind | None = None,
     ) -> str:
+        """By staff when it names no customer (unless `as_staff` says)."""
+
+        is_staff: bool = as_staff if as_staff is not None else contact_id is None
         result = self.world.reschedule_booking().run(
             RescheduleBookingCommand(
                 business_id=self.business.id,
+                actor_id=STAFF_ID if is_staff else None,
                 booking_id=booking_id,
                 contact_id=contact_id,
+                source_channel=channel,
                 old_date=None if old_date is None else LocalDate(old_date),
                 new_date=LocalDate(new_date),
                 new_time=None if new_time is None else LocalTimeOfDay(new_time),

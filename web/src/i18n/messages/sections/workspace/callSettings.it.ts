@@ -38,6 +38,32 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     connectWhatsapp: "Collega WhatsApp",
     smsMissing: "Gli SMS non sono disponibili al momento. Contatta l'assistenza.",
   },
+  recording: {
+    title: "Registrazione delle chiamate",
+    description:
+      "È disattivata finché non la attivi tu. Quando è attiva, l'audio di ogni chiamata resta disponibile per l'ascolto nella scheda della chiamata, per il tempo indicato in Impostazioni → Privacy. Quando è disattivata, l'audio viene eliminato subito dopo la chiamata e la trascrizione viene conservata senza numeri di telefono, di carta e di conto né indirizzi e-mail.",
+    toggle: "Registra le chiamate",
+    noticeTitle: "Cosa sente chi chiama all'inizio di ogni chiamata",
+    noticeHint: "Il saluto lo dice sia che tu registri sia che non registri, così chi chiama sa sempre dove leggere come viene trattata la sua chiamata. Dove la legge richiede il consenso, chi chiama può rifiutare e la chiamata prosegue senza registrazione.",
+    turnedOff: "La registrazione delle chiamate è disattivata",
+  },
+  transfers: {
+    title: "Trasferimenti al personale",
+    description:
+      "Durante l'orario di apertura, chi chiede di parlare con una persona viene passato al numero del tuo personale. Dopo il trasferimento la piattaforma vocale può continuare a trattare la chiamata, perciò il diritto del lavoro italiano (art. 4 dello Statuto dei lavoratori) chiede che il personale che risponde a queste chiamate ne sia informato prima. Della parte della chiamata con il personale non conserviamo nulla: né trascrizione, né riepilogo, né registrazione.",
+    confirm: "Il personale che risponde alle chiamate trasferite è stato informato",
+    confirmHint: "Senza questa conferma nessuno viene trasferito: l'assistente prende un messaggio e un collega richiama.",
+    confirmedOn: "Confermato il {date}",
+    number: "Numero del personale per i trasferimenti",
+    numberRule: "Solo un cellulare o un fisso del tuo paese o di un altro paese dell'UE, mai un numero a tariffa maggiorata, a costo condiviso o satellitare.",
+    openContacts: "Numeri del personale",
+    turnedOff: "I trasferimenti al personale sono disattivati",
+    readiness: {
+      ready: "Chi chiede di parlare con una persona viene trasferito durante l'orario di apertura.",
+      unconfirmed: "Nessuno viene ancora trasferito: conferma che il personale è stato informato.",
+      noNumber: "Nessun numero del personale a cui passare le chiamate. Aggiungi un cellulare in Impostazioni → Notifiche.",
+    },
+  },
   template: {
     title: "Testo del modello",
     description:
