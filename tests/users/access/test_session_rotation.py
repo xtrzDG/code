@@ -18,6 +18,7 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
 )
 from app.schemas.typings.users.constrained_strings import SessionRotationTicket
+from app.use_cases.users.sessions.session_proofs import record_proof
 from app.utilities.security.session_rotation_tickets import (
     ROTATION_GRACE_SECONDS,
     ROTATION_TICKET_TTL_SECONDS,
@@ -211,3 +212,37 @@ def test_rotating_needs_the_person_s_own_session() -> None:
     with pytest.raises(AuthenticationRequiredError):
         as_request(testbed, theirs, lambda: rotation(testbed).run(command))
     assert rotate(testbed, mine, ticket).auth_level is AuthLevel.TWO_FACTOR
+
+
+def test_a_session_lowered_while_its_proof_runs_is_not_raised_in_place() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = signed_in_long_ago(testbed)
+    rotated = rotate(testbed, signed_in, raise_level(testbed, signed_in))
+    testbed.clock.advance(int(testbed.settings.step_up_max_age_seconds) + MINUTE)
+    now = testbed.clock.build_wall_clock().now_unix()
+
+    def prove_while_lowered() -> SessionProof:
+        # The request read the session as two factors; then the person
+        # removed their last factor on another device.
+        testbed.user_session_repo.set_level_for_user(
+            rotated.user.id, AuthLevel.ONE_FACTOR, now
+        )
+        return record_proof(
+            testbed.session_assurance,
+            testbed.user_session_repo,
+            rotated.user.id,
+            AuthLevel.TWO_FACTOR,
+            now,
+        )
+
+    proof = as_request(testbed, rotated, prove_while_lowered)
+
+    # Every copy of the lowered token stays one factor; the proof waits as
+    # a ticket for this client, as for any other raise.
+    assert not proof.is_recorded
+    assert proof.rotation_ticket is not None
+    assert stored(testbed, rotated).auth_level is AuthLevel.ONE_FACTOR
+    assert not may_confirm_sensitive_actions(testbed, rotated)
+    assert rotate(testbed, rotated, proof.rotation_ticket).auth_level is (
+        AuthLevel.TWO_FACTOR
+    )

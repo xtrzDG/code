@@ -94,9 +94,21 @@ class ContactRepoContract(
         phone_number: E164PhoneNumber,
     ) -> list[ContactDocument]:
         """
-        Every contact holding this phone (given, proved, or a caller's
-        number kept to call back): a check that refuses a number (a block)
-        must see all of them, not one.
+        Every contact holding this phone as its `phone_number` (given, or a
+        caller's number kept to call back): a check that refuses a number
+        (a block) must see all of them, not one.
+        """
+        raise NotImplementedError
+
+    def list_by_verified_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> list[ContactDocument]:
+        """
+        Every contact whose phone a channel proved to be this one: several
+        may have (one proved it while keeping another given phone), and a
+        check that refuses a number must see all of them.
         """
         raise NotImplementedError
 

@@ -45,3 +45,12 @@ class ContactPhoneLookups(BusinessScopedRepository[ContactDocument]):
         return self._list_in_business(
             business_id, [field_equals(PHONE_NUMBER_FIELD, phone_number)]
         )
+
+    def list_by_verified_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> list[ContactDocument]:
+        return self._list_in_business(
+            business_id, [field_equals(VERIFIED_PHONE_NUMBER_FIELD, phone_number)]
+        )

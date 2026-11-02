@@ -129,7 +129,9 @@ class UserSessionRepoContract(RepoContract, Protocol):
         is them (a passed step-up that raised nothing, a removed
         authenticator), in one atomic step; a waiting rotation ticket goes.
         None, and nothing written, when the session is gone or has rotated
-        (its old token never gains a level or a proof again).
+        (its old token never gains a level or a proof again), or when it is
+        stored as one factor and `auth_level` is two (never raised in
+        place: such a raise waits as a rotation ticket).
         """
         raise NotImplementedError
 

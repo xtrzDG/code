@@ -25,11 +25,19 @@ def recorded_authentication(
     """
     The level and proof written on the session itself; a waiting rotation
     ticket goes (the proof it held is stale now). A rotated session takes
-    nothing: its old token never gains a level or a proof again.
+    nothing: its old token never gains a level or a proof again. Nor does
+    a session stored as one factor take two in place (lowered since the
+    request read it): that raise waits as a rotation ticket.
     """
 
     def record(session: UserSessionDocument) -> UserSessionDocument | None:
         if session.rotated_at is not None:
+            return None
+
+        if (
+            auth_level is AuthLevel.TWO_FACTOR
+            and session.auth_level is not AuthLevel.TWO_FACTOR
+        ):
             return None
 
         session.auth_level = auth_level

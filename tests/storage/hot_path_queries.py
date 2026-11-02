@@ -112,6 +112,14 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         "contacts_doc_phone_number_idx",
     ),
     HotQuery(
+        "contacts that proved a caller's number (blocked caller check)",
+        lambda r: r.contacts.list_by_verified_phone_number(
+            BUSINESS_IDS[0], E164PhoneNumber("+995555999999")
+        ),
+        "contacts",
+        "contacts_doc_verified_phone_number_idx",
+    ),
+    HotQuery(
         "handoff conversations of a contact",
         lambda r: r.conversations.list_by_contact(
             BUSINESS_IDS[0], ContactId(), status=ConversationStatus.HANDOFF

@@ -18,7 +18,9 @@ class ListMySessionsUseCase(UseCaseContract[SessionsQuery, UserSessionList]):
     session with its browser, system, addresses and times, the request's
     own first, then the most recently used, each address with the
     approximate country an offline database places it in. Ended sessions
-    are left out (the daily purge deletes them).
+    are left out (the daily purge deletes them), and so is the old token
+    of a session that rotated (`rotated_at`: the same device under a new
+    token, ending within seconds) unless it is the request's own.
     """
 
     def __init__(
@@ -45,6 +47,7 @@ class ListMySessionsUseCase(UseCaseContract[SessionsQuery, UserSessionList]):
             session
             for session in self._user_session_repo.list_by_user(input_data.user_id)
             if not is_session_over(session, now)
+            and (session.rotated_at is None or session.id == current)
         ]
         views: list[UserSessionView] = [
             session_view(session, session.id == current, self._ip_countries)

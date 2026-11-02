@@ -11,6 +11,7 @@ from app.schemas.dto.sessions import SessionsQuery
 from app.schemas.dto.users import LoginSessionView
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.utilities.security.access_tokens import hash_access_token
+from tests.users.access.rotation_steps import raise_level, rotate
 from tests.users.access.session_steps import (
     ANDROID_CHROME,
     CAFE_IP,
@@ -150,4 +151,32 @@ def test_the_daily_purge_removes_sessions_unused_too_long() -> None:
     assert int(purged) == 1
     assert testbed.user_session_repo.list_by_user(idle.user.id) == [
         stored(testbed, fresh)
+    ]
+
+
+def test_a_rotated_token_is_not_listed_as_another_device() -> None:
+    testbed = build_accounts_testbed()
+    phone = testbed.sign_in_with_phone(
+        GEORGIA_MOBILE, user_agent=IPHONE_SAFARI, client_ip=HOME_IP
+    )
+    testbed.clock.advance(int(testbed.settings.step_up_max_age_seconds) + MINUTE)
+    old_id = stored(testbed, phone).id
+    rotated = rotate(testbed, phone, raise_level(testbed, phone))
+
+    def listed(session: LoginSessionView) -> list[tuple[str, bool]]:
+        items = in_session(
+            testbed,
+            session,
+            lambda: testbed.list_my_sessions.run(
+                SessionsQuery(user_id=session.user.id)
+            ),
+        ).items
+        return [(str(item.id), item.is_current) for item in items]
+
+    # The old token still answers for a few seconds, but it is this same
+    # device: only a request it makes itself sees it.
+    assert listed(rotated) == [(str(stored(testbed, rotated).id), True)]
+    assert listed(phone) == [
+        (str(old_id), True),
+        (str(stored(testbed, rotated).id), False),
     ]

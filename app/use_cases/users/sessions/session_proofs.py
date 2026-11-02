@@ -44,20 +44,24 @@ def record_proof(
     if assurance is None or assurance.user_id != user_id:
         return SessionProof()
 
-    if raises_level(assurance, auth_level):
-        ticket: SessionRotationTicket = generate_rotation_ticket()
-        held: UserSessionDocument | None = user_session_repo.hold_rotation_ticket(
-            assurance.session_id,
-            hash_rotation_ticket(ticket),
-            proven_at,
-            ticket_expiry(proven_at),
+    if not raises_level(assurance, auth_level):
+        recorded: UserSessionDocument | None = user_session_repo.record_authentication(
+            assurance.session_id, auth_level, proven_at
         )
-        return SessionProof() if held is None else SessionProof(rotation_ticket=ticket)
+        if recorded is not None or auth_level is not AuthLevel.TWO_FACTOR:
+            return SessionProof(is_recorded=recorded is not None)
+        # Not written: the session is gone or rotated (no ticket either),
+        # or it was lowered to one factor since this request read it, and
+        # then this proof raises it like any other.
 
-    recorded: UserSessionDocument | None = user_session_repo.record_authentication(
-        assurance.session_id, auth_level, proven_at
+    ticket: SessionRotationTicket = generate_rotation_ticket()
+    held: UserSessionDocument | None = user_session_repo.hold_rotation_ticket(
+        assurance.session_id,
+        hash_rotation_ticket(ticket),
+        proven_at,
+        ticket_expiry(proven_at),
     )
-    return SessionProof(is_recorded=recorded is not None)
+    return SessionProof() if held is None else SessionProof(rotation_ticket=ticket)
 
 
 def raises_level(assurance: SessionAssurance, auth_level: AuthLevel) -> bool:

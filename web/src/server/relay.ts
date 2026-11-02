@@ -16,6 +16,7 @@ import {
 import { BodyTooLargeError, bodyLimitFor, isDeclaredTooLarge, limitBodyStream, payloadTooLargeMessage } from "./bodyLimits";
 import { isCrossSiteRequest } from "./sameOrigin";
 import { clearSessionCookie, readSessionToken } from "./sessionCookie";
+import { answersWithSessionToken } from "./sessionTokenPaths";
 
 const BODILESS_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
 const BODILESS_STATUSES: ReadonlySet<number> = new Set([101, 204, 205, 304]);
@@ -49,7 +50,9 @@ export function prepareBackendCall(
  * the answer back. A 401 for a request that carried the session ends it,
  * except a step-up challenge (the session stays; the page asks for a code). A
  * body over the path's limit (bodyLimits.ts) is refused with 413 before it
- * reaches the API.
+ * reaches the API. A path whose answer carries a session token (a sign-in
+ * step, a rotation: sessionTokenPaths.ts) is unknown here (404): only the
+ * routes that put the token into the cookie call it.
  */
 export async function relayToBackend(
   request: NextRequest,
@@ -61,6 +64,9 @@ export async function relayToBackend(
     return prepared.refusal;
   }
   const { requestId, headers, token } = prepared;
+  if (answersWithSessionToken(backendPath)) {
+    return jsonError(404, "not_found", "Unknown API path.", requestId);
+  }
   const limit = bodyLimitFor(backendPath);
   if (isDeclaredTooLarge(request.headers, limit)) {
     return jsonError(413, "payload_too_large", payloadTooLargeMessage(limit), requestId);

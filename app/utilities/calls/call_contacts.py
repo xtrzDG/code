@@ -35,15 +35,16 @@ def contacts_holding_number(
     phone_number: E164PhoneNumber,
 ) -> list[ContactDocument]:
     """
-    Every contact of the business that holds the number: a proved or a
-    given phone, the call-only contact of its calls (its PHONE identity),
-    the per-call contacts and the WhatsApp customer a text-back writes to.
-    Only checks that refuse the number read them (a block, a STOP): a
-    caller id may count against a customer, never for one.
+    Every contact of the business that holds the number: each one with it
+    as a proved or a given phone, the call-only contact of its calls (its
+    PHONE identity), the per-call contacts and the WhatsApp customer a
+    text-back writes to. Only checks that refuse the number read them (a
+    block, a STOP): a caller id may count against a customer, never for
+    one.
     """
 
     found: list[ContactDocument | None] = [
-        contact_repo.find_by_verified_phone_number(business_id, phone_number),
+        *contact_repo.list_by_verified_phone_number(business_id, phone_number),
         contact_repo.find_by_channel_identity(
             business_id, ChannelKind.PHONE, ChannelUserId(str(phone_number))
         ),

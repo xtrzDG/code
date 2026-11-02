@@ -151,3 +151,31 @@ def test_a_ticket_is_taken_once(collections: CollectionFactory) -> None:
         )
         is None
     )
+
+
+def test_a_one_factor_session_is_never_raised_in_place(
+    collections: CollectionFactory,
+) -> None:
+    repo = sessions(collections)
+    session = two_week_session()
+    repo.save(session)
+
+    raised = repo.record_authentication(
+        session.id, AuthLevel.TWO_FACTOR, Microseconds(NOW + SECOND)
+    )
+    kept = repo.get(session.id)
+    proven = repo.record_authentication(
+        session.id, AuthLevel.ONE_FACTOR, Microseconds(NOW + 2 * SECOND)
+    )
+
+    assert raised is None
+    assert kept is not None
+    assert (kept.auth_level, kept.authenticated_at) == (
+        AuthLevel.ONE_FACTOR,
+        Microseconds(NOW),
+    )
+    assert proven is not None
+    assert (proven.auth_level, proven.authenticated_at) == (
+        AuthLevel.ONE_FACTOR,
+        Microseconds(NOW + 2 * SECOND),
+    )

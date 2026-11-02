@@ -3,7 +3,9 @@ Several contacts may hold one number (a call never joins a contact a
 channel proved): a proved customer, the call-only contact of earlier
 calls, a contact of a single call, the WhatsApp customer of a text-back.
 One blocked among them refuses the number, at call start and on the
-line's fallback to the staff mobile; another number still gets through.
+line's fallback to the staff mobile, whichever field holds it (one of
+several proved phones, a WhatsApp account alone); another number still
+gets through.
 """
 
 from collections.abc import Callable
@@ -30,6 +32,8 @@ from tests.channels.voice_setup import CALLER, VoiceSetup, build_voice_setup
 
 HANGUP: str = '<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>'
 OTHER_CALLER: str = "+995599654321"
+# A customer's given phone that is not the calling number.
+GIVEN_ELSEWHERE: str = "+995599111222"
 
 
 def identity(channel: ChannelKind, user_id: str) -> ChannelIdentity:
@@ -41,13 +45,20 @@ def holder(
     identities: list[ChannelIdentity],
     business_id: BusinessId | None = None,
     is_blocked: bool = False,
+    phone_number: str | None = CALLER,
+    verified_phone_number: str | None = None,
 ) -> ContactDocument:
-    """A contact holding the caller's number (kept to call back)."""
+    """A contact holding the caller's number (by default kept to call back)."""
 
     now = setup.testbed.clock.now_microseconds()
     contact = ContactDocument(
         business_id=business_id or setup.business.id,
-        phone_number=E164PhoneNumber(CALLER),
+        phone_number=None if phone_number is None else E164PhoneNumber(phone_number),
+        verified_phone_number=(
+            None
+            if verified_phone_number is None
+            else E164PhoneNumber(verified_phone_number)
+        ),
         channel_identities=identities,
         block=ContactBlock(blocked_at=now, blocked_by=UserId()) if is_blocked else None,
         created_at=now,
@@ -83,8 +94,47 @@ def text_back_contact_blocked(setup: VoiceSetup) -> None:
     )
 
 
+def second_prover_blocked(setup: VoiceSetup) -> None:
+    """
+    Two customers proved the number (each keeps another given phone);
+    staff blocked the one who proved it later.
+    """
+
+    for user_id, is_blocked in (("556", False), ("557", True)):
+        holder(
+            setup,
+            [identity(ChannelKind.TELEGRAM, user_id)],
+            is_blocked=is_blocked,
+            phone_number=GIVEN_ELSEWHERE,
+            verified_phone_number=CALLER,
+        )
+
+
+def whatsapp_account_blocked(setup: VoiceSetup) -> None:
+    """
+    The setup's contact is the call-only contact of the number; staff
+    blocked the number's WhatsApp customer, who keeps no phone of their
+    own (it was removed from the card).
+    """
+
+    setup.contact.channel_identities = [identity(ChannelKind.PHONE, CALLER)]
+    setup.testbed.contact_repo.save(setup.contact)
+    holder(
+        setup,
+        [identity(ChannelKind.WHATSAPP, CALLER.removeprefix("+"))],
+        is_blocked=True,
+        phone_number=None,
+    )
+
+
 SCENARIOS = pytest.mark.parametrize(
-    "blocked_holder", [single_call_blocked, text_back_contact_blocked]
+    "blocked_holder",
+    [
+        single_call_blocked,
+        text_back_contact_blocked,
+        second_prover_blocked,
+        whatsapp_account_blocked,
+    ],
 )
 
 
@@ -129,15 +179,31 @@ def test_every_contact_holding_a_number_is_listed() -> None:
     setup = build_voice_setup()
     single_call = holder(setup, [identity(ChannelKind.PHONE, "el_call_7")])
     holder(setup, [identity(ChannelKind.PHONE, "el_call_8")], business_id=BusinessId())
+    provers = [
+        holder(
+            setup,
+            [identity(ChannelKind.TELEGRAM, user_id)],
+            phone_number=GIVEN_ELSEWHERE,
+            verified_phone_number=CALLER,
+        )
+        for user_id in ("556", "557")
+    ]
+    repo = setup.testbed.contact_repo
+    caller = E164PhoneNumber(CALLER)
 
-    holders = setup.testbed.contact_repo.list_by_phone_number(
-        setup.business.id, E164PhoneNumber(CALLER)
-    )
-    nobody = setup.testbed.contact_repo.list_by_phone_number(
-        setup.business.id, E164PhoneNumber(OTHER_CALLER)
-    )
+    holders = repo.list_by_phone_number(setup.business.id, caller)
+    proved = repo.list_by_verified_phone_number(setup.business.id, caller)
+    nobody = [
+        *repo.list_by_phone_number(setup.business.id, E164PhoneNumber(OTHER_CALLER)),
+        *repo.list_by_verified_phone_number(
+            setup.business.id, E164PhoneNumber(OTHER_CALLER)
+        ),
+    ]
 
     assert sorted(str(contact.id) for contact in holders) == sorted(
         [str(setup.contact.id), str(single_call.id)]
+    )
+    assert sorted(str(contact.id) for contact in proved) == sorted(
+        str(contact.id) for contact in provers
     )
     assert nobody == []
