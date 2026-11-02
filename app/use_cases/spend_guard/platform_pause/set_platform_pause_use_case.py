@@ -125,5 +125,7 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
             entry.id,
         )
         return build_platform_pause_view(
-            pause, read_budget_stop(self._spend_gauge, self._settings, now), self._settings
+            pause,
+            read_budget_stop(self._spend_gauge, self._settings, now),
+            self._settings,
         )
