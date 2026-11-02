@@ -37,6 +37,11 @@ export const devicesIt: Translation<typeof devicesEn> = {
     one: "{count} dispositivo disconnesso",
     other: "{count} dispositivi disconnessi",
   },
+  endAll: "Disconnetti ovunque",
+  endAllTitle: "Disconnettere tutti i dispositivi, anche questo?",
+  endAllDescription:
+    "Tutti i browser e i telefoni, compreso questo, dovranno accedere di nuovo. Usalo se pensi che qualcun altro sia entrato nel tuo account.",
+  endAllFailed: "Non è stato possibile disconnettere tutti i dispositivi. Riprova.",
   onlyThis: "L'accesso è attivo solo su questo dispositivo.",
   notYou:
     "Non riconosci un dispositivo? Disconnettilo, poi attiva l'app di autenticazione qui sopra.",

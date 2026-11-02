@@ -2,7 +2,8 @@
 
 /**
  * Account → Security → "Where you are signed in": every device with a live
- * session, this one first; sign one out, or every other one at once.
+ * session, this one first; sign one out, every other one at once, or
+ * every one with this one (then the sign-in page opens).
  */
 
 import { useState } from "react";
@@ -22,6 +23,7 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
   const devices = useDevices();
   const [ending, setEnding] = useState<UserSessionView | null>(null);
   const [isEndingOthers, setEndingOthers] = useState(false);
+  const [isEndingAll, setEndingAll] = useState(false);
   const others = otherSessionCount(devices.items);
 
   const endOne = async () => {
@@ -36,6 +38,12 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
     if (count !== null) {
       setEndingOthers(false);
       toast.success(tp("devices.endedOthers", count));
+    }
+  };
+
+  const endAll = async () => {
+    if (!(await devices.endEverywhere())) {
+      toast.error(t("devices.endAllFailed"));
     }
   };
 
@@ -56,11 +64,16 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
       title={t("devices.title")}
       description={isPlatformAdmin ? t("devices.descriptionAdmin") : t("devices.description")}
       actions={
-        others > 0 ? (
-          <Button variant="secondary" size="sm" onClick={() => setEndingOthers(true)}>
-            {t("devices.endOthers")}
+        <div className="flex flex-wrap gap-2">
+          {others > 0 ? (
+            <Button variant="secondary" size="sm" onClick={() => setEndingOthers(true)}>
+              {t("devices.endOthers")}
+            </Button>
+          ) : null}
+          <Button variant="secondary" size="sm" onClick={() => setEndingAll(true)}>
+            {t("devices.endAll")}
           </Button>
-        ) : null
+        </div>
       }
     >
       <ul className="divide-y divide-line">
@@ -89,6 +102,16 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
         title={t("devices.endOthersTitle")}
         description={t("devices.endOthersDescription")}
         confirmLabel={t("devices.endOthers")}
+      />
+      <ConfirmDialog
+        open={isEndingAll}
+        onClose={() => setEndingAll(false)}
+        onConfirm={endAll}
+        isPending={devices.isEndingAll}
+        error={devices.endAllError}
+        title={t("devices.endAllTitle")}
+        description={t("devices.endAllDescription")}
+        confirmLabel={t("devices.endAll")}
       />
     </Card>
   );

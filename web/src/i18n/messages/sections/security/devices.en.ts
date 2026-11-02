@@ -1,6 +1,6 @@
 /**
  * `devices.*` texts: Account → Security → "Where you are signed in" (the
- * person's sessions, ending one or all the others), in English: the
+ * person's sessions, ending one, all the others or all of them), in English: the
  * reference that it is typed against.
  */
 
@@ -38,6 +38,11 @@ export const devicesEn = {
     one: "{count} device signed out",
     other: "{count} devices signed out",
   },
+  endAll: "Sign out everywhere",
+  endAllTitle: "Sign out on every device, this one too?",
+  endAllDescription:
+    "Every browser and phone, this one included, will have to sign in again. Use it when you think someone else is in your account.",
+  endAllFailed: "Signing out everywhere did not work. Try again.",
   onlyThis: "Only this device is signed in.",
   notYou:
     "Do not recognise a device? Sign it out, then turn on the authenticator app above.",
