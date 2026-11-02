@@ -3,7 +3,8 @@ The deletion ledger applied to a restored database: every business the
 ledger names (its copy in the bucket, and the restored database's own
 entries) loses its rows again, in every table but what the law keeps and the
 job queue (the deletion's own sub-processor erasure jobs), so a restored
-backup never brings a deleted business back.
+backup never brings a deleted business back. The erased customers of the
+ledger beside it are counted (`contact_erasure_counting`).
 """
 
 from collections.abc import Sequence
@@ -12,15 +13,21 @@ from typing import LiteralString
 import psycopg
 from psycopg.rows import TupleRow
 
+from app.adapters.backup.contact_erasure_counting import count_restored_contacts
 from app.adapters.storage.postgres.business_row_queries import (
     count_business_rows,
     delete_business_batch,
     list_business_tables,
 )
 from app.schemas.dto.backups import DeletionLedgerApplication
+from app.schemas.dto.business_closures.contact_erasure_ledger import (
+    ContactErasureRecord,
+)
 from app.schemas.typings.business_closures.constrained_integers import (
     DeletedRowCount,
+    ErasedContactCount,
     LedgerBusinessCount,
+    RestoredContactCount,
     ResurrectedRowCount,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -54,9 +61,14 @@ def ledger_business_ids(
 
 
 def apply_deletion_ledger(
-    connection: Connection, mirrored: Sequence[BusinessId]
+    connection: Connection,
+    mirrored: Sequence[BusinessId],
+    erased_contacts: Sequence[ContactErasureRecord] = (),
 ) -> DeletionLedgerApplication:
-    """Delete the ledger's businesses' rows again; count what is left of them."""
+    """
+    Delete the ledger's businesses' rows again; count what is left of them,
+    and the erased customers the backup holds with their data again.
+    """
 
     business_ids: list[str] = ledger_business_ids(connection, mirrored)
     tables: list[DocumentCollectionName] = ledger_erase_order(
@@ -83,4 +95,8 @@ def apply_deletion_ledger(
         deleted_businesses=LedgerBusinessCount(len(business_ids)),
         erased_rows=DeletedRowCount(erased),
         remaining_rows=ResurrectedRowCount(remaining),
+        erased_contacts=ErasedContactCount(len(erased_contacts)),
+        restored_contacts=RestoredContactCount(
+            count_restored_contacts(connection, erased_contacts)
+        ),
     )

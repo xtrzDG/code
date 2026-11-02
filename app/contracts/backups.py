@@ -13,6 +13,9 @@ from app.schemas.dto.backups import (
     DatabaseFacts,
     RestoredDatabase,
 )
+from app.schemas.dto.business_closures.contact_erasure_ledger import (
+    ContactErasureRecord,
+)
 from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
 from app.schemas.typings.backups.constrained_strings import (
     BackupObjectKey,
@@ -75,12 +78,14 @@ class ScratchDatabaseAdapterContract(AdapterContract, Protocol):
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
         deleted_business_ids: Sequence[BusinessId] = (),
+        erased_contacts: Sequence[ContactErasureRecord] = (),
     ) -> RestoredDatabase:
         """
         Restore the dump into a new scratch database, count it and probe
         its row-level security, then apply the deletion ledger (these
         businesses and the restored database's own ledger lose their rows
-        again); drop it again unless it is kept.
+        again) and count the erased customers it holds with their data
+        again; drop it again unless it is kept.
 
         Raises:
             BackupToolError: the scratch database or pg_restore failed.

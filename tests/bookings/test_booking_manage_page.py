@@ -199,9 +199,10 @@ def test_a_link_stops_opening_a_month_after_the_visit(workshop: Workshop) -> Non
 def test_the_token_carries_only_ids_and_times(workshop: Workshop) -> None:
     booked: BookedTable = book_a_table(workshop)
 
-    raw = base64.urlsafe_b64decode(booked.token + "=")
+    raw = base64.urlsafe_b64decode(booked.token + "=" * (-len(booked.token) % 4))
 
-    assert len(raw) == 53
+    # 41 bytes of ids and times and a 128-bit MAC.
+    assert len(raw) == 57
     assert b"Salobie" not in raw
     claims = workshop.container.utilities.booking_manage_token_signer().read(
         BookingManageToken(booked.token)

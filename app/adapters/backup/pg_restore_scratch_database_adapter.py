@@ -31,6 +31,9 @@ from app.schemas.dto.backups import (
     IsolationProbe,
     RestoredDatabase,
 )
+from app.schemas.dto.business_closures.contact_erasure_ledger import (
+    ContactErasureRecord,
+)
 from app.schemas.exceptions.backup_errors import BackupToolError
 from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
 from app.schemas.typings.backups.constrained_strings import ScratchDatabaseName
@@ -69,7 +72,8 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
     restoring role is a superuser or has BYPASSRLS (which row-level
     security never binds). Then the deletion ledger is applied (the
     restoring role sees every row): the businesses it names lose their rows
-    again (`deletion_ledger_application`). The scratch database and the
+    again (`deletion_ledger_application`), and the erased customers the
+    backup holds with their data again are counted. The scratch database and the
     probe role are dropped afterwards unless the database is kept.
     """
 
@@ -86,6 +90,7 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
         deleted_business_ids: Sequence[BusinessId] = (),
+        erased_contacts: Sequence[ContactErasureRecord] = (),
     ) -> RestoredDatabase:
         pg_restore: str = locate_program("pg_restore", self._bin_directory)
         psql: str = locate_program("psql", self._bin_directory)
@@ -101,7 +106,7 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
             )
             facts, probes = self._inspect(name)
             ledger: DeletionLedgerApplication = self._apply_ledger(
-                name, deleted_business_ids
+                name, deleted_business_ids, erased_contacts
             )
         finally:
             if not is_kept:
@@ -136,13 +141,18 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         return facts, probes
 
     def _apply_ledger(
-        self, name: ScratchDatabaseName, deleted_business_ids: Sequence[BusinessId]
+        self,
+        name: ScratchDatabaseName,
+        deleted_business_ids: Sequence[BusinessId],
+        erased_contacts: Sequence[ContactErasureRecord],
     ) -> DeletionLedgerApplication:
         """After the counts: the deleted businesses lose their rows again."""
 
         with self._connect(str(name)) as connection:
             bypass_row_security(connection, True)
-            return apply_deletion_ledger(connection, deleted_business_ids)
+            return apply_deletion_ledger(
+                connection, deleted_business_ids, erased_contacts
+            )
 
     def _create_database(self, name: ScratchDatabaseName) -> int:
         """Create the scratch database; the server's `server_version_num`."""

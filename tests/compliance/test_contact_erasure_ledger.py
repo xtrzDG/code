@@ -4,6 +4,7 @@ job) and is applied again after a restore from a backup taken before it.
 """
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.adapters.business_closures.bucket_contact_erasure_ledger_adapter import (
     BucketContactErasureLedgerAdapter,
@@ -19,6 +20,7 @@ from app.schemas.constants.jobs import JobLane
 from app.schemas.dto.business_closures.contact_erasure_ledger import (
     ContactErasureRecord,
 )
+from app.schemas.dto.compliance import ContactErasureResult, ContactRecords
 from app.schemas.dto.jobs import JobTick, QueuedJobInput
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
@@ -169,14 +171,35 @@ def test_a_still_erased_or_unknown_customer_is_left_alone() -> None:
     assert int(reapply(tenants, ledger).run(TICK).processed_count) == 0
 
 
-def test_one_failing_erasure_never_stops_the_others_but_fails_the_run() -> None:
+def test_one_failing_erasure_never_stops_the_others_but_fails_the_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     tenants = seed_two_tenants()
+    testbed = tenants.testbed
     ledger = erase_and_record(tenants)
     restore_from_before(tenants)
-    tenants.testbed.recording_storage.is_failing = True
+    neighbour = tenants.neighbour.contact
+    ledger.record(
+        ContactErasureRecord(
+            business_id=tenants.business.id, contact_id=neighbour.id, erased_at=9
+        )
+    )
+    erase = testbed.contact_data_eraser.erase
+
+    def failing_for_the_visitor(
+        records: ContactRecords, now: Microseconds
+    ) -> ContactErasureResult:
+        if records.contact.id == tenants.visitor.contact.id:
+            raise ExternalServiceError("The recording storage is unavailable.")
+        return erase(records, now)
+
+    monkeypatch.setattr(testbed.contact_data_eraser, "erase", failing_for_the_visitor)
 
     with pytest.raises(ExternalServiceError, match="1 erasures"):
         reapply(tenants, ledger).run(TICK)
+
+    erased = testbed.contact_repo.get(tenants.business.id, neighbour.id)
+    assert erased is not None and erased.erased_at is not None
 
 
 def test_the_bucket_keeps_one_object_per_erased_customer() -> None:

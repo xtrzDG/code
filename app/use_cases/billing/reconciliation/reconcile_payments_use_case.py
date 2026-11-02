@@ -9,6 +9,7 @@ from app.contracts.platform_safety import (
     PaymentStatusReaderAdapterContract,
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.payment_reconciliation import PaymentMismatchKind
 from app.schemas.domain.payment_reconciliations import (
@@ -44,7 +45,8 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     The `reconcile_payments` periodic job (daily, once across workers):
     every checkout order written to in the last RECONCILIATION_WINDOW_DAYS
-    (the businesses walked in keyset batches, their orders by business) is
+    (the businesses walked in keyset batches, their orders read in each
+    business's own storage scope: the job itself names no business) is
     compared with what Flitt or Stripe says about it now
     (`PaymentStatusReaderAdapterContract`, read-only calls). A mismatch
     that moves money (`find_mismatch`) is logged as a structured
@@ -65,6 +67,7 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         payment_order_repo: PaymentOrderRepoContract,
         payment_status_reader: PaymentStatusReaderAdapterContract,
         reconciliation_repo: PaymentReconciliationRepoContract,
+        storage_scope: StorageScopeContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -73,6 +76,7 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         self._reconciliation_repo: PaymentReconciliationRepoContract = (
             reconciliation_repo
         )
+        self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: JobTick) -> JobReport:
@@ -132,9 +136,9 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         """One business's orders at a time, in the walk's order."""
 
         for business in walk_businesses(self._business_repo):
-            for order in self._payment_order_repo.list_by_business(business.id):
-                if is_reconcilable(order, since):
-                    yield order
+            with self._storage_scope.scoped_to_business(business.id):
+                orders = self._payment_order_repo.list_by_business(business.id)
+            yield from (order for order in orders if is_reconcilable(order, since))
 
 
 def build_mismatch(

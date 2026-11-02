@@ -134,7 +134,7 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
     )
     reconcile_payments_use_case, get_payment_reconciliation_use_case = (
         payment_reconciliation_use_cases(
-            config, repositories, time_provider, platform_admin_check
+            config, repositories, utilities, time_provider, platform_admin_check
         )
     )
     admit_owner_action_use_case: Factory[

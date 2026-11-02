@@ -43,16 +43,18 @@ class SpendGuardOperatorsContainer(containers.DeclarativeContainer):
         spend_guard_pipelines.set_business_spend_limits_pipeline, storage_scope
     )
     # The platform's brakes and the daily payment reconciliation (1230):
-    # platform-level work, so platform-wide.
-    get_platform_pause_operator = platform_pipeline_operator(
+    # they name no business, so they run unscoped (platform collections
+    # only); the spend gauge escalates for its one sum, and the
+    # reconciliation enters each business's scope for its orders.
+    get_platform_pause_operator = pipeline_operator(
         spend_guard_pipelines.get_platform_pause_pipeline, storage_scope
     )
-    set_platform_pause_operator = platform_pipeline_operator(
+    set_platform_pause_operator = pipeline_operator(
         spend_guard_pipelines.set_platform_pause_pipeline, storage_scope
     )
-    reconcile_payments_operator = platform_pipeline_operator(
+    reconcile_payments_operator = pipeline_operator(
         spend_guard_pipelines.reconcile_payments_pipeline, storage_scope
     )
-    get_payment_reconciliation_operator = platform_pipeline_operator(
+    get_payment_reconciliation_operator = pipeline_operator(
         spend_guard_pipelines.get_payment_reconciliation_pipeline, storage_scope
     )

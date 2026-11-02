@@ -124,6 +124,7 @@ def platform_pause_use_cases(
 def payment_reconciliation_use_cases(
     config: ConfigContainer,
     repositories: RepositoriesContainer,
+    utilities: UtilitiesContainer,
     time_provider: TimeProviderContainer,
     admin_check: Factory[PlatformAdminCheck],
 ) -> tuple[
@@ -141,6 +142,7 @@ def payment_reconciliation_use_cases(
                 build_payment_status_reader, settings=config.app_settings
             ),
             reconciliation_repo=repositories.payment_reconciliation_repo,
+            storage_scope=utilities.storage_scope,
             wall_clock=time_provider.microsecond_wall_clock,
         ),
         Factory(

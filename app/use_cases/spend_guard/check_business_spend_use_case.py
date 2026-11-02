@@ -73,7 +73,8 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
     First of all the platform's own brakes (`read_platform_brake`): while a
     platform admin paused every assistant, or the platform's provider
     spend of the UTC day reached its daily budget stop, every business is
-    at HARD_LIMIT with the brake named: its turns go to the team and its
+    at HARD_LIMIT: its turns go to the team (the customer hears, in their
+    language, that a colleague takes over) and its
     calls to the forwarding number. Nothing is marked, audited or told per
     business (the platform alerts tell the team about the stop; the pause
     is audited where it is set).
@@ -121,7 +122,6 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
                 day=day,
                 spend_micro_usd=CostMicroUsd(0),
                 limits=limits,
-                platform_brake=brake.brake,
             )
         hard_mark: SpendLimitMarkDocument | None = self._marks.get(
             business.id,

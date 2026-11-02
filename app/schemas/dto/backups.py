@@ -19,7 +19,9 @@ from app.schemas.typings.backups.constrained_strings import (
 from app.schemas.typings.backups.strings import RestoreCheckProblem
 from app.schemas.typings.business_closures.constrained_integers import (
     DeletedRowCount,
+    ErasedContactCount,
     LedgerBusinessCount,
+    RestoredContactCount,
     ResurrectedRowCount,
 )
 from app.schemas.typings.platform.strings import LocalDirectoryPath
@@ -106,11 +108,16 @@ class DeletionLedgerApplication(ImmutableDTO):
     The deletion ledger applied to the restored database: how many deleted
     businesses it names, how many of their rows the restore brought back
     and the ledger deleted again, and how many are left (must be none).
+    The ledger of erased customers is counted: how many it names and how
+    many of them the backup holds with their data again (the daily
+    `reapply_contact_erasures` erases those again after a real restore).
     """
 
     deleted_businesses: LedgerBusinessCount
     erased_rows: DeletedRowCount
     remaining_rows: ResurrectedRowCount
+    erased_contacts: ErasedContactCount = ErasedContactCount(0)
+    restored_contacts: RestoredContactCount = RestoredContactCount(0)
 
 
 class RestoredDatabase(ImmutableDTO):
