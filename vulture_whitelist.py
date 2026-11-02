@@ -96,7 +96,6 @@ _.RENDER  # app/schemas/constants/observability.py
 # by code.
 _.connected_by  # app/schemas/domain/calendar.py
 _.linked_chat_id  # app/schemas/domain/manager_links.py
-_.changed_by  # app/schemas/domain/bookings.py (BookingStatusChange)
 _.resolved_by  # app/schemas/domain/handoffs.py
 _.identity_digest  # app/schemas/domain/suppression.py (the id is derived from it)
 _.rented_by  # app/schemas/domain/phone_numbers.py (PhoneNumberDocument)
@@ -329,6 +328,7 @@ _.totp_last_used_at  # app/schemas/dto/mfa.py (AccountSecurityView)
 _.recovery_codes_left  # app/schemas/dto/mfa.py (AccountSecurityView)
 _.is_mfa_required  # app/schemas/dto/mfa.py (AccountSecurityView)
 _.step_up_valid_until  # app/schemas/dto/mfa.py (SessionAssuranceView)
+_.is_level_raised  # app/schemas/dto/mfa.py (SessionAssuranceView)
 _.members_without_two_factor  # app/schemas/dto/mfa.py (BusinessSecurityView)
 _.viewer_auth_level  # app/schemas/dto/mfa.py (BusinessSecurityView)
 

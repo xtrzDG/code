@@ -10,7 +10,8 @@ computed from the seeded records themselves, so no two screens disagree.
 - the customer list comes most recently active first, as each row says;
 - every seeded rating is the team's (the owner rated it in the cabinet);
 - every campaign message went to a guest who agreed to marketing, in the
-  chat the visit it follows was booked in.
+  messenger the visit it follows was booked in; a visit booked in a chat
+  that cannot carry it (the website chat) gets a skipped one.
 """
 
 import math
@@ -18,9 +19,10 @@ from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
-from app.schemas.constants.campaigns import CampaignMessageStatus
+from app.schemas.constants.campaigns import CampaignMessageStatus, CampaignSkipReason
 from app.schemas.constants.conversations import ConversationRatingBy
 from app.schemas.domain.conversations import CallDocument
+from app.utilities.conversations.staff_replies import SENDING_CHANNELS
 from tests.demo.test_demo_seeding import (
     DEMO_ENVIRONMENT,
     RESTAURANT,
@@ -209,14 +211,17 @@ def test_every_campaign_message_went_to_a_consenting_guest_in_their_chat() -> No
     workshop = start_workshop(DEMO_ENVIRONMENT)
     collections = workshop.container.adapters
     with workshop.client, workshop.container.utilities.storage_scope().platform_wide():
-        messages = collections.growth_collections.campaign_message_collection()
+        messages = (
+            collections.growth_collections.campaign_message_collection().list_all()
+        )
         contacts = collections.collections.contact_collection().list_all()
         bookings = collections.collections.booking_collection().list_all()
-        sent = [
-            message
-            for message in messages.list_all()
-            if message.status is not CampaignMessageStatus.SKIPPED
-        ]
+
+    sent = [
+        message
+        for message in messages
+        if message.status is not CampaignMessageStatus.SKIPPED
+    ]
 
     by_contact = {contact.id: contact for contact in contacts}
     by_booking = {booking.id: booking for booking in bookings}
@@ -229,3 +234,13 @@ def test_every_campaign_message_went_to_a_consenting_guest_in_their_chat() -> No
         assert message.sent_at is not None
         assert int(consent.given_at) <= int(message.sent_at)
         assert message.channel is by_booking[message.anchor_booking_id].source_channel
+        assert message.channel in SENDING_CHANNELS
+    no_channel = [
+        message
+        for message in messages
+        if message.skip_reason is CampaignSkipReason.NO_CHANNEL
+    ]
+    for message in no_channel:
+        anchor = by_booking[message.anchor_booking_id]
+        assert anchor.source_channel not in SENDING_CHANNELS
+        assert message.channel is None and message.sent_at is None

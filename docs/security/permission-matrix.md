@@ -34,15 +34,15 @@ at each request, so a change takes effect at the next one.
 | --- | ---: | ---: | ---: |
 | `public` | 45 | 11 | 14 |
 | `signed_webhook` | 13 | 11 | 0 |
-| `customer` | 16 | 7 | 0 |
-| `account` | 37 | 25 | 1 |
+| `customer` | 17 | 8 | 0 |
+| `account` | 38 | 26 | 2 |
 | `staff` | 115 | 39 | 0 |
 | `owner` | 154 | 115 | 1 |
 | `platform_admin` | 58 | 33 | 0 |
-| `api_key` | 13 | 4 | 0 |
+| `api_key` | 14 | 5 | 0 |
 | `operator_token` | 1 | 0 | 0 |
 | `as_api` | 0 | 0 | 5 |
-| **All** | 452 | 245 | 21 |
+| **All** | 455 | 248 | 22 |
 
 ## A business's operations by area
 

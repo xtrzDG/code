@@ -8,7 +8,9 @@ answered yet; a guest who said STOP is skipped.
 Campaign messages are marketing: every guest a demo message went to
 ticked the marketing box on the page of the visit it follows (a recorded
 consent of the current wording), and that visit was booked in the
-guest's messenger, the chat the message goes to.
+guest's messenger, the chat the message goes to. A guest known only in
+the website chat agreed too, but their visit's chat cannot carry the
+message, so it is skipped (no channel), as the campaign does.
 """
 
 from collections.abc import Sequence
@@ -17,6 +19,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_waitlist import channel_of
+from app.schemas.constants.channels import ChannelKind
 from app.registries.niches.rebooking_rule_catalog import NICHE_REBOOKING_RULES
 from app.schemas.constants.bookings import BookingOrigin, BookingStatus
 from app.schemas.constants.campaigns import (
@@ -45,6 +48,7 @@ from app.utilities.campaigns.campaign_keys import (
     campaign_month_of,
     campaign_settings_id_of,
 )
+from app.utilities.conversations.staff_replies import SENDING_CHANNELS
 from app.utilities.scheduling.zoned_time import load_time_zone
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -119,11 +123,12 @@ def build_demo_campaign_messages(
         if booking.origin is None
         and int(now) - int(booking.created_at) <= RECENT_DAYS * DAY
         and not by_id[booking.contact_id].opted_out_channels
+        and messenger_of(by_id[booking.contact_id]) is not None
     ][:RETURNED_LIMIT]
     for booking in returning:
         guest = by_id[booking.contact_id]
         earlier = earlier_visit(booking, booking.contact_id, booking.starts_at)
-        earlier.source_channel = channel_of(guest)
+        earlier.source_channel = messenger_of(guest) or channel_of(guest)
         bookings.append(earlier)
         agree_on_page_of(guest, earlier)
         messages.append(came_back(business, earlier, booking, guest, zone))
@@ -142,7 +147,7 @@ def build_demo_campaign_messages(
             int(now) // MICROSECONDS_PER_SECOND - (33 + 2 * index) * DAY_SECONDS
         )
         earlier = earlier_visit(kept[0], contact.id, visit_start, days_before=0)
-        earlier.source_channel = channel_of(contact)
+        earlier.source_channel = messenger_of(contact) or channel_of(contact)
         bookings.append(earlier)
         sent_at = Microseconds(
             int(earlier.ends_at) * MICROSECONDS_PER_SECOND + REBOOK_AFTER_DAYS * DAY
@@ -151,11 +156,25 @@ def build_demo_campaign_messages(
             messages.append(skipped(business, earlier, contact, zone, sent_at))
         elif index < INVITED_LIMIT:
             agree_on_page_of(contact, earlier)
-            messages.append(
-                message_of(business, earlier, contact, zone, sent_at, sent_at)
-            )
+            message = message_of(business, earlier, contact, zone, sent_at, sent_at)
+            if earlier.source_channel not in SENDING_CHANNELS:
+                message = not_sent(message, CampaignSkipReason.NO_CHANNEL)
+            messages.append(message)
 
     return messages
+
+
+def messenger_of(contact: ContactDocument) -> ChannelKind | None:
+    """
+    The guest's first messenger a business can write to first, or None for
+    a guest known only by phone or in the website chat.
+    """
+
+    for identity in contact.channel_identities:
+        if identity.channel in SENDING_CHANNELS:
+            return identity.channel
+
+    return None
 
 
 def agree_on_page_of(contact: ContactDocument, visit: BookingDocument) -> None:
@@ -229,9 +248,19 @@ def skipped(
 ) -> CampaignMessageDocument:
     """A guest who said STOP: never written to."""
 
-    message = message_of(business, visit, contact, zone, now, now)
+    return not_sent(
+        message_of(business, visit, contact, zone, now, now),
+        CampaignSkipReason.OPTED_OUT,
+    )
+
+
+def not_sent(
+    message: CampaignMessageDocument, reason: CampaignSkipReason
+) -> CampaignMessageDocument:
+    """The message recorded as skipped for the reason, never sent."""
+
     message.status = CampaignMessageStatus.SKIPPED
-    message.skip_reason = CampaignSkipReason.OPTED_OUT
+    message.skip_reason = reason
     message.channel = None
     message.sent_at = None
     return message

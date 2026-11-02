@@ -211,9 +211,10 @@ together with the settings themselves, in a reviewed pull request.
 Production fails closed: with `APP_ENV=production` the API and every
 worker refuse to start on an unsafe setting and name each one. Sign-in
 codes are hashed under a server key, sensitive actions (deposit payment
-pages included) need a fresh sign-in, people can sign out everywhere and
-platform admins can end a member's sessions; new-country sign-ins and
-code spraying are reported. The API checks webhook signature headers
+pages included) need a fresh sign-in, which also gives the session a new
+token, people can sign out everywhere and platform admins can end a
+member's sessions; new-country sign-ins and code spraying are reported.
+Webhook secrets rotate without refusing callbacks. The API checks webhook signature headers
 before reading a body, limits anonymous callers, bodies, JSON depth and
 request time, sends strict security headers and writes refusals to a
 security log without personal data; the cabinet adds its own CSRF rule,

@@ -37,6 +37,7 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "POST /v1/public-demos/{business_id}/messages": "demo sandbox, rate limited",
     "GET /v1/public/chat/{address}": "a business's published hosted chat",
     "GET /v1/public/bookings/{token}": "a signed manage link (HMAC token)",
+    "POST /v1/public/bookings/{token}/session": "a signed manage link, rate limited",
     "GET /v1/public/bookings/{token}/calendar.ics": "a signed manage link",
     "GET /v1/public/bookings/{token}/slots": "a signed manage link",
     "POST /v1/public/bookings/{token}/cancel": "a signed manage link",

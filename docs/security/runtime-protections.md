@@ -63,7 +63,9 @@ worker and cabinet do, each with its code and the test that proves it.
   platform chain; `tests/users/access/test_admin_member_sessions.py`);
   joining the platform-admin team ends a person's existing sessions, so
   admin rights come only with a new sign-in
-  (`tests/users/access/test_admin_role_sessions.py`). Right after a
+  (`tests/users/access/test_admin_role_sessions.py`); so does a member
+  made an owner of a business (`app/use_cases/businesses/owner_promotion_sweep.py`;
+  `tests/businesses/test_owner_promotion_sessions.py`). Right after a
   step-up the cabinet's server swaps the session's token for a new one
   (`POST /v1/auth/session/rotate`; the old token answers 30 seconds more
   as one factor), so a token copied before the step-up never gains its
@@ -85,7 +87,11 @@ worker and cabinet do, each with its code and the test that proves it.
   address bar (`POST /v1/public/bookings/{token}/session`;
   `tests/bookings/test_booking_manage_session.py`). A website-chat visitor
   key idle for 30 days reads nothing from before the gap
-  (`tests/channels/test_widget_visitor_key_expiry.py`).
+  (`tests/channels/test_widget_visitor_key_expiry.py`). On the hosted chat
+  page the conversation and its visitor key live in the tab's
+  `sessionStorage` and leave with it; on a business's own site a
+  conversation idle for a day is wiped from the device
+  (`tests/channels/test_widget_storage_expiry.py`).
 
 ## The API's edge
 
@@ -100,7 +106,11 @@ worker and cabinet do, each with its code and the test that proves it.
   verified as before (threat model, row 4).
 - **Replays**: a Zadarma notification must be recent and a signed copy
   under another call id is ignored (`app/adapters/voice/zadarma_replay_guard.py`;
-  `tests/calls/test_pbx_notification_replays.py`); an ElevenLabs timestamp
+  `tests/calls/test_pbx_notification_replays.py`); Twilio's signature has
+  no time, so each fallback or dial-status request is claimed once for at
+  least a day and a copy rings nobody and tells nobody
+  (`app/adapters/telephony/twilio_replay_guard.py`;
+  `tests/calls/test_twilio_request_replays.py`); an ElevenLabs timestamp
   may be at most 5 minutes ahead of the clock
   (`app/utilities/channels/webhook_signatures.py`;
   `tests/channels/test_webhook_signatures.py`).
@@ -291,10 +301,13 @@ worker and cabinet do, each with its code and the test that proves it.
   told (`tests/channels/test_call_transfers.py`).
 - **Recording is off by default** (`app/schemas/domain/call_settings.py`):
   without it the audio is deleted after the call and the transcript is kept
-  redacted; nothing of the staff part of a connected transfer is kept; every
-  greeting says where the privacy notice is
-  (`tests/calls/test_call_recording_settings.py`,
-  `tests/calls/test_declined_recordings.py`).
+  redacted; nothing of the staff part of a connected transfer is kept; the
+  greeting mentions a recording only while recording is on and always says
+  where the privacy notice is, and the hosted chat's privacy page says
+  calls are recorded only then (`tests/calls/test_call_recording_settings.py`,
+  `tests/calls/test_declined_recordings.py`,
+  `tests/brain/test_call_greeting_without_recording.py`,
+  `tests/sharing/test_privacy_notice_calls.py`).
 
 ## Bookings, money and data
 

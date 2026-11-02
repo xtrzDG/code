@@ -11,6 +11,140 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-02 — readiness round: sessions, platform brakes, marketing consent, call settings, idempotent money actions and request limits
+
+Spec: `ff034c2294dd4398`
+
+Everything below is additive within `/v1`, apart from the deprecations
+(sunset 2027-05-02, removed in `/v2`) and the new refusals, which a client
+that follows the description already handles as errors.
+
+- **Added** `POST /v1/me/sessions/revoke-all` (`RevokedSessionsView`): sign
+  out everywhere, this device included; audited (`signed_out_everywhere`).
+- **Added** `POST /v1/auth/session/rotate` (`LoginSessionView`): right
+  after a step-up, the session's token is swapped for a new one with the
+  same level, device and expiries; the old token answers 30 seconds more
+  as one factor; 409 without a recent proof. `SessionAssuranceView` (the
+  answer of `POST /v1/auth/step-up/verify` and
+  `…/step-up/passkey/verify`) adds `is_level_raised`: the proof raised
+  the session to two factors, so the client rotates its token.
+- **Added** `GET /v1/admin/clients/{business_id}/members`
+  (`ClientMemberSessionList` of `ClientMemberSessionsView`: role, name,
+  masked login, live sessions, last use; permission `view_clients`) and
+  `POST /v1/admin/clients/{business_id}/members/{member_user_id}/sessions/revoke`
+  (`RevokedSessionsView`): a SUPER admin ends every session of a client's
+  team member; needs a recent sign-in (401 `step_up_required`) and is
+  audited on the platform's chain. Adding a person to the platform-admin
+  team, or making a member an owner of a business, now ends their
+  existing sessions: they sign in again.
+- **Added** `GET·PUT /v1/admin/platform/pause` (`PlatformPauseView`:
+  `is_paused`, `reason`, `changed_by`, `changed_at`, `stop_percent`,
+  `budget_used_percent`, `brake` — `PlatformBrake` `paused` or
+  `budget_stop`). `PUT` (`PlatformPauseRequest`: `is_paused`, `reason` of
+  8–300 characters) pauses or resumes every assistant at once: SUPER admins
+  only, a recent sign-in (401 `step_up_required`), audited (entity
+  `platform_pause`); 409 when the platform already stands so.
+- **Added** `GET /v1/admin/payments/reconciliation`
+  (`PaymentReconciliationView`: `day`, `ran_at`, `checked_count`,
+  `unreadable_count`, `mismatches` of `PaymentMismatchView` with `kind`
+  `paid_at_provider`, `failed_at_provider`, `reversed_at_provider` or
+  `renewal_paid_at_provider`); SUPER and BILLING admins.
+- **Added** `POST /v1/public/bookings/{token}/marketing-consent`
+  (`{"is_given", "text_version"}`, `MarketingConsentText` `2026-11-02`;
+  answers `ManagedBookingView`): the guest's marketing box on the booking
+  page, protected by the signed manage link like cancel and reschedule;
+  404 `link_invalid`, `link_expired`, `booking_changed`, 409 for an erased
+  guest, 422 for an unknown wording, 429 past its own limits (10 a minute
+  per booking, 30 per client network). `ManagedBookingView` adds
+  `marketing_consent` and `privacy_url` (the business's privacy notice:
+  its own, else the platform's default notice of its chat page; null
+  while the cabinet's address is not configured).
+- **Added** `POST /v1/public/bookings/{token}/session`
+  (`ManagedBookingSession`: `token`, `expires_at`): trades the link's
+  token for a credential of 30 minutes that every route of the booking
+  page takes in place of the link's token, so the page can take the token
+  out of the address bar; a credential cannot open another one.
+- **Added** `POST /v1/public-api/bookings/{booking_id}/cancel` (scope
+  `bookings:write`, `Idempotency-Key`; answers the `PublicBooking`, also
+  for a booking already cancelled; 404 for another business's booking).
+- **Changed** customers: `CustomerCardView` and `ContactDetailView` add
+  `marketing_consent` (`MarketingConsentView`: `status` `agreed`,
+  `not_given`, `withdrawn` or `stopped`; `given_at`, `source`
+  `booking_page` or `in_person`, `text_version`, `recorded_by`,
+  `withdrawn_at`, `withdrawal` `booking_page`, `in_person` or `stop`,
+  `withdrawn_by`); the body of `PATCH …/contacts/{contact_id}/card` takes
+  an optional `marketing_consent` (true records a consent given in person
+  with the current wording, false a withdrawal). The customer's data
+  export (`GET …/contacts/{contact_id}/export`) carries the consent with
+  the contact (`ContactDocument.marketing_consent`) and the client address
+  a website message came from (`InboundCustomerMessage.client_ip_address`).
+- **Changed** `GET·PUT …/call-settings`: `CallSettingsView` adds
+  `is_recording_enabled` (off unless the owner turns it on; businesses
+  without an explicit choice read as off), `is_staff_transfer_confirmed`,
+  `staff_transfer_confirmed_by`, `staff_transfer_confirmed_at` and
+  `transfer_phone_number` (the allowed staff number calls go to, or null);
+  the request takes optional `is_recording_enabled` and
+  `is_staff_transfer_confirmed` (null or left out: unchanged). The hosted
+  chat page (`GET /v1/public/chat/{address}`, `HostedChatPhoneCalls`)
+  adds `is_recording_enabled`, so its privacy page says calls are
+  recorded only while they are.
+- **Changed** `PlatformAlertCode` adds `spend_budget_stop`,
+  `missed_job_runs` and `payment_mismatch` (`GET /v1/admin/system`).
+- **Changed** `Idempotency-Key` is accepted on `POST
+  /v1/admin/clients/{business_id}/credits`, `…/discount`,
+  `…/trial-extension`, `…/setup-fee-waiver`,
+  `…/invoices/{invoice_id}/manual-payment`, `…/plan`, `POST
+  /v1/admin/partners/{partner_id}/payouts`, `POST
+  /v1/businesses/{business_id}/deposit-settings/payment-links` and `POST
+  /v1/businesses/{business_id}/deposits/{deposit_id}/paid`: a retry
+  replays the first answer, the same key with another body gets 409
+  `idempotency_key_reused`.
+- **Changed** (values) writes to `…/deposit-settings` that add or remove a
+  payment page, choose another default or point a rule at another page
+  may answer 401 `step_up_required`. Booking manage tokens are 76
+  characters (version 2, a 128-bit MAC); 71-character links keep working
+  until they expire. The Google Calendar consent URL carries
+  `code_challenge` and `code_challenge_method=S256`.
+- **Changed** (new refusals, no schema change): 504
+  (`external_service_error`) for a request that has not started answering
+  within 60 s (170 s for model-backed and upload routes); 422
+  `validation_failed` with reason `too_deep` for JSON nested deeper than
+  64 levels; 413 for a body over 1 KiB on GET, HEAD and OPTIONS (64 KiB for
+  telephony forms); 429 on `GET /v1/widget/{business_id}/config` past 120
+  requests a minute per client network (the answer is now cacheable for
+  60 s); webhook deliveries without a well-formed signature header of
+  their provider get 401 (Stripe 403) before their body is read, and
+  floods get 429 with `Retry-After`. A made-up `Authorization` header no
+  longer exempts a request from the per-address limit.
+- **Changed** (values) `POST /v1/widget/{business_id}/messages` refuses
+  (422) a `contact_name` over 60 characters, over several lines or with
+  markup or invisible characters (was: over 100); a blank one still means
+  none. Saving the profile refuses (422) a tone, handoff or forbidden text
+  that spans lines, starts with `#` or contains `< > [ ] { }` or a
+  backtick. A customer's booking more than 365 days ahead gets 422, and
+  past the daily caps 429 with `Retry-After`; the assistant's
+  `create_lead` in a conversation answers 429 after 5 leads of one
+  contact in 24 hours (the public API's leads are not capped).
+- **Changed** voice webhooks: the conversation-initiation answer no longer
+  carries the dynamic variables `caller_name` and `upcoming_booking`, and
+  adds `can_transfer` (`yes`/`no`) and `transfer_number` (E.164 or
+  `none`); the greeting (`first_message`) mentions a recording only while
+  recording is on and ends with where the privacy notice is; `POST /v1/voice/tools/{list_my_bookings|cancel_booking|reschedule_booking}`
+  answer 200 with `{"error": …}` after authentication instead of running
+  the tool (a caller ID is not authentication).
+- **Changed** (values) the go-live check `voice_configuration` and
+  notification and channel errors (`last_error`, Telegram and Meta
+  connect messages) no longer name server settings; reason codes are
+  unchanged. Setup progress `phone_test_links` no longer has a `web_chat`
+  entry (the website chat is tried at the share links' `hosted_chat_url`).
+  `GET /widget/demo` answers 404 in production.
+- **Deprecated** (sunset 2027-05-02, removed in `/v2`)
+  `FeedbackTemplatePreview.example` (`GET …/review-settings`) and
+  `TextBackTemplatePreview.example` (`GET …/call-settings`), still filled,
+  which the cabinet no longer shows, and `WidgetSnippetView.demo_url` (`GET
+  …/channels/web/snippet`; it names `/widget/demo`, which production no
+  longer serves: preview the hosted chat page `/c/{address}?preview=1`).
+
 ## Values only, 2026-10-29 — the interface languages are English and Italian; Italy is the pilot country
 
 No `Spec:` line of its own: the committed description is still the

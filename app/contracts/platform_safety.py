@@ -13,10 +13,10 @@ from typed_time_provider import Microseconds
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.registry_contract import RegistryContract
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.spend import PlatformBrake
 from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocument
-from app.schemas.constants.spend import PlatformBrake
 from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.dto.payment_reconciliation import ProviderPaymentState
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
