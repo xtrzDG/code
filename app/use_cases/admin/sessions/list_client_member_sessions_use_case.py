@@ -8,8 +8,13 @@ from app.contracts.repositories.user_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.admin_sessions import ClientMemberSessionList, ClientMembersQuery
+from app.schemas.dto.admin_sessions import (
+    ClientMemberSessionList,
+    ClientMemberSessionsView,
+    ClientMembersQuery,
+)
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.use_cases.admin.sessions.client_member_sessions import member_sessions_view
 from app.use_cases.shared.business_access import require_business
@@ -21,7 +26,8 @@ class ListClientMemberSessionsUseCase(
     """
     A platform admin who sees clients looks at a client's team: each
     member's role, name and masked phone or e-mail, how many sessions they
-    have signed in and when one was last used (owners first, as stored).
+    have signed in and when one was last used (owners first, then the
+    members signed in on the most devices).
     The sessions themselves (devices, addresses) stay the person's own; a
     team has a handful of members, each read by an indexed lookup.
     """
@@ -51,14 +57,20 @@ class ListClientMemberSessionsUseCase(
             self._business_repo, input_data.client_id
         )
         now: Microseconds = self._wall_clock.now_unix()
-        return ClientMemberSessionList(
-            items=[
-                member_sessions_view(
-                    member,
-                    self._user_repo.get(member.user_id),
-                    self._user_session_repo.list_by_user(member.user_id),
-                    now,
-                )
-                for member in business.members
-            ]
+        items: list[ClientMemberSessionsView] = [
+            member_sessions_view(
+                member,
+                self._user_repo.get(member.user_id),
+                self._user_session_repo.list_by_user(member.user_id),
+                now,
+            )
+            for member in business.members
+        ]
+        # Owners first, then whoever is signed in on the most devices.
+        items.sort(
+            key=lambda item: (
+                item.role is not BusinessMemberRole.OWNER,
+                -int(item.live_session_count),
+            )
         )
+        return ClientMemberSessionList(items=items)

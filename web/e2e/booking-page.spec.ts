@@ -173,6 +173,31 @@ test.describe("in Hebrew", () => {
   });
 });
 
+test("the guest's marketing box is unticked until they tick it, and stays as they left it", async ({ page, request }) => {
+  const { businessId } = await signInAsDemoOwner(request);
+  const booked = await bookThroughWebChat(request, businessId, "en");
+
+  await page.goto(booked.path);
+  const box = page.getByRole("checkbox", { name: /news, offers and invitations to come back from/ });
+  await expect(box).not.toBeChecked();
+  await expect(page.getByText("Optional. You can untick it at any time, or reply STOP in that chat.")).toBeVisible();
+
+  await box.check();
+  await expect(box).toBeChecked();
+  await expect(box).toBeEnabled();
+
+  // What the page shows comes from the API: a reload keeps the tick.
+  await page.reload();
+  const reloaded = page.getByRole("checkbox", { name: /news, offers and invitations to come back from/ });
+  await expect(reloaded).toBeChecked();
+
+  await reloaded.uncheck();
+  await expect(reloaded).not.toBeChecked();
+  await expect(reloaded).toBeEnabled();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: /news, offers and invitations to come back from/ })).not.toBeChecked();
+});
+
 test("the page passes the accessibility audit in the light and the dark scheme", async ({ page, request }) => {
   const { businessId } = await signInAsDemoOwner(request);
   const booked = await bookThroughWebChat(request, businessId, "en");

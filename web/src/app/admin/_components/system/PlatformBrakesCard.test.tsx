@@ -6,11 +6,24 @@ import { queryCache } from "@/api/queryCache";
 import { answerGet, failure, ok } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
-import { brakeState, hasMismatches, type PaymentReconciliation, type PlatformBrakes } from "../../_lib/platformBrakes";
+import {
+  brakeState,
+  hasMismatches,
+  type PaymentReconciliation,
+  type PlatformBrakes,
+} from "../../_lib/platformBrakes";
 import { PaymentReconciliationCard } from "./PaymentReconciliationCard";
 import { PlatformBrakesCard } from "./PlatformBrakesCard";
 
-vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
+vi.mock("@/api/client", () => ({
+  api: {
+    GET: vi.fn(),
+    POST: vi.fn(),
+    PUT: vi.fn(),
+    PATCH: vi.fn(),
+    DELETE: vi.fn(),
+  },
+}));
 
 const running: PlatformBrakes = {
   is_paused: false,
@@ -53,17 +66,28 @@ describe("PlatformBrakesCard: the global pause and the budget stop", () => {
     vi.mocked(api.PUT).mockReset();
   });
 
-  it.each(["en", "it"] as const)("shows a paused platform with its reason in %s", async (locale) => {
-    const { t } = textsIn(locale);
-    answerGet(() => ok(paused));
-    renderInLocale(<PlatformBrakesCard canPause={false} />, { locale });
+  it.each(["en", "it"] as const)(
+    "shows a paused platform with its reason in %s",
+    async (locale) => {
+      const { t } = textsIn(locale);
+      answerGet(() => ok(paused));
+      renderInLocale(<PlatformBrakesCard canPause={false} />, { locale });
 
-    const card = await screen.findByRole("region", { name: t("adminSystem.brakes.title") });
-    expect(await within(card).findByText(t("adminSystem.brakes.states.paused"))).toBeTruthy();
-    expect(within(card).getByText(paused.reason ?? "")).toBeTruthy();
-    // Only a SUPER admin gets the button.
-    expect(within(card).queryByRole("button", { name: t("adminSystem.brakes.resume") })).toBeNull();
-  });
+      const card = await screen.findByRole("region", {
+        name: t("platformBrakes.brakes.title"),
+      });
+      expect(
+        await within(card).findByText(t("platformBrakes.brakes.states.paused")),
+      ).toBeTruthy();
+      expect(within(card).getByText(paused.reason ?? "")).toBeTruthy();
+      // Only a SUPER admin gets the button.
+      expect(
+        within(card).queryByRole("button", {
+          name: t("platformBrakes.brakes.resume"),
+        }),
+      ).toBeNull();
+    },
+  );
 
   it("lets a SUPER admin pause every assistant with a reason", async () => {
     const { t } = textsIn("en");
@@ -71,10 +95,20 @@ describe("PlatformBrakesCard: the global pause and the budget stop", () => {
     vi.mocked(api.PUT).mockImplementation((() => ok(paused)) as never);
     renderInLocale(<PlatformBrakesCard canPause />);
 
-    fireEvent.click(await screen.findByRole("button", { name: t("adminSystem.brakes.pause") }));
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: t("platformBrakes.brakes.pause"),
+      }),
+    );
     const dialog = await screen.findByRole("dialog");
-    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "  Prompt injection wave, stop now " } });
-    fireEvent.click(within(dialog).getByRole("button", { name: t("adminSystem.brakes.pause") }));
+    fireEvent.change(within(dialog).getByRole("textbox"), {
+      target: { value: "  Prompt injection wave, stop now " },
+    });
+    fireEvent.click(
+      within(dialog).getByRole("button", {
+        name: t("platformBrakes.brakes.pause"),
+      }),
+    );
 
     await waitFor(() => expect(api.PUT).toHaveBeenCalledTimes(1));
     expect(vi.mocked(api.PUT).mock.calls[0]).toEqual([
@@ -84,8 +118,14 @@ describe("PlatformBrakesCard: the global pause and the budget stop", () => {
   });
 
   it("is hidden from an admin whose role may not see operations", async () => {
-    answerGet(() => failure(403, { detail: "Your platform admin role does not include this." }));
-    const { container } = renderInLocale(<PlatformBrakesCard canPause={false} />);
+    answerGet(() =>
+      failure(403, {
+        detail: "Your platform admin role does not include this.",
+      }),
+    );
+    const { container } = renderInLocale(
+      <PlatformBrakesCard canPause={false} />,
+    );
 
     await waitFor(() => expect(api.GET).toHaveBeenCalled());
     await waitFor(() => expect(container.textContent).toBe(""));
@@ -97,23 +137,38 @@ describe("PaymentReconciliationCard: payments that differ from Flitt and Stripe"
     queryCache.clear();
   });
 
-  it.each(["en", "it"] as const)("lists each mismatch with its client in %s", async (locale) => {
-    const { t } = textsIn(locale);
-    answerGet(() => ok(reconciliation));
-    renderInLocale(<PaymentReconciliationCard />, { locale });
+  it.each(["en", "it"] as const)(
+    "lists each mismatch with its client in %s",
+    async (locale) => {
+      const { t } = textsIn(locale);
+      answerGet(() => ok(reconciliation));
+      renderInLocale(<PaymentReconciliationCard />, { locale });
 
-    const table = await screen.findByRole("table", { name: t("adminSystem.reconciliation.title") });
-    expect(within(table).getByText("Trattoria del Sole")).toBeTruthy();
-    expect(within(table).getByText(t("adminSystem.reconciliation.kinds.paid_at_provider"))).toBeTruthy();
-    expect(within(table).getByText(t("adminSystem.reconciliation.statuses.approved"))).toBeTruthy();
-  });
+      const table = await screen.findByRole("table", {
+        name: t("platformBrakes.reconciliation.title"),
+      });
+      expect(within(table).getByText("Trattoria del Sole")).toBeTruthy();
+      expect(
+        within(table).getByText(
+          t("platformBrakes.reconciliation.kinds.paid_at_provider"),
+        ),
+      ).toBeTruthy();
+      expect(
+        within(table).getByText(
+          t("platformBrakes.reconciliation.statuses.approved"),
+        ),
+      ).toBeTruthy();
+    },
+  );
 
   it("says so when every payment matches", async () => {
     const { t } = textsIn("en");
     answerGet(() => ok({ ...reconciliation, mismatches: [] }));
     renderInLocale(<PaymentReconciliationCard />);
 
-    expect(await screen.findByText(t("adminSystem.reconciliation.allMatch"))).toBeTruthy();
+    expect(
+      await screen.findByText(t("platformBrakes.reconciliation.allMatch")),
+    ).toBeTruthy();
     expect(screen.queryByRole("table")).toBeNull();
   });
 });

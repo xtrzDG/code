@@ -17,7 +17,7 @@ import { businessPath, inboxPath } from "@/lib/navigation";
 
 import { heroPeriodText, TrialLine } from "./ValueHeroParts";
 
-/** "cafe.example/c/mtsvane" from "https://cafe.example/c/mtsvane": the link as people read it. */
+/** "trattoria.example/c/da-marco" from "https://trattoria.example/c/da-marco": the link as people read it. */
 function displayUrl(url: string): string {
   return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 }

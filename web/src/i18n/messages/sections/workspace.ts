@@ -23,6 +23,7 @@ import { adminSpendEn } from "./workspace/adminSpend.en";
 import { adminSystemEn } from "./workspace/adminSystem.en";
 import { dataTasksEn } from "./workspace/dataTasks.en";
 import { providerCircuitsEn } from "./workspace/providerCircuits.en";
+import { platformBrakesEn } from "./workspace/platformBrakes.en";
 import { adminTeamEn } from "./workspace/adminTeam.en";
 import { billingEn } from "./workspace/billing.en";
 import { billingCardEn } from "./workspace/billingCard.en";
@@ -90,6 +91,7 @@ export const workspaceEn = {
   adminSpend: adminSpendEn,
   dataTasks: dataTasksEn,
   providerCircuits: providerCircuitsEn,
+  platformBrakes: platformBrakesEn,
   formFields: formFieldsEn,
 } as const;
 

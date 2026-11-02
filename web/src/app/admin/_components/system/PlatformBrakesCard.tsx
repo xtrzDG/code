@@ -7,7 +7,11 @@ import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 
-import { BRAKE_TONES, brakeState, type PlatformBrakes } from "../../_lib/platformBrakes";
+import {
+  BRAKE_TONES,
+  brakeState,
+  type PlatformBrakes,
+} from "../../_lib/platformBrakes";
 import { usePlatformBrakes } from "../../_lib/usePlatformBrakes";
 import { ActionDialog } from "../client/actions/ActionDialog";
 import { useSystemFormat } from "./useSystemFormat";
@@ -23,7 +27,7 @@ export function PlatformBrakesCard({ canPause }: { canPause: boolean }) {
   const toast = useToast();
   const { brakes, setPaused, isChanging, changeError } = usePlatformBrakes();
   const [isAsking, setAsking] = useState(false);
-  const title = t("adminSystem.brakes.title");
+  const title = t("platformBrakes.brakes.title");
   const data = brakes.data;
 
   if (brakes.error?.status === 403) {
@@ -34,7 +38,13 @@ export function PlatformBrakesCard({ canPause }: { canPause: boolean }) {
     if (!data) return;
     if (await setPaused(!data.is_paused, reason)) {
       setAsking(false);
-      toast.success(t(data.is_paused ? "adminSystem.brakes.resumed" : "adminSystem.brakes.paused"));
+      toast.success(
+        t(
+          data.is_paused
+            ? "platformBrakes.brakes.resumed"
+            : "platformBrakes.brakes.paused",
+        ),
+      );
     }
   };
 
@@ -42,11 +52,18 @@ export function PlatformBrakesCard({ canPause }: { canPause: boolean }) {
     <Card
       aria-label={title}
       title={title}
-      description={t("adminSystem.brakes.description")}
+      description={t("platformBrakes.brakes.description")}
       actions={
         data && canPause ? (
-          <Button variant={data.is_paused ? "primary" : "danger"} onClick={() => setAsking(true)}>
-            {t(data.is_paused ? "adminSystem.brakes.resume" : "adminSystem.brakes.pause")}
+          <Button
+            variant={data.is_paused ? "primary" : "danger"}
+            onClick={() => setAsking(true)}
+          >
+            {t(
+              data.is_paused
+                ? "platformBrakes.brakes.resume"
+                : "platformBrakes.brakes.pause",
+            )}
           </Button>
         ) : undefined
       }
@@ -62,9 +79,21 @@ export function PlatformBrakesCard({ canPause }: { canPause: boolean }) {
         <ActionDialog
           key={String(isAsking)}
           open={isAsking}
-          title={t(data.is_paused ? "adminSystem.brakes.resumeTitle" : "adminSystem.brakes.pauseTitle")}
-          description={t(data.is_paused ? "adminSystem.brakes.resumeDescription" : "adminSystem.brakes.pauseDescription")}
-          confirmLabel={t(data.is_paused ? "adminSystem.brakes.resume" : "adminSystem.brakes.pause")}
+          title={t(
+            data.is_paused
+              ? "platformBrakes.brakes.resumeTitle"
+              : "platformBrakes.brakes.pauseTitle",
+          )}
+          description={t(
+            data.is_paused
+              ? "platformBrakes.brakes.resumeDescription"
+              : "platformBrakes.brakes.pauseDescription",
+          )}
+          confirmLabel={t(
+            data.is_paused
+              ? "platformBrakes.brakes.resume"
+              : "platformBrakes.brakes.pause",
+          )}
           tone={data.is_paused ? "primary" : "danger"}
           isPending={isChanging}
           error={changeError}
@@ -84,21 +113,29 @@ function BrakesState({ brakes }: { brakes: PlatformBrakes }) {
   return (
     <div className="space-y-3">
       <p className="flex flex-wrap items-center gap-2">
-        <Badge tone={BRAKE_TONES[state]}>{t(`adminSystem.brakes.states.${state}`)}</Badge>
+        <Badge tone={BRAKE_TONES[state]}>
+          {t(`platformBrakes.brakes.states.${state}`)}
+        </Badge>
         {brakes.is_paused && brakes.changed_at ? (
-          <span className="text-sm text-ink-muted">{t("adminSystem.brakes.pausedSince", { time: format.when(brakes.changed_at) })}</span>
+          <span className="text-sm text-ink-muted">
+            {t("platformBrakes.brakes.pausedSince", {
+              time: format.when(brakes.changed_at),
+            })}
+          </span>
         ) : null}
       </p>
       {brakes.is_paused && brakes.reason ? (
         <p className="text-sm">
-          <span className="text-ink-muted">{t("adminSystem.brakes.reason")} </span>
+          <span className="text-ink-muted">
+            {t("platformBrakes.brakes.reason")}{" "}
+          </span>
           {brakes.reason}
         </p>
       ) : null}
       <p className="text-sm text-ink-muted">
         {percent === null
-          ? t("adminSystem.brakes.noBudget")
-          : t("adminSystem.brakes.budget", {
+          ? t("platformBrakes.brakes.noBudget")
+          : t("platformBrakes.brakes.budget", {
               percent: formatNumber(percent, locale),
               stop: formatNumber(brakes.stop_percent, locale),
             })}

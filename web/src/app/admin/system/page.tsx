@@ -18,5 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function AdminSystemPage() {
   const me = await getCurrentUser();
-  return <SystemScreen canPause={hasAdminPermission(me, "manage_operations")} />;
+  return (
+    <SystemScreen canPause={hasAdminPermission(me, "manage_operations")} />
+  );
 }

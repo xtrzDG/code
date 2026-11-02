@@ -102,6 +102,7 @@ def test_the_team_list_counts_live_sessions_without_contacts() -> None:
 
     listed = members(world)
 
+    assert listed.items[0].role is BusinessMemberRole.OWNER
     by_role = {item.role: item for item in listed.items}
     assert set(by_role) == {BusinessMemberRole.OWNER, BusinessMemberRole.STAFF}
     staff = by_role[BusinessMemberRole.STAFF]

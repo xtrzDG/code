@@ -31,6 +31,7 @@ import { customerMemoryIt } from "./customerMemory.it";
 import { dataExportsIt } from "./dataExports.it";
 import { dataTasksIt } from "./dataTasks.it";
 import { providerCircuitsIt } from "./providerCircuits.it";
+import { platformBrakesIt } from "./platformBrakes.it";
 import { formFieldsIt } from "./formFields.it";
 import { loginOptionsIt } from "./loginOptions.it";
 import { metaConnectIt } from "./metaConnect.it";
@@ -85,5 +86,6 @@ export const workspaceIt: Translation<typeof workspaceEn> = {
   adminSpend: adminSpendIt,
   dataTasks: dataTasksIt,
   providerCircuits: providerCircuitsIt,
+  platformBrakes: platformBrakesIt,
   formFields: formFieldsIt,
 };
