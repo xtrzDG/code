@@ -39,6 +39,15 @@ from app.schemas.dto.operations.message_texts import (
 )
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.bookings.booking_requesters import (
+    BookingRequester,
+    CustomerRequester,
+    StaffRequester,
+    customer_contact_of,
+    customer_phone_of,
+    identify_requester,
+    staff_actor_of,
+)
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     booking_unit_of,
@@ -63,11 +72,12 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
     Cancel a booking found by id, or by the customer's contact or phone and
     date (model tool cancel_booking and the cabinet).
 
-    A command that carries the customer's contact or phone is a customer
-    request: the booking must be theirs and staff are notified. A command
-    with only a booking id comes from the cabinet, where the staff member
-    (`actor_id`) may undo the cancellation for a short while
-    (RevertBookingStatusUseCase). Cancelling twice is
+    Who asks decides the authority (`identify_requester`): a customer (the
+    command's contact or phone) cancels only their own booking, never from
+    a phone call, and staff are notified; a staff member (`actor_id`, from
+    the cabinet) cancels any booking by its id and may undo it for a short
+    while (RevertBookingStatusUseCase); a command naming neither is refused
+    (AccessDeniedError). Cancelling twice is
     harmless; completed and no-show bookings cannot be cancelled. The
     confirmation quotes the profile's cancellation policy. The freed place
     goes to the waitlist (a staff cancellation a little later, for Undo).
@@ -122,6 +132,12 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: CancelBookingCommand) -> BookingResult:
+        requester: BookingRequester = identify_requester(
+            input_data.actor_id,
+            input_data.contact_id,
+            input_data.contact_phone_number,
+            input_data.source_channel,
+        )
         inputs: SchedulingInputs = load_scheduling_inputs(
             self._business_repo,
             self._business_profile_repo,
@@ -140,8 +156,8 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 input_data.business_id,
                 inputs.zone,
                 input_data.booking_id,
-                input_data.contact_id,
-                input_data.contact_phone_number,
+                customer_contact_of(requester),
+                customer_phone_of(requester),
                 local_date,
                 microseconds_to_seconds(int(now)),
                 is_sandbox=input_data.is_sandbox,
@@ -156,7 +172,9 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                         "cancelled."
                     )
 
-                note_status_change(booking, booking.status, input_data.actor_id, now)
+                note_status_change(
+                    booking, booking.status, staff_actor_of(requester), now
+                )
                 booking.status = BookingStatus.CANCELLED
                 booking.updated_at = now
                 self._booking_repo.save(booking)
@@ -180,11 +198,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
             )
 
         if is_newly_cancelled and not booking.is_sandbox:
-            is_customer_request: bool = (
-                input_data.contact_id is not None
-                or input_data.contact_phone_number is not None
-            )
-            if is_customer_request:
+            if isinstance(requester, CustomerRequester):
                 notify_staff_about_booking(
                     self._staff_alerts,
                     self._staff_notification_transformer,
@@ -197,7 +211,11 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
 
             self._calendar_sync.sync(booking)
             notice_if_freed(
-                self._growth, before, booking, now, input_data.actor_id is not None
+                self._growth,
+                before,
+                booking,
+                now,
+                isinstance(requester, StaffRequester),
             )
 
         return BookingResult(

@@ -35,14 +35,14 @@ TOOL_CALL_ID_PREFIX: str = "toolu_rehearsal_"
 
 class OfflineLlmAdapter(LlmAdapterContract):
     """
-    The model of `LLM_PROVIDER=scripted` (model id "scripted"): a staging
-    deployment, a local run without provider keys or the end-to-end
-    suite. It plays a rehearsal instead of reading (see
+    The model of `LLM_PROVIDER=scripted` (model id "scripted"), for
+    development and tests only: a local run without provider keys, the
+    tests and the end-to-end suite. It plays a rehearsal instead of reading (see
     `app/utilities/llm_rehearsal/rehearsal_turns.py`): the automatic checks'
     AI customer and judge, and an assistant that answers in the customer's
     language that it is a test assistant, books the first free time when
     asked to book and passes the conversation to a colleague when asked
-    for a person. So "Apply changes" goes live on such a server, without
+    for a person. So "Apply changes" goes live on such a run, without
     network or cost. It measures nothing about answer quality: its judge
     scores every answer 5, and only the checks of what the assistant did
     can fail. Unlike the tests' `ScriptedLlmAdapter` it keeps no requests,

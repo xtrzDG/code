@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 
 import { bookingPageTexts } from "@/lib/bookingPage/texts";
 import { directionOf } from "@/lib/hostedChat/language";
+import { privacyNoticeOfChat } from "@/lib/publicSite/customerPageLinks";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
-import { bookingPageLanguage, loadManagedBooking } from "@/server/managedBooking";
+import { bookingPageLanguage, loadManagedBooking, type ManagedBookingLookup } from "@/server/managedBooking";
 
+import { CustomerPageLinks } from "../../c/[slug]/_components/CustomerPageLinks";
 import { ManagedBooking } from "./_components/ManagedBooking";
 
 import "@/styles/bookingPage.css";
@@ -32,11 +34,21 @@ export const viewport: Viewport = {
   ],
 };
 
+/** The business's privacy notice: the one of its chat page, when the booking names that chat. */
+function privacyNoticeOf(lookup: ManagedBookingLookup): string | null {
+  if (lookup.kind !== "found") {
+    return null;
+  }
+  const chat = lookup.view.chat_links.find((link) => link.kind === "hosted_chat");
+  return chat ? privacyNoticeOfChat(chat.url) : null;
+}
+
 /**
  * /r/{token}: a guest's booking, opened from the link in their written
  * confirmation (no account). The signed token is the key; the API checks
  * it, its expiry and that the booking has not moved since, and limits how
- * often it is used. The page speaks the guest's language.
+ * often it is used. The page speaks the guest's language; at its foot the
+ * business's privacy notice and the platform's accessibility statement.
  */
 export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
   const { token } = await params;
@@ -62,6 +74,11 @@ export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
           <p>{texts[lookup.problem]}</p>
         </article>
       )}
+      <CustomerPageLinks
+        language={language}
+        privacyHref={privacyNoticeOf(lookup)}
+        className="mx-auto mt-6 w-full max-w-[560px] text-center text-sm text-ink-muted"
+      />
     </main>
   );
 }

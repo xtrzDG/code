@@ -1,7 +1,7 @@
 """
 "Apply changes" end to end over the API on the rehearsal model of
-LLM_PROVIDER=scripted (what development, staging and the cabinet's
-end-to-end suite run): the first launch passes every check, a new price
+LLM_PROVIDER=scripted (what development and the cabinet's end-to-end
+suite run): the first launch passes every check, a new price
 is listed in the owner's words, applied after a quick check, and the
 test bookings of the first checks no longer hold the tables.
 """

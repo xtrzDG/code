@@ -116,11 +116,10 @@ def is_allowed(link: FoundLink, allowed: Sequence[str]) -> bool:
     return False
 
 
-def link_host(url: str | None) -> str | None:
-    """The host of a configured address (a platform base URL); None if none."""
+def platform_link_hosts(base_urls: Iterable[str | None]) -> list[str]:
+    """The hosts of the platform's configured addresses (cabinet, API)."""
 
-    if url is None:
-        return None
-
-    link: FoundLink | None = parse_link(url)
-    return None if link is None else link.host
+    links: list[FoundLink | None] = [
+        parse_link(url) for url in base_urls if url is not None
+    ]
+    return [link.host for link in links if link is not None]

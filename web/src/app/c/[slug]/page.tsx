@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { readPreviewLook } from "@/lib/hostedChat/preview";
 import { hostedChatTexts } from "@/lib/hostedChat/texts";
 import { poweredByText } from "@/lib/referrals/poweredByTexts";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
-import { chatApiBase } from "@/server/hostedChat";
+import { chatApiBase, hostedChatPath, type HostedChatView } from "@/server/hostedChat";
 
+import { CustomerPageLinks } from "./_components/CustomerPageLinks";
 import { HostedChatPreview } from "./_components/HostedChatPreview";
 import { HostedChatNotice, HostedChatShell } from "./_components/HostedChatShell";
 import { HostedInfoPanel, hasHostedInfo } from "./_components/HostedInfoPanel";
@@ -15,6 +17,23 @@ import { visitSourceOf } from "./_lib/visitSource";
 
 /** The element the widget fills (its data-container). */
 const CONTAINER_ID = "hosted-chat";
+
+const LINKS_CLASS = "w-full px-4 pt-2 pb-4 text-center text-xs text-(--hc-muted)";
+
+/** The page's content, then its privacy and accessibility links below it. */
+function WithLinks({ language, privacyHref, children }: { language: string; privacyHref: string | null; children: ReactNode }) {
+  return (
+    <div className="flex w-full flex-col items-center">
+      {children}
+      <CustomerPageLinks language={language} privacyHref={privacyHref} className={LINKS_CLASS} />
+    </div>
+  );
+}
+
+/** The business's own privacy notice when it linked one, else the platform's default one for its chat. */
+function privacyNoticeHref(view: HostedChatView): string {
+  return view.privacy_url ?? `${hostedChatPath(view.slug ?? view.business_id)}/privacy`;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const { lookup } = await readHostedChatRequest();
@@ -50,7 +69,8 @@ export async function generateViewport(): Promise<Viewport> {
  * stays in the browser's storage, never in the address; the link's
  * `?src=` goes to the widget as the visitor's source. With `?preview=1`
  * it is the cabinet's live preview (HostedChatPreview), framed by the
- * Channels page.
+ * Channels page. Below the chat: the business's privacy notice and the
+ * platform's accessibility statement (CustomerPageLinks).
  */
 export default async function HostedChatPage({ searchParams }: PageProps<"/c/[slug]">) {
   const { lookup, acceptLanguage, nonce } = await readHostedChatRequest();
@@ -62,7 +82,9 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
     const texts = hostedChatTexts(page.language);
     return (
       <HostedChatShell page={page}>
-        <HostedChatNotice lead={texts.unavailable} hint={texts.tryLater} />
+        <WithLinks language={page.language} privacyHref={null}>
+          <HostedChatNotice lead={texts.unavailable} hint={texts.tryLater} />
+        </WithLinks>
       </HostedChatShell>
     );
   }
@@ -77,15 +99,18 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   }
   const page = chatLanguage(view, acceptLanguage);
   const texts = hostedChatTexts(page.language);
+  const privacyHref = privacyNoticeHref(view);
   if (!view.is_enabled) {
     return (
       <HostedChatShell page={page} accent={view.accent_color}>
-        <HostedChatNotice
-          title={view.business_name}
-          lead={texts.unavailable}
-          hint={texts.tryLater}
-          poweredBy={view.powered_by_url ? { label: poweredByText(page.language), url: view.powered_by_url } : null}
-        />
+        <WithLinks language={page.language} privacyHref={privacyHref}>
+          <HostedChatNotice
+            title={view.business_name}
+            lead={texts.unavailable}
+            hint={texts.tryLater}
+            poweredBy={view.powered_by_url ? { label: poweredByText(page.language), url: view.powered_by_url } : null}
+          />
+        </WithLinks>
       </HostedChatShell>
     );
   }
@@ -107,15 +132,17 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   );
   return (
     <HostedChatShell page={page} accent={view.accent_color}>
-      {hasHostedInfo(view) ? (
-        // A link in bio: the business's hours, address and Book beside the chat.
-        <div className="hc-layout">
-          <HostedInfoPanel view={view} language={page.language} containerId={CONTAINER_ID} now={new Date()} />
-          {frame}
-        </div>
-      ) : (
-        frame
-      )}
+      <WithLinks language={page.language} privacyHref={privacyHref}>
+        {hasHostedInfo(view) ? (
+          // A link in bio: the business's hours, address and Book beside the chat.
+          <div className="hc-layout">
+            <HostedInfoPanel view={view} language={page.language} containerId={CONTAINER_ID} now={new Date()} />
+            {frame}
+          </div>
+        ) : (
+          frame
+        )}
+      </WithLinks>
       <script
         async
         nonce={nonce}

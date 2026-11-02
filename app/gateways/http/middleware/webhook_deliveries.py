@@ -12,8 +12,8 @@ import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from app.gateways.http.billing_routes import FLITT_WEBHOOK_PATH
-from app.gateways.http.payment_method_routes import STRIPE_WEBHOOK_PATH
+from app.adapters.payments.flitt_payment_gateway_adapter import FLITT_WEBHOOK_PATH
+from app.adapters.payments.stripe_billing_adapter import STRIPE_WEBHOOK_PATH
 from app.gateways.http.telephony_routes import (
     ZADARMA_NOTIFICATIONS_PATH,
     ZADARMA_SIGNATURE_HEADER,

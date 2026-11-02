@@ -12,13 +12,22 @@ from collections.abc import Callable, Coroutine
 from typing import Any, cast
 
 from fastapi import Request
+from fastapi.routing import APIRoute
 from pydantic import BaseModel, ValidationError
 
+from app.gateways.http.json_nesting import (
+    ensure_json_nesting_within_limit,
+    looks_like_json,
+)
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.utilities.observability.security_events import (
+    REQUEST_BODY_REFUSED,
+    log_security_event,
+)
 
 type JsonBodyDependency[Body: BaseModel] = Callable[
     [Request],
@@ -29,6 +38,7 @@ MAX_REPORTED_VALIDATION_ERRORS: int = 5
 LOCAL_DEFINITION_PREFIX: str = "#/$defs/"
 EMPTY_JSON_OBJECT: bytes = b"{}"
 EMPTY_BODY_MESSAGE: str = "The request body must be a JSON object."
+JSON_TOO_DEEP_REASON: str = "json_too_deep"
 
 
 def build_json_body_dependency[Body: BaseModel](
@@ -54,7 +64,9 @@ def build_json_body_dependency[Body: BaseModel](
     """
 
     async def read_json_body(request: Request) -> Body:
-        return parse_json_body(body_type, await request.body(), optional=optional)
+        raw_body: bytes = await request.body()
+        refuse_deep_json(request, raw_body)
+        return parse_json_body(body_type, raw_body, optional=optional)
 
     return read_json_body
 
@@ -63,10 +75,35 @@ async def read_raw_request_body(request: Request) -> bytes:
     """
     The request body exactly as sent: for signed webhooks (signatures cover
     the raw bytes) and for routes whose body type depends on the path, which
-    then validate it with `parse_json_body`.
+    then validate it with `parse_json_body`. A JSON body nested deeper than
+    the limit is refused (422) before anything parses it.
     """
 
-    return await request.body()
+    raw_body: bytes = await request.body()
+    if looks_like_json(raw_body, request.headers.get("content-type")):
+        refuse_deep_json(request, raw_body)
+
+    return raw_body
+
+
+def refuse_deep_json(request: Request, raw_body: bytes) -> None:
+    """422 `too_deep` (and a security line) for a body nested too deep."""
+
+    try:
+        ensure_json_nesting_within_limit(raw_body)
+    except ValidationFailedError:
+        log_security_event(
+            REQUEST_BODY_REFUSED,
+            path=request.method + " " + route_template_of(request),
+            reason=JSON_TOO_DEEP_REASON,
+            client_address=None if request.client is None else request.client.host,
+        )
+        raise
+
+
+def route_template_of(request: Request) -> str:
+    route: object = request.scope.get("route")
+    return route.path if isinstance(route, APIRoute) else "unmatched"
 
 
 def parse_json_body[Body: BaseModel](
@@ -79,8 +116,8 @@ def parse_json_body[Body: BaseModel](
     Validate a raw JSON request body as `body_type` in JSON mode.
 
     Raises:
-        ValidationFailedError: the body is empty (unless optional), not JSON,
-            or breaks the schema.
+        ValidationFailedError: the body is empty (unless optional), nested
+            too deep (`json_nesting`), not JSON, or breaks the schema.
     """
 
     if raw_body.strip() == b"":
@@ -89,6 +126,7 @@ def parse_json_body[Body: BaseModel](
 
         raw_body = EMPTY_JSON_OBJECT
 
+    ensure_json_nesting_within_limit(raw_body)
     try:
         return body_type.model_validate_json(raw_body)
     except ValidationError as error:

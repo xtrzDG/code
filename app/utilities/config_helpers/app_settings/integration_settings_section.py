@@ -10,7 +10,7 @@ from app.schemas.typings.channels.constrained_strings import (
 from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
-    optional_text,
+    optional_setting,
 )
 
 
@@ -38,42 +38,42 @@ def read_integration_settings(
     environment_variables: Mapping[str, str],
 ) -> IntegrationSettingsSection:
     def secret(variable_name: str) -> PlatformSecret | None:
-        return optional_text(environment_variables, variable_name, PlatformSecret)
+        return optional_setting(environment_variables, variable_name, PlatformSecret)
 
     def identifier(variable_name: str) -> PlatformIdentifier | None:
-        return optional_text(environment_variables, variable_name, PlatformIdentifier)
+        return optional_setting(environment_variables, variable_name, PlatformIdentifier)
 
     return IntegrationSettingsSection(
         meta_app_id=identifier("META_APP_ID"),
         meta_app_secret=secret("META_APP_SECRET"),
         meta_verify_token=secret("META_VERIFY_TOKEN"),
-        meta_embedded_signup_config_id=optional_text(
+        meta_embedded_signup_config_id=optional_setting(
             environment_variables,
             "META_EMBEDDED_SIGNUP_CONFIG_ID",
             MetaConfigurationId,
         ),
         whatsapp_system_user_token=secret("WHATSAPP_SYSTEM_USER_TOKEN"),
-        whatsapp_notification_phone_number_id=optional_text(
+        whatsapp_notification_phone_number_id=optional_setting(
             environment_variables,
             "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID",
             MetaObjectId,
         ),
-        whatsapp_notification_template_name=optional_text(
+        whatsapp_notification_template_name=optional_setting(
             environment_variables,
             "WHATSAPP_NOTIFICATION_TEMPLATE",
             WhatsAppTemplateName,
         ),
-        whatsapp_reminder_template_name=optional_text(
+        whatsapp_reminder_template_name=optional_setting(
             environment_variables,
             "WHATSAPP_REMINDER_TEMPLATE",
             WhatsAppTemplateName,
         ),
-        whatsapp_owner_report_template_name=optional_text(
+        whatsapp_owner_report_template_name=optional_setting(
             environment_variables,
             "WHATSAPP_OWNER_REPORT_TEMPLATE",
             WhatsAppTemplateName,
         ),
-        whatsapp_booking_confirmation_template_name=optional_text(
+        whatsapp_booking_confirmation_template_name=optional_setting(
             environment_variables,
             "WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE",
             WhatsAppTemplateName,

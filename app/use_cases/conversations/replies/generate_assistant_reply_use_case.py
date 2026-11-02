@@ -72,6 +72,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     start_progress,
 )
 from app.utilities.conversations.customer_text_fencing import new_fence_key
+from app.utilities.reply_guard.reply_links import platform_link_hosts
 
 
 class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply]):
@@ -122,7 +123,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         tool_round_limit: LlmToolRoundLimit,
         fence_key_factory: Callable[[], str] = new_fence_key,
         country_registry: CountryRegistryContract | None = None,
-        platform_hosts: Sequence[str | None] = (),
+        platform_base_urls: Sequence[str | None] = (),
         check_spend: SpendCheck | None = None,
         tool_call_limit: int = MAX_TOOL_CALLS_PER_RESPONSE,
     ) -> None:
@@ -134,7 +135,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             contact_repo,
             claim_check,
             country_registry,
-            [host for host in platform_hosts if host is not None],
+            platform_link_hosts(platform_base_urls),
         )
         self._check_spend: SpendCheck | None = check_spend
         self._tool_call_limit: int = tool_call_limit

@@ -1,7 +1,7 @@
 """
 The rehearsal assistant (LLM_PROVIDER=scripted) names the price of the item
 a price-question customer quotes, so the deterministic price check passes on
-development, staging and end-to-end servers whatever the item's description.
+development and the end-to-end suite whatever the item's description.
 """
 
 from app.utilities.llm_rehearsal.rehearsal_facts import find_price

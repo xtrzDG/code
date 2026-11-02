@@ -38,6 +38,7 @@ from app.schemas.typings.bookings.strings import (
     ResourceReference,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
@@ -141,6 +142,8 @@ class CreateBookingCommand(ImmutableDTO):
     The contact is resolved by the server; name and phone from the
     conversation update the contact. A service and a resource may be named
     by id or by a name in any script (as in `AvailabilityQuery`).
+    `client_ip_address` is the web chat visitor's address, when known: the
+    daily caps of anonymous bookings count it per client network.
     """
 
     business_id: BusinessId
@@ -161,6 +164,7 @@ class CreateBookingCommand(ImmutableDTO):
     source_channel: ChannelKind
     language: LanguageTag
     is_sandbox: IsSandboxConversation = False
+    client_ip_address: ClientIpAddress | None = None
 
 
 class RescheduleBookingCommand(ImmutableDTO):
@@ -175,12 +179,19 @@ class RescheduleBookingCommand(ImmutableDTO):
     do `expected_date` and `expected_time`, the local start the cabinet
     showed. `resource_id` (the calendar's drag) moves it to that place
     only, instead of its own place first and then another free one.
+
+    Who asks decides the authority (`booking_requesters`): `actor_id`, the
+    staff member in the cabinet, may move any booking of the business; a
+    customer (contact or phone) only their own, and not from a phone call
+    (`source_channel`); a command naming neither is refused.
     """
 
     business_id: BusinessId
+    actor_id: UserId | None = None
     contact_id: ContactId | None = None
     booking_id: BookingId | None = None
     contact_phone_number: E164PhoneNumber | None = None
+    source_channel: ChannelKind | None = None
     old_date: LocalDate | None = None
     new_date: LocalDate
     new_time: LocalTimeOfDay | None = None
@@ -197,13 +208,15 @@ class CancelBookingCommand(ImmutableDTO):
     Cancel a booking found by id, or by contact phone and date (sandbox
     rule as for rescheduling). `actor_id` names the staff member who
     cancels in the cabinet (they may undo it for a short while);
-    `expected_starts_at` as for rescheduling.
+    `expected_starts_at`, the requester and `source_channel` as for
+    rescheduling.
     """
 
     business_id: BusinessId
     contact_id: ContactId | None = None
     booking_id: BookingId | None = None
     contact_phone_number: E164PhoneNumber | None = None
+    source_channel: ChannelKind | None = None
     date: LocalDate | None = None
     language: LanguageTag
     is_sandbox: IsSandboxConversation | None = None

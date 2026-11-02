@@ -1,4 +1,4 @@
-"""LLM_PROVIDER=scripted: the offline model a staging deployment answers with."""
+"""LLM_PROVIDER=scripted: the offline model development and tests answer with."""
 
 import json
 

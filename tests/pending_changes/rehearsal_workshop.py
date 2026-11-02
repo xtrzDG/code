@@ -1,7 +1,7 @@
 """
 The workshop (tests/e2e/harness.py) with the model of LLM_PROVIDER=scripted
-instead of the journey's script: what development, staging and the
-cabinet's end-to-end suite run on.
+instead of the journey's script: what development and the cabinet's
+end-to-end suite run on.
 """
 
 from typing import Any

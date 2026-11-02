@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Factory, List
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
@@ -12,6 +12,7 @@ from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.deposit_use_cases import DepositUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
 from app.containers.use_cases.waitlist_use_cases import WaitlistUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -93,6 +94,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     waitlist_use_cases: WaitlistUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     deposit_use_cases: DepositUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    spend_guard_use_cases: SpendGuardUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # The assistant's check_availability: a brand's location offers its
     # sister locations when it is full (R17-BRANDS).
@@ -160,7 +162,9 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         injection_flag_limit=config.app_settings.provided.reply_safety.injection_flag_limit,
         recall_customer_memory=recall_customer_memory_use_case,
     )
-    generate_assistant_reply_use_case: Factory[
+    # Autotests play their turns without the spend guard (as their
+    # orchestrator does): a check must test the version's own model.
+    autotest_generate_assistant_reply_use_case: Factory[
         UseCaseContract[PreparedTurn, GeneratedReply]
     ] = Factory(
         GenerateAssistantReplyUseCase,
@@ -175,6 +179,18 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         max_output_tokens=config.app_settings.provided.llm_max_output_tokens,
         effort=config.app_settings.provided.llm_chat_effort,
         tool_round_limit=config.app_settings.provided.llm_tool_round_limit,
+        country_registry=registries.country_registry,
+        platform_base_urls=List(
+            config.app_settings.provided.cabinet_base_url,
+            config.app_settings.provided.app_base_url,
+        ),
+    )
+    # A customer's turn stops before a further model round past the
+    # business's hard spend limit, like a voice call (`round_limits`).
+    generate_assistant_reply_use_case: Factory[
+        UseCaseContract[PreparedTurn, GeneratedReply]
+    ] = autotest_generate_assistant_reply_use_case.add_kwargs(  # type: ignore[assignment]
+        check_spend=spend_guard_use_cases.check_business_spend_use_case,
     )
     record_assistant_reply_use_case: Factory[
         UseCaseContract[ReplyRecord, AssistantReply]

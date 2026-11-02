@@ -5,8 +5,8 @@ from app.schemas.exceptions.media_errors import TranscriptionNotConfiguredError
 
 class UnavailableVoiceTranscriberAdapter(VoiceTranscriberContract):
     """
-    No speech-to-text (LLM_PROVIDER=scripted: offline runs, staging without
-    keys): every voice note is answered with the request to write.
+    No speech-to-text (LLM_PROVIDER=scripted: development and tests without
+    provider keys): every voice note is answered with the request to write.
     """
 
     def transcribe(self, request: VoiceTranscriptionInput) -> VoiceTranscriptionResult:
