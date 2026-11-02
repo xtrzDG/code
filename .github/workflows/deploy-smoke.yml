@@ -94,9 +94,11 @@ jobs:
       group: deploy-smoke-${{ needs.target.outputs.environment }}
       cancel-in-progress: false
     steps:
+      # The scripts come from the default branch, which review guards: the
+      # deployed commit is only an argument, never code this job runs.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.target.outputs.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
       - name: Smoke test the deployment
@@ -127,9 +129,11 @@ jobs:
       packages: read # pulls the images to verify
       attestations: read # reads their provenance
     steps:
+      # The scripts come from the default branch, which review guards: the
+      # deployed commit is only an argument, never code this job runs.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.target.outputs.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
       - name: Install cosign
