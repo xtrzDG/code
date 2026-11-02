@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     ChannelRepoContract,
@@ -20,9 +19,6 @@ from app.schemas.dto.calls.call_settings import (
 )
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.use_cases.voice.call_settings.recording_notices import (
-    build_recording_notices,
-)
 from app.utilities.calls.call_follow_up_keys import call_settings_id_of
 from app.utilities.calls.text_back_texts import TEXT_BACK_MESSAGE_TEXT, template_body
 from app.utilities.channels.channel_health import is_channel_active
@@ -35,14 +31,13 @@ from app.utilities.scheduling.localized_formatting import choose_template_langua
 class CallSettingsSources:
     """
     What the view reads besides the settings: the WhatsApp channel, the
-    profile's staff number, the texts callers get and hear, the country's
-    recording rule, and whether the platform can send SMS.
+    profile's staff number, the texts callers get, and whether the
+    platform can send SMS.
     """
 
     channel_repo: ChannelRepoContract
     business_profile_repo: BusinessProfileRepoContract
     text_resolver: LocalizedTextResolverContract
-    country_registry: CountryRegistryContract
     is_sms_available: bool
 
 
@@ -83,10 +78,8 @@ def build_call_settings_view(
             for language in preview_languages(business)
         ],
         is_recording_enabled=settings.is_recording_enabled,
-        recording_notices=build_recording_notices(
-            business, sources.country_registry, sources.text_resolver
-        ),
         is_staff_transfer_confirmed=settings.is_staff_transfer_confirmed,
+        staff_transfer_confirmed_by=settings.staff_transfer_confirmed_by,
         staff_transfer_confirmed_at=settings.staff_transfer_confirmed_at,
         transfer_phone_number=find_transfer_phone_number(
             business, sources.business_profile_repo.get_by_business(business.id)

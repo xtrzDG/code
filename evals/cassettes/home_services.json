@@ -477,6 +477,31 @@
   },
   {
    "request": {
+    "request_digest": "0a20e9dc2d442789157e839b1935d43a44d2db4225f458bede9cec0240e98ac6",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "565f9b40a1b7ffedd982f87c7a7e931a545937910792c62931e217c9f33b0587",
+    "transcript_tail": "te\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Fix-It Masters has been moved to Wednesday, October 7, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0a46a086826b5c770cb25a64f645280e532d1af03f811bfd8d81040d3317845d",
     "model_id": "scripted",
     "instruction_digest": "d24e71507ea464702640648da8bbd8eda6ed1bc90dde75a64326890f209fb643",
@@ -542,31 +567,6 @@
       "text": "ცოცხალ ადამიანთან მინდა საუბარი. გთხოვთ, მენეჯერთან დამაკავშირეთ.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ცოცხალ ადამიანთან მინდა საუბარი. გთხოვთ, მენეჯერთან დამაკავშირეთ.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "0e597be974d5bc341fe4b877cff5fb5da6700a2129123908dbfb981a3d54d604",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "b53641027c142f326d24471d529ed855e3b8194fa01f3b643d98e6524a783bb6",
-    "transcript_tail": ": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Fix-It Masters-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -864,7 +864,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 4
     }
    ]
   },
@@ -1070,6 +1070,31 @@
   },
   {
    "request": {
+    "request_digest": "266c9d6aee9113f7eba4a313c62271d601155539cecfb8c7d970e5ea7a15f40f",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "42575c5afe13a441af6d669d94eb50027c6a9bef3b2d7a348f75ae046c0726a7",
+    "transcript_tail": "booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Fix-It Masters is confirmed: Thursday, October 8, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "2b7f5342b5895a7607153ba1a5bfdfa27175670d52c16f7d539ece92d4ada85d",
     "model_id": "scripted",
     "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
@@ -1176,31 +1201,6 @@
   },
   {
    "request": {
-    "request_digest": "2e7272f1f7961f1a3511ee39ffa295522797391e7577e0c4443fffaa00b3691b",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "21b01d59bf5082f3d58d6cb311b0c16eb879c745f838bd54ce7fc7512ff74af3",
-    "transcript_tail": " [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Fix-It Masters is confirmed: Thursday, October 8, 2026, 12:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "3154f5defc9b2af59a3bd11cff400248c66d3a35824635afee22b37cc083e39a",
     "model_id": "scripted",
     "instruction_digest": "144b81176be086d3a1de691dbceb5e9fe935793aea1c05e6c00e4e9cc2ed46c8",
@@ -1245,7 +1245,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -1332,7 +1332,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -1357,7 +1357,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -1490,31 +1490,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"handoff_to_human\", \"input\": {\"reason\": \"customer_request\", \"summary\": \"The customer asks to talk to a person.\", \"urgency\": \"normal\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "4605b51e6a65b40cbd1deb6fc3a171f2e9b47e788532c5528647cdabb529a55a",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "8e2634dd5b07674923aa7d701f45bc1edce4b0a1a771d748ed7106c5d9a2251a",
-    "transcript_tail": "ialist visit\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Fix-It Masters» перенесена на среда, 7 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1737,31 +1712,6 @@
   },
   {
    "request": {
-    "request_digest": "5150731bacd90381c26dfc7fbd8e026626998e7356c45e02a0cd4e469d9ff951",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "6c340905328dbf3a3c652efbf272bc562e10c23e1569efdb4dcfe81a9a85543f",
-    "transcript_tail": "\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Fix-It Masters» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 12
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "51c75938b631e1ad4d44b1ec1b716d9ab12cb74e239b2ce732e23a4bd30ab15d",
     "model_id": "scripted",
     "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
@@ -1880,6 +1830,31 @@
   },
   {
    "request": {
+    "request_digest": "551d3427c5fb7394575e3b730fc74a91ca9dfb131d9e2bd02eca57ca56c80530",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "f38e2f9bdf7d01887d7f5900471462c4ecc692e8969aa5c6c1ef8c06eefd1817",
+    "transcript_tail": "e\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Fix-It Masters-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "59cac46c2b0e95a07688dbd25f85c2244755e6d2ea7d30a1bb090dce87fcc09f",
     "model_id": "scripted",
     "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
@@ -1905,7 +1880,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2460,7 +2435,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2485,7 +2460,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2697,7 +2672,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -2778,7 +2753,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3040,7 +3015,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -3152,7 +3127,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -3198,31 +3173,6 @@
       "text": "დიახ, დაჯავშნეთ.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"დიახ, დაჯავშნეთ.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "972bdb39bfb3f4eaa74c7e707a3be8bd2bb3712267ed82c5e7c65e23589cf990",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "4fa561f494b538251fe81d50b5e3fb9608efd3b7f1e5f50b2dc76fdc21f9c612",
-    "transcript_tail": ",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Fix-It Masters has been moved to Wednesday, October 7, 2026, 12:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3404,6 +3354,31 @@
       "text": "Ваш вопрос передан коллеге. Вам скоро ответят.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Ваш вопрос передан коллеге. Вам скоро ответят.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 8
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "a0319aa425cb9f72f9d376f7d617748282d5d3237f43a57eecbb54f8348f63d3",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "01c2ffddc4430d830085a334350dbd10c30499f0f820f4f4d2459b5c0bbb728d",
+    "transcript_tail": "-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Fix-It Masters» перенесена на среда, 7 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3689,6 +3664,31 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
+     "elapsed": 4
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "a8a3428b890618c196d52bd5458745d241500587b13097fb344bcf5ea6ae2540",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "abc4223a5ac1af884ecbe3caa27387dbdc71449110859844127df54e2acf4292",
+    "transcript_tail": "9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Fix-It Masters-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
      "elapsed": 0
     }
    ]
@@ -3770,31 +3770,6 @@
   },
   {
    "request": {
-    "request_digest": "b0734b7b6508a0e25b28ae709bb5a85abd2b35fce4b3ecd75039ec965493782a",
-    "model_id": "scripted",
-    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "c24400d0aa404c655e91c2390547827444ebfaafa2a462369de7ff8aa5d2fd25",
-    "transcript_tail": "\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Fix-It Masters-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "b229c11cac9df61f756d7b23bb5436232a9dcfb0201c1aae263e780bf6825304",
     "model_id": "scripted",
     "instruction_digest": "51ba7cea9d1abd2e55290cc9a84ce893dacce7bcb8673e04d77c448289b97926",
@@ -3839,7 +3814,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4045,7 +4020,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -4070,7 +4045,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -4132,7 +4107,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 5
+     "elapsed": 0
     }
    ]
   },
@@ -5174,6 +5149,31 @@
   },
   {
    "request": {
+    "request_digest": "f357a50b9e54ec3339e2614905447152cb00d77a75862298fed174435f22b7e5",
+    "model_id": "scripted",
+    "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "cb8ce2f6ccd761898579761541f3935493a28d400ad284505ec223a5abe0c288",
+    "transcript_tail": "\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Specialist visit\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Fix-It Masters» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "f35d4c615291978ab71b6d30ef46d20793dd7612273d3791137713d2c7dd3397",
     "model_id": "scripted",
     "instruction_digest": "0fff9f06bdd765fd5989d5f6059114b6496c8d5a9247e6801a02f84aa658575f",
@@ -5243,7 +5243,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },

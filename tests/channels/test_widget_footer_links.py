@@ -40,7 +40,9 @@ def build_client(base: str | None = "https://assistant.example/") -> TestClient:
     application = FastAPI()
     install_error_handlers(application)
     application.include_router(
-        build_widget_accessibility_router(None if base is None else CabinetBaseUrl(base))
+        build_widget_accessibility_router(
+            None if base is None else CabinetBaseUrl(base)
+        )
     )
     return TestClient(application, follow_redirects=False)
 
@@ -110,9 +112,7 @@ def test_the_footer_links_the_statement_in_a_new_tab() -> None:
     # A privacy address that is not a web page is no link at all.
     assert "aw-privacy" not in by_class
     statement = by_class["aw-accessibility"]
-    assert statement["href"] == (
-        "https://api.example/widget/accessibility?language=it"
-    )
+    assert statement["href"] == ("https://api.example/widget/accessibility?language=it")
     assert statement["target"] == "_blank"
     assert statement["rel"] == "noopener noreferrer"
     assert by_class["aw-powered"]["href"] == "https://assistant.example/?ref=X"

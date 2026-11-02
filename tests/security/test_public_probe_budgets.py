@@ -5,10 +5,13 @@ one check between probes and holds the internet to a budget too, while the
 platform's own health check (a private address) is never refused.
 """
 
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.gateways.http.channel_routes import (
+    WIDGET_CONFIG_REFUSAL,
     WIDGET_CONFIG_REQUESTS_PER_MINUTE,
     build_channel_router,
 )
@@ -17,6 +20,7 @@ from app.gateways.http.health_routes import (
     READINESS_PROBES_PER_MINUTE,
     build_readiness_router,
 )
+from app.gateways.http.network_budget_dependency import build_network_budget
 from app.schemas.constants.observability import ReadinessState
 from app.schemas.dto.channels.widget import WidgetConfigView
 from app.schemas.dto.health import ReadinessQuery, ReadinessReport
@@ -47,7 +51,9 @@ class ConfigOperator:
 
 
 class Unused:
-    def operate(self, input_data: object) -> object:
+    """An operator these routes never call."""
+
+    def operate(self, input_data: Any) -> Any:
         raise AssertionError(input_data)
 
 
@@ -76,6 +82,14 @@ def config_client(address: str) -> tuple[TestClient, ConfigOperator]:
             widget_config_operator=operator,
             widget_message_operator=Unused(),
             widget_messages_operator=Unused(),
+            # The real budget on a clock that stands still: no refill while
+            # the test runs, however slow the machine.
+            widget_config_budget=build_network_budget(
+                "widget-config",
+                WIDGET_CONFIG_REQUESTS_PER_MINUTE,
+                WIDGET_CONFIG_REFUSAL,
+                clock=lambda: 0.0,
+            ),
         )
     )
     return TestClient(application, client=(address, 40000)), operator
@@ -100,7 +114,9 @@ def test_the_widget_config_is_cacheable_and_held_per_network() -> None:
     assert operator.calls == WIDGET_CONFIG_REQUESTS_PER_MINUTE
 
 
-def probe_client(address: str, now: list[float]) -> tuple[TestClient, CountingReadiness]:
+def probe_client(
+    address: str, now: list[float]
+) -> tuple[TestClient, CountingReadiness]:
     readiness = CountingReadiness()
     application = FastAPI()
     install_error_handlers(application)

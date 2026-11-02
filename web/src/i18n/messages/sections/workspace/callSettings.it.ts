@@ -44,7 +44,9 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
       "È disattivata finché non la attivi tu. Quando è attiva, l'audio di ogni chiamata resta disponibile per l'ascolto nella scheda della chiamata, per il tempo indicato in Impostazioni → Privacy. Quando è disattivata, l'audio viene eliminato subito dopo la chiamata e la trascrizione viene conservata senza numeri di telefono, di carta e di conto né indirizzi e-mail.",
     toggle: "Registra le chiamate",
     noticeTitle: "Cosa sente chi chiama all'inizio di ogni chiamata",
-    noticeHint: "Il saluto lo dice sia che tu registri sia che non registri, così chi chiama sa sempre dove leggere come viene trattata la sua chiamata. Dove la legge richiede il consenso, chi chiama può rifiutare e la chiamata prosegue senza registrazione.",
+    noticeRecorded: "La chiamata viene registrata.",
+    noticePrivacy: "L'informativa sulla privacy è sulla nostra pagina web.",
+    noticeHint: "In ogni lingua della tua attività. Dove la legge richiede il consenso, chi chiama può rifiutare e la chiamata prosegue senza registrazione; dove leggere l'informativa sulla privacy viene detto sia che tu registri sia che non registri.",
     turnedOff: "La registrazione delle chiamate è disattivata",
   },
   transfers: {

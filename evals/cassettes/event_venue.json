@@ -653,6 +653,31 @@
   },
   {
    "request": {
+    "request_digest": "14998b1c56c968edc56f00f50b37793cbcd25cb94a4302037b51f410c2ec1b4e",
+    "model_id": "scripted",
+    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "7cb7ad31a0b3b7dc7f2350049b7a5b9a391602423a090539ca4098e4d6bcca37",
+    "transcript_tail": "ing_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Garden Hall-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 14:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 14:00-ზე. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "1690db3057ff5fc473d24f36a208a959557d0cc5071659e16505bcdc255a99f7",
     "model_id": "scripted",
     "instruction_digest": "e3976857041002ef2561d4dd088d523e8574b55225c76ca3c6a61aa0e0082739",
@@ -1484,7 +1509,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 3
     }
    ]
   },
@@ -1827,7 +1852,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2512,7 +2537,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2537,7 +2562,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2776,31 +2801,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0002\", \"name\": \"cancel_booking\", \"input\": {\"booking_id\": null, \"phone\": null, \"date\": \"2026-10-08\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "84419397cb2fc4660e3a0f16ed8af00620d96a1cb9c4b134a37ee32905a1f5fe",
-    "model_id": "scripted",
-    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "73a7ea724c575df8e32f2fea32b63b0643651f4c2a3950eb34e9c493fa26e1eb",
-    "transcript_tail": "_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Garden Hall-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 14:00. სახელი: ნინო. სტუმრები: 40.\\\\nგაუქმების წესები: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 14:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 14:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3210,31 +3210,6 @@
   },
   {
    "request": {
-    "request_digest": "9556a58137b330d497b03140418439d8251fe67c7a6ad4e38b2165f184e31703",
-    "model_id": "scripted",
-    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "915a7d952e80599f3f753784cccd73741603eabcf877a6c68108ded385f05523",
-    "transcript_tail": "e_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Garden Hall has been moved to Wednesday, October 7, 2026, 14:00. Name: Emma. Guests: 40.\\\\nCancellation policy: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 14:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 14:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "956b63f06d66834a1368810043a906b33a90b28d99e3fd3b87d386348281023f",
     "model_id": "scripted",
     "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
@@ -3393,6 +3368,31 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "9acb4de573817077cd1845e6b3ec87ad14bda8cde54ac492e18b66b6dea40f14",
+    "model_id": "scripted",
+    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "1748a4edafab04982130ac7aef786b111e07e51575f063f319c353cbc3c8bca6",
+    "transcript_tail": "\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Garden Hall has been moved to Wednesday, October 7, 2026, 14:00. Name: <customer_value>Emma</customer_value>. Guests: 40.\\\\nCancellation policy: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 14:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 14:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3765,7 +3765,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -4027,7 +4027,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 1
+     "elapsed": 0
     }
    ]
   },
@@ -4058,21 +4058,21 @@
   },
   {
    "request": {
-    "request_digest": "bfde2197f40f2da8a564d492630b867e0562b21c845e4a6c67c52960dcde15ac",
+    "request_digest": "bcff8bda5cde0cbf4172574129e1945c62bcc466df78c13576bb662d673ed820",
     "model_id": "scripted",
     "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "4506b2c4e287c905ba949b0aa3214431793aca81aed5d3d81bf6fdd47811ecff",
-    "transcript_tail": "content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Garden Hall-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00. სახელი: ნინო. სტუმრები: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "f300aaf166c93a3c674e448e819b4fc3fc87572985bdebb8cb3909d066c42bea",
+    "transcript_tail": "l\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Garden Hall» перенесена на среда, 7 октября 2026 г., 14:00. Имя: <customer_value>Анна</customer_value>. Гостей: 40.\\\\nПравила отмены: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 14:00-ზე. გელოდებით!",
+      "text": "Готово! Ваша бронь теперь в среду, 7 октября, в 14:00.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 14:00-ზე. გელოდებით!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь в среду, 7 октября, в 14:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4164,31 +4164,6 @@
   },
   {
    "request": {
-    "request_digest": "c63e745cbebd7a51ee9cd1d2e73e0e38e3f339c321628cbb00bb97d765260f19",
-    "model_id": "scripted",
-    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7150035fe0d0ff9beb4d99f66cc998abbf358d61c91f609185101b35f51ed0a8",
-    "transcript_tail": "ed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Garden Hall» перенесена на среда, 7 октября 2026 г., 14:00. Имя: Анна. Гостей: 40.\\\\nПравила отмены: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша бронь теперь в среду, 7 октября, в 14:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь в среду, 7 октября, в 14:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "c6d17ac39ab9cfccbaf7361b4f1fed77438c428d95c9e5926e3512b78e8e351c",
     "model_id": "scripted",
     "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
@@ -4270,21 +4245,21 @@
   },
   {
    "request": {
-    "request_digest": "c8aafb0def9e5586f5fcfa65b18388f091d1a592788c63d1117296261baa7bc7",
+    "request_digest": "cbe195981355fc513ddd719210629a9c26a4483760f649a434df289e02425c65",
     "model_id": "scripted",
     "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "bdcf473a3d8e7b1e68aef302f460d5a622fa0b19a12cc0639d7e3e836b239bf8",
-    "transcript_tail": "ontent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Garden Hall is confirmed: Thursday, October 8, 2026, 14:00. Name: Emma. Guests: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "342964acb399623ee9f5cc9e89a670913d3e427d7b5e4ae9b24a617079e49d78",
+    "transcript_tail": "ng_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Garden Hall» подтверждена: четверг, 8 октября 2026 г., 14:00. Имя: <customer_value>Анна</customer_value>. Гостей: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 14:00. See you!",
+      "text": "Готово, Анна! Вы записаны на четверг, 14:00. Ждём вас!",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 14:00. See you!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 14:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4563,7 +4538,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4734,6 +4709,31 @@
       "text": "В среду, 7 октября, в 14:00 свободно. Перенести вашу бронь с четверга на среду, на 14:00?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"В среду, 7 октября, в 14:00 свободно. Перенести вашу бронь с четверга на среду, на 14:00?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "e171842b248301da1d691d3dddfd3009e01e30fb8c8c3cf8583fc16fc8223cd4",
+    "model_id": "scripted",
+    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "ab7e7482bc2ac23336f481563441f89cf0ad75a22b4345183e866ef782380fa5",
+    "transcript_tail": "2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Garden Hall-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 14:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 40.\\\\nგაუქმების წესები: Please tell us about changes at least 14 days before the event.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 14:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 14:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4937,6 +4937,31 @@
   },
   {
    "request": {
+    "request_digest": "e7acc836ed7e3b2bc48cd528825bba0391de8e33f2585b08d66ddac2e3fe6934",
+    "model_id": "scripted",
+    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "b537216e2cc777ac859d1acf88d52b27fb50a553578da296e81489d9e589d813",
+    "transcript_tail": "_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Garden Hall is confirmed: Thursday, October 8, 2026, 14:00. Name: <customer_value>Emma</customer_value>. Guests: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 14:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 14:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "e852e2d1c7629bcea250ba0056dd86ed11236e0267134e0942b4861b45398c8e",
     "model_id": "scripted",
     "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
@@ -5056,7 +5081,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -5133,31 +5158,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "f38f6f9175522eca6653a417bc1554907820dbab102c051275e20d5f89ab3497",
-    "model_id": "scripted",
-    "instruction_digest": "6a7ba1cd3932e37890565f5df3546cefa53b52e97e33e05c8fca3a0b974cf953",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "2ff8f8679d80a0cdac1340540f3a53d0da50ed938665573b06b6330c5ce6a19d",
-    "transcript_tail": "\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Main hall\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":40,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Garden Hall» подтверждена: четверг, 8 октября 2026 г., 14:00. Имя: Анна. Гостей: 40.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"18:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 14:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 14:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null

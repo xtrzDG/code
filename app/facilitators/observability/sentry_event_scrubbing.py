@@ -99,7 +99,7 @@ def scrub_messages(event: Event) -> None:
 
     logentry: object = event.get("logentry")
     if isinstance(logentry, dict):
-        entry = cast(dict[str, object], logentry)
+        entry: dict[str, object] = logentry
         entry.pop("params", None)
         for key in ("message", "formatted"):
             if isinstance(entry.get(key), str):

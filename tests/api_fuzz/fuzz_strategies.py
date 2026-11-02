@@ -14,7 +14,7 @@ STREAM_MEDIA_TYPE: str = "text/event-stream"
 # Path segments: ids of all shapes, words, markup, other scripts.
 SEGMENT_TEXT = st.one_of(
     st.text(
-        alphabet=st.characters(blacklist_categories=("Cs",), blacklist_characters="/"),
+        alphabet=st.characters(codec="utf-8", exclude_characters="/"),
         min_size=1,
         max_size=40,
     ),
@@ -83,7 +83,9 @@ def documented_operations(description: JsonObject) -> list[Operation]:
 
 def is_stream(operation: JsonObject) -> bool:
     responses: dict[str, JsonObject] = operation.get("responses", {})
-    return any(STREAM_MEDIA_TYPE in (r.get("content") or {}) for r in responses.values())
+    return any(
+        STREAM_MEDIA_TYPE in (r.get("content") or {}) for r in responses.values()
+    )
 
 
 def names_in(parameters: list[JsonObject], location: str) -> tuple[str, ...]:

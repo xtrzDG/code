@@ -109,7 +109,7 @@ def test_an_unsigned_delivery_is_refused_before_its_body_is_read(
     assert response.json()["error"] in {"authentication_required", "access_denied"}
     assert BODY_READS == []
     [line] = [r for r in caplog.records if r.name == "app.security"]
-    fields = getattr(line, "log_fields")
+    fields = line.__dict__["log_fields"]
     assert fields["security_event"] == WEBHOOK_DELIVERY_REFUSED
     assert fields["reason"] == "missing_signature"
     assert fields["client_network"] == "198.51.100.0/24"
@@ -192,7 +192,7 @@ def test_a_flood_from_one_network_is_held_per_provider(
     ]
     # One line when the flood starts, not one per refused delivery.
     assert len(floods) == 1
-    assert getattr(floods[0], "log_fields")["provider"] == "meta"
+    assert floods[0].__dict__["log_fields"]["provider"] == "meta"
 
 
 async def accept() -> dict[str, str]:

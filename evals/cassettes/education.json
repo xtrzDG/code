@@ -397,7 +397,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -680,6 +680,31 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "1c50962c11a1eff8a04a6a0701c6a91db1bdb5ddd2c6e98d769c08634a541b9d",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "8b6c3839b2840090047e9d861afdc7ec195a48888aaca0eac3c84f529a8a65e3",
+    "transcript_tail": "oking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Lingua School» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1644,6 +1669,31 @@
   },
   {
    "request": {
+    "request_digest": "4e82a3656f22b6f2875ea36f8d57caa9afb23bec16503ef9df9020a6b2b5c5b0",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "f728fff26cd400b5a8c8bbbf6d1295b28fe5443968a71b168ef4afcc5b9e83af",
+    "transcript_tail": "0-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Lingua School» перенесена на среда, 7 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "4f5d9695521b019d4427f907d6c4f1d38784b04bc7267cb36542cf1375f53f45",
     "model_id": "scripted",
     "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
@@ -1775,7 +1825,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2237,7 +2287,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 3
     }
    ]
   },
@@ -2412,7 +2462,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2433,6 +2483,56 @@
       "text": "Ваш вопрос передан коллеге. Вам скоро ответят.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Ваш вопрос передан коллеге. Вам скоро ответят.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "6d0c008d0e0b2443af67ab8b1caabeadac96837d614b1efb01ac79a18fd094cb",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "b1f6e487f0ba3b28683c50d34e976b79f0ac3e57c8597c7fa59f82fe6d47b039",
+    "transcript_tail": "ing_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Lingua School is confirmed: Thursday, October 8, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "6df7e464b3ed10881eb44216707290ae9a347e9f8320838a58d9c4ea8ebbd7f9",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "4b2cbc10b2f26927968ad532012788655485d4f8a1397fe182aacb3f2e07f6e6",
+    "transcript_tail": ",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Lingua School-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2742,6 +2842,31 @@
   },
   {
    "request": {
+    "request_digest": "817d755fb0570164c5de70df011c55639ff7ff96dc2c0f435d2834607a27689d",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "f39fd2cf4cc0276555748d393df4975a6d46ab6ad87218a1caac19ea21151a0a",
+    "transcript_tail": "te\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Lingua School-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "81c8a3c0762dd0a265b1582be87aec0fb900fb63f7d1880db9082d4d350d6216",
     "model_id": "scripted",
     "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
@@ -2985,31 +3110,6 @@
   },
   {
    "request": {
-    "request_digest": "8d6c2e02c530fb994fc90518b7e2b2ed117bd185ce6945036327bc572eca14f4",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "fbbbd141204e16c4547f47b8d22a4bec081cfbc29892676c98fc74ba12666309",
-    "transcript_tail": "\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Lingua School has been moved to Wednesday, October 7, 2026, 13:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "8d88931eae93525ef1a33741994d4efd603365c694a191c5a7ed3e3c6109fc40",
     "model_id": "scripted",
     "instruction_digest": "9226a1d8ecc050f6a848814a3d0c4c3591b1ea4fd9d3f7c389e4ff3cc361139d",
@@ -3137,31 +3237,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"list_my_bookings\", \"input\": {}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "96517799a787ed4af4115d63bfd779feb5f87a8537c22ea85239a7e9a3462095",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "9a8006637b98213e4b1e3e3ca6031c08958c67b23f52deede33b4bb6aae530c4",
-    "transcript_tail": "{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Lingua School» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3349,6 +3424,31 @@
       "text": "Да, записывайте.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Да, записывайте.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "a0b8419a1476c4c11447eb8565d3a4b51eaff7a01f841dfce215e1290795a730",
+    "model_id": "scripted",
+    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "48e6bc2ba558d18fd5bd04ca923fff3959a743461e44f417d787a9dad9dc8127",
+    "transcript_tail": "ate\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Lingua School has been moved to Wednesday, October 7, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3584,7 +3684,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -3609,7 +3709,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3752,7 +3852,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3964,7 +4064,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -4145,7 +4245,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 16
+     "elapsed": 0
     }
    ]
   },
@@ -4196,56 +4296,6 @@
       "fallback_model_id": null
      },
      "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "c7574c93c264387098ded25eb7565add829b558765791db6b635c3cf6775c4fb",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "387c7d6c3e51ce2e4966ac132fe8094e2cb24e298ae464a8acbb2d6560052087",
-    "transcript_tail": "ith a teacher\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Lingua School» перенесена на среда, 7 октября 2026 г., 13:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "cae63ad24967cef2661269c6fb195c96efdfc42f7d5a6df5f5a419d4e32c728d",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "9f4874fb959141c2dff6038b0901d37416d24c4621082905744d935de56c6bb1",
-    "transcript_tail": ",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Lingua School-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 12 hours in advance if you need to move the appointment.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 6
     }
    ]
   },
@@ -4663,31 +4713,6 @@
   },
   {
    "request": {
-    "request_digest": "db077ee37135781222ca21d37dcc7988f59cddc71b6a01140a326b20dcf472a8",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "68819cbd6d6bdff61d0cec0c95ee25ab078216df5bedffd6ca7c8ec190452576",
-    "transcript_tail": "content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Lingua School is confirmed: Thursday, October 8, 2026, 13:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "dc988185570793f47bbe46c9c60547b8d4ef6cab429602aa293715a00afa1b21",
     "model_id": "scripted",
     "instruction_digest": "c5d79bcfb2edd5f7843bb89811d0849ab563543efa7e9f316508df691b443227",
@@ -4900,7 +4925,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4927,31 +4952,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"handoff_to_human\", \"input\": {\"reason\": \"customer_request\", \"summary\": \"The customer asks to talk to a person.\", \"urgency\": \"normal\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "e6c15a078fb8f35b6d775f40f09203007075fda7e36ca2a2aedd9a2766128076",
-    "model_id": "scripted",
-    "instruction_digest": "ff66fe4f5fbbfd85d34e12d6ca3228852529dc245dd7ca065ef1baf68a9c19c0",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "70cdaf088f15d28ab37df6a53f5447a9ac73a0d7213d7de3857080530dc37626",
-    "transcript_tail": "\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Lesson with a teacher\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Lingua School-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5187,7 +5187,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },

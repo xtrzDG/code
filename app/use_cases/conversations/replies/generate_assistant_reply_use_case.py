@@ -55,10 +55,8 @@ from app.use_cases.conversations.replies.round_limits import (
     MAX_TOOL_CALLS_PER_RESPONSE,
     SpendCheck,
     SpendLimitReached,
-    ToolCallBatch,
     refuse_past_hard_limit,
     refused_call_outcome,
-    split_tool_calls,
 )
 from app.use_cases.conversations.replies.transcript_turns import (
     append_response,
@@ -267,14 +265,13 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     ) -> list[LlmToolResult]:
         """Every call's result: those past the per-response limit never ran."""
 
-        batch: ToolCallBatch = split_tool_calls(calls, self._tool_call_limit)
         results: list[LlmToolResult] = []
-        for call in calls:
+        for position, call in enumerate(calls):
             outcome: AssistantToolOutcome = (
                 self._run_assistant_tool.run(
                     AssistantToolInvocation(context=turn.tool_context, call=call)
                 )
-                if call in batch.run
+                if position < self._tool_call_limit
                 else refused_call_outcome(call, self._tool_call_limit)
             )
             record_tool_outcome(progress, call, outcome)

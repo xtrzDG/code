@@ -17,7 +17,9 @@ function makeNode(kind, extra) {
   return node;
 }
 var document = {
-  createElement: function (tagName) { return makeNode("element", { tagName: tagName }); },
+  createElement: function (tagName) {
+    return makeNode("element", { tagName: tagName });
+  },
   createTextNode: function (text) { return makeNode("text", { textContent: text }); }
 };
 function describe(node) {

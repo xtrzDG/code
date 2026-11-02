@@ -1,6 +1,5 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.messaging_clients import SmsMessagingClientContract
-from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     ChannelRepoContract,
@@ -25,9 +24,9 @@ class GetCallSettingsUseCase(UseCaseContract[CallSettingsQuery, CallSettingsView
     Settings → Calls for the owner: summaries and text-backs on or off, the
     WhatsApp template's name, the SMS fallback, whether the WhatsApp number
     is connected and SMS can be sent, the text-back to register as the
-    template in each of the business's languages, the recording with what
-    callers hear about it, and the transfers to staff with the owner's
-    confirmation of the staff notice.
+    template in each of the business's languages, whether calls are
+    recorded, and the transfers to staff with the owner's confirmation of
+    the staff notice.
     """
 
     def __init__(
@@ -39,7 +38,6 @@ class GetCallSettingsUseCase(UseCaseContract[CallSettingsQuery, CallSettingsView
         channel_repo: ChannelRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         text_resolver: LocalizedTextResolverContract,
-        country_registry: CountryRegistryContract,
         sms_client: SmsMessagingClientContract | None,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -50,7 +48,6 @@ class GetCallSettingsUseCase(UseCaseContract[CallSettingsQuery, CallSettingsView
             channel_repo=channel_repo,
             business_profile_repo=business_profile_repo,
             text_resolver=text_resolver,
-            country_registry=country_registry,
             is_sms_available=sms_client is not None,
         )
 

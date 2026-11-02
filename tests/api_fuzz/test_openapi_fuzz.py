@@ -1,12 +1,17 @@
 """
 Every documented API operation answers malformed, hostile and random
-requests with a 4xx, never a 5xx: path ids of any shape, odd query values
-and random JSON bodies (with the operation's own field names), sent by a
-signed-in owner (also for the business it owns). Deterministic (derandomized,
-no example database) and a few examples per operation, so it stays fast.
+requests with a 4xx, never a server error: path ids of any shape, odd
+query values and random JSON bodies (with the operation's own field
+names), sent by a signed-in owner (also for the business it owns). The one
+5xx allowed is the documented 502 `external_service_error` of a provider
+this test application has no account for (Google Calendar). The
+operations come from the committed description (web/openapi.json, which
+`npm run gen:api` keeps in step with the code). Deterministic
+(derandomized, no example database), a few examples per operation.
 """
 
 import json
+from pathlib import Path
 
 import pytest
 from hypothesis import HealthCheck, given, settings
@@ -19,12 +24,13 @@ from tests.api_fuzz.fuzz_strategies import (
     documented_operations,
     requests_to,
 )
-from tests.e2e.harness import start_workshop
 
+DESCRIPTION: Path = Path(__file__).resolve().parents[2] / "web" / "openapi.json"
 OPERATIONS: list[Operation] = documented_operations(
-    start_workshop().application.openapi()
+    json.loads(DESCRIPTION.read_text(encoding="utf-8"))
 )
 EXAMPLES_PER_OPERATION: int = 3
+PROVIDER_UNAVAILABLE: tuple[int, str] = (502, "external_service_error")
 
 pytestmark = pytest.mark.api_fuzz
 
@@ -60,6 +66,10 @@ def test_no_operation_answers_a_server_error(
         headers={**fuzz_target.headers(), "Content-Type": "application/json"},
     )
 
-    assert response.status_code < 500, (
+    outcome: tuple[int, str] = (
+        response.status_code,
+        str(response.json().get("error")) if response.status_code >= 500 else "",
+    )
+    assert response.status_code < 500 or outcome == PROVIDER_UNAVAILABLE, (
         f"{operation.label} -> {response.status_code}: {response.text[:300]}"
     )

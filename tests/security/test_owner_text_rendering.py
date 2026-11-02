@@ -67,7 +67,7 @@ def test_template_syntax_in_an_export_is_written_as_typed(payload: str) -> None:
 
 
 def test_formulas_typed_by_owners_stay_text() -> None:
-    text = exported(["=HYPERLINK(\"https://evil.example\")", "+1-2"])
+    text = exported(['=HYPERLINK("https://evil.example")', "+1-2"])
 
     assert "'=HYPERLINK" in text
     assert "'+1-2" in text
@@ -100,7 +100,9 @@ def test_a_valid_download_name_is_one_quoted_header_value() -> None:
 @pytest.mark.skipif(shutil.which("node") is None, reason="needs node")
 @pytest.mark.parametrize("payload", TEMPLATE_PAYLOADS)
 def test_the_widget_greeting_takes_the_business_name_as_text(payload: str) -> None:
-    expression: str = 'text("greeting").split("{business}").join(config.business_name || "")'
+    expression: str = (
+        'text("greeting").split("{business}").join(config.business_name || "")'
+    )
     assert expression in SCRIPT_SOURCE
     name: str = f"Pizza {payload}"
     program: str = (

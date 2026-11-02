@@ -41,7 +41,9 @@ def read_integration_settings(
         return optional_setting(environment_variables, variable_name, PlatformSecret)
 
     def identifier(variable_name: str) -> PlatformIdentifier | None:
-        return optional_setting(environment_variables, variable_name, PlatformIdentifier)
+        return optional_setting(
+            environment_variables, variable_name, PlatformIdentifier
+        )
 
     return IntegrationSettingsSection(
         meta_app_id=identifier("META_APP_ID"),

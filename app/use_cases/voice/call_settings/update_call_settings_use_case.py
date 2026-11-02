@@ -2,7 +2,6 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.messaging_clients import SmsMessagingClientContract
-from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     ChannelRepoContract,
@@ -60,7 +59,6 @@ class UpdateCallSettingsUseCase(
         business_profile_repo: BusinessProfileRepoContract,
         audit_log_repo: AuditLogRepoContract,
         text_resolver: LocalizedTextResolverContract,
-        country_registry: CountryRegistryContract,
         sms_client: SmsMessagingClientContract | None,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -73,7 +71,6 @@ class UpdateCallSettingsUseCase(
             channel_repo=channel_repo,
             business_profile_repo=business_profile_repo,
             text_resolver=text_resolver,
-            country_registry=country_registry,
             is_sms_available=sms_client is not None,
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock

@@ -56,7 +56,9 @@ def build_client() -> TestClient:
         raise RuntimeError("fails before its deadline")
 
     return TestClient(
-        RequestDeadlineMiddleware(application, default_seconds=SHORT, long_seconds=SHORT),
+        RequestDeadlineMiddleware(
+            application, default_seconds=SHORT, long_seconds=SHORT
+        ),
         raise_server_exceptions=True,
     )
 

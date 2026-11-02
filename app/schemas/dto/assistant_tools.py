@@ -33,8 +33,8 @@ from app.schemas.typings.bookings.constrained_strings import (
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.bookings.strings import ResourceReference
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.constrained_strings import CustomerGivenName
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     CanTextCaller,
@@ -45,8 +45,8 @@ from app.schemas.typings.conversations.constrained_strings import (
     ChoicePromptText,
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.constrained_strings import AssistantHandoffSummary
+from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import UnansweredQuestionText
 from app.schemas.typings.knowledge.strings import (
     KnowledgeSearchQuery,

@@ -82,15 +82,16 @@ def test_test_chat_requests_never_count() -> None:
 def test_handoffs_past_the_cap_are_queued_without_alerting_staff() -> None:
     fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
     alerted: list[int] = []
+    statuses: list[HandoffStatus] = []
     for _ in range(MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY + 1):
         before = len(fixture.world.notifier.sent)
-        result = fixture.hand_off()
+        statuses.append(fixture.hand_off().status)
         alerted.append(len(fixture.world.notifier.sent) - before)
 
     assert alerted[:MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY] == [3, 3, 3]
     assert alerted[-1] == 0
     # The last one still joins the queue and silences the assistant.
-    assert result.status is HandoffStatus.PENDING
+    assert statuses[-1] is HandoffStatus.PENDING
     assert len(fixture.world.handoff_repo.list_by_business(fixture.business.id)) == 4
 
 

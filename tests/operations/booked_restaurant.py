@@ -2,11 +2,11 @@
 A Tbilisi restaurant where two customers already booked, for cancel and move tests.
 """
 
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.dto.bookings import CancelBookingCommand, RescheduleBookingCommand
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,

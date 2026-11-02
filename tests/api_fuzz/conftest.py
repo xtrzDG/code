@@ -13,6 +13,7 @@ from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.journeys import GEORGIAN_OWNER_PHONE, sign_in_and_create_restaurant
 
 FUZZ_MARK: str = "api_fuzz"
+SECONDS_BETWEEN_CODES: int = 31
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -33,7 +34,12 @@ class FuzzTarget:
     def keep_signed_in(self) -> None:
         """A fuzzed sign-out or deletion ends the session: sign in again."""
 
-        if self.workshop.client.get("/v1/me", headers=self.headers()).status_code == 401:
+        if (
+            self.workshop.client.get("/v1/me", headers=self.headers()).status_code
+            == 401
+        ):
+            # Past the wait between two login codes of one number.
+            self.workshop.clock.advance(SECONDS_BETWEEN_CODES)
             self.token, _ = self.workshop.sign_in_with_phone(GEORGIAN_OWNER_PHONE)
 
 

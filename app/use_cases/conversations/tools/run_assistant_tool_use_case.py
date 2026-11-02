@@ -80,7 +80,7 @@ from app.utilities.conversations.business_today import (
     BusinessToday,
     find_business_today,
 )
-from app.utilities.conversations.tool_payloads import describe_tool_input_error
+from app.utilities.conversations.tool_input_errors import describe_tool_input_error
 
 type ToolHandler = Callable[[LlmToolCall, AssistantToolContext], AssistantToolOutcome]
 

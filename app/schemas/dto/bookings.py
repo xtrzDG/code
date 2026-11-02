@@ -62,14 +62,11 @@ class AvailabilityQuery(ImmutableDTO):
 
     Time-slot resources use `time` and `duration_minutes`; night resources
     use `nights`. Times are in the business time zone, with schedule
-    exceptions (holidays) applied.
-
-    A sandbox query from a test conversation (`conversation_id`) sees that
-    conversation's own test bookings, not those of other tests.
-
-    `full_day` is the staff view: every free slot of the date for every
-    matching resource (no nearest-time or count limit), by the cabinet's
-    rules (no minimum notice, no online party-size limit).
+    exceptions (holidays) applied. A sandbox query from a test conversation
+    (`conversation_id`) sees that conversation's own test bookings, not
+    those of other tests. `full_day` is the staff view: every free slot of
+    the date for every matching resource (no nearest-time or count limit),
+    by the cabinet's rules (no minimum notice, no online party-size limit).
 
     A service (`service_reference` from the model: an id or a name in any
     script; `service_item_id` from the cabinet) sets the length and buffer
@@ -142,8 +139,6 @@ class CreateBookingCommand(ImmutableDTO):
     The contact is resolved by the server; name and phone from the
     conversation update the contact. A service and a resource may be named
     by id or by a name in any script (as in `AvailabilityQuery`).
-    `client_ip_address` is the web chat visitor's address, when known: the
-    daily caps of anonymous bookings count it per client network.
     """
 
     business_id: BusinessId
@@ -164,6 +159,7 @@ class CreateBookingCommand(ImmutableDTO):
     source_channel: ChannelKind
     language: LanguageTag
     is_sandbox: IsSandboxConversation = False
+    # A web chat visitor's address: anonymous bookings are capped per network.
     client_ip_address: ClientIpAddress | None = None
 
 
@@ -178,12 +174,9 @@ class RescheduleBookingCommand(ImmutableDTO):
     booking only while it still starts then (checked under the lock), as
     do `expected_date` and `expected_time`, the local start the cabinet
     showed. `resource_id` (the calendar's drag) moves it to that place
-    only, instead of its own place first and then another free one.
-
-    Who asks decides the authority (`booking_requesters`): `actor_id`, the
-    staff member in the cabinet, may move any booking of the business; a
-    customer (contact or phone) only their own, and not from a phone call
-    (`source_channel`); a command naming neither is refused.
+    only, instead of its own place first and then another free one. Staff
+    (`actor_id`) or a customer (contact or phone, never from a phone call:
+    `source_channel`) is the requester (`booking_requesters`).
     """
 
     business_id: BusinessId
@@ -208,8 +201,7 @@ class CancelBookingCommand(ImmutableDTO):
     Cancel a booking found by id, or by contact phone and date (sandbox
     rule as for rescheduling). `actor_id` names the staff member who
     cancels in the cabinet (they may undo it for a short while);
-    `expected_starts_at`, the requester and `source_channel` as for
-    rescheduling.
+    `expected_starts_at` and the requester as for rescheduling.
     """
 
     business_id: BusinessId

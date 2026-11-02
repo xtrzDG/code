@@ -6,7 +6,6 @@ and a business past its day's call minutes are refused.
 
 from typing import Any
 
-import httpx
 import pytest
 
 from app.schemas.constants.billing import UsageKind
@@ -28,7 +27,7 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.channels.voice_service import MAX_DAILY_CALL_MINUTES
-from tests.channels.channels_payloads import to_json_bytes
+from tests.channels.channels_payloads import HttpResponse, to_json_bytes
 from tests.channels.channels_settings import UNITED_STATES
 from tests.channels.voice_setup import (
     ASSISTANT_LINE,
@@ -41,7 +40,7 @@ from tests.channels.voice_setup import (
 HOUR: int = 60 * 60
 
 
-def post_start(setup: VoiceSetup, caller: str | None = CALLER) -> httpx.Response:
+def post_start(setup: VoiceSetup, caller: str | None = CALLER) -> HttpResponse:
     body: dict[str, Any] = {"agent_id": "agent_1", "called_number": ASSISTANT_LINE}
     if caller is not None:
         body["caller_id"] = caller

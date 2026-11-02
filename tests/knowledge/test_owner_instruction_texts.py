@@ -78,7 +78,9 @@ def test_ordinary_owner_texts_are_saved_as_written() -> None:
         harness,
         business.id,
         FaqAndHandoffStepInput(
-            handoff_rules=[HandoffRuleText("Banquets of more than 20 guests (ask 50%)")],
+            handoff_rules=[
+                HandoffRuleText("Banquets of more than 20 guests (ask 50%)")
+            ],
             forbidden=[ForbiddenRuleText("Non promettere sconti!")],
             tone=ToneText(" Cordiale, dare del Lei ai clienti "),
         ),

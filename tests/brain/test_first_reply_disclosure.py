@@ -61,7 +61,9 @@ def test_the_website_chat_shows_the_notice_in_its_footer_instead() -> None:
 
     assert reply.text is not None
     assert PRIVACY_URL not in reply.text
-    assert reply.text.startswith(f"Hello! I am the AI assistant of {world.business.name}.")
+    assert reply.text.startswith(
+        f"Hello! I am the AI assistant of {world.business.name}."
+    )
 
 
 def test_no_notice_line_without_an_address() -> None:
@@ -69,7 +71,9 @@ def test_no_notice_line_without_an_address() -> None:
 
     reply = world.send("Hi")
 
-    assert reply.text == f"Hello! I am the AI assistant of {world.business.name}.\nHello!"
+    assert (
+        reply.text == f"Hello! I am the AI assistant of {world.business.name}.\nHello!"
+    )
 
 
 def test_the_disclosure_exists_in_every_language_customers_are_read_in() -> None:

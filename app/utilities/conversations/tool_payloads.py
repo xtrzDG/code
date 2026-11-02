@@ -9,8 +9,6 @@ Availability and booking results and their errors also state
 `business_today`, so relative dates are checked against today.
 """
 
-from pydantic import ValidationError
-
 from app.schemas.dto.billing import Money
 from app.schemas.dto.bookings import AvailabilityResult, BookingResult, LeadView
 from app.schemas.dto.handoffs import HandoffResult, UnansweredQuestionView
@@ -29,13 +27,15 @@ from app.utilities.conversations.offer_payloads import (
     render_stay_quote,
 )
 from app.utilities.conversations.sister_payloads import render_sister_locations
-from app.utilities.conversations.untrusted_text import wrap_customer_value
+from app.utilities.conversations.untrusted_text import (
+    fence_value_in,
+    wrap_customer_value,
+)
 from app.utilities.money.money_math import (
     convert_money_to_major_units,
     get_currency_minor_unit_digits,
 )
 
-MAX_REPORTED_INPUT_ERRORS: int = 3
 MAX_ERROR_MESSAGE_LENGTH: int = 300
 
 
@@ -157,7 +157,9 @@ def render_booking(
         "end_date": str(booking.end_date),
         "party_size": int(booking.party_size),
         "timezone": str(booking.timezone),
-        "confirmation_text": str(result.confirmation_text),
+        "confirmation_text": fence_value_in(
+            str(result.confirmation_text), str(booking.contact_name or "")
+        ),
     }
     if booking.time is not None:
         rendered["time"] = str(booking.time)
@@ -274,17 +276,6 @@ def with_business_today(
         return payload
 
     return {**payload, "business_today": business_today}
-
-
-def describe_tool_input_error(error: ValidationError) -> str:
-    """Which arguments were wrong and why, without repeating their values."""
-
-    problems: list[str] = []
-    for detail in error.errors()[:MAX_REPORTED_INPUT_ERRORS]:
-        location: str = ".".join(str(part) for part in detail["loc"]) or "input"
-        problems.append(f"{location}: {detail['msg']}")
-
-    return "Invalid tool input: " + "; ".join(problems)
 
 
 def format_major_units(money: Money) -> str:

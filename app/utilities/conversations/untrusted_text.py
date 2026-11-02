@@ -62,6 +62,19 @@ def wrap_in(tag: str, text: str, brackets: dict[int, str] = ANGLE_BRACKETS) -> s
     return f"<{tag}>{text.translate(brackets)}</{tag}>"
 
 
+def fence_value_in(text: str, value: str) -> str:
+    """
+    A platform text that quotes a customer's value (a booking confirmation
+    that names the guest), with every standalone occurrence fenced.
+    """
+
+    if value.strip() == "":
+        return text
+
+    pattern: re.Pattern[str] = re.compile(rf"(?<!\w){re.escape(value)}(?!\w)")
+    return pattern.sub(lambda match: wrap_customer_value(match.group(0)), text)
+
+
 def strip_customer_values(text: str) -> tuple[str, list[str]]:
     """
     The text without its customer values (each replaced by a marker), and

@@ -94,12 +94,14 @@ test("recording is off until the owner turns it on, and transfers wait for the s
   await page.goto(`/b/${owner.businessId}/settings/calls`);
   const recording = page.getByRole("switch", { name: calls.recording.toggle });
   await expect(recording).toHaveAttribute("aria-checked", "false");
-  // What callers hear: the recording sentence and where the privacy notice is.
-  await expect(page.getByText(/privacy notice is on our web page/).first()).toBeVisible();
+  // What callers hear: where the privacy notice is, and the recording once it is on.
+  await expect(page.getByText(calls.recording.noticePrivacy)).toBeVisible();
+  await expect(page.getByText(calls.recording.noticeRecorded)).toHaveCount(0);
 
   const recorded = nextSave(page, "/call-settings");
   await recording.click();
   await recorded;
+  await expect(page.getByText(calls.recording.noticeRecorded)).toBeVisible();
   const confirm = page.getByRole("switch", { name: calls.transfers.confirm });
   await expect(confirm).toHaveAttribute("aria-checked", "false");
   const confirmed = nextSave(page, "/call-settings");
@@ -109,7 +111,8 @@ test("recording is off until the owner turns it on, and transfers wait for the s
   await page.reload();
   await expect(recording).toHaveAttribute("aria-checked", "true");
   await expect(confirm).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText(calls.transfers.confirmedOn.split("{date}")[0])).toBeVisible();
+  const [confirmedPrefix = ""] = calls.transfers.confirmedOn.split("{date}");
+  await expect(page.getByText(confirmedPrefix.trim())).toBeVisible();
 });
 
 test("the latest text-backs say what each caller got", async ({ page, owner }) => {

@@ -278,31 +278,6 @@
   },
   {
    "request": {
-    "request_digest": "04845afbccfafa0f3eaec34e9b9bdb921aadeb23692271a2ab842a2278aa8bcc",
-    "model_id": "scripted",
-    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "702d166a178bade81ccb9dc8fa25b841a827da17a979e662608e3a8033c34610",
-    "transcript_tail": "esource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Auto Pro Service» перенесена на среда, 7 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "04f8a98faae17a582e9f885de9d99a7621d1508cbbcd65a69afe47d1bba3e9d2",
     "model_id": "scripted",
     "instruction_digest": "5f185337dad3d738f32654b43657c849b13ac2977d3448dd6c8a607a8b6c5975",
@@ -521,6 +496,31 @@
   },
   {
    "request": {
+    "request_digest": "0f1e4b6db5d7a8a6be62a02f96b5616dcfaa20808062fa159ef965fb726c161e",
+    "model_id": "scripted",
+    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "53343d6651a2afc6822fb148f297dea112d6eaf3c4e1480c1805f22c95d06665",
+    "transcript_tail": "date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Auto Pro Service» перенесена на среда, 7 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0fcb3c7fe7148fb3d8a8af0ce8d1bb7e4cd63c13099993b80227ab2985f94560",
     "model_id": "scripted",
     "instruction_digest": "5678addbc58a7c39f9cb38ce5a757e46c2bb02fda684310e46746b71f0b86fa0",
@@ -672,31 +672,6 @@
       "fallback_model_id": null
      },
      "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "16aa5e736bc74bb66c03afb0f3d30576eb968a33804a791bea54e49381f126cc",
-    "model_id": "scripted",
-    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "1ca69deb2b9fb9d583144abbfd95c11176c587d0c919a8b6fb67aea2937b2eab",
-    "transcript_tail": ":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Auto Pro Service has been moved to Wednesday, October 7, 2026, 12:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 4
     }
    ]
   },
@@ -1001,7 +976,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 12
     }
    ]
   },
@@ -1244,7 +1219,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -1269,7 +1244,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 6
     }
    ]
   },
@@ -1427,31 +1402,6 @@
       "text": "Здравствуйте! Я не смогу в четверг, отмените, пожалуйста, мою запись.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте! Я не смогу в четверг, отмените, пожалуйста, мою запись.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "360d10fe6488ecfe366c8fc7b25dcf12fc1a8b21266aedbc7695b3a0fb653166",
-    "model_id": "scripted",
-    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "5ce9f189fb308ad492069a7608f155424b4552a443a6c5a03c98716a4dd3f327",
-    "transcript_tail": "ent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Auto Pro Service» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1758,31 +1708,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "42f0919d3abe4032fcacdda03e1dc58ec84804c74ef72b134aeef5aff90d09a8",
-    "model_id": "scripted",
-    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "82ef11d5eddb228e593283a54d08ba928d75796f09a1fedd1148b7e5d17aeb06",
-    "transcript_tail": "\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Auto Pro Service-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2229,7 +2154,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2354,7 +2279,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2904,7 +2829,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2929,7 +2854,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 12
     }
    ]
   },
@@ -3118,6 +3043,31 @@
       "text": "Компьютерная диагностика стоит 50 лари. Чем ещё могу помочь?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Компьютерная диагностика стоит 50 лари. Чем ещё могу помочь?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "849bbed5aa399e2dc3ed0aeee02f3917a6211ba4812756e885265bbb597ca220",
+    "model_id": "scripted",
+    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "3e518ed719575356ebb71770ee85169f546fa6d40eacd22a33eaedc398560707",
+    "transcript_tail": "\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Auto Pro Service» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3415,21 +3365,21 @@
   },
   {
    "request": {
-    "request_digest": "926ce9a49298676a11b4aaad63ed83c42764f3af2e25313cf601960e98dd97e5",
+    "request_digest": "93e062cb4957d08fef03a310586d0b1af0c25526b79105ea72da7d5537e92795",
     "model_id": "scripted",
     "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "963b0b3a60d94fa6bfe328264bacc556ad01b9ce7830969a69a373751edd9800",
-    "transcript_tail": "nt\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Auto Pro Service-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "5d43f8beba3c667d69f536ccb56ded255005e958f59d0b46b823b0c12462763f",
+    "transcript_tail": "0-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Auto Pro Service-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3939,7 +3889,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -4076,21 +4026,21 @@
   },
   {
    "request": {
-    "request_digest": "b05e7d26dfaf06cb4a8c61d3f163fb8d59e8ece4830c3b05ccbcf7e049752ce0",
+    "request_digest": "aec3638deacb4e8346e4f6f0554438af3576a767831108fc2aa85b505b65d313",
     "model_id": "scripted",
     "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "5aa7aa2dcc9ff39e2f220c2e2a9cd6de50cf9e7fa4b6fe5dcfa8daa655d232f0",
-    "transcript_tail": "t\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Auto Pro Service is confirmed: Thursday, October 8, 2026, 12:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "ba80043fb871daf738534643c9fad417f81e7bf00a9e9acbc5a63899fb056c57",
+    "transcript_tail": "id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Auto Pro Service-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4151,7 +4101,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -4369,6 +4319,31 @@
   },
   {
    "request": {
+    "request_digest": "c8869d18a9bf000bf92138e52c473a889dec34c5c4b38eda229668d707d9304f",
+    "model_id": "scripted",
+    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "d044b37c20fea8800b9cdc4e60f9c3aaac6069500c677e7baaa0cf97bf635931",
+    "transcript_tail": ":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Service bay\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Auto Pro Service is confirmed: Thursday, October 8, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "ca7e3a33d11810fc7792023957d080a117465f5aee5a09bdb6bd80f43e43867f",
     "model_id": "scripted",
     "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
@@ -4463,7 +4438,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -4837,6 +4812,31 @@
   },
   {
    "request": {
+    "request_digest": "e453ea2de13c1cc8f08e5627919258d206d0f1c07380b9b8d07cb1a1c0996c2e",
+    "model_id": "scripted",
+    "instruction_digest": "90027483c0a24e2b1589fdadecd9e40f873155dad1fa3dbfa32277afc4c8a02d",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "a3021d1e1063e5642d3db0fbf12212ba125c53842a64967b6dfd642644805a97",
+    "transcript_tail": "10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Auto Pro Service has been moved to Wednesday, October 7, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"13:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "e60a108f4abd2f239705e8aa1dee1a00a39908807f2aa476d3d96e2ff22d338e",
     "model_id": "scripted",
     "instruction_digest": "8f2ee475b8681d4ddd34699c59b9aa7cf5f2b793314b40b00ad7aad0a6e9e198",
@@ -5193,7 +5193,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },

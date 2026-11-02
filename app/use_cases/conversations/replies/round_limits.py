@@ -11,9 +11,6 @@ The limits of one reply's model rounds.
   team, so a long tool loop cannot run past the limit.
 """
 
-from collections.abc import Sequence
-from dataclasses import dataclass
-
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.spend import SpendLevel
 from app.schemas.dto.assistant_tools import AssistantToolOutcome
@@ -33,20 +30,6 @@ type SpendCheck = UseCaseContract[SpendCheckRequest, SpendVerdict]
 
 class SpendLimitReached(Exception):
     """The business passed its hard spend limit during the turn (technical)."""
-
-
-@dataclass(frozen=True)
-class ToolCallBatch:
-    """A response's calls: those that run and those refused (technical record)."""
-
-    run: list[LlmToolCall]
-    refused: list[LlmToolCall]
-
-
-def split_tool_calls(calls: Sequence[LlmToolCall], limit: int) -> ToolCallBatch:
-    """The first `limit` calls run; the rest are refused."""
-
-    return ToolCallBatch(run=list(calls[:limit]), refused=list(calls[limit:]))
 
 
 def refused_call_outcome(call: LlmToolCall, limit: int) -> AssistantToolOutcome:

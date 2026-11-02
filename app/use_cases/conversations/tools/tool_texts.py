@@ -10,10 +10,16 @@ from app.schemas.typings.contacts.constrained_strings import CustomerGivenName
 from app.schemas.typings.contacts.strings import ContactName
 
 
-def given_contact_name(name: CustomerGivenName | None) -> ContactName | None:
-    """The name the customer gave, as the contact's name; None when none."""
+def given_contact_name(name: CustomerGivenName) -> ContactName:
+    """The name the customer gave, as the contact's name."""
 
-    return None if name is None else ContactName(str(name))
+    return ContactName(str(name))
+
+
+def optional_contact_name(name: CustomerGivenName | None) -> ContactName | None:
+    """The name the customer gave, if any, as the contact's name."""
+
+    return None if name is None else given_contact_name(name)
 
 
 def given_booking_note(note: AssistantBookingNote | None) -> BookingNote | None:

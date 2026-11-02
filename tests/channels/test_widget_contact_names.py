@@ -49,7 +49,11 @@ def test_a_name_is_kept_without_its_surrounding_spaces() -> None:
 def test_the_widget_refuses_the_message_of_a_bad_name(name: str) -> None:
     testbed = ChannelsTestbed()
     business = enable_widget(testbed)
-    body: dict[str, Any] = {"session_key": SESSION_KEY, "text": "Hi", "contact_name": name}
+    body: dict[str, Any] = {
+        "session_key": SESSION_KEY,
+        "text": "Hi",
+        "contact_name": name,
+    }
 
     response = testbed.build_http_client().post(
         f"/v1/widget/{business.id}/messages", json=body

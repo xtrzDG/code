@@ -46,7 +46,9 @@ export const callSettingsEn = {
       "Off unless you turn it on. When it is on, the audio of each call is kept for listening in the call's card, for as long as Settings → Privacy says. When it is off, the audio is deleted right after the call and the transcript is kept without phone, card and account numbers or e-mail addresses.",
     toggle: "Record calls",
     noticeTitle: "What callers hear at the start of every call",
-    noticeHint: "The greeting says this whether or not you record, so callers always know where to read how their call is processed. Where the law asks for consent, callers may say no and the call goes on without a recording.",
+    noticeRecorded: "The call is recorded.",
+    noticePrivacy: "Our privacy notice is on our web page.",
+    noticeHint: "In each language of your business. Where the law asks for consent, callers may say no and the call goes on without a recording; where to read the privacy notice is said whether or not you record.",
     turnedOff: "Call recording is off",
   },
   transfers: {

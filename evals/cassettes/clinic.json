@@ -446,7 +446,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -548,31 +548,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"handoff_to_human\", \"input\": {\"reason\": \"customer_request\", \"summary\": \"The customer asks to talk to a person.\", \"urgency\": \"normal\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "078586d974a8b0d0cd0fab57b9b22e2bc7d7da37cf44df0c5ae33b07938907e6",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "b0061220b481c4ae4d935c5cdac362b2ddf2ea283c998ccc6d4380334d6eafd6",
-    "transcript_tail": "\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Vake Family Clinic» перенесена на среда, 7 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -714,6 +689,56 @@
   },
   {
    "request": {
+    "request_digest": "0e284329a718c4eceaa39128c70762703a12a34d22c824278190f2f53ffbfb84",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "cb89398c321fd2bac429ba0c68cf5a90714e6150375fa897be1d312022949058",
+    "transcript_tail": "7\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Vake Family Clinic-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "0e37accd57cdff13993d97ed04a3b659185f0555223db6d1d281f1819eb3cd3b",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "074fff4c2c1febe6b9286a7ef59633c785f9fcfc0a74b15cdea2c318e0125f7b",
+    "transcript_tail": "g_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Vake Family Clinic-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0e77f0f54a6484be68e621657a2328a72108ab9476a4f9f7f7f5c93fc3869f6b",
     "model_id": "scripted",
     "instruction_digest": "7f2d31fd94ae7590e49b388970a14cef51202511a3e1ee3ea89f2057585789a3",
@@ -783,7 +808,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 3
+     "elapsed": 0
     }
    ]
   },
@@ -1026,7 +1051,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 7
+     "elapsed": 0
     }
    ]
   },
@@ -1232,7 +1257,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -1494,7 +1519,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2043,7 +2068,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2286,6 +2311,31 @@
   },
   {
    "request": {
+    "request_digest": "34fdd0837aa3c4ffb3cf80282dbd9b6ce2015001da64973cd2f9cb195691a88f",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "65c15a983c498c2d953dfd914d45f02b5c30e163fe3a74d451c56244c1decd41",
+    "transcript_tail": "id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد حجزك في ⁨Vake Family Clinic⁩: ⁨الخميس، 8 أكتوبر 2026⁩، ⁨12:00⁩. الاسم: ⁨<customer_value>ليلى</customer_value>⁩. عدد الضيوف: ⁨1⁩.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "تم، ليلى! حجزك يوم الخميس الساعة 12:00. بانتظارك!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! حجزك يوم الخميس الساعة 12:00. بانتظارك!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "35ce0cf57bf6587434e06177d8497d5089b6bb4e55b27ffe31b7cfee87703e80",
     "model_id": "scripted",
     "instruction_digest": "7aa3092e5893c3e51b3f0b19e08ce82cfefc9acf72432da3f013842709bbc242",
@@ -2436,7 +2486,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2679,31 +2729,6 @@
   },
   {
    "request": {
-    "request_digest": "3ce1db4edde0af276ca418faca15d0a9331df8e38e5c442f82c930511846aa28",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "6cac40fb10cb5429ba71eb8734782703751243eef896f8f25c64c8d459987fe3",
-    "transcript_tail": "ontent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Vake Family Clinic» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "3cee8364554d0f6c4d0b67971951c4ab3a1f7b60d538621f8b2bf0b4a325c236",
     "model_id": "scripted",
     "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
@@ -2916,7 +2941,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3421,7 +3446,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -3598,31 +3623,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"record_unanswered_question\", \"input\": {\"question\": \"هل يوجد شاحن للسيارات الكهربائية بالقرب منكم؟\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "4fd3ac1c06956fe5da9f9031ce7864aeb1274c0ff1681814f6c0008d3f530f68",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "ad5fa4816683e14a5fb8e571e5df003488e8bcc2678e853c50127bdb80da86ca",
-    "transcript_tail": "ntent\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Vake Family Clinic-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4031,6 +4031,31 @@
   },
   {
    "request": {
+    "request_digest": "631c330000269d5523dda0615263b36d34a1f78a50d755352b1f464c82b44d6b",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "4fa35008e88db5476ce2e26e76b165f5eb1f9beb43222cd1290ee795a6b6fe00",
+    "transcript_tail": "d\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Vake Family Clinic is confirmed: Thursday, October 8, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "63f12e32115219e3c3f185566ee841a81bfd91236e1cfd6dafed4182a98498b6",
     "model_id": "scripted",
     "instruction_digest": "3463f336753781a431867599d16fdd0e90f593938b0f743b8c20b1b388cf933d",
@@ -4274,7 +4299,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -4301,6 +4326,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"check_availability\", \"input\": {\"date\": \"2026-10-08\", \"time\": \"07:00\", \"party_size\": 1, \"nights\": null, \"resource_type\": null, \"duration_minutes\": null}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "6e20020a57850bb9440f31596e1335cf80313e993039aee7c78a39efbab79d03",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "be5b9295b07ebc4433659c5d8eaa54d9b1a2140a0c5664f387d7a7c5cba847da",
+    "transcript_tail": "07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Vake Family Clinic has been moved to Wednesday, October 7, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4804,7 +4854,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4911,6 +4961,31 @@
       "fallback_model_id": null
      },
      "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "81fd702ed2bc42815b2c5144aa8ad206203ef8ecb67a7b4607944415d04b8283",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "09f9d5d137de32c358b24956e14b3d249b57a6a2f042ccfd09f6fd2926b6bea5",
+    "transcript_tail": "\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"ההזמנה שלך ב-⁨Vake Family Clinic⁩ אושרה: ⁨יום חמישי, 8 באוקטובר 2026⁩, ⁨12:00⁩. שם: ⁨<customer_value>נועה</customer_value>⁩. מספר אורחים: ⁨1⁩.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 12:00. נתראה!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 12:00. נתראה!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 8
     }
    ]
   },
@@ -5035,7 +5110,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -5085,7 +5160,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 42
+     "elapsed": 0
     }
    ]
   },
@@ -6001,6 +6076,31 @@
   },
   {
    "request": {
+    "request_digest": "a60bf986cad9472b8f8cba30c7ac4c83b9a34c686beaad78d0b43cee517bea3e",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "c0ff57c88bbc1cee4485af7e0d41e2ffe2678d42036437b03ffe312707a39fa4",
+    "transcript_tail": "_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Vake Family Clinic» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "a6a51f9fd5bbf5cee0010a95f56a3b3781dec327d605f824720daf17521c5fd7",
     "model_id": "scripted",
     "instruction_digest": "62287dab0633d16d8cb622a2c4fbf862f5c51e7552857a65e76b2b6faa6a97a2",
@@ -6363,7 +6463,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 7
+     "elapsed": 0
     }
    ]
   },
@@ -6519,31 +6619,6 @@
   },
   {
    "request": {
-    "request_digest": "baad57c69bc077a55e119312180a083c196cd12b2ec72921588af6eeb71a69a3",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "fce4c4c7f67f51da2968bb3f51072d0101e7e2a020fcfff6f7c07f29ec709cf9",
-    "transcript_tail": "ntent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد حجزك في ⁨Vake Family Clinic⁩: ⁨الخميس، 8 أكتوبر 2026⁩، ⁨12:00⁩. الاسم: ⁨ليلى⁩. عدد الضيوف: ⁨1⁩.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "تم، ليلى! حجزك يوم الخميس الساعة 12:00. بانتظارك!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! حجزك يوم الخميس الساعة 12:00. بانتظارك!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "bb367409a779eb7cdc9b5d1f3b159850b975d981d93efd94a4a72bca720de5c0",
     "model_id": "scripted",
     "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
@@ -6584,31 +6659,6 @@
       "text": "თქვენთან ახლოს ელექტრომობილის დამტენი არის?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"თქვენთან ახლოს ელექტრომობილის დამტენი არის?\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "bba9e3e325b09a5171fb4ebd31190035e764f9df98eaaf79cbaaccd26a77f5d2",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "87b3deaa509133a240cb1aa0aeab97228cc2ae3728c1852aa854cb5c26155bf5",
-    "transcript_tail": "\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"ההזמנה שלך ב-⁨Vake Family Clinic⁩ אושרה: ⁨יום חמישי, 8 באוקטובר 2026⁩, ⁨12:00⁩. שם: ⁨נועה⁩. מספר אורחים: ⁨1⁩.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 12:00. נתראה!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 12:00. נתראה!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -6719,7 +6769,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -7019,7 +7069,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -7150,31 +7200,6 @@
   },
   {
    "request": {
-    "request_digest": "d3e45211ee065527a6a69c5cc4b64cb224432f6ba1689d4edd28d0e52524b2d3",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7182e08a8e8e928f5877a3de75e459c0159124170e9361ce1b851cc3448f1418",
-    "transcript_tail": "\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Vake Family Clinic-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "d4b4cb0fe0e045256a53d061ab6627fbdae6ac9d389300a9f252e5317a033270",
     "model_id": "scripted",
     "instruction_digest": "476833f18632177ac510b4833d0215478af4296655e67310edaa752904c7c443",
@@ -7256,6 +7281,31 @@
   },
   {
    "request": {
+    "request_digest": "d6e3c14f15567ee99fe6d28929eadb561fddde9552108891459b7389b74e46d0",
+    "model_id": "scripted",
+    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "3ad1782727b7cec7d42e3aefcbef83810c18ca360ca55a50e982ed8238f5afc6",
+    "transcript_tail": "e\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Vake Family Clinic» перенесена на среда, 7 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "d8b9cfe76fa05d3b5a397560dd7449a78876a3930a096b4a6ac152139850e51e",
     "model_id": "scripted",
     "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
@@ -7327,31 +7377,6 @@
       "text": "თქვენი ჯავშანი ხუთშაბათს, 8 ოქტომბერს, 12:00-ზეა. გელოდებით!",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"თქვენი ჯავშანი ხუთშაბათს, 8 ოქტომბერს, 12:00-ზეა. გელოდებით!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "dbf7d4bd288f2fa790fced471ebe8a475a480fa0a837374473cdecc6e9d7f4f7",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "46bdd77a1494366861f5f1897fe0153d2166f3a1aaeb2f487d0fb33ad6eb0165",
-    "transcript_tail": "tent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Vake Family Clinic is confirmed: Thursday, October 8, 2026, 12:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -7662,7 +7687,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -7808,31 +7833,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 16
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "ee38fd5acff3a33510dd573e1c924ab99a76cee8897967158e9508570b6ba9b3",
-    "model_id": "scripted",
-    "instruction_digest": "da2f91c84c7ea86f2d5d6e58a44cd6fa1e97927e6a9fcf856b57b30f71d79434",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "0efb9378c2a5a98afc42ede52518629e3b4fce748b60182fb803e35782f91be3",
-    "transcript_tail": "\\\":\\\"Doctor\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Vake Family Clinic has been moved to Wednesday, October 7, 2026, 12:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 24 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null

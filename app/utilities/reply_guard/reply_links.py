@@ -31,6 +31,8 @@ BARE_DOMAIN_PATTERN: re.Pattern[str] = re.compile(
     r"(?<![@\w.-])((?:[a-z0-9][a-z0-9-]*[a-z0-9]\.)+"
     rf"(?:{COMMON_TOP_LEVEL_DOMAINS}))(/[^\s<>\"'`]*)?(?![\w@-])"
 )
+# A host name: labels of letters, digits and hyphens (no spaces, no IPv6).
+HOST_PATTERN: re.Pattern[str] = re.compile(r"[\w-]+(?:\.[\w-]+)*")
 TRAILING_PUNCTUATION: str = ".,;:!?)]}»”’'\""
 WWW_PREFIX: str = "www."
 
@@ -75,7 +77,7 @@ def parse_link(written: str) -> FoundLink | None:
     except ValueError:
         return None
 
-    if host == "":
+    if HOST_PATTERN.fullmatch(host) is None:
         return None
 
     return FoundLink(text=written, host=host.removeprefix(WWW_PREFIX), path=parts.path)

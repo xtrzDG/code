@@ -15,6 +15,7 @@ from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.handoffs.strings import HandoffSummary
+from tests.calls.call_steps import save_call_settings
 from tests.channels.channels_payloads import telegram_ok
 from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
 from tests.channels.post_call_steps import (
@@ -41,6 +42,8 @@ class TestPostCallWebhook:
             "POST", r"/sendMessage$", telegram_ok({})
         )
         add_booking(setup)
+        # The owner turned the recording of calls on (off by default).
+        save_call_settings(setup, is_text_back_enabled=False, is_recording_enabled=True)
 
         body = process_call(setup, post_call_payload(tool_names=("create_booking",)))
 

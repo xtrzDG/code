@@ -30,8 +30,8 @@ const VIEW: CallSettingsView = {
   is_sms_available: true,
   template_previews: [],
   is_recording_enabled: false,
-  recording_notices: [],
   is_staff_transfer_confirmed: false,
+  staff_transfer_confirmed_by: null,
   staff_transfer_confirmed_at: null,
   transfer_phone_number: null,
 };

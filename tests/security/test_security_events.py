@@ -62,7 +62,7 @@ def build_client(address: str = "203.0.113.77") -> TestClient:
 
 def security_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, object]]:
     return [
-        dict(getattr(record, "log_fields"))
+        dict(record.__dict__["log_fields"])
         for record in caplog.records
         if record.name == "app.security"
     ]

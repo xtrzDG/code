@@ -107,6 +107,10 @@ class RequestDeadlineMiddleware:
                 timeout=deadline,
                 return_when=asyncio.FIRST_COMPLETED,
             )
+        except asyncio.CancelledError:
+            # The server gave up on the request itself: so does its route.
+            route.cancel()
+            raise
         finally:
             waiting_for_start.cancel()
 

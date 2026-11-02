@@ -7470,29 +7470,6 @@
         "title": "CallGuardVerdict",
         "type": "string"
       },
-      "CallNoticePreview": {
-        "additionalProperties": false,
-        "description": "What a caller hears about the recording and the privacy notice.",
-        "properties": {
-          "language": {
-            "maxLength": 16,
-            "minLength": 2,
-            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
-            "title": "Language",
-            "type": "string"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "language",
-          "text"
-        ],
-        "title": "CallNoticePreview",
-        "type": "object"
-      },
       "CallOutcome": {
         "description": "Result extracted from a finished phone call.",
         "enum": [
@@ -7508,7 +7485,7 @@
       },
       "CallSettingsView": {
         "additionalProperties": false,
-        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business; the recording with the\nnotice callers hear in each language (`recording_notices`), and the\nstaff number transfers go to (None: no allowed staff number) with the\nowner's confirmation of the staff notice (who confirmed it, when).",
+        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business; whether calls are\nrecorded, and the staff number transfers go to (None: no allowed staff\nnumber) with the owner's confirmation of the staff notice (who\nconfirmed it, when).",
         "properties": {
           "is_recording_enabled": {
             "default": false,
@@ -7540,13 +7517,6 @@
             "title": "Is Whatsapp Connected",
             "type": "boolean"
           },
-          "recording_notices": {
-            "items": {
-              "$ref": "#/components/schemas/CallNoticePreview"
-            },
-            "title": "Recording Notices",
-            "type": "array"
-          },
           "staff_transfer_confirmed_at": {
             "anyOf": [
               {
@@ -7557,6 +7527,17 @@
               }
             ],
             "title": "Staff Transfer Confirmed At"
+          },
+          "staff_transfer_confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Transfer Confirmed By"
           },
           "template_previews": {
             "items": {
@@ -36739,6 +36720,24 @@
             }
           },
           {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -36886,6 +36885,24 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -37053,6 +37070,24 @@
             "schema": {
               "title": "Invoice Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -38027,6 +38062,24 @@
             }
           },
           {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -38312,6 +38365,24 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -38762,6 +38833,24 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -66522,6 +66611,24 @@
             }
           },
           {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -67183,6 +67290,24 @@
             "schema": {
               "title": "Deposit Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {

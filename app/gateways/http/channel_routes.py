@@ -6,7 +6,10 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import PlainTextResponse
 
 from app.contracts.operator_contract import OperatorContract
-from app.gateways.http.network_budget_dependency import build_network_budget
+from app.gateways.http.network_budget_dependency import (
+    NetworkBudgetDependency,
+    build_network_budget,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.serialized_json_response import serialized_json_response
 from app.gateways.http.strict_request_parsing import (
@@ -96,6 +99,7 @@ def build_channel_router(
         WidgetMessagesView,
     ],
     widget_origin_guard: WidgetOriginGuard | None = None,
+    widget_config_budget: NetworkBudgetDependency | None = None,
 ) -> APIRouter:
     """
     Routes (no bearer token; each is authenticated by its platform):
@@ -116,13 +120,18 @@ def build_channel_router(
                                                           X-Widget-Session-Key,
                                                           ?after=<message id>)
     The widget routes answer 403 to a website the business does not allow
-    (`widget_origin_guard`).
+    (`widget_origin_guard`); the config's budget per client network is
+    `widget_config_budget` (by default WIDGET_CONFIG_REQUESTS_PER_MINUTE).
     """
 
     router = APIRouter(tags=["channels"], responses=standard_error_responses())
     guarded = [] if widget_origin_guard is None else [Depends(widget_origin_guard)]
-    config_budget = build_network_budget(
-        "widget-config", WIDGET_CONFIG_REQUESTS_PER_MINUTE, WIDGET_CONFIG_REFUSAL
+    config_budget: NetworkBudgetDependency = (
+        build_network_budget(
+            "widget-config", WIDGET_CONFIG_REQUESTS_PER_MINUTE, WIDGET_CONFIG_REFUSAL
+        )
+        if widget_config_budget is None
+        else widget_config_budget
     )
 
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)

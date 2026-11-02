@@ -19,7 +19,7 @@ from app.use_cases.conversations.tools.booking_tool_handlers import (
 from app.use_cases.conversations.tools.tool_outcomes import success_outcome
 from app.use_cases.conversations.tools.tool_texts import (
     given_booking_note,
-    given_contact_name,
+    optional_contact_name,
 )
 from app.utilities.conversations.business_today import BusinessToday
 from app.utilities.conversations.waitlist_payloads import render_waitlist_join
@@ -49,7 +49,7 @@ def run_join_waitlist(
             business_id=context.business_id,
             contact_id=context.contact_id,
             conversation_id=context.conversation_id,
-            contact_name=given_contact_name(tool_input.name) or context.contact_name,
+            contact_name=optional_contact_name(tool_input.name) or context.contact_name,
             source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,

@@ -12,13 +12,14 @@ pull request (offline, from recorded model answers) and every night
 
 ## What is played
 
-`evals/datasets/<niche>.yaml` holds one business and its scenarios (872 in
+`evals/datasets/<niche>.yaml` holds one business and its scenarios (892 in
 16 niches). Each niche plays:
 
 - the eight core scenarios in each of ka, ru and en (price, booking or
   order, closed hours, unknown question, discount, person, injection, rude
   customer or emergency), plus he and ar for restaurant, hotel,
-  beauty_salon and clinic;
+  beauty_salon and clinic, and Italian (the first market's language) for
+  the restaurant;
 - in ka, ru and en, a WhatsApp customer who cancels, moves (`reschedule`)
   or asks about (`my_bookings`) a booking seeded for their proven phone
   (where the business takes orders instead: their open order, which a
@@ -36,8 +37,13 @@ pull request (offline, from recorded model answers) and every night
   uk, hy and es (`foreign_language`) and ka, ru and hy typed in Latin
   letters (`transliterated`).
 
-The restaurant also has a fully booked Friday whose guests join the
-waitlist, owner checks (`owner_check`), a menu link (`send_link`) and a
+The restaurant also asks, in it and en, whether a real person answers
+(`aiperson__*`: "sei una persona vera?"; the assistant says it is an AI and
+offers a colleague), reports an emergency (`emergency112__*`: the reply
+names 112, the country's emergency number, and hands off as critical) and
+asks about allergens (`allergens__*`: only the restaurant's own words, with
+a word to confirm with staff). It has a fully booked Friday whose guests
+join the waitlist, owner checks (`owner_check`), a menu link (`send_link`) and a
 party of six whose table asks a deposit (`send_payment_link`: the
 platform writes the payment line, with the amount and the owner's page,
 under the reply); the online shop has a 90-item catalog beyond the instruction's fact table

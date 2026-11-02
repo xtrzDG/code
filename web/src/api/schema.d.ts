@@ -8859,16 +8859,6 @@ export interface components {
          */
         CallGuardVerdict: "clean" | "flagged" | "handed_off";
         /**
-         * CallNoticePreview
-         * @description What a caller hears about the recording and the privacy notice.
-         */
-        CallNoticePreview: {
-            /** Language */
-            language: string;
-            /** Text */
-            text: string;
-        };
-        /**
          * CallOutcome
          * @description Result extracted from a finished phone call.
          * @enum {string}
@@ -8878,10 +8868,10 @@ export interface components {
          * CallSettingsView
          * @description The settings with what they rely on: whether the business's WhatsApp
          *     number is connected, whether the platform can send SMS, and the
-         *     text-back in each language of the business; the recording with the
-         *     notice callers hear in each language (`recording_notices`), and the
-         *     staff number transfers go to (None: no allowed staff number) with the
-         *     owner's confirmation of the staff notice (who confirmed it, when).
+         *     text-back in each language of the business; whether calls are
+         *     recorded, and the staff number transfers go to (None: no allowed staff
+         *     number) with the owner's confirmation of the staff notice (who
+         *     confirmed it, when).
          */
         CallSettingsView: {
             /**
@@ -8904,10 +8894,10 @@ export interface components {
             is_text_back_enabled: boolean;
             /** Is Whatsapp Connected */
             is_whatsapp_connected: boolean;
-            /** Recording Notices */
-            recording_notices?: components["schemas"]["CallNoticePreview"][];
             /** Staff Transfer Confirmed At */
             staff_transfer_confirmed_at?: number | null;
+            /** Staff Transfer Confirmed By */
+            staff_transfer_confirmed_by?: string | null;
             /** Template Previews */
             template_previews?: components["schemas"]["TextBackTemplatePreview"][];
             /** Text Back Template Name */
@@ -20722,6 +20712,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -20818,6 +20810,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -20916,6 +20910,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -21570,6 +21566,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -21758,6 +21756,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -22038,6 +22038,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -39137,6 +39139,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -39538,6 +39542,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {

@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.bookings import CreateBookingCommand
 from app.schemas.typings.contacts.strings import ContactName
 from tests.brain.brain_world import build_world
 from tests.brain.scripted_turns import scripted
@@ -66,6 +67,7 @@ def test_a_booking_name_within_its_limits_is_the_contact_name() -> None:
 
     assert is_error is False
     [command] = world.bookings.commands
+    assert isinstance(command, CreateBookingCommand)
     assert type(command.contact_name) is ContactName
     assert command.contact_name == "Anna-Maria O'Neil"
 

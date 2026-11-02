@@ -278,6 +278,31 @@
   },
   {
    "request": {
+    "request_digest": "0099dda135c7ed119fddff91a91d0b69796dc9d61cc827b13fab653f32c31a8a",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "cba40c69dc3e5edbe433b587f0d448e55f131100aa7cbb8da796ac5641af7dfd",
+    "transcript_tail": "booking_<id:7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Kartli Cars & Tours is confirmed: Thursday, October 8, 2026, 09:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 09:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 09:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0142ebb6e4ded5908688672b5cf86c2696e4f4e3be4178fa49c141f1f878ff4c",
     "model_id": "scripted",
     "instruction_digest": "e22afb437d6c0177748b0965aa9e9532cc0bcd701d34544bf89758ec948d303c",
@@ -1176,7 +1201,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -1500,31 +1525,6 @@
   },
   {
    "request": {
-    "request_digest": "3c6a6d95aaa2f46dc5e00344ca61ae477cf373d5917def970a4b0144060913da",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "a3efae5c3262fbf86f65fcdbf6f9e9d84a5fa300a8ed463bc9c5da534c473805",
-    "transcript_tail": "_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Kartli Cars & Tours» перенесена на среда, 7 октября 2026 г., 09:00. Имя: Анна. Гостей: 2.\\\\nПравила отмены: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша бронь теперь в среду, 7 октября, в 09:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь в среду, 7 октября, в 09:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "3c79659083203470f7067df2743e0f7f8d2faa245a08e748b5c4795ffeddc177",
     "model_id": "scripted",
     "instruction_digest": "e4c22d7298178a741fd05a2249d1f20ff7d1a50570d38e832c5bfc14c3056f57",
@@ -1625,7 +1625,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -2355,7 +2355,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -2688,6 +2688,31 @@
       "text": "Машина эконом-класса на день стоит 90 лари. Чем ещё могу помочь?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Машина эконом-класса на день стоит 90 лари. Чем ещё могу помочь?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 8
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "78f600da8d56df891115b6b0606271fa7ce27d8123864bb6d8b4ef9b10c7b3ae",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "2fde1f6617e0c717d78f9bb6bf22ad4c1096923acd454a7fdd7128ef067d4564",
+    "transcript_tail": "7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Kartli Cars & Tours-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 09:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 09:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 09:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3110,31 +3135,6 @@
   },
   {
    "request": {
-    "request_digest": "897d0f005cff93642de135524e9f8a0875ea1448269f1e31ea6e940a716dba18",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "b35469321676c86a2f6b91bbfe723118a96b35759ef6891227cd53d5a1b7ef89",
-    "transcript_tail": "omy car\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Kartli Cars & Tours has been moved to Wednesday, October 7, 2026, 09:00. Name: Emma. Guests: 2.\\\\nCancellation policy: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 09:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 09:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "89b256b989ea673801427baa11257336af09bc2585b43e9a4675228cf1dc3af0",
     "model_id": "scripted",
     "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
@@ -3235,31 +3235,6 @@
   },
   {
    "request": {
-    "request_digest": "914a1cf0670c626260381220a95e7c9c05155b801af5ac2f531d1f1c52473e8c",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "ef0631ebfff361f7effd6d2a9140bb6fef776e577c49e193521c6b1fac9362c7",
-    "transcript_tail": "my car\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Kartli Cars & Tours-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 09:00. სახელი: ნინო. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 09:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 09:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "9166d781d84157984ebdfb547cf6b288de8c3520bc8b2d0a9ffadb1b701614ab",
     "model_id": "scripted",
     "instruction_digest": "88b050fdba6122f48147a8676e66ce715473f74478153ef19fb9a3d65cae6995",
@@ -3329,32 +3304,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "94ec3e28cdc61d90e4232af7d4ab9a5e1f734a92efe38d8c2346d46aa77e53ba",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "ed61a511026217e175016291d43fb06bd902fb7154321f8022254265a8bd16fe",
-    "transcript_tail": ": \"{\\\"booking_id\\\":\\\"booking_<id:7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Kartli Cars & Tours-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 09:00. სახელი: ნინო. სტუმრები: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 09:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 09:00-ზე. გელოდებით!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -3381,6 +3331,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0002\", \"name\": \"create_booking\", \"input\": {\"name\": \"Анна\", \"phone\": \"+79161234567\", \"resource_type\": null, \"date\": \"2026-10-08\", \"time\": \"09:00\", \"party_size\": 2, \"duration_minutes\": 600, \"nights\": null, \"notes\": null}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "9992eb7435cc9b3f54198ef1b68b306a7284d1ff786d2779a1f66dec63dd5d33",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "528b20ab397a5c6d0f02f834aae2a35efca1df46cce676118e7c60571ecd1c72",
+    "transcript_tail": "\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Kartli Cars & Tours» перенесена на среда, 7 октября 2026 г., 09:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\\nПравила отмены: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша бронь теперь в среду, 7 октября, в 09:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь в среду, 7 октября, в 09:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3715,6 +3690,31 @@
   },
   {
    "request": {
+    "request_digest": "a7c63cf49a79dae711ededd1abe1fbe576c76d8e6294ab57a91c08e0af507da1",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "842d1f504c2a5f86ecf371582e9ed57a8bc88cfb5f98dc3593df2d8b3d77377b",
+    "transcript_tail": ",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Kartli Cars & Tours has been moved to Wednesday, October 7, 2026, 09:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\\nCancellation policy: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 09:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 09:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "aa4cc3e453532a8bafa2da78f51915d9e6b0510a16a3c18dadae8588d8032ad0",
     "model_id": "scripted",
     "instruction_digest": "db2fd4c62ca34dfae123976aca25de6e41d30a6d5bf438ef7f2a11b7c700af64",
@@ -3886,6 +3886,31 @@
       "text": "დიახ, გადაიტანეთ.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"დიახ, გადაიტანეთ.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "b6733d5682f55f468727613c923df6a23161626b279926ce7055b542cd42a931",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "81271713d9c39f66d99a013c6f8ad4fc3bd88d381778602257a309ee649b2f14",
+    "transcript_tail": "\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Kartli Cars & Tours-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 09:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel or change your booking at least 24 hours before pick-up.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:7>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 09:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 09:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4089,31 +4114,6 @@
   },
   {
    "request": {
-    "request_digest": "bf16a8fd074c3fd302525a37182876a1433314c3de1bbb6b3b892a6b008fdf16",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "3041fa70053b49e1a195192982489c7800a6ca3726258eb69ba8b305f1414eed",
-    "transcript_tail": "\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Kartli Cars & Tours» подтверждена: четверг, 8 октября 2026 г., 09:00. Имя: Анна. Гостей: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 09:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 09:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "c0f93198cbfc2dd9855e56fb1f0b6145b580b0f0850a0040b0d55293452ba6d1",
     "model_id": "scripted",
     "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
@@ -4235,6 +4235,31 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "caa26e0ed4ba44c17371acc2dba51d00672e137056ebac3a12520471f42c5975",
+    "model_id": "scripted",
+    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "ef340b4fe66f64fe598975aa652aa0a936d1eac7c8d79c80689273f749ac13dc",
+    "transcript_tail": "\\\"booking_<id:7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Kartli Cars & Tours» подтверждена: четверг, 8 октября 2026 г., 09:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 09:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 09:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5027,31 +5052,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"record_unanswered_question\", \"input\": {\"question\": \"Can I pay in cryptocurrency?\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "f70a7e1c737a9c6c354c5025b6012eef6dd48980b41aac49a812cdf70d361d76",
-    "model_id": "scripted",
-    "instruction_digest": "8e8ba8090e837eb40f60d8c96cfa093b06bb8a86b21df232daf5156682127f00",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7dfbaad07d057ea343f8fe71a0068d5b93ffc453e2e343c2c961cd1fcd8e808e",
-    "transcript_tail": " [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:7>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Economy car\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Kartli Cars & Tours is confirmed: Thursday, October 8, 2026, 09:00. Name: Emma. Guests: 2.\\\",\\\"time\\\":\\\"09:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 09:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 09:00. See you!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null

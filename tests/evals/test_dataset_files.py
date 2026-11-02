@@ -3,7 +3,8 @@ The committed datasets cover every niche in ka/ru/en with the eight core
 scenarios (four niches in he/ar, the restaurant in Italian too), and the
 language scenarios of the four biggest niches: guests writing German,
 French, Turkish, Ukrainian, Armenian or Spanish, and Georgian, Russian or
-Armenian typed in Latin letters. The deeper flows and the attacks are in test_dataset_depth.py.
+Armenian typed in Latin letters. The deeper flows and the attacks are in
+test_dataset_depth.py.
 """
 
 from collections import Counter

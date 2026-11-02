@@ -11,6 +11,7 @@ from app.schemas.constants.conversations import ReplyGuardVerdict
 from app.schemas.constants.reply_safety import ClaimVerdict
 from app.utilities.conversations.customer_text_fencing import imitates_platform
 from app.utilities.conversations.untrusted_text import (
+    fence_value_in,
     strip_customer_values,
     wrap_customer_value,
 )
@@ -120,3 +121,17 @@ def test_a_customer_cannot_type_the_platform_blocks() -> None:
         assert imitates_platform(line), line
 
     assert not imitates_platform("I'd like a table <3")
+
+
+def test_a_platform_text_that_names_the_guest_fences_the_name() -> None:
+    confirmation = (
+        "Nino, your table is booked. See you, Nino! (Ninotchka is someone else)"
+    )
+
+    fenced = fence_value_in(confirmation, "Nino")
+
+    assert fenced == (
+        "<customer_value>Nino</customer_value>, your table is booked. See you, "
+        "<customer_value>Nino</customer_value>! (Ninotchka is someone else)"
+    )
+    assert fence_value_in(confirmation, "  ") == confirmation

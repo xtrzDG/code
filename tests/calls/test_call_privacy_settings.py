@@ -1,7 +1,6 @@
 """
-Settings → Calls: the recording (off unless the owner turns it on) with
-what callers hear about it, and the owner's confirmation of the staff
-notice that transfers to staff need.
+Settings → Calls: the recording (off unless the owner turns it on) and
+the owner's confirmation of the staff notice that transfers to staff need.
 """
 
 from typing import Any
@@ -69,12 +68,7 @@ def test_recording_and_transfers_are_off_by_default(
     assert body["is_staff_transfer_confirmed"] is False
     assert body["staff_transfer_confirmed_at"] is None
     assert body["transfer_phone_number"] is None
-    notices = {
-        notice["language"]: notice["text"] for notice in body["recording_notices"]
-    }
-    assert list(notices) == ["ka", "ru", "en"]
-    assert notices["en"].endswith("Our privacy notice is on our web page.")
-    assert "record" in notices["en"].lower()
+    assert body["staff_transfer_confirmed_by"] is None
 
 
 def test_the_owner_turns_recording_on_and_confirms_the_staff_notice(
@@ -91,6 +85,9 @@ def test_the_owner_turns_recording_on_and_confirms_the_staff_notice(
     assert stored.staff_transfer_confirmed_by == setup.business.members[0].user_id
     assert stored.staff_transfer_confirmed_at == setup.testbed.clock.now_microseconds()
     assert body["staff_transfer_confirmed_at"] == stored.staff_transfer_confirmed_at
+    assert body["staff_transfer_confirmed_by"] == str(
+        stored.staff_transfer_confirmed_by
+    )
 
 
 def test_a_request_without_them_leaves_them_and_a_withdrawal_forgets_who(

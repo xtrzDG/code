@@ -222,31 +222,6 @@
  "entries": [
   {
    "request": {
-    "request_digest": "02c73a9fd8f68a8d85514aa0992a8f7d1616bcc6b6677669568e56439a4e4694",
-    "model_id": "scripted",
-    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "c3d32fcb17925fe1b2d8dd800b88a66fe9436589032a6ec52e4de9cb0edb4018",
-    "transcript_tail": "\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Pulse Fitness-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 18:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 18:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 18:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "0388207350e3adea43f5318a903963be245592206455822c599e5fa8c9491ed7",
     "model_id": "scripted",
     "instruction_digest": "34a3b481f947e4f3a2af152cf0ef3073bde045f8c51c738854991ea6b818ebaa",
@@ -328,46 +303,21 @@
   },
   {
    "request": {
-    "request_digest": "04bfcdbf5e18f92bcc61811bbc85fd1bcf6e9d8df817f25fa3004b1de4f014a0",
+    "request_digest": "0c4a2e358025b2e9871c87a7f0e2cfbcc3948113717dc94177d947d837d0b1b9",
     "model_id": "scripted",
     "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "a1eadf8435be49244ed8aee7f5a89baa4b151ca600970abdf2f2eae81ac3bb12",
-    "transcript_tail": "tent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Pulse Fitness is confirmed: Thursday, October 8, 2026, 18:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "222b8f6e3a58c1b0d0ee0ee6eaa8c587d85b03881fba340d5fd12827cbf1912b",
+    "transcript_tail": "ss\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Pulse Fitness has been moved to Wednesday, October 7, 2026, 18:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 18:00. See you!",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 18:00.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 18:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "0aa33161372bc434aff3151c6fdef8540db26b925cd95219f34b770b3316b431",
-    "model_id": "scripted",
-    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "1ea1f06fc2a3b17c812681fbbf913cc91805c92d1255e6a29022e108b12a9400",
-    "transcript_tail": "ntent\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Pulse Fitness-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 18:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 18:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 18:00-ზე. გელოდებით!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 18:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -792,6 +742,31 @@
       "text": "Да, записывайте.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Да, записывайте.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "22cd8f397ac2f130a71839ea4778e49c0f2cbfad3a5cad2b65aabe646fa99e71",
+    "model_id": "scripted",
+    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "6cceb91aaf5a587032ad59d83101b604d278c541a74d58275d1d69994f9fefa8",
+    "transcript_tail": "_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Pulse Fitness» подтверждена: четверг, 8 октября 2026 г., 18:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 18:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 18:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1613,31 +1588,6 @@
   },
   {
    "request": {
-    "request_digest": "544407a3ffe9c8b01433d41d04ad125c67290f05767b8c9fd50276a2a52dd0d6",
-    "model_id": "scripted",
-    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7ae778826db035fa516def1ee405cbf2228e8729e207a5bf97631a215df034cf",
-    "transcript_tail": "ontent\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Pulse Fitness» подтверждена: четверг, 8 октября 2026 г., 18:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 18:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 18:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "566bc3090d526df9cf7bca7e8984a1c91c8cd39c54b43a48ebe4cffb350c50cd",
     "model_id": "scripted",
     "instruction_digest": "2b3c1c3f7240259bb837be4fd5ead6100a724c52d249a2cd7d8143a147058ea6",
@@ -1688,7 +1638,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -2187,7 +2137,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -2430,6 +2380,31 @@
   },
   {
    "request": {
+    "request_digest": "764a97ba366c0bdd2dda532c74455c638b9cf57d40cb77c6e69adac367c071a5",
+    "model_id": "scripted",
+    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "dc6714203993efa6d116ea31d49c6fb18fa2a43e500cf5c51bba448c1a1b2b08",
+    "transcript_tail": "s\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Pulse Fitness-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 18:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 18:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 18:00-ზეა.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "773c20084d3756121317f6b7904cca91f6dc71ed8e52d71aa354baa0b4102976",
     "model_id": "scripted",
     "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
@@ -2451,31 +2426,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"record_unanswered_question\", \"input\": {\"question\": \"თქვენთან ახლოს ელექტრომობილის დამტენი არის?\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "77fa9a4f6815f0e98a0890c56a990fa70597aec7e5f400a31b68274d4453f95a",
-    "model_id": "scripted",
-    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "a4d5a38a4c8157c020a39471f99b14637468b14932370f6a5181fd1a827731d4",
-    "transcript_tail": "s\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Pulse Fitness» перенесена на среда, 7 октября 2026 г., 18:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 18:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 18:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2636,7 +2586,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2873,7 +2823,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 1
     }
    ]
   },
@@ -2904,7 +2854,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -4095,31 +4045,6 @@
   },
   {
    "request": {
-    "request_digest": "c286f7ca3a497984593e8f486b4b5013856314fd4e92e16bbe0ea8dbc0c68121",
-    "model_id": "scripted",
-    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7ee1a11198fc2a645d81495610b2b992d1ea7d6076332b10ea5a55ea45796f6a",
-    "transcript_tail": "d\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Pulse Fitness has been moved to Wednesday, October 7, 2026, 18:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 18:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 18:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "c30d58cf8fb9ebdabe2369ad193b7c822c3c19aac92e1da365e8f98ec5d1536f",
     "model_id": "scripted",
     "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
@@ -4172,6 +4097,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"check_availability\", \"input\": {\"date\": \"2026-10-08\", \"time\": \"18:00\", \"party_size\": 1, \"nights\": null, \"resource_type\": null, \"duration_minutes\": null}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "c5b8485727f345fe0392821de2c5937ea65896bffac9c13b442c5bee05915d33",
+    "model_id": "scripted",
+    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "3257dce3a7f1232978404d988b4d4a5ffe7356fe69cf6c46b57e0170033fa00b",
+    "transcript_tail": "g_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Pulse Fitness-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 18:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 18:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 18:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4615,6 +4565,31 @@
       "text": "Здравствуйте! Сколько стоит абонемент на месяц?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте! Сколько стоит абонемент на месяц?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "db93f00c98edf6687d4b865811a9efeaad364dff7316a957d99b55e35d7366c1",
+    "model_id": "scripted",
+    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "a9185240b69d04e6b0253970432ce74e2077ca99ce18267757f394ccf175299f",
+    "transcript_tail": "\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Pulse Fitness» перенесена на среда, 7 октября 2026 г., 18:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please cancel at least 6 hours before the class.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 18:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 18:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5243,7 +5218,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 4
     }
    ]
   },
@@ -5289,6 +5264,31 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "fc54a009e10e49a52091c26a5854cb4c09470c4e19b5811302a30d92fa8ece0d",
+    "model_id": "scripted",
+    "instruction_digest": "56707262092fb102ce8c95c2b7c38203aea39b9e0f8a80f7b0d8f85b27ffccb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "b6c3851a3b02923eb6602e90c8a92ae64f69a9acdf6543a5636821dfda95c680",
+    "transcript_tail": "d\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Group class\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Pulse Fitness is confirmed: Thursday, October 8, 2026, 18:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"18:00\\\",\\\"end_time\\\":\\\"19:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 18:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 18:00. See you!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null

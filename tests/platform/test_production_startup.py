@@ -72,9 +72,11 @@ def test_the_api_does_not_start_on_production_problems() -> None:
         container_with(production_with({"LOG_FORMAT": "text"}))
     )
 
-    with pytest.raises(ValidationFailedError, match="LOG_FORMAT"):
-        with TestClient(application):
-            pass
+    with (
+        pytest.raises(ValidationFailedError, match="LOG_FORMAT"),
+        TestClient(application),
+    ):
+        pass
 
 
 def test_the_worker_does_not_start_on_production_problems() -> None:

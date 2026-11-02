@@ -17,7 +17,6 @@ export type TextBackStatus = Schema<"TextBackStatus">;
 export type TextBackChannel = Schema<"TextBackChannel">;
 export type MissedCallReason = Schema<"MissedCallReason">;
 export type TextBackSkipReason = Schema<"TextBackSkipReason">;
-export type CallNoticePreview = Schema<"CallNoticePreview">;
 
 /** Settings → Calls lists the latest text-backs only (the API pages further). */
 export const TEXT_BACK_LIST_SIZE = 20;

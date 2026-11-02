@@ -83,7 +83,9 @@ class TestReplays:
     def test_another_call_of_the_same_caller_is_a_new_one(
         self, setup: VoiceSetup
     ) -> None:
-        notify(setup, zadarma_form(pbx_call_id="in_1", call_start="2026-10-01 13:50:00"))
+        notify(
+            setup, zadarma_form(pbx_call_id="in_1", call_start="2026-10-01 13:50:00")
+        )
         later = notify(
             setup, zadarma_form(pbx_call_id="in_2", call_start="2026-10-01 13:59:35")
         )

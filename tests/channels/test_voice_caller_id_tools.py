@@ -4,10 +4,9 @@ change a customer's bookings never run from the voice agent, once the
 webhook is authenticated, and the agent hears to hand the request to staff.
 """
 
-import httpx
 import pytest
 
-from tests.channels.channels_payloads import to_json_bytes
+from tests.channels.channels_payloads import HttpResponse, to_json_bytes
 from tests.channels.voice_setup import (
     CALLER,
     VoiceSetup,
@@ -16,7 +15,7 @@ from tests.channels.voice_setup import (
 )
 
 
-def call_tool(setup: VoiceSetup, tool_name: str, secret: str | None) -> httpx.Response:
+def call_tool(setup: VoiceSetup, tool_name: str, secret: str | None) -> HttpResponse:
     headers: dict[str, str] = {"X-Assistant-Business-Id": str(setup.business.id)}
     if secret is not None:
         headers["X-Assistant-Tool-Secret"] = secret

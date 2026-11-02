@@ -78,21 +78,14 @@ class TextBackTemplatePreview(ImmutableDTO):
     example: MessageText
 
 
-class CallNoticePreview(ImmutableDTO):
-    """What a caller hears about the recording and the privacy notice."""
-
-    language: LanguageTag
-    text: MessageText
-
-
 class CallSettingsView(ImmutableDTO):
     """
     The settings with what they rely on: whether the business's WhatsApp
     number is connected, whether the platform can send SMS, and the
-    text-back in each language of the business; the recording with the
-    notice callers hear in each language (`recording_notices`), and the
-    staff number transfers go to (None: no allowed staff number) with the
-    owner's confirmation of the staff notice (who confirmed it, when).
+    text-back in each language of the business; whether calls are
+    recorded, and the staff number transfers go to (None: no allowed staff
+    number) with the owner's confirmation of the staff notice (who
+    confirmed it, when).
     """
 
     is_summary_enabled: IsCallSummaryEnabled
@@ -105,10 +98,8 @@ class CallSettingsView(ImmutableDTO):
         default_factory=list[TextBackTemplatePreview]
     )
     is_recording_enabled: IsCallRecordingEnabled = False
-    recording_notices: list[CallNoticePreview] = Field(
-        default_factory=list[CallNoticePreview]
-    )
     is_staff_transfer_confirmed: IsStaffTransferConfirmed = False
+    staff_transfer_confirmed_by: UserId | None = None
     staff_transfer_confirmed_at: Microseconds | None = None
     transfer_phone_number: E164PhoneNumber | None = None
 

@@ -770,6 +770,31 @@
   },
   {
    "request": {
+    "request_digest": "0b066b35b49da2665b7a51e6d21f830af825ba652550c98e42cfa243b75d337f",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "24ad50a7e2c63107225fc8d9575fcd7d1a61770affc75df3f6958018ac714e26",
+    "transcript_tail": "booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Studio Rose» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0b36d99f0dd5908c235fb4f18810e4c9698bc9258164f1cd62b439a64f1f203c",
     "model_id": "scripted",
     "instruction_digest": "1eb9a443858879eb6b32ea278d3b73fb32f41d9c74d462e5d1aad5846133b83b",
@@ -841,56 +866,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"list_my_bookings\", \"input\": {}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "0c5368b9670d2c82e2a17f4ca6f7fbeec51852e6d9dde5e03cb3129d03b7db3a",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "aadd3d23ab9da30c1a8c7252b4f6246624446b43a39d345266a02530250b5122",
-    "transcript_tail": "rce_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Studio Rose has been moved to Wednesday, October 7, 2026, 13:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "0cf6491c6137107fe74f488408892e577ba1f2d610abe9186edf07956aabf0a1",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "21671a89b262baf33ca85df4fb9250c771e43ad6ed0d74c2a0415840caa12902",
-    "transcript_tail": "{\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Studio Rose» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1677,31 +1652,6 @@
       "text": "יש לידכם עמדת טעינה לרכב חשמלי?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"יש לידכם עמדת טעינה לרכב חשמלי?\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "26ea8043d5a150b1f9ce02373230e74149467b2f71323d7d463379a80c4f793b",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "592d50a0ffb0df04779ff4377611f71467fc7099a5d4b9231759988e01e0fed4",
-    "transcript_tail": "rmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Studio Rose» перенесена на среда, 7 октября 2026 г., 13:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2716,6 +2666,31 @@
   },
   {
    "request": {
+    "request_digest": "4c15fa82e72577b41d791be0d843db97426fa9eee797cbe36b1c613ec588c69d",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "64feca89fd4a767180e41756f83b760be3d29adef0b13ff868e5bed3a54f5815",
+    "transcript_tail": "oking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Studio Rose is confirmed: Thursday, October 8, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "4d6af099ab8de9477634831bb673438e4cfbd0a14e9b0a82e91d1c7ee8d74f3a",
     "model_id": "scripted",
     "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
@@ -2760,7 +2735,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -3047,7 +3022,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 4
+     "elapsed": 0
     }
    ]
   },
@@ -3521,7 +3496,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3846,7 +3821,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -4313,31 +4288,6 @@
   },
   {
    "request": {
-    "request_digest": "7e466647e9cce6f32727c58791364b8b1c5937484661164b5354383f1c925d72",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "5bdaabe9f07cc4a869f94b9daf5d25499c2aa599eaa2ead0aec5bac317bbb8b6",
-    "transcript_tail": "ce_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Studio Rose-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "809f589ff7763ec5923f147092a3165edf655a9805ffdc2cd69d125fddf51f1c",
     "model_id": "scripted",
     "instruction_digest": "4c3e07e69c3ae01dc4e457d4d8de4a30e9b00f80daafce841a1001f52584f186",
@@ -4669,7 +4619,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4721,31 +4671,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"handoff_to_human\", \"input\": {\"reason\": \"customer_request\", \"summary\": \"The customer asks to talk to a person.\", \"urgency\": \"normal\"}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "8c028e8466f08ce371b48a805c8dc3df92a1010690634d834cd3966997205f0f",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7643ee5142594debecb9114df7117b1f7b5ff8d09a7e88601bd40009be1d7c9b",
-    "transcript_tail": "{\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد حجزك في ⁨Studio Rose⁩: ⁨الخميس، 8 أكتوبر 2026⁩، ⁨13:00⁩. الاسم: ⁨ليلى⁩. عدد الضيوف: ⁨1⁩.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "تم، ليلى! حجزك يوم الخميس الساعة 13:00. بانتظارك!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! حجزك يوم الخميس الساعة 13:00. بانتظارك!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4956,7 +4881,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -5108,6 +5033,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"list_my_bookings\", \"input\": {}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "993e71c56d8598093e7d3da30452ff157cc69a8b5e7f19ab132847030a1735f4",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "1e2fe4cadf6b873b48b29ec978cfdac51e4d6cb3aa963b33b44cab6464c2309c",
+    "transcript_tail": "\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Studio Rose» перенесена на среда, 7 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5623,6 +5573,31 @@
   },
   {
    "request": {
+    "request_digest": "acd6e672d1825f8f76e91c8cd157a29c2f2dfb89afa2472d07bb2581615914e0",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "45083409acc3c67a819206e20ee57eeec31e908c779235b910a63719651b49c4",
+    "transcript_tail": "g_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"ההזמנה שלך ב-⁨Studio Rose⁩ אושרה: ⁨יום חמישי, 8 באוקטובר 2026⁩, ⁨13:00⁩. שם: ⁨<customer_value>נועה</customer_value>⁩. מספר אורחים: ⁨1⁩.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 13:00. נתראה!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 13:00. נתראה!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "ad10b94e6b5fdb6a0b22c467ce69dca87d225feb96ac82b0c36337c539e75e44",
     "model_id": "scripted",
     "instruction_digest": "3878c40f2069af61f23bbcbb57cc88339e1c10ed9652f9a0ceb91c849e1ce01c",
@@ -5769,31 +5744,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "b4b0af0aa02443f3f68e4f4e778a906609afc882062516b739bdac4e3eaf92d7",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7e374f04a7a9d23af66fb729abda084d7b683b79316941683d738f2557b01ef9",
-    "transcript_tail": ": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Studio Rose-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -6054,7 +6004,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -6528,7 +6478,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -6989,6 +6939,56 @@
   },
   {
    "request": {
+    "request_digest": "d7c6f0c36fd6ea88964e76ce7e5ad9d6bfd5a0e35c500d3cd24f3c0948170c1c",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "7740f429659901cba1178b49a2a44386f399ef6a0cd234b08e7a10c9193f67ff",
+    "transcript_tail": "ooking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد حجزك في ⁨Studio Rose⁩: ⁨الخميس، 8 أكتوبر 2026⁩، ⁨13:00⁩. الاسم: ⁨<customer_value>ليلى</customer_value>⁩. عدد الضيوف: ⁨1⁩.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "تم، ليلى! حجزك يوم الخميس الساعة 13:00. بانتظارك!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! حجزك يوم الخميس الساعة 13:00. بانتظارك!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "d93043ae528bb7e4ebc6582ccdb1f563f7fcec745311fcd06ce28e8cffdc4b70",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "96622aa28a474a865e0bcd17bf5fc917b38d09788a30c3d3bb3cdce3dc0e49f7",
+    "transcript_tail": "\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Studio Rose-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "da0ca6db36c347e2f7cde92560174428b2c00c24cb957eead1a65fdcce74aa0f",
     "model_id": "scripted",
     "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
@@ -7014,7 +7014,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -7145,21 +7145,21 @@
   },
   {
    "request": {
-    "request_digest": "de8c6e6b2aebbf4b14703305d24d5c0429e7a77f57046a2fafe9587396df1032",
+    "request_digest": "def4cfc587c18cc1da10dda3e62f4fdbcc800e2dcf9c9ec08bda432e4459de46",
     "model_id": "scripted",
     "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "cf6268e4c4513e0a3ce08843f6cc4022f45fef398cfed3c598a1964af7467bae",
-    "transcript_tail": "{\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Studio Rose is confirmed: Thursday, October 8, 2026, 13:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "782b24cdc86c5d4ac433fac2c39d5348bd86c69886e310bc5ef232feb7efea68",
+    "transcript_tail": "2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Studio Rose has been moved to Wednesday, October 7, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -7185,31 +7185,6 @@
       "text": "გასაგებია, მაგრამ ფასების შეცვლა არ შემიძლია: ქალის თმის შეჭრა ღირს 60 ლარი. სიამოვნებით დაგეხმარებით თქვენს ბიუჯეტში რამის შერჩევაში.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"გასაგებია, მაგრამ ფასების შეცვლა არ შემიძლია: ქალის თმის შეჭრა ღირს 60 ლარი. სიამოვნებით დაგეხმარებით თქვენს ბიუჯეტში რამის შერჩევაში.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "df39ef70bb71d5ece95690dfaeed6b38f5b840d377de4f8b6a36669d55964ddf",
-    "model_id": "scripted",
-    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "40e4e5ff3c5f844cfda0a9e52fcf1900d0b7c3cbcc8061103a04372e13094df0",
-    "transcript_tail": "content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Master\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"ההזמנה שלך ב-⁨Studio Rose⁩ אושרה: ⁨יום חמישי, 8 באוקטובר 2026⁩, ⁨13:00⁩. שם: ⁨נועה⁩. מספר אורחים: ⁨1⁩.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 13:00. נתראה!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! ההזמנה נקבעה ליום חמישי בשעה 13:00. נתראה!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -7441,6 +7416,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0002\", \"name\": \"cancel_booking\", \"input\": {\"booking_id\": null, \"phone\": null, \"date\": \"2026-10-08\"}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "e41df1b32e1183e2604b25b43148cc6f9b28f53b176c7c17d093b146da448839",
+    "model_id": "scripted",
+    "instruction_digest": "108a074db2dbcaf0a9f950e5c6e1620b8713111689ebf4ae65d51bf0dc5a16d9",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "fa12075361219d1dfcc7d9ea44a310ab43374167335e6e732b2303e420e13705",
+    "transcript_tail": "026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Studio Rose-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
