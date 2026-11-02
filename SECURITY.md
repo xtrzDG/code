@@ -210,10 +210,14 @@ together with the settings themselves, in a reviewed pull request.
 
 Production fails closed: with `APP_ENV=production` the API and every
 worker refuse to start on an unsafe setting and name each one. Sign-in
-codes are hashed under a server key, sensitive actions (deposit payment
-pages included) need a fresh sign-in, which also gives the session a new
-token, people can sign out everywhere and platform admins can end a
-member's sessions; new-country sign-ins and code spraying are reported.
+codes are hashed under a server key and sensitive actions (deposit payment
+pages included) need a fresh sign-in. A proof that raises a session to
+two factors (a step-up, a new authenticator, a first passkey) reaches only
+a new token, through a one-time rotation ticket for the client that made
+it, and page code never holds a session token; people can sign out
+everywhere, platform admins can end a member's sessions, and becoming an
+owner ends one's sessions; new-country sign-ins and code spraying are
+reported.
 Webhook secrets rotate without refusing callbacks. The API checks webhook
 signature headers before reading a body, limits anonymous callers,
 bodies, JSON depth and request time, sends strict security headers and
@@ -224,9 +228,12 @@ addresses and phone numbers (the residuals are named on the page below).
 The assistant reads customers' and owners' words only as fenced values,
 its tools and contacts are capped, its replies are checked for team notes
 and foreign links, it says it is an AI and names 112 in an emergency. A
-caller ID never authenticates, calls are put through only to ordinary
-numbers of the business's country or the EU, recordings are off by
-default; the platform can be paused and stops at its daily budget; queued
+caller ID never authenticates, in a call or in the missed-call text-back,
+and a number is refused when any contact holding it is blocked; calls are
+put through only to ordinary numbers of the business's country or the EU
+(staff and manager numbers are checked when saved), recordings are off by
+default; the platform can be paused and stops at its daily budget, its
+background model work included; queued
 jobs stay in their tenant; payments are reconciled daily; erasures survive
 a restore and marketing waits for consent. Each measure with its code and
 test: [docs/security/runtime-protections.md](docs/security/runtime-protections.md)

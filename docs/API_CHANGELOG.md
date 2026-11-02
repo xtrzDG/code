@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-11-02 — readiness round: sessions, platform brakes, marketing consent, call settings, idempotent money actions and request limits
 
-Spec: `ff034c2294dd4398`
+Spec: `b80c99a7707f9a64`
 
 Everything below is additive within `/v1`, apart from the deprecations
 (sunset 2027-05-02, removed in `/v2`) and the new refusals, which a client
@@ -21,13 +21,28 @@ that follows the description already handles as errors.
 
 - **Added** `POST /v1/me/sessions/revoke-all` (`RevokedSessionsView`): sign
   out everywhere, this device included; audited (`signed_out_everywhere`).
-- **Added** `POST /v1/auth/session/rotate` (`LoginSessionView`): right
-  after a step-up, the session's token is swapped for a new one with the
-  same level, device and expiries; the old token answers 30 seconds more
-  as one factor; 409 without a recent proof. `SessionAssuranceView` (the
-  answer of `POST /v1/auth/step-up/verify` and
-  `…/step-up/passkey/verify`) adds `is_level_raised`: the proof raised
-  the session to two factors, so the client rotates its token.
+- **Added** `POST /v1/auth/session/rotate` (body `RotateSessionRequest`
+  `{"rotation_ticket"}`, required: 422 without it; answers
+  `LoginSessionView`): right after a proof that raised a one-factor
+  session to two factors (a step-up, a new authenticator or a first
+  passkey), the client that made the proof swaps the session's token for
+  a new one with the same device and expiries. That proof is not written
+  on the session itself: its answer carries a one-time `rotation_ticket`
+  (32–64 URL-safe characters, valid 120 seconds, usable once and only with
+  the token of the session it was issued to), and only the token the
+  rotation returns carries the two factors and the proof. The old token
+  stays one factor with no proof and answers 30 seconds more; a wrong,
+  used, expired or another session's ticket, or a proof older than the
+  step-up window, gets 409. `SessionAssuranceView` (the answer of
+  `POST /v1/auth/step-up/verify` and `…/step-up/passkey/verify`) adds
+  `is_level_raised` and `rotation_ticket` (null unless `is_level_raised`).
+- **Changed** `RecoveryCodesView` (the answer of
+  `POST /v1/me/mfa/totp/confirm`) and `PasskeyAddedView` (the answer of
+  `POST /v1/me/passkeys`) add `is_level_raised` and `rotation_ticket`: a
+  new authenticator or a first passkey on a one-factor session is swapped
+  in by a rotation as well (a session that already had two factors
+  records the proof in place). `POST /v1/me/mfa/recovery-codes` answers
+  them as `false` and null.
 - **Added** `GET /v1/admin/clients/{business_id}/members`
   (`ClientMemberSessionList` of `ClientMemberSessionsView`: role, name,
   masked login, live sessions, last use; permission `view_clients`) and
@@ -35,8 +50,10 @@ that follows the description already handles as errors.
   (`RevokedSessionsView`): a SUPER admin ends every session of a client's
   team member; needs a recent sign-in (401 `step_up_required`) and is
   audited on the platform's chain. Adding a person to the platform-admin
-  team, or making a member an owner of a business, now ends their
-  existing sessions: they sign in again.
+  team, making a member an owner of a business, or inviting an existing
+  account directly as an owner (`POST /v1/businesses/{business_id}/members`
+  with role `owner`, which joins at once), now ends their existing
+  sessions: they sign in again.
 - **Added** `GET·PUT /v1/admin/platform/pause` (`PlatformPauseView`:
   `is_paused`, `reason`, `changed_by`, `changed_at`, `stop_percent`,
   `budget_used_percent`, `brake` — `PlatformBrake` `paused` or
@@ -118,7 +135,12 @@ that follows the description already handles as errors.
   …/profile`, `PUT …/profile/steps/{step}`) refuses (422) a
   `handoff_phone_number` calls may not be put through to: not a mobile or
   landline of the business's country or the EU, or a premium, shared-cost
-  or satellite number.
+  or satellite number. Saving the business settings (`PATCH
+  /v1/businesses/{business_id}`) refuses the same way a manager contact on
+  WhatsApp or SMS whose number calls may not be put through to (it is also
+  a transfer and fallback candidate): 422
+  `manager_contacts[<index>].address: <reason>`, and nothing of the change
+  is stored.
 - **Changed** (new refusals, no schema change): 504
   (`external_service_error`) for a request that has not started answering
   within 60 s (170 s for model-backed and upload routes); 422
@@ -164,7 +186,14 @@ that follows the description already handles as errors.
   `TextBackTemplatePreview.example` (`GET …/call-settings`), still filled,
   which the cabinet no longer shows, and `WidgetSnippetView.demo_url` (`GET
   …/channels/web/snippet`; it names `/widget/demo`, which production no
-  longer serves: preview the hosted chat page `/c/{address}?preview=1`).
+  longer serves: preview the hosted chat page `/c/{address}?preview=1`),
+  and `is_recording_notice_enabled` of the business profile: in the answer
+  of the profile endpoints (`BusinessProfileView`), in `PUT …/profile`
+  (`ProfileInput`), in profile step 6 (`PUT …/profile/steps/{step}`,
+  `ChannelsStepInput`) and in the setup autosave `PATCH …/profile`
+  (`ProfilePatch`). It is still accepted and returned but has no effect:
+  whether calls are recorded, and so announced, is set in the call
+  settings (`is_recording_enabled`, Settings → Calls).
 
 ## Values only, 2026-10-29 — the interface languages are English and Italian; Italy is the pilot country
 

@@ -515,6 +515,22 @@ does, before the next release opens the gate. After a
 rollback the rented numbers stay with the carrier and keep answering;
 release them from the carrier's console if the rollback is final.
 
+The release with session rotation tickets (`UserSessionDocument`
+version 4: four optional fields, `rotation_ticket_hash`,
+`rotation_ticket_expires_at`, `rotation_proven_at` and `rotated_at`, no
+upcaster) changes `POST /v1/auth/session/rotate`: it now needs the
+one-time `rotation_ticket` of the proof's answer. While an old cabinet
+runs against the new API its rotation call has no ticket and is refused,
+so a step-up that raised a session leaves it one factor and the person
+confirms again once the new cabinet loads (nothing is lost; the old token
+never gains two factors). A version-3 session row reads as a session with
+no ticket. In the same release the booking page's credential is a
+version-3 token an older release cannot read: actions on a page opened on
+the new release can say the link does not work until the rollout ends,
+and reopening the link fixes it. After a rollback the old release ignores
+the four fields; a session the new release wound down ends at its stored
+end as before.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

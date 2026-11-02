@@ -81,3 +81,85 @@ describe("the cookie statement", () => {
     }
   });
 });
+
+const REPOSITORY = path.resolve(__dirname, "..", "..", "..");
+const WIDGET_DIRECTORY = path.join(REPOSITORY, "app", "gateways", "http", "static", "widget");
+const BOOKING_PAGE_SESSION = path.join(REPOSITORY, "web", "src", "app", "r", "[token]", "_lib", "pageSession.ts");
+
+/** The widget's scripts (app/gateways/http/static/widget/*.js), joined. */
+function widgetSource(): string {
+  return readdirSync(WIDGET_DIRECTORY)
+    .filter((name) => name.endsWith(".js"))
+    .sort()
+    .map((name) => readFileSync(path.join(WIDGET_DIRECTORY, name), "utf8"))
+    .join("\n");
+}
+
+/** The keys the widget keeps directly in one storage (not in the conversation's own storage). */
+function keysKeptIn(source: string, storage: "localStorageOrNull" | "sessionStorageOrNull"): string[] {
+  const pattern = new RegExp(`\\(${storage}\\(\\), storagePrefix \\+ "([a-z-]+)"`, "g");
+  return [...new Set([...source.matchAll(pattern)].map((match) => match[1]))].sort();
+}
+
+/** CONVERSATION_IDLE_EXPIRY_MS of the widget, in hours. */
+function idleExpiryHours(source: string): number {
+  const product = /var CONVERSATION_IDLE_EXPIRY_MS = ([\d\s*]+);/.exec(source)?.[1];
+  expect(product, "CONVERSATION_IDLE_EXPIRY_MS in the widget").toBeDefined();
+  const milliseconds = (product ?? "0").split("*").reduce((total, factor) => total * Number(factor.trim()), 1);
+  return milliseconds / (60 * 60 * 1000);
+}
+
+/** Section 4 of a statement, on one line. */
+function storageSection(text: string): string {
+  const start = text.indexOf("## 4. Storage in your browser");
+  expect(start, "section 4 of the statement").toBeGreaterThanOrEqual(0);
+  return text.slice(start, text.indexOf("\n## 5.", start)).replace(/\s+/g, " ");
+}
+
+describe("the cookie statement's storage section", () => {
+  const statement = latestStatement();
+  const widget = widgetSource();
+
+  it("says the chat page keeps the conversation for the tab only and removes an older copy", () => {
+    // storage.js: the chat page (data-mode="page") keeps the conversation in
+    // sessionStorage and forgets one an earlier version left in localStorage.
+    expect(widget).toContain("return isPageMode ? sessionStorageOrNull() : localStorageOrNull();");
+    expect(widget).toMatch(/if \(isPageMode\) \{\s*forgetConversationOn\(localStorageOrNull\(\)\);/);
+    for (const text of statement.values()) {
+      const section = storageSection(text);
+      expect(section).toContain("in the storage of the browser tab only, so it is gone when the tab is closed");
+      expect(section).toContain(
+        "removes a conversation that an earlier version of the page kept in the browser's local storage",
+      );
+    }
+  });
+
+  it("names everything else the widget keeps in local storage and in the tab", () => {
+    expect(keysKeptIn(widget, "localStorageOrNull")).toEqual(["language", "rated"]);
+    expect(keysKeptIn(widget, "sessionStorageOrNull")).toEqual(["open"]);
+    // The visit source (data-source, ?src=, ?utm_source=) is kept for the tab too.
+    expect(widget).toMatch(/function loadVisitSource\(\) \{\s*var storage = sessionStorageOrNull\(\);/);
+    for (const text of statement.values()) {
+      const section = storageSection(text);
+      expect(section).toContain("Only the language you chose and the answers you rated stay in local storage.");
+      expect(section).toContain("for the tab only, whether the chat is open and the source the page names");
+    }
+  });
+
+  it("keeps a site's widget conversation as long as the widget does", () => {
+    const hours = idleExpiryHours(widget);
+    expect(hours).toBe(24);
+    for (const text of statement.values()) {
+      expect(storageSection(text)).toContain(`for up to ${hours} hours after the last message`);
+    }
+  });
+
+  it("says the booking page keeps its short credential for the tab only", () => {
+    const pageSession = readFileSync(BOOKING_PAGE_SESSION, "utf8");
+    expect(pageSession).toContain("window.sessionStorage.setItem(STORAGE_KEY");
+    expect(pageSession).not.toContain("localStorage");
+    for (const text of statement.values()) {
+      expect(storageSection(text)).toContain("keeps it in the storage of the browser tab only");
+    }
+  });
+});

@@ -16,8 +16,16 @@ chat window in a shadow DOM (the site's and the widget's styles never mix),
 the visitor's browser language among the business's languages,
 right-to-left writing for Hebrew and Arabic, a typing indicator, errors with
 a retry, a full-screen window on phones, keyboard control. A random key in
-`localStorage` recognises the visitor; the last messages are kept there
-too. The owner picks the brand colour and the button's corner in the cabinet
+`localStorage` recognises the visitor; the last messages, the read position
+and an open handoff are kept there too, and a conversation idle for 24 hours
+(`CONVERSATION_IDLE_EXPIRY_MS`) is removed when the widget next loads. On
+the hosted chat page (`data-mode="page"`) the same conversation lives in the
+tab's `sessionStorage` only and leaves with the tab; the page removes one an
+earlier version left in `localStorage`. Only the chosen language and the
+rated answers stay in `localStorage`; whether the window is open and the
+visit's source are kept for the tab (`sessionStorage`). The cookie
+statement (`docs/legal/cookies-2026-11-03.en.md`, section 4) says the same,
+and `web/src/lib/cookieStatement.test.ts` compares it with the script. The owner picks the brand colour and the button's corner in the cabinet
 (`PUT …/channels/web` with `widget_color` and `widget_position`); the
 greeting in every language of the live version comes from
 `GET /v1/widget/{id}/config`. Attributes of the snippet win over the
@@ -57,8 +65,14 @@ strict CSP must allow the API's address in `script-src` and `connect-src`.
 production) shows the widget as on a website even while the chat is off, for
 developers and UI tests; its `color`, `position`, `theme` (`light`/`dark`)
 and `lang` (or `language`, any of the widget's languages) show a choice not
-saved yet. Owners preview and try the widget on the hosted chat page
-(`/c/{address}`, the cabinet's live preview is `/c/{address}?preview=1`). Only
+saved yet. The footer's accessibility link opens
+`GET /widget/accessibility?language=<tag>` on the API (not in the API
+description): a 302 to `{CABINET_BASE_URL}/{en|it}/accessibility` in the
+site's locale of the visitor's language (English otherwise), cached for a
+day; without `CABINET_BASE_URL` it answers 404
+(`app/gateways/http/widget_accessibility_routes.py`). Owners preview and try
+the widget on the hosted chat page (`/c/{address}`, the cabinet's live
+preview is `/c/{address}?preview=1`). Only
 outside production does the API's own origin (`APP_BASE_URL`) pass the
 widget's site check with the cabinet's.
 

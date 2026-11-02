@@ -23,6 +23,20 @@ round of a tool loop and every call start consults:
   fallback puts the caller through to the business's staff phone (the
   handoff phone, else the first manager with a phone); with none, the call
   is a missed call with its text-back;
+- background model work holds too: quality sampling and topic grouping
+  skip their run, conversation summaries wait an hour, knowledge indexing
+  retries, a finished call's summary is skipped (staff get the call report
+  without it, and no caller memory is written), and an autotest run queued
+  before the brake is skipped when the worker starts it (it reads as
+  ERRORED and the version goes back to its previous status; an "Apply
+  changes" whose checks were skipped stays at the checking stage, and the
+  owner applies again once the brake lifts);
+- owners' costly actions (menu import, starting a website import,
+  starting autotests, alias suggestions, renting a number) get 409
+  `platform_brake` with the detail `paused` or `budget_stop`, which the
+  cabinet words in English and Italian; the test chat is not refused (its
+  turns go to the team like customers'), and searching numbers and asking
+  the team for one still work;
 - nothing of a business changes: resuming (or UTC midnight, for the
   budget stop) restores every assistant at once.
 

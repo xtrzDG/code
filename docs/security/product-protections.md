@@ -72,31 +72,51 @@ a path here moves.
   `tests/channels/test_voice_caller_id_tools.py`). A customer's cancel or
   move needs a contact or a proven phone and is refused from a phone call;
   staff need their user (`tests/operations/test_booking_requesters.py`).
+  The phone instruction names only the voice agent's tools: it creates
+  bookings and passes existing ones to a colleague with
+  `handoff_to_human`, and it never promises a text unless a tool result
+  says one is sent (`app/utilities/assembly/phone_instruction_sections.py`;
+  `tests/assembly/test_phone_instruction.py`,
+  `tests/brain/test_voice_text_promises.py`). The missed-call text-back
+  writes to the number's WhatsApp account, or to a new contact that holds
+  only that account and no verified phone; a caller ID never finds a
+  contact by a verified or given phone and never adds an identity to one
+  (`app/use_cases/voice/missed_calls/text_back_conversation.py`;
+  `tests/calls/test_text_back_delivery.py`).
 - **Agents** start a web or WebSocket conversation only with a signed URL
   made with the platform's key (calls to the business's number are not
   affected) and take at most 5 calls at once and 300 a day
   (`app/adapters/voice/elevenlabs_agent_config.py`;
   `tests/channels/test_voice_agent_creation.py`); a business takes no new
-  call past 600 call minutes in its day, and a blocked number is refused
-  at the call's start, also by the carrier fallback
-  (`app/use_cases/voice/call_admission.py`;
+  call past 600 call minutes in its day, and a number is refused at the
+  call's start, also by the carrier fallback, when any contact holding it
+  is blocked (one that proved it, the call-only and per-call contacts, the
+  WhatsApp customer of the number, any contact that gave it); a STOP or a
+  block of any of them also stops the text-back
+  (`app/use_cases/voice/call_admission.py`,
+  `app/utilities/calls/call_contacts.py`;
   `tests/spend_guard/test_voice_caps.py`,
-  `tests/calls/test_call_fallback_blocked.py`).
+  `tests/calls/test_call_fallback_blocked.py`,
+  `tests/calls/test_blocked_callers_by_number.py`).
 - **Toll fraud**: calls are put through only to a mobile or landline of the
   business's country or an EU state, never to premium, shared-cost,
   special-tariff, satellite or international premium numbers, checked
-  when the owner saves the staff number (422) and again before every
-  transfer and fallback dial
-  (`app/utilities/channels/transfer_destinations.py`;
-  `tests/channels/test_transfer_destinations.py`); a transfer happens only
-  while the business is open and after the owner confirmed that staff were
-  told (`tests/channels/test_call_transfers.py`).
+  when the owner saves the staff number or a manager's WhatsApp or SMS
+  number (422, nothing stored) and again before every transfer and
+  fallback dial (`app/utilities/channels/transfer_destinations.py`,
+  `app/use_cases/businesses/manager_contact_rules.py`;
+  `tests/channels/test_transfer_destinations.py`,
+  `tests/businesses/test_manager_contact_destinations.py`); a transfer
+  happens only while the business is open and after the owner confirmed
+  that staff were told (`tests/channels/test_call_transfers.py`).
 - **Recording is off by default** (`app/schemas/domain/call_settings.py`):
   without it the audio is deleted after the call and the transcript is kept
   redacted; nothing of the staff part of a connected transfer is kept; the
   greeting mentions a recording only while recording is on and always says
   where the privacy notice is, and the hosted chat's privacy page says
-  calls are recorded only then (`tests/calls/test_call_recording_settings.py`,
+  calls are recorded only then. Only the call settings switch recording;
+  the profile's old recording-notice flag is deprecated and changes
+  nothing (`tests/calls/test_call_recording_settings.py`,
   `tests/calls/test_declined_recordings.py`,
   `tests/brain/test_call_greeting_without_recording.py`,
   `tests/sharing/test_privacy_notice_calls.py`).
@@ -114,11 +134,18 @@ a path here moves.
   customer turns go to the team, calls to the forwarding number, the
   background model jobs ask no model (quality sampling and topics skip
   the run, summaries wait an hour, knowledge indexing fails and is retried,
-  a website import fails), and owners' costly actions (menu import,
-  starting a website import, autotest runs, alias suggestions, renting a
-  number) get 409 `platform_brake` (`app/utilities/spend/platform_brakes.py`,
-  `app/use_cases/spend_guard/admit_owner_action_use_case.py`;
+  a website import fails, a finished call's summary is skipped and staff
+  get the report without it, an autotest run queued before the brake is
+  skipped when the worker starts it), and owners' costly actions (menu
+  import, starting a website import, autotest runs, alias suggestions,
+  renting a number) get 409 `platform_brake`, which the cabinet words by
+  its detail in English and Italian (`app/utilities/spend/platform_brakes.py`,
+  `app/use_cases/spend_guard/admit_owner_action_use_case.py`,
+  `app/use_cases/voice/summaries/summarize_call_use_case.py`;
   `tests/spend_guard/test_platform_pause_reach.py`,
+  `tests/calls/test_call_summary_brake.py`,
+  `tests/assembly/test_autotest_brake_at_start.py`,
+  `web/src/api/platformBrake.test.ts`,
   `tests/quality/test_quality_sampling_brake.py`,
   `tests/spend_guard/test_platform_brakes.py`,
   `tests/spend_guard/test_platform_pause_admin.py`;
@@ -143,8 +170,12 @@ a path here moves.
   `tests/storage/test_contact_erasure_ledger_on_postgres.py`).
 - **Marketing consent**: invitations to come back go only to customers with
   an active consent, recorded with its wording's version, source, who and
-  when; STOP, the suppression list and a block always win
+  when, and only in the chat the anchor booking was made in (a phone or
+  website-chat booking gets none); STOP, the suppression list and a block
+  always win, and a STOP in a chat already stopped withdraws a consent
+  given after it, in one atomic change of the card
   (`app/use_cases/campaigns/campaign_writer.py`,
+  `app/use_cases/feedback/answers/messaging_preferences.py`,
   `app/schemas/domain/contacts.py`;
   `tests/campaigns/test_campaign_consent.py`,
   `tests/customers/test_marketing_consent_stop.py`,

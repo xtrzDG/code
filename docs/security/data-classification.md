@@ -56,7 +56,7 @@ start otherwise (`tests/legal/test_processor_uses.py`).
 | Second sign-in steps and passkey challenges | 24 hours | `purge_stale_rows` | same module |
 | Expired sessions | until their idle or absolute expiry, then the next run | `purge_stale_rows` | `app/utilities/security/session_expiry.py` |
 | Delivery logs (outbox messages) | 30 days | `purge_stale_rows` | `DELIVERY_RETENTION_SECONDS` |
-| Webhook receipts and inbox events | 30 days | `purge_stale_rows` | `CHANNEL_RECEIPT_RETENTION_SECONDS` (receipts), `DELIVERY_RETENTION_SECONDS` (inbox events) |
+| Webhook receipts and inbox events (a website-chat message's event also keeps the visitor's IP address, `client_ip_address`, which caps anonymous bookings per client network) | 30 days | `purge_stale_rows` | `CHANNEL_RECEIPT_RETENTION_SECONDS` (receipts), `DELIVERY_RETENTION_SECONDS` (inbox events) |
 | Outbound webhook delivery log | 30 days | `purge_webhook_deliveries`, daily | `app/utilities/integrations/webhook_schedule.py` |
 | Facebook sign-ins of the Channels page (the owner's Facebook token while a page is picked) | 15 minutes, then removed by the next daily run | `purge_stale_rows` | `STATE_LIFETIME_SECONDS` in `app/use_cases/channels/meta_connection/meta_states.py` |
 | Missed calls | 90 days (sooner with the conversation) | `purge_stale_rows` | `MISSED_CALL_RETENTION_SECONDS` |

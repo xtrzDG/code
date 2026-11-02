@@ -67,15 +67,39 @@ moves.
   joining the platform-admin team ends a person's existing sessions, so
   admin rights come only with a new sign-in
   (`tests/users/access/test_admin_role_sessions.py`); so does a member
-  made an owner of a business (`app/use_cases/businesses/owner_promotion_sweep.py`;
-  `tests/businesses/test_owner_promotion_sessions.py`). Right after a
-  step-up the cabinet's server swaps the session's token for a new one
-  (`POST /v1/auth/session/rotate`; the old token answers 30 seconds more
-  as one factor), so a token copied before the step-up never gains its
-  level (`app/use_cases/users/sessions/rotate_session_use_case.py`,
+  made an owner of a business, and an existing account invited directly
+  as an owner (it joins at once): the sweep runs before the change is
+  stored and again after it, so a failed sweep stores nothing and a retry
+  sweeps again (`app/use_cases/businesses/owner_promotion_sweep.py`,
+  `app/use_cases/businesses/invite_staff_use_case.py`;
+  `tests/businesses/test_owner_promotion_sessions.py`,
+  `tests/businesses/test_owner_invitation_sessions.py`).
+- **Session rotation**: a proof that raises a one-factor session to two
+  factors (a step-up, a new authenticator, a first passkey) is not written
+  on that session. The session keeps only the SHA-256 hash of a one-time
+  rotation ticket (256 random bits, 120 seconds, bound to that session),
+  and the ticket goes in the proof's answer to the client that made it
+  alone. With it the cabinet's server swaps the token
+  (`POST /v1/auth/session/rotate`); taking the ticket and winding the old
+  session down are one atomic write, and only the new token carries the
+  two factors and the proof. The old token stays one factor with no
+  proof, answers 30 seconds more for requests on their way, never takes a
+  proof or a ticket again (`rotated_at`) and is left out of the device
+  list. A session stored as one factor is never raised in place, even
+  when it was lowered while a proof ran; a use of a session never moves
+  its stored end later, so a stale read cannot undo a wind-down or an end
+  (`app/use_cases/users/sessions/session_proofs.py`,
+  `app/use_cases/users/sessions/rotate_session_use_case.py`,
+  `app/repositories/user_session_changes.py`,
   `web/src/server/sessionRotation.ts`;
   `tests/users/access/test_session_rotation.py`,
-  `web/src/app/api/auth/session/rotate/route.test.ts`).
+  `tests/users/mfa/test_step_up_rotation.py`,
+  `tests/storage/test_session_store_writes.py`,
+  `tests/users/access/test_device_sessions.py`,
+  `web/src/app/api/auth/session/rotate/route.test.ts`). Residual: a
+  sweep (factor removal, owner promotion) that runs between the old
+  session's wind-down and the new session's save does not see the new
+  one; that token is held only by the client that made the proof.
 - **Google Calendar** connects with PKCE (S256) and a state bound to the
   person and the session that started it; completing it checks again that
   the person still owns the business
@@ -88,7 +112,12 @@ moves.
   `tests/bookings/test_booking_manage_tokens.py`); the booking page trades
   it for a credential of about 30 minutes and takes the token out of the
   address bar (`POST /v1/public/bookings/{token}/session`;
-  `tests/bookings/test_booking_manage_session.py`). A website-chat visitor
+  `tests/bookings/test_booking_manage_session.py`). Every answer to a
+  credential carries a credential that ends no later, with one exception:
+  the calendar file (`…/calendar.ics`) embeds a freshly signed long-lived
+  manage link, so the guest's calendar entry keeps a working link
+  (`app/use_cases/bookings/public/get_managed_booking_calendar_use_case.py`).
+  A website-chat visitor
   key idle for 30 days reads nothing from before the gap
   (`tests/channels/test_widget_visitor_key_expiry.py`). On the hosted chat
   page the conversation and its visitor key live in the tab's
@@ -188,6 +217,13 @@ moves.
   (`web/src/server/sameOrigin.ts`; `web/src/server/sameOrigin.test.ts`).
   Every BFF route that reads a body has a limit
   (`web/src/server/bodyLimits.ts`).
+- **Session tokens never reach page code**: the catch-all relay
+  (`/api/backend/*`) answers 404 for every API route whose answer carries
+  a session token (the sign-in steps and the rotation), however the path
+  is encoded, before calling the API; only the dedicated routes read
+  those answers and put the token into the httpOnly cookie
+  (`web/src/server/sessionTokenPaths.ts`, `web/src/server/relay.ts`;
+  `web/src/server/sessionTokenPaths.test.ts`).
 - **Sign-out** answers `Clear-Site-Data: "cache", "cookies", "storage"`,
   and the button also empties Web Storage itself
   (`web/src/app/api/auth/logout/route.ts`,
