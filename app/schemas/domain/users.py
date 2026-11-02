@@ -15,6 +15,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.users.booleans import (
     IsOtpChallengeConsumed,
+    IsOtpCodeHashServerKeyed,
     IsPlatformAdmin,
     IsUserVerified,
     IsVerifiedLoginDestination,
@@ -72,10 +73,14 @@ class OtpChallengeDocument(BaseDocument):
     One login attempt with a one-time code; only the code hash is stored.
     `is_verified_destination` marks a code for a verified user's phone or
     e-mail: those sends count against a budget of their own.
+    `is_code_hash_server_keyed`: the hash is keyed with the platform's key
+    material (`one_time_codes`); a challenge of version 2 or older was
+    keyed with its own id alone and is read that way until it expires.
     """
 
-    # 2: `is_verified_destination` (optional, so version 1 needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 2: `is_verified_destination`; 3: `is_code_hash_server_keyed` (both
+    # optional, so older versions need no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: OtpChallengeId = Field(default_factory=OtpChallengeId)
     login_method: LoginMethod
     phone_number: E164PhoneNumber | None = None
@@ -89,6 +94,7 @@ class OtpChallengeDocument(BaseDocument):
     is_consumed: IsOtpChallengeConsumed = False
     requested_from_ip: ClientIpAddress | None = None
     is_verified_destination: IsVerifiedLoginDestination = False
+    is_code_hash_server_keyed: IsOtpCodeHashServerKeyed = False
 
 
 class UserSessionDocument(BaseDocument):

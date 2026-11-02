@@ -22,7 +22,11 @@ from app.facilitators.spend_guard.spend_limit_notice_facilitator import (
     SpendLimitNoticeFacilitator,
 )
 from app.repositories.billing_repositories import UsageEventRepository
+from app.registries.limits.platform_spend_gauge_registry import (
+    PlatformSpendGaugeRegistry,
+)
 from app.repositories.compliance_repositories import AuditLogRepository
+from app.repositories.platform_safety_repositories import PlatformPauseRepository
 from app.repositories.spend_guard_repositories import (
     BusinessLimitsRepository,
     SpendLimitMarkRepository,
@@ -42,6 +46,7 @@ from app.schemas.domain.business_limits import (
 )
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.spend_guard import UsageKindTotal
@@ -70,6 +75,7 @@ from app.use_cases.spend_guard.check_business_spend_use_case import (
     CheckBusinessSpendUseCase,
 )
 from app.utilities.spend.spend_keys import business_limits_id_of
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.operations.fakes import FakeLocalizedTextResolver, RecordingManagerNotifier
@@ -117,6 +123,7 @@ class SpendWorld:
     jobs: RecordingJobQueue
     check: CheckBusinessSpendUseCase
     usage_spend: CountingUsageSpend
+    pauses: PlatformPauseRepository
 
     def spend(
         self,
@@ -221,6 +228,9 @@ def build_spend_world(
     )
     notifier = RecordingManagerNotifier()
     jobs = RecordingJobQueue()
+    pauses = PlatformPauseRepository(
+        InMemoryDocumentCollectionAdapter(PlatformPauseDocument)
+    )
     check = CheckBusinessSpendUseCase(
         business_limits_repo=limits,
         spend_limit_mark_repo=marks if wrap_marks is None else wrap_marks(marks),
@@ -235,6 +245,10 @@ def build_spend_world(
         ),
         exchange_rate_registry=FixedEuroRates(),
         settings=settings or SpendGuardSettings(),
+        platform_pause_repo=pauses,
+        platform_spend_gauge=PlatformSpendGaugeRegistry(
+            usage_spend, StorageScopeContext()
+        ),
     )
     return SpendWorld(
         business=business,
@@ -247,4 +261,5 @@ def build_spend_world(
         jobs=jobs,
         check=check,
         usage_spend=usage_spend,
+        pauses=pauses,
     )

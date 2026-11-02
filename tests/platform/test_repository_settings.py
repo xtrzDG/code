@@ -31,6 +31,9 @@ MAIN: dict[str, Any] = {
 }
 EXPECTED: dict[str, Any] = {
     "branches": {"main": MAIN},
+    # Judged by scripts/repository_environments.py
+    # (tests/platform/test_repository_environments.py).
+    "environments": {},
     "private_vulnerability_reporting": True,
     "dependabot_security_updates": True,
 }
@@ -230,6 +233,7 @@ def test_a_missing_answer_proves_nothing(tmp_path: Path) -> None:
         ({"branches": {}}, "no branch is expected"),
         ({"private_vulnerability_reporting": "yes"}, "must be true or false"),
         ({"dependabot_security_updates": None}, "must be true or false"),
+        ({"environments": []}, "environments must be an object"),
     ],
 )
 def test_unusable_expectations_are_refused(

@@ -33,7 +33,13 @@ class PlatformAlertCode(StrEnum):
     daily check found an audit hash chain broken (an entry changed,
     removed or put in). VOICE_HEALTH: calls of the voice platform's API
     fail, or its finished-call reports stopped while the 7 days before
-    expect calls at this time of day.
+    expect calls at this time of day. SPEND_BUDGET_STOP: today's provider
+    spend reached the share of the daily budget where every assistant
+    stops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).
+    MISSED_JOB_RUNS: a periodic job has not succeeded within its interval
+    and grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).
+    PAYMENT_MISMATCH: the daily reconciliation found payments whose status
+    at Flitt or Stripe differs from the platform's record.
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -58,6 +64,9 @@ class PlatformAlertCode(StrEnum):
     FAILED_SIGN_IN_CHECKS = "failed_sign_in_checks"
     AUDIT_CHAIN_BROKEN = "audit_chain_broken"
     VOICE_HEALTH = "voice_health"
+    SPEND_BUDGET_STOP = "spend_budget_stop"
+    MISSED_JOB_RUNS = "missed_job_runs"
+    PAYMENT_MISMATCH = "payment_mismatch"
 
 
 class PlatformAlertStatus(StrEnum):

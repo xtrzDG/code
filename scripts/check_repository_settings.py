@@ -9,17 +9,24 @@ files) against the reviewed expectations:
 
 Prints one GitHub error line per setting that is off and appends a short
 Markdown report to the summary file. Exit codes: 0 every setting as
-expected, 1 a setting is off (branch protection weakened or removed,
-private vulnerability reporting or Dependabot security updates switched
-off), 2 the check proves nothing (expectations unreadable, an answer
-missing, a token that is missing, expired or may not read the settings).
+expected, 1 a setting is off (branch protection weakened or removed, an
+environment missing or without its reviewers or branch rule, private
+vulnerability reporting or Dependabot security updates switched off), 2 the
+check proves nothing (expectations unreadable, an answer missing, a token
+that is missing, expired or may not read the settings).
 """
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from scripts.repository_environments import (
+    EnvironmentExpectation,
+    environment_problems,
+    parse_environment_expectations,
+)
 from scripts.repository_settings import (
     Expectations,
     Response,
@@ -27,6 +34,7 @@ from scripts.repository_settings import (
     branch_problems,
     classic_protection,
     combined,
+    mapping,
     parse_expectations,
     parse_response,
     reporting_problems,
@@ -51,7 +59,11 @@ def read_response(directory: Path, name: str) -> Response:
         raise SettingsError(f"{path.name}: {error}") from error
 
 
-def problems_of(expected: Expectations, responses: Path) -> list[str]:
+def problems_of(
+    expected: Expectations,
+    environments: tuple[EnvironmentExpectation, ...],
+    responses: Path,
+) -> list[str]:
     problems: list[str] = []
     for branch in expected.branches:
         protection = combined(
@@ -67,17 +79,29 @@ def problems_of(expected: Expectations, responses: Path) -> list[str]:
     problems += security_fixes_problems(
         expected, read_response(responses, "security-fixes")
     )
+    for environment in environments:
+        problems += environment_problems(
+            environment,
+            read_response(responses, f"environment-{environment.name}"),
+            read_response(responses, f"branch-policies-{environment.name}"),
+        )
     return problems
 
 
-def report(expected: Expectations, problems: list[str]) -> list[str]:
+def report(
+    expected: Expectations,
+    environments: tuple[EnvironmentExpectation, ...],
+    problems: list[str],
+) -> list[str]:
     branches = ", ".join(branch.branch for branch in expected.branches)
+    named = ", ".join(environment.name for environment in environments) or "none"
     if not problems:
         return [
             "## Repository settings: as expected",
             "",
-            f"Protection of {branches}, private vulnerability reporting and"
-            " Dependabot security updates match .github/repository-settings.json.",
+            f"Protection of {branches}, the environments ({named}), private"
+            " vulnerability reporting and Dependabot security updates match"
+            " .github/repository-settings.json.",
         ]
     return [
         f"## Repository settings: {len(problems)} setting(s) off",
@@ -100,8 +124,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parsed = parser.parse_args(arguments)
 
     try:
-        expected = parse_expectations(parsed.expected.read_text(encoding="utf-8"))
-        problems = problems_of(expected, parsed.responses)
+        text = parsed.expected.read_text(encoding="utf-8")
+        expected = parse_expectations(text)
+        environments = parse_environment_expectations(mapping(json.loads(text)))
+        problems = problems_of(expected, environments, parsed.responses)
     except (OSError, SettingsError, TypeError, ValueError) as error:
         print(f"::error::Repository settings check: {error}", file=sys.stderr)
         return EXIT_UNUSABLE
@@ -112,7 +138,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
         print("Every repository setting is as expected.")
     if parsed.summary is not None:
         with parsed.summary.open("a", encoding="utf-8") as summary:
-            summary.write("\n".join(report(expected, problems)) + "\n")
+            summary.write("\n".join(report(expected, environments, problems)) + "\n")
     return EXIT_SETTING_OFF if problems else EXIT_AS_EXPECTED
 
 

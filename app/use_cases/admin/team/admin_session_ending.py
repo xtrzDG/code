@@ -1,4 +1,4 @@
-"""The end of a changed or removed platform admin's sessions."""
+"""The end of a new, changed or removed platform admin's sessions."""
 
 from typed_time_provider import Microseconds
 
@@ -20,10 +20,11 @@ from app.use_cases.shared.session_sweeps import end_sessions, own_session
 
 class AdminSessionEnding:
     """
-    A changed or removed admin signs in again: every session of theirs ends
-    (SESSION_REVOKED with the count, by the SUPER admin who made the
-    change), so no device keeps rights it was signed in with. When admins
-    change their own role, the request's session stays.
+    A new, changed or removed admin signs in again: every session of theirs
+    ends (SESSION_REVOKED with the count, by the SUPER admin who made the
+    change), so no device keeps rights it was signed in with and new rights
+    come only with a new token. When admins change their own role, the
+    request's session stays.
     """
 
     def __init__(
@@ -44,6 +45,7 @@ class AdminSessionEnding:
         actor_id: UserId,
         client_ip_address: ClientIpAddress | None,
         now: Microseconds,
+        reason: SessionSweepReason = SessionSweepReason.ADMIN_ROLE_CHANGED,
     ) -> None:
         user: UserDocument | None = signed_in_user(self._user_repo, admin)
         if user is None:
@@ -55,7 +57,7 @@ class AdminSessionEnding:
             SessionSweep(
                 user_id=user.id,
                 actor_id=actor_id,
-                reason=SessionSweepReason.ADMIN_ROLE_CHANGED,
+                reason=reason,
                 kept_session_id=own_session(self._session_assurance, user.id),
                 client_ip_address=client_ip_address,
                 now=now,

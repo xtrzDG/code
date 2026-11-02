@@ -1,9 +1,10 @@
 # Weekly dependency updates, grouped so a week brings a few pull requests,
 # not dozens. Security updates are opened as soon as an advisory appears,
-# independent of this schedule. New releases wait a few days (cooldown) so
-# a compromised version is usually yanked before it reaches us. A grouped
-# patch or minor update merges itself once CI is green
-# (.github/workflows/automerge.yml); everything else waits for a person.
+# independent of this schedule and of the cooldown. A new release waits a
+# week (cooldown) so a compromised version is usually yanked before it
+# reaches us. A grouped patch or minor update merges itself once CI is green
+# (.github/workflows/automerge.yml); everything else waits for a person, and
+# nothing reaches production without one (docs/operations/deploys.md).
 version: 2
 updates:
   - package-ecosystem: uv
@@ -14,7 +15,7 @@ updates:
       time: "06:00"
       timezone: Europe/Berlin
     cooldown:
-      default-days: 5
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       python-runtime:
@@ -33,7 +34,7 @@ updates:
       time: "06:00"
       timezone: Europe/Berlin
     cooldown:
-      default-days: 5
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       # Next.js and its ESLint config move together.
@@ -62,6 +63,39 @@ updates:
         update-types: ["version-update:semver-major"]
     labels: [dependencies, javascript]
 
+  # The Zapier app and the CI-only tools (Lighthouse CI) with their own
+  # lockfiles.
+  - package-ecosystem: npm
+    directories: [/integrations/zapier, /.github/tools/lhci]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      tooling:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    labels: [dependencies, javascript]
+
+  # pip-audit, hash-pinned for CI (.github/tools/pip-audit/requirements.txt).
+  - package-ecosystem: pip
+    directory: /.github/tools/pip-audit
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      pip-audit:
+        patterns: ["*"]
+    labels: [dependencies, python]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -69,11 +103,15 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns: ["*"]
     labels: [dependencies, github-actions]
 
+  # Base images, pinned by tag and digest: an update moves the digest of
+  # the same tag as well as the tag.
   - package-ecosystem: docker
     directories: [/, /web]
     schedule:
@@ -81,7 +119,24 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
     groups:
       base-images:
+        patterns: ["*"]
+    labels: [dependencies, docker]
+
+  # Service images of the compose files (Postgres, k6), likewise.
+  - package-ecosystem: docker-compose
+    directories: [/, /perf]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      service-images:
         patterns: ["*"]
     labels: [dependencies, docker]

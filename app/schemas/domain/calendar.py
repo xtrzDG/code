@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -18,7 +18,7 @@ from app.schemas.typings.bookings.strings import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
-from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.users.prefixed_id import UserId, UserSessionId
 
 
 class CalendarConnectionDocument(BaseDocument):
@@ -50,9 +50,17 @@ class CalendarAuthorizationStateDocument(BaseDocument):
     Pending OAuth authorization started by an owner.
 
     The random `state` sent to the provider is stored only as a hash and can
-    be used once before it expires; it binds the callback to the business.
+    be used once before it expires; it binds the callback to the business,
+    the owner and the session they started from (`session_id`). The flow's
+    PKCE code verifier is kept only sealed with the platform key ring
+    (`sealed_code_verifier`) until the code exchange. A state of version 1
+    has neither: it was started before both and has expired since (ten
+    minutes), so it is never finished.
     """
 
+    # 2: `session_id` and `sealed_code_verifier` (optional, so version 1
+    # needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: CalendarAuthorizationStateId = Field(
         default_factory=CalendarAuthorizationStateId
     )
@@ -61,6 +69,8 @@ class CalendarAuthorizationStateDocument(BaseDocument):
     state_hash: CalendarAuthorizationStateHash
     expires_at: Microseconds
     is_consumed: IsCalendarAuthorizationStateConsumed = False
+    session_id: UserSessionId | None = None
+    sealed_code_verifier: EncryptedChannelSecret | None = None
 
 
 class CalendarEventLinkDocument(BaseDocument):

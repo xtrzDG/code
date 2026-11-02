@@ -8,6 +8,7 @@ IsBlockedOnlyFilter = bool
 IsContactBlocked = bool
 IsContactErased = bool
 IsContactPhoneVerified = bool
+IsMarketingConsentGiven = bool
 IsPhoneMasked = bool
 IsSegmentCountExact = bool
 IsVipCustomer = bool

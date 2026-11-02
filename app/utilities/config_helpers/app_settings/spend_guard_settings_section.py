@@ -1,6 +1,7 @@
 """
-SPEND_*, PLATFORM_DAILY_SPEND_BUDGET_USD, CALL_* and API_*: the spend
-guard's limits, the voice call caps and the generic request limits.
+SPEND_*, PLATFORM_DAILY_SPEND_*, CALL_* and API_*: the spend guard's
+limits, the platform's daily budget and its stop, the voice call caps and
+the generic request limits.
 """
 
 from collections.abc import Mapping
@@ -13,6 +14,7 @@ from app.schemas.configurations.spend_guard_settings import (
     DEFAULT_CALL_MAX_DURATION_SECONDS,
     DEFAULT_CALL_SILENCE_END_SECONDS,
     DEFAULT_HARD_LIMIT_MULTIPLE,
+    DEFAULT_PLATFORM_SPEND_STOP_PERCENT,
     DEFAULT_SOFT_LIMIT_MULTIPLE,
     SpendGuardSettings,
 )
@@ -23,6 +25,7 @@ from app.schemas.typings.spend.constrained_integers import (
     CallMaxDurationSeconds,
     CallSilenceEndSeconds,
     PlatformDailySpendBudgetMicroUsd,
+    PlatformSpendStopPercent,
     SpendLimitMultiple,
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
@@ -77,6 +80,11 @@ def read_spend_guard_settings(
                 budget_usd * MICRO_USD_PER_USD,
                 PlatformDailySpendBudgetMicroUsd,
             )
+        ),
+        platform_spend_stop_percent=integer(
+            "PLATFORM_DAILY_SPEND_STOP_PERCENT",
+            DEFAULT_PLATFORM_SPEND_STOP_PERCENT,
+            PlatformSpendStopPercent,
         ),
         call_max_duration_seconds=integer(
             "CALL_MAX_DURATION_SECONDS",

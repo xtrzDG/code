@@ -113,4 +113,18 @@ class PaymentReturnUrl(BaseConstrainedTypedString):
     pattern = r"^https?://[^\s/]+(/[^\s]*)?$"
 
 
+class ReconciliationDay(BaseConstrainedTypedString):
+    """
+    The UTC day of one daily payment reconciliation, ISO `YYYY-MM-DD` (the
+    key its result is stored under).
+
+    Example:
+        day = ReconciliationDay("2026-11-02")
+    """
+
+    min_length = 10
+    max_length = 10
+    pattern = r"^\d{4}-\d{2}-\d{2}$"
+
+
 # Keep abc order for all non example types, if possible.

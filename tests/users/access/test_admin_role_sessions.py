@@ -191,3 +191,21 @@ def test_changing_your_own_role_keeps_the_session_you_used() -> None:
 
     assert live_sessions(world, world.support) == {here}
     assert elsewhere not in live_sessions(world, world.support)
+
+
+def test_a_person_made_admin_signs_in_again_to_get_the_rights() -> None:
+    world = TeamWorld()
+    owner = world.testbed.user_repo.get(world.owner_id)
+    assert owner is not None and owner.email is None
+    open_sessions(world, owner, 2)
+    signed_in = live_sessions(world, owner)
+    assert len(signed_in) >= 2
+
+    world.add_by(PlatformAdminRole.SUPPORT_READONLY, phone=str(owner.phone_number))
+
+    assert live_sessions(world, owner) == set()
+    [entry] = revocations(world)
+    assert entry.actor_id == world.support.id
+    assert str(entry.entity_id) == f"{owner.id}:admin_role_granted"
+    assert entry.record_count is not None
+    assert int(entry.record_count) == len(signed_in)

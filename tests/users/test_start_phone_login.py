@@ -8,7 +8,7 @@ from app.schemas.dto.users import StartOtpLoginCommand
 from app.schemas.exceptions.application_errors import UnsupportedLanguageError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.utilities.security.one_time_codes import hash_otp_code
+from app.utilities.security.one_time_codes import hash_otp_code, otp_hash_keys
 from tests.users.accounts_phones import (
     BRAZIL_MOBILE,
     GEORGIA_MOBILE,
@@ -129,7 +129,10 @@ def test_phone_login_works_for_numbers_of_any_country(
     stored = testbed.otp_challenge_repo.get(challenge.challenge_id)
     assert stored is not None
     assert str(stored.code_hash) != str(delivery.code)
-    assert stored.code_hash == hash_otp_code(stored.id, delivery.code)
+    assert stored.code_hash == hash_otp_code(
+        otp_hash_keys(testbed.settings)[0], stored.id, delivery.code
+    )
+    assert stored.is_code_hash_server_keyed is True
     assert stored.created_at == testbed.clock.now_microseconds()
     assert stored.expires_at == testbed.clock.now_microseconds() + 600_000_000
     assert stored.failed_attempts == 0

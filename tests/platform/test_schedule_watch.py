@@ -1,7 +1,8 @@
 """
 The scheduled guards CI cannot replace (the restore drill, the perf
-budgets, the nightly evals, the DAST baseline, the repository settings)
-are themselves watched: every day a workflow
+budgets, the nightly evals, the DAST baseline, the repository settings, the
+dependency audit, the active scan of staging, the image rescan, production's
+synthetic checks) are themselves watched: every day a workflow
 opens an issue for each one without a successful scheduled run in 8 days.
 """
 
@@ -20,6 +21,10 @@ WATCHED: list[str] = [
     "evals-nightly.yml",
     "zap.yml",
     "repo-settings.yml",
+    "dependency-audit.yml",
+    "zap-staging.yml",
+    "image-rescan.yml",
+    "synthetics.yml",
 ]
 
 

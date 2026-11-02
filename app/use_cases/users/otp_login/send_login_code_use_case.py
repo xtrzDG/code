@@ -26,7 +26,11 @@ from app.use_cases.users.otp_login.login_code_limits import (
 from app.use_cases.users.otp_login.login_risk_signals import (
     require_bot_check_when_risky,
 )
-from app.utilities.security.one_time_codes import generate_otp_code, hash_otp_code
+from app.utilities.security.one_time_codes import (
+    generate_otp_code,
+    hash_otp_code,
+    otp_hash_keys,
+)
 
 
 class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDocument]):
@@ -93,7 +97,10 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
             country_code=destination.country_code,
             delivery_channel=input_data.delivery_channels[0],
             locale=input_data.locale,
-            code_hash=hash_otp_code(challenge_id, code),
+            code_hash=hash_otp_code(
+                otp_hash_keys(self._app_settings)[0], challenge_id, code
+            ),
+            is_code_hash_server_keyed=True,
             expires_at=self._wall_clock.now_unix_with_delta(
                 Seconds(int(self._app_settings.otp_lifetime_seconds))
             ),

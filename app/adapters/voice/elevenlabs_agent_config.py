@@ -27,11 +27,11 @@ from app.utilities.channels.channel_endpoints import (
 from app.utilities.channels.language_codes import to_voice_platform_language
 from app.utilities.channels.voice_service import (
     CALL_VARIABLE_PLACEHOLDERS,
+    CAN_TRANSFER_VARIABLE,
     LOCAL_NOW_VARIABLE,
     MAX_CONCURRENT_CALLS,
     MAX_DAILY_CALLS,
     NEXT_DAYS_VARIABLE,
-    NO_TRANSFER_VALUE,
     OPEN_NOW_VARIABLE,
     OPEN_NOW_YES,
     TIMEZONE_VARIABLE,
@@ -44,9 +44,10 @@ AGENT_TAG: str = "assistant-workshop"
 MAX_AGENT_NAME_LENGTH: int = 120
 # Concept sections 1 and 6: during opening hours a caller who asks for a
 # person is put through to staff; outside them the agent hands off and a
-# colleague calls back. The call-initiation webhook sets is_open_now and
-# the destination, transfer_number: the staff mobile only while the
-# business is open, else "none", so the platform has nowhere to dial.
+# colleague calls back. The call-initiation webhook sets is_open_now,
+# can_transfer and the destination, transfer_number: the staff mobile only
+# while the business is open and transfers are allowed, else "none", so the
+# platform has nowhere to dial. The prompt never shows the number itself.
 TRANSFER_TOOL_DESCRIPTION: str = (
     "Put the caller through to a staff member of the business."
 )
@@ -60,12 +61,11 @@ def placeholder(variable_name: str) -> str:
 
 TRANSFER_CONDITION: str = (
     "The caller asks to talk to a person (an operator, a manager, a staff "
-    "member), the business is open now and a transfer number is set: "
-    f"is_open_now is '{placeholder(OPEN_NOW_VARIABLE)}' and must be "
-    f"'{OPEN_NOW_YES}', and transfer_number is "
-    f"'{placeholder(TRANSFER_NUMBER_VARIABLE)}' and must not be "
-    f"'{NO_TRANSFER_VALUE}'. Otherwise never transfer: use handoff_to_human "
-    "so a colleague calls back."
+    "member), the business is open now and staff can take the call: "
+    f"is_open_now is '{placeholder(OPEN_NOW_VARIABLE)}' and can_transfer is "
+    f"'{placeholder(CAN_TRANSFER_VARIABLE)}', and both must be "
+    f"'{OPEN_NOW_YES}'. Otherwise never transfer: use handoff_to_human so a "
+    "colleague calls back."
 )
 # Signed URLs only: no allowed host, and a connection without an origin is
 # refused too. Phone calls through the business's number are not affected.
@@ -86,8 +86,7 @@ CURRENT_CALL_SECTION: str = "\n".join(
         f"({placeholder(TIMEZONE_VARIABLE)}).",
         f"- The next days: {placeholder(NEXT_DAYS_VARIABLE)}.",
         f"- The business is open now: {placeholder(OPEN_NOW_VARIABLE)}.",
-        f"- Staff can take the call: {placeholder(TRANSFER_NUMBER_VARIABLE)} "
-        f"({NO_TRANSFER_VALUE}: nobody can, hand off instead).",
+        f"- Staff can take the call now: {placeholder(CAN_TRANSFER_VARIABLE)}.",
         'Turn "today", "tomorrow" or a weekday into a YYYY-MM-DD date from these '
         "lines before you call a tool, and say the date back to the caller. When "
         f"the local date is {UNKNOWN_VALUE}, ask the caller for the exact date.",

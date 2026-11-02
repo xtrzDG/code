@@ -30,11 +30,15 @@ class OwnerRuleInstruction(BaseConstrainedTypedString):
 
     min_length = 1
     max_length = 300
+    # Invisible: the characters `CustomerGivenName` refuses (controls, soft
+    # hyphen, zero-width, direction and format marks, tag letters).
     pattern = (
-        r"^[^\s#<>\[\]{}`\x00-\x1f\x7f-\x9f​-‏ -‮"
-        r"⁠-⁯﻿](?:[^<>\[\]{}`\x00-\x1f\x7f-\x9f​-‏"
-        r" -‮⁠-⁯﻿]{0,298}[^\s<>\[\]{}`\x00-\x1f"
-        r"\x7f-\x9f​-‏ -‮⁠-⁯﻿])?\Z"
+        r"^[^\s#<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]"
+        r"(?:[^<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]{0,298}"
+        r"[^\s<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f])?\Z"
     )
 
 
@@ -51,10 +55,12 @@ class OwnerToneInstruction(BaseConstrainedTypedString):
     min_length = 1
     max_length = 200
     pattern = (
-        r"^[^\s#<>\[\]{}`\x00-\x1f\x7f-\x9f​-‏ -‮"
-        r"⁠-⁯﻿](?:[^<>\[\]{}`\x00-\x1f\x7f-\x9f​-‏"
-        r" -‮⁠-⁯﻿]{0,198}[^\s<>\[\]{}`\x00-\x1f"
-        r"\x7f-\x9f​-‏ -‮⁠-⁯﻿])?\Z"
+        r"^[^\s#<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]"
+        r"(?:[^<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]{0,198}"
+        r"[^\s<>\[\]{}`\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f])?\Z"
     )
 
 

@@ -101,6 +101,16 @@ class SecurityOperatorsContainer(containers.DeclarativeContainer):
     revoke_other_sessions_operator = pipeline_operator(
         security_pipelines.revoke_other_sessions_pipeline, storage_scope
     )
+    revoke_all_sessions_operator = pipeline_operator(
+        security_pipelines.revoke_all_sessions_pipeline, storage_scope
+    )
+    # A client team's sessions are platform rows: admin views, platform-wide.
+    list_client_member_sessions_operator = platform_pipeline_operator(
+        security_pipelines.list_client_member_sessions_pipeline, storage_scope
+    )
+    end_member_sessions_operator = platform_pipeline_operator(
+        security_pipelines.end_member_sessions_pipeline, storage_scope
+    )
     list_platform_admins_operator = pipeline_operator(
         security_pipelines.list_platform_admins_pipeline, storage_scope
     )

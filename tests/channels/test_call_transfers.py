@@ -73,6 +73,8 @@ def open_with_staff(
 
 
 def transfer_number(setup: VoiceSetup) -> str:
+    """The call's transfer destination; can_transfer says the same to the prompt."""
+
     response = setup.testbed.build_http_client().post(
         "/v1/voice/webhooks/conversation-initiation",
         content=to_json_bytes({"caller_id": CALLER, "agent_id": "agent_1"}),
@@ -82,7 +84,9 @@ def transfer_number(setup: VoiceSetup) -> str:
         },
     )
     assert response.status_code == 200, response.text
-    number: str = response.json()["dynamic_variables"]["transfer_number"]
+    variables: dict[str, str] = response.json()["dynamic_variables"]
+    number: str = variables["transfer_number"]
+    assert variables["can_transfer"] == ("no" if number == "none" else "yes")
     return number
 
 

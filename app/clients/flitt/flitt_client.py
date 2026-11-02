@@ -30,6 +30,7 @@ DEFAULT_FLITT_API_BASE_URL: str = "https://pay.flitt.com"
 CHECKOUT_URL_PATH: str = "/api/checkout/url/"
 SUBSCRIPTION_PATH: str = "/api/subscription/"
 RECURRING_PATH: str = "/api/recurring/"
+ORDER_STATUS_PATH: str = "/api/status/order_id"
 # A payment's answer may be slow, and an answer cut off leaves the charge
 # unknown: Flitt keeps its longer read budget (the connection still fails
 # fast).
@@ -100,6 +101,20 @@ class FlittClient(ClientContract):
         """
 
         return self._post(RECURRING_PATH, order_parameters)
+
+    def read_order_status(self, order_id: str) -> dict[str, object]:
+        """
+        The order as Flitt knows it now (its `order_status`, `payment_id`,
+        `amount`, `currency`), for the daily reconciliation.
+
+        Raises:
+            PaymentProviderRefusedError: Flitt refused the request (an
+                order it does not know).
+            ExternalServiceError: transport error, HTTP error or a bad
+                response signature.
+        """
+
+        return self._post(ORDER_STATUS_PATH, {"order_id": order_id})
 
     def stop_subscription(self, order_id: str) -> None:
         """Stop the automatic charges of a subscription order."""

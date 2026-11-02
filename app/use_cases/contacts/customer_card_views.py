@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds
 
+from app.contracts.privacy import SuppressionListContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -13,13 +14,16 @@ from app.schemas.typings.compliance.strings import (
     ClientIpAddress,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.contacts.marketing_consent_views import consent_view
 from app.utilities.customers.customer_card import tag_values
 
 CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
 
 
 def card_view(
-    contact: ContactDocument, settings: CustomerSettingsDocument | None
+    contact: ContactDocument,
+    settings: CustomerSettingsDocument | None,
+    suppression_list: SuppressionListContract,
 ) -> CustomerCardView:
     return CustomerCardView(
         contact_id=contact.id,
@@ -28,6 +32,7 @@ def card_view(
         is_blocked=contact.block is not None,
         blocked_at=None if contact.block is None else contact.block.blocked_at,
         known_tags=[] if settings is None else list(settings.known_tags),
+        marketing_consent=consent_view(contact, suppression_list),
     )
 
 

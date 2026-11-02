@@ -67,6 +67,15 @@ class SecurityOrchestratorsContainer(containers.DeclarativeContainer):
     revoke_other_sessions_orchestrator = use_case_orchestrator(
         mfa_use_cases.revoke_other_sessions_use_case
     )
+    revoke_all_sessions_orchestrator = use_case_orchestrator(
+        mfa_use_cases.revoke_all_sessions_use_case
+    )
+    list_client_member_sessions_orchestrator = use_case_orchestrator(
+        security_use_cases.list_client_member_sessions_use_case
+    )
+    end_member_sessions_orchestrator = use_case_orchestrator(
+        security_use_cases.end_member_sessions_use_case
+    )
     list_platform_admins_orchestrator = use_case_orchestrator(
         security_use_cases.list_platform_admins_use_case
     )

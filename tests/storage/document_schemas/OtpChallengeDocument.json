@@ -1,7 +1,7 @@
 {
   "collection": "otp_challenges",
   "document_type": "OtpChallengeDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -61,6 +61,10 @@
         "pattern": "^otp_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
+      "is_code_hash_server_keyed": {
+        "default": false,
+        "type": "boolean"
+      },
       "is_consumed": {
         "default": false,
         "type": "boolean"
@@ -108,7 +112,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "updated_at": {

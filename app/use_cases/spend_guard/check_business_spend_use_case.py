@@ -1,6 +1,10 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
+from app.contracts.platform_safety import (
+    PlatformPauseRepoContract,
+    PlatformSpendGaugeContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.spend_guard_repositories import (
     BusinessLimitsRepoContract,
@@ -16,6 +20,7 @@ from app.schemas.constants.spend import SpendLevel
 from app.schemas.domain.business_limits import SpendLimitMarkDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.dto.platform_pause import PlatformBrakeReading
 from app.schemas.dto.spend_guard import (
     ProviderSpend,
     SpendCheckRequest,
@@ -31,6 +36,9 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.spend.constrained_integers import DailySpendLimitMicroUsd
 from app.schemas.typings.spend.constrained_strings import SpendDay
 from app.use_cases.shared.owner_contacts import owner_contacts
+from app.use_cases.spend_guard.platform_pause.platform_brakes import (
+    read_platform_brake,
+)
 from app.utilities.spend.cheaper_models import cheaper_model_of
 from app.utilities.spend.spend_days import business_day
 from app.utilities.spend.spend_keys import spend_limit_mark_id_of
@@ -61,6 +69,14 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
     audit log. A hard mark of the day for the current limit settles later
     turns with one read by id; raising the limit lets the business answer
     again the same day.
+
+    First of all the platform's own brakes (`read_platform_brake`): while a
+    platform admin paused every assistant, or the platform's provider
+    spend of the UTC day reached its daily budget stop, every business is
+    at HARD_LIMIT with the brake named: its turns go to the team and its
+    calls to the forwarding number. Nothing is marked, audited or told per
+    business (the platform alerts tell the team about the stop; the pause
+    is audited where it is set).
     """
 
     def __init__(
@@ -73,6 +89,8 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         notices: SpendLimitNoticeFacilitatorContract,
         exchange_rate_registry: ExchangeRateRegistryContract,
         settings: SpendGuardSettings,
+        platform_pause_repo: PlatformPauseRepoContract,
+        platform_spend_gauge: PlatformSpendGaugeContract,
     ) -> None:
         self._limits_repo: BusinessLimitsRepoContract = business_limits_repo
         self._marks: SpendLimitMarkRepoContract = spend_limit_mark_repo
@@ -82,6 +100,8 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         self._notices: SpendLimitNoticeFacilitatorContract = notices
         self._exchange_rates: ExchangeRateRegistryContract = exchange_rate_registry
         self._settings: SpendGuardSettings = settings
+        self._pause_repo: PlatformPauseRepoContract = platform_pause_repo
+        self._spend_gauge: PlatformSpendGaugeContract = platform_spend_gauge
 
     def run(self, input_data: SpendCheckRequest) -> SpendVerdict:
         business: BusinessDocument = input_data.business
@@ -92,6 +112,17 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
             self._settings,
             self._exchange_rates,
         )
+        brake: PlatformBrakeReading = read_platform_brake(
+            self._pause_repo, self._spend_gauge, self._settings, input_data.now
+        )
+        if brake.brake is not None:
+            return SpendVerdict(
+                level=SpendLevel.HARD_LIMIT,
+                day=day,
+                spend_micro_usd=CostMicroUsd(0),
+                limits=limits,
+                platform_brake=brake.brake,
+            )
         hard_mark: SpendLimitMarkDocument | None = self._marks.get(
             business.id,
             spend_limit_mark_id_of(business.id, day, SpendLevel.HARD_LIMIT),

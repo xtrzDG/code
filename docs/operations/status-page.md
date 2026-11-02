@@ -54,8 +54,8 @@ The card **Status page announcements** on the admin page **System**
 
 1. Choose the level: a notice (`info`), planned maintenance, degraded
    service or an outage, and the components it affects.
-2. Write the text in English (required) and in Georgian and Russian: each
-   owner reads it in the cabinet's language, else English.
+2. Write the text in English (required) and in Italian: each owner reads
+   it in the cabinet's language, else English.
 3. Planned maintenance gets its start (up to 60 days ahead) and expected
    end; it shows as scheduled until it starts.
 4. Update it as you learn (`PATCH`), and resolve it when service is back:

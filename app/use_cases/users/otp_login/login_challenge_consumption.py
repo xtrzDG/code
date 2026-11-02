@@ -16,7 +16,10 @@ from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.use_cases.users.sign_in_security_audit import SignInSecurityAudit
-from app.utilities.security.one_time_codes import is_otp_code_matching
+from app.utilities.security.one_time_codes import (
+    is_otp_code_matching,
+    otp_hash_keys,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 INVALID_CODE_MESSAGE: str = "The login code is wrong or has expired."
@@ -70,7 +73,7 @@ def consume_login_challenge(
     if attempt is None:
         raise refusal_after_lost_race(otp_challenge_repo, challenge)
 
-    if not is_otp_code_matching(challenge.id, code, challenge.code_hash):
+    if not is_otp_code_matching(challenge, code, otp_hash_keys(app_settings)):
         if attempt >= max_attempts:
             logger.warning(
                 "Login code challenge %s locked after %s wrong codes.",

@@ -118,3 +118,17 @@ class DepositExemption(StrEnum):
     VALUE_UNKNOWN = "value_unknown"
     NOT_A_BANQUET = "not_a_banquet"
     NOTHING_OPEN = "nothing_open"
+
+
+class PaymentPageChangeKind(StrEnum):
+    """
+    How a change of the deposit settings touched the pages guests pay on
+    (the owners hear of it and it needs a fresh confirmation): a page added
+    or removed, another default template, or a deposit rule pointed at
+    another page. Never stored.
+    """
+
+    ADDED = "added"
+    REMOVED = "removed"
+    DEFAULT_CHANGED = "default_changed"
+    RULE_PAGE_CHANGED = "rule_page_changed"

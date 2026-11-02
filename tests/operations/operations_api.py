@@ -74,16 +74,20 @@ def operator[InputData, OutputData](
 
 
 class TokenAuthenticator(OperatorContract[SessionCheck, SessionAssurance]):
+    """One session per token: its requests share the session id, as a real one's."""
+
     def __init__(self, users: dict[str, UserId]) -> None:
-        self._users: dict[str, UserId] = users
+        self._sessions: dict[str, SessionAssurance] = {
+            token: signed_in(user_id) for token, user_id in users.items()
+        }
 
     def operate(self, input_data: SessionCheck) -> SessionAssurance:
         token: AccessToken = input_data.access_token
-        user_id: UserId | None = self._users.get(str(token))
-        if user_id is None:
+        session: SessionAssurance | None = self._sessions.get(str(token))
+        if session is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return signed_in(user_id)
+        return session
 
 
 class Api:
@@ -117,6 +121,8 @@ class Api:
             )
         )
         world = self.world
+        # The session the gateway binds is the one the calendar flow keeps.
+        session_assurance = SessionAssuranceContext()
         application = FastAPI()
         install_error_handlers(application)
         application.include_router(
@@ -129,7 +135,7 @@ class Api:
                             STRANGER_TOKEN: UserId(),
                         }
                     ),
-                    SessionAssuranceContext(),
+                    session_assurance,
                 ),
                 authorize_business_access=operator(
                     build_authorize_business_access(
@@ -162,6 +168,8 @@ class Api:
                         authorization_state_repo=state_repo,
                         calendar_client=google_client,
                         wall_clock=world.clock.wall_clock,
+                        session_assurance=session_assurance,
+                        secret_cipher=cipher,
                     )
                 ),
                 complete_calendar_connection=operator(
@@ -171,6 +179,15 @@ class Api:
                         calendar_client=google_client,
                         secret_cipher=cipher,
                         wall_clock=world.clock.wall_clock,
+                        session_assurance=session_assurance,
+                        authorize_business_access=build_authorize_business_access(
+                            business_repo=world.business_repo,
+                            user_repo=world.user_repo,
+                            audit_log_repo=world.audit_repo,
+                            wall_clock=world.clock.wall_clock,
+                            session_assurance=SessionAssuranceContext(),
+                            app_settings=ACCESS_SETTINGS,
+                        ),
                     )
                 ),
                 disconnect_calendar=operator(

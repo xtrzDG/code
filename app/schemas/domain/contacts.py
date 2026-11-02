@@ -5,6 +5,12 @@ from pydantic import Field, model_validator
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.marketing_consent import (
+    MarketingConsentSource,
+    MarketingConsentText,
+    MarketingConsentWithdrawal,
+)
+from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.booleans import IsContactBlocked, IsVipCustomer
 from app.schemas.typings.contacts.constrained_strings import (
@@ -47,6 +53,47 @@ class ContactBlock(PersistentDocument):
     blocked_by: UserId
 
 
+class MarketingConsent(PersistentDocument):
+    """
+    The customer's consent to marketing messages (Codice privacy art. 130,
+    GDPR art. 7(1): the business must be able to show it): when, where
+    (`source`), recorded by whom (`recorded_by`, the team member for a
+    consent given in person; None: the customer themselves, on the page of
+    `booking_id`) and the wording agreed to (`text_version`). Taken back
+    when `withdrawn_at` is set: how (`withdrawal`) and by whom
+    (`withdrawn_by`, None: the customer). A new consent replaces a taken
+    back one; every change is audited (UPDATE of the contact).
+    """
+
+    given_at: Microseconds
+    source: MarketingConsentSource
+    text_version: MarketingConsentText
+    recorded_by: UserId | None = None
+    booking_id: BookingId | None = None
+    withdrawn_at: Microseconds | None = None
+    withdrawal: MarketingConsentWithdrawal | None = None
+    withdrawn_by: UserId | None = None
+
+    @property
+    def is_active(self) -> bool:
+        return self.withdrawn_at is None
+
+    def withdrawn(
+        self,
+        at: Microseconds,
+        how: MarketingConsentWithdrawal,
+        by: UserId | None = None,
+    ) -> Self:
+        """The consent taken back (a taken back one stays as it was)."""
+
+        if not self.is_active:
+            return self
+
+        return self.model_copy(
+            update={"withdrawn_at": at, "withdrawal": how, "withdrawn_by": by}
+        )
+
+
 class ContactDocument(BaseDocument):
     """
     A customer of one business (concept table `contacts`).
@@ -81,9 +128,15 @@ class ContactDocument(BaseDocument):
     list's filter). Only the card writes of the repository change them; a
     plain save keeps them as stored, so a turn that read the contact
     earlier never undoes a tag or a block. An erased customer has none.
+
+    Version 5 adds `marketing_consent` (optional, a card field like the
+    tags): marketing messages go only to a customer with an active one.
+    Every customer from before it has none, which reads as no consent. A
+    plain save that brings a new STOP (a channel joins `opted_out_channels`)
+    takes it back (`keep_card_fields`); an erasure drops it.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: ContactId = Field(default_factory=ContactId)
     business_id: BusinessId
     name: ContactName | None = None
@@ -101,6 +154,16 @@ class ContactDocument(BaseDocument):
     is_vip: IsVipCustomer = False
     block: ContactBlock | None = None
     is_blocked: IsContactBlocked = False
+    marketing_consent: MarketingConsent | None = None
+
+    @property
+    def has_marketing_consent(self) -> bool:
+        """
+        Consent recorded and not taken back. A STOP, the suppression list
+        and a block are the sender's checks and always win over it.
+        """
+
+        return self.marketing_consent is not None and self.marketing_consent.is_active
 
     @property
     def is_test_only(self) -> bool:

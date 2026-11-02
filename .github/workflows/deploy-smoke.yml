@@ -4,17 +4,21 @@ name: Deploy smoke test
 # deployed commit's images checked against what CI published on main
 # (scripts/verify_images.sh: the cosign signature and the SLSA provenance
 # name this repository's ci.yml, refs/heads/main and exactly this commit). A
-# green staging run of both fast-forwards the `release` branch, which
-# production deploys (render.yaml); a red production run is the signal to
-# roll back (docs/operations/deploys.md).
+# green staging run of both asks a person to promote the commit: once one of
+# the required reviewers of the environment `production-release` approves
+# it, the `release` branch, which production deploys (render.yaml), is
+# fast-forwarded to it. A red production run is the signal to roll back
+# (docs/operations/deploys.md).
 #
 # Setup: GitHub environments `staging` and `production`, each with the
 # variables API_URL (and optionally CABINET_URL, SMOKE_WIDGET_BUSINESS_ID,
-# SMOKE_EXPECT_REPLY). Render reports deploys to GitHub as deployments of
-# the service's name; a Render deploy webhook relayed as a repository
-# dispatch works too. Repository variable PROMOTE_AFTER_STAGING_SMOKE=false
-# turns the automatic promotion off. The promotion waits until production has
-# finished the post-deploy data tasks of the release it runs (repository
+# SMOKE_EXPECT_REPLY), and `production-release` with its reviewers, `main`
+# as its only branch and the secret RELEASE_DEPLOY_KEY. Render reports
+# deploys to GitHub as deployments of the service's name; a Render deploy
+# webhook relayed as a repository dispatch works too. Repository variable
+# PROMOTE_AFTER_STAGING_SMOKE=false leaves the approval request out (the
+# promotion is then started by hand). The promotion waits until production
+# has finished the post-deploy data tasks of the release it runs (repository
 # variable PRODUCTION_API_URL, scripts/check_data_tasks.sh): re-run the
 # promote job once they are done.
 on:
@@ -133,16 +137,26 @@ jobs:
           printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           scripts/verify_images.sh "$SHA"
 
+  # The one step to production that waits for a person: the job runs in the
+  # environment `production-release`, whose required reviewers
+  # (.github/repository-settings.json) approve or reject it on the run's
+  # page, and which only workflows of `main` may use. It pushes with that
+  # environment's deploy key, the only key the protection of `release` lets
+  # past its pull-request rule: no workflow token can move `release`, and an
+  # environment GitHub made up on the fly holds no key.
   promote:
-    name: Promote to production (release branch)
+    name: Promote to production (release branch, approved by a person)
     needs: [target, smoke, images]
     if: >-
       needs.target.outputs.environment == 'staging'
       && vars.PROMOTE_AFTER_STAGING_SMOKE != 'false'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    environment: production-release
     permissions:
-      contents: write
+      contents: read
+      # Reads the environment's protection rules before anything is pushed.
+      actions: read
     concurrency:
       group: promote-release
       cancel-in-progress: false
@@ -150,6 +164,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      # Without reviewers the job would have started unapproved: refuse.
+      - name: A person approved this promotion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          reviewers="$(gh api "repos/${GITHUB_REPOSITORY}/environments/production-release" \
+            --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')"
+          if [ "${reviewers:-0}" -lt 1 ]; then
+            echo "::error::The environment production-release has no required reviewers: nothing reaches production without a person's approval (docs/operations/deploys.md)."
+            exit 1
+          fi
 
       - name: Wait for production's post-deploy data tasks
         env:
@@ -166,7 +193,19 @@ jobs:
       - name: Fast-forward release to the smoke-tested commit
         env:
           SHA: ${{ needs.target.outputs.sha }}
+          RELEASE_DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
         run: |
+          if [ -z "$RELEASE_DEPLOY_KEY" ]; then
+            echo "::error::The environment production-release has no secret RELEASE_DEPLOY_KEY: release cannot move (docs/operations/deploys.md, \"One-time setup\")." >&2
+            exit 1
+          fi
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/release-key"' EXIT
+          printf '%s\n' "$RELEASE_DEPLOY_KEY" > "$RUNNER_TEMP/release-key"
+          # GitHub's published SSH host key, and no other.
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/release-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts"
+          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
           git fetch --no-tags origin main
           if ! git merge-base --is-ancestor "$SHA" origin/main; then
             echo "$SHA is not on main: not promoted."

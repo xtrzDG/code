@@ -6,6 +6,8 @@ from app.containers.clients import ClientsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.booking_grid import BookingGrid, BookingGridQuery
 from app.schemas.dto.calendar import (
@@ -73,6 +75,8 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Resources, schedules and exceptions.
     create_resource_use_case: Factory[
@@ -147,6 +151,8 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         authorization_state_repo=repositories.calendar_authorization_state_repo,
         calendar_client=clients.google_calendar_client,
         wall_clock=time_provider.microsecond_wall_clock,
+        session_assurance=utilities.session_assurance,
+        secret_cipher=adapters.secret_cipher,
     )
     complete_google_calendar_connection_use_case: Factory[
         UseCaseContract[CompleteCalendarConnectionCommand, CalendarConnectionOutcome]
@@ -157,6 +163,10 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         calendar_client=clients.google_calendar_client,
         secret_cipher=adapters.secret_cipher,
         wall_clock=time_provider.microsecond_wall_clock,
+        session_assurance=utilities.session_assurance,
+        authorize_business_access=(
+            account_use_cases.authorize_business_access_use_case
+        ),
     )
     disconnect_google_calendar_use_case: Factory[
         UseCaseContract[DisconnectCalendarCommand, CalendarDisconnectResult]

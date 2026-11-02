@@ -85,6 +85,7 @@ class CustomerBed:
             customer_settings_repo=testbed.customer_settings_repo,
             audit_log_repo=testbed.audit_log_repo,
             wall_clock=wall_clock,
+            suppression_list=testbed.suppression_list,
         )
         self.change_blocking = ChangeCustomerBlockingUseCase(
             authorize_business_access=authorize,
@@ -92,6 +93,7 @@ class CustomerBed:
             customer_settings_repo=testbed.customer_settings_repo,
             audit_log_repo=testbed.audit_log_repo,
             wall_clock=wall_clock,
+            suppression_list=testbed.suppression_list,
         )
         self.get_standing = GetContactStandingUseCase(
             authorize_business_access=authorize,

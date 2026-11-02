@@ -1,11 +1,16 @@
 """
-The team's card on a customer (tags, VIP, block): how a plain save keeps
-it, and the tag rules every writer shares.
+The team's card on a customer (tags, VIP, block, marketing consent): how a
+plain save keeps it, and the tag rules every writer shares.
 """
 
 from typed_time_provider import Microseconds
 
-from app.schemas.domain.contacts import ContactDocument, ContactTagMark
+from app.schemas.constants.marketing_consent import MarketingConsentWithdrawal
+from app.schemas.domain.contacts import (
+    ContactDocument,
+    ContactTagMark,
+    MarketingConsent,
+)
 from app.schemas.typings.contacts.constrained_strings import (
     CustomerTag,
     CustomerTagKey,
@@ -23,7 +28,10 @@ def keep_card_fields(
     """
     The contact to store for a plain save: the incoming one with the card
     as stored (a turn that read the contact before a colleague tagged or
-    blocked it must not undo that). An erasure stores no card.
+    blocked it, or before the customer agreed to marketing, must not undo
+    that). A save that brings a new STOP (a channel the stored contact did
+    not opt out of) takes the marketing consent back in the same step. An
+    erasure stores no card.
     """
 
     if incoming.erased_at is not None:
@@ -35,8 +43,23 @@ def keep_card_fields(
             "is_vip": stored.is_vip,
             "block": stored.block,
             "is_blocked": stored.block is not None,
+            "marketing_consent": consent_after_save(incoming, stored),
         }
     )
+
+
+def consent_after_save(
+    incoming: ContactDocument, stored: ContactDocument
+) -> MarketingConsent | None:
+    """The stored consent, taken back by a STOP the save records."""
+
+    consent: MarketingConsent | None = stored.marketing_consent
+    if consent is None or not (
+        set(incoming.opted_out_channels) - set(stored.opted_out_channels)
+    ):
+        return consent
+
+    return consent.withdrawn(incoming.updated_at, MarketingConsentWithdrawal.STOP)
 
 
 def tag_key(tag: CustomerTag) -> CustomerTagKey:

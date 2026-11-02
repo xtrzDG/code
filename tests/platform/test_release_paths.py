@@ -8,7 +8,11 @@ protection cannot be passed by a skipped job:
   merge pushes no event (ZAP, CodeQL and Lighthouse included);
 - the required checks of ci.yml cannot be skipped into passing: a required
   job that needs other jobs runs always and fails unless they succeeded;
-- automerge waits for every workflow that owns a required check.
+- automerge waits for every workflow that owns a required check;
+- nothing reaches production without a person: the promotion to `release`
+  runs in the environment `production-release`, whose reviewers approve it,
+  and pushes with its deploy key; every environment a job names is
+  declared with its protection, and `release` is protected like `main`.
 """
 
 import ast
@@ -170,10 +174,84 @@ def test_automerge_waits_for_every_workflow_of_a_required_check() -> None:
             owners.add(str(document["name"]))
     run = automerge_script()
 
-    assert owners == {"CI", "CodeQL", "API contract"}
+    assert owners == {"CI", "CodeQL", "API contract", "Workflow audit"}
     assert set(triggers(workflow("automerge.yml"))["workflow_run"]["workflows"]) == (
         owners
     )
     # A merge while one of them still runs would be refused: wait for it.
     assert run.index('gh pr checks "$pr" --required') < run.index("gh pr merge")
     assert 'select(.bucket == "pending")' in run
+
+
+def promote_job() -> dict[str, Any]:
+    return jobs(workflow("deploy-smoke.yml"))["promote"]
+
+
+def test_a_person_approves_every_promotion_to_production() -> None:
+    promote = promote_job()
+    expected = json.loads(SETTINGS.read_text(encoding="utf-8"))
+    release = expected["environments"]["production-release"]
+    steps = cast(list[dict[str, Any]], promote["steps"])
+    names = [str(step.get("name", "")) for step in steps]
+    approval = steps[names.index("A person approved this promotion")]
+    push = steps[names.index("Fast-forward release to the smoke-tested commit")]
+
+    assert promote["environment"] == "production-release"
+    assert release["required_reviewers"] and release["deployment_branches"] == ["main"]
+    # The job's own token reads; the push needs the environment's deploy key.
+    assert promote["permissions"] == {"contents": "read", "actions": "read"}
+    assert steps[0]["with"]["persist-credentials"] is False
+    assert names.index("A person approved this promotion") < names.index(
+        "Fast-forward release to the smoke-tested commit"
+    )
+    assert "environments/production-release" in str(approval["run"])
+    assert 'select(.type == "required_reviewers")' in str(approval["run"])
+    assert push["env"]["RELEASE_DEPLOY_KEY"] == "${{ secrets.RELEASE_DEPLOY_KEY }}"
+    run = str(push["run"])
+    assert '[ -z "$RELEASE_DEPLOY_KEY" ]' in run
+    assert "StrictHostKeyChecking=yes" in run and "github.com ssh-ed25519 " in run
+    assert run.index("GIT_SSH_COMMAND") < run.index('git push origin "$SHA')
+    # Production's own smoke run never promotes anything.
+    assert (
+        runs(
+            str(promote["if"])
+            .replace("needs.target.outputs.environment", repr("production"))
+            .replace("vars.PROMOTE_AFTER_STAGING_SMOKE", repr("")),
+            "deployment_status",
+            MAIN,
+        )
+        is False
+    )
+
+
+def test_every_named_environment_is_declared_with_its_protection() -> None:
+    declared = set(json.loads(SETTINGS.read_text(encoding="utf-8"))["environments"])
+    named: set[str] = set()
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        for job in jobs(workflow(path.name)).values():
+            environment = job.get("environment")
+            if isinstance(environment, str) and "${{" not in environment:
+                named.add(environment)
+
+    assert named == declared
+
+
+def test_release_is_protected_like_main_with_checks_its_commits_carry() -> None:
+    branches = json.loads(SETTINGS.read_text(encoding="utf-8"))["branches"]
+    main, release = branches["main"], branches["release"]
+    on_main: set[str] = set()
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        document = workflow(path.name)
+        push = triggers(document).get("push")
+        if isinstance(push, dict) and "paths" not in push:
+            for job_id, job in jobs(document).items():
+                if is_required(job_id, job):
+                    on_main.add(str(document["name"]))
+
+    for flag in ("pull_request_required", "force_pushes_blocked", "deletions_blocked"):
+        assert release[flag] is True and main[flag] is True, flag
+    assert set(release["required_status_checks"]) <= set(main["required_status_checks"])
+    # A promoted commit of main carries every check release requires: the
+    # pull-request-only check (oasdiff) ran on its pull request instead.
+    assert on_main == {"CI", "CodeQL", "Workflow audit"}
+    assert all("oasdiff" not in check for check in release["required_status_checks"])

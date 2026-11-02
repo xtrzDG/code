@@ -22,6 +22,11 @@ from app.repositories.platform_announcement_repository import (
     PlatformAnnouncementRepository,
 )
 from app.repositories.platform_monitor_repository import PlatformMonitorRepository
+from app.repositories.platform_safety_repositories import (
+    PaymentReconciliationRepository,
+    PeriodicJobHeartbeatRepository,
+    PlatformPauseRepository,
+)
 from app.repositories.platform_status_day_repository import (
     PlatformStatusDayRepository,
 )
@@ -127,4 +132,18 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
         NicheTextRepository,
         draft_collection=operations_collections.niche_text_draft_collection,
         release_collection=operations_collections.niche_text_release_collection,
+    )
+    # The global pause, the periodic jobs' heartbeats and the daily payment
+    # reconciliations (1230).
+    platform_pause_repo: Singleton[PlatformPauseRepository] = Singleton(
+        PlatformPauseRepository,
+        collection=operations_collections.platform_pause_collection,
+    )
+    periodic_job_heartbeat_repo: Singleton[PeriodicJobHeartbeatRepository] = Singleton(
+        PeriodicJobHeartbeatRepository,
+        collection=operations_collections.periodic_job_heartbeat_collection,
+    )
+    payment_reconciliation_repo: Singleton[PaymentReconciliationRepository] = Singleton(
+        PaymentReconciliationRepository,
+        collection=operations_collections.payment_reconciliation_collection,
     )

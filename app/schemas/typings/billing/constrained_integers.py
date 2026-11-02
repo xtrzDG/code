@@ -179,6 +179,15 @@ class PaymentRetryDayOffset(BaseConstrainedTypedInt):
     le = 30
 
 
+class ReconciledOrderCount(BaseConstrainedTypedInt):
+    """
+    Payment orders one daily reconciliation compared with their payment
+    provider, or could not compare (the provider did not answer).
+    """
+
+    ge = 0
+
+
 class TrialCardPromptDayOffset(BaseConstrainedTypedInt):
     """
     Whole local days after a trial starts from which the cabinet asks the

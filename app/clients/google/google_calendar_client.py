@@ -1,6 +1,7 @@
-"""Google OAuth 2.0 (web server flow) and Google Calendar API v3 over httpx."""
-
-from urllib.parse import urlencode
+"""
+Google OAuth 2.0 (web server flow with PKCE) and Google Calendar API v3
+over httpx.
+"""
 
 import httpx
 
@@ -24,6 +25,14 @@ from app.clients.google.google_calendar_requests import (
     events_url,
 )
 from app.clients.google.google_http import GoogleHttp
+from app.clients.google.google_oauth_requests import (
+    GOOGLE_CALENDAR_SCOPES,
+    GOOGLE_REVOKE_ENDPOINT,
+    GOOGLE_TOKEN_ENDPOINT,
+    code_exchange_form,
+    consent_url,
+    refresh_form,
+)
 from app.contracts.operations import GoogleCalendarClientContract
 from app.schemas.dto.calendar_sync.busy_reads import (
     BusyPeriod,
@@ -43,6 +52,8 @@ from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
+    CalendarCodeChallenge,
+    CalendarCodeVerifier,
     CalendarDisplayName,
     CalendarEventId,
     CalendarRefreshToken,
@@ -51,25 +62,19 @@ from app.schemas.typings.bookings.strings import (
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 
-GOOGLE_AUTHORIZATION_ENDPOINT: str = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_ENDPOINT: str = "https://oauth2.googleapis.com/token"
-GOOGLE_REVOKE_ENDPOINT: str = "https://oauth2.googleapis.com/revoke"
-# Least privilege: create, change and delete events (bookings mirrored),
-# and read calendars (the list to link a resource to, and their free/busy).
-GOOGLE_CALENDAR_SCOPES: str = (
-    "https://www.googleapis.com/auth/calendar.events "
-    "https://www.googleapis.com/auth/calendar.readonly"
-)
+# The scopes stay importable from here (the consent asks for them).
+__all__ = ["GOOGLE_CALENDAR_SCOPES", "GoogleCalendarClient"]
 GONE_STATUS_CODES: frozenset[int] = frozenset({404, 410})
 MAX_CALENDAR_NAME_LENGTH: int = 200
 
 
 class GoogleCalendarClient(GoogleCalendarClientContract):
     """
-    Minimal Google client: consent URL with offline access, code exchange,
-    token refresh and revocation, the calendar's title, event insert, patch
-    and delete, and availability: the account's calendars and a calendar's
-    free/busy (these two raise BusyTimeSourceError with the reason).
+    Minimal Google client: consent URL with offline access and a PKCE
+    challenge, code exchange with its verifier, token refresh and
+    revocation, the calendar's title, event insert, patch and delete, and
+    availability: the account's calendars and a calendar's free/busy (these
+    two raise BusyTimeSourceError with the reason).
 
     Missing credentials (GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
     APP_BASE_URL) make every call raise ExternalServiceError, as do network
@@ -98,53 +103,35 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
     def build_authorization_url(
         self,
         state: CalendarAuthorizationState,
+        code_challenge: CalendarCodeChallenge,
     ) -> CalendarAuthorizationUrl:
         client_id, _, redirect_url = self._require_credentials()
-        query: str = urlencode(
-            {
-                "client_id": client_id,
-                "redirect_uri": redirect_url,
-                "response_type": "code",
-                "scope": GOOGLE_CALENDAR_SCOPES,
-                "access_type": "offline",
-                "include_granted_scopes": "true",
-                "prompt": "consent",
-                "state": str(state),
-            }
-        )
-        return CalendarAuthorizationUrl(f"{GOOGLE_AUTHORIZATION_ENDPOINT}?{query}")
+        return consent_url(client_id, redirect_url, state, code_challenge)
 
-    def exchange_code(self, code: CalendarAuthorizationCode) -> CalendarTokenGrant:
+    def exchange_code(
+        self,
+        code: CalendarAuthorizationCode,
+        code_verifier: CalendarCodeVerifier | None,
+    ) -> CalendarTokenGrant:
         client_id, client_secret, redirect_url = self._require_credentials()
-        payload: dict[str, object] = self._http.post_form(
-            GOOGLE_TOKEN_ENDPOINT,
-            {
-                "code": str(code),
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "redirect_uri": redirect_url,
-                "grant_type": "authorization_code",
-            },
-            "Google authorization code exchange",
+        form = code_exchange_form(
+            code, client_id, client_secret, redirect_url, code_verifier
         )
-        return parse_token_grant(payload)
+        return parse_token_grant(
+            self._http.post_form(
+                GOOGLE_TOKEN_ENDPOINT, form, "Google authorization code exchange"
+            )
+        )
 
     def refresh_access_token(
         self,
         refresh_token: CalendarRefreshToken,
     ) -> CalendarTokenGrant:
         client_id, client_secret, _ = self._require_credentials()
-        payload: dict[str, object] = self._http.post_form(
-            GOOGLE_TOKEN_ENDPOINT,
-            {
-                "refresh_token": str(refresh_token),
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "grant_type": "refresh_token",
-            },
-            "Google access token refresh",
+        form = refresh_form(refresh_token, client_id, client_secret)
+        return parse_token_grant(
+            self._http.post_form(GOOGLE_TOKEN_ENDPOINT, form, "Google access token refresh")
         )
-        return parse_token_grant(payload)
 
     def revoke_token(self, refresh_token: CalendarRefreshToken) -> None:
         response: httpx.Response = self._http.send(
@@ -264,7 +251,9 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         )
         return read_calendar_entries(response)
 
-    def _require_credentials(self) -> tuple[str, str, str]:
+    def _require_credentials(
+        self,
+    ) -> tuple[PlatformIdentifier, PlatformSecret, CalendarRedirectUrl]:
         if (
             self._client_id is None
             or self._client_secret is None
@@ -275,4 +264,4 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
                 "GOOGLE_OAUTH_CLIENT_SECRET and APP_BASE_URL are required)."
             )
 
-        return str(self._client_id), str(self._client_secret), str(self._redirect_url)
+        return self._client_id, self._client_secret, self._redirect_url

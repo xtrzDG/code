@@ -15,6 +15,19 @@ class SpendLevel(StrEnum):
     HARD_LIMIT = "hard_limit"
 
 
+class PlatformBrake(StrEnum):
+    """
+    Why every business's assistant holds the language model back at once,
+    whatever its own spend: a platform admin paused them all (PAUSED), or
+    the platform's provider spend of the UTC day reached the share of its
+    daily budget where it stops (BUDGET_STOP). Customers are handed to
+    the team in their language and calls go to the forwarding number.
+    """
+
+    PAUSED = "paused"
+    BUDGET_STOP = "budget_stop"
+
+
 class SpendProvider(StrEnum):
     """
     Who the platform pays for a kind of metered usage: the language model

@@ -10,6 +10,8 @@ IsCardSetupAvailable = bool
 IsClientDiscountActive = bool
 IsDerivedExchangeRate = bool
 IsExchangeRateStale = bool
+# A provider's answer is about an order's first payment, not its latest.
+IsFirstPayment = bool
 IsInitialPaymentSettled = bool
 IsPaymentRetry = bool
 IsPriceEstimated = bool

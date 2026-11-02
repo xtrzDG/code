@@ -6,7 +6,8 @@ and history and each person's guidance (1111); the service level
 indicators in five-minute slots and hourly rows (1163); the post-deploy
 data tasks' state (1164); the marks of the platform's watchers
 (1173); the platform admin's overrides of the niche templates' texts
-(1221). Part of DOCUMENT_COLLECTIONS (document_collection_catalog.py).
+(1221); the global pause, the periodic jobs' heartbeats and the daily
+payment reconciliations (1230). Part of DOCUMENT_COLLECTIONS (document_collection_catalog.py).
 """
 
 from app.schemas.domain.client_standings import ClientStandingDocument
@@ -29,6 +30,9 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from app.utilities.storage.niche_text_collections import NICHE_TEXT_COLLECTIONS
+from app.utilities.storage.platform_safety_collections import (
+    PLATFORM_SAFETY_COLLECTIONS,
+)
 
 DATA_TASK_STATES_COLLECTION: DocumentCollectionName = DocumentCollectionName(
     "data_task_states"
@@ -69,4 +73,5 @@ OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
         DocumentCollectionName("platform_monitors"), PlatformMonitorDocument
     ),
     *NICHE_TEXT_COLLECTIONS,  # Drafts and versions of the niche texts (1221).
+    *PLATFORM_SAFETY_COLLECTIONS,  # Pause, job heartbeats, reconciliations (1230).
 )

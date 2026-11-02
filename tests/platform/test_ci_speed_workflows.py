@@ -51,10 +51,10 @@ def test_the_backend_tests_run_in_parts_of_each_group() -> None:
     parts: list[dict[str, Any]] = tests["strategy"]["matrix"]["include"]
     groups: dict[str, list[dict[str, Any]]] = {
         group: [part for part in parts if part["group"] == group]
-        for group in ("postgres", "rest")
+        for group in ("postgres", "rest", "api-fuzz")
     }
 
-    assert {part["group"] for part in parts} == {"postgres", "rest"}
+    assert {part["group"] for part in parts} == {"postgres", "rest", "api-fuzz"}
     for group_parts in groups.values():
         total: int = group_parts[0]["parts"]
         assert [part["part"] for part in group_parts] == list(range(1, total + 1))
@@ -63,6 +63,10 @@ def test_the_backend_tests_run_in_parts_of_each_group() -> None:
     assert tests["timeout-minutes"] <= 15
     assert "postgres and not perf" in tests["env"]["MARKERS"]
     assert "not postgres and not perf" in tests["env"]["MARKERS"]
+    # The API fuzz run is a job of its own, left out of the other parts.
+    assert groups["api-fuzz"] == [{"group": "api-fuzz", "part": 1, "parts": 1}]
+    assert "matrix.group == 'api-fuzz' && 'api_fuzz'" in tests["env"]["MARKERS"]
+    assert "not perf and not api_fuzz" in tests["env"]["MARKERS"]
     assert tests["env"]["TEST_PART"] == "${{ matrix.part }}/${{ matrix.parts }}"
     assert (
         tests["env"]["COVERAGE_FILE"]
@@ -249,7 +253,7 @@ def test_only_a_green_dependabot_run_can_merge_and_only_its_head() -> None:
 
     assert triggers(automerge) == {
         "workflow_run": {
-            "workflows": ["CI", "CodeQL", "API contract"],
+            "workflows": ["CI", "CodeQL", "API contract", "Workflow audit"],
             "types": ["completed"],
         }
     }

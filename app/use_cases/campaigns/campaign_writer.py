@@ -54,6 +54,16 @@ class CampaignWriter:
     customer who is gone, unreachable in a connected messenger, or
     reachable only where the 24-hour window is closed without a template
     is skipped with that reason.
+
+    Every message of a campaign (an invitation back, a recall, a
+    pre-arrival note) is marketing, so it goes only to a customer whose
+    marketing consent is recorded and not taken back (Codice privacy art.
+    130(1)-(2); `ContactDocument.marketing_consent`). There is no e-mail
+    channel, so the soft opt-in of art. 130(4), which covers e-mail only,
+    never applies. A customer without consent gets nothing and nothing is
+    stored, so a consent given while the booking is still due counts.
+    Service messages (confirmations, reminders, the booking's link) are
+    other flows and need no marketing consent.
     """
 
     message_repo: CampaignMessageRepoContract
@@ -95,6 +105,9 @@ class CampaignWriter:
 
         if is_messaging_suppressed(self.suppression_list, business.id, contact):
             return self._skip(message, CampaignSkipReason.OPTED_OUT)
+
+        if not contact.has_marketing_consent:
+            return False
 
         choice: RouteChoice = self.routing.choose(
             business,

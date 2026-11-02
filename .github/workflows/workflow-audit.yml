@@ -1,0 +1,68 @@
+name: Workflow audit
+
+# The workflows and the Dependabot configuration, on every pull request and
+# every push to main, by two tools pinned by version and SHA-256:
+#
+# - actionlint: syntax, expressions, the job graph, and shellcheck of every
+#   `run:` (the runner's own shellcheck);
+# - zizmor: template injection, credentials left in checkouts, dangerous
+#   triggers, unpinned or impostor actions and images, excessive
+#   permissions, Dependabot cooldown (.github/zizmor.yml). With the job's
+#   token it also asks GitHub whether a pinned commit belongs to its action
+#   and whether an action has a known advisory.
+#
+# A finding fails the check. An exception is commented where it occurs
+# (`# zizmor: ignore[<audit>]` and the reason), never in a blanket list.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workflow-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONLINT_VERSION: "1.7.12"
+  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+  # zizmor's Linux wheel, checked against the SHA-256 PyPI publishes for it.
+  ZIZMOR_VERSION: "1.31.1"
+  ZIZMOR_SHA256: "58e878eb2dbd2c6183c105e1ac28c14f7dd1eca44a783f1fe2a69647d012c410"
+
+jobs:
+  audit:
+    name: Workflow audit (actionlint, zizmor)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint and zizmor
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$archive"
+          echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" actionlint
+          wheel="zizmor-${ZIZMOR_VERSION}-py3-none-manylinux_2_28_x86_64.whl"
+          curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$wheel" \
+            "https://files.pythonhosted.org/packages/py3/z/zizmor/$wheel"
+          echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/$wheel" | sha256sum --check
+          unzip -q -j -o "$RUNNER_TEMP/$wheel" "zizmor-${ZIZMOR_VERSION}.data/scripts/zizmor" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/actionlint" -version
+          "$RUNNER_TEMP/zizmor" --version
+
+      - name: actionlint
+        run: '"$RUNNER_TEMP/actionlint" -color'
+
+      - name: zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: '"$RUNNER_TEMP/zizmor" --format github .'

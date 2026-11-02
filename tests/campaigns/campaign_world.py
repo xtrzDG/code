@@ -12,12 +12,16 @@ from app.repositories.customer_history_repository import CustomerHistoryReposito
 from app.repositories.customer_repositories import CustomerSegmentRepository
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.campaigns import CampaignAudience, RebookingRuleKind
+from app.schemas.constants.marketing_consent import (
+    CURRENT_MARKETING_CONSENT_TEXT,
+    MarketingConsentSource,
+)
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.campaigns import (
     CampaignMessageDocument,
     CampaignSettingsDocument,
 )
-from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.domain.customer_segments import (
     CustomerSegmentDocument,
@@ -107,6 +111,32 @@ class CampaignWorld(GrowthWorld):
         )
         self.segment_repo.save(segment)
         return segment
+
+    def guest(
+        self,
+        name: str,
+        language: str = "ru",
+        phone: str | None = None,
+        has_consent: bool = True,
+    ) -> ContactDocument:
+        """A guest in Telegram; one who agreed to marketing unless told."""
+
+        guest = super().guest(name, language, phone)
+        if has_consent:
+            self.agree(guest)
+        return guest
+
+    def agree(self, guest: ContactDocument) -> None:
+        """The guest ticked the marketing box on their booking page."""
+
+        def record(stored: ContactDocument) -> None:
+            stored.marketing_consent = MarketingConsent(
+                given_at=self.clock.now_microseconds(),
+                source=MarketingConsentSource.BOOKING_PAGE,
+                text_version=CURRENT_MARKETING_CONSENT_TEXT,
+            )
+
+        self.contact_repo.change_card(self.business.id, guest.id, record)
 
     def make_vip(self, guest: ContactDocument) -> None:
         def mark(stored: ContactDocument) -> None:

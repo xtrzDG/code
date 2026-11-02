@@ -9,7 +9,7 @@ and the stored count ended at 1).
 
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import pytest
 from typed_time_provider import Microseconds
@@ -25,7 +25,6 @@ from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
-from app.schemas.typings.users.strings import OtpCodeHash
 from app.use_cases.users.otp_login import login_challenge_consumption
 from app.utilities.security.one_time_codes import is_otp_code_matching
 from tests.users.accounts_phones import GEORGIA_MOBILE
@@ -54,10 +53,10 @@ def count_comparisons(monkeypatch: pytest.MonkeyPatch) -> list[OtpCode]:
     compared: list[OtpCode] = []
 
     def counting_compare(
-        challenge_id: OtpChallengeId, code: OtpCode, code_hash: OtpCodeHash
+        challenge: OtpChallengeDocument, code: OtpCode, keys: Sequence[bytes]
     ) -> bool:
         compared.append(code)
-        return is_otp_code_matching(challenge_id, code, code_hash)
+        return is_otp_code_matching(challenge, code, keys)
 
     monkeypatch.setattr(
         login_challenge_consumption, "is_otp_code_matching", counting_compare

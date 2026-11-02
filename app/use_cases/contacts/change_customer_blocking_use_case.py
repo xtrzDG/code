@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.customer_repositories import (
     CustomerCardRepoContract,
@@ -42,7 +43,9 @@ class ChangeCustomerBlockingUseCase(
         customer_settings_repo: CustomerSettingsRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        suppression_list: SuppressionListContract,
     ) -> None:
+        self._suppression_list: SuppressionListContract = suppression_list
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -94,5 +97,7 @@ class ChangeCustomerBlockingUseCase(
             )
         )
         return card_view(
-            changed, self._customer_settings_repo.get_by_business(business.id)
+            changed,
+            self._customer_settings_repo.get_by_business(business.id),
+            self._suppression_list,
         )

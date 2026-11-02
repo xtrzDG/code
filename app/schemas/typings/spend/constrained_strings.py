@@ -3,6 +3,20 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class PlatformPauseReason(BaseConstrainedTypedString):
+    """
+    Why a platform admin paused (or resumed) every assistant at once, in
+    their own words; the audit log keeps it with the action.
+
+    Example:
+        reason = PlatformPauseReason("Model provider answers in the wrong language")
+    """
+
+    min_length = 8
+    max_length = 300
+    pattern = r"^\S(.*\S)?$"
+
+
 class SpendDay(BaseConstrainedTypedString):
     """
     One calendar day of spend, ISO `YYYY-MM-DD`: a business's own day in its

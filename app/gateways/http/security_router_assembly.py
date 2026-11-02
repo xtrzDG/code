@@ -3,6 +3,9 @@
 from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.admin_member_session_routes import (
+    build_admin_member_session_router,
+)
 from app.gateways.http.admin_security_routes import build_admin_security_router
 from app.gateways.http.admin_team_routes import build_admin_team_router
 from app.gateways.http.business_security_routes import (
@@ -12,6 +15,7 @@ from app.gateways.http.mfa_routes import build_mfa_router
 from app.gateways.http.passkey_account_routes import build_passkey_account_router
 from app.gateways.http.passkey_sign_in_routes import build_passkey_sign_in_router
 from app.gateways.http.session_routes import build_sessions_router
+from app.gateways.http.session_sign_out_routes import build_session_sign_out_router
 from app.gateways.http.support_access_routes import build_support_access_router
 from app.gateways.http.user_authentication import CurrentUserDependency
 
@@ -87,6 +91,17 @@ def build_security_routers(
             list_my_sessions_operator=security.list_my_sessions_operator(),
             revoke_session_operator=security.revoke_session_operator(),
             revoke_other_sessions_operator=security.revoke_other_sessions_operator(),
+            current_user=current_user,
+        ),
+        build_session_sign_out_router(
+            revoke_all_sessions_operator=security.revoke_all_sessions_operator(),
+            current_user=current_user,
+        ),
+        build_admin_member_session_router(
+            list_client_member_sessions_operator=(
+                security.list_client_member_sessions_operator()
+            ),
+            end_member_sessions_operator=security.end_member_sessions_operator(),
             current_user=current_user,
         ),
         build_admin_team_router(

@@ -2,8 +2,10 @@
 
 One page per failure, each in the same order: how it shows, what to check,
 how to stop the harm (mitigate), how to fix it, and what to do afterwards.
-Severity, roles and owner communication are in `../incident.md`; the alerts
-that link here are in `../slo.md` and `ops/alerts/`.
+Severity, roles and owner communication are in `../incident.md` (the
+first-minute decision tree and the hours in `../on-call.md`); the alerts
+that link here are in `../slo.md` and `ops/alerts/`; which dependency needs
+which runbook is `../dependency-map.md`.
 
 | Runbook | Alerts that link it | Usual severity |
 | --- | --- | --- |
@@ -26,6 +28,10 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [error-budget-burn](error-budget-burn.md) | `answer_budget_fast_burn`, `answer_budget_slow_burn`, `api_budget_fast_burn`, `api_budget_slow_burn` | SEV1-SEV2 |
 | [audit-anomaly](audit-anomaly.md) | `bulk_personal_data`, `tenant_hopping`, `failed_sign_in_checks` | SEV2 |
 | [audit-chain-broken](audit-chain-broken.md) | `audit_chain_broken`, a broken chain on Admin → Audit | SEV1 |
+| [render-outage](render-outage.md) | the uptime monitor's three checks at once, a Render incident | SEV1 |
+| [dns-outage](dns-outage.md) | DNS or TLS errors of the uptime monitor, the certificate expiry monitor | SEV1 |
+| [sms-outage](sms-outage.md) | `outbound_failures` with Twilio errors, owners without SMS codes | SEV2 |
+| [email-outage](email-outage.md) | `outbound_failures` with SMTP errors, owners without e-mail codes | SEV2 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
 the providers' circuits, queue lanes and dead letters, channels in ERROR, the last backup. Each

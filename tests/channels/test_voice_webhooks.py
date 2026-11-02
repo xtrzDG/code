@@ -117,6 +117,7 @@ def test_nothing_about_the_caller_comes_from_the_caller_id(caller: str | None) -
     assert response.status_code == 200, response.text
     assert set(response.json()["dynamic_variables"]) == {
         "is_open_now",
+        "can_transfer",
         "transfer_number",
         "local_now",
         "next_days",

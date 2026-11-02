@@ -8,21 +8,31 @@ from app.contracts.operations import (
     GoogleCalendarClientContract,
 )
 from app.contracts.secret_cipher import SecretCipherAdapterContract
+from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.calendar import CalendarConnectionFailure
+from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.calendar import (
     CalendarAuthorizationStateDocument,
     CalendarConnectionDocument,
 )
+from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.calendar import CalendarConnectionOutcome
 from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectionView,
     CalendarTokenGrant,
     CompleteCalendarConnectionCommand,
 )
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
+    ExternalServiceError,
+    NotFoundError,
+)
 from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationCode,
+    CalendarCodeVerifier,
     CalendarDisplayName,
     ExternalCalendarId,
 )
@@ -42,14 +52,18 @@ class CompleteGoogleCalendarConnectionUseCase(
     """
     OAuth callback: the state must be one we issued, unused and unexpired
     (it is consumed before the code exchange, so a callback cannot be
-    replayed), and it must be brought back by the user who started the flow:
-    a consent link forwarded to someone else cannot attach their Google
-    account to the business that issued it (login CSRF). Another user's
-    state is reported as an expired link, without its business and without
-    consuming it. Google's code is exchanged for tokens; the refresh token is
-    stored only encrypted, and the business's primary calendar becomes the
-    connected calendar (replacing an earlier connection), with its title
-    when Google tells it.
+    replayed), and it must be brought back by the user who started the flow,
+    on the session they started it from: a consent link forwarded to
+    someone else, or finished from another device, cannot attach a Google
+    account to the business that issued it (login CSRF). Another user's or
+    another session's state is reported as an expired link, without its
+    business and without consuming it. The person must still be an owner of
+    the business when they come back (a removed owner gets an expired link,
+    without the business). Google's code is exchanged for tokens with the
+    flow's PKCE verifier (a code intercepted on its way back is useless
+    without it); the refresh token is stored only encrypted, and the
+    business's primary calendar becomes the connected calendar (replacing
+    an earlier connection), with its title when Google tells it.
 
     Nothing is raised for the expected failures (the owner declined, an old
     or used link, no offline access, Google unavailable): the outcome names
@@ -64,6 +78,10 @@ class CompleteGoogleCalendarConnectionUseCase(
         calendar_client: GoogleCalendarClientContract,
         secret_cipher: SecretCipherAdapterContract,
         wall_clock: WallClock[Microseconds],
+        session_assurance: SessionAssuranceContract,
+        authorize_business_access: UseCaseContract[
+            BusinessAccessRequest, BusinessDocument
+        ],
     ) -> None:
         self._authorization_state_repo: CalendarAuthorizationStateRepoContract = (
             authorization_state_repo
@@ -72,6 +90,10 @@ class CompleteGoogleCalendarConnectionUseCase(
         self._calendar_client: GoogleCalendarClientContract = calendar_client
         self._secret_cipher: SecretCipherAdapterContract = secret_cipher
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._session_assurance: SessionAssuranceContract = session_assurance
+        self._authorize_business_access: UseCaseContract[
+            BusinessAccessRequest, BusinessDocument
+        ] = authorize_business_access
 
     def run(
         self,
@@ -85,7 +107,7 @@ class CompleteGoogleCalendarConnectionUseCase(
                 hash_authorization_state(input_data.state)
             )
         )
-        if state is None or state.user_id != input_data.user_id:
+        if state is None or not self._is_own_session(state, input_data):
             return CalendarConnectionOutcome(
                 failure=CalendarConnectionFailure.LINK_EXPIRED
             )
@@ -110,7 +132,51 @@ class CompleteGoogleCalendarConnectionUseCase(
                 ),
             )
 
+        if not self._is_still_owner(state):
+            return CalendarConnectionOutcome(
+                failure=CalendarConnectionFailure.LINK_EXPIRED
+            )
+
         return self._connect(state, input_data.code, now)
+
+    def _is_own_session(
+        self,
+        state: CalendarAuthorizationStateDocument,
+        input_data: CompleteCalendarConnectionCommand,
+    ) -> bool:
+        """The person and the session that started the flow (none: from before)."""
+
+        session: SessionAssurance | None = self._session_assurance.current()
+        return (
+            state.user_id == input_data.user_id
+            and state.session_id is not None
+            and session is not None
+            and session.user_id == input_data.user_id
+            and session.session_id == state.session_id
+        )
+
+    def _is_still_owner(self, state: CalendarAuthorizationStateDocument) -> bool:
+        try:
+            self._authorize_business_access.run(
+                BusinessAccessRequest(
+                    user_id=state.user_id,
+                    business_id=state.business_id,
+                    required_role=BusinessMemberRole.OWNER,
+                )
+            )
+        except AccessDeniedError, NotFoundError:
+            return False
+        return True
+
+    def _verifier_of(
+        self, state: CalendarAuthorizationStateDocument
+    ) -> CalendarCodeVerifier | None:
+        if state.sealed_code_verifier is None:
+            return None
+
+        return CalendarCodeVerifier(
+            str(self._secret_cipher.decrypt(state.sealed_code_verifier))
+        )
 
     def _connect(
         self,
@@ -119,7 +185,9 @@ class CompleteGoogleCalendarConnectionUseCase(
         now: Microseconds,
     ) -> CalendarConnectionOutcome:
         try:
-            grant: CalendarTokenGrant = self._calendar_client.exchange_code(code)
+            grant: CalendarTokenGrant = self._calendar_client.exchange_code(
+                code, self._verifier_of(state)
+            )
         except ExternalServiceError as error:
             LOGGER.warning("Google Calendar code exchange failed: %s", error)
             return CalendarConnectionOutcome(

@@ -147,11 +147,14 @@ class TestAgentCreation:
         }
         assert "+995599000111" not in json.dumps(agent)
         assert "{{is_open_now}}" in destination["condition"]
-        assert "{{transfer_number}}" in destination["condition"]
+        assert "{{can_transfer}}" in destination["condition"]
+        # The model never sees the staff number itself.
+        assert "{{transfer_number}}" not in json.dumps(agent_config["prompt"])
         assert "handoff_to_human" in destination["condition"]
         assert agent_config["dynamic_variables"] == {
             "dynamic_variable_placeholders": {
                 "is_open_now": "no",
+                "can_transfer": "no",
                 "transfer_number": "none",
                 "local_now": "unknown",
                 "next_days": "unknown",

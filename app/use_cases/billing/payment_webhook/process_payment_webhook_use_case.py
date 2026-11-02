@@ -10,7 +10,7 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import SubscriptionStatus
-from app.schemas.constants.payments import PaymentWebhookOutcome
+from app.schemas.constants.payments import PaymentStatus, PaymentWebhookOutcome
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
@@ -24,6 +24,7 @@ from app.schemas.dto.payments import (
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.billing.strings import PaymentNotificationKey
+from app.use_cases.billing.payment_state_events import log_payment_state_change
 from app.use_cases.billing.payment_webhook.card_on_file_recording import (
     build_card_notice_key,
     is_pending_card_setup,
@@ -123,6 +124,7 @@ class ProcessPaymentWebhookUseCase(
                 payment_order_id=payment_order.id,
             )
 
+        status_before: PaymentStatus = payment_order.status
         business: BusinessDocument | None = self._business_repo.get(
             payment_order.business_id
         )
@@ -175,6 +177,12 @@ class ProcessPaymentWebhookUseCase(
 
         payment_order.updated_at = now
         self._payment_order_repo.save(payment_order)
+        log_payment_state_change(
+            payment_order,
+            status_before,
+            None if new_payment is None else new_payment.status,
+            outcome,
+        )
         return PaymentWebhookReceipt(outcome=outcome, payment_order_id=payment_order.id)
 
     def _record_card(

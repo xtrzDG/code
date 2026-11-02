@@ -60,9 +60,11 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
     Notification failures never lose the lead. The lead's conversation
     joins the team inbox's "Requests" view and, when the business asked for
     it, is assigned automatically. A contact makes at most
-    MAX_LEADS_PER_CONTACT_PER_DAY real requests in 24 hours
-    (`contact_daily_caps`): one more is refused (RateLimitedError, the
+    MAX_LEADS_PER_CONTACT_PER_DAY real requests in its conversations in 24
+    hours (`contact_daily_caps`): one more is refused (RateLimitedError, the
     model's tool hears it), so an anonymous visitor cannot flood the team.
+    A request the business itself sends without a conversation (its public
+    API key) is not capped.
     """
 
     def __init__(
@@ -115,7 +117,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
             self._contact_repo, business.id, input_data.contact_id
         )
         now: Microseconds = self._wall_clock.now_unix()
-        if not input_data.is_sandbox:
+        if not input_data.is_sandbox and input_data.conversation_id is not None:
             self._refuse_past_daily_cap(business, contact, now)
 
         lead = LeadDocument(

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 #
 # Owner cabinet (Next.js). A regular `next build` + `next start` image (the
 # config does not use the standalone output).
@@ -9,13 +9,16 @@
 # Runtime variables: BACKEND_URL (the Python API, server side only) and
 # COOKIE_SECURE ("false" only when served over plain http).
 
-# The base image is named once, in a FROM line, so Dependabot can update it.
-FROM node:22-bookworm-slim AS node-base
+# The base image is named once, in a FROM line, by tag and digest: the build
+# takes exactly the reviewed image, and Dependabot (docker) moves both when
+# the tag moves. node 22-bookworm-slim of 2026-11-02.
+FROM node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS node-base
 
 # --- Dependencies ------------------------------------------------------------
 FROM node-base AS deps
 WORKDIR /web
-COPY package.json package-lock.json ./
+# .npmrc: no package runs install scripts (ignore-scripts).
+COPY package.json package-lock.json .npmrc ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
@@ -25,8 +28,9 @@ WORKDIR /web
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /web/node_modules ./node_modules
 COPY . .
-# The server renders Georgian and Russian dates and plurals: refuse a Node
-# without full ICU (scripts/check-intl.mjs).
+# The server renders the cabinet's Italian dates and plurals and the
+# customers' pages in their languages: refuse a Node without full ICU
+# (scripts/check-intl.mjs).
 RUN node scripts/check-intl.mjs \
     && npm run build \
     && npm prune --omit=dev --no-audit --no-fund

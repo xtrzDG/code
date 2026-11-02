@@ -42,6 +42,7 @@ from app.utilities.channels.channel_endpoints import (
 from app.utilities.channels.language_codes import to_voice_platform_language
 from app.utilities.channels.voice_service import (
     CALLER_ID_BOUND_TOOLS,
+    CAN_TRANSFER_VARIABLE,
     LOCAL_NOW_VARIABLE,
     NEXT_DAYS_VARIABLE,
     NO_TRANSFER_VALUE,
@@ -203,13 +204,15 @@ def build_voice_router(
 def build_call_variables(initiation: CallInitiationData) -> dict[str, str]:
     """
     The per-call variables of the agent's "Current call" block: whether the
-    business is open, the staff number a transfer may go to ("none": no
-    transfer on this call), the local date and time, the next days and
-    the time zone.
+    business is open and a transfer is possible, the local date and time,
+    the next days and the time zone; and the staff number a transfer goes
+    to ("none": no transfer on this call), read only by the transfer tool.
     """
 
+    can_transfer: bool = initiation.transfer_phone_number is not None
     return {
         OPEN_NOW_VARIABLE: OPEN_NOW_YES if initiation.is_open_now else OPEN_NOW_NO,
+        CAN_TRANSFER_VARIABLE: OPEN_NOW_YES if can_transfer else OPEN_NOW_NO,
         TRANSFER_NUMBER_VARIABLE: (
             NO_TRANSFER_VALUE
             if initiation.transfer_phone_number is None

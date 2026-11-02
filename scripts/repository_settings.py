@@ -1,7 +1,8 @@
 """
 The repository settings the project's security relies on but no file can
-hold: protection of the default branch, private vulnerability reporting and
-Dependabot security updates (SECURITY.md, "Repository settings").
+hold: protection of `main` and `release`, private vulnerability reporting and
+Dependabot security updates (SECURITY.md, "Repository settings"); the
+environments are judged by scripts/repository_environments.py.
 
 .github/workflows/repo-settings.yml reads them with `gh api --include`, one
 file per endpoint, and scripts/check_repository_settings.py judges the files
@@ -83,11 +84,13 @@ def parse_response(text: str) -> Response:
     return Response(int(status.group(1)), parsed)
 
 
-def unusable(endpoint: str, response: Response) -> SettingsError:
+def unusable(
+    endpoint: str, response: Response, permission: str = "Administration: read"
+) -> SettingsError:
     if response.status == 401:
         reason = "the token is missing, expired or revoked"
     elif response.status == 403:
-        reason = "the token may not read it (it needs Administration: read)"
+        reason = f"the token may not read it (it needs {permission})"
     else:
         reason = f"HTTP {response.status} {response.message}".rstrip()
     return SettingsError(f"{endpoint}: {reason}")

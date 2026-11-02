@@ -1,15 +1,25 @@
-"""Customers: the team's card on one customer (tags, VIP, block) and its standing."""
+"""
+Customers: the team's card on one customer (tags, VIP, block, marketing
+consent) and its standing.
+"""
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.customers import CustomerStanding
+from app.schemas.constants.marketing_consent import (
+    MarketingConsentSource,
+    MarketingConsentStatus,
+    MarketingConsentText,
+    MarketingConsentWithdrawal,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.booleans import (
     IsContactBlocked,
     IsContactErased,
+    IsMarketingConsentGiven,
     IsVipCustomer,
 )
 from app.schemas.typings.contacts.constrained_integers import (
@@ -24,8 +34,11 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 class CustomerCardRequest(ImmutableDTO):
     """
-    A change of the card: tags to add and to take off (any case), and the
-    VIP flag (unchanged when left out). At most 20 tags at a time.
+    A change of the card: tags to add and to take off (any case), the VIP
+    flag, and the customer's marketing consent as they gave or took it back
+    in person (true records the current wording with the team member who
+    recorded it; false records that it was taken back); each unchanged
+    when left out. At most 20 tags at a time.
     """
 
     add_tags: list[CustomerTag] = Field(
@@ -35,6 +48,7 @@ class CustomerCardRequest(ImmutableDTO):
         default_factory=list[CustomerTag], max_length=20
     )
     is_vip: IsVipCustomer | None = None
+    marketing_consent: IsMarketingConsentGiven | None = None
 
 
 class ChangeCustomerCardCommand(ImmutableDTO):
@@ -59,10 +73,29 @@ class ChangeCustomerBlockingCommand(ImmutableDTO):
     client_ip_address: ClientIpAddress | None = None
 
 
+class MarketingConsentView(ImmutableDTO):
+    """
+    The customer's marketing consent as the card shows it: the status
+    (STOPPED whatever was recorded while they said STOP, are on the
+    suppression list or blocked), and what was recorded: when, where, by
+    whom (None: the customer), the wording's version, and when and how it
+    was taken back.
+    """
+
+    status: MarketingConsentStatus = MarketingConsentStatus.NOT_GIVEN
+    given_at: Microseconds | None = None
+    source: MarketingConsentSource | None = None
+    text_version: MarketingConsentText | None = None
+    recorded_by: UserId | None = None
+    withdrawn_at: Microseconds | None = None
+    withdrawal: MarketingConsentWithdrawal | None = None
+
+
 class CustomerCardView(ImmutableDTO):
     """
-    The card after a change: the customer's tags, VIP flag and block, and
-    the business's tags (the latest used first) to offer next.
+    The card after a change: the customer's tags, VIP flag, block and
+    marketing consent, and the business's tags (the latest used first) to
+    offer next.
     """
 
     contact_id: ContactId
@@ -71,6 +104,9 @@ class CustomerCardView(ImmutableDTO):
     is_blocked: IsContactBlocked = False
     blocked_at: Microseconds | None = None
     known_tags: list[CustomerTag] = Field(default_factory=list[CustomerTag])
+    marketing_consent: MarketingConsentView = Field(
+        default_factory=MarketingConsentView
+    )
 
 
 class ContactStandingQuery(ImmutableDTO):

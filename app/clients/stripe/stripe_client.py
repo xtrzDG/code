@@ -122,6 +122,16 @@ class StripeClient(ClientContract):
             {"expand": ["default_payment_method"]},
         )
 
+    def retrieve_invoice(self, invoice_id: str) -> dict[str, object]:
+        """An invoice as Stripe has it now (its `status`), for reconciliation."""
+
+        return self._request("GET", f"/v1/invoices/{invoice_id}")
+
+    def retrieve_checkout_session(self, session_id: str) -> dict[str, object]:
+        """A checkout session (its `status`, `payment_status`), for reconciliation."""
+
+        return self._request("GET", f"/v1/checkout/sessions/{session_id}")
+
     def retrieve_payment_method(self, payment_method_id: str) -> dict[str, object]:
         return self._request("GET", f"/v1/payment_methods/{payment_method_id}")
 

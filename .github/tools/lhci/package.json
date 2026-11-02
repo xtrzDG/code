@@ -1,0 +1,9 @@
+{
+  "name": "lighthouse-ci-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lighthouse CI for .github/workflows/lighthouse.yml, installed from this lockfile (npm ci --ignore-scripts) so every package is pinned with its integrity hash.",
+  "dependencies": {
+    "@lhci/cli": "0.15.1"
+  }
+}

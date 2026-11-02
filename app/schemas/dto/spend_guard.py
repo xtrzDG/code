@@ -11,6 +11,7 @@ from app.schemas.configurations.spend_guard_settings import (
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.spend import (
     OwnerAction,
+    PlatformBrake,
     RequestLimitClass,
     SpendLevel,
     SpendProvider,
@@ -71,6 +72,10 @@ class SpendVerdict(ImmutableDTO):
     """
     Where the business stands today. `cheaper_model_id`: the model to answer
     on past the soft limit (None at NORMAL and HARD_LIMIT).
+    `platform_brake`: why the platform holds every assistant back at once
+    (the global pause, the daily budget stop); the level is then
+    HARD_LIMIT whatever the business spent, and its own spend is not
+    summed (0).
     """
 
     level: SpendLevel
@@ -78,6 +83,7 @@ class SpendVerdict(ImmutableDTO):
     spend_micro_usd: CostMicroUsd
     limits: SpendLimits
     cheaper_model_id: LlmModelId | None = None
+    platform_brake: PlatformBrake | None = None
 
 
 class SpendLimitPassing(ImmutableDTO):

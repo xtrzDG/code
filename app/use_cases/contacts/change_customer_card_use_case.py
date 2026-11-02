@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.customer_repositories import (
     CustomerCardRepoContract,
@@ -20,6 +21,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.contacts.constrained_strings import CustomerTag
 from app.use_cases.contacts.customer_card_views import card_change_entry, card_view
+from app.use_cases.contacts.marketing_consent_views import record_in_person
 from app.utilities.customers.customer_card import (
     add_tags,
     remember_tags,
@@ -31,12 +33,14 @@ class ChangeCustomerCardUseCase(
     UseCaseContract[ChangeCustomerCardCommand, CustomerCardView]
 ):
     """
-    Owners and staff tag a customer and mark them VIP (Customers → a
-    customer). The change is one atomic step on the contact as stored, so
-    two colleagues tagging at once both land, and a turn saving the
-    contact meanwhile keeps it. Tags compare without case; a customer
-    carries at most 20; the business's list of tags remembers the new ones
-    first. An erased customer has no card. Audited (UPDATE of the contact).
+    Owners and staff tag a customer, mark them VIP and record the
+    marketing consent the customer gave or took back in person, with who
+    recorded it and the wording's version (Customers → a customer). The
+    change is one atomic step on the contact as stored, so two colleagues
+    tagging at once both land, and a turn saving the contact meanwhile
+    keeps it. Tags compare without case; a customer carries at most 20;
+    the business's list of tags remembers the new ones first. An erased
+    customer has no card. Audited (UPDATE of the contact).
     """
 
     def __init__(
@@ -48,7 +52,9 @@ class ChangeCustomerCardUseCase(
         customer_settings_repo: CustomerSettingsRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        suppression_list: SuppressionListContract,
     ) -> None:
+        self._suppression_list: SuppressionListContract = suppression_list
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -85,6 +91,10 @@ class ChangeCustomerCardUseCase(
             )
             if request.is_vip is not None:
                 contact.is_vip = request.is_vip
+            if request.marketing_consent is not None:
+                record_in_person(
+                    contact, request.marketing_consent, input_data.user_id, now
+                )
 
         changed: ContactDocument | None = self._card_repo.change_card(
             business.id, input_data.contact_id, change
@@ -102,7 +112,7 @@ class ChangeCustomerCardUseCase(
                 changed, input_data.user_id, input_data.client_ip_address, now
             )
         )
-        return card_view(changed, settings)
+        return card_view(changed, settings, self._suppression_list)
 
     def _remember(
         self, business: BusinessDocument, added: list[CustomerTag], now: Microseconds

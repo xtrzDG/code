@@ -58,6 +58,18 @@ class PlatformDailySpendBudgetMicroUsd(BaseConstrainedTypedInt):
     ge = 1
 
 
+class PlatformSpendStopPercent(BaseConstrainedTypedInt):
+    """
+    The share of the platform's daily budget at which every assistant stops
+    calling the language model until UTC midnight
+    (PLATFORM_DAILY_SPEND_STOP_PERCENT, 100 by default); never below the
+    80 % the budget alert warns at.
+    """
+
+    ge = 80
+    le = 1_000
+
+
 class SpendLimitMultiple(BaseConstrainedTypedInt):
     """
     A daily spend limit as a multiple of the plan's planned daily provider

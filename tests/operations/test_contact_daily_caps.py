@@ -1,7 +1,9 @@
 """
 A customer can set off at most five requests and three staff alerts of
-handoffs in 24 hours, so an anonymous visitor cannot flood the team; test
-chats never count, and the next day starts afresh.
+handoffs in 24 hours in conversations, so an anonymous visitor cannot flood
+the team; an emergency always alerts, the business's own requests (public
+API, no conversation) are not capped, test chats never count, and the next
+day starts afresh.
 """
 
 from datetime import datetime, timedelta
@@ -10,7 +12,7 @@ import pytest
 
 from app.schemas.constants.bookings import LeadType
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.handoffs import HandoffStatus
+from app.schemas.constants.handoffs import HandoffStatus, HandoffUrgency
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.bookings.strings import LeadDetails
@@ -34,12 +36,12 @@ class LeadFlood:
             self.business, self.contact, ChannelKind.WEB_CHAT
         )
 
-    def request(self, is_sandbox: bool = False) -> LeadView:
+    def request(self, is_sandbox: bool = False, in_chat: bool = True) -> LeadView:
         return self.world.create_lead().run(
             CreateLeadCommand(
                 business_id=self.business.id,
                 contact_id=self.contact.id,
-                conversation_id=self.conversation.id,
+                conversation_id=self.conversation.id if in_chat else None,
                 lead_type=LeadType.OTHER,
                 details=LeadDetails("Call me back"),
                 source_channel=ChannelKind.WEB_CHAT,
@@ -69,6 +71,16 @@ def test_a_contact_makes_five_requests_a_day() -> None:
     assert len(flood.world.notifier.sent) == alerts
     flood.next_day()
     assert flood.request().id is not None
+
+
+def test_requests_of_the_business_without_a_conversation_are_not_capped() -> None:
+    flood = LeadFlood()
+    for _ in range(MAX_LEADS_PER_CONTACT_PER_DAY):
+        flood.request()
+
+    assert flood.request(in_chat=False).id is not None
+    with pytest.raises(RateLimitedError):
+        flood.request()
 
 
 def test_test_chat_requests_never_count() -> None:
@@ -104,3 +116,19 @@ def test_test_chat_handoffs_neither_alert_nor_count() -> None:
     fixture.hand_off()
 
     assert len(fixture.world.notifier.sent) - before == 3
+
+
+def test_an_emergency_alerts_staff_past_the_cap() -> None:
+    fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
+    for _ in range(MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY):
+        fixture.hand_off()
+    before = len(fixture.world.notifier.sent)
+
+    quiet = fixture.hand_off(urgency=HandoffUrgency.HIGH)
+    after_quiet = len(fixture.world.notifier.sent)
+    emergency = fixture.hand_off(urgency=HandoffUrgency.CRITICAL)
+
+    assert after_quiet == before
+    assert quiet.status is HandoffStatus.PENDING
+    assert len(fixture.world.notifier.sent) - after_quiet == 3
+    assert emergency.urgency is HandoffUrgency.CRITICAL

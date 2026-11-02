@@ -6,6 +6,7 @@ from app.schemas.typings.spend.constrained_integers import (
     CallMaxDurationSeconds,
     CallSilenceEndSeconds,
     PlatformDailySpendBudgetMicroUsd,
+    PlatformSpendStopPercent,
     SpendLimitMultiple,
 )
 
@@ -16,6 +17,7 @@ DEFAULT_CALL_SILENCE_END_SECONDS: int = 30
 DEFAULT_API_REQUESTS_PER_USER_PER_MINUTE: int = 600
 DEFAULT_API_REQUESTS_PER_IP_PER_MINUTE: int = 120
 DEFAULT_API_EXPORTS_PER_USER_PER_MINUTE: int = 30
+DEFAULT_PLATFORM_SPEND_STOP_PERCENT: int = 100
 
 
 class SpendGuardSettings(ImmutableDTO):
@@ -32,7 +34,12 @@ class SpendGuardSettings(ImmutableDTO):
     the assistant's own provider (`cheaper_model_of`).
     `platform_daily_budget_micro_usd` (PLATFORM_DAILY_SPEND_BUDGET_USD, in
     whole dollars): the spend the platform plans for a UTC day; the
-    `spend_budget` alert fires at 80 % of it. Unset: no budget alert.
+    `spend_budget` alert fires at 80 % of it. Unset: no budget alert and
+    no stop. `platform_spend_stop_percent`
+    (PLATFORM_DAILY_SPEND_STOP_PERCENT, 100): at that share of the budget
+    every assistant stops calling the model until UTC midnight (customers
+    are handed to the team, calls go to the forwarding number) and the
+    `spend_budget_stop` alert fires.
     `call_max_duration_seconds`, `call_silence_end_seconds`
     (CALL_MAX_DURATION_SECONDS 600, CALL_SILENCE_END_SECONDS 30): the voice
     agent ends a call at that length or after that much silence.
@@ -51,6 +58,9 @@ class SpendGuardSettings(ImmutableDTO):
     )
     soft_limit_model_id: LlmModelId | None = None
     platform_daily_budget_micro_usd: PlatformDailySpendBudgetMicroUsd | None = None
+    platform_spend_stop_percent: PlatformSpendStopPercent = PlatformSpendStopPercent(
+        DEFAULT_PLATFORM_SPEND_STOP_PERCENT
+    )
     call_max_duration_seconds: CallMaxDurationSeconds = CallMaxDurationSeconds(
         DEFAULT_CALL_MAX_DURATION_SECONDS
     )

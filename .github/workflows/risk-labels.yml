@@ -1,0 +1,33 @@
+name: Risk labels
+
+# Labels a pull request `risk:high` when it touches a security boundary:
+# sign-in and sessions, encryption and signatures, payments, inbound
+# webhooks, tenant isolation, the assistant's tools, or the CI and images
+# that hold the secrets (.github/labeler.yml). The label asks for a second
+# look; it is never removed by this workflow. A pull request from a fork
+# gets a read-only token, so its reviewer labels it by hand.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-labels-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    name: Label high-risk changes
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      # Adds the label to the pull request.
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          sync-labels: false

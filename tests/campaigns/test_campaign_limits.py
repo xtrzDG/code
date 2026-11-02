@@ -55,6 +55,7 @@ def test_a_guest_in_no_connected_messenger_is_skipped_with_the_reason() -> None:
     world = CampaignWorld()
     world.enable()
     phone_only = world.add_contact(world.business, "Phone only", "+995599111222")
+    world.agree(phone_only)
     world.visit(phone_only, VISIT_STARTS, VISIT_ENDS)
 
     world.run_campaigns()

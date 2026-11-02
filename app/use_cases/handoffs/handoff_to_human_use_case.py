@@ -18,7 +18,7 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import HandoffStatus
+from app.schemas.constants.handoffs import HandoffStatus, HandoffUrgency
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -77,7 +77,8 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
     does a contact's handoff past MAX_HANDOFF_ALERTS_PER_CONTACT_PER_DAY in
     24 hours (`contact_daily_caps`): it joins the team's queue and silences
     the assistant, but nobody is alerted again, so an anonymous visitor
-    cannot flood staff with alerts.
+    cannot flood staff with alerts. An emergency (urgency CRITICAL) always
+    alerts staff, whatever came before it.
 
     The customer is told, in their language, that a colleague replies soon
     (during opening hours, or when hours are unknown) or when the business
@@ -170,7 +171,10 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         conversation.updated_at = now
         self._conversation_repo.save(conversation)
 
-        if not input_data.is_sandbox and self._alerts_staff(business, input_data, now):
+        if not input_data.is_sandbox and (
+            input_data.urgency is HandoffUrgency.CRITICAL
+            or self._alerts_staff(business, input_data, now)
+        ):
             queued: DeliveredNotificationCount = self._notify_staff(
                 business, input_data, handoff
             )

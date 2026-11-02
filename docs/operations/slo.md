@@ -26,8 +26,29 @@ Postgres deliver without heroics.
 What does not count against the budgets: messages a business sent while
 its assistant was paused or off, sandbox and autotest conversations,
 requests refused by design (4xx, rate limits), and planned maintenance
-announced 24 h before (on the status page once it exists, R13; until then
-by e-mail to owners).
+announced 24 h before on the status page (`docs/operations/maintenance.md`).
+
+## Product objectives
+
+Five more promises follow the customer's path past the first answer. They
+are read from the same metrics and tables every month, in the SLO report
+(`docs/operations/maintenance.md`, the calendar); they have no error budget
+of their own yet, and their alerts page on the size of a failure, not on its
+burn rate.
+
+| SLI | Objective (28 days) | Measured from | Pages today |
+| --- | --- | --- | --- |
+| **Calls answered**: calls to a business's assistant that the voice platform took and reported, over those plus the calls it could not take | 99% | finished-call reports (`calls`) and the voice fallback's missed calls (`missed_calls`, `app/gateways/http/twilio_voice_routes.py`) | `voice_health` (SEV2) |
+| **Voice latency**: the time our tools add to the agent's answer during a call | p95 under 2 s | `workshop_http_request_duration_seconds` of `POST /v1/voice/tools/{tool_name}` | `api_budget_*` when they fail; the dashboard's voice row |
+| **Booking success**: booking tool calls (create, reschedule, cancel) that ended with a booking or a business answer (slot taken, closed), not an error | 99.5% | the tool results stored with each reply | `tool_errors` (SEV3) |
+| **Notification delivery**: outbox messages (customers' replies, reminders, staff notices) delivered, over all that settled | 99% | `workshop_outbound_attempts_total` by `outcome` | `outbound_failures` (SEV2) |
+| **Webhook lag**: from a webhook's arrival to its inbound job starting | p99 under 10 s | `workshop_job_pickup_delay_seconds{lane="inbound"}`, `workshop_queue_oldest_wait_seconds{lane="inbound"}` | `inbound_backlog` (SEV2, 120 s) |
+
+Why: a call that the platform drops costs the business a booking at once,
+so its target sits close to the chat's; the voice agent itself answers in
+about a second and our tools must not double it; a booking the assistant
+promised but could not write is worse than none; a reminder that never
+arrives becomes a no-show.
 
 ## How each SLO is read today
 
@@ -178,7 +199,7 @@ with the restore drill's result (`docs/operations/backup-restore.md`).
 
 | Budget left (28 days) | What happens |
 | --- | --- |
-| More than 50% | Normal work. Risky changes (migrations of large tables, provider switches) ship on weekdays before 15:00 Tbilisi time. |
+| More than 50% | Normal work. Risky changes (migrations of large tables, provider switches) ship on weekdays before 15:00 Europe/Rome, never in a freeze period, and those that may interrupt answering only in the maintenance window (`docs/operations/maintenance.md`). |
 | 50% to 0% | Every deploy names its rollback in the pull request; no Friday deploys; the on-call person reviews the burn each morning. |
 | Spent | Feature work stops for the area that spent it: only fixes, tests and reliability work ship until the 28-day window is back above zero. A SEV1 or SEV2 postmortem's action items go first. |
 | Spent twice in a quarter | The objective or the architecture is wrong: revisit the target with the founder, or plan the structural fix (more workers, a second model provider, a second region) before new features. |

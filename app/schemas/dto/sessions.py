@@ -132,3 +132,10 @@ class SessionSweep(ImmutableDTO):
     kept_session_id: UserSessionId | None = None
     client_ip_address: ClientIpAddress | None = None
     now: Microseconds
+
+
+class RevokeAllSessionsCommand(ImmutableDTO):
+    """End every session of the person, the request's own too (sign out everywhere)."""
+
+    user_id: UserId
+    client_ip_address: ClientIpAddress | None = None

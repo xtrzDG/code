@@ -174,8 +174,12 @@ def test_the_smoke_workflow_tests_every_deploy_and_promotes_only_staging() -> No
     assert "needs: [target, smoke, images]" in promote
     assert 'git push origin "$SHA:refs/heads/release"' in promote
     assert "--force" not in promote
-    assert "contents: write" in promote
-    assert "contents: write" not in workflow.split("\n  promote:\n", 1)[0]
+    # A person approves (environment production-release) and the push uses
+    # that environment's deploy key: no job's token may write the repository
+    # (tests/platform/test_release_paths.py checks the approval in detail).
+    assert "\n    environment: production-release\n" in promote
+    assert "secrets.RELEASE_DEPLOY_KEY" in promote
+    assert "contents: write" not in workflow
 
 
 def test_ci_runs_the_same_smoke_test_against_the_image() -> None:

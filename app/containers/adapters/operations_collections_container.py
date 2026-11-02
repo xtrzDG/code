@@ -16,8 +16,11 @@ from app.schemas.domain.niche_texts import (
     NicheTextDraftDocument,
     NicheTextReleaseDocument,
 )
+from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
+from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
+from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
@@ -157,6 +160,32 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     niche_text_release_collection = document_collection(
         NicheTextReleaseDocument,
         "niche_text_releases",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The global pause, the periodic jobs' heartbeats and the daily payment
+    # reconciliations (1230).
+    platform_pause_collection = document_collection(
+        PlatformPauseDocument,
+        "platform_pauses",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    periodic_job_heartbeat_collection = document_collection(
+        PeriodicJobHeartbeatDocument,
+        "periodic_job_heartbeats",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    payment_reconciliation_collection = document_collection(
+        PaymentReconciliationDocument,
+        "payment_reconciliations",
         config,
         clients,
         utilities,

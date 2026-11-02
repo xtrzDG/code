@@ -21,6 +21,8 @@ from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
+    CalendarCodeChallenge,
+    CalendarCodeVerifier,
     CalendarEventDescription,
     CalendarEventId,
     CalendarEventTitle,
@@ -44,6 +46,8 @@ DRAFT = CalendarEventDraft(
     timezone=TimezoneName("Asia/Tbilisi"),
 )
 ACCESS = CalendarAccessToken("access-xyz")
+# RFC 7636 appendix B: this verifier's S256 challenge is E9Melhoa2Owv....
+VERIFIER: str = "dBjftJeZ4CVP-mJ92K9pmMHUfBKy8Q6fH0T6GF9Kd3k"
 
 
 class TestGoogleCalendarClient:
@@ -51,7 +55,10 @@ class TestGoogleCalendarClient:
         url = (
             FakeGoogle()
             .client()
-            .build_authorization_url(CalendarAuthorizationState("state-123"))
+            .build_authorization_url(
+                CalendarAuthorizationState("state-123"),
+                CalendarCodeChallenge("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"),
+            )
         )
 
         parts = urlsplit(str(url))
@@ -73,13 +80,18 @@ class TestGoogleCalendarClient:
             "include_granted_scopes": "true",
             "prompt": "consent",
             "state": "state-123",
+            # PKCE: a code that comes back without its verifier is useless.
+            "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            "code_challenge_method": "S256",
         }
 
     def test_code_exchange_and_refresh_post_forms_to_the_token_endpoint(self) -> None:
         google = FakeGoogle()
         client = google.client()
 
-        grant = client.exchange_code(CalendarAuthorizationCode("good-code"))
+        grant = client.exchange_code(
+            CalendarAuthorizationCode("good-code"), CalendarCodeVerifier(VERIFIER)
+        )
         refreshed = client.refresh_access_token(CalendarRefreshToken("refresh-initial"))
 
         assert (grant.access_token, grant.refresh_token, grant.expires_in) == (
@@ -97,6 +109,7 @@ class TestGoogleCalendarClient:
             "client_secret": "client-secret",
             "redirect_uri": str(REDIRECT_URL),
             "grant_type": "authorization_code",
+            "code_verifier": VERIFIER,
         }
         assert google.form(refresh)["grant_type"] == "refresh_token"
 
@@ -162,7 +175,9 @@ class TestGoogleCalendarClient:
             )
 
         with pytest.raises(ExternalServiceError, match="unexpected payload"):
-            client_with(not_json).exchange_code(CalendarAuthorizationCode("good-code"))
+            client_with(not_json).exchange_code(
+                CalendarAuthorizationCode("good-code"), None
+            )
 
         with pytest.raises(ExternalServiceError, match="HTTP 500 \\(UNAVAILABLE\\)"):
             google.client().delete_event(
@@ -197,7 +212,9 @@ class TestGoogleCalendarClient:
         )
 
         with pytest.raises(ExternalServiceError, match="not configured"):
-            unconfigured.build_authorization_url(CalendarAuthorizationState("s"))
+            unconfigured.build_authorization_url(
+                CalendarAuthorizationState("s"), CalendarCodeChallenge("c")
+            )
 
         assert not unconfigured.is_configured()
         assert FakeGoogle().client().is_configured()

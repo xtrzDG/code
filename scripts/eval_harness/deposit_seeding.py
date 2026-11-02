@@ -7,12 +7,14 @@ scenario (create_booking's result says so, send_payment_link issues it
 and the platform writes the payment line under the reply).
 """
 
+import contextvars
 from decimal import Decimal
 
 from pydantic import Field
 
 from app.containers.app import AppContainer
 from app.schemas.constants.deposits import DepositRule, DepositTarget, PaymentLinkKind
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.deposits.deposit_settings import (
     AddPaymentLinkCommand,
@@ -32,7 +34,8 @@ from app.schemas.typings.deposits.constrained_strings import (
     PaymentLinkAddressInput,
     PaymentLinkLabel,
 )
-from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.typings.users.prefixed_id import UserId, UserSessionId
 from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.strict_model import StrictModel
 
@@ -59,8 +62,33 @@ def seed_deposits(
     business: BusinessDocument,
     deposits: DepositSpec,
 ) -> None:
-    """Called inside the business's storage scope, as its owner."""
+    """
+    Called inside the business's storage scope, as its owner. A payment
+    page needs the owner's fresh confirmation (step-up), as in the
+    cabinet: the seeding runs as a session of the owner signed in just now,
+    in a context of its own, so nothing after it sees that session.
+    """
 
+    assurance = SessionAssurance(
+        user_id=owner_id,
+        session_id=UserSessionId(),
+        auth_level=AuthLevel.ONE_FACTOR,
+        authenticated_at=container.time_provider.microsecond_wall_clock().now_unix(),
+    )
+
+    def seed_as_signed_in_owner() -> None:
+        container.utilities.session_assurance().bind(assurance)
+        add_deposit_settings(container, owner_id, business, deposits)
+
+    contextvars.copy_context().run(seed_as_signed_in_owner)
+
+
+def add_deposit_settings(
+    container: AppContainer,
+    owner_id: UserId,
+    business: BusinessDocument,
+    deposits: DepositSpec,
+) -> None:
     use_cases = container.use_cases.deposits
     use_cases.add_payment_link_use_case().run(
         AddPaymentLinkCommand(

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.contact_activity_repositories import (
@@ -34,6 +35,7 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.use_cases.contacts.customer_standing import standing_of
 from app.use_cases.contacts.customer_timeline import build_timeline
+from app.use_cases.contacts.marketing_consent_views import consent_view
 from app.use_cases.shared.contact_summaries import summarize_contact
 from app.use_cases.shared.customer_phone_privacy import (
     protect_phone,
@@ -48,7 +50,9 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
     and their whole history across channels as one timeline (calls of
     their phone conversations too), read by the customer (indexed), never
     through the business's whole history; how many visits they made and
-    so how well the business knows them. An erased customer is shown
+    so how well the business knows them, and whether marketing may reach
+    them (their consent, never "agreed" while messages to them are
+    stopped). An erased customer is shown
     without personal data. Staff see the phone masked unless the owner
     allowed them. The view is audited (VIEW of the contact).
     """
@@ -66,7 +70,9 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         brand_repo: BrandRepoContract,
+        suppression_list: SuppressionListContract,
     ) -> None:
+        self._suppression_list: SuppressionListContract = suppression_list
         self._brand_repo: BrandRepoContract = brand_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -138,6 +144,7 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
             visit_count=visits.visit_count,
             last_visit_at=visits.last_visit_at,
             blocked_at=None if contact.block is None else contact.block.blocked_at,
+            marketing_consent=consent_view(contact, self._suppression_list),
             timeline=build_timeline(activity, calls),
             conversations=[
                 ContactConversationView(

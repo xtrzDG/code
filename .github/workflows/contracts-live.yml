@@ -76,18 +76,6 @@ jobs:
     env:
       UV_FROZEN: "1"
       CONTRACTS_LIVE: "1"
-      CONTRACTS_TELEGRAM_BOT_TOKEN: ${{ secrets.CONTRACTS_TELEGRAM_BOT_TOKEN }}
-      CONTRACTS_META_ACCESS_TOKEN: ${{ secrets.CONTRACTS_META_ACCESS_TOKEN }}
-      CONTRACTS_META_PHONE_NUMBER_ID: ${{ secrets.CONTRACTS_META_PHONE_NUMBER_ID }}
-      CONTRACTS_META_TEST_RECIPIENT: ${{ secrets.CONTRACTS_META_TEST_RECIPIENT }}
-      CONTRACTS_TWILIO_TEST_ACCOUNT_SID: ${{ secrets.CONTRACTS_TWILIO_TEST_ACCOUNT_SID }}
-      CONTRACTS_TWILIO_TEST_AUTH_TOKEN: ${{ secrets.CONTRACTS_TWILIO_TEST_AUTH_TOKEN }}
-      CONTRACTS_GOOGLE_CLIENT_ID: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_ID }}
-      CONTRACTS_GOOGLE_CLIENT_SECRET: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_SECRET }}
-      CONTRACTS_GOOGLE_REFRESH_TOKEN: ${{ secrets.CONTRACTS_GOOGLE_REFRESH_TOKEN }}
-      CONTRACTS_OPENAI_API_KEY: ${{ secrets.CONTRACTS_OPENAI_API_KEY }}
-      CONTRACTS_ANTHROPIC_API_KEY: ${{ secrets.CONTRACTS_ANTHROPIC_API_KEY }}
-      CONTRACTS_ELEVENLABS_API_KEY: ${{ secrets.CONTRACTS_ELEVENLABS_API_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -103,8 +91,22 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      # -rs lists the providers skipped for want of sandbox secrets.
+      # -rs lists the providers skipped for want of sandbox secrets; only
+      # this step holds them.
       - name: Call the sandboxes
+        env:
+          CONTRACTS_TELEGRAM_BOT_TOKEN: ${{ secrets.CONTRACTS_TELEGRAM_BOT_TOKEN }}
+          CONTRACTS_META_ACCESS_TOKEN: ${{ secrets.CONTRACTS_META_ACCESS_TOKEN }}
+          CONTRACTS_META_PHONE_NUMBER_ID: ${{ secrets.CONTRACTS_META_PHONE_NUMBER_ID }}
+          CONTRACTS_META_TEST_RECIPIENT: ${{ secrets.CONTRACTS_META_TEST_RECIPIENT }}
+          CONTRACTS_TWILIO_TEST_ACCOUNT_SID: ${{ secrets.CONTRACTS_TWILIO_TEST_ACCOUNT_SID }}
+          CONTRACTS_TWILIO_TEST_AUTH_TOKEN: ${{ secrets.CONTRACTS_TWILIO_TEST_AUTH_TOKEN }}
+          CONTRACTS_GOOGLE_CLIENT_ID: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_ID }}
+          CONTRACTS_GOOGLE_CLIENT_SECRET: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_SECRET }}
+          CONTRACTS_GOOGLE_REFRESH_TOKEN: ${{ secrets.CONTRACTS_GOOGLE_REFRESH_TOKEN }}
+          CONTRACTS_OPENAI_API_KEY: ${{ secrets.CONTRACTS_OPENAI_API_KEY }}
+          CONTRACTS_ANTHROPIC_API_KEY: ${{ secrets.CONTRACTS_ANTHROPIC_API_KEY }}
+          CONTRACTS_ELEVENLABS_API_KEY: ${{ secrets.CONTRACTS_ELEVENLABS_API_KEY }}
         run: uv run pytest tests/contracts/live -rs -q
 
   report:

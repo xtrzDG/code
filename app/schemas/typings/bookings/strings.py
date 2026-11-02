@@ -30,6 +30,21 @@ class CalendarAuthorizationStateHash(BaseTypedString):
     """SHA-256 hex digest of a calendar OAuth state, the only stored form."""
 
 
+class CalendarCodeChallenge(BaseTypedString):
+    """
+    The PKCE challenge of a calendar consent (RFC 7636 S256): the base64url
+    SHA-256 of its code verifier, sent to Google in the consent link.
+    """
+
+
+class CalendarCodeVerifier(BaseTypedString):
+    """
+    The PKCE code verifier of one calendar consent (RFC 7636: 43 to 128
+    unreserved characters), stored only sealed and sent to Google with the
+    code exchange, so a stolen authorization code alone is useless.
+    """
+
+
 class CalendarDisplayName(BaseTypedString):
     """
     Title of a connected calendar as the provider shows it (for a primary

@@ -34,6 +34,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.assistants.constrained_integers import (
     LlmMaxOutputTokens,
+    LlmToolCallLimit,
     LlmToolRoundLimit,
 )
 from app.schemas.typings.conversations.strings import (
@@ -123,7 +124,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         country_registry: CountryRegistryContract | None = None,
         platform_base_urls: Sequence[str | None] = (),
         check_spend: SpendCheck | None = None,
-        tool_call_limit: int = MAX_TOOL_CALLS_PER_RESPONSE,
+        tool_call_limit: LlmToolCallLimit = MAX_TOOL_CALLS_PER_RESPONSE,
     ) -> None:
         self._llm_adapter: LlmAdapterContract = llm_adapter
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
@@ -136,7 +137,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             platform_link_hosts(platform_base_urls),
         )
         self._check_spend: SpendCheck | None = check_spend
-        self._tool_call_limit: int = tool_call_limit
+        self._tool_call_limit: LlmToolCallLimit = tool_call_limit
         self._tool_registry: AssistantToolRegistryContract = tool_registry
         self._run_assistant_tool: UseCaseContract[
             AssistantToolInvocation, AssistantToolOutcome
@@ -271,7 +272,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
                 self._run_assistant_tool.run(
                     AssistantToolInvocation(context=turn.tool_context, call=call)
                 )
-                if position < self._tool_call_limit
+                if position < int(self._tool_call_limit)
                 else refused_call_outcome(call, self._tool_call_limit)
             )
             record_tool_outcome(progress, call, outcome)

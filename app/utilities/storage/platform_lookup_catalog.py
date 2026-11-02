@@ -22,6 +22,9 @@ from app.utilities.storage.lookup_field_builders import (
 )
 from app.utilities.storage.niche_text_collections import NICHE_TEXT_LOOKUP_FIELDS
 from app.utilities.storage.passkey_collections import PASSKEY_LOOKUP_FIELDS
+from app.utilities.storage.platform_safety_collections import (
+    PLATFORM_SAFETY_LOOKUP_FIELDS,
+)
 
 PLATFORM_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName, tuple[DocumentLookupField, ...]
@@ -111,4 +114,5 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
     **PASSKEY_LOOKUP_FIELDS,  # Passkeys and their ceremonies (1201).
     **BUSINESS_CLOSURE_LOOKUP_FIELDS,  # Closures and the deletion ledger (1220).
     **NICHE_TEXT_LOOKUP_FIELDS,  # The niche templates' published texts (1221).
+    **PLATFORM_SAFETY_LOOKUP_FIELDS,  # The overdue job heartbeats (1230).
 }

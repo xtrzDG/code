@@ -2,13 +2,16 @@
 
 A tag (`@v4`) can be moved to other code by whoever controls the action's
 repository; a commit SHA cannot. Dependabot keeps the pins current and the
-comment names the release.
+comment names the release. No checkout leaves the job's token in the
+working copy, and a secret reaches only the step that uses it.
 """
 
 import re
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
+import yaml
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 WORKFLOW_DIRECTORY: Path = PROJECT_ROOT / ".github" / "workflows"
@@ -17,10 +20,12 @@ USES_PATTERN: re.Pattern[str] = re.compile(
 )
 PINNED_PATTERN: re.Pattern[str] = re.compile(r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$")
 VERSION_COMMENT_PATTERN: re.Pattern[str] = re.compile(r"^\s+#\s+v\d+(\.\d+)*\s*$")
-# Release archives and prebuilt npm tarballs fetched outside a lockfile.
+# Release archives, prebuilt npm tarballs and wheels fetched outside a lockfile.
 DOWNLOAD_PATTERN: re.Pattern[str] = re.compile(
     r"https://\S+/releases/download/|https://registry\.npmjs\.org/\S+/-/"
+    r"|https://files\.pythonhosted\.org/"
 )
+SECRET_PATTERN: re.Pattern[str] = re.compile(r"\$\{\{\s*secrets\.")
 
 
 def workflow_paths() -> list[Path]:
@@ -72,11 +77,62 @@ def test_downloaded_tools_are_checked_against_a_digest(workflow_path: Path) -> N
     assert text.count("sha256sum --check") == downloads
 
 
-def test_dependabot_watches_every_ecosystem() -> None:
-    text: str = (PROJECT_ROOT / ".github" / "dependabot.yml").read_text(
-        encoding="utf-8"
-    )
-    ecosystems = set(re.findall(r"package-ecosystem:\s*(\S+)", text))
+def workflow(path: Path) -> dict[Any, Any]:
+    return cast(dict[Any, Any], yaml.safe_load(path.read_text(encoding="utf-8")))
 
-    assert ecosystems == {"uv", "npm", "github-actions", "docker"}
-    assert text.count("interval: weekly") == len(ecosystems)
+
+def jobs(path: Path) -> dict[str, dict[str, Any]]:
+    return cast(dict[str, dict[str, Any]], workflow(path)["jobs"])
+
+
+@pytest.mark.parametrize("workflow_path", workflow_paths(), ids=lambda path: path.name)
+def test_no_checkout_keeps_the_token(workflow_path: Path) -> None:
+    kept = [
+        f"{name}: {step['uses']}"
+        for name, job in jobs(workflow_path).items()
+        for step in cast(list[dict[str, Any]], job.get("steps", []))
+        if str(step.get("uses", "")).startswith("actions/checkout@")
+        and step.get("with", {}).get("persist-credentials") is not False
+    ]
+
+    assert kept == []
+
+
+@pytest.mark.parametrize("workflow_path", workflow_paths(), ids=lambda path: path.name)
+def test_secrets_reach_only_the_steps_that_use_them(workflow_path: Path) -> None:
+    document = workflow(workflow_path)
+    leaks = [
+        f"{name}: env"
+        for name, job in jobs(workflow_path).items()
+        if SECRET_PATTERN.search(yaml.safe_dump(job.get("env", {})))
+    ]
+    if SECRET_PATTERN.search(yaml.safe_dump(document.get("env", {}))):
+        leaks.append("workflow env")
+
+    assert leaks == []
+
+
+def test_dependabot_watches_every_ecosystem_with_a_week_of_cooldown() -> None:
+    path = PROJECT_ROOT / ".github" / "dependabot.yml"
+    updates = cast(list[dict[str, Any]], workflow(path)["updates"])
+    ecosystems = {str(update["package-ecosystem"]) for update in updates}
+    directories: set[str] = set()
+    for update in updates:
+        directories |= {str(update.get("directory", ""))} | set(
+            update.get("directories", [])
+        )
+
+    assert ecosystems == {
+        "uv",
+        "npm",
+        "pip",
+        "github-actions",
+        "docker",
+        "docker-compose",
+    }
+    assert all(update["schedule"]["interval"] == "weekly" for update in updates)
+    # A new release waits a week; security updates do not (Dependabot's rule).
+    assert all(update["cooldown"]["default-days"] >= 7 for update in updates)
+    for lockfile_directory in ("/web", "/integrations/zapier", "/.github/tools/lhci"):
+        assert lockfile_directory in directories, lockfile_directory
+    assert {"/.github/tools/pip-audit", "/perf"} <= directories

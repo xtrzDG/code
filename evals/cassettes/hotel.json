@@ -533,6 +533,31 @@
   },
   {
    "request": {
+    "request_digest": "0b7677e89bb87818d4a5ed6a259ecfaf6d356a1bb5e93db25bbeeba197919889",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "1d42a9d7bca5565f1d93c435462d18010443151f2741451ebb59242bbd440982",
+    "transcript_tail": "uble room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your stay at Rustaveli Terrace Hotel is confirmed: check-in Thursday, October 8, 2026 from 14:00, check-out Saturday, October 10, 2026 until 12:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "0f51e30a54892ece1757a7846c14c87269dc5dece7cc15e990631e75bbb48320",
     "model_id": "scripted",
     "instruction_digest": "1fd1dedf78279257ab30d629fe3cb406506ecab1b8adc3a2a512345cbacda642",
@@ -1394,6 +1419,31 @@
   },
   {
    "request": {
+    "request_digest": "2defba7806e1dfdf4e13fc56c448e8f986aeaf1d85bf7b47eeb9a6cf7b1cb243",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "dd0c250a849be1eb0aa7c382692bf04d833bc13d2bd46a0887440f31d8e616a4",
+    "transcript_tail": "\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Rustaveli Terrace Hotel-ში დადასტურებულია: შესვლა ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00-დან, გასვლა შაბათი, 10 ოქტომბერი, 2026, 12:00-მდე. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "2e3b37ab682c8ab8a9f37fe6e06b81b0ddf2877b1d53755d37c10a64d96cb986",
     "model_id": "scripted",
     "instruction_digest": "5bfca5d4cc5429b7ca1969788e3a6c751e2f5ef2e6b0bafb2188a9dcbe9bf228",
@@ -1413,7 +1463,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -1484,6 +1534,31 @@
       "text": "I understand, but I can't change prices: the standard double room costs 180 GEL. I'd be glad to help you choose something within your budget.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"I understand, but I can't change prices: the standard double room costs 180 GEL. I'd be glad to help you choose something within your budget.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "33f920a411c8dce9b2921e66787338279849461cf5f44e2a96b355403ba3698b",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "f1f5d643376fb0f776e94b9b311b8355fcb6a66b546ddf0b76cb5a2850ef4db1",
+    "transcript_tail": "oom\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"השהייה שלך ב-⁨Rustaveli Terrace Hotel⁩ אושרה: צ'ק-אין ⁨יום חמישי, 8 באוקטובר 2026⁩ החל מ-⁨14:00⁩, צ'ק-אאוט ⁨יום שבת, 10 באוקטובר 2026⁩ עד ⁨12:00⁩. שם: ⁨<customer_value>נועה</customer_value>⁩. מספר אורחים: ⁨2⁩.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "מעולה, נועה! 2 הלילות מיום חמישי הוזמנו; צ'ק-אין מ-14:00. נתראה!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! 2 הלילות מיום חמישי הוזמנו; צ'ק-אין מ-14:00. נתראה!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1565,31 +1640,6 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0002\", \"name\": \"create_booking\", \"input\": {\"name\": \"נועה\", \"phone\": \"+972502345678\", \"resource_type\": null, \"date\": \"2026-10-08\", \"time\": null, \"party_size\": 2, \"duration_minutes\": null, \"nights\": 2, \"notes\": null}}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "35bcb977a0fb5700267a5a2dec516e47bb77fcbd1475f1e72d1bb2a23e3ef93c",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "023f3a13b7e20cfefe780969c6da88ac3c8662d88e6c61c4acd716df6f5c3b78",
-    "transcript_tail": "source_name\\\":\\\"Standard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"השהייה שלך ב-⁨Rustaveli Terrace Hotel⁩ אושרה: צ'ק-אין ⁨יום חמישי, 8 באוקטובר 2026⁩ החל מ-⁨14:00⁩, צ'ק-אאוט ⁨יום שבת, 10 באוקטובר 2026⁩ עד ⁨12:00⁩. שם: ⁨נועה⁩. מספר אורחים: ⁨2⁩.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>נועה</customer_value>\\\",\\\"phone\\\":\\\"+972502345678\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "מעולה, נועה! 2 הלילות מיום חמישי הוזמנו; צ'ק-אין מ-14:00. נתראה!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"מעולה, נועה! 2 הלילות מיום חמישי הוזמנו; צ'ק-אין מ-14:00. נתראה!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1750,21 +1800,21 @@
   },
   {
    "request": {
-    "request_digest": "3e02ee5f86e98b9b0ae658cbc6f8dac7e76450cebefe2368aed6f3200e76b0ab",
+    "request_digest": "3e4601d49cc41e3432f42f71884343d8c76a92eaec3eb6826171e3cfde09ee1e",
     "model_id": "scripted",
     "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "4252650c4e8475ec212f81d59b4c96767a9468f90b2ecd4f2ca6f3d5a1b296ea",
-    "transcript_tail": "irmed\\\",\\\"resource_name\\\":\\\"Standard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваше проживание в «Rustaveli Terrace Hotel» подтверждено: заезд четверг, 8 октября 2026 г. с 14:00, выезд суббота, 10 октября 2026 г. до 12:00. Имя: Анна. Гостей: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "d59f11201b4a9d58134683b4a6ecf915489de51b9ca7e4308225553187663de6",
+    "transcript_tail": "nd_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Rustaveli Terrace Hotel-ში გადატანილია: ორშაბათი, 12 ოქტომბერი, 2026, 14:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2081,7 +2131,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 20
+     "elapsed": 0
     }
    ]
   },
@@ -2412,7 +2462,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 2
+     "elapsed": 0
     }
    ]
   },
@@ -2718,26 +2768,26 @@
   },
   {
    "request": {
-    "request_digest": "5c18acb2e66d240c65ca40ee1830408d80bbb1d5e411685de86e49c8691e8376",
+    "request_digest": "5cea0ee4b6f96c7208c5b22b68a2921bedc8281d281e8354aa4d8a7899ba49de",
     "model_id": "scripted",
     "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
     "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "7600ea027ce534a8965cdf37454db529f1e2c7087e0db8efd4337eb04e49f170",
-    "transcript_tail": " room\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Rustaveli Terrace Hotel has been moved to Monday, October 12, 2026, 14:00. Name: Emma. Guests: 2.\\\\nCancellation policy: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+    "transcript_digest": "d21ee85a3d4b96e8ed20ecae339386196e2e67d621a73e5052021bf2c80feeaf",
+    "transcript_tail": "2\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Rustaveli Terrace Hotel» перенесена на понедельник, 12 октября 2026 г., 14:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\\nПравила отмены: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
    },
    "takes": [
     {
      "sample_index": 0,
      "response": {
       "stop_reason": "end_turn",
-      "text": "Done! Your stay now starts on Monday, 12 October, for 2 nights.",
+      "text": "Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.",
       "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your stay now starts on Monday, 12 October, for 2 nights.\"}]}",
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2787,7 +2837,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 20
+     "elapsed": 0
     }
    ]
   },
@@ -2961,7 +3011,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -3267,7 +3317,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3473,7 +3523,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -3804,7 +3854,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -3972,6 +4022,31 @@
   },
   {
    "request": {
+    "request_digest": "81844692d2ce4b904294281a92932307b2437bce4584496dff078d6516f28776",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "1c15a7bea29e4813d5a3d7ac2b548ae139ff007ee566601136c116b3ce5c72d7",
+    "transcript_tail": "\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Rustaveli Terrace Hotel has been moved to Monday, October 12, 2026, 14:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\\nCancellation policy: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your stay now starts on Monday, 12 October, for 2 nights.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your stay now starts on Monday, 12 October, for 2 nights.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "841b37e20c9806ca4b0783d9c3103eb03621e60c441c563119b87802e2c76666",
     "model_id": "scripted",
     "instruction_digest": "547aca49b8f0ad55f9a1630bbd77a9ed94e36dd438033af8b6eeffcf1268c363",
@@ -4093,31 +4168,6 @@
       "text": "Здравствуйте! Я не смогу в четверг, отмените, пожалуйста, мою бронь.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте! Я не смогу в четверг, отмените, пожалуйста, мою бронь.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "8b931bfc2267982665aaf2398469d199f0533b02f93267772e76195f8f16023b",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "b9e4f0b7cc58e2049607a2d6a381c0ece907755b6c8d425874bada3d6ed23eaf",
-    "transcript_tail": "ouble room\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Rustaveli Terrace Hotel» перенесена на понедельник, 12 октября 2026 г., 14:00. Имя: Анна. Гостей: 2.\\\\nПравила отмены: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4365,6 +4415,31 @@
   },
   {
    "request": {
+    "request_digest": "94499328bf0a025e4589be796aa79379595e3021ba17283c85dcb9c948c36935",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "7e5d6dfb4227f421681f02cb36967ece92bec602dbea22af25525546ccb12029",
+    "transcript_tail": "e\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد إقامتك في ⁨Rustaveli Terrace Hotel⁩: تسجيل الوصول ⁨الخميس، 8 أكتوبر 2026⁩ من الساعة ⁨14:00⁩، والمغادرة ⁨السبت، 10 أكتوبر 2026⁩ حتى الساعة ⁨12:00⁩. الاسم: ⁨<customer_value>ليلى</customer_value>⁩. عدد الضيوف: ⁨2⁩.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "تم، ليلى! تم حجز 2 ليالٍ ابتداءً من يوم الخميس؛ تسجيل الوصول من 14:00. بانتظارك!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! تم حجز 2 ليالٍ ابتداءً من يوم الخميس؛ تسجيل الوصول من 14:00. بانتظارك!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "948545932760ad6d9f8b15efe9ac9fa70b81d6c449f4f8b0d4e48908f5db3c1b",
     "model_id": "scripted",
     "instruction_digest": "6a274f6cd07c121f0a3cbf53b47d19e2b737da3f4bc80bbdbab6236a87e185a9",
@@ -4385,31 +4460,6 @@
       "fallback_model_id": null
      },
      "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "94a2287d21c8c0514762ef51216c4645b882ec7639e7075964d668699390ee30",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "2206cd294d28db36d7756b110e7b8db786f405297feb4552602a3c42114027bb",
-    "transcript_tail": "oom\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Rustaveli Terrace Hotel-ში გადატანილია: ორშაბათი, 12 ოქტომბერი, 2026, 14:00. სახელი: ნინო. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel or change your booking at least 48 hours before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 16
     }
    ]
   },
@@ -4640,7 +4690,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 16
+     "elapsed": 0
     }
    ]
   },
@@ -4823,31 +4873,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "a18a3d941b83999a09486199d18a4cac41fce0252b5e5af4f92927dabec9815c",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "c7c865f9ba8b639d2c86687d63d8aed2f221bf6b4da6435ed490701dd7715fd1",
-    "transcript_tail": "rce_name\\\":\\\"Standard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Rustaveli Terrace Hotel-ში დადასტურებულია: შესვლა ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00-დან, გასვლა შაბათი, 10 ოქტომბერი, 2026, 12:00-მდე. სახელი: ნინო. სტუმრები: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5309,6 +5334,31 @@
        }
       ],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"tool_use\", \"id\": \"toolu_scripted_0001\", \"name\": \"get_price\", \"input\": {\"item_name\": \"Standard double room\"}}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "ae02ee2d7ca2d2b34193d7d4cd33f40f30177ed0a24183f7e6e732dd5d869f17",
+    "model_id": "scripted",
+    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "6e533f90bf85400e298ce9f807bd47a8f68f8bc075518b4d697469385d921e5d",
+    "transcript_tail": "ard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваше проживание в «Rustaveli Terrace Hotel» подтверждено: заезд четверг, 8 октября 2026 г. с 14:00, выезд суббота, 10 октября 2026 г. до 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5812,7 +5862,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -6834,7 +6884,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -7002,31 +7052,6 @@
   },
   {
    "request": {
-    "request_digest": "d9c78b1beff42c22cda7e30db4e5022f756abe7e86588e65f817c189b0fdc894",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "2cffb211c0ffed642f2fe4fe2934694a16f93e0fda8ed010e7abab07b6f08413",
-    "transcript_tail": "\",\\\"resource_name\\\":\\\"Standard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your stay at Rustaveli Terrace Hotel is confirmed: check-in Thursday, October 8, 2026 from 14:00, check-out Saturday, October 10, 2026 until 12:00. Name: Emma. Guests: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "da5d57b9b07b7bfe0c32837e631eebc24920b600483c67052e6874eac2e83182",
     "model_id": "scripted",
     "instruction_digest": "5d2c1d4112b2a721a7f44cdaaef9eabb23aed8a7734c1dd6e20867027b5c6d1b",
@@ -7067,31 +7092,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "db7ca142e27e7f50e309b78a34c0193b8c8c64e7be0f6f1929a0feb399bd8399",
-    "model_id": "scripted",
-    "instruction_digest": "8616fb1b67a0ffcdb92d8e5ece36f67c5c0de09a6d673e696e431075bbf9e22a",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "dfbba10eefe921ce7fd19b377feab28bc58803a54f2acc0038833de05b53e187",
-    "transcript_tail": "\\\":\\\"Standard double room\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"تم تأكيد إقامتك في ⁨Rustaveli Terrace Hotel⁩: تسجيل الوصول ⁨الخميس، 8 أكتوبر 2026⁩ من الساعة ⁨14:00⁩، والمغادرة ⁨السبت، 10 أكتوبر 2026⁩ حتى الساعة ⁨12:00⁩. الاسم: ⁨ليلى⁩. عدد الضيوف: ⁨2⁩.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ليلى</customer_value>\\\",\\\"phone\\\":\\\"+971501234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "تم، ليلى! تم حجز 2 ليالٍ ابتداءً من يوم الخميس؛ تسجيل الوصول من 14:00. بانتظارك!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"تم، ليلى! تم حجز 2 ليالٍ ابتداءً من يوم الخميس؛ تسجيل الوصول من 14:00. بانتظارك!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -7258,7 +7258,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },

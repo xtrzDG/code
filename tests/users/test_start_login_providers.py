@@ -9,7 +9,7 @@ from app.schemas.dto.users import StartOtpLoginCommand
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.strings import RawEmailAddressInput
-from app.utilities.security.one_time_codes import hash_otp_code
+from app.utilities.security.one_time_codes import hash_otp_code, otp_hash_keys
 from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
 
@@ -68,7 +68,10 @@ def test_a_failing_provider_falls_back_along_the_country_list() -> None:
     assert stored is not None
     assert stored.delivery_channel is OtpDeliveryChannel.WHATSAPP
     [delivery] = testbed.otp_delivery.deliveries
-    assert stored.code_hash == hash_otp_code(stored.id, delivery.code)
+    assert stored.code_hash == hash_otp_code(
+        otp_hash_keys(testbed.settings)[0], stored.id, delivery.code
+    )
+    assert stored.is_code_hash_server_keyed is True
 
 
 def test_when_every_provider_fails_a_generic_error_is_reported(

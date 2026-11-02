@@ -29,7 +29,7 @@ class AssistantLeadBudget(BaseConstrainedTypedString):
 
     min_length = 1
     max_length = 100
-    pattern = r"^[^\x00-\x1f\x7f  ]*\Z"
+    pattern = r"^[^\x00-\x1f\x7f\u2028\u2029]*\Z"
 
 
 class AssistantLeadDetails(BaseConstrainedTypedString):

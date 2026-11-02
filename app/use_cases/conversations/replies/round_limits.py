@@ -17,9 +17,10 @@ from app.schemas.dto.assistant_tools import AssistantToolOutcome
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.dto.spend_guard import SpendCheckRequest, SpendVerdict
+from app.schemas.typings.assistants.constrained_integers import LlmToolCallLimit
 from app.use_cases.conversations.tools.tool_outcomes import error_outcome
 
-MAX_TOOL_CALLS_PER_RESPONSE: int = 5
+MAX_TOOL_CALLS_PER_RESPONSE: LlmToolCallLimit = LlmToolCallLimit(5)
 TOO_MANY_TOOL_CALLS: str = (
     "Not run: one response may call at most {limit} tools. Call what is still "
     "needed in your next response, one step at a time."
@@ -32,10 +33,12 @@ class SpendLimitReached(Exception):
     """The business passed its hard spend limit during the turn (technical)."""
 
 
-def refused_call_outcome(call: LlmToolCall, limit: int) -> AssistantToolOutcome:
+def refused_call_outcome(
+    call: LlmToolCall, limit: LlmToolCallLimit
+) -> AssistantToolOutcome:
     """The error result of a call past the limit (it never ran)."""
 
-    return error_outcome(call, TOO_MANY_TOOL_CALLS.format(limit=limit))
+    return error_outcome(call, TOO_MANY_TOOL_CALLS.format(limit=int(limit)))
 
 
 def refuse_past_hard_limit(check: SpendCheck | None, turn: PreparedTurn) -> None:

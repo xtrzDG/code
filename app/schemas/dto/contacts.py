@@ -11,6 +11,7 @@ from app.schemas.constants.customers import CustomerListFilter, CustomerStanding
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.customers.customer_timeline import CustomerTimelineEntry
+from app.schemas.dto.customers.customer_card import MarketingConsentView
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.constrained_integers import (
     BookingStartsAtUnixSeconds,
@@ -156,7 +157,7 @@ class ContactDetailView(ImmutableDTO):
     too), the latest moment first: a booking by its start, so upcoming
     visits lead. `standing`, `visit_count` and `last_visit_at` say how well
     the business knows them; `blocked_at` since when the assistant does
-    not answer them.
+    not answer them; `marketing_consent` whether marketing may reach them.
     """
 
     contact: ContactSummaryView
@@ -164,6 +165,9 @@ class ContactDetailView(ImmutableDTO):
     visit_count: ContactVisitCount = ContactVisitCount(0)
     last_visit_at: Microseconds | None = None
     blocked_at: Microseconds | None = None
+    marketing_consent: MarketingConsentView = Field(
+        default_factory=MarketingConsentView
+    )
     timeline: list[CustomerTimelineEntry] = Field(
         default_factory=list[CustomerTimelineEntry]
     )

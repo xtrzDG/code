@@ -31,6 +31,8 @@ from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
     CalendarAuthorizationStateHash,
+    CalendarCodeChallenge,
+    CalendarCodeVerifier,
     CalendarDisplayName,
     CalendarEventId,
     CalendarRefreshToken,
@@ -132,11 +134,23 @@ class GoogleCalendarClientContract(ClientContract, Protocol):
     def build_authorization_url(
         self,
         state: CalendarAuthorizationState,
+        code_challenge: CalendarCodeChallenge,
     ) -> CalendarAuthorizationUrl:
-        """Consent page asking for offline access to calendar events."""
+        """
+        Consent page asking for offline access to calendar events, with the
+        PKCE challenge (S256) of the flow's code verifier.
+        """
         raise NotImplementedError
 
-    def exchange_code(self, code: CalendarAuthorizationCode) -> CalendarTokenGrant:
+    def exchange_code(
+        self,
+        code: CalendarAuthorizationCode,
+        code_verifier: CalendarCodeVerifier | None,
+    ) -> CalendarTokenGrant:
+        """
+        The tokens of a consent's code; `code_verifier` is the flow's PKCE
+        verifier (None only for a consent started before PKCE).
+        """
         raise NotImplementedError
 
     def refresh_access_token(

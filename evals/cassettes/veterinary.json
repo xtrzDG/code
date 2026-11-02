@@ -328,31 +328,6 @@
   },
   {
    "request": {
-    "request_digest": "0600bad383c535e93863d28386d121abbeec7b647784ff524c32d04e0eb910d5",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "0a9a2e2367782d246ca43389f8818f080333be59a451a177a70a452a6df5d49a",
-    "transcript_tail": "{\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Happy Paws Vet» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "06fea816afb2135b5d723c97c0e45132176bd9ea5b700438f8b32c307af0d870",
     "model_id": "scripted",
     "instruction_digest": "3dcd8f92cef72e8a5567dca195ac75275cd1c42ddbb2ad92bc96a01200a9162a",
@@ -1145,31 +1120,6 @@
   },
   {
    "request": {
-    "request_digest": "3a803d52214bf7139bfe84b300c8fa120c58162bc1f41e2bc8c053b3ba92ad4b",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "6694e686e1f8d10035b752e795f89128902594924f138ba992dbcc395fffd00a",
-    "transcript_tail": "rce_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Happy Paws Vet has been moved to Wednesday, October 7, 2026, 12:00. Name: Emma. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "3bb41628a9e73fcdf82013511ee8c0a4d2f9c350555f071f8156672e63c3226a",
     "model_id": "scripted",
     "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
@@ -1260,31 +1210,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "43a97588f72f376986cf3ba6439523f033d6312ce02d41bf0f398afb83e7b52b",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "c0f6e98db7492e223284211cbe1be4dcf6524011f1f0a549ee2bfac6462451b5",
-    "transcript_tail": "rmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Happy Paws Vet» перенесена на среда, 7 октября 2026 г., 12:00. Имя: Анна. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -2717,31 +2642,6 @@
   },
   {
    "request": {
-    "request_digest": "7d05e24b82addddcd280e2f6064eddfa4067beb0e1390264c3c94420856d5f84",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "56ae757d67b70911b73359835e5744d50f9b83940450399d389777395d1b7a89",
-    "transcript_tail": "ce_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Happy Paws Vet-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "7eed3ae747532b9886ccc47a78f24a64ba8117b6a825e81139aca250d347a39d",
     "model_id": "scripted",
     "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
@@ -2807,6 +2707,31 @@
       "text": "Здравствуйте, это снова я! Сколько стоило то, о чём я спрашивала в прошлый раз?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте, это снова я! Сколько стоило то, о чём я спрашивала в прошлый раз?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "826fcf23e4b2b03232c8432bf6a062708181f5d95a231324ca28b8715e2bc4fa",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "b90b7a8442ff1d7306b98bc29da99dc9dc171bb6703d5637aefe380211c1956c",
+    "transcript_tail": "-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Happy Paws Vet-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 12:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3013,6 +2938,31 @@
       "text": "Done: your booking for Thursday is cancelled. Hope to see you another time!",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done: your booking for Thursday is cancelled. Hope to see you another time!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "93931162b3fc7ccddb849dbe6f4d7e46a572ec39fd72980aec9ae6f360582af3",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "4566b122977ac77f05c49c6598de2be0e8d870ec32e57592262075b96a4e1534",
+    "transcript_tail": "\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Happy Paws Vet» перенесена на среда, 7 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 12:00.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3708,6 +3658,31 @@
   },
   {
    "request": {
+    "request_digest": "b776507a5410fb041f0acfeb4480775016eee6552be4c2480294c5eeffc99df7",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "fe1dc3fc9342c39224a6b1adf8f9004d601da09aaa3f000fa53b4a9e3b91c082",
+    "transcript_tail": "6-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Happy Paws Vet has been moved to Wednesday, October 7, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 12:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 12:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "bb599bd36261bf2c85891e5159312085707ad4581b8eb1708e7dc8184d4c60a0",
     "model_id": "scripted",
     "instruction_digest": "99ad4db6a7dc15bd48e5c0a65938bfc912f0f14027c67518715b0765a4b4e7db",
@@ -3748,6 +3723,31 @@
       "text": "Здравствуйте! Сколько стоит осмотр?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте! Сколько стоит осмотр?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "bd6afe00ea96963bb8cb152f34620eeeb84efb11376a4aef778aca2e2944c586",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "8318e48e8b313bca61f70b04d34ad88bd93ab701eff11b7e186edfd56bc46b6c",
+    "transcript_tail": "oking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Happy Paws Vet is confirmed: Thursday, October 8, 2026, 12:00. Name: <customer_value>Emma</customer_value>. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4014,31 +4014,6 @@
   },
   {
    "request": {
-    "request_digest": "cfea46aaf95e1af8174d4a0c6822de53389559c5fb327074374dbe35de82a653",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "81d2bc600dd91a6f77e07a316d2d1052ea11147cf8f13dd970b4b0040166b168",
-    "transcript_tail": "{\"content\": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Happy Paws Vet is confirmed: Thursday, October 8, 2026, 12:00. Name: Emma. Guests: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 12:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 12:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "d021a655a7b53e97ab9022ceaf74e62e998fe56b7268fd83bf411ea56ecd6efe",
     "model_id": "scripted",
     "instruction_digest": "ef0a814a2be73f66cecc15d16a157a6471327a20e41ffda838bf7179e5668714",
@@ -4264,7 +4239,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4310,6 +4285,31 @@
       "text": "Здравствуйте! Хочу записаться: осмотр кошки, в четверг в 12:00. Меня зовут Анна, телефон +7 916 123-45-67.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте! Хочу записаться: осмотр кошки, в четверг в 12:00. Меня зовут Анна, телефон +7 916 123-45-67.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "d7a67a89c5ca446d364208c2e023531beb67ce3de914d20abfce1560cf8a75c8",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "55340b2a6adb2e56a51e546e2863246819b1d16e32a70febb163c07d41272de4",
+    "transcript_tail": "\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Happy Paws Vet-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4407,31 +4407,6 @@
   },
   {
    "request": {
-    "request_digest": "dc6c210e3b7538e59fd0539a9b22ddfc5a1b885bdc6ad26a1cf8b02fec36a341",
-    "model_id": "scripted",
-    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "a1cfa3a61f9d906aa09593dea5730b334d8a82b4d870feb0802dc3c4e83c6556",
-    "transcript_tail": ": [{\"content\": \"{\\\"booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Happy Paws Vet-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 12:00. სახელი: ნინო. სტუმრები: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 12:00-ზე. გელოდებით!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 8
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "dcfd551353b12f51c87655bfc0dc71ab1589fe79fac740871f3310c0473a3416",
     "model_id": "scripted",
     "instruction_digest": "3b370c47701404a2ee08f0d4710d6e123f6ce18fe3d3243b4b060d9c2cd30064",
@@ -4501,7 +4476,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4869,6 +4844,31 @@
   },
   {
    "request": {
+    "request_digest": "f13027f2d06811d5a37566f82e7b7565e3565dd5f9218ea6a8755aa822a9e385",
+    "model_id": "scripted",
+    "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "50d5a1427b7ebe843324ed164cf476c9e2a1cb0d238b17cb0e6fae04e18b6c2d",
+    "transcript_tail": "booking_id\\\":\\\"booking_<id:9>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Vet\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":1,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Happy Paws Vet» подтверждена: четверг, 8 октября 2026 г., 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 1.\\\",\\\"time\\\":\\\"12:00\\\",\\\"end_time\\\":\\\"12:30\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 12:00. Ждём вас!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "f152de4a77284a26400bf019cce7be5ab87de8f4581026732410f721d2d521c7",
     "model_id": "scripted",
     "instruction_digest": "ca51bfac01ee0624ae6d51bc9c57c2027a84e5cfebb05bea0e25b6251bb374b1",
@@ -5093,7 +5093,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },

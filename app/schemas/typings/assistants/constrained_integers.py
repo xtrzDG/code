@@ -99,6 +99,13 @@ class LlmPricePerMillionTokensMicroUsd(BaseConstrainedTypedInt):
     ge = 0
 
 
+class LlmToolCallLimit(BaseConstrainedTypedInt):
+    """Maximum number of tool calls of one model response that are run."""
+
+    ge = 1
+    le = 20
+
+
 class LlmToolRoundLimit(BaseConstrainedTypedInt):
     """Maximum number of tool-use rounds inside one assistant reply."""
 

@@ -16,7 +16,6 @@ from app.schemas.typings.localization.strings import (
     RawPhoneNumberInput,
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
-from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.schemas.typings.users.strings import AccessToken, RawEmailAddressInput
 from app.utilities.security.access_tokens import (
     generate_access_token,
@@ -28,11 +27,7 @@ from app.utilities.security.login_destination_masking import (
     mask_email_address,
     mask_phone_number,
 )
-from app.utilities.security.one_time_codes import (
-    generate_otp_code,
-    hash_otp_code,
-    is_otp_code_matching,
-)
+from app.utilities.security.one_time_codes import generate_otp_code
 from tests.users.accounts_phones import PhonenumbersParser
 
 
@@ -41,22 +36,6 @@ def test_generated_codes_are_six_random_digits() -> None:
 
     assert all(len(code) == 6 and code.isdigit() for code in codes)
     assert len(codes) > 150
-
-
-def test_code_hash_is_keyed_by_the_challenge() -> None:
-    first_challenge, second_challenge = OtpChallengeId(), OtpChallengeId()
-    code = OtpCode("042317")
-
-    first_hash = hash_otp_code(first_challenge, code)
-
-    assert first_hash == hash_otp_code(first_challenge, code)
-    assert first_hash != hash_otp_code(second_challenge, code)
-    assert first_hash != sha256(b"042317").hexdigest()
-    assert "042317" not in first_hash
-    assert len(first_hash) == 64
-    assert is_otp_code_matching(first_challenge, code, first_hash) is True
-    assert is_otp_code_matching(first_challenge, OtpCode("042318"), first_hash) is False
-    assert is_otp_code_matching(second_challenge, code, first_hash) is False
 
 
 def test_access_tokens_are_random_and_stored_as_sha256() -> None:

@@ -1,11 +1,14 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.privacy.suppression_list_facilitator import (
+    SuppressionListFacilitator,
+)
 from app.schemas.dto.contacts import ContactPage
 from app.schemas.dto.customers.customer_card import (
     ChangeCustomerBlockingCommand,
@@ -89,6 +92,12 @@ class CustomerUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
+    # A typed edge CoreUseCasesContainer fills: the card never says a
+    # customer agreed to marketing while the suppression list stops them.
+    suppression_list: Dependency[SuppressionListFacilitator] = Dependency(
+        instance_of=SuppressionListFacilitator
+    )
+
     authorize = account_use_cases.authorize_business_access_use_case
     wall_clock = time_provider.microsecond_wall_clock
     segment_readers: Factory[SegmentReaders] = Factory(
@@ -107,6 +116,7 @@ class CustomerUseCasesContainer(containers.DeclarativeContainer):
         customer_settings_repo=repositories.customer_settings_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        suppression_list=suppression_list,
     )
     change_customer_blocking_use_case: Factory[
         UseCaseContract[ChangeCustomerBlockingCommand, CustomerCardView]
@@ -117,6 +127,7 @@ class CustomerUseCasesContainer(containers.DeclarativeContainer):
         customer_settings_repo=repositories.customer_settings_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        suppression_list=suppression_list,
     )
     get_contact_standing_use_case: Factory[
         UseCaseContract[ContactStandingQuery, ContactStandingView]

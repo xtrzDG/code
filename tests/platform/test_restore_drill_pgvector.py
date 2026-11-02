@@ -29,8 +29,10 @@ def test_both_drills_restore_into_postgres_with_pgvector() -> None:
     }
 
     assert images.keys() == {"round-trip", "production"}
-    assert all(image.startswith("pgvector/pgvector:") for image in images.values())
-    assert all(image.endswith("-pg16") for image in images.values())
+    # Tag and digest (tests/platform/test_image_pins.py): the tag says what.
+    tags: set[str] = {image.partition("@")[0] for image in images.values()}
+    assert all(tag.startswith("pgvector/pgvector:") for tag in tags)
+    assert all(tag.endswith("-pg16") for tag in tags)
 
 
 def test_the_nightly_drill_backs_up_a_database_with_the_embeddings_enabled() -> None:

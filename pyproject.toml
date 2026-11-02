@@ -64,6 +64,11 @@ dev = [
 
 [tool.uv]
 package = false
+# Install wheels only, never build a source distribution: building runs the
+# package's own code (its build backend) on a developer's machine, in CI and
+# in the image build. Every locked package has wheels for Linux, macOS and
+# Windows on Python 3.14.
+no-build = true
 
 [tool.ruff]
 line-length = 88

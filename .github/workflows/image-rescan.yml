@@ -1,0 +1,90 @@
+name: Image rescan
+
+# Weekly: both images of what production runs (the `release` branch) built
+# again from their pinned bases and scanned with today's Trivy database
+# (vulnerabilities with a fix, misconfigurations, secrets; reviewed
+# exceptions in .trivyignore): a CVE published since the last deploy shows
+# here, not at the next release. Render builds production's own images from
+# the same Dockerfiles and commit, so these stand in for them. The run
+# summary reports how old each pinned base image is and how long ago the
+# release commit was made (scripts/image_age_report.py): over 30 days warns
+# (Dependabot's docker updates or a deploy are due), over 90 days fails.
+on:
+  schedule:
+    # 04:29 UTC on Wednesdays.
+    - cron: "29 4 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-rescan
+  cancel-in-progress: false
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release).
+jobs:
+  rescan:
+    name: Rebuild and rescan the release images (Trivy, image age)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      TRIVY_IMAGE_CONFIG_SCANNERS: misconfig,secret
+      TRIVY_SECRET_CONFIG: .github/trivy-secret.yaml
+    steps:
+      # This workflow's own commit for the scripts and the reviewed
+      # exceptions; the code production runs in release/.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: release
+          path: release
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.14"
+
+      - name: Build both images
+        run: |
+          docker build --pull --tag assistant-workshop-backend:rescan release
+          docker build --pull --tag assistant-workshop-web:rescan release/web
+
+      - name: Scan the backend image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-backend:rescan
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+      - name: Scan the cabinet image (Trivy)
+        if: ${{ !cancelled() }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-web:rescan
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+          skip-setup-trivy: true
+
+      # The bases by the digests the Dockerfiles pin, and when they were made.
+      - name: Image age
+        if: ${{ !cancelled() }}
+        run: |
+          images=()
+          for reference in $(sed -n -E 's/^FROM ([^ ]+@sha256:[0-9a-f]{64}).*/\1/p' release/Dockerfile release/web/Dockerfile); do
+            docker pull --quiet "$reference" > /dev/null
+            images+=("$reference=$(docker image inspect --format '{{.Created}}' "$reference")")
+          done
+          uv run --no-project python -m scripts.image_age_report \
+            --release-commit "$(git -C release log -1 --format=%cI)" \
+            --summary "$GITHUB_STEP_SUMMARY" "${images[@]}"

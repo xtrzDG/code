@@ -19,6 +19,11 @@ Sections 8 (sub-processors) and 9 (security measures) are generated from the
 registries in `app/registries/legal/`, which hold no Italian today; the drafts
 keep their markers with a placeholder.
 
+`dpa-art28-annex.md` is not a translation: it maps the DPA in force to each
+duty of Article 28(3) GDPR for a reviewing lawyer, an auditor or a
+business's DPO, and collects what the next DPA version should fix
+(`tests/legal/test_dpa_art28_annex.py`).
+
 ## Publishing a draft
 
 1. A lawyer who is a native speaker of the language reviews the draft

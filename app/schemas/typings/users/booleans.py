@@ -9,6 +9,7 @@ IsCurrentSession = bool
 IsEmailLoginAvailable = bool
 IsNewUser = bool
 IsOtpChallengeConsumed = bool
+IsOtpCodeHashServerKeyed = bool
 IsOtpCodeLoggingEnabled = bool
 IsPhoneLoginAvailable = bool
 IsPlatformAdmin = bool

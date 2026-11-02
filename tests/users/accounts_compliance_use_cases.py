@@ -139,6 +139,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             customer_settings_repo=self.customer_settings_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            suppression_list=self.suppression_list,
         )
         self.export_contact_data = ExportContactDataUseCase(
             authorize_business_access=self.authorize_business_access,

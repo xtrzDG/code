@@ -141,6 +141,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             customer_settings_repo=repositories.customer_settings_repo,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            suppression_list=facilitators.suppression_list,
         )
     )
     collect_contact_records_use_case: Factory[

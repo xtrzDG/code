@@ -6,11 +6,17 @@ from app.contracts.platform_admins import (
     PlatformAdminRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.user_repositories import UserRepoContract
-from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.repositories.user_repositories import (
+    UserRepoContract,
+    UserSessionRepoContract,
+)
+from app.contracts.session_assurance import (
+    SessionAssuranceContract,
+    StepUpGuardContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
-from app.schemas.constants.users import LoginMethod
+from app.schemas.constants.users import LoginMethod, SessionSweepReason
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.platform_admins import (
@@ -22,6 +28,7 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
+from app.use_cases.admin.team.admin_session_ending import AdminSessionEnding
 from app.use_cases.admin.team.admin_team import audit_team_change, team_view
 from app.utilities.security.email_addresses import parse_email_address
 from app.utilities.security.platform_admin_ids import derive_platform_admin_id
@@ -37,7 +44,10 @@ class AddPlatformAdminUseCase(
     A SUPER admin adds a person to the admin team by the phone number
     (international format) or e-mail they sign in with, with a role. The
     person may not have signed in yet: their first sign-in asks them to set
-    up an authenticator, which the admin pages need. Needs a fresh
+    up an authenticator, which the admin pages need. A person already
+    signed in has every session ended (audited as SESSION_REVOKED): the
+    admin rights come only with a new sign-in, a new token and the admin
+    session limits, never on a token issued before. Needs a fresh
     confirmation (step-up); audited as PLATFORM_ADMIN_CHANGED.
     """
 
@@ -50,6 +60,8 @@ class AddPlatformAdminUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         step_up: StepUpGuardContract,
+        user_session_repo: UserSessionRepoContract,
+        session_assurance: SessionAssuranceContract,
     ) -> None:
         self._authorize_platform_admin: PlatformAdminCheck = authorize_platform_admin
         self._platform_admin_repo: PlatformAdminRepoContract = platform_admin_repo
@@ -58,6 +70,9 @@ class AddPlatformAdminUseCase(
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._step_up: StepUpGuardContract = step_up
+        self._sessions: AdminSessionEnding = AdminSessionEnding(
+            user_repo, user_session_repo, session_assurance, audit_log_repo
+        )
 
     def run(self, input_data: AddPlatformAdminCommand) -> PlatformAdminTeamView:
         actor: UserDocument = self._authorize_platform_admin.run(
@@ -78,6 +93,13 @@ class AddPlatformAdminUseCase(
             record,
             input_data.client_ip_address,
             record.created_at,
+        )
+        self._sessions.end(
+            record,
+            actor.id,
+            input_data.client_ip_address,
+            record.created_at,
+            SessionSweepReason.ADMIN_ROLE_GRANTED,
         )
         return team_view(self._platform_admin_repo, self._user_repo, actor.id)
 

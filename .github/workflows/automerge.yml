@@ -8,17 +8,24 @@ name: Dependabot automerge
 # request is checked out or run, and the merge names the exact head commit
 # CI passed on, so a later push to the branch stops it.
 #
-# Branch protection requires checks of three workflows (CI, CodeQL, API
-# contract; .github/repository-settings.json), which finish in any order: the
-# job runs after each of them and merges only once no required check of the
-# head is pending, so the last one to finish merges. After the merge it
-# starts every workflow a push to main would have started, since a merge
-# made with this job's token pushes no event: CI (whose run on main
-# publishes the signed images deploy smoke verifies), CodeQL, Lighthouse
-# and the ZAP baseline, all checks Render's checksPass waits for.
+# Branch protection requires checks of four workflows (CI, CodeQL, API
+# contract, Workflow audit; .github/repository-settings.json), which finish
+# in any order: the job runs after each of them and merges only once no
+# required check of the head is pending, so the last one to finish merges.
+# After the merge it starts every workflow a push to main would have
+# started, since a merge made with this job's token pushes no event: CI
+# (whose run on main publishes the signed images deploy smoke verifies),
+# CodeQL, Lighthouse, the workflow audit and the ZAP baseline, all checks
+# Render's checksPass waits for. A merge reaches staging, never production:
+# promotion waits for a person (deploy-smoke.yml, production-release).
 on:
-  workflow_run:
-    workflows: [CI, CodeQL, API contract]
+  # zizmor flags workflow_run because such a job usually runs code or reads
+  # artifacts of the pull request with the base branch's privileges. This
+  # one checks out the default branch only, reads no artifact, and merges
+  # only the exact head commit of an open Dependabot pull request of this
+  # repository whose commit Dependabot authored.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [CI, CodeQL, API contract, Workflow audit]
     types: [completed]
 
 permissions:
@@ -107,7 +114,7 @@ jobs:
             # A merge made with this job's token starts no workflow on the
             # base branch, so its new head would carry no CI, no signed
             # images and no scan: ask for every push workflow of main.
-            for name in ci.yml codeql.yml lighthouse.yml zap.yml; do
+            for name in ci.yml codeql.yml lighthouse.yml workflow-audit.yml zap.yml; do
               gh workflow run "$name" --ref "$base"
             done
           fi

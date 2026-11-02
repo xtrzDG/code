@@ -54,6 +54,7 @@ class TestCallInitiation:
             # No opening hours in the profile: never put through to staff.
             "dynamic_variables": {
                 "is_open_now": "no",
+                "can_transfer": "no",
                 "transfer_number": "none",
                 "local_now": "Thursday 2026-10-01 16:00",
                 "next_days": "Fri 2026-10-02, Sat 2026-10-03, Sun 2026-10-04, "

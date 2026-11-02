@@ -47,9 +47,10 @@ of this file. Anything not needed any more is removed the same day.
 
 ### Provider consoles
 
-For each sub-processor in `app/registries/legal/` (OpenAI, Anthropic,
-ElevenLabs, Zadarma, Meta, Telegram, Flitt, Langfuse, Sentry, Google,
-Cloudflare, the object storage, the e-mail provider, Twilio):
+For each vendor of `docs/operations/vendor-register.md` (OpenAI,
+Anthropic, ElevenLabs, Zadarma, Meta, Telegram, Flitt, Stripe, Langfuse,
+Sentry, Google, Cloudflare, the object storage, the e-mail provider,
+Twilio, the registrar and DNS host):
 
 - [ ] Console users and their roles; former team members removed.
 - [ ] API keys: each one in use, scoped as narrowly as the provider allows,
@@ -72,6 +73,11 @@ Cloudflare, the object storage, the e-mail provider, Twilio):
 
 - [ ] The threat model (`docs/security/threat-model.md`) still describes the
       trust boundaries; new integrations of the quarter are in it.
+- [ ] The rotation log of `docs/security/secrets-inventory.md` has no secret
+      older than its period; every departure of the quarter has a complete
+      row in `docs/operations/offboarding.md`.
+- [ ] Every owner's monitor of `docs/operations/on-call.md` (certificates,
+      domain, PSPs, provider budgets, uptime) exists and pages the rota.
 
 ## Reviews
 

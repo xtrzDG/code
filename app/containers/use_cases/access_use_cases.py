@@ -10,6 +10,11 @@ from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.admin_sessions import (
+    ClientMemberSessionList,
+    ClientMembersQuery,
+    EndMemberSessionsCommand,
+)
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.platform_admins import (
     AddPlatformAdminCommand,
@@ -18,6 +23,7 @@ from app.schemas.dto.platform_admins import (
     PlatformAdminTeamView,
     RemovePlatformAdminCommand,
 )
+from app.schemas.dto.sessions import RevokedSessionsView
 from app.schemas.dto.support_access import (
     CloseClientCabinetCommand,
     EndSupportAccessCommand,
@@ -30,6 +36,12 @@ from app.use_cases.admin.access.close_client_cabinet_use_case import (
 )
 from app.use_cases.admin.access.end_expired_support_access_use_case import (
     EndExpiredSupportAccessUseCase,
+)
+from app.use_cases.admin.sessions.end_member_sessions_use_case import (
+    EndMemberSessionsUseCase,
+)
+from app.use_cases.admin.sessions.list_client_member_sessions_use_case import (
+    ListClientMemberSessionsUseCase,
 )
 from app.use_cases.admin.team.add_platform_admin_use_case import (
     AddPlatformAdminUseCase,
@@ -91,6 +103,8 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
     )
     change_platform_admin_role_use_case: Factory[
         UseCaseContract[ChangePlatformAdminRoleCommand, PlatformAdminTeamView]
@@ -117,6 +131,30 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         user_session_repo=repositories.user_session_repo,
         session_assurance=utilities.session_assurance,
+    )
+
+    # --- A client team's sign-ins, and a platform admin ending them.
+    list_client_member_sessions_use_case: Factory[
+        UseCaseContract[ClientMembersQuery, ClientMemberSessionList]
+    ] = Factory(
+        ListClientMemberSessionsUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        user_repo=repositories.user_repo,
+        user_session_repo=repositories.user_session_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    end_member_sessions_use_case: Factory[
+        UseCaseContract[EndMemberSessionsCommand, RevokedSessionsView]
+    ] = Factory(
+        EndMemberSessionsUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
+        audit_log_repo=repositories.audit_log_repo,
+        step_up=utilities.step_up_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
 
     # --- Support access: the admin's side and its expiry.

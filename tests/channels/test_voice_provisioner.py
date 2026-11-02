@@ -236,12 +236,18 @@ class TestCurrentCallBlock:
         )
         assert variables == {
             "is_open_now",
+            "can_transfer",
             "transfer_number",
             "local_now",
             "next_days",
             "timezone",
         }
-        assert all("{{" + variable + "}}" in prompt for variable in variables)
+        # The transfer tool reads transfer_number; the prompt every other one.
+        assert all(
+            "{{" + variable + "}}" in prompt
+            for variable in variables - {"transfer_number"}
+        )
+        assert "{{transfer_number}}" not in prompt
         # A caller id proves nobody's identity: no booking is read out or
         # changed on the phone, and an emergency is sent to 112 first.
         assert "{{caller_name}}" not in prompt

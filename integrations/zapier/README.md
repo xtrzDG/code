@@ -35,15 +35,21 @@ cd integrations/zapier
 npm test        # node --test, no network and no dependencies needed
 ```
 
+`package-lock.json` pins every dependency with its integrity hash, and
+`.npmrc` keeps their install scripts from running (`ignore-scripts`):
+install with `npm ci`, never `npm install` (which may move the lock).
+Dependabot proposes updates weekly, and the nightly dependency audit
+(`.github/workflows/dependency-audit.yml`) reports advisories in the lock.
+
 ## Publish
 
 Publishing needs a Zapier developer account, which this repository does
 not have yet; nothing here has been pushed to Zapier.
 
 ```sh
-npm install -g zapier-platform-cli
+npm install -g zapier-platform-cli@19.1.0
 cd integrations/zapier
-npm install
+npm ci
 zapier login
 zapier register "Assistant Workshop"     # once; writes .zapierapprc
 zapier env:set 1.0.0 WORKSHOP_API_URL=https://<the API's public address>
@@ -55,6 +61,6 @@ zapier push
 `package.json`; raise both together. `overrides` holds `form-data` at
 4.0.6: core 19.1.0 pins 4.0.5, which has a CRLF injection in multipart
 field names (GHSA-hmw2-7cc7-3qxx); drop the override once the core's own
-pin is 4.0.6 or later (`npm audit --omit=dev` after `npm install`). A new trigger or field is fine at any
+pin is 4.0.6 or later (`npm audit` after updating the lock). A new trigger or field is fine at any
 time; renaming a key breaks existing Zaps (it is the same rule as the
 public API's).

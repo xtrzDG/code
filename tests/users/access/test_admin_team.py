@@ -65,6 +65,8 @@ class TeamWorld(SupportWorld):
             testbed.audit_log_repo,
             wall_clock,
             AllowStepUp(),
+            testbed.user_session_repo,
+            testbed.session_assurance,
         )
         self.change = ChangePlatformAdminRoleUseCase(
             authorize,

@@ -24,6 +24,9 @@ OPEN_NOW_YES: str = "yes"
 OPEN_NOW_NO: str = "no"
 TRANSFER_NUMBER_VARIABLE: str = "transfer_number"
 NO_TRANSFER_VALUE: str = "none"
+# Whether a transfer is possible on this call ("yes"/"no"): what the prompt
+# sees, so the model never learns the staff number it could read out.
+CAN_TRANSFER_VARIABLE: str = "can_transfer"
 # Per-call variables of the "Current call" block: the business-local date
 # and time, the next days and the time zone. The placeholders stand in
 # until the call-initiation webhook answers (or when it cannot): closed,
@@ -35,6 +38,7 @@ TIMEZONE_VARIABLE: str = "timezone"
 UNKNOWN_VALUE: str = "unknown"
 CALL_VARIABLE_PLACEHOLDERS: dict[str, str] = {
     OPEN_NOW_VARIABLE: OPEN_NOW_NO,
+    CAN_TRANSFER_VARIABLE: OPEN_NOW_NO,
     TRANSFER_NUMBER_VARIABLE: NO_TRANSFER_VALUE,
     LOCAL_NOW_VARIABLE: UNKNOWN_VALUE,
     NEXT_DAYS_VARIABLE: UNKNOWN_VALUE,

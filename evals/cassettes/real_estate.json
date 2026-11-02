@@ -303,6 +303,31 @@
   },
   {
    "request": {
+    "request_digest": "0e35fc75903a21bdb2ad9704ca24cb71317a7c63eb4d7628ab1e0f9c14a43d10",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "d64204388ca4b6bd899385d2719ed2737ddf59b1de638244458f6ad81c09433b",
+    "transcript_tail": ":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Tbilisi Homes Realty-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "11292ff45851e946b9cd6a1a07a2aad9e3bcaef1030c2874ce6f3007b519e97a",
     "model_id": "scripted",
     "instruction_digest": "544fc4d93cc19329030fc5991b6c1e9291255331a5b03024d0922d0cbe74bb19",
@@ -459,7 +484,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -580,31 +605,6 @@
       "text": "დიახ, გადაიტანეთ.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"დიახ, გადაიტანეთ.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "249fe45ff6e7f3ab8e32483563bb0f88c507aeeadfc392845e84f3ccbee65d02",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "b75938c6db64ce2a62ee9055b1978c91e0d963dc190341c201c9e367ab3a9bb8",
-    "transcript_tail": "nt\": \"{\\\"booking_id\\\":\\\"booking_<id:6>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Tbilisi Homes Realty» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: Анна. Гостей: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -783,6 +783,31 @@
   },
   {
    "request": {
+    "request_digest": "2d06337fb780d9e42e71531291f5be4500618e7e9ca4dae08ef1a2390b7a3955",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "b3cea71033f332f5397fd268d2c1ee8fc122bdfd59f829cab01b186b686fc2cc",
+    "transcript_tail": "\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Tbilisi Homes Realty» перенесена на среда, 7 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "2e09916b9a0927c8b112998ae98ff75998eede633f79efc837a049bcdcb864f8",
     "model_id": "scripted",
     "instruction_digest": "312e6f0f00107d3818661cb7f52dd8109d4c890bf2762411e8b6265442576e43",
@@ -920,6 +945,31 @@
   },
   {
    "request": {
+    "request_digest": "345d3c0c409234a99c1faaa63367b9626bf0bfe79f537e5bf2522a8bc60806dd",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "72c82b394735537b7352df72aa3bd35fc7c671f167700245d7c7493a381ddef7",
+    "transcript_tail": "us\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Tbilisi Homes Realty-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "34edc509fb27c73f9df4af1c162510d5dca2e8e9fad5c454757af73ec4f27f3e",
     "model_id": "scripted",
     "instruction_digest": "e04523cc55fc67f6bbe91c1d59cf93ac216342dbb5f82a885121c3eb1146716e",
@@ -1014,32 +1064,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "3a1560a358f90e0bf57472bf822fc310a7a130c106358f7b9e404251c02b98ef",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "0ee78bc2e07a86a9c2bdad40311dc3793f2112b533d17a4a6a6605c313daeb73",
-    "transcript_tail": "\": \"{\\\"booking_id\\\":\\\"booking_<id:6>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Tbilisi Homes Realty is confirmed: Thursday, October 8, 2026, 13:00. Name: Emma. Guests: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -1422,31 +1447,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "4d9407f128d0053fb691c680702668e5e07c511713e555c115dc6958ed67e17b",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "77410d1d4b96a8cdb8f247f5fba8952f64eed0ea3169d1e72d6b701e32a06b47",
-    "transcript_tail": "ate\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Tbilisi Homes Realty-ში გადატანილია: ოთხშაბათი, 07 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 2.\\\\nგაუქმების წესები: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ოთხშაბათს, 7 ოქტომბერს, 13:00-ზეა.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1932,7 +1932,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2063,7 +2063,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -2113,7 +2113,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 20
+     "elapsed": 0
     }
    ]
   },
@@ -2250,6 +2250,31 @@
   },
   {
    "request": {
+    "request_digest": "6d8ff3bd20f2073864f4b56607ba5cbf50365f6ded50163bebe45fd7571fe0d9",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "07bef6aa3978a00d4b014bae10d653e964786507779702c80e39f04f82859f86",
+    "transcript_tail": ":6>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Tbilisi Homes Realty is confirmed: Thursday, October 8, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! You are booked for Thursday at 13:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! You are booked for Thursday at 13:00. See you!\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "6dfa9d9638075d4f6da511197579dea15c7ad8a7b3782f0ab6d7d910a491c93e",
     "model_id": "scripted",
     "instruction_digest": "70d551f10de85ebb10408ab5cf2ca3de93f6b884a8665474c304fd3d6d947ccc",
@@ -2269,7 +2294,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2406,31 +2431,6 @@
   },
   {
    "request": {
-    "request_digest": "732ccf6794f78f8bf5c00b66ca0c92bb68bf3a88cb22bdc80b9deeccc0c29654",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "13972719d0d82c455cd43ec3b2a3f3f79e6cc8f9efe3760fc17ab58df8c9bec7",
-    "transcript_tail": " an agent\\\",\\\"date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Tbilisi Homes Realty» перенесена на среда, 7 октября 2026 г., 13:00. Имя: Анна. Гостей: 2.\\\\nПравила отмены: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша запись теперь в среду, 7 октября, в 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша запись теперь в среду, 7 октября, в 13:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "7335f2dbdd7e420e9514cfdc7468d590121985ed5b8627a03b1c3daba1f25852",
     "model_id": "scripted",
     "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
@@ -2537,7 +2537,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -2923,7 +2923,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -3272,7 +3272,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -3384,7 +3384,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -3492,6 +3492,31 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "a6159e8ee04007566068e7e71f8283049dfd3af5fe603a8e6325fa9ec0547814",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "59e1b9a18a7eff4535aba62e54b7b0d1afe273376cba5fbe9060abafc4ec7d92",
+    "transcript_tail": "id:6>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Tbilisi Homes Realty» подтверждена: четверг, 8 октября 2026 г., 13:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! Вы записаны на четверг, 13:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3995,31 +4020,6 @@
   },
   {
    "request": {
-    "request_digest": "b8c338933d6a0340915ccd06df7f29d878f31f41c142c3a73a04dfece8083a59",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "fbbc62f8957e3571e64ff72da4f14bf084df97e75c79feaf68b86a9efcee2b42",
-    "transcript_tail": "date\\\":\\\"2026-10-07\\\",\\\"end_date\\\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Tbilisi Homes Realty has been moved to Wednesday, October 7, 2026, 13:00. Name: Emma. Guests: 2.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "bc7c370f7d12876f01fcbe49875365f015b0e754ec9665e28eaa39dbabe9794c",
     "model_id": "scripted",
     "instruction_digest": "1087cd247192d6d4f8274a06adc1fba0c761de40f62c774a64ec67d0cc0c8368",
@@ -4085,31 +4085,6 @@
       "text": "თქვენი ჯავშანი ხუთშაბათს, 8 ოქტომბერს, 13:00-ზეა. გელოდებით!",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"თქვენი ჯავშანი ხუთშაბათს, 8 ოქტომბერს, 13:00-ზეა. გელოდებით!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "bf19eacb1ee38db60ae0c94f6004442bd94cd821214b9f57e54b8a8f7cce4a8f",
-    "model_id": "scripted",
-    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "69479c08035d79ea2cd64ac61cfcb90d90f2378916f7d568792494e407bbf405",
-    "transcript_tail": "ng_id\\\":\\\"booking_<id:6>\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Viewing with an agent\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-08\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Tbilisi Homes Realty-ში დადასტურებულია: ხუთშაბათი, 08 ოქტომბერი, 2026, 13:00. სახელი: ნინო. სტუმრები: 2.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:5>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 13:00-ზე. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -4214,7 +4189,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 16
     }
    ]
   },
@@ -4339,7 +4314,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4495,7 +4470,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },
@@ -4775,7 +4750,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -5224,6 +5199,31 @@
   },
   {
    "request": {
+    "request_digest": "f54db8b2a560eb1ac8db3f6640ab901d6bfd834afa19a651ce57767fb3a13795",
+    "model_id": "scripted",
+    "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "e9e40e7730181838fe0c39b8f9e16d5d64dfebc097c18211e25a9f93c3a6e874",
+    "transcript_tail": "\":\\\"2026-10-07\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Tbilisi Homes Realty has been moved to Wednesday, October 7, 2026, 13:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\\nCancellation policy: Please let us know at least 3 hours in advance if you cannot come to the viewing.\\\",\\\"time\\\":\\\"13:00\\\",\\\"end_time\\\":\\\"14:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:6>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your booking is now on Wednesday, 7 October at 13:00.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your booking is now on Wednesday, 7 October at 13:00.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "f5c32cb3d136f9446945d14d2ae6c8b682c1e2764a4c1314786cb1efa6bde65e",
     "model_id": "scripted",
     "instruction_digest": "cd545642a5e5fd425948a70ba0e40928816b8567040b14918447e3994327ba71",
@@ -5293,7 +5293,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 8
+     "elapsed": 0
     }
    ]
   },

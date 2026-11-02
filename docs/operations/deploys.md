@@ -20,7 +20,7 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
       │
       │      deploy-smoke.yml: scripts/smoke.sh against staging and
       │      scripts/verify_images.sh for the deployed commit
-      ▼ green
+      ▼ green, then a person approves (environment production-release)
   release ──► production (render.yaml)       checksPass again, same commit
               deploy-smoke.yml: scripts/smoke.sh and verify_images.sh
               against production
@@ -29,26 +29,27 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
 - Every Render service (API, worker, cabinet) follows a branch with
   `autoDeployTrigger: checksPass`: a commit whose CI failed, or is still
   running, is never deployed.
-- Staging follows `main`; production follows `release`. Only
-  `.github/workflows/deploy-smoke.yml` moves `release`, and only forward
-  (no force push) to a commit of `main` whose staging smoke test passed.
-  Without staging, move it by hand after a green CI run:
-  `git push origin <commit>:release`. The promotion waits until
-  production finished the post-deploy data tasks of the release it runs
-  (`scripts/check_data_tasks.sh`, see "Data tasks after a deploy").
+- Staging is a production rehearsal (`render.staging.yaml`: the same image,
+  `APP_ENV=production`, a real model, its own keys, test data only). It
+  follows `main`; production follows `release`, which nothing reaches
+  without a person: only the promote job of `.github/workflows/deploy-smoke.yml`
+  moves it, forward only, to a commit of `main` that passed on staging, once
+  a reviewer of the environment `production-release` approved the run
+  (Review deployments). The repository variable
+  `PROMOTE_AFTER_STAGING_SMOKE=false` leaves that request out: run Deploy
+  smoke test → staging by hand, then approve. The promotion waits for
+  production's post-deploy data tasks (`scripts/check_data_tasks.sh`).
 - API, worker and cabinet of one environment follow the same branch, so
   they always deploy the same commit. Never deploy one of them from another
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
   `/readyz` (the database answers, the release's migrations are applied),
   `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and
-  `/.well-known/security.txt` (a security mailbox and an https
-  `Canonical` address) and,
-  with `SMOKE_WIDGET_BUSINESS_ID`, a test chat through the website widget
-  (`/v1/widget/{business_id}/config`, a message accepted with `202` and
-  the worker's answer polled from `/v1/widget/{business_id}/messages`, so
-  the check also proves the worker runs). CI runs the same script against
-  the freshly built image.
+  `/.well-known/security.txt` (below) and, with `SMOKE_WIDGET_BUSINESS_ID`,
+  a test chat through the website widget (`/v1/widget/{business_id}/config`,
+  a message accepted with `202` and the worker's answer polled from
+  `/v1/widget/{business_id}/messages`, so the check also proves the worker
+  runs). CI runs the same script against the freshly built image.
 
 ### Signed images
 
@@ -69,14 +70,12 @@ on `main` after review. Deploy smoke's `Signed images` job runs
 - `gh attestation verify`: provenance signed by the same workflow, from the
   same commit and ref, built on a GitHub-hosted runner.
 
-A commit pushed to `release` without passing CI on `main`, or images signed
-by another workflow or a fork, fail this job, and the promotion to
-`release` waits for it. This catches mistakes, not a deliberate bypass: the
-job runs the deployed commit's own `.github/workflows/deploy-smoke.yml` and
-`scripts/verify_images.sh`, so a commit pushed straight to `release` could
-replace the check itself. Against intent the boundary is who may push to
-`release` at all: write access to the repository
-(`docs/security/access-review.md`).
+Images signed by another workflow or a fork fail this job, and the
+promotion waits for it. This catches mistakes, not a deliberate bypass (the
+job runs the deployed commit's own workflow). Against intent the boundary is
+the protection of `release` (`.github/repository-settings.json`, checked
+daily): the one key past it is `production-release`'s deploy key, which a
+job of `main` receives only after a reviewer approved it.
 
 The scan of the running stack (`.github/workflows/zap.yml`, SECURITY.md
 "Dynamic scan") is a check of every commit of `main` as well, so
@@ -94,34 +93,34 @@ scripts/verify_images.sh <commit>` with cosign, gh (`GH_TOKEN` with
 1. Create the `release` branch before production's Blueprint:
    `git push origin main:release`.
 2. Create staging: Render → New → Blueprint → this repository, Blueprint
-   path `render.staging.yaml`. Its env group `workshop-staging` sets
-   `LLM_PROVIDER=scripted`: answers are one fixed sentence, nothing is sent
-   to a model provider and nothing is paid per message. Give it its own
-   addresses and sign-in channel (an e-mail mailbox is enough), never
-   production's secrets.
+   path `render.staging.yaml` (the production rehearsal above, with its own
+   OpenAI project and a small budget). Give it its own addresses, sign-in
+   channel (an e-mail mailbox is enough) and keys, never production's.
 3. In staging's cabinet create a smoke business with the website widget
    turned on and a live assistant (the widget refuses messages for a
    business that is not live, `409`); note its id.
 4. GitHub → Settings → Environments: `staging` and `production`, with the
    variables `API_URL` and `CABINET_URL` (public addresses). For staging
-   also `SMOKE_WIDGET_BUSINESS_ID` (step 3) and
-   `SMOKE_EXPECT_REPLY=staging server`. Production gets no business id
-   unless one real model answer per deploy is wanted.
+   also `SMOKE_WIDGET_BUSINESS_ID` (step 3), with `SMOKE_EXPECT_REPLY` empty
+   (a real model answers); production only if a model answer is wanted.
 5. Render reports each deploy of a GitHub-connected service to GitHub as a
    deployment whose environment is the service's name
    (`workshop-staging-api`, `workshop-api`); a successful one starts the
    smoke workflow. Check Actions after the first deploy: if no run
    appears, relay a Render deploy webhook as a repository dispatch
-   `render-deploy-succeeded` with
-   `{"service": "<service name>", "sha": "<commit>"}`, or start the
-   workflow by hand (Run workflow → staging or production).
-6. If `release` is a protected branch, allow GitHub Actions to push to it.
-   Set the repository variable `PROMOTE_AFTER_STAGING_SMOKE=false` to
-   promote by hand instead.
-7. Set the repository variable `PRODUCTION_API_URL` (the production
-   API's public address): the promotion reads production's `/readyz` and
-   refuses while a data task is open. Without it every promotion stops
-   with a message that names the variable.
+   `render-deploy-succeeded` with `{"service": "<service name>", "sha":
+   "<commit>"}`, or start the workflow by hand (Run workflow → staging or
+   production; also when a promote job was "not allowed to deploy to
+   production-release": that deployment named no branch).
+6. The approval: `ssh-keygen -t ed25519 -N '' -f release-key`, the `.pub`
+   as a deploy key with write access; the environment `production-release`
+   with the reviewers of `.github/repository-settings.json`, branch `main`
+   only and the secret `RELEASE_DEPLOY_KEY` (then delete both files); a
+   ruleset on `release` like `main`'s whose only bypass is "Deploy keys";
+   `backup-drill` gets branch `main` only as well.
+7. The repository variable `PRODUCTION_API_URL` (the production API's
+   public address): the promotion reads production's `/readyz` and refuses
+   while a data task is open, or when the variable is missing.
 
 ## Database roles
 
@@ -697,8 +696,9 @@ report a broken flow right after a deploy:
    `workshop-api`, `workshop-worker`, `workshop-cabinet` → Events → the
    last good deploy → Rollback. API first, then worker, then cabinet.
 2. **Stop the bad commit from coming back.** Move `release` to the good
-   commit: `git push --force-with-lease origin <good-commit>:release`
-   (the only force push ever made to `release`). Render then deploys that
+   commit, the only force push ever made to it: add "Repository admin" to
+   the bypass of `release`'s ruleset, `git push --force-with-lease origin
+   <good-commit>:release`, remove the bypass. Render then deploys that
    commit, so the services stay on it.
 3. **Check.** Run the smoke workflow by hand (Actions → Deploy smoke test →
    Run workflow → production) and look at Sentry.

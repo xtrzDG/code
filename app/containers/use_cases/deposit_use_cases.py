@@ -47,6 +47,7 @@ from app.use_cases.deposits.get_deposit_settings_use_case import (
 )
 from app.use_cases.deposits.mark_deposit_paid_use_case import MarkDepositPaidUseCase
 from app.use_cases.deposits.payment_lines import PaymentLines
+from app.use_cases.deposits.payment_page_notices import PaymentPageNotices
 from app.use_cases.deposits.quote_deposit_use_case import QuoteDepositUseCase
 from app.use_cases.deposits.remove_payment_link_use_case import (
     RemovePaymentLinkUseCase,
@@ -90,6 +91,12 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
         settings_repo=repositories.deposit_settings_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
+        step_up=utilities.step_up_guard,
+        page_notices=Factory(
+            PaymentPageNotices,
+            staff_alerts=facilitators.staff_alert_facilitator,
+            resolver=utilities.localized_text_resolver,
+        ),
     )
 
     get_deposit_settings_use_case: Factory[

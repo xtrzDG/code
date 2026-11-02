@@ -28,6 +28,7 @@ from app.schemas.dto.mfa import (
     VerifyStepUpCommand,
 )
 from app.schemas.dto.sessions import (
+    RevokeAllSessionsCommand,
     RevokedSessionsView,
     RevokeOtherSessionsCommand,
     RevokeSessionCommand,
@@ -65,6 +66,9 @@ from app.use_cases.users.mfa.verify_mfa_login_use_case import VerifyMfaLoginUseC
 from app.use_cases.users.mfa.verify_step_up_use_case import VerifyStepUpUseCase
 from app.use_cases.users.sessions.list_my_sessions_use_case import (
     ListMySessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_all_sessions_use_case import (
+    RevokeAllSessionsUseCase,
 )
 from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
     RevokeOtherSessionsUseCase,
@@ -161,6 +165,15 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[RevokeOtherSessionsCommand, RevokedSessionsView]
     ] = Factory(
         RevokeOtherSessionsUseCase,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    revoke_all_sessions_use_case: Factory[
+        UseCaseContract[RevokeAllSessionsCommand, RevokedSessionsView]
+    ] = Factory(
+        RevokeAllSessionsUseCase,
         user_session_repo=repositories.user_session_repo,
         session_assurance=utilities.session_assurance,
         audit_log_repo=repositories.audit_log_repo,

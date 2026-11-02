@@ -42,6 +42,9 @@ ALERT_TITLES: dict[str, str] = {
     "failed_sign_in_checks": "Sign-in codes guessed",
     "audit_chain_broken": "Audit chain broken",
     "voice_health": "Phone assistant fails",
+    "spend_budget_stop": "Daily budget used up: assistants stopped",
+    "missed_job_runs": "Scheduled jobs missed",
+    "payment_mismatch": "Payments differ from the provider",
 }
 
 

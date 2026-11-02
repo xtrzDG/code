@@ -30,7 +30,7 @@ setting and on a missing, public or short `ENCRYPTION_KEY`
 | Render env group `workshop-backend` | the encryption ring and keys every backend service shares | the platform owner and deputy (Render workspace) |
 | Render service variables (`sync: false` in `render.yaml`) | provider keys of `workshop-api` (the workers read them `fromService`), the backup bucket of `workshop-backup` and `workshop-batch-worker` | same |
 | Render database `workshop-db` | `DATABASE_URL` (`fromDatabase`) | same |
-| GitHub repository and environment secrets | CI, the restore drill (`backup-drill`), the live contract tests, the nightly evals | repository admins |
+| GitHub repository and environment secrets | CI, the promotion to `release` (`production-release`), the restore drill (`backup-drill`), the live contract tests, the nightly evals | repository admins |
 | Postgres, sealed with `ENCRYPTION_KEYS` | the businesses' own credentials (last table) | the application only; a leaked key alone opens nothing |
 | The founders' password manager vault | escrow copies of `ENCRYPTION_KEYS` and the age escrow identity | two named people |
 
@@ -74,6 +74,7 @@ setting and on a missing, public or short `ENCRYPTION_KEY`
 | Secret | Purpose | Owner | Stored in | Rotate | Procedure |
 | --- | --- | --- | --- | --- | --- |
 | `BACKUP_AGE_IDENTITY` | opens backups in the restore drill | platform owner (escrow holder for the second identity) | GitHub environment `backup-drill` | 12 months | `docs/operations/backup-restore.md`, "Keys and custody": add the new public key, keep the old private key until every kept archive is newer |
+| `RELEASE_DEPLOY_KEY` | the SSH deploy key that moves `release` (what production deploys) after the approved promotion | platform owner | GitHub environment `production-release` (reviewers, branch `main` only) | 12 months | `ssh-keygen -t ed25519`, the new `.pub` as a write deploy key, the private key as the secret, then delete the old deploy key and both local files (`docs/operations/deploys.md`, "One-time setup") |
 | `REPO_SETTINGS_TOKEN` | reads branch protection for the daily settings check | platform owner | repository secret | 12 months (fine-grained token expiry) | new fine-grained token, *Administration: Read-only*, this repository only (`SECURITY.md`, "Repository settings") |
 | `SENTRY_AUTH_TOKEN` | uploads the cabinet's source maps from CI | platform owner | repository secret | 12 months | new organisation token with the release scope only |
 | `CONTRACTS_OPENAI_API_KEY`, `CONTRACTS_ANTHROPIC_API_KEY`, `CONTRACTS_ELEVENLABS_API_KEY` | live contract tests against the providers | platform owner | repository secrets | 12 months | separate low-limit keys, never production's |

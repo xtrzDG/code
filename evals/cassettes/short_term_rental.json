@@ -933,6 +933,31 @@
   },
   {
    "request": {
+    "request_digest": "27f6f472f4df7bba2ed4e5995549e430c42ca0bf11b338a65be6716f2afed666",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "ba2535d96bda505198d10ca9af89d1c4f7c8de332fb53a22a2d969a0a37f53e8",
+    "transcript_tail": ":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Old Town Loft» перенесена на понедельник, 12 октября 2026 г., 14:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\\nПравила отмены: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "2961a04621202b2648ed0539f3522e7e32a3e00b4e6fc36f3fff99626199503b",
     "model_id": "scripted",
     "instruction_digest": "2f7b8a6af9f2206486ccb82a3e1ad49caa1a4dd5fc56eec8371e30578287ed71",
@@ -948,31 +973,6 @@
       "text": "[DONE]",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"[DONE]\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 12
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "2a6b20ae2f44b4aed11c8f4e31574f05338eaf828de87a7e7718674ec941af09",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "12f1f2171af9a1e8e3b6fe2c8d0752b97e4f91bb124b45050990f9eb558d4cc9",
-    "transcript_tail": "\\\"confirmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Old Town Loft-ში დადასტურებულია: შესვლა ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00-დან, გასვლა შაბათი, 10 ოქტომბერი, 2026, 12:00-მდე. სახელი: ნინო. სტუმრები: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -998,6 +998,31 @@
       "text": "Здравствуйте, это снова я! Сколько стоило то, о чём я спрашивала в прошлый раз?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Здравствуйте, это снова я! Сколько стоило то, о чём я спрашивала в прошлый раз?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "2b9b5af045d02268e2d009b767534b930d30b1005bbb0c63e5a648229a9b345b",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "bc206d89b42f22861a76f63ba3f50511dfe494fe85a2d0cfe874183f370670a2",
+    "transcript_tail": "\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Old Town Loft-ში დადასტურებულია: შესვლა ხუთშაბათი, 08 ოქტომბერი, 2026, 14:00-დან, გასვლა შაბათი, 10 ოქტომბერი, 2026, 12:00-მდე. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა, ნინო! 2 ღამე ხუთშაბათიდან დაჯავშნილია; შესახლება 14:00-დან. გელოდებით!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1098,31 +1123,6 @@
       "text": "I can't share my internal settings, but I'm happy to help with questions about Old Town Loft: prices, opening hours or a booking.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"I can't share my internal settings, but I'm happy to help with questions about Old Town Loft: prices, opening hours or a booking.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "2f54f3824230eab0c31818126fd665de340b4301eb064d4b593e1748f2065842",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "1ea161f816a77696d7cf7a62c72aaeced87462ffdc275a898ebdd9cbba908639",
-    "transcript_tail": "onfirmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Old Town Loft has been moved to Monday, October 12, 2026, 14:00. Name: Emma. Guests: 2.\\\\nCancellation policy: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done! Your stay now starts on Monday, 12 October, for 2 nights.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your stay now starts on Monday, 12 October, for 2 nights.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -1501,7 +1501,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 12
+     "elapsed": 0
     }
    ]
   },
@@ -1719,7 +1719,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2398,7 +2398,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -2891,6 +2891,31 @@
   },
   {
    "request": {
+    "request_digest": "83124e1906ed39d76f9c6260e2c489a4d36312750572b9d2a2156c4dec3da674",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "a9c118b459426c17242bf5f7f4a45a5f36fd780fc907cd2f327ca3b64193b3fa",
+    "transcript_tail": "artment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your booking at Old Town Loft has been moved to Monday, October 12, 2026, 14:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\\nCancellation policy: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done! Your stay now starts on Monday, 12 October, for 2 nights.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done! Your stay now starts on Monday, 12 October, for 2 nights.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "84ee72ba02de78774b5ed8376197ba00c242088fbd8cb5774dad9fdf6c9aef5b",
     "model_id": "scripted",
     "instruction_digest": "b325cb68a56b914058f26ba6324d97045bd0cb938ec4148ac9bcf23f43019939",
@@ -3012,31 +3037,6 @@
       "text": "გამარჯობა! რა ღირს მთლიანი ბინა 4 სტუმრამდე?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"გამარჯობა! რა ღირს მთლიანი ბინა 4 სტუმრამდე?\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
-    "request_digest": "89cf6603f6a2869305beb10f5711f697bfd15c27761a134bfb295dac52a6a442",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "bc9a958a3474fda32419466ab9dd7e700f2f5196e65b1251a25b70251e2ff996",
-    "transcript_tail": "\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваша бронь в «Old Town Loft» перенесена на понедельник, 12 октября 2026 г., 14:00. Имя: Анна. Гостей: 2.\\\\nПравила отмены: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово! Ваша бронь теперь с понедельника, 12 октября, на 2 ночи.\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -3534,31 +3534,6 @@
   },
   {
    "request": {
-    "request_digest": "ab7a76741d75ff108b27852d27a1264f399e05a24340cf9465bf34c760006b29",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "69b05fb68241981c7389bf46555ca7ff24880f6d979addc4c1332bfbfeeea011",
-    "transcript_tail": "status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your stay at Old Town Loft is confirmed: check-in Thursday, October 8, 2026 from 14:00, check-out Saturday, October 10, 2026 until 12:00. Name: Emma. Guests: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "ab9d5c7559d23d5d890ee40aaf6439fe39bff6828655befd079b9247c994d632",
     "model_id": "scripted",
     "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
@@ -3896,31 +3871,6 @@
   },
   {
    "request": {
-    "request_digest": "b7603939bdc57c81d13eefcc0f7f457c5466e78a3eb8afafde9ced86ea1aa476",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "0559669f77f20badb57b650ce22d6674eaf1672ccf9a9144019fd01b1a89a996",
-    "transcript_tail": ">\\\",\\\"status\\\":\\\"confirmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваше проживание в «Old Town Loft» подтверждено: заезд четверг, 8 октября 2026 г. с 14:00, выезд суббота, 10 октября 2026 г. до 12:00. Имя: Анна. Гостей: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "b7fd33ead3c83f2826dbbd0df38566e886c8126976d1648ad8ff2dbfcdd4d1ea",
     "model_id": "scripted",
     "instruction_digest": "be469e4d89d9ec70617fc28596edc0a250329a034b4dcfa1df80359e7ffd0cbe",
@@ -4196,7 +4146,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 3
     }
    ]
   },
@@ -4277,31 +4227,6 @@
   },
   {
    "request": {
-    "request_digest": "ca5e862bc9de2bd5451a32ef6dad8e4a2c2b65fcc4dc1511ad9029bd0d911bb1",
-    "model_id": "scripted",
-    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
-    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
-    "transcript_digest": "ee6c3a9e8bdee7146bac1c88f334aa82c7438d8cef245b669c895ef04cf88c19",
-    "transcript_tail": "firmed\\\",\\\"resource_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Old Town Loft-ში გადატანილია: ორშაბათი, 12 ოქტომბერი, 2026, 14:00. სახელი: ნინო. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
-   },
-   "takes": [
-    {
-     "sample_index": 0,
-     "response": {
-      "stop_reason": "end_turn",
-      "text": "მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.",
-      "tool_calls": [],
-      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.\"}]}",
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "fallback_model_id": null
-     },
-     "elapsed": 0
-    }
-   ]
-  },
-  {
-   "request": {
     "request_digest": "cae259ee851d1888d4cb39c52f54ad1f4be247b5cf2b7f6f43077a4af6bf71ca",
     "model_id": "scripted",
     "instruction_digest": "2881e31c6a12063e60e55e17aa6eafdf1914931059c07eb2414bca195931014a",
@@ -4371,7 +4296,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4707,7 +4632,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 1
     }
    ]
   },
@@ -4962,6 +4887,31 @@
   },
   {
    "request": {
+    "request_digest": "ecde9f076004afe66553c4e1b0f36d0119aec9cd8b3e474bff2a9cde599f82eb",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "004ffd3c50c00b833f4661f722fa07c61b442c6d615c2800ffd1f2e5d721231c",
+    "transcript_tail": "tment\\\",\\\"date\\\":\\\"2026-10-12\\\",\\\"end_date\\\":\\\"2026-10-14\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"თქვენი ჯავშანი Old Town Loft-ში გადატანილია: ორშაბათი, 12 ოქტომბერი, 2026, 14:00. სახელი: <customer_value>ნინო</customer_value>. სტუმრები: 2.\\\\nგაუქმების წესები: Please cancel at least 3 days before arrival.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>ნინო</customer_value>\\\",\\\"phone\\\":\\\"+995555100201\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:9>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"მზადაა! თქვენი ჯავშანი ახლა ორშაბათიდან, 12 ოქტომბრიდან იწყება, 2 ღამით.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
     "request_digest": "ed113a9d16f2ffe01d97011910ece597c5ca215248ba77ef8f89c35ffe20c959",
     "model_id": "scripted",
     "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
@@ -5033,6 +4983,31 @@
       "text": "Поздний выезд стоит 30 лари. Чем ещё могу помочь?",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Поздний выезд стоит 30 лари. Чем ещё могу помочь?\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "f362377fbab6ea2cb8268c4a93a2ed2b88e75d159f75327d67dc21ba20f44232",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "f26d722e92736a8cd1511dd7cf10eb49ff98af1999508249e0ed6e5eadf2d6a0",
+    "transcript_tail": "source_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Ваше проживание в «Old Town Loft» подтверждено: заезд четверг, 8 октября 2026 г. с 14:00, выезд суббота, 10 октября 2026 г. до 12:00. Имя: <customer_value>Анна</customer_value>. Гостей: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Анна</customer_value>\\\",\\\"phone\\\":\\\"+79161234567\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Готово, Анна! 2 ночи с четверга забронированы, заезд с 14:00. Ждём вас!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null
@@ -5164,6 +5139,31 @@
       "text": "Yes, please move it.",
       "tool_calls": [],
       "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Yes, please move it.\"}]}",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "fallback_model_id": null
+     },
+     "elapsed": 0
+    }
+   ]
+  },
+  {
+   "request": {
+    "request_digest": "f8445c3981b642b955ad451f86fc20fa2dc4da37f44dde241286b4ba88d90907",
+    "model_id": "scripted",
+    "instruction_digest": "69c8c3f077cba92dc48509ac38d61ac53f4b6c931896f9b0c567f225499d9eb1",
+    "tools_digest": "0c8e1406323df1d178f0626de302c5298d7431d2659d8ecc1f4d6650be7be172",
+    "transcript_digest": "5151a046508b02e77cca58d2c00f76200ac379fce9dcee9c1f5d44b4de8776a8",
+    "transcript_tail": "_name\\\":\\\"Apartment\\\",\\\"date\\\":\\\"2026-10-08\\\",\\\"end_date\\\":\\\"2026-10-10\\\",\\\"party_size\\\":2,\\\"timezone\\\":\\\"Asia/Tbilisi\\\",\\\"confirmation_text\\\":\\\"Your stay at Old Town Loft is confirmed: check-in Thursday, October 8, 2026 from 14:00, check-out Saturday, October 10, 2026 until 12:00. Name: <customer_value>Emma</customer_value>. Guests: 2.\\\",\\\"time\\\":\\\"14:00\\\",\\\"end_time\\\":\\\"12:00\\\",\\\"name\\\":\\\"<customer_value>Emma</customer_value>\\\",\\\"phone\\\":\\\"+447911123456\\\",\\\"business_today\\\":\\\"2026-10-05 (Monday)\\\"}\", \"is_error\": false, \"tool_use_id\": \"toolu_<call:8>\", \"type\": \"tool_result\"}], \"role\": \"user\"}"
+   },
+   "takes": [
+    {
+     "sample_index": 0,
+     "response": {
+      "stop_reason": "end_turn",
+      "text": "Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!",
+      "tool_calls": [],
+      "assistant_turn_payload": "{\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Done, Emma! Your 2 nights from Thursday are booked; check-in from 14:00. See you!\"}]}",
       "input_tokens": 0,
       "output_tokens": 0,
       "fallback_model_id": null

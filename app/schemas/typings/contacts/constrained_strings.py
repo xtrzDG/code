@@ -31,11 +31,17 @@ class CustomerGivenName(BaseConstrainedTypedString):
 
     min_length = 1
     max_length = 60
+    # Invisible: controls, soft hyphen, the Arabic letter and Mongolian
+    # vowel marks, zero-width and direction marks, line and paragraph
+    # separators, embeddings and overrides, word joiner and invisible
+    # operators, byte order mark, interlinear annotations and tag letters.
     pattern = (
-        r"^[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f​-‏ -‮"
-        r"⁠-⁯﻿](?:[^<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f"
-        r"​-‏ -‮⁠-⁯﻿]{0,58}[^\s<>\[\]{}`*#|\\"
-        r"\x00-\x1f\x7f-\x9f​-‏ -‮⁠-⁯﻿])?\Z"
+        r"^[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]"
+        r"(?:[^<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]{0,58}"
+        r"[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f])?\Z"
     )
 
 

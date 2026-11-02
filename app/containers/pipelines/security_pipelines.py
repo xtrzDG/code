@@ -67,6 +67,15 @@ class SecurityPipelinesContainer(containers.DeclarativeContainer):
     revoke_other_sessions_pipeline = orchestrator_pipeline(
         security_orchestrators.revoke_other_sessions_orchestrator
     )
+    revoke_all_sessions_pipeline = orchestrator_pipeline(
+        security_orchestrators.revoke_all_sessions_orchestrator
+    )
+    list_client_member_sessions_pipeline = orchestrator_pipeline(
+        security_orchestrators.list_client_member_sessions_orchestrator
+    )
+    end_member_sessions_pipeline = orchestrator_pipeline(
+        security_orchestrators.end_member_sessions_orchestrator
+    )
     list_platform_admins_pipeline = orchestrator_pipeline(
         security_orchestrators.list_platform_admins_orchestrator
     )

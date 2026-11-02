@@ -166,6 +166,8 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     # The spend guard: spend limits, owner action and API limits, chat
     # websites, the platform's spend (1142).
@@ -296,4 +298,5 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         account_use_cases=accounts,
+        suppression_list=facilitators.suppression_list,
     )

@@ -24,6 +24,7 @@ from app.schemas.typings.billing.strings import (
     PaymentProviderReference,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.billing.payment_state_events import log_payment_order_opened
 from app.utilities.billing.billing_periods import (
     get_interval_months,
     to_local_calendar_day,
@@ -105,4 +106,5 @@ def open_payment_order(
     payment_order.created_at = now
     payment_order.updated_at = now
     payment_order_repo.save(payment_order)
+    log_payment_order_opened(payment_order)
     return payment_order, session

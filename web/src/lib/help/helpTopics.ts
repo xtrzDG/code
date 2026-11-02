@@ -22,6 +22,7 @@ export const HELP_ARTICLES = [
   "bookings",
   "billing",
   "privacy",
+  "dpia-support",
 ] as const;
 
 export type HelpArticleSlug = (typeof HELP_ARTICLES)[number];
