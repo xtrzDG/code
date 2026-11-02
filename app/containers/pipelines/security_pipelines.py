@@ -70,6 +70,9 @@ class SecurityPipelinesContainer(containers.DeclarativeContainer):
     revoke_all_sessions_pipeline = orchestrator_pipeline(
         security_orchestrators.revoke_all_sessions_orchestrator
     )
+    rotate_session_pipeline = orchestrator_pipeline(
+        security_orchestrators.rotate_session_orchestrator
+    )
     list_client_member_sessions_pipeline = orchestrator_pipeline(
         security_orchestrators.list_client_member_sessions_orchestrator
     )

@@ -70,6 +70,9 @@ class SecurityOrchestratorsContainer(containers.DeclarativeContainer):
     revoke_all_sessions_orchestrator = use_case_orchestrator(
         mfa_use_cases.revoke_all_sessions_use_case
     )
+    rotate_session_orchestrator = use_case_orchestrator(
+        mfa_use_cases.rotate_session_use_case
+    )
     list_client_member_sessions_orchestrator = use_case_orchestrator(
         security_use_cases.list_client_member_sessions_use_case
     )

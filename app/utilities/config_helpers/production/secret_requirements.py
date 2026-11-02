@@ -7,6 +7,9 @@ merchant, and never runs a feature whose webhooks it could not verify
 
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.typings.platform.strings import ProductionSettingProblem
+from app.utilities.config_helpers.production.previous_secret_requirements import (
+    find_previous_secret_problems,
+)
 
 # Stripe's test-mode keys (secret, restricted) and any publishable key,
 # which is no secret at all.
@@ -30,6 +33,7 @@ def find_provider_secret_problems(
             ProductionSettingProblem(f"{needed} is not set, but {because} is: {why}.")
             for needed, because, why in missing_verification_secrets(settings)
         ),
+        *find_previous_secret_problems(settings),
     ]
     return problems
 

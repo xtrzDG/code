@@ -139,7 +139,7 @@ def test_the_staff_number_is_one_calls_may_go_to(
     [
         "+1 212 555 0100",  # Outside the business's country and the EU.
         "+39 899 123 456",  # An Italian premium number.
-        "+881 6 1234 5678",  # A satellite number.
+        "+39 800 123 456",  # An Italian toll-free number.
     ],
 )
 def test_a_staff_number_calls_may_not_go_to_is_refused(raw_phone: str) -> None:

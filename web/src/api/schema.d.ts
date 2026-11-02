@@ -1033,6 +1033,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/session/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rotate Session */
+        post: operations["auth_rotate_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/step-up": {
         parameters: {
             query?: never;
@@ -12530,13 +12547,20 @@ export interface components {
         /**
          * HostedChatPhoneCalls
          * @description How the business's AI phone assistant treats calls, for its privacy
-         *     notice: calls are recorded; where the law of the business's country
-         *     asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
-         *     the start of the call. A caller may decline anywhere: the audio is then
-         *     deleted and a transcript without contact or card numbers kept.
-         *     Recordings and transcripts are kept `recording_retention_days`.
+         *     notice. Calls are recorded only while the owner turned recording on
+         *     (`is_recording_enabled`, off by default): without it the audio is
+         *     deleted after the call and a transcript without contact or card
+         *     numbers kept. With it, where the law of the business's country asks
+         *     every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at the
+         *     start of the call; a caller may decline anywhere, with the same
+         *     result. Recordings and transcripts are kept `recording_retention_days`.
          */
         HostedChatPhoneCalls: {
+            /**
+             * Is Recording Enabled
+             * @default false
+             */
+            is_recording_enabled: boolean;
             recording_consent_rule: components["schemas"]["RecordingConsentRule"];
             /** Recording Retention Days */
             recording_retention_days: number;
@@ -17886,12 +17910,20 @@ export interface components {
         ServiceMode: "full" | "leads_only";
         /**
          * SessionAssuranceView
-         * @description How the session is signed in now, and until when it may do sensitive actions.
+         * @description How the session is signed in now, and until when it may do sensitive
+         *     actions. `is_level_raised`: this proof raised it from one factor to
+         *     two, so the cabinet swaps its token (POST /v1/auth/session/rotate) and
+         *     a token copied before never gains the level.
          */
         SessionAssuranceView: {
             auth_level: components["schemas"]["AuthLevel"];
             /** Authenticated At */
             authenticated_at: number;
+            /**
+             * Is Level Raised
+             * @default false
+             */
+            is_level_raised: boolean;
             /** Step Up Valid Until */
             step_up_valid_until: number;
         };
@@ -26788,6 +26820,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoginSessionView"] | components["schemas"]["MfaRequiredView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    auth_rotate_session: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginSessionView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

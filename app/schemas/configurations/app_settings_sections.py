@@ -16,6 +16,9 @@ from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.payment_settings import PaymentSettings
 from app.schemas.configurations.phone_number_settings import PhoneNumberSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
+from app.schemas.configurations.previous_secret_settings import (
+    PreviousSecretSettings,
+)
 from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.public_api_settings import PublicApiSettings
 from app.schemas.configurations.public_site_settings import PublicSiteSettings
@@ -33,6 +36,10 @@ from app.schemas.configurations.voice_agent_settings import VoiceAgentSettings
 class AppSettingsSections(ImmutableDTO):
     """The settings that come as sections, each with its defaults."""
 
+    # Webhook secrets in rotation, still accepted (<NAME>_PREVIOUS).
+    previous_secrets: PreviousSecretSettings = Field(
+        default_factory=PreviousSecretSettings
+    )
     # Off-site backups and the restore drill (BACKUP_*; `workshop backup`,
     # `workshop restore-check`, docs/operations/backup-restore.md).
     backup: BackupSettings = Field(default_factory=BackupSettings)

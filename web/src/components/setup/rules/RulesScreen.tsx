@@ -72,11 +72,17 @@ export function RulesScreen({ ctx }: { ctx: StepContext }) {
           suggestions={forbiddenSuggestions}
           error={forbiddenSave.error}
         />
+        {/* What the API accepts as an owner's rule: shown once for both lists. */}
+        <p className="text-sm text-ink-muted">{t("profileEdit.rules.instructionRule")}</p>
         <section aria-labelledby={toneId} className="space-y-5 rounded-2xl border border-line bg-surface/85 p-5 backdrop-blur-sm sm:p-6">
           <h2 id={toneId} className="sr-only">
             {t("profileEdit.rules.toneTitle")}
           </h2>
-          <Field label={t("profileEdit.rules.toneTitle")} optionalLabel={t("common.optional")}>
+          <Field
+            label={t("profileEdit.rules.toneTitle")}
+            optionalLabel={t("common.optional")}
+            hint={t("profileEdit.rules.instructionRule")}
+          >
             {(control) => (
               <Input
                 {...control}

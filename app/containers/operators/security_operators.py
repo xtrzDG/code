@@ -104,6 +104,9 @@ class SecurityOperatorsContainer(containers.DeclarativeContainer):
     revoke_all_sessions_operator = pipeline_operator(
         security_pipelines.revoke_all_sessions_pipeline, storage_scope
     )
+    rotate_session_operator = pipeline_operator(
+        security_pipelines.rotate_session_pipeline, storage_scope
+    )
     # A client team's people and sessions are platform rows (unscoped).
     list_client_member_sessions_operator = pipeline_operator(
         security_pipelines.list_client_member_sessions_pipeline, storage_scope

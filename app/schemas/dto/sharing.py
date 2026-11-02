@@ -18,6 +18,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import AddressText, BusinessName
+from app.schemas.typings.calls.booleans import IsCallRecordingEnabled
 from app.schemas.typings.channels.booleans import IsWebChatEnabled
 from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
@@ -111,15 +112,18 @@ class HostedChatLookup(ImmutableDTO):
 class HostedChatPhoneCalls(ImmutableDTO):
     """
     How the business's AI phone assistant treats calls, for its privacy
-    notice: calls are recorded; where the law of the business's country
-    asks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at
-    the start of the call. A caller may decline anywhere: the audio is then
-    deleted and a transcript without contact or card numbers kept.
-    Recordings and transcripts are kept `recording_retention_days`.
+    notice. Calls are recorded only while the owner turned recording on
+    (`is_recording_enabled`, off by default): without it the audio is
+    deleted after the call and a transcript without contact or card
+    numbers kept. With it, where the law of the business's country asks
+    every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at the
+    start of the call; a caller may decline anywhere, with the same
+    result. Recordings and transcripts are kept `recording_retention_days`.
     """
 
     recording_consent_rule: RecordingConsentRule
     recording_retention_days: RecordingRetentionDays
+    is_recording_enabled: IsCallRecordingEnabled = False
 
 
 class HostedChatView(ImmutableDTO):

@@ -1,5 +1,7 @@
 from typed_time_provider import Microseconds
 
+from app.adapters.telephony.twilio_replay_guard import TwilioReplayGuard
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.telephony import CallFallbackAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.calls import MissedCallReason, MissedCallSource
@@ -7,6 +9,7 @@ from app.schemas.dto.calls.call_fallback import (
     CallFallbackReply,
     CallFallbackReport,
     CallFallbackWebhookRequest,
+    FallbackDialReport,
 )
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.exceptions.application_errors import (
@@ -21,15 +24,18 @@ from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.telephony.strings import TwimlDocument
 from app.utilities.calls.twilio_voice_webhooks import (
     build_dial_twiml,
+    build_empty_twiml,
     build_fallback_dial_path,
     build_hangup_twiml,
     build_voice_fallback_path,
+    describe_request_claim,
     first_values,
     is_valid_twilio_signature,
     read_form_pairs,
     read_unanswered_reason,
 )
 from app.utilities.channels.channel_endpoints import join_public_url
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 
 
 class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
@@ -44,50 +50,65 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
     (`From`) and, for a call forwarded to the line, `ForwardedFrom`; the
     dial's action adds `DialCallStatus`. A missed call of the fallback is
     the line's (source PBX) of the business, keyed by Twilio's call SID.
+
+    Twilio's signature carries no time, so once a request's signature
+    checks out its address, call and status are claimed for a day
+    (`TwilioReplayGuard`): a signed copy sent again is `is_repeated`, and
+    is answered with an empty <Response/> (`ignore_request`).
     """
 
-    def __init__(self, app_settings: AppSettings) -> None:
+    def __init__(
+        self, app_settings: AppSettings, buckets: RateLimitBucketAdapterContract
+    ) -> None:
         self._app_settings: AppSettings = app_settings
+        self._replay_guard: TwilioReplayGuard = TwilioReplayGuard(buckets)
 
     def read_fallback(
         self,
         request: CallFallbackWebhookRequest,
         now: Microseconds,
     ) -> CallFallbackReport:
-        fields: dict[str, str] = self._verified(
-            request, build_voice_fallback_path(request.business_id)
-        )
+        path: str = build_voice_fallback_path(request.business_id)
+        fields: dict[str, str] = self._verified(request, path)
+        call_id: ProviderCallId = read_call_sid(fields)
         return CallFallbackReport(
-            provider_call_id=read_call_sid(fields),
+            provider_call_id=call_id,
             called_at=now,
             assistant_number=read_number(fields, "To"),
             caller_number=read_number(fields, "From"),
             forwarded_from=read_number(fields, "ForwardedFrom"),
+            is_repeated=self._replay_guard.is_replay(
+                describe_request_claim(path, fields), now
+            ),
         )
 
     def read_dial_outcome(
         self,
         request: CallFallbackWebhookRequest,
         now: Microseconds,
-    ) -> MissedCallReport | None:
-        fields: dict[str, str] = self._verified(
-            request, build_fallback_dial_path(request.business_id)
-        )
+    ) -> FallbackDialReport:
+        path: str = build_fallback_dial_path(request.business_id)
+        fields: dict[str, str] = self._verified(request, path)
         call_id: ProviderCallId = read_call_sid(fields)
+        if self._replay_guard.is_replay(describe_request_claim(path, fields), now):
+            return FallbackDialReport(is_repeated=True)
+
         reason: MissedCallReason | None = read_unanswered_reason(
             fields.get("DialCallStatus", "")
         )
         if reason is None:
-            return None
+            return FallbackDialReport()
 
-        return MissedCallReport(
-            source=MissedCallSource.PBX,
-            provider_call_id=call_id,
-            reason=reason,
-            called_at=now,
-            business_id=request.business_id,
-            assistant_number=read_number(fields, "To"),
-            caller_number=read_number(fields, "From"),
+        return FallbackDialReport(
+            missed_call=MissedCallReport(
+                source=MissedCallSource.PBX,
+                provider_call_id=call_id,
+                reason=reason,
+                called_at=now,
+                business_id=request.business_id,
+                assistant_number=read_number(fields, "To"),
+                caller_number=read_number(fields, "From"),
+            )
         )
 
     def transfer(
@@ -104,6 +125,9 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
     def end_call(self) -> CallFallbackReply:
         return CallFallbackReply(twiml=TwimlDocument(build_hangup_twiml()))
 
+    def ignore_request(self) -> CallFallbackReply:
+        return CallFallbackReply(twiml=TwimlDocument(build_empty_twiml()))
+
     def _address(self, path: str) -> str | None:
         base_url = self._app_settings.app_base_url
         return None if base_url is None else join_public_url(str(base_url), path)
@@ -113,20 +137,19 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
     ) -> dict[str, str]:
         """The form fields of a request Twilio signed for this address."""
 
-        auth_token = self._app_settings.twilio_auth_token
+        # The previous auth token too, while a rotation is under way.
+        auth_tokens = accepted_secrets(
+            self._app_settings.twilio_auth_token,
+            self._app_settings.previous_secrets.twilio_auth_token,
+        )
         url: str | None = self._address(path)
         pairs: list[tuple[str, str]] = read_form_pairs(request.body)
-        if (
-            auth_token is None
-            or url is None
-            or not is_valid_twilio_signature(
-                str(auth_token),
-                url,
-                pairs,
-                None
-                if request.signature_header is None
-                else str(request.signature_header),
-            )
+        signature: str | None = (
+            None if request.signature_header is None else str(request.signature_header)
+        )
+        if url is None or not any(
+            is_valid_twilio_signature(str(auth_token), url, pairs, signature)
+            for auth_token in auth_tokens
         ):
             raise AuthenticationRequiredError(
                 "The Twilio signature is missing or wrong."

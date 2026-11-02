@@ -53,6 +53,7 @@ from app.utilities.channels.meta_page_events import (
 from app.utilities.channels.meta_story_context import read_story_note
 from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 from app.utilities.sharing.acquisition_sources import read_referral_source
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -103,11 +104,16 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         channel_secret: ChannelSecret | None,
     ) -> None:
         del channel_secret
-        app_secret: PlatformSecret | None = self._app_settings.meta_app_secret
-        if app_secret is None or not is_valid_sha256_signature(
-            str(app_secret),
-            payload.body,
-            payload.signature_header,
+        # The previous app secret too, while a rotation is under way.
+        app_secrets: list[PlatformSecret] = accepted_secrets(
+            self._app_settings.meta_app_secret,
+            self._app_settings.previous_secrets.meta_app_secret,
+        )
+        if not any(
+            is_valid_sha256_signature(
+                str(app_secret), payload.body, payload.signature_header
+            )
+            for app_secret in app_secrets
         ):
             raise AuthenticationRequiredError(
                 "The Meta webhook signature is missing or wrong."

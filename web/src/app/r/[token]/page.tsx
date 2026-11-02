@@ -2,22 +2,30 @@ import type { Metadata, Viewport } from "next";
 
 import { bookingPageTexts } from "@/lib/bookingPage/texts";
 import { directionOf } from "@/lib/hostedChat/language";
-import { privacyNoticeOfChat } from "@/lib/publicSite/customerPageLinks";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
 import { bookingPageLanguage, loadManagedBooking, type ManagedBookingLookup } from "@/server/managedBooking";
 
 import { CustomerPageLinks } from "../../c/[slug]/_components/CustomerPageLinks";
+import { BookingProblemCard } from "./_components/BookingProblemCard";
 import { ManagedBooking } from "./_components/ManagedBooking";
+import { RestoredBooking } from "./_components/RestoredBooking";
+import { PAGE_SESSION_SEGMENT } from "./_lib/pageSessionPath";
+import { privacyNoticeOfView } from "./_lib/privacyNotice";
 
 import "@/styles/bookingPage.css";
 import "@/styles/bookingActions.css";
 
+/** A page opened by its credential (/r/booking) asks the API from the browser. */
+const REFUSED: ManagedBookingLookup = { kind: "refused", problem: "linkInvalid" };
+
 export async function generateMetadata({ params }: PageProps<"/r/[token]">): Promise<Metadata> {
   const { token } = await params;
-  const lookup = await loadManagedBooking(token);
+  const isRestored = token === PAGE_SESSION_SEGMENT;
+  const lookup = isRestored ? REFUSED : await loadManagedBooking(token);
   const texts = bookingPageTexts(await bookingPageLanguage(lookup));
+  const title = lookup.kind === "found" ? `${texts.pageTitle} · ${lookup.view.business_name}` : texts.errorTitle;
   return {
-    title: { absolute: lookup.kind === "found" ? `${texts.pageTitle} · ${lookup.view.business_name}` : texts.errorTitle },
+    title: { absolute: isRestored ? texts.pageTitle : title },
     robots: { index: false, follow: false },
     // The address is the key to the booking: it never leaves in a Referer.
     referrer: "no-referrer",
@@ -34,24 +42,27 @@ export const viewport: Viewport = {
   ],
 };
 
-/** The business's privacy notice: the one of its chat page, when the booking names that chat. */
+/** The business's privacy notice, when the booking could be read. */
 function privacyNoticeOf(lookup: ManagedBookingLookup): string | null {
-  if (lookup.kind !== "found") {
-    return null;
-  }
-  const chat = (lookup.view.chat_links ?? []).find((link) => link.kind === "hosted_chat");
-  return chat ? privacyNoticeOfChat(chat.url) : null;
+  return lookup.kind === "found" ? privacyNoticeOfView(lookup.view) : null;
 }
 
 /**
  * /r/{token}: a guest's booking, opened from the link in their written
  * confirmation (no account). The signed token is the key; the API checks
  * it, its expiry and that the booking has not moved since, and limits how
- * often it is used. The page speaks the guest's language; at its foot the
- * business's privacy notice and the platform's accessibility statement.
+ * often it is used. Once open, the page trades the token for a short-lived
+ * credential and its address becomes /r/booking (pageSession.ts), which a
+ * reload of the tab opens with that credential (RestoredBooking); the link
+ * itself keeps working. The page speaks the guest's language; at its foot
+ * the business's privacy notice and the platform's accessibility
+ * statement.
  */
 export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
   const { token } = await params;
+  if (token === PAGE_SESSION_SEGMENT) {
+    return <RestoredBooking />;
+  }
   const lookup = await loadManagedBooking(token);
   const language = await bookingPageLanguage(lookup);
   const texts = bookingPageTexts(language);
@@ -61,18 +72,7 @@ export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
       {lookup.kind === "found" ? (
         <ManagedBooking initialView={lookup.view} texts={texts} language={language} />
       ) : (
-        <article className="bp-card bp-problem-page" aria-labelledby="bp-title">
-          <span className="bp-mark" aria-hidden>
-            <svg viewBox="0 0 24 24" focusable="false">
-              <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
-              <path d="M8 3v4M16 3v4M3.5 10h17M10 14l4 4M14 14l-4 4" />
-            </svg>
-          </span>
-          <h1 id="bp-title" className="bp-title">
-            {texts.errorTitle}
-          </h1>
-          <p>{texts[lookup.problem]}</p>
-        </article>
+        <BookingProblemCard title={texts.errorTitle} text={texts[lookup.problem]} />
       )}
       <CustomerPageLinks
         language={language}

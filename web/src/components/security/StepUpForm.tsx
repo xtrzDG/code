@@ -9,9 +9,10 @@
  * no passkeys); a login code never stands in for the second factor. Only
  * people with no second factor get a login code at their own phone or
  * e-mail (one sent moments ago is offered again: stepUpAsker.ts).
- * Once confirmed, the waiting requests run again by themselves; cancelling
- * leaves them refused. Loaded by StepUpDialog only when a confirmation is
- * asked for.
+ * Once confirmed, a session the confirmation raised to two factors gets a
+ * fresh token (rotateSession.ts) and the waiting requests run again by
+ * themselves; cancelling leaves them refused. Loaded by StepUpDialog only
+ * when a confirmation is asked for.
  */
 
 import { useEffect, useState } from "react";
@@ -40,6 +41,7 @@ import {
 import { createStepUpAsker } from "@/lib/security/stepUpAsker";
 
 import { OneTimeCodeField } from "./OneTimeCodeField";
+import { rotateSessionIfRaised } from "./rotateSession";
 import { StepUpPasskeyOption } from "./StepUpPasskeyOption";
 import { useStepUpPasskey } from "./useStepUpPasskey";
 
@@ -122,8 +124,9 @@ export default function StepUpForm() {
           ? { recovery_code: recoveryCode }
           : { code: digits };
     try {
-      await unwrap(api.POST("/v1/auth/step-up/verify", { body }));
+      const assurance = await unwrap(api.POST("/v1/auth/step-up/verify", { body }));
       stepUp.forget();
+      await rotateSessionIfRaised(assurance);
       toast.success(t("mfa.stepUp.confirmed"));
       settleStepUp(true);
     } catch (caught) {

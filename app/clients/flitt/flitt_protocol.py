@@ -20,7 +20,7 @@ import base64
 import binascii
 import hmac
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import cast
 from urllib.parse import parse_qsl
 
@@ -189,3 +189,37 @@ def require_mapping(value: object, label: str) -> dict[str, object]:
 
     mapping: dict[object, object] = cast(dict[object, object], value)
     return {str(key): item for key, item in mapping.items()}
+
+
+def verified_callback_parameters(
+    secret_keys: Sequence[str], parameters: dict[str, object]
+) -> dict[str, object] | None:
+    """
+    The parameters of a callback one of the keys signed (the current key
+    first, then the previous one while a rotation is under way): a 2.0
+    envelope's decoded data, or the flat parameters. None when no key did.
+    """
+
+    if is_envelope(parameters):
+        envelope_data: str = str(parameters["data"])
+        if not any(
+            is_signature_valid(
+                build_envelope_signature(key, envelope_data),
+                parameters.get(SIGNATURE_PARAMETER),
+            )
+            for key in secret_keys
+        ):
+            return None
+
+        return decode_envelope_data(envelope_data)
+
+    if not any(
+        is_signature_valid(
+            build_parameter_signature(key, parameters),
+            parameters.get(SIGNATURE_PARAMETER),
+        )
+        for key in secret_keys
+    ):
+        return None
+
+    return parameters

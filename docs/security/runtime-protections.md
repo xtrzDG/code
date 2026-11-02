@@ -63,7 +63,14 @@ worker and cabinet do, each with its code and the test that proves it.
   platform chain; `tests/users/access/test_admin_member_sessions.py`);
   joining the platform-admin team ends a person's existing sessions, so
   admin rights come only with a new sign-in
-  (`tests/users/access/test_admin_role_sessions.py`).
+  (`tests/users/access/test_admin_role_sessions.py`). Right after a
+  step-up the cabinet's server swaps the session's token for a new one
+  (`POST /v1/auth/session/rotate`; the old token answers 30 seconds more
+  as one factor), so a token copied before the step-up never gains its
+  level (`app/use_cases/users/sessions/rotate_session_use_case.py`,
+  `web/src/server/sessionRotation.ts`;
+  `tests/users/access/test_session_rotation.py`,
+  `web/src/app/api/auth/session/rotate/route.test.ts`).
 - **Google Calendar** connects with PKCE (S256) and a state bound to the
   person and the session that started it; completing it checks again that
   the person still owns the business
@@ -73,7 +80,10 @@ worker and cabinet do, each with its code and the test that proves it.
 - **Guest links**: a booking's manage link carries a 128-bit MAC (older
   96-bit links open until they expire;
   `app/utilities/security/booking_manage_token_signer.py`;
-  `tests/bookings/test_booking_manage_tokens.py`). A website-chat visitor
+  `tests/bookings/test_booking_manage_tokens.py`); the booking page trades
+  it for a credential of about 30 minutes and takes the token out of the
+  address bar (`POST /v1/public/bookings/{token}/session`;
+  `tests/bookings/test_booking_manage_session.py`). A website-chat visitor
   key idle for 30 days reads nothing from before the gap
   (`tests/channels/test_widget_visitor_key_expiry.py`).
 
@@ -94,6 +104,13 @@ worker and cabinet do, each with its code and the test that proves it.
   may be at most 5 minutes ahead of the clock
   (`app/utilities/channels/webhook_signatures.py`;
   `tests/channels/test_webhook_signatures.py`).
+- **Rotating a webhook secret** refuses no callback: while the provider
+  switches, the old value in `<NAME>_PREVIOUS` is accepted after the
+  current one (ElevenLabs, Meta, Flitt, Zadarma, Twilio), never alone and
+  never to sign anything (`app/utilities/config_helpers/secret_rotation.py`;
+  `tests/platform/test_previous_secrets.py`,
+  `tests/channels/test_webhook_secret_rotation.py`;
+  `docs/operations/runbooks/secret-rotation.md`).
 - **Anonymous limit per address**: an `Authorization` header exempts a
   request only on routes that verify a credential; a made-up one counts
   against the address
@@ -266,7 +283,8 @@ worker and cabinet do, each with its code and the test that proves it.
 - **Toll fraud**: calls are put through only to a mobile or landline of the
   business's country or an EU state, never to premium, shared-cost,
   special-tariff, satellite or international premium numbers, checked
-  before every transfer and fallback dial
+  when the owner saves the staff number (422) and again before every
+  transfer and fallback dial
   (`app/utilities/channels/transfer_destinations.py`;
   `tests/channels/test_transfer_destinations.py`); a transfer happens only
   while the business is open and after the owner confirmed that staff were
@@ -288,8 +306,15 @@ worker and cabinet do, each with its code and the test that proves it.
 - **Platform brakes**: a SUPER admin pauses every assistant at once (step-up,
   a reason, audited), and at `PLATFORM_DAILY_SPEND_STOP_PERCENT` of the
   daily budget every assistant stops calling the model until UTC midnight:
-  customer turns go to the team, calls to the forwarding number
-  (`app/utilities/spend/platform_brakes.py`;
+  customer turns go to the team, calls to the forwarding number, the
+  background model jobs ask no model (quality sampling and topics skip
+  the run, summaries wait an hour, knowledge indexing fails and is retried,
+  a website import fails), and owners' costly actions (menu
+  import, autotests, alias suggestions, renting a number) get 409
+  `platform_brake` (`app/utilities/spend/platform_brakes.py`,
+  `app/use_cases/spend_guard/admit_owner_action_use_case.py`;
+  `tests/spend_guard/test_platform_pause_reach.py`,
+  `tests/quality/test_quality_sampling_brake.py`,
   `tests/spend_guard/test_platform_brakes.py`,
   `tests/spend_guard/test_platform_pause_admin.py`;
   `docs/operations/runbooks/platform-brakes.md`).

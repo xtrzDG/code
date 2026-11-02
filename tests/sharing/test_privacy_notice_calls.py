@@ -1,6 +1,7 @@
 """
-The hosted chat's privacy notice states how calls are recorded when the
-business's AI assistant answers its phone (over HTTP, the whole application).
+The hosted chat's privacy notice states how calls are treated when the
+business's AI assistant answers its phone, and that they are recorded only
+while the owner records calls (over HTTP, the whole application).
 """
 
 from typed_time_provider import Microseconds
@@ -10,6 +11,7 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -17,6 +19,7 @@ from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.utilities.calls.call_follow_up_keys import call_settings_id_of
 from tests.e2e.harness import Workshop
 from tests.sharing.sharing_steps import SharedBusiness, create_business, share_links
 
@@ -29,8 +32,12 @@ def answer_calls(
     *,
     country: str | None = None,
     phone_status: ChannelStatus = ChannelStatus.CONNECTED,
+    is_recording_enabled: bool | None = None,
 ) -> None:
-    """A live voice version and the business's phone number."""
+    """
+    A live voice version and the business's phone number (and, when given,
+    the owner's recording switch).
+    """
 
     container = workshop.container
     business_id = BusinessId(business.business_id)
@@ -65,6 +72,14 @@ def answer_calls(
                 status=phone_status,
             )
         )
+        if is_recording_enabled is not None:
+            container.repositories.call_settings_repo().save(
+                CallSettingsDocument(
+                    id=call_settings_id_of(business_id),
+                    business_id=business_id,
+                    is_recording_enabled=is_recording_enabled,
+                )
+            )
 
 
 def public_chat(workshop: Workshop, business: SharedBusiness) -> dict[str, object]:
@@ -81,13 +96,27 @@ def test_a_chat_only_business_says_nothing_about_calls(workshop: Workshop) -> No
     assert public_chat(workshop, business)["phone_calls"] is None
 
 
-def test_a_notice_country_states_that_calls_are_recorded(workshop: Workshop) -> None:
+def test_calls_are_not_recorded_until_the_owner_turns_recording_on(
+    workshop: Workshop,
+) -> None:
     business = create_business(workshop, OWNER_PHONE, "Cafe Batumi")
     answer_calls(workshop, business)
 
     assert public_chat(workshop, business)["phone_calls"] == {
         "recording_consent_rule": "notice",
         "recording_retention_days": 90,
+        "is_recording_enabled": False,
+    }
+
+
+def test_a_notice_country_states_that_calls_are_recorded(workshop: Workshop) -> None:
+    business = create_business(workshop, OWNER_PHONE, "Cafe Batumi")
+    answer_calls(workshop, business, is_recording_enabled=True)
+
+    assert public_chat(workshop, business)["phone_calls"] == {
+        "recording_consent_rule": "notice",
+        "recording_retention_days": 90,
+        "is_recording_enabled": True,
     }
 
 
@@ -95,11 +124,12 @@ def test_an_all_party_consent_country_states_that_callers_are_asked(
     workshop: Workshop,
 ) -> None:
     business = create_business(workshop, OWNER_PHONE, "Café Berlin")
-    answer_calls(workshop, business, country="DE")
+    answer_calls(workshop, business, country="DE", is_recording_enabled=True)
 
     assert public_chat(workshop, business)["phone_calls"] == {
         "recording_consent_rule": "all_party_consent",
         "recording_retention_days": 90,
+        "is_recording_enabled": True,
     }
 
 

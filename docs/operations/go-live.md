@@ -228,6 +228,7 @@ after you set it, `curl -fsS <production-api-url>/readyz` answers `ready`.
 | SMS sign-in codes and phone numbers in the cabinet | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID`, `PHONE_NUMBER_PROVIDER` (`twilio`); optionally `PHONE_NUMBER_PRICE_MARKUP_PERCENT` in `workshop-backend` | docs/LAUNCH.md 4.3 and 4.6 |
 | Card payments in the EU, the US and Israel | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | docs/LAUNCH.md 4.7.2; the webhook is `<production-api-url>/v1/payments/stripe/webhook`; owners pay through Flitt until a later release opens the gate `stripe_payments`, not before 2026-11-22 |
 | The platform's budget stop and sign-in notices | optionally `PLATFORM_DAILY_SPEND_STOP_PERCENT` in `workshop-backend` (80–1000, 100 by default: at that share of `PLATFORM_DAILY_SPEND_BUDGET_USD` every assistant hands customers to the team until UTC midnight); `GEOIP_COUNTRY_DATABASE_PATH` (a GeoLite2-Country `.mmdb`: the new-country sign-in notice, else only new devices are told) | size the budget first (`docs/operations/runbooks/platform-brakes.md`) |
+| Rotating a webhook secret later | `ELEVENLABS_WEBHOOK_SECRET_PREVIOUS`, `META_APP_SECRET_PREVIOUS`, `FLITT_SECRET_KEY_PREVIOUS`, `ZADARMA_API_SECRET_PREVIOUS`, `TWILIO_AUTH_TOKEN_PREVIOUS`: leave them unset at launch; during a rotation the old value goes in `workshop-backend` | `docs/operations/runbooks/secret-rotation.md` |
 
 Check:
 

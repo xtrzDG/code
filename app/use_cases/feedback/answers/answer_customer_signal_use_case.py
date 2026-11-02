@@ -36,7 +36,12 @@ MESSENGER_CHANNELS: frozenset[ChannelKind] = frozenset(
 )
 # A customer past the hourly message limit, or blocked, hears nothing back.
 SILENT_GATES: frozenset[TurnGate] = frozenset(
-    {TurnGate.LIMIT_NOTICE, TurnGate.LIMIT_SILENCE, TurnGate.BLOCKED_SILENCE}
+    {
+        TurnGate.LIMIT_NOTICE,
+        TurnGate.CONVERSATION_LIMIT_NOTICE,
+        TurnGate.LIMIT_SILENCE,
+        TurnGate.BLOCKED_SILENCE,
+    }
 )
 
 

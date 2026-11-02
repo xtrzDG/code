@@ -111,6 +111,7 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
             referral_links=facilitators.referral_links,
             assistant_version_repo=repositories.assistant_version_repo,
             country_registry=registries.country_registry,
+            call_settings_repo=repositories.call_settings_repo,
         )
     )
     open_widget_handoff_use_case: Factory[

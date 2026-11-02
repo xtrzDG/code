@@ -4,10 +4,14 @@ from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.call_follow_up_repositories import (
+    CallSettingsRepoContract,
+)
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.localization import RecordingConsentRule
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.sharing import HostedChatPhoneCalls
 from app.schemas.exceptions.application_errors import UnknownCountryError
@@ -18,12 +22,15 @@ def describe_phone_calls(
     channels: list[ChannelDocument],
     version_repo: AssistantVersionRepoContract,
     country_registry: CountryRegistryContract,
+    call_settings_repo: CallSettingsRepoContract,
 ) -> HostedChatPhoneCalls | None:
     """
-    How the business's calls are recorded, when its AI assistant answers
+    How the business's calls are treated, when its AI assistant answers
     them: its live version has voice and its phone number is connected.
-    The consent rule is its country's (all-party consent where the
-    platform does not know the country, as the call's greeting does).
+    They are recorded only while the owner turned recording on (its call
+    settings; off without them). The consent rule is its country's
+    (all-party consent where the platform does not know the country, as
+    the call's greeting does).
     """
 
     if business.published_assistant_version_id is None or not any(
@@ -45,7 +52,11 @@ def describe_phone_calls(
     except UnknownCountryError:
         rule = RecordingConsentRule.ALL_PARTY_CONSENT
 
+    settings: CallSettingsDocument | None = call_settings_repo.get_by_business(
+        business.id
+    )
     return HostedChatPhoneCalls(
         recording_consent_rule=rule,
         recording_retention_days=business.recording_retention_days,
+        is_recording_enabled=settings is not None and settings.is_recording_enabled,
     )

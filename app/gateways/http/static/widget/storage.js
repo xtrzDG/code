@@ -1,8 +1,8 @@
-  // --- visitor identity and history (localStorage, never cookies) ---------
+  // --- visitor identity and history (web storage, never cookies) ----------
 
   function loadSessionKey() {
     forgetIdleConversation();
-    var storage = localStorageOrNull();
+    var storage = conversationStorageOrNull();
     var key = storageGet(storage, storagePrefix + "session");
     if (key && SESSION_KEY_PATTERN.test(key)) {
       return key;
@@ -15,16 +15,20 @@
   // A new visitor key (a new conversation): the others are forgotten.
   function replaceSessionKey() {
     var key = "v1_" + randomString(32);
-    storageSet(localStorageOrNull(), storagePrefix + "session", key);
+    storageSet(conversationStorageOrNull(), storagePrefix + "session", key);
     return key;
   }
 
   // A conversation idle for CONVERSATION_IDLE_EXPIRY_MS is over: its
   // transcript, position and visitor key leave the device (the API would
   // hand the old messages back to the old key). A history saved before
-  // its time was stamped starts the idle clock now.
+  // its time was stamped starts the idle clock now. On the chat page a
+  // conversation an earlier version kept on the device is removed.
   function forgetIdleConversation() {
-    var storage = localStorageOrNull();
+    if (isPageMode) {
+      forgetConversationOn(localStorageOrNull());
+    }
+    var storage = conversationStorageOrNull();
     var lastAt = Math.max(
       Number(storageGet(storage, storagePrefix + "activity-at")) || 0,
       Number(storageGet(storage, storagePrefix + "history-at")) || 0
@@ -38,13 +42,17 @@
     if (Date.now() - lastAt <= CONVERSATION_IDLE_EXPIRY_MS) {
       return;
     }
+    forgetConversationOn(storage);
+  }
+
+  function forgetConversationOn(storage) {
     CONVERSATION_STORAGE_KEYS.forEach(function (name) {
       storageRemove(storage, storagePrefix + name);
     });
   }
 
   function clearConversationState() {
-    var storage = localStorageOrNull();
+    var storage = conversationStorageOrNull();
     storageSet(storage, storagePrefix + "cursor", "");
     storageSet(storage, storagePrefix + "handoff", "0");
     storageSet(storage, storagePrefix + "handoff-at", "0");
@@ -52,7 +60,7 @@
   }
 
   function loadHistory() {
-    var raw = storageGet(localStorageOrNull(), storagePrefix + "history");
+    var raw = storageGet(conversationStorageOrNull(), storagePrefix + "history");
     if (!raw) {
       return [];
     }
@@ -196,6 +204,14 @@
     } catch (error) {
       return null;
     }
+  }
+
+  // Where a conversation is kept (its visitor key, transcript, position,
+  // handoff and last activity): the chat page (data-mode="page", the
+  // hosted chat) keeps it for the tab only, so the transcript leaves with
+  // the tab; a site's widget keeps it on the device until it goes idle.
+  function conversationStorageOrNull() {
+    return isPageMode ? sessionStorageOrNull() : localStorageOrNull();
   }
 
   function sessionStorageOrNull() {

@@ -58,6 +58,7 @@ class AuthenticateVoiceToolCallUseCase(
             self._app_settings.elevenlabs_webhook_secret,
             input_data.credentials,
             input_data.body,
+            self._app_settings.previous_secrets.elevenlabs_webhook_secret,
         )
         business: BusinessDocument | None = self._business_repo.get(
             input_data.credentials.business_id

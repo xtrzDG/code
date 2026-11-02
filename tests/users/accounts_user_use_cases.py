@@ -30,6 +30,7 @@ from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
 from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
+from app.use_cases.businesses.owner_promotion_sweep import OwnerPromotionSweep
 from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
 from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
@@ -54,6 +55,7 @@ from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
 from app.utilities.security.require_recent_authentication import (
     RequireRecentAuthentication,
 )
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.foundation.access_support import AllowStepUp
 from tests.foundation.brand_repositories import in_memory_brand_repo
@@ -283,6 +285,12 @@ class AccountsUserUseCases(AccountsRepositories):
             step_up=self.step_up,
         )
         self.remove_member = RemoveMemberUseCase(member_mutations=member_mutations)
+        self.owner_promotions = OwnerPromotionSweep(
+            self.user_session_repo,
+            self.audit_log_repo,
+            StorageScopeContext(),
+            wall_clock,
+        )
         self.change_member_role = ChangeMemberRoleUseCase(
-            member_mutations=member_mutations
+            member_mutations=member_mutations, owner_promotions=self.owner_promotions
         )

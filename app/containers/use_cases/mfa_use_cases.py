@@ -32,6 +32,7 @@ from app.schemas.dto.sessions import (
     RevokedSessionsView,
     RevokeOtherSessionsCommand,
     RevokeSessionCommand,
+    RotateSessionCommand,
     SessionsQuery,
     UserSessionList,
 )
@@ -76,6 +77,7 @@ from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
 from app.use_cases.users.sessions.revoke_session_use_case import (
     RevokeSessionUseCase,
 )
+from app.use_cases.users.sessions.rotate_session_use_case import RotateSessionUseCase
 
 
 class MfaUseCasesContainer(containers.DeclarativeContainer):
@@ -177,6 +179,18 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         user_session_repo=repositories.user_session_repo,
         session_assurance=utilities.session_assurance,
         audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # A fresh token for a session that just proved itself (step-up).
+    rotate_session_use_case: Factory[
+        UseCaseContract[RotateSessionCommand, LoginSessionView]
+    ] = Factory(
+        RotateSessionUseCase,
+        user_repo=repositories.user_repo,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
+        user_view_transformer=transformers.user_view_transformer,
+        app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     start_totp_enrollment_use_case: Factory[

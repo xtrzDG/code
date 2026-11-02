@@ -44,7 +44,9 @@ class RouteCallFallbackUseCase(
     call of the line (NOT_STARTED) with its text-back. A business that is
     gone: the call ends. So does a call from a number staff blocked
     (`is_blocked_caller`), which the voice agent refused: it reaches
-    nobody and is no missed call.
+    nobody and is no missed call. A signed copy of a request already
+    handled (Twilio's signature has no time) changes nothing: no phone
+    rings, no missed call, no notice.
     """
 
     def __init__(
@@ -68,6 +70,18 @@ class RouteCallFallbackUseCase(
         report: CallFallbackReport = self._call_fallback_adapter.read_fallback(
             input_data, now
         )
+        if report.is_repeated:
+            logger.warning(
+                "Fallback call %s was asked about again (a signed copy); ignored.",
+                report.provider_call_id,
+            )
+            return CallFallbackPlan(
+                reply=self._call_fallback_adapter.ignore_request(),
+                called_at=now,
+                business_id=input_data.business_id,
+                is_repeated=True,
+            )
+
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )

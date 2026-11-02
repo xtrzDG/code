@@ -76,7 +76,10 @@ def fallback_settings(**overrides: str) -> AppSettings:
 def build_fallback_client(testbed: ChannelsTestbed) -> TestClient:
     """The fallback router over the testbed's missed-call flow and outbox."""
 
-    adapter = TwilioCallFallbackAdapter(testbed.settings)
+    # The claims of signed requests, shared by every request to the testbed.
+    adapter = TwilioCallFallbackAdapter(
+        testbed.settings, testbed.carrier_request_claims
+    )
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(

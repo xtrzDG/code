@@ -22,6 +22,8 @@ export const privacyNoticeIt: Translation<typeof privacyNoticeEn> = {
     "{business} conserva le conversazioni per {conversations} dall'ultimo messaggio, dopodiché vengono cancellate automaticamente, e i registri delle elaborazioni AI dell'assistente per {modelRecords}. Può chiedere in qualsiasi momento che i Suoi dati vengano cancellati.",
   callsTitle: "Chiamate",
   callsRecorded: "Quando chiama {business}, risponde il suo assistente AI. La chiamata viene registrata e trascritta; il personale di {business} può ascoltare la registrazione e leggere la trascrizione.",
+  callsNotRecorded:
+    "Quando chiama {business}, risponde il suo assistente AI. La chiamata non viene registrata; al termine l'audio viene cancellato e si conserva solo una trascrizione scritta, senza numeri di telefono, indirizzi e-mail, numeri di carta o di conto.",
   callsNotice: "All'inizio della chiamata l'assistente avvisa che la chiamata viene registrata.",
   callsConsent: "All'inizio della chiamata l'assistente avvisa che la chiamata viene registrata e che Lei può rifiutare la registrazione.",
   callsDecline: "Può dire in qualsiasi momento che non desidera che la chiamata venga registrata. La chiamata prosegue; al termine l'audio viene cancellato e si conserva solo una trascrizione scritta, senza numeri di telefono, indirizzi e-mail, numeri di carta o di conto.",

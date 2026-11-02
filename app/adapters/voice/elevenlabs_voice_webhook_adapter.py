@@ -54,6 +54,7 @@ from app.utilities.channels.json_values import (
 from app.utilities.channels.language_codes import from_voice_platform_language
 from app.utilities.channels.skipped_webhook_parts import known_kind, log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_elevenlabs_signature
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 POST_CALL_TRANSCRIPTION_EVENT: str = "post_call_transcription"
@@ -91,14 +92,19 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
         request: PostCallWebhookRequest,
         now: Microseconds,
     ) -> None:
-        webhook_secret: PlatformSecret | None = (
-            self._app_settings.elevenlabs_webhook_secret
+        # The previous webhook secret too, while a rotation is under way.
+        webhook_secrets: list[PlatformSecret] = accepted_secrets(
+            self._app_settings.elevenlabs_webhook_secret,
+            self._app_settings.previous_secrets.elevenlabs_webhook_secret,
         )
-        if webhook_secret is None or not is_valid_elevenlabs_signature(
-            webhook_secret,
-            request.body,
-            request.signature_header,
-            int(now) // MICROSECONDS_PER_SECOND,
+        if not any(
+            is_valid_elevenlabs_signature(
+                webhook_secret,
+                request.body,
+                request.signature_header,
+                int(now) // MICROSECONDS_PER_SECOND,
+            )
+            for webhook_secret in webhook_secrets
         ):
             raise AuthenticationRequiredError(
                 "The ElevenLabs signature is missing, wrong or too old."

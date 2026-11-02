@@ -13,6 +13,7 @@ import { hostedChatPath, lookUpHostedChat, type HostedChatLookup, type HostedCha
 
 import { HostedChatNotice, HostedChatShell } from "../_components/HostedChatShell";
 import { chatLanguage, visitorLanguage, type PageLanguage } from "../_lib/hostedChatRequest";
+import { phoneCallKeys } from "./_texts/phoneCallKeys";
 import { PRIVACY_NOTICE_DRAFTS, privacyNoticeFor } from "./_texts/privacyNoticeTexts";
 
 const REVIEWED_LANGUAGES = ["en"];
@@ -65,7 +66,8 @@ export async function generateMetadata({ searchParams }: PageProps<"/c/[slug]/pr
  * the reviewed texts in English, Russian and Georgian, a draft marked for
  * review (with a link to the English text, which prevails) in the other
  * languages of the chat widget. When the business's AI assistant answers
- * its phone, a "Phone calls" section says how calls are recorded.
+ * its phone, a "Phone calls" section says how calls are treated: recorded
+ * only while the business records calls (Settings → Calls).
  */
 export default async function PrivacyNoticePage({ params, searchParams }: PageProps<"/c/[slug]/privacy">) {
   const { slug } = await params;
@@ -95,14 +97,8 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
   const names = { business: view.business_name };
   const naming = (key: Parameters<typeof text>[0], values?: MessageValues): SentenceWithUserValues => ({ text: text(key, values), values: names });
   const periods = keptPeriods(notice.language, view);
-  // Calls answered by the AI assistant: recorded, the caller told (or asked, where the law wants consent), and free to decline.
+  // Calls answered by the AI assistant: not recorded unless the owner turned recording on (`phoneCallKeys`).
   const calls = view.phone_calls;
-  const callSentences = (phone: NonNullable<typeof calls>): SentenceWithUserValues[] => [
-    naming("callsRecorded"),
-    naming(phone.recording_consent_rule === "all_party_consent" ? "callsConsent" : "callsNotice"),
-    naming("callsDecline"),
-    naming("callsKept", periods),
-  ];
   const sections = [
     { title: text("whoTitle"), body: [naming("who")] },
     {
@@ -112,7 +108,7 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
     { title: text("whyTitle"), body: [naming("why")] },
     { title: text("sharedTitle"), body: [naming("shared")] },
     { title: text("keptTitle"), body: [naming("kept", periods)] },
-    ...(calls ? [{ title: text("callsTitle"), body: callSentences(calls) }] : []),
+    ...(calls ? [{ title: text("callsTitle"), body: phoneCallKeys(calls).map((key) => naming(key, periods)) }] : []),
     { title: text("rightsTitle"), body: [naming("rights")] },
   ];
   const address = hostedChatPath(view.slug ?? slug);

@@ -52,6 +52,7 @@ from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
 from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
+from app.use_cases.businesses.owner_promotion_sweep import OwnerPromotionSweep
 from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
@@ -264,7 +265,17 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     )
     change_member_role_use_case: Factory[
         UseCaseContract[ChangeMemberRoleCommand, BusinessView]
-    ] = Factory(ChangeMemberRoleUseCase, member_mutations=member_mutation_guard)
+    ] = Factory(
+        ChangeMemberRoleUseCase,
+        member_mutations=member_mutation_guard,
+        owner_promotions=Factory(
+            OwnerPromotionSweep,
+            user_session_repo=repositories.user_session_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            storage_scope=utilities.storage_scope,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+    )
     remove_member_use_case: Factory[
         UseCaseContract[RemoveMemberCommand, BusinessView]
     ] = Factory(RemoveMemberUseCase, member_mutations=member_mutation_guard)

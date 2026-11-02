@@ -8,6 +8,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calls.booleans import IsRepeatedCarrierRequest
 from app.schemas.typings.channels.strings import WebhookSignatureHeader
 from app.schemas.typings.contacts.booleans import IsContactBlocked
 from app.schemas.typings.conversations.strings import ProviderCallId
@@ -32,6 +33,8 @@ class CallFallbackReport(ImmutableDTO):
     A call the voice platform could not take, as the carrier reported it:
     the number called (the business's line), the caller and, for a call
     forwarded to the line, the number it was forwarded from.
+    `is_repeated`: this signed request (its call and status) was handled
+    before, so it is answered with nothing and changes nothing.
     """
 
     provider_call_id: ProviderCallId
@@ -39,6 +42,7 @@ class CallFallbackReport(ImmutableDTO):
     assistant_number: RawPhoneNumberInput | None = None
     caller_number: RawPhoneNumberInput | None = None
     forwarded_from: RawPhoneNumberInput | None = None
+    is_repeated: IsRepeatedCarrierRequest = False
 
 
 class CallFallbackReply(ImmutableDTO):
@@ -55,7 +59,9 @@ class CallFallbackPlan(ImmutableDTO):
     not rung because the call came from it, was forwarded from it or is
     that very line (ringing it would loop). `is_caller_blocked`: the
     caller's number is one staff blocked, so the call just ends (no staff
-    phone rings, no missed call, no notice).
+    phone rings, no missed call, no notice). `is_repeated`: the carrier's
+    request was a signed copy of one already handled: it is answered with
+    nothing, and nobody is told.
     """
 
     reply: CallFallbackReply
@@ -65,6 +71,18 @@ class CallFallbackPlan(ImmutableDTO):
     looping_phone_number: E164PhoneNumber | None = None
     missed_call: MissedCallReport | None = None
     is_caller_blocked: IsContactBlocked = False
+    is_repeated: IsRepeatedCarrierRequest = False
+
+
+class FallbackDialReport(ImmutableDTO):
+    """
+    How the call put through to the staff mobile ended, as the carrier
+    reported it: the missed call when nobody took it. `is_repeated`: a
+    signed copy of a report already handled, which changes nothing.
+    """
+
+    missed_call: MissedCallReport | None = None
+    is_repeated: IsRepeatedCarrierRequest = False
 
 
 class FallbackDialOutcome(ImmutableDTO):

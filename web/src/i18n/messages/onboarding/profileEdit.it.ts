@@ -147,6 +147,7 @@ export const profileEditIt: Translation<typeof profileEditEn> = {
     handoffHint: "Ad esempio: un reclamo, un banchetto per più di 20 persone.",
     forbiddenTitle: "Cosa l’assistente non promette mai",
     forbiddenHint: "Ad esempio: sconti senza la tua approvazione.",
+    instructionRule: "Scrivi ogni regola e il tono su una riga, senza i caratteri < > [ ] { } ` e senza iniziare con #.",
     rule: "Regola {number}",
     rulePlaceholder: "Descrivi la regola",
     addRule: "Aggiungi una regola",

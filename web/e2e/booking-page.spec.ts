@@ -95,13 +95,21 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   await move.getByRole("button", { name: /^Move to / }).click();
 
   await expect(page.getByText(/^Done! Your booking is moved\./)).toBeVisible();
-  await expect(page).not.toHaveURL(new RegExp(booked.token));
-  const newToken = new URL(page.url()).pathname.split("/").pop()!;
-  expect(await bookingDate(request, newToken)).toBe(nextDay);
+  // The link's token left the address bar once the page opened (its short-lived credential).
+  await expect(page).toHaveURL(/\/r\/booking$/);
   // The chat has the new confirmation with the new link.
+  let newToken = "";
   await expect
-    .poll(async () => (await chatAnswers(request, businessId, booked.sessionKey)).join("\n"))
-    .toContain(`/r/${newToken}`);
+    .poll(async () => {
+      const links = (await chatAnswers(request, businessId, booked.sessionKey)).join("\n").match(/\/r\/([A-Za-z0-9_-]{40,120})/g) ?? [];
+      newToken = (links.map((link) => link.slice(3)).find((token) => token !== booked.token) ?? "");
+      return newToken;
+    })
+    .not.toBe("");
+  expect(await bookingDate(request, newToken)).toBe(nextDay);
+  // A reload of the tab still opens the booking.
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Your booking" })).toBeVisible();
 
   // The old link no longer opens the booking.
   await page.goto(booked.path);

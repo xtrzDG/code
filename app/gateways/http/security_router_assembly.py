@@ -14,6 +14,7 @@ from app.gateways.http.business_security_routes import (
 from app.gateways.http.mfa_routes import build_mfa_router
 from app.gateways.http.passkey_account_routes import build_passkey_account_router
 from app.gateways.http.passkey_sign_in_routes import build_passkey_sign_in_router
+from app.gateways.http.session_rotation_routes import build_session_rotation_router
 from app.gateways.http.session_routes import build_sessions_router
 from app.gateways.http.session_sign_out_routes import build_session_sign_out_router
 from app.gateways.http.support_access_routes import build_support_access_router
@@ -95,6 +96,10 @@ def build_security_routers(
         ),
         build_session_sign_out_router(
             revoke_all_sessions_operator=security.revoke_all_sessions_operator(),
+            current_user=current_user,
+        ),
+        build_session_rotation_router(
+            rotate_session_operator=security.rotate_session_operator(),
             current_user=current_user,
         ),
         build_admin_member_session_router(

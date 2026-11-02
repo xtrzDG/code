@@ -37,12 +37,19 @@ from app.utilities.conversations.assistant_texts.notice_texts import (
     COLLEAGUE_TAKES_OVER,
     COLLEAGUE_WILL_CALL_BACK,
     CONTACT_LIMIT_NOTICE,
+    CONVERSATION_LIMIT_NOTICE,
 )
 from app.utilities.conversations.farewells import is_farewell
 from app.utilities.deposits.payment_line_joining import with_payment_lines
 from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+# The once-only stop message of each limit: the contact's hourly messages,
+# and the end of a conversation's length.
+LIMIT_NOTICES: dict[TurnGate, LocalizedText] = {
+    TurnGate.LIMIT_NOTICE: CONTACT_LIMIT_NOTICE,
+    TurnGate.CONVERSATION_LIMIT_NOTICE: CONVERSATION_LIMIT_NOTICE,
+}
 
 
 class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
@@ -54,7 +61,8 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     answered by the platform (and a low rating handed to a colleague)
     without the model; while staff own the conversation stay silent
     in chat and promise a call back on the phone; past the contact's message
-    limit answer once with a polite stop message; a message with nothing the
+    limit, or at the end of the conversation's length, answer once with a
+    polite stop message (`LIMIT_NOTICES`); a message with nothing the
     assistant can read (a sticker, a file) gets a polite request to write.
     Otherwise generate the reply with tools and the reply guard (numbers,
     claims, other people's contact details). When the model refuses, is
@@ -197,10 +205,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
                 should_end_call=True,
             )
 
-        if turn.gate is TurnGate.LIMIT_NOTICE:
+        if turn.gate in LIMIT_NOTICES:
             return ReplyRecord(
                 turn=turn,
-                text=self._resolve(CONTACT_LIMIT_NOTICE, turn),
+                text=self._resolve(LIMIT_NOTICES[turn.gate], turn),
                 should_end_call=is_phone,
             )
 

@@ -33,8 +33,10 @@
  *                          per source
  *
  * No dependencies and no cookies. The visitor is identified by a random
- * session key kept in localStorage; the widget renders inside a shadow root,
- * so the host page's styles and the widget's styles never mix.
+ * session key kept in localStorage (on the chat page, data-mode="page", in
+ * sessionStorage with the rest of the conversation: it leaves with the
+ * tab); the widget renders inside a shadow root, so the host page's styles
+ * and the widget's styles never mix.
  *
  * Sending a message is accepted at once (202) with a ticket to the
  * visitor's live stream (GET .../events?ticket=..., EventSource): the

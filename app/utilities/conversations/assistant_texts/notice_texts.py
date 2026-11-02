@@ -107,3 +107,54 @@ CONTACT_LIMIT_NOTICE: LocalizedText = build_localized_text(
     ja="短時間に多くのメッセージが送信されました。少し時間をおいてから、もう一度"
     "ご連絡ください。",
 )
+
+# The end of a conversation's length (MAX_CONVERSATION_MESSAGES): said once,
+# then the assistant stays silent until a new conversation starts.
+CONVERSATION_LIMIT_NOTICE: LocalizedText = build_localized_text(
+    en="We have talked a lot in this conversation, so I will stop here. Our "
+    "team sees all your messages and will get back to you if needed.",
+    ru="В этом разговоре мы обменялись уже очень многими сообщениями, поэтому "
+    "я здесь остановлюсь. Наша команда видит все ваши сообщения и при "
+    "необходимости свяжется с вами.",
+    ka="ამ საუბარში უკვე ბევრი შეტყობინება გავცვალეთ, ამიტომ აქ შევჩერდები. "
+    "ჩვენი გუნდი ხედავს თქვენს ყველა შეტყობინებას და საჭიროების შემთხვევაში "
+    "დაგიკავშირდებათ.",
+    tr="Bu görüşmede çok fazla mesajlaştık, bu yüzden burada duruyorum. "
+    "Ekibimiz tüm mesajlarınızı görüyor ve gerekirse size dönüş yapacak.",
+    he="התכתבנו הרבה בשיחה הזו, ולכן אעצור כאן. הצוות שלנו רואה את כל ההודעות "
+    "שלך ויחזור אליך במידת הצורך.",
+    ar="لقد تبادلنا الكثير من الرسائل في هذه المحادثة، لذا سأتوقف هنا. يرى "
+    "فريقنا جميع رسائلك وسيتواصل معك إذا لزم الأمر.",
+    hy="Այս զրույցում արդեն շատ հաղորդագրություններ ենք փոխանակել, ուստի "
+    "այստեղ կկանգնեմ։ Մեր թիմը տեսնում է ձեր բոլոր հաղորդագրությունները և "
+    "անհրաժեշտության դեպքում կկապվի ձեզ հետ։",
+    uk="У цій розмові ми вже обмінялися дуже багатьма повідомленнями, тож я "
+    "тут зупинюся. Наша команда бачить усі ваші повідомлення і за потреби "
+    "зв'яжеться з вами.",
+    de="Wir haben in diesem Gespräch schon sehr viel geschrieben, deshalb höre "
+    "ich hier auf. Unser Team sieht alle Ihre Nachrichten und meldet sich bei "
+    "Bedarf bei Ihnen.",
+    fr="Nous avons beaucoup échangé dans cette conversation, je vais donc "
+    "m'arrêter ici. Notre équipe voit tous vos messages et reviendra vers vous "
+    "si nécessaire.",
+    es="Hemos hablado mucho en esta conversación, así que me detengo aquí. "
+    "Nuestro equipo ve todos sus mensajes y se pondrá en contacto con usted si "
+    "es necesario.",
+    it="Abbiamo scritto molto in questa conversazione, quindi mi fermo qui. Il "
+    "nostro team vede tutti i suoi messaggi e la ricontatterà se necessario.",
+    pt="Já conversamos bastante nesta conversa, por isso vou parar por aqui. "
+    "Nossa equipe vê todas as suas mensagens e entrará em contato se necessário.",
+    pl="W tej rozmowie wymieniliśmy już bardzo wiele wiadomości, więc na tym "
+    "zakończę. Nasz zespół widzi wszystkie wiadomości i w razie potrzeby się "
+    "odezwie.",
+    az="Bu söhbətdə artıq çoxlu mesaj yazışmışıq, ona görə burada dayanıram. "
+    "Komandamız bütün mesajlarınızı görür və lazım olsa, sizinlə əlaqə "
+    "saxlayacaq.",
+    kk="Бұл әңгімеде көп хабарлама алмастық, сондықтан осы жерде тоқтаймын. "
+    "Біздің команда барлық хабарламаларыңызды көреді және қажет болса, сізбен "
+    "хабарласады.",
+    zh="我们在这次对话中已经交流了很多，我就先到这里。我们的团队能看到您的所有消息，"
+    "如有需要会与您联系。",
+    ja="この会話ではたくさんのやり取りをしましたので、ここで一度終了いたします。"
+    "スタッフがすべてのメッセージを確認し、必要に応じてご連絡いたします。",
+)

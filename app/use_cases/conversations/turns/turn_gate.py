@@ -48,9 +48,10 @@ def choose_turn_gate(
     A customer the owner blocked hears nothing (Customers → block). Staff
     own a conversation in HANDOFF (silence in chat, a call-back promise on
     the phone); a contact who keeps trying prompt injection, is past the
-    hourly per-contact limit or wrote MAX_CONVERSATION_MESSAGES messages in
-    this conversation is answered once with a polite stop message, then the
-    assistant stays silent.
+    hourly per-contact limit is answered once with a polite stop message;
+    one who wrote MAX_CONVERSATION_MESSAGES messages in this conversation
+    is told once that the conversation ends here (CONVERSATION_LIMIT_NOTICE);
+    then the assistant stays silent.
     """
 
     if contact.block is not None and not conversation.is_sandbox:
@@ -89,10 +90,10 @@ def choose_turn_gate(
     ):
         return TurnGate.LIMIT_SILENCE
 
-    if (
-        recent_message_count == int(contact_message_limit)
-        or conversation_message_count == MAX_CONVERSATION_MESSAGES
-    ):
+    if conversation_message_count == MAX_CONVERSATION_MESSAGES:
+        return TurnGate.CONVERSATION_LIMIT_NOTICE
+
+    if recent_message_count == int(contact_message_limit):
         return TurnGate.LIMIT_NOTICE
 
     return TurnGate.ANSWER

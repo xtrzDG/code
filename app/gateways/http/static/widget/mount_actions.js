@@ -238,12 +238,12 @@
     }
 
     function adoptStoredSession() {
-      var stored = storageGet(localStorageOrNull(), storagePrefix + "session");
+      var stored = storageGet(conversationStorageOrNull(), storagePrefix + "session");
       if (stored && stored !== state.sessionKey && SESSION_KEY_PATTERN.test(stored)) {
         stopPolling();
         state.sessionKey = stored;
         forgetConversation();
-        state.storedHistory = storageGet(localStorageOrNull(), storagePrefix + "history");
+        state.storedHistory = storageGet(conversationStorageOrNull(), storagePrefix + "history");
         renderLog();
       }
     }

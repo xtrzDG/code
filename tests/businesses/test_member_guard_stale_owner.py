@@ -151,7 +151,8 @@ def test_an_owner_demoted_meanwhile_cannot_change_a_role() -> None:
         actor: UserId, member: UserId, step_up: StepUpGuardContract
     ) -> Callable[[], BusinessView]:
         return lambda: ChangeMemberRoleUseCase(
-            member_mutations=guard(testbed, step_up)
+            member_mutations=guard(testbed, step_up),
+            owner_promotions=testbed.owner_promotions,
         ).run(
             ChangeMemberRoleCommand(
                 user_id=actor,
@@ -176,7 +177,10 @@ def test_an_owner_demoted_meanwhile_cannot_change_a_role() -> None:
 def test_an_owner_may_still_step_down_while_another_owner_stays() -> None:
     testbed, business, (first, second, _third) = three_owners()
 
-    view = ChangeMemberRoleUseCase(member_mutations=guard(testbed, Passes())).run(
+    view = ChangeMemberRoleUseCase(
+        member_mutations=guard(testbed, Passes()),
+        owner_promotions=testbed.owner_promotions,
+    ).run(
         ChangeMemberRoleCommand(
             user_id=second,
             business_id=business.id,

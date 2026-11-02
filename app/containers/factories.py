@@ -85,6 +85,7 @@ def build_flitt_client(settings: AppSettings) -> FlittClient | None:
     return FlittClient(
         merchant_id=settings.flitt_merchant_id,
         secret_key=settings.flitt_secret_key,
+        previous_secret_key=settings.previous_secrets.flitt_secret_key,
     )
 
 

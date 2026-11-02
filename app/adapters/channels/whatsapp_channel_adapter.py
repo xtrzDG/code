@@ -60,6 +60,7 @@ from app.utilities.channels.whatsapp_webhook_parts import (
     other_field_kind,
     status_kinds,
 )
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 from app.utilities.conversations.assistant_texts.choice_texts import (
     CHOICE_LIST_BUTTON,
 )
@@ -109,11 +110,16 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         channel_secret: ChannelSecret | None,
     ) -> None:
         del channel_secret
-        app_secret: PlatformSecret | None = self._app_settings.meta_app_secret
-        if app_secret is None or not is_valid_sha256_signature(
-            str(app_secret),
-            payload.body,
-            payload.signature_header,
+        # The previous app secret too, while a rotation is under way.
+        app_secrets: list[PlatformSecret] = accepted_secrets(
+            self._app_settings.meta_app_secret,
+            self._app_settings.previous_secrets.meta_app_secret,
+        )
+        if not any(
+            is_valid_sha256_signature(
+                str(app_secret), payload.body, payload.signature_header
+            )
+            for app_secret in app_secrets
         ):
             raise AuthenticationRequiredError(
                 "The Meta webhook signature is missing or wrong."

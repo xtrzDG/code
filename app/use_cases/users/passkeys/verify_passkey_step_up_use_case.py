@@ -99,4 +99,5 @@ class VerifyPasskeyStepUpUseCase(
                 + int(self._app_settings.step_up_max_age_seconds)
                 * MICROSECONDS_PER_SECOND
             ),
+            is_level_raised=assurance.auth_level is not AuthLevel.TWO_FACTOR,
         )

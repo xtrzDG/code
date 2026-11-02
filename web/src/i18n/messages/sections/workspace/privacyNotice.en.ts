@@ -24,6 +24,8 @@ export const privacyNoticeEn = {
     "{business} keeps conversations for {conversations} after their last message, then they are deleted automatically, and the records of the assistant's AI calls for {modelRecords}. You can ask it to delete yours at any time.",
   callsTitle: "Phone calls",
   callsRecorded: "When you call {business}, its AI assistant answers. The call is recorded and transcribed; the staff of {business} can listen to the recording and read the transcript.",
+  callsNotRecorded:
+    "When you call {business}, its AI assistant answers. The call is not recorded; afterwards the audio is deleted and only a written transcript is kept, without phone numbers, e-mail addresses, or card and account numbers.",
   callsNotice: "At the start of the call the assistant says that the call is recorded.",
   callsConsent: "At the start of the call the assistant says that the call is recorded and that you can refuse the recording.",
   callsDecline: "You can say at any time that you do not want the call recorded. The call goes on; afterwards the audio is deleted and only a written transcript is kept, without phone numbers, e-mail addresses, or card and account numbers.",

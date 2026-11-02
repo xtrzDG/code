@@ -15,6 +15,9 @@ IsCallbackRequested = bool
 IsCallSummaryEnabled = bool
 IsCallSummaryGenerated = bool
 IsNewMissedCall = bool
+# A carrier's webhook (Twilio's fallback or dial status) whose call and
+# status were already handled: a signed request sent again.
+IsRepeatedCarrierRequest = bool
 IsSmsFallbackEnabled = bool
 # The owner confirmed that the staff who take transferred calls were told,
 # as Italian labour law asks of tools that can monitor staff, that the

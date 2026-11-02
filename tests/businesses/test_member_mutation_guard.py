@@ -105,7 +105,10 @@ def owners_of(testbed: AccountsTestbed, business: BusinessDocument) -> list[User
 
 def test_two_owners_demoting_each_other_at_once_leave_one_owner() -> None:
     testbed, business, owner_id, co_owner_id = two_owners()
-    change_role = ChangeMemberRoleUseCase(member_mutations=racing_guard(testbed))
+    change_role = ChangeMemberRoleUseCase(
+        member_mutations=racing_guard(testbed),
+        owner_promotions=testbed.owner_promotions,
+    )
     entries_before = len(testbed.audit_log_repo.list_by_business(business.id))
 
     def demote(actor_id: UserId, member_id: UserId) -> TeamChange:

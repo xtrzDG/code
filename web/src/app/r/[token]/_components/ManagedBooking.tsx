@@ -10,6 +10,7 @@ import { interfaceSentence, type SentenceWithUserValues } from "@/i18n/userValue
 import { bookingProblem, isPageProblem, type BookingProblem } from "@/lib/bookingPage/refusals";
 import type { BookingPageTexts } from "@/lib/bookingPage/texts";
 
+import { usePageSession } from "../_lib/usePageSession";
 import { BookingContacts } from "./BookingContacts";
 import { BookingFacts } from "./BookingFacts";
 import { MarketingConsentBox } from "./marketingConsent/MarketingConsentBox";
@@ -42,19 +43,31 @@ function CalendarIcon() {
  * The guest's booking behind the link: what it is, a calendar file, a
  * move to another free time, a cancellation (confirmed in a dialog) and
  * the ways to write to the business, and the guest's own (unticked) box
- * for the business's marketing messages. A move issues a new link: the
- * page's address follows it.
+ * for the business's marketing messages. Once open, the page trades the
+ * link's token for its short-lived credential and takes the token out of
+ * the address bar (`usePageSession`); `sessionExpiresAt` is set for a page
+ * that opened on that credential already. Without a credential, a move
+ * issues a new link and the page's address follows it.
  */
 export function ManagedBooking({
   initialView,
   texts,
   language,
+  sessionExpiresAt = null,
 }: {
   initialView: View;
   texts: BookingPageTexts;
   language: string;
+  sessionExpiresAt?: number | null;
 }) {
   const [view, setView] = useState(initialView);
+  const [sessionEnds, setSessionEnds] = useState<number | null>(sessionExpiresAt);
+  const isSession = sessionEnds !== null;
+  const adoptCredential = useCallback((token: string, expiresAt: number) => {
+    setView((current) => ({ ...current, token }));
+    setSessionEnds(expiresAt);
+  }, []);
+  usePageSession({ token: view.token, language, isSession, expiresAt: sessionEnds, onCredential: adoptCredential });
   const [notice, setNotice] = useState<SentenceWithUserValues | null>(null);
   const [problem, setProblem] = useState<BookingProblem | null>(null);
   const [isMoving, setMoving] = useState(false);
@@ -108,8 +121,10 @@ export function ManagedBooking({
   function moved(next: View) {
     setView(next);
     setMoving(false);
-    // The old link no longer opens the booking: the address takes the new one.
-    window.history.replaceState(null, "", `/r/${encodeURIComponent(next.token)}`);
+    if (!isSession) {
+      // The old link no longer opens the booking: the address takes the new one.
+      window.history.replaceState(null, "", `/r/${encodeURIComponent(next.token)}`);
+    }
     report(interfaceSentence(texts.movedNotice), null);
   }
 

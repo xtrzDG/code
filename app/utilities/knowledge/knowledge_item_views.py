@@ -7,7 +7,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.dto.knowledge_admin import KnowledgeItemDetails
-from app.schemas.typings.knowledge.strings import KnowledgeBody
+from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -41,13 +41,13 @@ def to_item_view(
 ) -> KnowledgeItemView:
     """
     The item as the language model sees it (search_knowledge, get_price):
-    imported text as an untrusted block.
+    imported text, its title too, as an untrusted block.
     """
 
     return KnowledgeItemView(
         id=item.id,
         kind=item.kind,
-        title=item.title,
+        title=model_title(item),
         body=model_body(item),
         price_minor=item.price_minor,
         currency_code=(
@@ -61,6 +61,18 @@ def to_item_view(
         seasonal_rates=list(item.seasonal_rates),
         tags=list(item.tags),
     )
+
+
+def model_title(item: KnowledgeItemDocument) -> KnowledgeTitle:
+    """
+    The item's title as the model reads it: a title imported from a website
+    or a menu file comes as an untrusted block, like its text.
+    """
+
+    if item.source is not KnowledgeItemSource.MENU_IMPORT:
+        return item.title
+
+    return KnowledgeTitle(wrap_untrusted(str(item.title)))
 
 
 def model_body(item: KnowledgeItemDocument) -> KnowledgeBody | None:

@@ -139,3 +139,13 @@ class RevokeAllSessionsCommand(ImmutableDTO):
 
     user_id: UserId
     client_ip_address: ClientIpAddress | None = None
+
+
+class RotateSessionCommand(ImmutableDTO):
+    """
+    Swap the request's session token for a fresh one right after the
+    person proved it is them again (a step-up): the session keeps its
+    level, device and expiries, the old token stops working.
+    """
+
+    user_id: UserId

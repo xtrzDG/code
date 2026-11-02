@@ -12,7 +12,11 @@ from app.schemas.constants.mfa import AuthLevel, StepUpMethod, TotpFactorStatus
 from app.schemas.dto.users import OtpChallengeView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.mfa.booleans import IsMfaRequired, IsMfaRequiredForMembers
+from app.schemas.typings.mfa.booleans import (
+    IsMfaRequired,
+    IsMfaRequiredForMembers,
+    IsSessionLevelRaised,
+)
 from app.schemas.typings.mfa.constrained_integers import (
     MemberWithoutTwoFactorCount,
     RecoveryCodeCount,
@@ -185,11 +189,17 @@ class VerifyStepUpCommand(ImmutableDTO):
 
 
 class SessionAssuranceView(ImmutableDTO):
-    """How the session is signed in now, and until when it may do sensitive actions."""
+    """
+    How the session is signed in now, and until when it may do sensitive
+    actions. `is_level_raised`: this proof raised it from one factor to
+    two, so the cabinet swaps its token (POST /v1/auth/session/rotate) and
+    a token copied before never gains the level.
+    """
 
     auth_level: AuthLevel
     authenticated_at: Microseconds
     step_up_valid_until: Microseconds
+    is_level_raised: IsSessionLevelRaised = False
 
 
 class BusinessSecurityView(ImmutableDTO):

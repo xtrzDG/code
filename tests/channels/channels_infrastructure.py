@@ -186,6 +186,8 @@ class ChannelsInfrastructure:
         self.widget_rate_limits = RequestRateLimitRegistry(
             InMemoryRateLimitBucketAdapter()
         )
+        # The claims of signed carrier requests (Twilio's call fallback).
+        self.carrier_request_claims = InMemoryRateLimitBucketAdapter()
         self.phone_number_parser = PhoneNumberParser()
         self.language_registry = LanguageRegistry()
         self.language_detector = LanguageDetector()

@@ -193,7 +193,9 @@ class CampaignWriter:
         )
 
 
-def in_booking_chat(contact: ContactDocument, booking: BookingDocument) -> ContactDocument:
+def in_booking_chat(
+    contact: ContactDocument, booking: BookingDocument
+) -> ContactDocument:
     """
     The contact as the campaign may reach it: only its identities in the
     channel the booking was made in (the chat its consent names).

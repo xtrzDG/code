@@ -56,6 +56,8 @@ export interface BookingPageTexts {
   errorTitle: string;
   linkInvalid: string;
   linkExpired: string;
+  /** A page opened by its credential that can no longer open the booking (the tab's credential ended). */
+  pageClosed: string;
   bookingChanged: string;
   notActive: string;
   alreadyStarted: string;

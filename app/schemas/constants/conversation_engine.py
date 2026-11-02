@@ -8,7 +8,10 @@ class TurnGate(StrEnum):
     ANSWER asks the language model. While staff own the conversation (open
     handoff) the assistant stays silent in chat and promises a call back on
     the phone. Past the per-contact message limit the assistant answers once
-    with a polite stop message and then stays silent until the hour passes.
+    with a polite stop message and then stays silent until the hour passes;
+    at the end of a conversation's length (CONVERSATION_LIMIT_NOTICE) it
+    closes the conversation once with its own text and then stays silent
+    until a new conversation starts. Not stored.
     A message with nothing the assistant can read (a sticker, a file, a voice
     note without words) gets the platform's request to write instead. A
     customer the owner blocked gets nothing at all (BLOCKED_SILENCE; a call
@@ -19,6 +22,7 @@ class TurnGate(StrEnum):
     STAFF_SILENCE = "staff_silence"
     STAFF_CALLBACK = "staff_callback"
     LIMIT_NOTICE = "limit_notice"
+    CONVERSATION_LIMIT_NOTICE = "conversation_limit_notice"
     LIMIT_SILENCE = "limit_silence"
     ATTACHMENT_NOTICE = "attachment_notice"
     BLOCKED_SILENCE = "blocked_silence"

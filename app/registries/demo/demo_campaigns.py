@@ -24,15 +24,15 @@ from app.schemas.constants.campaigns import (
     CampaignSkipReason,
     RebookingRuleKind,
 )
+from app.schemas.constants.marketing_consent import (
+    CURRENT_MARKETING_CONSENT_TEXT,
+    MarketingConsentSource,
+)
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.campaigns import (
     CampaignMessageDocument,
     CampaignSettingsDocument,
-)
-from app.schemas.constants.marketing_consent import (
-    CURRENT_MARKETING_CONSENT_TEXT,
-    MarketingConsentSource,
 )
 from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.typings.bookings.constrained_integers import (

@@ -134,6 +134,8 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
                 + int(self._app_settings.step_up_max_age_seconds)
                 * MICROSECONDS_PER_SECOND
             ),
+            is_level_raised=auth_level is AuthLevel.TWO_FACTOR
+            and assurance.auth_level is not AuthLevel.TWO_FACTOR,
         )
 
     def _check_login_code(

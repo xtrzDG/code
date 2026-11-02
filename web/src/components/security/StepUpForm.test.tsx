@@ -1,25 +1,27 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "@/api/client";
+import { settleStepUp } from "@/api/stepUp";
 import type { StepUpChallengeView } from "@/api/types";
 import { renderInLocale, textsIn } from "@/test/render";
 
 import StepUpForm from "./StepUpForm";
 
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
+vi.mock("@/api/stepUp", () => ({ settleStepUp: vi.fn() }));
 
 /** What openapi-fetch resolves to for a 200. */
 function answer(data: unknown): never {
   return Promise.resolve({ data, response: new Response(null, { status: 200 }) }) as never;
 }
 
-const VERIFIED = { auth_level: "two_factor", authenticated_at: 1, step_up_valid_until: 2 };
+const VERIFIED = { auth_level: "two_factor", authenticated_at: 1, step_up_valid_until: 2, is_level_raised: false };
 
-function answerStepUp(challenge: StepUpChallengeView) {
+function answerStepUp(challenge: StepUpChallengeView, verified: object = VERIFIED) {
   vi.mocked(api.POST).mockImplementation(((path: string) =>
-    answer(path === "/v1/auth/step-up" ? challenge : VERIFIED)) as never);
+    answer(path === "/v1/auth/step-up" ? challenge : verified)) as never);
 }
 
 function postsTo(path: string): unknown[][] {
@@ -61,5 +63,48 @@ describe("StepUpForm: a passkey person confirms with a second factor, never a lo
 
     expect(await screen.findByRole("button", { name: t("mfa.stepUp.resend") })).toBeTruthy();
     expect(screen.queryByLabelText(t("mfa.secondStep.recoveryCode"))).toBeNull();
+  });
+});
+
+describe("StepUpForm: a confirmation that raised the session to two factors swaps its token", () => {
+  const rotations = vi.fn(async () => new Response(null, { status: 200 }));
+
+  beforeEach(() => {
+    vi.mocked(api.POST).mockReset();
+    vi.mocked(settleStepUp).mockClear();
+    rotations.mockClear();
+    vi.stubGlobal("fetch", rotations);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function confirmWithAuthenticator(isLevelRaised: boolean) {
+    const { t } = textsIn("en");
+    answerStepUp({ method: "totp", passkey_available: false } as StepUpChallengeView, {
+      ...VERIFIED,
+      is_level_raised: isLevelRaised,
+    });
+    renderInLocale(<StepUpForm />);
+    await userEvent.type(await screen.findByLabelText(t("mfa.stepUp.code")), "123456");
+    await waitFor(() => expect(postsTo("/v1/auth/step-up/verify")).toHaveLength(1));
+  }
+
+  it("asks for a new session token once the level was raised, before the waiting requests run", async () => {
+    await confirmWithAuthenticator(true);
+
+    await waitFor(() => expect(settleStepUp).toHaveBeenCalledWith(true));
+    expect(rotations).toHaveBeenCalledWith("/api/auth/session/rotate", { method: "POST" });
+    expect(rotations.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(settleStepUp).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("keeps the token when the session already had two factors", async () => {
+    await confirmWithAuthenticator(false);
+
+    await waitFor(() => expect(settleStepUp).toHaveBeenCalledWith(true));
+    expect(rotations).not.toHaveBeenCalled();
   });
 });

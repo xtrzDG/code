@@ -61,8 +61,9 @@ class SessionSweepReason(StrEnum):
     Why every session of a person was lowered to one factor or ended: their
     authenticator was removed or a new one confirmed, their recovery codes
     were replaced, their platform-admin role was given, changed or taken
-    away, they signed out everywhere, or a platform admin ended them.
-    Written only into audit references, never as a stored enum.
+    away, they signed out everywhere, a platform admin ended them, or they
+    were made an owner of a business (owner rights come with a new
+    sign-in). Written only into audit references, never as a stored enum.
     """
 
     AUTHENTICATOR_REMOVED = "authenticator_removed"
@@ -72,3 +73,4 @@ class SessionSweepReason(StrEnum):
     ADMIN_ROLE_GRANTED = "admin_role_granted"
     SIGNED_OUT_EVERYWHERE = "signed_out_everywhere"
     ENDED_BY_PLATFORM_ADMIN = "ended_by_platform_admin"
+    BUSINESS_ROLE_RAISED = "business_role_raised"

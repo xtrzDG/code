@@ -100,7 +100,9 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     )
     # The call fallback of rented numbers (Twilio's VoiceFallbackUrl).
     call_fallback_adapter: Singleton[TwilioCallFallbackAdapter] = Singleton(
-        TwilioCallFallbackAdapter, app_settings=config.app_settings
+        TwilioCallFallbackAdapter,
+        app_settings=config.app_settings,
+        buckets=rate_limit_buckets,
     )
     voice_webhook_adapter: Singleton[ElevenLabsVoiceWebhookAdapter] = Singleton(
         ElevenLabsVoiceWebhookAdapter,

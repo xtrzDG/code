@@ -19,13 +19,13 @@
       pendingItem: null,
       handoffNoticeShown: false,
       // Polling for staff replies (see the header comment).
-      cursor: storageGet(localStorageOrNull(), storagePrefix + "cursor"),
-      isHandedOff: storageGet(localStorageOrNull(), storagePrefix + "handoff") === "1",
-      handoffAt: Number(storageGet(localStorageOrNull(), storagePrefix + "handoff-at")) || 0,
+      cursor: storageGet(conversationStorageOrNull(), storagePrefix + "cursor"),
+      isHandedOff: storageGet(conversationStorageOrNull(), storagePrefix + "handoff") === "1",
+      handoffAt: Number(storageGet(conversationStorageOrNull(), storagePrefix + "handoff-at")) || 0,
       // The visitor's last exchange (an answer or new messages), any tab.
-      activityAt: Number(storageGet(localStorageOrNull(), storagePrefix + "activity-at")) || 0,
+      activityAt: Number(storageGet(conversationStorageOrNull(), storagePrefix + "activity-at")) || 0,
       // The history as this tab last read or wrote it (other tabs change it).
-      storedHistory: storageGet(localStorageOrNull(), storagePrefix + "history"),
+      storedHistory: storageGet(conversationStorageOrNull(), storagePrefix + "history"),
       pollTimer: null,
       pollDelay: POLL_FIRST_DELAY_MS,
       isPolling: false,

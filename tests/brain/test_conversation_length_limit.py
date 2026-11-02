@@ -1,7 +1,7 @@
 """
 A conversation is answered for MAX_CONVERSATION_MESSAGES customer messages:
-the next one gets the polite stop message once, later ones silence, and
-every message still reaches the inbox.
+the next one gets its own closing message once (not the hourly limit's),
+later ones silence, and every message still reaches the inbox.
 """
 
 from datetime import timedelta
@@ -17,7 +17,12 @@ from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.engine_helpers import requests_of
 from tests.brain.scripted_turns import say, scripted
 
+# Its own closing text, not the hourly limit's "write again a little later".
 STOP_MESSAGE: str = (
+    "We have talked a lot in this conversation, so I will stop here. Our team "
+    "sees all your messages and will get back to you if needed."
+)
+HOURLY_STOP_MESSAGE: str = (
     "You have sent a lot of messages in a short time. Please write again a "
     "little later, and we will gladly continue."
 )
@@ -77,3 +82,25 @@ def test_a_new_conversation_is_answered_again() -> None:
 
     assert reply.text is not None and reply.text.endswith("Welcome back!")
     assert len(world.conversations()) == 2
+
+
+def test_the_hourly_limit_keeps_its_own_text() -> None:
+    world = build_world(scripted(say("Hello!")), contact_message_limit=1)
+    world.send("Hi")
+
+    notice = world.send("And the terrace?")
+
+    assert notice.text == HOURLY_STOP_MESSAGE
+
+
+def test_the_closing_text_is_said_in_the_customers_language() -> None:
+    world = build_world(
+        scripted(say("Ciao!"), say("Certo.")), contact_message_limit=1000
+    )
+    world.send("Ciao")
+    seed_customer_messages(world, MAX_CONVERSATION_MESSAGES - 1)
+
+    notice = world.send("Ci siete ancora?")
+
+    assert notice.text is not None
+    assert notice.text.startswith("Abbiamo scritto molto in questa conversazione")

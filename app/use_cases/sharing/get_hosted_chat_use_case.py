@@ -13,6 +13,9 @@ from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
 )
+from app.contracts.repositories.call_follow_up_repositories import (
+    CallSettingsRepoContract,
+)
 from app.contracts.repositories.retention_repositories import (
     BusinessPrivacySettingsRepoContract,
 )
@@ -80,7 +83,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         referral_links: ReferralLinksFacilitatorContract,
         assistant_version_repo: AssistantVersionRepoContract,
         country_registry: CountryRegistryContract,
+        call_settings_repo: CallSettingsRepoContract,
     ) -> None:
+        self._call_settings_repo: CallSettingsRepoContract = call_settings_repo
         self._version_repo: AssistantVersionRepoContract = assistant_version_repo
         self._country_registry: CountryRegistryContract = country_registry
         self._referral_links: ReferralLinksFacilitatorContract = referral_links
@@ -165,7 +170,11 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
                 business, POWERED_BY_SOURCE_TAG
             ),
             phone_calls=describe_phone_calls(
-                business, channels, self._version_repo, self._country_registry
+                business,
+                channels,
+                self._version_repo,
+                self._country_registry,
+                self._call_settings_repo,
             ),
         )
 

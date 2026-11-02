@@ -12,6 +12,7 @@ from app.schemas.dto.calls.call_fallback import (
     CallFallbackReply,
     CallFallbackReport,
     CallFallbackWebhookRequest,
+    FallbackDialReport,
 )
 from app.schemas.dto.calls.missed_calls import MissedCallReport, PbxCallWebhookRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -55,7 +56,8 @@ class CallFallbackAdapterContract(AdapterContract, Protocol):
         now: Microseconds,
     ) -> CallFallbackReport:
         """
-        The call of a fallback request. Raises AuthenticationRequiredError
+        The call of a fallback request (`is_repeated` when the same call
+        and status were handled before). Raises AuthenticationRequiredError
         unless the carrier signed it for the business's address,
         ValidationFailedError when it names no call.
         """
@@ -65,11 +67,12 @@ class CallFallbackAdapterContract(AdapterContract, Protocol):
         self,
         request: CallFallbackWebhookRequest,
         now: Microseconds,
-    ) -> MissedCallReport | None:
+    ) -> FallbackDialReport:
         """
         The caller who did not get through when the staff mobile was busy,
-        rang out or failed (a missed call of the request's business); None
-        when someone took the call. Raises like `read_fallback`.
+        rang out or failed (a missed call of the request's business); no
+        missed call when someone took the call or the report was handled
+        before (`is_repeated`). Raises like `read_fallback`.
         """
         raise NotImplementedError
 
@@ -84,4 +87,8 @@ class CallFallbackAdapterContract(AdapterContract, Protocol):
 
     def end_call(self) -> CallFallbackReply:
         """Hang up."""
+        raise NotImplementedError
+
+    def ignore_request(self) -> CallFallbackReply:
+        """Answer a repeated request with nothing to do."""
         raise NotImplementedError

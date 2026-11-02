@@ -6,13 +6,12 @@ from app.clients.flitt.flitt_protocol import (
     ENVELOPE_VERSION,
     RESPONSE_WRAPPER_KEY,
     build_envelope_signature,
-    build_parameter_signature,
     decode_envelope_data,
     encode_envelope_data,
-    is_envelope,
     is_signature_valid,
     parse_callback_parameters,
     require_mapping,
+    verified_callback_parameters,
 )
 from app.clients.http.provider_timeouts import provider_timeout
 from app.contracts.client_contract import ClientContract
@@ -25,6 +24,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.exceptions.payment_errors import PaymentProviderRefusedError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 
 DEFAULT_FLITT_API_BASE_URL: str = "https://pay.flitt.com"
 CHECKOUT_URL_PATH: str = "/api/checkout/url/"
@@ -59,9 +59,14 @@ class FlittClient(ClientContract):
         secret_key: PlatformSecret,
         api_base_url: PublicBaseUrl | None = None,
         transport: httpx.BaseTransport | None = None,
+        previous_secret_key: PlatformSecret | None = None,
     ) -> None:
         self._merchant_id: str = str(merchant_id).strip()
         self._secret_key: str = str(secret_key)
+        # Callbacks only: requests are always signed with the current key.
+        self._callback_keys: list[str] = [
+            str(key) for key in accepted_secrets(secret_key, previous_secret_key)
+        ]
         base_url: str = (
             DEFAULT_FLITT_API_BASE_URL if api_base_url is None else str(api_base_url)
         )
@@ -137,20 +142,10 @@ class FlittClient(ClientContract):
             AccessDeniedError: the signature or the merchant id is wrong.
         """
 
-        parameters: dict[str, object] = parse_callback_parameters(body, content_type)
-        if is_envelope(parameters):
-            envelope_data: str = str(parameters["data"])
-            if not is_signature_valid(
-                build_envelope_signature(self._secret_key, envelope_data),
-                parameters.get("signature"),
-            ):
-                raise AccessDeniedError("Payment notification signature is invalid.")
-
-            parameters = decode_envelope_data(envelope_data)
-        elif not is_signature_valid(
-            build_parameter_signature(self._secret_key, parameters),
-            parameters.get("signature"),
-        ):
+        parameters: dict[str, object] | None = verified_callback_parameters(
+            self._callback_keys, parse_callback_parameters(body, content_type)
+        )
+        if parameters is None:
             raise AccessDeniedError("Payment notification signature is invalid.")
 
         if str(parameters.get("merchant_id", "")).strip() != self._merchant_id:

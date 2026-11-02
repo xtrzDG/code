@@ -21,6 +21,7 @@ from app.utilities.calls.zadarma_notifications import (
     read_form_fields,
     read_missed_reason,
 )
+from app.utilities.config_helpers.secret_rotation import accepted_secrets
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 MAX_RING_SECONDS: int = 24 * 60 * 60
@@ -54,12 +55,18 @@ class ZadarmaPbxWebhookAdapter(PbxWebhookAdapterContract):
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def verify_signature(self, request: PbxCallWebhookRequest) -> None:
-        api_secret: PlatformSecret | None = self._app_settings.zadarma_api_secret
+        # The previous API secret too, while a rotation is under way.
+        api_secrets: list[PlatformSecret] = accepted_secrets(
+            self._app_settings.zadarma_api_secret,
+            self._app_settings.previous_secrets.zadarma_api_secret,
+        )
         fields: dict[str, str] = read_form_fields(request.body)
-        if api_secret is None or not is_valid_zadarma_signature(
-            str(api_secret),
-            fields,
-            None if request.signature_header is None else str(request.signature_header),
+        signature: str | None = (
+            None if request.signature_header is None else str(request.signature_header)
+        )
+        if not any(
+            is_valid_zadarma_signature(str(api_secret), fields, signature)
+            for api_secret in api_secrets
         ):
             raise AuthenticationRequiredError(
                 "The Zadarma signature is missing or wrong."

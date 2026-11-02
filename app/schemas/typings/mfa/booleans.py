@@ -7,5 +7,6 @@ Example:
 IsMfaChallengeConsumed = bool
 IsMfaRequired = bool
 IsMfaRequiredForMembers = bool
+IsSessionLevelRaised = bool
 IsTotpEnrollmentRequired = bool
 # Keep abc order for all non example types, if possible.

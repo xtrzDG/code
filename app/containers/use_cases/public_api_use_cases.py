@@ -79,11 +79,11 @@ from app.use_cases.integrations.public_api.public_webhook_subscriptions import (
     SubscribePublicWebhookUseCase,
     UnsubscribePublicWebhookUseCase,
 )
-from app.use_cases.integrations.public_api.start_public_cancellation_use_case import (
-    StartPublicCancellationUseCase,
-)
 from app.use_cases.integrations.public_api.start_public_booking_use_case import (
     StartPublicBookingUseCase,
+)
+from app.use_cases.integrations.public_api.start_public_cancellation_use_case import (
+    StartPublicCancellationUseCase,
 )
 from app.use_cases.integrations.public_api.start_public_lead_use_case import (
     StartPublicLeadUseCase,

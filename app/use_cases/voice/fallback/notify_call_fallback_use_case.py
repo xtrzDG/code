@@ -50,7 +50,7 @@ class NotifyCallFallbackUseCase(
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
 
     def run(self, input_data: CallFallbackPlan) -> DeliveredNotificationCount:
-        if input_data.is_caller_blocked:
+        if input_data.is_caller_blocked or input_data.is_repeated:
             return DeliveredNotificationCount(0)
 
         business: BusinessDocument | None = self._business_repo.get(

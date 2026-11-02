@@ -76,6 +76,9 @@ from app.utilities.config_helpers.app_settings.platform_admin_settings_section i
 from app.utilities.config_helpers.app_settings.platform_alert_settings_section import (
     read_platform_alert_settings,
 )
+from app.utilities.config_helpers.app_settings.previous_secret_settings_section import (
+    read_previous_secret_settings,
+)
 from app.utilities.config_helpers.app_settings.privacy_settings_section import (
     read_privacy_settings,
 )
@@ -202,6 +205,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_session_settings(environment_variables, is_development),
         **read_support_settings(environment_variables),
         **read_privacy_settings(environment_variables),
+        **read_previous_secret_settings(environment_variables),
         **read_seller_settings(environment_variables),
         **read_quality_settings(environment_variables),
         **read_voice_agent_settings(environment_variables),

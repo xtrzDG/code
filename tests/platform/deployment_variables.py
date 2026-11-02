@@ -101,6 +101,14 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # Empty until a key rotation; then set in the env group
         # workshop-backend (docs/operations/backup-restore.md).
         "ENCRYPTION_KEYS",
+        # Empty until a webhook secret is rotated; then the old value is set
+        # in the env group workshop-backend for the switch-over and removed
+        # again (docs/dev/environment.md).
+        "ELEVENLABS_WEBHOOK_SECRET_PREVIOUS",
+        "META_APP_SECRET_PREVIOUS",
+        "FLITT_SECRET_KEY_PREVIOUS",
+        "ZADARMA_API_SECRET_PREVIOUS",
+        "TWILIO_AUTH_TOKEN_PREVIOUS",
         # Optional contacts of "Help and support"; set in the env group
         # workshop-backend when the team has them (docs/LAUNCH.md).
         "SUPPORT_WHATSAPP",

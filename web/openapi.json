@@ -16219,8 +16219,13 @@
       },
       "HostedChatPhoneCalls": {
         "additionalProperties": false,
-        "description": "How the business's AI phone assistant treats calls, for its privacy\nnotice: calls are recorded; where the law of the business's country\nasks every party's consent (`ALL_PARTY_CONSENT`) the caller is asked at\nthe start of the call. A caller may decline anywhere: the audio is then\ndeleted and a transcript without contact or card numbers kept.\nRecordings and transcripts are kept `recording_retention_days`.",
+        "description": "How the business's AI phone assistant treats calls, for its privacy\nnotice. Calls are recorded only while the owner turned recording on\n(`is_recording_enabled`, off by default): without it the audio is\ndeleted after the call and a transcript without contact or card\nnumbers kept. With it, where the law of the business's country asks\nevery party's consent (`ALL_PARTY_CONSENT`) the caller is asked at the\nstart of the call; a caller may decline anywhere, with the same\nresult. Recordings and transcripts are kept `recording_retention_days`.",
         "properties": {
+          "is_recording_enabled": {
+            "default": false,
+            "title": "Is Recording Enabled",
+            "type": "boolean"
+          },
           "recording_consent_rule": {
             "$ref": "#/components/schemas/RecordingConsentRule"
           },
@@ -29755,7 +29760,7 @@
       },
       "SessionAssuranceView": {
         "additionalProperties": false,
-        "description": "How the session is signed in now, and until when it may do sensitive actions.",
+        "description": "How the session is signed in now, and until when it may do sensitive\nactions. `is_level_raised`: this proof raised it from one factor to\ntwo, so the cabinet swaps its token (POST /v1/auth/session/rotate) and\na token copied before never gains the level.",
         "properties": {
           "auth_level": {
             "$ref": "#/components/schemas/AuthLevel"
@@ -29763,6 +29768,11 @@
           "authenticated_at": {
             "title": "Authenticated At",
             "type": "integer"
+          },
+          "is_level_raised": {
+            "default": false,
+            "title": "Is Level Raised",
+            "type": "boolean"
           },
           "step_up_valid_until": {
             "title": "Step Up Valid Until",
@@ -46229,6 +46239,115 @@
           }
         },
         "summary": "Verify Otp Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/session/rotate": {
+      "post": {
+        "operationId": "auth_rotate_session",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginSessionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Rotate Session",
         "tags": [
           "auth"
         ]

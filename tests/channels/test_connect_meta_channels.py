@@ -67,7 +67,9 @@ class TestConnectMetaChannels:
         unconfigured = CabinetSetup(build_settings(WHATSAPP_SYSTEM_USER_TOKEN=""))
 
         with caplog.at_level(logging.WARNING):
-            response = unconfigured.put("whatsapp", {"phone_number_id": PHONE_NUMBER_ID})
+            response = unconfigured.put(
+                "whatsapp", {"phone_number_id": PHONE_NUMBER_ID}
+            )
 
         assert response.status_code == 502
         assert response.json()["message"] == (

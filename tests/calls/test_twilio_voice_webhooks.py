@@ -6,6 +6,9 @@ import hmac
 
 import pytest
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.adapters.telephony.twilio_call_fallback_adapter import (
     TwilioCallFallbackAdapter,
 )
@@ -96,7 +99,9 @@ def test_how_the_call_to_the_mobile_ended(
 
 
 def test_without_the_address_no_call_is_put_through() -> None:
-    adapter = TwilioCallFallbackAdapter(fallback_settings(APP_BASE_URL=""))
+    adapter = TwilioCallFallbackAdapter(
+        fallback_settings(APP_BASE_URL=""), InMemoryRateLimitBucketAdapter()
+    )
 
     with pytest.raises(PreconditionFailedError, match="APP_BASE_URL"):
         adapter.transfer(

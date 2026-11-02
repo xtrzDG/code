@@ -40,7 +40,7 @@
 
     function markActivity() {
       state.activityAt = Date.now();
-      storageSet(localStorageOrNull(), storagePrefix + "activity-at", String(state.activityAt));
+      storageSet(conversationStorageOrNull(), storagePrefix + "activity-at", String(state.activityAt));
     }
 
     // The history and position another tab saved; this tab's unsent and
@@ -50,7 +50,7 @@
         // Adopted after the answer: the message being sent is in the history.
         return;
       }
-      var raw = storageGet(localStorageOrNull(), storagePrefix + "history");
+      var raw = storageGet(conversationStorageOrNull(), storagePrefix + "history");
       if (raw !== state.storedHistory) {
         var unsaved = state.history.filter(function (item) {
           return item.failed;
@@ -62,13 +62,13 @@
         });
         renderLog();
       }
-      var cursor = storageGet(localStorageOrNull(), storagePrefix + "cursor");
+      var cursor = storageGet(conversationStorageOrNull(), storagePrefix + "cursor");
       if (cursor) {
         state.cursor = cursor;
       }
       state.activityAt = Math.max(
         state.activityAt,
-        Number(storageGet(localStorageOrNull(), storagePrefix + "activity-at")) || 0
+        Number(storageGet(conversationStorageOrNull(), storagePrefix + "activity-at")) || 0
       );
     }
 
@@ -252,15 +252,15 @@
 
     function saveCursor(cursor) {
       state.cursor = cursor;
-      storageSet(localStorageOrNull(), storagePrefix + "cursor", cursor);
+      storageSet(conversationStorageOrNull(), storagePrefix + "cursor", cursor);
     }
 
     function setHandedOff(isHandedOff) {
       state.isHandedOff = isHandedOff;
-      storageSet(localStorageOrNull(), storagePrefix + "handoff", isHandedOff ? "1" : "0");
+      storageSet(conversationStorageOrNull(), storagePrefix + "handoff", isHandedOff ? "1" : "0");
       if (isHandedOff) {
         state.handoffAt = Date.now();
-        storageSet(localStorageOrNull(), storagePrefix + "handoff-at", String(state.handoffAt));
+        storageSet(conversationStorageOrNull(), storagePrefix + "handoff-at", String(state.handoffAt));
       }
     }
 

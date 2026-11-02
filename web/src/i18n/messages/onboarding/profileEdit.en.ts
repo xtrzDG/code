@@ -149,6 +149,7 @@ export const profileEditEn = {
     handoffHint: "For example: a complaint, a banquet for more than 20 people.",
     forbiddenTitle: "What the assistant never promises",
     forbiddenHint: "For example: discounts without your approval.",
+    instructionRule: "Write each rule and the tone on one line, without < > [ ] { } ` characters and not starting with #.",
     rule: "Rule {number}",
     rulePlaceholder: "Describe the rule",
     addRule: "Add a rule",

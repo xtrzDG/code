@@ -2,8 +2,10 @@
 
 /**
  * "Confirm it is you" with a passkey: the API's options, the device's
- * signed answer, the API's check. On success the step-up is settled and
- * the waiting requests run again; a refusal is told in the form.
+ * signed answer, the API's check. On success a session the passkey raised
+ * to two factors gets a fresh token (rotateSession.ts), the step-up is
+ * settled and the waiting requests run again; a refusal is told in the
+ * form.
  */
 
 import { useState } from "react";
@@ -15,6 +17,8 @@ import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { signWithPasskey } from "@/lib/security/passkeyCeremony";
 import { passkeyProblem } from "@/lib/security/passkeyProblem";
+
+import { rotateSessionIfRaised } from "./rotateSession";
 
 export function useStepUpPasskey(onConfirmed: () => void) {
   const { t } = useI18n();
@@ -31,11 +35,12 @@ export function useStepUpPasskey(onConfirmed: () => void) {
     try {
       const started = await unwrap(api.POST("/v1/auth/step-up/passkey"));
       const credential = await signWithPasskey(started.options);
-      await unwrap(
+      const assurance = await unwrap(
         api.POST("/v1/auth/step-up/passkey/verify", {
           body: { passkey_challenge_id: started.passkey_challenge_id, credential },
         }),
       );
+      await rotateSessionIfRaised(assurance);
       onConfirmed();
     } catch (caught) {
       const error = toApiError(caught);

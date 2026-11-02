@@ -43,6 +43,11 @@ CABINET_ROUTES: dict[str, tuple[str, str, str]] = {
     "/api/auth/mfa/passkey/options": (PUBLIC, "none", SIGN_IN_STEP),
     "/api/auth/mfa/passkey/verify": (PUBLIC, "none", SIGN_IN_STEP),
     "/api/auth/mfa/verify": (PUBLIC, "none", SIGN_IN_STEP),
+    "/api/auth/session/rotate": (
+        ACCOUNT,
+        "own account",
+        "the session cookie; the API swaps the token of a session just confirmed",
+    ),
     "/api/auth/start": (PUBLIC, "none", SIGN_IN_STEP),
     "/api/auth/verify": (PUBLIC, "none", SIGN_IN_STEP),
     "/api/backend/[...path]": (

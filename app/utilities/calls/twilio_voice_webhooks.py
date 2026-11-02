@@ -34,6 +34,7 @@ TWILIO_SIGNATURE_HEADER: str = "X-Twilio-Signature"
 # the caller back to the assistant's number.
 DIAL_TIMEOUT_SECONDS: int = 20
 MAX_FORM_FIELDS: int = 64
+CLAIM_DIGEST_LENGTH: int = 32
 # How a call to the staff mobile that nobody took ended ("completed" and
 # "answered": someone took it).
 UNANSWERED_DIAL_STATUSES: Mapping[str, MissedCallReason] = {
@@ -121,6 +122,25 @@ def build_hangup_twiml() -> str:
     """End the call."""
 
     return '<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>'
+
+
+def build_empty_twiml() -> str:
+    """Nothing to do: the answer to a repeated request."""
+
+    return '<?xml version="1.0" encoding="UTF-8"?><Response/>'
+
+
+def describe_request_claim(path: str, fields: Mapping[str, str]) -> str:
+    """
+    What a signed request is claimed by (a technical key part): its address,
+    its call and the call's or the dial's status, as a digest. Twilio's
+    signature carries no time, so the same request sent again carries the
+    same claim.
+    """
+
+    status: str = fields.get("DialCallStatus") or fields.get("CallStatus") or ""
+    claimed: str = "\n".join([path, fields.get("CallSid", "").strip(), status.strip()])
+    return hashlib.sha256(claimed.encode("utf-8")).hexdigest()[:CLAIM_DIGEST_LENGTH]
 
 
 def read_unanswered_reason(dial_status: str) -> MissedCallReason | None:
