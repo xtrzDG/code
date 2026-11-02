@@ -21,7 +21,11 @@ name: Deploy smoke test
 # waits until production has finished the post-deploy data tasks of the
 # release it runs (repository variable PRODUCTION_API_URL,
 # scripts/check_data_tasks.sh): re-run the promote job once they are done.
-on:
+#
+# The smoke and promote jobs hold their own concurrency groups (per
+# environment, and one promotion at a time); a group for the whole workflow
+# would queue production's smoke test behind a promotion awaiting approval.
+on: # zizmor: ignore[concurrency-limits]
   deployment_status:
   repository_dispatch:
     # {"event_type": "render-deploy-succeeded",
@@ -120,8 +124,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-      packages: read
-      attestations: read
+      packages: read # pulls the images to verify
+      attestations: read # reads their provenance
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -159,7 +163,7 @@ jobs:
     permissions:
       contents: read
       # Reads the environment's protection rules before anything is pushed.
-      actions: read
+      actions: read # the environment's protection rules
     concurrency:
       group: promote-release
       cancel-in-progress: false

@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
+from app.contracts.ip_countries import IpCountryLookupAdapterContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.notification_utilities import StaffLinkSignerContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
@@ -25,6 +26,7 @@ from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.dto.sessions import SessionDevice
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.notifications.constrained_strings import (
     PushNotificationTag,
     StaffAlertSubject,
@@ -41,9 +43,13 @@ MAX_NOTIFIED_BUSINESSES: int = 3
 
 class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
     """
-    Tells a person their account was signed in from a new device: a
-    browser and system none of their other live sessions uses. A first
-    sign-in (no other session) or a known device tells nobody.
+    Tells a person their account was signed in from a new device (a
+    browser and system none of their other live sessions uses) or from a
+    new country (the offline country database places the address in a
+    country none of their other live sessions was opened or used from;
+    the notice names it). A first sign-in (no other session), or a known
+    device in a known country, tells nobody; without a country database
+    (or for private addresses) only the device counts.
 
     - Their devices with notifications on hear it through the staff alert
       facilitator as a personal, urgent alert (no staff contact, no quiet
@@ -66,7 +72,9 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         localized_text_resolver: LocalizedTextResolverContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        ip_countries: IpCountryLookupAdapterContract | None = None,
     ) -> None:
+        self._ip_countries: IpCountryLookupAdapterContract | None = ip_countries
         self._business_repo: BusinessRepoContract = business_repo
         self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._manager_notifier: ManagerNotificationFacilitatorContract = (
@@ -87,19 +95,52 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         other_sessions: Sequence[UserSessionDocument],
     ) -> None:
         try:
+            if not other_sessions:
+                return
+
             device: SessionDevice = describe_device(session.user_agent)
-            if not other_sessions or any(
+            new_country: CountryCode | None = self._new_country(
+                session, other_sessions
+            )
+            if new_country is None and any(
                 is_same_device(device, describe_device(other.user_agent))
                 for other in other_sessions
             ):
                 return
 
-            self._notify(user, session, device)
+            self._notify(user, session, device, new_country)
         except Exception:
             logger.exception("The new-device notice of user %s failed.", user.id)
 
+    def _new_country(
+        self,
+        session: UserSessionDocument,
+        other_sessions: Sequence[UserSessionDocument],
+    ) -> CountryCode | None:
+        """The session's country when the others are known and all elsewhere."""
+
+        if self._ip_countries is None or session.created_ip is None:
+            return None
+
+        country: CountryCode | None = self._ip_countries.country_of(session.created_ip)
+        known: set[CountryCode] = {
+            found
+            for other in other_sessions
+            for address in (other.created_ip, other.last_seen_ip)
+            if address is not None
+            and (found := self._ip_countries.country_of(address)) is not None
+        }
+        if country is None or not known or country in known:
+            return None
+
+        return country
+
     def _notify(
-        self, user: UserDocument, session: UserSessionDocument, device: SessionDevice
+        self,
+        user: UserDocument,
+        session: UserSessionDocument,
+        device: SessionDevice,
+        new_country: CountryCode | None,
     ) -> None:
         businesses: list[BusinessDocument] = sorted(
             self._business_repo.list_by_member(user.id),
@@ -108,7 +149,9 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         if not businesses:
             return
 
-        texts = SignInNoticeTexts(self._resolver, device, session.created_ip)
+        texts = SignInNoticeTexts(
+            self._resolver, device, session.created_ip, new_country
+        )
         subject = StaffAlertSubject(f"sign_in:{session.id}")
         for business in businesses:
             self._staff_alerts.alert(

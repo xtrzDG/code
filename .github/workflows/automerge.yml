@@ -48,12 +48,12 @@ jobs:
     permissions:
       # actions: write starts the push workflows of the base branch after
       # the merge.
-      actions: write
+      actions: write # starts main's push workflows after the merge
       # checks and statuses: read tell which required checks are pending.
-      checks: read
-      contents: write
-      pull-requests: write
-      statuses: read
+      checks: read # required checks still pending
+      contents: write # the squash merge
+      pull-requests: write # merges the pull request
+      statuses: read # required statuses still pending
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -1,7 +1,8 @@
 # Evaluation dataset of the beauty_salon niche: Studio Rose in ka, ru, en, he, ar, it.
-# Eight scenarios per language (Italian, the first market's language, as
-# its guests write it: the business does not list it). `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
+# Eight scenarios per language; Italian (the first market's language) is
+# written by guests although the business does not list it. `customer` and
+# `assistant` are the reference conversation the scripted model plays (the
+# seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
 niche: beauty_salon

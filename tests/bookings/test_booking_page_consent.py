@@ -1,0 +1,91 @@
+"""
+End to end over HTTP: the marketing box of a guest's booking page. It is
+unticked until the guest ticks it; ticking records the consent on their
+contact (the page, the booking, the wording's version, the moment) and the
+team's card shows it; unticking takes it back.
+"""
+
+from tests.bookings.manage_journey import BookedTable, book_a_table
+from tests.e2e.harness import Workshop
+from tests.e2e.journeys import JsonObject
+
+TEXT_VERSION: str = "2026-11-02"
+
+
+def tick(workshop: Workshop, booked: BookedTable, is_given: bool) -> JsonObject:
+    answer = workshop.client.post(
+        f"{booked.page}/marketing-consent",
+        json={"is_given": is_given, "text_version": TEXT_VERSION},
+    )
+    assert answer.status_code == 200, answer.text
+    assert answer.headers["cache-control"] == "no-store"
+    view: JsonObject = answer.json()
+    return view
+
+
+def card_consent(workshop: Workshop, booked: BookedTable) -> JsonObject:
+    """The team's view of the booking's guest: their marketing consent."""
+
+    restaurant = booked.restaurant
+    [customer] = workshop.client.get(
+        f"{restaurant.base}/contacts", headers=restaurant.headers
+    ).json()["items"]
+    detail = workshop.client.get(
+        f"{restaurant.base}/contacts/{customer['id']}", headers=restaurant.headers
+    )
+    assert detail.status_code == 200, detail.text
+    consent: JsonObject = detail.json()["marketing_consent"]
+    return consent
+
+
+def test_the_box_is_unticked_until_the_guest_ticks_it(workshop: Workshop) -> None:
+    booked = book_a_table(workshop)
+
+    page = workshop.client.get(booked.page).json()
+
+    assert page["marketing_consent"] is False
+    assert card_consent(workshop, booked)["status"] == "not_given"
+
+
+def test_a_tick_is_recorded_kept_and_taken_back_by_unticking(
+    workshop: Workshop,
+) -> None:
+    booked = book_a_table(workshop)
+
+    ticked = tick(workshop, booked, True)
+
+    assert ticked["marketing_consent"] is True
+    assert workshop.client.get(booked.page).json()["marketing_consent"] is True
+    consent = card_consent(workshop, booked)
+    assert (consent["status"], consent["source"], consent["text_version"]) == (
+        "agreed",
+        "booking_page",
+        TEXT_VERSION,
+    )
+    assert consent["recorded_by"] is None
+
+    unticked = tick(workshop, booked, False)
+
+    assert unticked["marketing_consent"] is False
+    withdrawn = card_consent(workshop, booked)
+    assert (withdrawn["status"], withdrawn["withdrawal"]) == (
+        "withdrawn",
+        "booking_page",
+    )
+
+
+def test_an_unknown_wording_or_a_forged_link_is_refused(workshop: Workshop) -> None:
+    booked = book_a_table(workshop)
+
+    unknown = workshop.client.post(
+        f"{booked.page}/marketing-consent",
+        json={"is_given": True, "text_version": "2020-01-01"},
+    )
+    forged = workshop.client.post(
+        f"{booked.page[:-4]}AAAA/marketing-consent",
+        json={"is_given": True, "text_version": TEXT_VERSION},
+    )
+
+    assert unknown.status_code == 422
+    assert forged.status_code == 404
+    assert card_consent(workshop, booked)["status"] == "not_given"

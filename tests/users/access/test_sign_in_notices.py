@@ -10,6 +10,7 @@ from typed_time_provider import Microseconds
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.contracts.ip_countries import IpCountryLookupAdapterContract
 from app.facilitators.users.sign_in_notice_facilitator import SignInNoticeFacilitator
 from app.repositories.business_repositories import BusinessRepository
 from app.schemas.constants.handoffs import ManagerContactChannel
@@ -38,7 +39,9 @@ from tests.users.access.session_steps import (
 )
 
 
-def build_notices(world: AlertWorld) -> SignInNoticeFacilitator:
+def build_notices(
+    world: AlertWorld, ip_countries: IpCountryLookupAdapterContract | None = None
+) -> SignInNoticeFacilitator:
     businesses = BusinessRepository(
         InMemoryDocumentCollectionAdapter[BusinessDocument](BusinessDocument)
     )
@@ -53,6 +56,7 @@ def build_notices(world: AlertWorld) -> SignInNoticeFacilitator:
         localized_text_resolver=resolver,
         app_settings=world.settings,
         wall_clock=world.clock.wall_clock,
+        ip_countries=ip_countries,
     )
 
 
@@ -61,7 +65,7 @@ def owner_of(world: AlertWorld, email: str | None = None) -> UserDocument:
         id=world.owner,
         login_method=LoginMethod.EMAIL if email else LoginMethod.PHONE,
         email=EmailAddress(email) if email else None,
-        locale=LanguageTag("ru"),
+        locale=LanguageTag("it"),
     )
 
 
@@ -96,11 +100,11 @@ def test_a_new_device_is_told_to_its_person_only() -> None:
     assert str(push.tag).startswith("sign_in:")
     assert "Safari · iOS" in str(push.brief.detail)
     assert CAFE_IP in str(push.brief.detail)
-    # No staff contact hears it; the owner's e-mail does, in Russian.
+    # No staff contact hears it; the owner's e-mail does, in Italian.
     [(contact, text)] = world.notifier.sent
     assert contact.channel is ManagerContactChannel.EMAIL
     assert str(contact.address) == "owner@salobie.example"
-    assert "Новый вход в ваш аккаунт" in str(text)
+    assert "Nuovo accesso al tuo account" in str(text)
     assert "/n/" in str(text)
 
 

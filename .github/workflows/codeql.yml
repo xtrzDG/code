@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-      security-events: write
+      security-events: write # uploads the analysis
     strategy:
       fail-fast: false
       matrix:

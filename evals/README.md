@@ -12,14 +12,14 @@ pull request (offline, from recorded model answers) and every night
 
 ## What is played
 
-`evals/datasets/<niche>.yaml` holds one business and its scenarios (892 in
+`evals/datasets/<niche>.yaml` holds one business and its scenarios (908 in
 16 niches). Each niche plays:
 
 - the eight core scenarios in each of ka, ru and en (price, booking or
   order, closed hours, unknown question, discount, person, injection, rude
   customer or emergency), plus he and ar for restaurant, hotel,
   beauty_salon and clinic, and Italian (the first market's language) for
-  the restaurant;
+  the restaurant, hotel and beauty_salon;
 - in ka, ru and en, a WhatsApp customer who cancels, moves (`reschedule`)
   or asks about (`my_bookings`) a booking seeded for their proven phone
   (where the business takes orders instead: their open order, which a

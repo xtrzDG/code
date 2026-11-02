@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      issues: write
+      issues: write # opens or comments on the failure issue
     steps:
       - name: One open issue while production fails its checks
         env:

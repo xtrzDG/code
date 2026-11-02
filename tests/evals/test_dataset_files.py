@@ -1,10 +1,10 @@
 """
 The committed datasets cover every niche in ka/ru/en with the eight core
-scenarios (four niches in he/ar, the restaurant in Italian too), and the
-language scenarios of the four biggest niches: guests writing German,
-French, Turkish, Ukrainian, Armenian or Spanish, and Georgian, Russian or
-Armenian typed in Latin letters. The deeper flows and the attacks are in
-test_dataset_depth.py.
+scenarios (four niches in he/ar, the restaurant, the hotel and the beauty
+salon in Italian too), and the language scenarios of the four biggest
+niches: guests writing German, French, Turkish, Ukrainian, Armenian or
+Spanish, and Georgian, Russian or Armenian typed in Latin letters. The
+deeper flows and the attacks are in test_dataset_depth.py.
 """
 
 from collections import Counter
@@ -25,7 +25,7 @@ RTL_NICHES: set[str] = {"restaurant", "hotel", "beauty_salon", "clinic"}
 LANGUAGE_NICHES: set[str] = RTL_NICHES
 # The first market's language, mirroring the English core scenarios.
 ITALIAN: str = "it"
-ITALIAN_NICHES: set[str] = {"restaurant"}
+ITALIAN_NICHES: set[str] = {"restaurant", "hotel", "beauty_salon"}
 LANGUAGE_SCENARIO_KINDS: set[AutotestScenarioKind] = {
     AutotestScenarioKind.FOREIGN_LANGUAGE,
     AutotestScenarioKind.TRANSLITERATED,

@@ -784,13 +784,13 @@ jobs:
     permissions:
       contents: read
       # Push the images to ghcr.io.
-      packages: write
+      packages: write # pushes both images to ghcr.io
       # The OIDC token Sigstore issues the signing certificates for.
-      id-token: write
+      id-token: write # Sigstore's signing certificate
       # The provenance in the repository's attestations, with its storage
       # record (the registry and the digest it was pushed to).
-      attestations: write
-      artifact-metadata: write
+      attestations: write # the provenance attestations
+      artifact-metadata: write # the attestations' storage record
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -871,7 +871,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      actions: read
+      actions: read # this run's jobs and their durations
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

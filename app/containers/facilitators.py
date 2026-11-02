@@ -195,7 +195,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # A sign-in from a new device: the person's devices and e-mail (1103).
+    # A sign-in from a new device or country: the person's devices and e-mail.
     sign_in_notice_facilitator: Singleton[SignInNoticeFacilitator] = Singleton(
         SignInNoticeFacilitator,
         business_repo=repositories.business_repo,
@@ -206,6 +206,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        ip_countries=adapters.ip_country_lookup,
     )
     # A download of a full export: every owner's devices and e-mail or SMS.
     export_download_notice_facilitator: Singleton[ExportDownloadNoticeFacilitator] = (

@@ -13,13 +13,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: major-updates
+  cancel-in-progress: false
+
 jobs:
   issue:
     name: Open the quarter's issue
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      issues: write
+      issues: write # opens the quarter's issue
     steps:
       - name: Open it once per quarter
         env:

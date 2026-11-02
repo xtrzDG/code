@@ -25,14 +25,18 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: schedule-watch
+  cancel-in-progress: false
+
 jobs:
   watch:
     name: Each guard succeeded within 8 days
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      actions: read
-      issues: write
+      actions: read # the guards' scheduled runs
+      issues: write # opens an issue per silent guard
     steps:
       - name: Open an issue for each silent guard
         env:
