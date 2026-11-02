@@ -22,17 +22,15 @@ from app.contracts.repositories.spend_guard_repositories import (
     UsageSpendRepoContract,
 )
 from app.schemas.constants.billing import UsageKind
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
-from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.spend_guard import UsageKindTotal
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.contacts.booleans import IsContactBlocked
-from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.utilities.calls.call_contacts import contacts_holding_number
 from app.utilities.channels.voice_service import (
     MAX_DAILY_CALL_MINUTES,
     find_transfer_phone_number,
@@ -62,25 +60,22 @@ def is_blocked_caller(
     caller_phone_number: E164PhoneNumber | None,
 ) -> IsContactBlocked:
     """
-    The number belongs to a contact of the business staff blocked (proved
-    by a channel, given, or the call-only contact earlier calls from it
-    share: `find_or_create_call_contact`); a withheld number never does.
-    Several contacts may hold one number (a call never joins a contact a
-    channel proved), so each is looked up by its own key.
+    Any contact of the business that holds the number is one staff
+    blocked (`contacts_holding_number`: proved by a channel, given, the
+    call-only contact earlier calls share, a contact of a single call, the
+    WhatsApp customer of a text-back); a withheld number never is. Several
+    contacts may hold one number (a call never joins a contact a channel
+    proved), and one blocked among them refuses the number.
     """
 
     if caller_phone_number is None:
         return False
 
-    contacts: list[ContactDocument | None] = [
-        contact_repo.find_by_verified_phone_number(business.id, caller_phone_number),
-        contact_repo.find_by_channel_identity(
-            business.id, ChannelKind.PHONE, ChannelUserId(str(caller_phone_number))
-        ),
-        contact_repo.find_by_phone_number(business.id, caller_phone_number),
-    ]
     return any(
-        contact is not None and contact.block is not None for contact in contacts
+        contact.block is not None
+        for contact in contacts_holding_number(
+            contact_repo, business.id, caller_phone_number
+        )
     )
 
 

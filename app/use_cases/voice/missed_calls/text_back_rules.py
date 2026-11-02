@@ -1,15 +1,17 @@
 """
 The rules of a text-back: in which language, through which channel, and
-the callers who are not texted (already writing with the business, texted
-in the last day, past the daily caps of unrequested messages). Opted-out
-customers are found by `app.utilities.channels.opt_out`.
+the callers who are not texted (opted out or blocked, already writing with
+the business, texted in the last day, past the daily caps of unrequested
+messages). Every contact holding the number counts for a refusal.
 """
 
+from collections.abc import Sequence
 from datetime import timedelta
 
 from typed_time_provider import Microseconds
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
@@ -23,6 +25,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -39,6 +42,8 @@ from app.utilities.calls.call_follow_up_keys import (
 )
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.proactive_limits import proactive_message_counter
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
+from app.utilities.privacy.suppressed_identities import phone_identity
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # A caller is texted within minutes; a report that arrives hours late (the
@@ -124,32 +129,53 @@ def choose_text_back_channel(
 def is_in_conversation(
     conversation_repo: ConversationRepoContract,
     business: BusinessDocument,
-    contact: ContactDocument | None,
+    holders: Sequence[ContactDocument],
     now: Microseconds,
 ) -> bool:
     """
-    The caller writes with the business in a messenger: a conversation
-    staff own, or one with a message in the last day (calls do not count).
+    A contact holding the number writes with the business in a messenger:
+    a conversation staff own, or one with a message in the last day (calls
+    do not count). It only holds a text-back back, so any holder counts.
     """
-
-    if contact is None:
-        return False
 
     window_start = Microseconds(
         int(now)
         - int(ACTIVE_CONVERSATION_WINDOW.total_seconds()) * MICROSECONDS_PER_SECOND
     )
-    open_ones = conversation_repo.list_by_contact(
-        business.id, contact.id, status=ConversationStatus.HANDOFF
-    )
-    recent_ones = conversation_repo.list_by_contact(
-        business.id, contact.id, last_message_from=window_start
-    )
-    return any(
-        conversation.channel is not ChannelKind.PHONE
-        and not conversation.is_sandbox
-        and conversation.status is not ConversationStatus.CLOSED
-        for conversation in [*open_ones, *recent_ones]
+    for contact in holders:
+        open_ones = conversation_repo.list_by_contact(
+            business.id, contact.id, status=ConversationStatus.HANDOFF
+        )
+        recent_ones = conversation_repo.list_by_contact(
+            business.id, contact.id, last_message_from=window_start
+        )
+        if any(
+            conversation.channel is not ChannelKind.PHONE
+            and not conversation.is_sandbox
+            and conversation.status is not ConversationStatus.CLOSED
+            for conversation in [*open_ones, *recent_ones]
+        ):
+            return True
+
+    return False
+
+
+def is_caller_suppressed(
+    suppression_list: SuppressionListContract,
+    business_id: BusinessId,
+    caller: E164PhoneNumber,
+    holders: Sequence[ContactDocument],
+) -> bool:
+    """
+    The number is not texted: it is on the suppression list, or a contact
+    holding it said STOP or is blocked by staff (a refusal may follow a
+    caller id; `contacts_holding_number`).
+    """
+
+    also = [phone_identity(caller)]
+    return is_messaging_suppressed(suppression_list, business_id, None, also) or any(
+        is_messaging_suppressed(suppression_list, business_id, holder, also)
+        for holder in holders
     )
 
 

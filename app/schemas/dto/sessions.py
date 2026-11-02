@@ -13,8 +13,14 @@ from app.schemas.constants.users import SessionDeviceKind, SessionSweepReason
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.storage.constrained_integers import DocumentCount
-from app.schemas.typings.users.booleans import IsCurrentSession
-from app.schemas.typings.users.constrained_strings import SessionUserAgent
+from app.schemas.typings.users.booleans import (
+    IsCurrentSession,
+    IsSessionProofRecorded,
+)
+from app.schemas.typings.users.constrained_strings import (
+    SessionRotationTicket,
+    SessionUserAgent,
+)
 from app.schemas.typings.users.prefixed_id import UserId, UserSessionId
 from app.schemas.typings.users.strings import (
     AccessToken,
@@ -141,11 +147,38 @@ class RevokeAllSessionsCommand(ImmutableDTO):
     client_ip_address: ClientIpAddress | None = None
 
 
+class RotateSessionRequest(ImmutableDTO):
+    """
+    The one-time ticket the proof that raised the session to two factors
+    answered (a step-up, a new authenticator or first passkey), held only
+    by the client that made it.
+
+    Example: {"rotation_ticket": "q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d"}.
+    """
+
+    rotation_ticket: SessionRotationTicket
+
+
 class RotateSessionCommand(ImmutableDTO):
     """
-    Swap the request's session token for a fresh one right after the
-    person proved it is them again (a step-up): the session keeps its
-    level, device and expiries, the old token stops working.
+    Swap the request's session token for a fresh one with the ticket of the
+    proof that raised it to two factors: the new session carries the two
+    factors, device and expiries; the old token winds down as one factor.
     """
 
     user_id: UserId
+    rotation_ticket: SessionRotationTicket
+
+
+class SessionProof(ImmutableDTO):
+    """
+    What a proof of the person did to the request's session: written on it
+    (`is_recorded`: a proof that keeps or lowers its level), or held for
+    its rotation (`rotation_ticket`, for the client that made the proof:
+    it raised a one-factor session to two factors, and only the token
+    that ticket swaps in carries them). Neither when the session is gone
+    or has rotated.
+    """
+
+    is_recorded: IsSessionProofRecorded = False
+    rotation_ticket: SessionRotationTicket | None = None

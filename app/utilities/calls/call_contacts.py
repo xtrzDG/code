@@ -18,8 +18,46 @@ from app.contracts.repositories.conversation_repositories import ContactRepoCont
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+
+
+def whatsapp_user_id(phone_number: E164PhoneNumber) -> ChannelUserId:
+    """WhatsApp names a customer by the international digits of their number."""
+
+    return ChannelUserId(str(phone_number).removeprefix("+"))
+
+
+def contacts_holding_number(
+    contact_repo: ContactRepoContract,
+    business_id: BusinessId,
+    phone_number: E164PhoneNumber,
+) -> list[ContactDocument]:
+    """
+    Every contact of the business that holds the number: a proved or a
+    given phone, the call-only contact of its calls (its PHONE identity),
+    the per-call contacts and the WhatsApp customer a text-back writes to.
+    Only checks that refuse the number read them (a block, a STOP): a
+    caller id may count against a customer, never for one.
+    """
+
+    found: list[ContactDocument | None] = [
+        contact_repo.find_by_verified_phone_number(business_id, phone_number),
+        contact_repo.find_by_channel_identity(
+            business_id, ChannelKind.PHONE, ChannelUserId(str(phone_number))
+        ),
+        contact_repo.find_by_channel_identity(
+            business_id, ChannelKind.WHATSAPP, whatsapp_user_id(phone_number)
+        ),
+        *contact_repo.list_by_phone_number(business_id, phone_number),
+    ]
+    holders: dict[ContactId, ContactDocument] = {}
+    for contact in found:
+        if contact is not None:
+            holders.setdefault(contact.id, contact)
+
+    return list(holders.values())
 
 
 def is_call_only_contact(contact: ContactDocument) -> bool:

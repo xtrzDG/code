@@ -35,6 +35,22 @@ class OtpCode(BaseConstrainedTypedString):
     pattern = r"^[0-9]{6}$"
 
 
+class SessionRotationTicket(BaseConstrainedTypedString):
+    """
+    The one-time ticket a proof that raised a session to two factors hands
+    to the client that made it (256 random bits, URL-safe); only that client
+    can then swap the session's token (POST /v1/auth/session/rotate). Never
+    stored: the session keeps its hash.
+
+    Example:
+        ticket = SessionRotationTicket("q3Jt0bW8yJ1x2Zc4l5mN6oP7rS8tU9vW0xY1zA2bC3d")
+    """
+
+    min_length = 32
+    max_length = 64
+    pattern = r"^[A-Za-z0-9_\-]+$"
+
+
 class SessionUserAgent(BaseConstrainedTypedString):
     """
     The User-Agent header a session was signed in or last used with, cut

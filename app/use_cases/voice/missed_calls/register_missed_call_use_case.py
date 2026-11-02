@@ -49,11 +49,13 @@ from app.use_cases.voice.missed_calls.text_back_rules import (
     DAY_WINDOW,
     choose_text_back_channel,
     choose_text_back_language,
+    is_caller_suppressed,
     is_in_conversation,
     is_too_late,
     refusal_reason,
     text_back_counters,
 )
+from app.utilities.calls.call_contacts import contacts_holding_number
 from app.utilities.calls.call_follow_up_keys import (
     call_settings_id_of,
     missed_call_id_of,
@@ -63,8 +65,6 @@ from app.utilities.calls.text_back_jobs import (
     encode_text_back_payload,
 )
 from app.utilities.channels.delivery_targets import find_business_channel
-from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
-from app.utilities.privacy.suppressed_identities import phone_identity
 
 
 class RegisterMissedCallUseCase(
@@ -79,13 +79,14 @@ class RegisterMissedCallUseCase(
 
     Not texted (SKIPPED, with the reason): text-backs off, a hidden
     number, an assistant that is not live, a report hours late, no
-    channel, a customer who opted out (STOP, on their contact or the
-    suppression list, which outlives an erasure) or already writes with the
-    business in a messenger, and a caller texted in the last day (one per
-    caller per day, at most 200 per business per day, and within the
-    customer's shared daily cap of unrequested messages, counted for every
-    API instance together). A report of the same call again changes nothing; None when
-    no business has the line.
+    channel, a number staff blocked or whose customer opted out (STOP, on
+    any contact holding the number or the suppression list, which outlives
+    an erasure) or already writes with the business in a messenger, and a
+    caller texted in the last day (one per caller per day, at most 200 per
+    business per day, and within the customer's shared daily cap of
+    unrequested messages, counted for every API instance together). A
+    report of the same call again changes nothing; None when no business
+    has the line.
     """
 
     def __init__(
@@ -227,17 +228,19 @@ class RegisterMissedCallUseCase(
         if channel is None:
             return TextBackSkipReason.NO_CHANNEL
 
+        holders: list[ContactDocument] = contacts_holding_number(
+            self._contact_repo, business.id, caller
+        )
+        if is_caller_suppressed(self._suppression_list, business.id, caller, holders):
+            return TextBackSkipReason.OPTED_OUT
+
+        if is_in_conversation(self._conversation_repo, business, holders, now):
+            return TextBackSkipReason.IN_CONVERSATION
+
+        # The customer the text-back writes to, by the number's WhatsApp.
         contact: ContactDocument | None = find_caller_contact(
             self._contact_repo, business, caller
         )
-        if is_messaging_suppressed(
-            self._suppression_list, business.id, contact, [phone_identity(caller)]
-        ):
-            return TextBackSkipReason.OPTED_OUT
-
-        if is_in_conversation(self._conversation_repo, business, contact, now):
-            return TextBackSkipReason.IN_CONVERSATION
-
         refused: RateLimitKey | None = self._rate_limits.try_acquire_all(
             text_back_counters(business, caller, contact), DAY_WINDOW, now
         )

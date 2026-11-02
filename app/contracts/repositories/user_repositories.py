@@ -23,7 +23,10 @@ from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import OtpChallengeId, UserId, UserSessionId
-from app.schemas.typings.users.strings import AccessTokenHash
+from app.schemas.typings.users.strings import (
+    AccessTokenHash,
+    SessionRotationTicketHash,
+)
 
 
 class UserRepoContract(RepoContract, Protocol):
@@ -123,8 +126,44 @@ class UserSessionRepoContract(RepoContract, Protocol):
     ) -> UserSessionDocument | None:
         """
         Set how the session is signed in and when its person last proved it
-        is them (a passed step-up, a confirmed or removed authenticator), in
-        one atomic step; None when the session is gone.
+        is them (a passed step-up that raised nothing, a removed
+        authenticator), in one atomic step; a waiting rotation ticket goes.
+        None, and nothing written, when the session is gone or has rotated
+        (its old token never gains a level or a proof again).
+        """
+        raise NotImplementedError
+
+    def hold_rotation_ticket(
+        self,
+        session_id: UserSessionId,
+        ticket_hash: SessionRotationTicketHash,
+        proven_at: Microseconds,
+        expires_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        """
+        Keep, in one atomic step, the hash of the rotation ticket a proof
+        that raised the session to two factors (made at `proven_at`) handed
+        to its client, valid until `expires_at`; a newer ticket replaces an
+        older one. The session's own level and proof stay. None, and nothing
+        written, when the session is gone or has rotated.
+        """
+        raise NotImplementedError
+
+    def take_rotation_ticket(
+        self,
+        session_id: UserSessionId,
+        ticket_hash: SessionRotationTicketHash,
+        now: Microseconds,
+        old_token_ends_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        """
+        Use the session's rotation ticket once and wind the session down, in
+        one atomic step (a concurrent use or a second rotation cannot come
+        in between): one factor, no proof, no ticket, `rotated_at` now, over
+        at `old_token_ends_at` at the latest. Returns the session as it was
+        before (with its ticket's proof), to be carried on under a new
+        token; None, and nothing written, when the session is gone, has
+        rotated, or waits for no such ticket or an expired one.
         """
         raise NotImplementedError
 
@@ -136,8 +175,11 @@ class UserSessionRepoContract(RepoContract, Protocol):
         """
         Record a use of the session in one atomic step: when and from
         where it was last seen, the browser it names (when it sent one),
-        the new idle expiry and the (possibly earlier) absolute expiry;
-        None when the session is gone.
+        the new idle expiry and the (possibly earlier) absolute expiry.
+        The stored absolute expiry never moves later (the earlier of the
+        two wins, so a use read before a rotation's wind-down cannot undo
+        it) and the idle expiry never passes it; None when the session is
+        gone.
         """
         raise NotImplementedError
 
@@ -161,7 +203,8 @@ class UserSessionRepoContract(RepoContract, Protocol):
         """
         Make every session of the person (but `except_session_id`) count as
         signed in with `auth_level`, each in one atomic step; when they last
-        proved it is them stays. Returns how many sessions changed level.
+        proved it is them stays, a waiting rotation ticket goes. Returns how
+        many sessions changed level.
         """
         raise NotImplementedError
 

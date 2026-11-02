@@ -33,6 +33,7 @@ from app.schemas.typings.users.prefixed_id import (
 from app.schemas.typings.users.strings import (
     AccessTokenHash,
     OtpCodeHash,
+    SessionRotationTicketHash,
     UserDisplayName,
 )
 
@@ -115,11 +116,20 @@ class UserSessionDocument(BaseDocument):
     hours for platform admins). `expires_at` is the absolute end (30 days,
     a day for platform admins). Sessions from before version 3 have none
     of these and get them at their next use.
+
+    A proof that would raise the session from one factor to two is not
+    written on it: it waits as a rotation ticket (`rotation_ticket_hash`,
+    valid until `rotation_ticket_expires_at`, the proof made at
+    `rotation_proven_at`) that only the client that made the proof holds.
+    With it, that client swaps the token: a new session gets the two
+    factors and this one winds down (`rotated_at`: one factor, no proof,
+    over within seconds; it takes no proof or ticket any more).
     """
 
     # 2: `auth_level` and `authenticated_at`; 3: the device, its last use
-    # and the idle expiry (all optional, so older versions need no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # and the idle expiry; 4: the rotation ticket and `rotated_at` (all
+    # optional, so older versions need no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: UserSessionId = Field(default_factory=UserSessionId)
     user_id: UserId
     token_hash: AccessTokenHash
@@ -131,3 +141,7 @@ class UserSessionDocument(BaseDocument):
     last_seen_at: Microseconds | None = None
     last_seen_ip: ClientIpAddress | None = None
     idle_expires_at: Microseconds | None = None
+    rotation_ticket_hash: SessionRotationTicketHash | None = None
+    rotation_ticket_expires_at: Microseconds | None = None
+    rotation_proven_at: Microseconds | None = None
+    rotated_at: Microseconds | None = None

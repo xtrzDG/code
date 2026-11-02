@@ -88,6 +88,18 @@ class ContactRepoContract(
         """A contact whose phone a channel proved (never a typed phone)."""
         raise NotImplementedError
 
+    def list_by_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> list[ContactDocument]:
+        """
+        Every contact holding this phone (given, proved, or a caller's
+        number kept to call back): a check that refuses a number (a block)
+        must see all of them, not one.
+        """
+        raise NotImplementedError
+
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         raise NotImplementedError
 

@@ -13,6 +13,7 @@ IsOtpCodeHashServerKeyed = bool
 IsOtpCodeLoggingEnabled = bool
 IsPhoneLoginAvailable = bool
 IsPlatformAdmin = bool
+IsSessionProofRecorded = bool
 IsSignUpRestricted = bool
 IsUserVerified = bool
 IsVerifiedLoginDestination = bool

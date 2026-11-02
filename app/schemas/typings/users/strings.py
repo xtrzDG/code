@@ -47,6 +47,10 @@ class SessionOperatingSystem(BaseTypedString):
     """
 
 
+class SessionRotationTicketHash(BaseTypedString):
+    """SHA-256 hex digest of a session rotation ticket, its only stored form."""
+
+
 class TurnstileErrorCode(BaseTypedString):
     """An error code Cloudflare's siteverify returned ("invalid-input-response")."""
 

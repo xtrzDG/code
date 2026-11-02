@@ -9,6 +9,13 @@ from app.contracts.repositories.user_repositories import (
     UserSessionRepoContract,
 )
 from app.repositories.document_queries import field_equals, time_range
+from app.repositories.user_session_changes import (
+    held_ticket,
+    recorded_activity,
+    recorded_authentication,
+    set_level,
+    wound_down,
+)
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.users import (
     OtpChallengeDocument,
@@ -29,7 +36,10 @@ from app.schemas.typings.users.prefixed_id import (
     UserId,
     UserSessionId,
 )
-from app.schemas.typings.users.strings import AccessTokenHash
+from app.schemas.typings.users.strings import (
+    AccessTokenHash,
+    SessionRotationTicketHash,
+)
 
 PHONE_NUMBER_FIELD: DocumentFieldPath = DocumentFieldPath("phone_number")
 EMAIL_FIELD: DocumentFieldPath = DocumentFieldPath("email")
@@ -178,30 +188,40 @@ class UserSessionRepository(UserSessionRepoContract):
         auth_level: AuthLevel,
         authenticated_at: Microseconds,
     ) -> UserSessionDocument | None:
-        def record(session: UserSessionDocument) -> UserSessionDocument:
-            session.auth_level = auth_level
-            session.authenticated_at = authenticated_at
-            session.updated_at = authenticated_at
-            return session
-
-        return self._collection.modify(str(session_id), record)
+        return self._collection.modify(
+            str(session_id), recorded_authentication(auth_level, authenticated_at)
+        )
 
     def record_activity(
         self,
         session_id: UserSessionId,
         activity: SessionActivity,
     ) -> UserSessionDocument | None:
-        def record(session: UserSessionDocument) -> UserSessionDocument:
-            session.last_seen_at = activity.seen_at
-            session.last_seen_ip = activity.seen_ip
-            if activity.user_agent is not None:
-                session.user_agent = activity.user_agent
-            session.idle_expires_at = activity.idle_expires_at
-            session.expires_at = activity.expires_at
-            session.updated_at = activity.seen_at
-            return session
+        return self._collection.modify(str(session_id), recorded_activity(activity))
 
-        return self._collection.modify(str(session_id), record)
+    def hold_rotation_ticket(
+        self,
+        session_id: UserSessionId,
+        ticket_hash: SessionRotationTicketHash,
+        proven_at: Microseconds,
+        expires_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        return self._collection.modify(
+            str(session_id), held_ticket(ticket_hash, proven_at, expires_at)
+        )
+
+    def take_rotation_ticket(
+        self,
+        session_id: UserSessionId,
+        ticket_hash: SessionRotationTicketHash,
+        now: Microseconds,
+        old_token_ends_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        taken: list[UserSessionDocument] = []
+        self._collection.modify(
+            str(session_id), wound_down(ticket_hash, now, old_token_ends_at, taken)
+        )
+        return taken[0] if taken else None
 
     def list_by_user(self, user_id: UserId) -> list[UserSessionDocument]:
         return self._collection.list_by_fields([field_equals(USER_ID_FIELD, user_id)])
@@ -213,24 +233,13 @@ class UserSessionRepository(UserSessionRepoContract):
         now: Microseconds,
         except_session_id: UserSessionId | None = None,
     ) -> DocumentCount:
-        def set_level(session: UserSessionDocument) -> UserSessionDocument | None:
-            # A legacy session without a level already counts as one factor.
-            current: AuthLevel = session.auth_level or AuthLevel.ONE_FACTOR
-            if current is auth_level:
-                return None
-
-            session.auth_level = auth_level
-            session.updated_at = now
-            return session
-
-        changed: int = 0
+        changed: list[UserSessionDocument] = []
         for session in self.list_by_user(user_id):
-            if session.id == except_session_id:
-                continue
-
-            if self._collection.modify(str(session.id), set_level) is not None:
-                changed += 1
-        return DocumentCount(changed)
+            if session.id != except_session_id:
+                self._collection.modify(
+                    str(session.id), set_level(auth_level, now, changed)
+                )
+        return DocumentCount(len(changed))
 
     def delete_for_user(
         self,

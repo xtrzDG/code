@@ -27,10 +27,8 @@ from app.repositories.conversation_lookup_fields import (
     CREATED_AT_FIELD,
     DIRECTION_FIELD,
     LAST_MESSAGE_AT_FIELD,
-    PHONE_NUMBER_FIELD,
     SEQUENCE_NUMBER_FIELD,
     STATUS_FIELD,
-    VERIFIED_PHONE_NUMBER_FIELD,
 )
 from app.repositories.conversation_memory_writes import ConversationMemoryWrites
 from app.repositories.conversation_review_writes import ConversationReviewWrites
@@ -42,6 +40,7 @@ from app.repositories.document_queries import (
     time_range,
 )
 from app.repositories.listing.contact_listing import with_folded_name
+from app.repositories.listing.contact_phone_lookups import ContactPhoneLookups
 from app.repositories.listing.conversation_listing import ConversationListing
 from app.repositories.listing.customer_card_writes import CustomerCardWrites
 from app.repositories.listing.guard_activity_reading import GuardActivityReading
@@ -68,10 +67,9 @@ from app.schemas.typings.conversations.prefixed_id import (
     MessageId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepository(CustomerCardWrites, ContactRepoContract):
+class ContactRepository(CustomerCardWrites, ContactPhoneLookups, ContactRepoContract):
     def save(self, contact: ContactDocument) -> None:
         self._save_keeping_card(contact)
 
@@ -105,24 +103,6 @@ class ContactRepository(CustomerCardWrites, ContactRepoContract):
                     return contact
 
         return None
-
-    def find_by_phone_number(
-        self,
-        business_id: BusinessId,
-        phone_number: E164PhoneNumber,
-    ) -> ContactDocument | None:
-        return self._find_in_business(
-            business_id, [field_equals(PHONE_NUMBER_FIELD, phone_number)]
-        )
-
-    def find_by_verified_phone_number(
-        self,
-        business_id: BusinessId,
-        phone_number: E164PhoneNumber,
-    ) -> ContactDocument | None:
-        return self._find_in_business(
-            business_id, [field_equals(VERIFIED_PHONE_NUMBER_FIELD, phone_number)]
-        )
 
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         return self._list_in_business(business_id)

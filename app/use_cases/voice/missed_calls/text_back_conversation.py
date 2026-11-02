@@ -2,6 +2,11 @@
 The WhatsApp conversation a text-back opens: the caller's reply lands in
 it like any WhatsApp message, and the assistant (and staff) see what was
 sent, because the text-back is its first message (written by the business).
+
+A caller id proves nobody's identity, so the conversation belongs to the
+WhatsApp account of the number (WhatsApp delivers only to the number's
+real owner, whose reply proves it), never to a contact found by a
+verified phone, a given phone or earlier calls from the number.
 """
 
 from datetime import timedelta
@@ -25,16 +30,11 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.use_cases.shared.contact_activity import record_contact_seen
+from app.utilities.calls.call_contacts import whatsapp_user_id
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # The window in which a customer message joins an open conversation.
 CONVERSATION_WINDOW: timedelta = timedelta(hours=24)
-
-
-def whatsapp_user_id(caller: E164PhoneNumber) -> ChannelUserId:
-    """WhatsApp names a customer by the international digits of their number."""
-
-    return ChannelUserId(str(caller).removeprefix("+"))
 
 
 def find_caller_contact(
@@ -43,19 +43,13 @@ def find_caller_contact(
     caller: E164PhoneNumber,
 ) -> ContactDocument | None:
     """
-    The customer behind a calling number: the contact whose phone a call
-    or a booking proved, else the one who writes from it on WhatsApp, else
-    the one who called from it before.
+    The customer who writes from the calling number on WhatsApp: the
+    text-back goes to that account, so its reply is theirs. Nobody else is
+    found by a caller id (a verified or given phone, earlier calls).
     """
 
-    return (
-        contact_repo.find_by_verified_phone_number(business.id, caller)
-        or contact_repo.find_by_channel_identity(
-            business.id, ChannelKind.WHATSAPP, whatsapp_user_id(caller)
-        )
-        or contact_repo.find_by_channel_identity(
-            business.id, ChannelKind.PHONE, ChannelUserId(str(caller))
-        )
+    return contact_repo.find_by_channel_identity(
+        business.id, ChannelKind.WHATSAPP, whatsapp_user_id(caller)
     )
 
 
@@ -72,8 +66,8 @@ def open_text_back_conversation(
     """
     The caller's WhatsApp conversation with the text-back as its newest
     message: an open one of the last day, else a new one pinned to the live
-    version (None while the business has none). The caller is the contact
-    whose phone a call proved, or a new one known by phone and WhatsApp.
+    version (None while the business has none), of the number's WhatsApp
+    customer (`resolve_caller`).
     """
 
     if business.published_assistant_version_id is None:
@@ -121,32 +115,32 @@ def resolve_caller(
     user_id: ChannelUserId,
     now: Microseconds,
 ) -> ContactDocument:
+    """
+    The number's WhatsApp customer, else a new contact known by that
+    WhatsApp account alone, with the number kept to call back and no
+    verified phone (WhatsApp proves it when they reply). No contact gains
+    an identity here: a call-only contact never gets the WhatsApp account
+    (`is_call_only_contact`), and the WhatsApp contact never gets the
+    number's PHONE identity, so later calls from the number keep their own
+    call-only contact (`find_or_create_call_contact`).
+    """
+
     contact: ContactDocument | None = find_caller_contact(
         contact_repo, business, caller
     )
-    identity = ChannelIdentity(channel=ChannelKind.WHATSAPP, channel_user_id=user_id)
     if contact is None:
         contact = ContactDocument(
             business_id=business.id,
             phone_number=caller,
-            verified_phone_number=caller,
+            verified_phone_number=None,
             channel_identities=[
-                ChannelIdentity(
-                    channel=ChannelKind.PHONE,
-                    channel_user_id=ChannelUserId(str(caller)),
-                ),
-                identity,
+                ChannelIdentity(channel=ChannelKind.WHATSAPP, channel_user_id=user_id)
             ],
             created_at=now,
             updated_at=now,
         )
         contact_repo.save(contact)
         return contact
-
-    if identity not in contact.channel_identities:
-        contact.channel_identities.append(identity)
-        contact.updated_at = now
-        contact_repo.save(contact)
 
     # The missed call is the customer's latest activity.
     return record_contact_seen(contact_repo, contact, now)

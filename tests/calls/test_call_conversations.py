@@ -1,6 +1,7 @@
 """
 Every answered call has a conversation (its card shows the summary), and
-a text-back joins the caller's WhatsApp conversation, whoever they are.
+a text-back joins the WhatsApp conversation of the number's account,
+never a contact found by the caller id.
 """
 
 import json
@@ -77,9 +78,13 @@ class TestCallConversations:
 
 
 class TestTextBackConversations:
-    def test_a_known_caller_without_whatsapp_gets_it_added(
+    def test_a_proved_phone_does_not_pull_the_text_back_in(
         self, setup: VoiceSetup
     ) -> None:
+        # This used to add the WhatsApp account to the contact whose phone
+        # was proved: a caller id was taken as theirs. A caller id proves
+        # nothing, so the text-back's conversation belongs to the number's
+        # WhatsApp account alone, and the proved contact stays as it was.
         setup.contact.channel_identities = [
             identity
             for identity in setup.contact.channel_identities
@@ -87,15 +92,22 @@ class TestTextBackConversations:
         ]
         setup.contact.verified_phone_number = setup.contact.phone_number
         setup.testbed.contact_repo.save(setup.contact)
+        known = setup.testbed.contact_repo.get(setup.business.id, setup.contact.id)
 
         report_missed_call(setup)
         setup.testbed.run_worker()
 
-        contact = setup.testbed.contact_repo.get(setup.business.id, setup.contact.id)
-        assert contact is not None
-        assert ChannelKind.WHATSAPP in {
-            identity.channel for identity in contact.channel_identities
-        }
+        assert (
+            setup.testbed.contact_repo.get(setup.business.id, setup.contact.id)
+            == known
+        )
+        [missed] = missed_calls(setup)
+        assert missed.conversation_id is not None
+        conversation = setup.testbed.conversation_repo.get(
+            setup.business.id, missed.conversation_id
+        )
+        assert conversation is not None
+        assert conversation.contact_id != setup.contact.id
 
     def test_a_conversation_opened_meanwhile_is_continued(
         self, setup: VoiceSetup
