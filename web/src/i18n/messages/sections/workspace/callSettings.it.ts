@@ -22,6 +22,7 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     template: "Nome del modello WhatsApp",
     templateHint: "Il nome del modello di utilità approvato sul tuo numero WhatsApp: lettere latine minuscole, cifre e trattini bassi.",
     templateInvalid: "Usa solo lettere latine minuscole, cifre e trattini bassi.",
+    marketingTemplate: "Meta classifica questo modello come marketing. Il messaggio dopo una chiamata persa è un messaggio di servizio: indica un modello di utilità senza promozioni.",
     sms: "Invia un SMS quando WhatsApp non è possibile",
     smsHint: "Dal mittente SMS della piattaforma, quando il numero non ha WhatsApp o il modello viene rifiutato.",
     smsNeedsTextBack: "Prima attiva i messaggi a chi ha chiamato senza ricevere risposta.",

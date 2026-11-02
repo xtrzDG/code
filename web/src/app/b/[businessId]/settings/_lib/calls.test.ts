@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiError, describeError } from "@/api/errors";
 import { en } from "@/i18n/messages/en";
 import { it as italian } from "@/i18n/messages/it";
 import { createTranslator } from "@/i18n/translate";
 
 import {
+  CALL_SETTINGS_REFUSALS,
   callerNoticeKeys,
   callSettingsBody,
   callSettingsForm,
@@ -200,5 +202,24 @@ describe("what callers hear", () => {
       "Da Mario è titolare del trattamento dei suoi dati e li usa solo per gestire la sua richiesta. " +
         "Per l'informativa privacy completa, mi chieda il link o consulti la nostra pagina web.",
     ]);
+  });
+});
+
+describe("a refused template", () => {
+  it("says in the owner's language that Meta files it as marketing", () => {
+    const refusal = new ApiError({
+      status: 422,
+      code: "validation_failed",
+      detail: "The WhatsApp template spring_offer is in Meta's marketing category.",
+      reasons: [{ code: "marketing_template", message: "Name a utility template.", details: [] }],
+    });
+
+    for (const [locale, messages] of [["en", en], ["it", italian]] as const) {
+      const translator = createTranslator(locale, messages);
+      const { title, detail } = describeError(refusal, translator, undefined, CALL_SETTINGS_REFUSALS);
+      expect(title).toBe(translator.t("callSettings.textBack.marketingTemplate"));
+      // Not the English detail of the API.
+      expect(detail).toBeNull();
+    }
   });
 });

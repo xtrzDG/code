@@ -9,6 +9,7 @@ typed (their handoff cases and prohibitions) is fenced as the owner's text
 
 from collections.abc import Sequence
 
+from app.utilities.assembly.health_data_rule import HEALTH_DATA_RULE
 from app.utilities.conversations.owner_text_fencing import fence_owner_text
 
 
@@ -84,6 +85,7 @@ def build_prohibition_section(
         "banking passwords, in writing or by voice; when a customer gives one, "
         "never repeat it and tell them to pay only through the business's "
         "secure payment link.",
+        HEALTH_DATA_RULE,
     ]
     rules: list[str] = [*(fence_owner_text(rule) for rule in owner_rules), *niche_rules]
     if rules:

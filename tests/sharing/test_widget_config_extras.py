@@ -66,3 +66,15 @@ def test_other_channels_are_offered_with_their_links(workshop: Workshop) -> None
     assert config["contact_links"] == [
         {"kind": "telegram", "url": "https://t.me/workshop_bot"}
     ]
+
+
+def test_the_business_phone_is_there_for_when_the_chat_cannot_answer(
+    workshop: Workshop,
+) -> None:
+    restaurant = open_restaurant(workshop)
+
+    config = workshop.client.get(f"/v1/widget/{restaurant.business_id}/config").json()
+
+    # The public phone of the profile (wizard step contacts_and_hours); the
+    # widget offers it under a message the chat could not answer.
+    assert config["business_phone_number"] == "+995322123456"

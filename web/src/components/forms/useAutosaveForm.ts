@@ -26,6 +26,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 
+import type { ReasonMessages } from "@/api/errors";
 import { useToast, type ToastTitle } from "@/components/ui";
 
 import { AutosaveEngine } from "./autosaveEngine";
@@ -49,6 +50,8 @@ export interface AutosaveFormOptions<Form extends object, Stored, Body> extends 
   stored: Stored;
   /** An Undo toast for a change that switches something off: its title, or null for none. */
   undo?: (before: Form, after: Form) => ToastTitle | null;
+  /** The screen's words for the API's refusal reasons (`reasons[].code`). */
+  reasonMessages?: ReasonMessages;
 }
 
 export function useAutosaveForm<Form extends object, Stored, Body>(options: AutosaveFormOptions<Form, Stored, Body>) {
@@ -63,7 +66,7 @@ export function useAutosaveForm<Form extends object, Stored, Body>(options: Auto
         const answer = await options.save(body, base);
         if (!answer.ok && !options.conflict?.isConflict(answer.error) && !isTransientFailure(answer.error)) {
           // Refused (not lost): why, once; a lost connection is retried and shown by the field.
-          toast.error(answer.error);
+          toast.error(answer.error, undefined, options.reasonMessages);
         }
         return answer;
       },

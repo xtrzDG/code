@@ -24,6 +24,7 @@ export const callSettingsEn = {
     template: "WhatsApp template name",
     templateHint: "The name of the approved utility template on your WhatsApp number: lowercase Latin letters, digits and underscores.",
     templateInvalid: "Use lowercase Latin letters, digits and underscores only.",
+    marketingTemplate: "Meta files this template as marketing. A text-back is a service message: name a utility template without promotion.",
     sms: "Send an SMS when WhatsApp is not possible",
     smsHint: "From the platform's SMS sender, when the number has no WhatsApp or the template is refused.",
     smsNeedsTextBack: "Turn on messages to callers who did not get through first.",

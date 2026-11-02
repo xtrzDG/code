@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
 import {
+  CALL_SETTINGS_REFUSALS,
   callSettingsBody,
   callSettingsForm,
   isSameCallSettings,
@@ -50,6 +51,8 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
     invalidFields: (values) => (templateNameError(values) ? ["templateName"] : []),
     toBody: (values, base) => (isSameCallSettings(values, base) ? null : callSettingsBody(values)),
     save: (body) => save.run(body),
+    // A template Meta files as marketing is refused: the toast says why.
+    reasonMessages: CALL_SETTINGS_REFUSALS,
     onSaved: (saved) => settings.setData(saved),
     undo: (before, after) => {
       const key = turnedOffText(before, after);

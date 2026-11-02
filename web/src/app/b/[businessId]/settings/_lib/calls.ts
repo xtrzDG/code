@@ -5,11 +5,17 @@
  * with it, and the labels of the latest text-backs.
  */
 
+import type { ReasonMessages } from "@/api/errors";
 import type { RequestBody, Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
 import type { MessageKey } from "@/i18n/translate";
 
 export type CallSettingsView = Schema<"CallSettingsView">;
+
+/** Why the API refused the settings (`reasons[].code`), in words. */
+export const CALL_SETTINGS_REFUSALS: ReasonMessages = {
+  marketing_template: () => ({ key: "callSettings.textBack.marketingTemplate" }),
+};
 export type CallSettingsBody = RequestBody<"/v1/businesses/{business_id}/call-settings", "put">;
 export type TextBackView = Schema<"TextBackView">;
 export type TextBackPage = Schema<"TextBackPage">;

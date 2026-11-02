@@ -1,5 +1,6 @@
 from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
@@ -34,10 +35,17 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 
 class BusinessMember(PersistentDocument):
-    """A user with a role inside one business."""
+    """
+    A user with a role inside one business. `invited_at` is when an owner
+    invited them (None: the business's creator, a brand's location, or an
+    invitation from before version 8); an invitation of an account that
+    has not signed in yet lapses after seven days
+    (`app/use_cases/businesses/lapsed_invitations.py`).
+    """
 
     user_id: UserId
     role: BusinessMemberRole
+    invited_at: Microseconds | None = None
 
 
 class ManagerContact(PersistentDocument):
@@ -85,7 +93,8 @@ class BusinessDocument(BaseDocument):
     Version 7: `brand_id`, the brand (chain of locations) the business is a
     location of (None: a business on its own, as every older row).
     Version 8: `staff_may_play_recordings`, the owner's permission for staff
-    to play the call recordings (False: owners only, as every older row).
+    to play the call recordings (False: owners only, as every older row),
+    and the members' `invited_at` (None on older rows).
     """
 
     schema_version: SchemaVersion = SchemaVersion("8")
