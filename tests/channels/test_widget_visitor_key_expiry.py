@@ -73,11 +73,11 @@ def test_an_idle_key_reads_nothing_and_starts_afresh_when_used_again() -> None:
     }
 
     again = send(testbed, business.id, "Hello again")
-    # The old answer is behind the idle gap: from the old position nothing
-    # comes but the new position, and after it only the new answer.
+    # The old answer is behind the idle gap: even from the old position only
+    # the new answer comes.
     body = poll(client, business.id, after=first["cursor"]).json()
-    assert body["items"] == []
-    assert body["cursor"] == again["cursor"]
-    newest = poll(client, business.id, after=again["cursor"]).json()
-    assert [item["id"] for item in newest["items"]] == [again["message_id"]]
-    assert first["message_id"] not in [item["id"] for item in newest["items"]]
+    assert [item["id"] for item in body["items"]] == [again["message_id"]]
+    # Without a position the whole chat is read: still nothing from before.
+    whole = poll(client, business.id).json()
+    assert whole["items"] == []
+    assert whole["cursor"] == again["cursor"]

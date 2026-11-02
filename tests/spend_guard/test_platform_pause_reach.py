@@ -37,7 +37,7 @@ def test_a_paused_platform_hands_the_customer_to_the_team_in_their_language() ->
     spend = build_spend_world()
     pause(spend)
     world = build_world(
-        scripted(say("never"), say("Certo, a che ora?")),
+        scripted(say("Certo, a che ora?")),
         ITALY,
         guard=GuardOptions(spend_check=spend.check),
     )
