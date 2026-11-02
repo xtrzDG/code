@@ -3,19 +3,22 @@
 /**
  * "Rules" of Assistant → Business profile, in the edit mode of the
  * tunnel's screens: the ready answers, when to call a person, what never
- * to promise, the tone, the call-recording notice and the niche's
- * questions about how the business works. Everything saves itself as the
- * owner types; the niche's starter answers are only offered, never saved
- * until the owner takes them.
+ * to promise, the tone and the niche's questions about how the business
+ * works. Everything saves itself as the owner types; the niche's starter
+ * answers are only offered, never saved until the owner takes them. Whether
+ * calls are recorded (and so whether callers hear it) is set in Settings →
+ * Calls, which the screen links to.
  */
 
+import Link from "next/link";
 import { useId, useState } from "react";
 
 import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
-import { Button, Checkbox, Field, Input } from "@/components/ui";
+import { Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { businessPath } from "@/lib/navigation";
 import { cleanRules } from "@/lib/wizard/faq";
 
 import { SaveProblem } from "../edit/SaveProblem";
@@ -42,11 +45,9 @@ export function RulesScreen({ ctx }: { ctx: StepContext }) {
   const [handoff, setHandoff] = useState<string[]>(() => profile.handoff_rules ?? []);
   const [forbidden, setForbidden] = useState<string[]>(() => profile.forbidden ?? []);
   const [tone, setTone] = useState(profile.tone ?? "");
-  const [recording, setRecording] = useState(profile.is_recording_notice_enabled);
   const handoffSave = useProfileField(ctx.businessId, cleanRules(handoff), (value) => ({ handoff_rules: value }));
   const forbiddenSave = useProfileField(ctx.businessId, cleanRules(forbidden), (value) => ({ forbidden: value }));
   const toneSave = useProfileField(ctx.businessId, tone.trim(), (value) => ({ tone: value || null }));
-  const recordingSave = useProfileField(ctx.businessId, recording, (value) => ({ is_recording_notice_enabled: value }));
 
   const handoffSuggestions = starters.handoff_rules?.length ? starters.handoff_rules : ctx.wizard.default_handoff_rules;
   const forbiddenSuggestions = starters.forbidden_rules?.length ? starters.forbidden_rules : ctx.wizard.default_forbidden_rules;
@@ -72,17 +73,13 @@ export function RulesScreen({ ctx }: { ctx: StepContext }) {
           suggestions={forbiddenSuggestions}
           error={forbiddenSave.error}
         />
-        {/* What the API accepts as an owner's rule: shown once for both lists. */}
+        {/* What the API accepts as an owner's rule and the tone: shown once, before the tone. */}
         <p className="text-sm text-ink-muted">{t("profileEdit.rules.instructionRule")}</p>
         <section aria-labelledby={toneId} className="space-y-5 rounded-2xl border border-line bg-surface/85 p-5 backdrop-blur-sm sm:p-6">
           <h2 id={toneId} className="sr-only">
             {t("profileEdit.rules.toneTitle")}
           </h2>
-          <Field
-            label={t("profileEdit.rules.toneTitle")}
-            optionalLabel={t("common.optional")}
-            hint={t("profileEdit.rules.instructionRule")}
-          >
+          <Field label={t("profileEdit.rules.toneTitle")} optionalLabel={t("common.optional")}>
             {(control) => (
               <Input
                 {...control}
@@ -102,14 +99,15 @@ export function RulesScreen({ ctx }: { ctx: StepContext }) {
             </p>
           ) : null}
           <SaveProblem error={toneSave.error} />
-          <Checkbox
-            id="profile-recording-notice"
-            checked={recording}
-            onChange={(event) => setRecording(event.target.checked)}
-            label={<span className="font-medium">{t("profileEdit.rules.recordingNotice")}</span>}
-            description={t("profileEdit.rules.recordingNoticeHint")}
-          />
-          <SaveProblem error={recordingSave.error} />
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+            {t("profileEdit.rules.recordingNotice")}
+            <Link
+              href={businessPath(ctx.businessId, "settings/calls")}
+              className="inline-flex min-h-10 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-focus"
+            >
+              {t("profileEdit.rules.recordingNoticeLink")}
+            </Link>
+          </p>
         </section>
         <SectionQuestions ctx={ctx} section="rules" title={t("profileEdit.rules.questionsTitle")} />
       </div>

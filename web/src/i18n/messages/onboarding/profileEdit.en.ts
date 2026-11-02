@@ -161,8 +161,8 @@ export const profileEditEn = {
     tonePlaceholder: "For example: friendly and short",
     toneSuggested: "Suggested: {tone}",
     useTone: "Use it",
-    recordingNotice: "Say that calls are recorded",
-    recordingNoticeHint: "The assistant says it at the start of every call. Many countries require it by law.",
+    recordingNotice: "Whether calls are recorded, and so whether callers hear that they are, is set in Settings → Calls.",
+    recordingNoticeLink: "Open Settings → Calls",
     questionsTitle: "More about how you work",
   },
 } as const;

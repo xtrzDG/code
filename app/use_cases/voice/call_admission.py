@@ -22,6 +22,7 @@ from app.contracts.repositories.spend_guard_repositories import (
     UsageSpendRepoContract,
 )
 from app.schemas.constants.billing import UsageKind
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -30,6 +31,7 @@ from app.schemas.dto.spend_guard import UsageKindTotal
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.contacts.booleans import IsContactBlocked
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.channels.voice_service import (
     MAX_DAILY_CALL_MINUTES,
@@ -61,7 +63,10 @@ def is_blocked_caller(
 ) -> IsContactBlocked:
     """
     The number belongs to a contact of the business staff blocked (proved
-    by a channel or given); a withheld number never does.
+    by a channel, given, or the call-only contact earlier calls from it
+    share: `find_or_create_call_contact`); a withheld number never does.
+    Several contacts may hold one number (a call never joins a contact a
+    channel proved), so each is looked up by its own key.
     """
 
     if caller_phone_number is None:
@@ -69,6 +74,9 @@ def is_blocked_caller(
 
     contacts: list[ContactDocument | None] = [
         contact_repo.find_by_verified_phone_number(business.id, caller_phone_number),
+        contact_repo.find_by_channel_identity(
+            business.id, ChannelKind.PHONE, ChannelUserId(str(caller_phone_number))
+        ),
         contact_repo.find_by_phone_number(business.id, caller_phone_number),
     ]
     return any(

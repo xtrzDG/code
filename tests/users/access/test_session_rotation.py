@@ -137,3 +137,24 @@ def test_rotating_needs_the_person_s_own_session() -> None:
             lambda: rotation(testbed).run(RotateSessionCommand(user_id=mine.user.id)),
         )
     assert testbed.authenticate_user.run(check(mine)).user_id == mine.user.id
+
+
+def test_the_old_token_cannot_rotate_once_the_session_rotated() -> None:
+    testbed = build_accounts_testbed()
+    signed_in = testbed.sign_in_with_phone(GEORGIA_MOBILE)
+    testbed.user_session_repo.record_authentication(
+        stored(testbed, signed_in).id,
+        AuthLevel.TWO_FACTOR,
+        testbed.clock.build_wall_clock().now_unix(),
+    )
+    rotated = rotate(testbed, signed_in)
+
+    # A copy of the token from before the step-up never gets a token of
+    # the raised level of its own, during its last seconds either.
+    with pytest.raises(ConflictError):
+        rotate(testbed, signed_in)
+
+    assert testbed.authenticate_user.run(check(rotated)).auth_level is (
+        AuthLevel.TWO_FACTOR
+    )
+    assert len(testbed.user_session_repo.list_by_user(signed_in.user.id)) == 2

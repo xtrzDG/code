@@ -31,6 +31,13 @@ BRAKED_ACTIONS: frozenset[OwnerAction] = frozenset(
         OwnerAction.PHONE_NUMBER_RENTAL,
     }
 )
+# Actions counted only once they succeeded (a number the carrier sold):
+# their brake is checked with their room before the costly work
+# (`CheckOwnerActionRoomUseCase`). Refusing one when it is counted, after
+# a brake started meanwhile, would leave a bought number unrecorded.
+COUNTED_AFTER_SUCCESS: frozenset[OwnerAction] = frozenset(
+    {OwnerAction.PHONE_NUMBER_RENTAL}
+)
 
 
 class AdmitOwnerActionUseCase(UseCaseContract[OwnerActionAdmission, None]):
@@ -38,7 +45,8 @@ class AdmitOwnerActionUseCase(UseCaseContract[OwnerActionAdmission, None]):
     Count one limited cabinet action (`owner_action_limits`: test chat 30 a
     minute per person, menu imports 10 an hour and autotest runs 20 a day
     per business) in the shared counters, or refuse it. While a platform
-    brake holds, a costly action (`BRAKED_ACTIONS`) is refused first.
+    brake holds, a costly action (`BRAKED_ACTIONS`) is refused first, but
+    one counted after it succeeded (`COUNTED_AFTER_SUCCESS`) is counted.
 
     Raises:
         ConflictError: a platform brake holds (reason `platform_brake`).
@@ -62,7 +70,8 @@ class AdmitOwnerActionUseCase(UseCaseContract[OwnerActionAdmission, None]):
         counter: RateLimitCounter = owner_action_counter(input_data)
         window = RateWindowSeconds(limit.window_seconds)
         now: Microseconds = self._wall_clock.now_unix()
-        refuse_under_a_brake(self._platform_brakes, input_data.action, now)
+        if input_data.action not in COUNTED_AFTER_SUCCESS:
+            refuse_under_a_brake(self._platform_brakes, input_data.action, now)
         if self._rate_limits.try_acquire_all([counter], window, now) is None:
             return
 

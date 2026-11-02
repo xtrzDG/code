@@ -159,8 +159,8 @@ export const profileEditIt: Translation<typeof profileEditEn> = {
     tonePlaceholder: "Ad esempio: cordiale e conciso",
     toneSuggested: "Suggerito: {tone}",
     useTone: "Usa questo",
-    recordingNotice: "Avvisa che le chiamate sono registrate",
-    recordingNoticeHint: "L’assistente lo dice all’inizio di ogni chiamata. In molti paesi è obbligatorio per legge.",
+    recordingNotice: "Se le chiamate vengono registrate, e quindi se chi chiama lo sente dire, si imposta in Impostazioni → Chiamate.",
+    recordingNoticeLink: "Apri Impostazioni → Chiamate",
     questionsTitle: "Altro su come lavori",
   },
 };

@@ -2,8 +2,10 @@
 The owners' costly actions while a platform brake holds: a menu import, an
 autotest run, alias suggestions and a rented number are refused (409,
 reason `platform_brake`) and not counted; the test chat, number searches
-and requests for a number pass. `PlatformBrakeRegistry` reads the pause
-and the daily budget stop as the spend guard does.
+and requests for a number pass. A rental is refused before the carrier
+sells the number; one already sold is counted even if a brake started
+meanwhile. `PlatformBrakeRegistry` reads the pause and the daily budget
+stop as the spend guard does.
 """
 
 from datetime import timedelta
@@ -20,11 +22,12 @@ from app.registries.limits.platform_spend_gauge_registry import (
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.schemas.constants.spend import OwnerAction, PlatformBrake
 from app.schemas.dto.spend_guard import OwnerActionAdmission
-from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.exceptions.application_errors import ConflictError, RateLimitedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.spend_guard.admit_owner_action_use_case import (
     BRAKED_ACTIONS,
+    COUNTED_AFTER_SUCCESS,
     AdmitOwnerActionUseCase,
     CheckOwnerActionRoomUseCase,
 )
@@ -81,8 +84,10 @@ def test_a_costly_action_is_refused_while_a_brake_holds_and_not_counted(
     brakes = SetPlatformBrakes(brake)
     admit, check_room = build(brakes)
     asked = admission(action)
+    # A rental is refused by its room check, before the carrier sells it.
+    refusing = (check_room,) if action in COUNTED_AFTER_SUCCESS else (admit, check_room)
 
-    for use_case in (admit, check_room):
+    for use_case in refusing:
         with pytest.raises(ConflictError) as refusal:
             use_case.run(asked)
         [reason] = refusal.value.reasons
@@ -97,6 +102,29 @@ def test_a_costly_action_is_refused_while_a_brake_holds_and_not_counted(
             admit.run(asked)
     else:
         admit.run(asked)
+
+
+@pytest.mark.parametrize("brake", list(PlatformBrake))
+def test_a_rental_the_carrier_sold_is_counted_whatever_the_brake(
+    brake: PlatformBrake,
+) -> None:
+    brakes = SetPlatformBrakes()
+    admit, check_room = build(brakes)
+    asked = admission(OwnerAction.PHONE_NUMBER_RENTAL)
+
+    for _ in range(3):
+        brakes.brake = None
+        check_room.run(asked)
+        # A brake that starts while the carrier sells the number does not
+        # refuse counting it: the number is bought and must be recorded.
+        brakes.brake = brake
+        admit.run(asked)
+
+    brakes.brake = None
+    # All three counted: the day's rentals are used up.
+    with pytest.raises(RateLimitedError):
+        check_room.run(asked)
+    assert set(COUNTED_AFTER_SUCCESS) == {OwnerAction.PHONE_NUMBER_RENTAL}
 
 
 @pytest.mark.parametrize("action", FREE)

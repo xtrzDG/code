@@ -13,7 +13,11 @@ from app.schemas.constants.bookings import BookingStatus, ResourceKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument
-from app.schemas.domain.contacts import ContactBlock, ContactDocument
+from app.schemas.domain.contacts import (
+    ChannelIdentity,
+    ContactBlock,
+    ContactDocument,
+)
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.typings.billing.constrained_integers import UsageQuantity
 from app.schemas.typings.bookings.constrained_integers import (
@@ -24,6 +28,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.contacts.strings import ContactName
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.channels.voice_service import MAX_DAILY_CALL_MINUTES
@@ -150,6 +155,39 @@ def test_a_blocked_number_is_refused(by_verified_phone: bool) -> None:
     assert "blocked" in blocked.text
     assert withheld.status_code == 200, withheld.text
     assert setup.testbed.call_greeting.requests[-1:] != []
+
+
+def test_a_blocked_call_only_contact_is_refused_beside_a_proved_one() -> None:
+    # A WhatsApp customer proved the number; calls from it share a contact
+    # of their own (a caller id never joins a proved contact), and staff
+    # blocked that one: both hold the number, the block still counts.
+    setup = build_voice_setup()
+    whatsapp = ChannelIdentity(
+        channel=ChannelKind.WHATSAPP, channel_user_id=ChannelUserId(CALLER[1:])
+    )
+    setup.contact.verified_phone_number = E164PhoneNumber(CALLER)
+    setup.contact.channel_identities = [whatsapp]
+    setup.testbed.contact_repo.save(setup.contact)
+    now = setup.testbed.clock.now_microseconds()
+    setup.testbed.contact_repo.save(
+        ContactDocument(
+            business_id=setup.business.id,
+            phone_number=E164PhoneNumber(CALLER),
+            channel_identities=[
+                ChannelIdentity(
+                    channel=ChannelKind.PHONE, channel_user_id=ChannelUserId(CALLER)
+                )
+            ],
+            block=ContactBlock(blocked_at=now, blocked_by=UserId()),
+            created_at=now,
+            updated_at=now,
+        )
+    )
+
+    blocked = post_start(setup)
+
+    assert blocked.status_code == 409, blocked.text
+    assert "blocked" in blocked.text
 
 
 @pytest.mark.parametrize(
