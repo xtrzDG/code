@@ -148,14 +148,17 @@ def read_content_length(scope: Scope) -> int | None:
 def refuse_body(scope: Scope, reason: str) -> None:
     log_security_event(
         REQUEST_BODY_REFUSED,
-        path=route_class_of(str(scope.get("path", ""))),
+        path=route_class_of(str(scope.get("path", "")), str(scope.get("method", ""))),
         reason=reason,
         client_address=client_address_of(scope),
     )
 
 
-def route_class_of(path: str) -> str:
-    """The pattern of the limit a path falls under (logs carry no ids)."""
+def route_class_of(path: str, method: str = "POST") -> str:
+    """The class of the limit a request falls under (logs carry no ids)."""
+
+    if method.upper() in READING_METHODS:
+        return "reading"
 
     for pattern, _ in BODY_LIMITS:
         if pattern.match(path):

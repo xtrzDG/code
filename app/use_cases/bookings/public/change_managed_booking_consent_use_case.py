@@ -22,12 +22,22 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.schemas.typings.contacts.booleans import IsMarketingConsentGiven
 from app.use_cases.bookings.guest_booking import GuestBooking
 from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
-from app.utilities.bookings.manage_rate_limits import MANAGE_CHANGE_LIMITS
+from app.utilities.bookings.manage_rate_limits import ManageRateLimits
 
 CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
 GONE_MESSAGE: str = "The guest of this booking is no longer known."
+# The box's own budget: it notifies nobody, and a guest who ticks and
+# unticks it must never use up the changes that cancel or move the booking.
+MANAGE_CONSENT_LIMITS: ManageRateLimits = ManageRateLimits(
+    key_prefix="booking-manage-consent",
+    per_booking_per_minute=10,
+    per_address_per_minute=30,
+    per_platform_per_minute=2_000,
+    refusal="Too many changes of the box; wait a moment and try again.",
+)
 
 
 class ChangeManagedBookingConsentUseCase(
@@ -66,12 +76,12 @@ class ChangeManagedBookingConsentUseCase(
             ConflictError: the guest's data was erased.
         """
 
-        is_given: bool | None = input_data.marketing_consent
+        is_given: IsMarketingConsentGiven | None = input_data.marketing_consent
         text: MarketingConsentText | None = input_data.consent_text
         if is_given is None or text is None:
             raise ValidationFailedError("Say whether the box is ticked, and its text.")
 
-        self._pages.refuse_too_frequent(input_data, MANAGE_CHANGE_LIMITS)
+        self._pages.refuse_too_frequent(input_data, MANAGE_CONSENT_LIMITS)
         guest_booking: GuestBooking = self._pages.current(input_data.claims)
         booking: BookingDocument = guest_booking.booking
         now: Microseconds = self._wall_clock.now_unix()

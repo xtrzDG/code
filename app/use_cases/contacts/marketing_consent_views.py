@@ -14,6 +14,7 @@ from app.schemas.constants.marketing_consent import (
 )
 from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.dto.customers.customer_card import MarketingConsentView
+from app.schemas.typings.contacts.booleans import IsMarketingConsentGiven
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 
@@ -63,7 +64,10 @@ def consent_status(
 
 
 def record_in_person(
-    contact: ContactDocument, is_given: bool, user_id: UserId, now: Microseconds
+    contact: ContactDocument,
+    is_given: IsMarketingConsentGiven,
+    user_id: UserId,
+    now: Microseconds,
 ) -> None:
     """
     The customer told the team they agree (the current wording, recorded

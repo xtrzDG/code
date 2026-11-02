@@ -14,6 +14,7 @@ from typing import Any, cast
 from fastapi import Request
 from fastapi.routing import APIRoute
 from pydantic import BaseModel, ValidationError
+from starlette.concurrency import run_in_threadpool
 
 from app.gateways.http.json_nesting import (
     ensure_json_nesting_within_limit,
@@ -39,6 +40,9 @@ LOCAL_DEFINITION_PREFIX: str = "#/$defs/"
 EMPTY_JSON_OBJECT: bytes = b"{}"
 EMPTY_BODY_MESSAGE: str = "The request body must be a JSON object."
 JSON_TOO_DEEP_REASON: str = "json_too_deep"
+# A larger body (a menu import, a call report) is measured and parsed in a
+# worker thread, so it does not hold the event loop of every other request.
+INLINE_BODY_MAX_BYTES: int = 64 * 1024
 
 
 def build_json_body_dependency[Body: BaseModel](
@@ -65,8 +69,14 @@ def build_json_body_dependency[Body: BaseModel](
 
     async def read_json_body(request: Request) -> Body:
         raw_body: bytes = await request.body()
-        refuse_deep_json(request, raw_body)
-        return parse_json_body(body_type, raw_body, optional=optional)
+        if len(raw_body) <= INLINE_BODY_MAX_BYTES:
+            refuse_deep_json(request, raw_body)
+            return parse_json_body(body_type, raw_body, optional=optional)
+
+        await run_in_threadpool(refuse_deep_json, request, raw_body)
+        return await run_in_threadpool(
+            parse_json_body, body_type, raw_body, optional=optional
+        )
 
     return read_json_body
 
@@ -80,9 +90,13 @@ async def read_raw_request_body(request: Request) -> bytes:
     """
 
     raw_body: bytes = await request.body()
-    if looks_like_json(raw_body, request.headers.get("content-type")):
-        refuse_deep_json(request, raw_body)
+    if not looks_like_json(raw_body, request.headers.get("content-type")):
+        return raw_body
 
+    if len(raw_body) <= INLINE_BODY_MAX_BYTES:
+        refuse_deep_json(request, raw_body)
+    else:
+        await run_in_threadpool(refuse_deep_json, request, raw_body)
     return raw_body
 
 

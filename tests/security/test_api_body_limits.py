@@ -1,6 +1,7 @@
 """Request body limits of the API: 413 before or while a body is read."""
 
 import asyncio
+import logging
 from collections.abc import Iterator
 from typing import Annotated
 
@@ -103,14 +104,21 @@ def test_a_request_that_only_reads_may_carry_no_real_body(method: str) -> None:
     assert find_body_limit("/v1/me", method) == READING_BODY_LIMIT_BYTES
 
 
-def test_a_get_with_a_body_is_refused_before_reading() -> None:
+def test_a_get_with_a_body_is_refused_before_reading(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     client, _ = build_client()
 
-    response = client.request(
-        "GET", "/v1/echo-read", content=b"x" * (READING_BODY_LIMIT_BYTES + 1)
-    )
+    with caplog.at_level(logging.WARNING, logger="app.security"):
+        response = client.request(
+            "GET", "/v1/echo-read", content=b"x" * (READING_BODY_LIMIT_BYTES + 1)
+        )
 
     assert response.status_code == 413
+    lines = [r for r in caplog.records if r.name == "app.security"]
+    assert [(r.security_event, r.path, r.reason) for r in lines] == [
+        ("request_body_refused", "reading", "declared_too_large")
+    ]
 
 
 def test_a_body_within_the_limit_is_read() -> None:

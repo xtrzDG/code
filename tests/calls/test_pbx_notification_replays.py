@@ -72,6 +72,18 @@ class TestReplays:
         assert len(missed_calls(setup)) == 1
         assert len(whatsapp_templates(setup)) == 1
 
+    def test_a_copy_sent_again_is_still_ignored(self, setup: VoiceSetup) -> None:
+        notify(setup, zadarma_form(pbx_call_id="in_1790856000.1"))
+
+        copies = [
+            notify(setup, zadarma_form(pbx_call_id="in_1790856000.2"))
+            for _ in range(3)
+        ]
+
+        assert [copy.json()["status"] for copy in copies] == ["ignored"] * 3
+        assert len(missed_calls(setup)) == 1
+        assert len(whatsapp_templates(setup)) == 1
+
     def test_the_providers_repeat_is_still_a_duplicate(self, setup: VoiceSetup) -> None:
         notify(setup, zadarma_form())
 
@@ -101,3 +113,5 @@ class TestReplays:
         assert not one.is_replay(fields, NOW)
         assert not other.is_replay(fields, NOW)
         assert other.is_replay({**fields, "pbx_call_id": "in_9"}, NOW)
+        assert one.is_replay({**fields, "pbx_call_id": "in_9"}, NOW)
+        assert not one.is_replay(fields, NOW)

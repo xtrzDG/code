@@ -5,7 +5,11 @@ of thousands of nested brackets would make a parser recurse until it fails
 
 The measure needs no parse: strings are cut out (a bracket inside a string
 is text), the brackets left are counted in order. A body that is not JSON
-at all is measured the same way and refused by the parser after.
+at all is measured the same way and refused by the parser after. The cut
+is linear in the body's length whatever it holds: a string runs to its
+closing quote or, unterminated, to the end of the body (the parser stops
+there too), and nothing is tried twice (possessive quantifiers), so a
+body of escaped quotes cannot make it quadratic.
 """
 
 import re
@@ -21,13 +25,17 @@ from app.schemas.typings.platform.strings import ErrorReasonMessage
 # The deepest request of the API nests about ten levels (a provider's
 # webhook); the parsers themselves give up near 200 (pydantic) and 1000.
 MAX_JSON_NESTING_DEPTH: int = 64
-JSON_STRING: re.Pattern[bytes] = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"', re.DOTALL)
+JSON_STRING: re.Pattern[bytes] = re.compile(
+    rb'"[^"\\]*+(?:\\.[^"\\]*+)*+(?:"|\\?\Z)', re.DOTALL
+)
 OPENING: frozenset[int] = frozenset(b"[{")
 NOT_A_BRACKET: bytes = bytes(byte for byte in range(256) if byte not in b"[]{}")
 TOO_DEEP_MESSAGE: str = (
     f"The request body nests deeper than {MAX_JSON_NESTING_DEPTH} levels."
 )
 JSON_BODY_START: frozenset[int] = frozenset(b"[{")
+# A UTF-8 byte order mark, which JSON parsers skip before the first value.
+UTF8_BOM: bytes = b"\xef\xbb\xbf"
 
 
 def json_nesting_depth(
@@ -60,7 +68,7 @@ def looks_like_json(raw_body: bytes, content_type: str | None) -> bool:
     if content_type is not None and "json" in content_type.lower():
         return True
 
-    stripped: bytes = raw_body.lstrip()
+    stripped: bytes = raw_body.lstrip().removeprefix(UTF8_BOM).lstrip()
     return stripped != b"" and stripped[0] in JSON_BODY_START
 
 

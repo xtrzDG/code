@@ -17,6 +17,7 @@ from starlette.concurrency import run_in_threadpool
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
     mark_credential_check,
+    note_credential_check,
 )
 from app.gateways.http.strict_request_parsing import read_client_ip_address
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -55,6 +56,7 @@ def build_api_key_authentication(
             str | None, Header(description=KEY_DESCRIPTION)
         ] = None,
     ) -> ApiKeyPrincipal:
+        note_credential_check(request)
         known: object = getattr(request.state, PRINCIPAL_STATE, None)
         if isinstance(known, ApiKeyPrincipal):
             return known

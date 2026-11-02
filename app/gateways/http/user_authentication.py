@@ -10,6 +10,7 @@ from app.contracts.operator_contract import OperatorContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
     mark_credential_check,
+    note_credential_check,
 )
 from app.gateways.http.request_limits import limit_class_of
 from app.gateways.http.strict_request_parsing import read_client_ip_address
@@ -70,6 +71,7 @@ def build_current_user_dependency(
         request: Request,
         authorization: Annotated[str | None, Header()] = None,
     ) -> UserId:
+        note_credential_check(request)
         client_ip_address: ClientIpAddress | None = read_client_ip_address(request)
         try:
             check = SessionCheck(

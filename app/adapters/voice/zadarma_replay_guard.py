@@ -36,11 +36,12 @@ class ZadarmaReplayGuard:
 
     The signature covers who called, which number and when, not the call
     id: a copy with another `pbx_call_id` would pass the signature and make
-    a second missed call and text-back. The signed fields are claimed once;
-    the call ids seen with them are counted. A copy of those fields with a
-    call id never seen with them is a replay. The very same notification
-    again is not: it is the provider's retry, and the missed call it names
-    already exists (answered "duplicate" by its own id).
+    a second missed call and text-back. The signed fields are claimed once,
+    and only the call id of the notification that won the claim is kept
+    with them. Any other call id with those fields is a replay, however
+    often it is sent. The very same notification again is not: it is the
+    provider's retry, and the missed call it names already exists
+    (answered "duplicate" by its own id).
 
     A claim that cannot be read or written is logged and the notification
     handled: the missed call's own id still keeps exact repeats out.
@@ -58,20 +59,24 @@ class ZadarmaReplayGuard:
         content_key = RateLimitKey(f"{KEY_PREFIX}:{content}")
         call_key = RateLimitKey(f"{KEY_PREFIX}:{content}:{call_id_digest(fields)}")
         try:
-            seen_with_this_call: bool = (
-                int(self._buckets.read_counts(call_key, window).current_count) > 0
-            )
-            self._buckets.count_if_within(
-                [RateLimitCounter(key=call_key, limit=UNLIMITED)], window
-            )
+            if int(self._buckets.read_counts(call_key, window).current_count) > 0:
+                # The call that won the claim, sent again by the provider.
+                return False
+
             is_first_copy: bool = (
                 self._buckets.count_if_within(
                     [RateLimitCounter(key=content_key, limit=ONCE)], window
                 )
                 is None
             )
+            if not is_first_copy:
+                return True
+
+            self._buckets.count_if_within(
+                [RateLimitCounter(key=call_key, limit=UNLIMITED)], window
+            )
         except ApplicationError as error:
             LOGGER.warning("Zadarma notification not claimed: %s", error)
             return False
 
-        return not is_first_copy and not seen_with_this_call
+        return False

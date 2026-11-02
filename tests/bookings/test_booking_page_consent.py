@@ -12,6 +12,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
+from app.schemas.constants.compliance import AuditAction
 from app.schemas.dto.booking_manage import BookingManageClaims, ManagedBookingAction
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.constrained_integers import (
@@ -26,7 +27,8 @@ from app.use_cases.bookings.public.change_managed_booking_consent_use_case impor
 from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
 from tests.bookings.manage_journey import BookedTable, book_a_table
 from tests.e2e.harness import Workshop
-from tests.e2e.journeys import JsonObject
+from tests.e2e.journeys import WIDGET_SESSION, JsonObject
+from tests.e2e.widget_turns import ask_widget
 from tests.users.accounts_clock import AdjustableClock
 
 TEXT_VERSION: str = "2026-11-02"
@@ -92,6 +94,69 @@ def test_a_tick_is_recorded_kept_and_taken_back_by_unticking(
         "withdrawn",
         "booking_page",
     )
+
+
+def test_each_change_of_the_box_is_audited_as_the_guests_own(
+    workshop: Workshop,
+) -> None:
+    booked = book_a_table(workshop)
+    business_id = BusinessId(booked.restaurant.business_id)
+    container = workshop.container
+
+    tick(workshop, booked, True)
+    tick(workshop, booked, False)
+
+    with container.utilities.storage_scope().scoped_to_business(business_id):
+        entries = container.repositories.audit_log_repo().list_by_business(
+            business_id
+        )
+    changes = [
+        entry
+        for entry in entries
+        if entry.entity == "contact" and entry.action is AuditAction.UPDATE
+    ]
+    assert len(changes) == 2
+    assert all(entry.actor_id is None for entry in changes)
+
+
+def test_the_box_has_its_own_limit_and_never_uses_up_the_cancellation(
+    workshop: Workshop,
+) -> None:
+    booked = book_a_table(workshop)
+
+    answers = [
+        workshop.client.post(
+            f"{booked.page}/marketing-consent",
+            json={"is_given": index % 2 == 0, "text_version": TEXT_VERSION},
+        )
+        for index in range(11)
+    ]
+
+    assert [answer.status_code for answer in answers[:10]] == [200] * 10
+    assert answers[10].status_code == 429
+    cancelled = workshop.client.post(f"{booked.page}/cancel")
+    assert cancelled.status_code == 200, cancelled.text
+
+
+def test_stop_in_the_chat_takes_a_ticked_box_back_and_start_does_not_tick_it(
+    workshop: Workshop,
+) -> None:
+    booked = book_a_table(workshop)
+    business_id = booked.restaurant.business_id
+    tick(workshop, booked, True)
+    workshop.clock.advance(60)
+
+    ask_widget(workshop, business_id, WIDGET_SESSION, "STOP")
+
+    stopped = card_consent(workshop, booked)
+    assert (stopped["status"], stopped["withdrawal"]) == ("stopped", "stop")
+    assert workshop.client.get(booked.page).json()["marketing_consent"] is False
+
+    workshop.clock.advance(60)
+    ask_widget(workshop, business_id, WIDGET_SESSION, "START")
+
+    restarted = card_consent(workshop, booked)
+    assert (restarted["status"], restarted["withdrawal"]) == ("withdrawn", "stop")
 
 
 def test_an_unknown_wording_or_a_forged_link_is_refused(workshop: Workshop) -> None:

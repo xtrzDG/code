@@ -115,3 +115,42 @@ def test_measuring_a_large_body_is_fast() -> None:
 
     assert depth == 3
     assert time.perf_counter() - started < 1.0
+
+
+def test_hostile_strings_are_measured_in_linear_time() -> None:
+    # Each escaped quote once restarted the string search: 32 KB took 6 s.
+    hostile: tuple[bytes, ...] = (
+        b'"' + b'\\"' * 128_000,
+        b'["' + b"\\x" * 128_000,
+        b'"\\' * 128_000,
+        b'"' * 256_000,
+    )
+
+    started = time.perf_counter()
+    depths = [json_nesting_depth(body) for body in hostile]
+
+    assert depths == [0, 1, 0, 0]
+    assert time.perf_counter() - started < 1.0
+
+
+def test_an_unterminated_string_hides_no_brackets_the_parser_reads() -> None:
+    assert json_nesting_depth(b'[[["text [[[[') == 3
+    assert json_nesting_depth(b'{"a": "x\\') == 1
+    assert json_nesting_depth(b'["x\\\\", [[]]]') == 3
+
+
+def test_a_byte_order_mark_does_not_hide_a_json_body() -> None:
+    assert looks_like_json(b"\xef\xbb\xbf" + b"[" * 100, None)
+    assert looks_like_json(b" \xef\xbb\xbf {}", "text/plain")
+
+
+def test_a_large_hostile_body_is_refused_quickly() -> None:
+    client = build_client()
+    body: bytes = b'{"note": "' + b'\\"' * 100_000 + b'", "deep": ' + b"[" * 70
+
+    started = time.perf_counter()
+    refused = client.post("/v1/notes", content=body)
+
+    assert refused.status_code == 422
+    assert refused.json()["reasons"][0]["code"] == "too_deep"
+    assert time.perf_counter() - started < 2.0

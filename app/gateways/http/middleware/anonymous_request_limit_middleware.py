@@ -9,7 +9,9 @@ An Authorization header alone exempts nothing. A request without one is
 counted before routing; one with a header is counted once its route is
 known (`admit_anonymous_request`, a dependency of every route), unless that
 route checks the credential itself (`verifies_credential`). A header on a
-path no route serves is counted after its 404. Routes with limits of their
+path no route serves is counted after its 404, and so is one whose route
+was answered before its credential check ran (a refused body, say).
+Routes with limits of their
 own or callers that are not browsers are left alone: the website chat
 (per visitor, network, business and platform), the providers' webhooks
 (their admission budgets, `webhook_admission_middleware`), the landing
@@ -47,6 +49,8 @@ CREDENTIAL_CHECK_ATTRIBUTE: str = "verifies_credential"
 # route: the admission to call, and whether it was decided.
 DEFERRED_ADMISSION_STATE: str = "workshop_deferred_admission"
 ADMISSION_DECIDED_STATE: str = "workshop_admission_decided"
+# Set by a credential check as it runs: it counts the request itself.
+CREDENTIAL_CHECKED_STATE: str = "workshop_credential_checked"
 EXEMPT_PREFIXES: tuple[str, ...] = (
     "/healthz",
     "/readyz",
@@ -71,6 +75,12 @@ def mark_credential_check[Dependency: Callable[..., object]](
 
     setattr(dependency, CREDENTIAL_CHECK_ATTRIBUTE, True)
     return dependency
+
+
+def note_credential_check(request: Request) -> None:
+    """Called by a credential check as it starts: it counts this request."""
+
+    request.scope.setdefault("state", {})[CREDENTIAL_CHECKED_STATE] = True
 
 
 def is_exempt(scope: Scope) -> bool:
@@ -111,8 +121,12 @@ class AnonymousRequestLimitMiddleware:
             state: dict[str, object] = scope.setdefault("state", {})
             state[DEFERRED_ADMISSION_STATE] = self._admit
             await self.app(scope, receive, send)
-            if not state.get(ADMISSION_DECIDED_STATE):
-                # No route took the request (404, 405): it counts all the same.
+            if not (
+                state.get(ADMISSION_DECIDED_STATE)
+                or state.get(CREDENTIAL_CHECKED_STATE)
+            ):
+                # No route took the request (404, 405), or its credential
+                # was never checked: it counts all the same.
                 await count_quietly(self._admit, client_address)
             return
 
@@ -145,11 +159,12 @@ async def admit_anonymous_request(request: Request) -> None:
     if not callable(admit):
         return
 
-    state[ADMISSION_DECIDED_STATE] = True
     route: object = request.scope.get("route")
     if isinstance(route, APIRoute) and route_checks_credential(route):
+        # Counted by the check when it runs (or after the answer if not).
         return
 
+    state[ADMISSION_DECIDED_STATE] = True
     client_address: str | None = client_address_of(request.scope)
     if client_address is not None:
         # A refusal is a RateLimitedError: the error handler answers (and

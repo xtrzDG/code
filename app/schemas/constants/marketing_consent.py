@@ -37,14 +37,15 @@ class MarketingConsentText(StrEnum):
     """
     The versions of the consent wording, by the day each took effect; the
     version a customer agreed to is stored with their consent, so the exact
-    text stays provable. 2026-11-02, the booking page
+    text stays provable. 2026-11-02, the booking page's box
     (`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,
-    15 languages) and the card's record of a consent given in person
-    (`customers.consent.*` of the cabinet's dictionaries): "Send me news,
-    offers and invitations to come back from {business}, in the chat this
-    booking was made in. I can take this back at any time here or by
-    replying STOP." A changed wording is a new value (behind a release
-    gate, like every new stored value).
+    15 languages, the STOP word in each) and the card's record of a
+    consent given in person (`customers.consent.wording` of the cabinet's
+    dictionaries), in English: "I'd like to get news, offers and
+    invitations to come back from {business} in the chat where I made this
+    booking." The page adds: "Optional. You can untick it at any time, or
+    reply STOP in that chat." A changed wording is a new value (behind a
+    release gate, like every new stored value).
     """
 
     V2026_11_02 = "2026-11-02"
