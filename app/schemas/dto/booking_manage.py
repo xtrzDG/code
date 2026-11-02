@@ -20,6 +20,7 @@ from app.schemas.typings.bookings.booleans import (
     CanCancelManagedBooking,
     CanRescheduleManagedBooking,
     IsBookingConfirmationQueued,
+    IsBookingPageSession,
     IsManagedBookingOver,
     IsManagedStayAvailable,
     IsOpenOnDate,
@@ -61,12 +62,19 @@ class BookingManageClaims(ImmutableDTO):
     What a manage link proves: the platform issued it for this booking of
     this business while the booking started at `booking_version` (a moved
     booking gets a new link), and it opens until `expires_at`.
+
+    `is_page_session`: a short-lived page credential the booking page got
+    for its link (POST /v1/public/bookings/{token}/session), never sent in
+    a message; it opens the same booking until its own `expires_at`, every
+    answer to it carries a credential that ends no later, and it cannot be
+    exchanged again.
     """
 
     business_id: BusinessId
     booking_id: BookingId
     booking_version: BookingStartsAtUnixSeconds
     expires_at: Microseconds
+    is_page_session: IsBookingPageSession = False
 
 
 class BookingConfirmationRequest(ImmutableDTO):
@@ -148,6 +156,9 @@ class ManagedBookingView(ImmutableDTO):
     to the business, the chat the booking was made in first.
     `marketing_consent` is whether the guest agreed to marketing messages
     and has not taken it back (the page's box, unticked until then).
+    `privacy_url` is the business's privacy notice: its own, else the
+    platform's default notice for its chat page (None while the cabinet's
+    address is not configured).
     """
 
     token: BookingManageToken
@@ -173,6 +184,19 @@ class ManagedBookingView(ImmutableDTO):
     can_reschedule: CanRescheduleManagedBooking = False
     is_over: IsManagedBookingOver = False
     marketing_consent: IsMarketingConsentGiven = False
+    privacy_url: WebLink | None = None
+
+
+class ManagedBookingSession(ImmutableDTO):
+    """
+    The booking page's short-lived credential for its link: `token` opens
+    the same booking on every route of the page (in place of the link's
+    token) until `expires_at`, so the page can take the link's token out of
+    the address bar.
+    """
+
+    token: BookingManageToken
+    expires_at: Microseconds
 
 
 class ManagedBookingSlots(ImmutableDTO):

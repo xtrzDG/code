@@ -1,6 +1,7 @@
 """
 The website chat's visitor name is a `CustomerGivenName`: at most 60
-characters on one line, without markup; a blank name means none.
+characters on one line, without markup (NUL characters dropped); a blank
+name means none.
 """
 
 from typing import Any
@@ -52,6 +53,13 @@ def test_a_blank_name_means_none(name: str | None) -> None:
 )
 def test_a_name_written_with_a_joiner_is_kept(name: str) -> None:
     assert read_contact_name(WidgetContactNameInput(name)) == name
+
+
+def test_nul_characters_are_dropped_before_the_name_is_checked() -> None:
+    # Nobody means a NUL and storage cannot keep one: the engine drops it
+    # from every customer text, so it never refuses a message.
+    assert read_contact_name(WidgetContactNameInput("Нино\u0000")) == "Нино"
+    assert read_contact_name(WidgetContactNameInput("\u0000 ")) is None
 
 
 def test_a_name_is_kept_without_its_surrounding_spaces() -> None:

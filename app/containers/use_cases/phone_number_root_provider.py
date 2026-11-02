@@ -44,9 +44,11 @@ def phone_number_root_provider(
         dependencies=Factory(
             PhoneNumberDependencies,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
-            admit_owner_action=admit_owner_action_factory(registries, time_provider),
+            admit_owner_action=admit_owner_action_factory(
+                registries, facilitators, time_provider
+            ),
             check_owner_action_room=check_owner_action_room_factory(
-                registries, time_provider
+                registries, facilitators, time_provider
             ),
             step_up=utilities.step_up_guard,
             phone_number_repo=repositories.phone_number_repo,

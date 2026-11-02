@@ -74,7 +74,9 @@ class MenuImportUseCasesContainer(containers.DeclarativeContainer):
         menu_extraction_adapter=adapters.menu_extraction_adapter,
         knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
-        admit_owner_action=admit_owner_action_factory(registries, time_provider),
+        admit_owner_action=admit_owner_action_factory(
+            registries, facilitators, time_provider
+        ),
     )
     confirm_imported_items_use_case: Factory[
         UseCaseContract[ConfirmImportedItemsCommand, ConfirmImportedItemsResult]

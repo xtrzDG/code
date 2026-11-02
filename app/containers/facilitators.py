@@ -12,6 +12,7 @@ from app.containers.integration_facilitators import IntegrationFacilitatorsConta
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.live_facilitators import LiveFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
+from app.containers.platform_brake_factories import platform_brake_providers
 from app.containers.privacy_facilitators import PrivacyFacilitatorsContainer
 from app.containers.referral_facilitators import ReferralFacilitatorsContainer
 from app.containers.registries import RegistriesContainer
@@ -81,8 +82,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Check-ins of the periodic jobs (Sentry Crons), with Sentry only.
     job_monitor: Singleton[JobMonitorFacilitatorContract] = Singleton(
-        build_job_monitor_facilitator,
-        error_reporter=error_reporter,
+        build_job_monitor_facilitator, error_reporter=error_reporter
     )
     # Sign-in codes and the login's abuse protection.
     sign_in: SignInFacilitatorsContainer = Container(  # type: ignore[assignment]
@@ -163,6 +163,10 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         PushNotificationSenderFacilitator,
         push_subscription_repo=repositories.push_subscription_repo,
         web_push_client=clients.web_push_client,
+    )
+    # The platform's brakes and the spend guard's gauge (1230), one per process.
+    platform_spend_gauge, platform_brakes = platform_brake_providers(
+        config, repositories, utilities
     )
     # Signed, expiring links of notifications (key from ENCRYPTION_KEY).
     staff_link_signer: Singleton[StaffLinkSigner] = Singleton(
@@ -248,10 +252,8 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         GrowthFacilitatorsContainer, repositories=repositories, utilities=utilities,
         job_queue=job_queue_facilitator, staff_alerts=staff_alert_facilitator,
     )  # fmt: skip
-    growth_bookings, deposit_settlement = (
-        growth.growth_bookings,
-        growth.deposit_settlement,
-    )
+    growth_bookings = growth.growth_bookings
+    deposit_settlement = growth.deposit_settlement
     # The reply guard's claim check: a cheap verifier (LLM_VERIFIER_MODEL_ID).
     claim_check: Singleton[ClaimCheckFacilitator] = Singleton(
         ClaimCheckFacilitator,

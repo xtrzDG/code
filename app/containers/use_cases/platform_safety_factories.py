@@ -1,8 +1,9 @@
 """
 The providers of the platform's safety switches and watchers, for the
-spend guard's container: the daily budget stop's spend gauge, the global
-pause, the platform admin's check and the daily payment reconciliation
-with its read-only provider reader (1230).
+spend guard's container: the global pause, the platform admin's check and
+the daily payment reconciliation with its read-only provider reader
+(1230). The daily budget stop's spend gauge and the brakes are shared
+by every context (`app/containers/platform_brake_factories.py`).
 """
 
 from dependency_injector.providers import Factory, Singleton
@@ -49,16 +50,6 @@ from app.use_cases.spend_guard.platform_pause.get_platform_pause_use_case import
 from app.use_cases.spend_guard.platform_pause.set_platform_pause_use_case import (
     SetPlatformPauseUseCase,
 )
-
-
-def platform_spend_gauge(
-    repositories: RepositoriesContainer, utilities: UtilitiesContainer
-) -> Singleton[PlatformSpendGaugeRegistry]:
-    return Singleton(
-        PlatformSpendGaugeRegistry,
-        usage_spend_repo=repositories.usage_spend_repo,
-        storage_scope=utilities.storage_scope,
-    )
 
 
 def platform_admin_check(

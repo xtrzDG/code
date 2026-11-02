@@ -11,7 +11,6 @@ from app.containers.use_cases.platform_safety_factories import (
     payment_reconciliation_use_cases,
     platform_admin_check,
     platform_pause_use_cases,
-    platform_spend_gauge,
 )
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -52,32 +51,38 @@ from app.use_cases.spend_guard.save_widget_allowed_origins_use_case import (
 
 
 def check_owner_action_room_factory(
-    registries: RegistriesContainer, time_provider: TimeProviderContainer
+    registries: RegistriesContainer,
+    facilitators: FacilitatorsContainer,
+    time_provider: TimeProviderContainer,
 ) -> Factory[UseCaseContract[OwnerActionAdmission, None]]:
     """
     The owner action limits checked without counting, for actions counted
-    only once they succeed (number rentals).
+    only once they succeed (number rentals), and the platform's brakes.
     """
 
     return Factory(
         CheckOwnerActionRoomUseCase,
         rate_limit_registry=registries.request_rate_limit_registry,
+        platform_brakes=facilitators.platform_brakes,
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
 
 def admit_owner_action_factory(
-    registries: RegistriesContainer, time_provider: TimeProviderContainer
+    registries: RegistriesContainer,
+    facilitators: FacilitatorsContainer,
+    time_provider: TimeProviderContainer,
 ) -> Factory[UseCaseContract[OwnerActionAdmission, None]]:
     """
-    The owner action limits over the shared counters; the contexts whose
-    actions they limit (menu imports, autotests) build it from their own
-    edges.
+    The owner action limits over the shared counters and the platform's
+    brakes; the contexts whose actions they limit (menu imports, autotests,
+    aliases, number rentals) build it from their own edges.
     """
 
     return Factory(
         AdmitOwnerActionUseCase,
         rate_limit_registry=registries.request_rate_limit_registry,
+        platform_brakes=facilitators.platform_brakes,
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
@@ -107,7 +112,7 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         alert_settings=config.app_settings.provided.platform_alerts,
     )
     # The platform's spend of the UTC day, read once a minute per process.
-    platform_spend_gauge = platform_spend_gauge(repositories, utilities)
+    platform_spend_gauge = facilitators.platform_spend_gauge
     check_business_spend_use_case: Factory[
         UseCaseContract[SpendCheckRequest, SpendVerdict]
     ] = Factory(
@@ -139,7 +144,7 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
     )
     admit_owner_action_use_case: Factory[
         UseCaseContract[OwnerActionAdmission, None]
-    ] = admit_owner_action_factory(registries, time_provider)
+    ] = admit_owner_action_factory(registries, facilitators, time_provider)
     admit_api_request_use_case: Factory[UseCaseContract[ApiRequestAdmission, None]] = (
         Factory(
             AdmitApiRequestUseCase,

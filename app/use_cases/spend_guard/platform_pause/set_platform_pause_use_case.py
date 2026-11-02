@@ -23,11 +23,11 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.use_cases.spend_guard.platform_pause.platform_brakes import (
-    read_budget_stop,
-)
 from app.use_cases.spend_guard.platform_pause.platform_pause_views import (
     build_platform_pause_view,
+)
+from app.utilities.spend.platform_brakes import (
+    read_budget_stop,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)

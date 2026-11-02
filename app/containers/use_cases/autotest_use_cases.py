@@ -140,7 +140,9 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         plan_autotest_scenarios=plan_autotest_scenarios_use_case,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
-        admit_owner_action=admit_owner_action_factory(registries, time_provider),
+        admit_owner_action=admit_owner_action_factory(
+            registries, facilitators, time_provider
+        ),
         assistant_apply_repo=repositories.assistant_apply_repo,
     )
     enqueue_autotest_run_use_case: Factory[

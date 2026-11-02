@@ -56,6 +56,7 @@ from app.utilities.sharing.share_links import (
     SHARE_LINK_KIND_OF,
     build_contact_links,
     business_address,
+    choose_privacy_url,
 )
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -146,15 +147,31 @@ class ManagedBookingPages:
                 ),
             )
 
-    def token_for(self, booking: BookingDocument) -> BookingManageToken:
-        """A fresh link token of the booking as it is now."""
+    def token_for(
+        self,
+        booking: BookingDocument,
+        request_claims: BookingManageClaims | None = None,
+    ) -> BookingManageToken:
+        """
+        A fresh link token of the booking as it is now; for a request made
+        with a page credential, a page credential again that ends when the
+        request's did (an answer never outlives what was asked with).
+        """
+
+        expires_at: Microseconds = manage_link_expiry(booking.ends_at)
+        is_page_session: bool = (
+            request_claims is not None and request_claims.is_page_session
+        )
+        if request_claims is not None and is_page_session:
+            expires_at = Microseconds(min(int(expires_at), int(request_claims.expires_at)))
 
         return self.link_signer.sign(
             BookingManageClaims(
                 business_id=booking.business_id,
                 booking_id=booking.id,
                 booking_version=booking.starts_at,
-                expires_at=manage_link_expiry(booking.ends_at),
+                expires_at=expires_at,
+                is_page_session=is_page_session,
             )
         )
 
@@ -201,6 +218,9 @@ class ManagedBookingPages:
             can_reschedule=is_changeable,
             is_over=self._now_seconds() >= int(booking.ends_at),
             marketing_consent=self._has_marketing_consent(booking),
+            privacy_url=choose_privacy_url(
+                guest_booking.business, profile, self.cabinet_base_url
+            ),
         )
 
     def _has_marketing_consent(self, booking: BookingDocument) -> bool:

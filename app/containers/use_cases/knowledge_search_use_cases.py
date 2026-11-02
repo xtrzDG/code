@@ -85,6 +85,7 @@ def build_knowledge_search_providers(
     adapters: AdaptersContainer,
     clients: ClientsContainer,
     config: ConfigContainer,
+    facilitators: FacilitatorsContainer,
     registries: RegistriesContainer,
     repositories: RepositoriesContainer,
     time_provider: TimeProviderContainer,
@@ -166,7 +167,9 @@ def build_knowledge_search_providers(
             usage_event_repo=repositories.usage_event_repo,
             alias_suggester=alias_suggester,
             language_detector=utilities.language_detector,
-            admit_owner_action=admit_owner_action_factory(registries, time_provider),
+            admit_owner_action=admit_owner_action_factory(
+                registries, facilitators, time_provider
+            ),
             wall_clock=time_provider.microsecond_wall_clock,
         ),
         # The worker's job (INDEX_KNOWLEDGE_JOB).
@@ -210,7 +213,14 @@ def knowledge_search_edges(
     """The typed dependencies of `KnowledgeUseCasesContainer` beyond its edges."""
 
     search: KnowledgeSearchProviders = build_knowledge_search_providers(
-        adapters, clients, config, registries, repositories, time_provider, utilities
+        adapters,
+        clients,
+        config,
+        facilitators,
+        registries,
+        repositories,
+        time_provider,
+        utilities,
     )
     return KnowledgeSearchEdges(
         job_queue=facilitators.job_queue_facilitator,

@@ -36,10 +36,10 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.spend.constrained_integers import DailySpendLimitMicroUsd
 from app.schemas.typings.spend.constrained_strings import SpendDay
 from app.use_cases.shared.owner_contacts import owner_contacts
-from app.use_cases.spend_guard.platform_pause.platform_brakes import (
+from app.utilities.spend.cheaper_models import cheaper_model_of
+from app.utilities.spend.platform_brakes import (
     read_platform_brake,
 )
-from app.utilities.spend.cheaper_models import cheaper_model_of
 from app.utilities.spend.spend_days import business_day
 from app.utilities.spend.spend_keys import spend_limit_mark_id_of
 from app.utilities.spend.spend_limit_defaults import resolve_spend_limits

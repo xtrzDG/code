@@ -34,9 +34,10 @@ access to what is reviewed every quarter
 
 In scope:
 
-- the HTTP API (`/v1/...`) and its webhooks (Telegram, Meta, Flitt,
-  ElevenLabs, Google Calendar callback);
-- the website widget (`/widget.js`, `/v1/widget/...`);
+- the HTTP API (`/v1/...`) and its webhooks (Telegram, Meta, Stripe,
+  Flitt, ElevenLabs, Zadarma, Twilio, the Google Calendar callback);
+- the website widget (`/widget.js`, `/v1/widget/...`), the hosted chat
+  page (`/c/...`) and the guest's booking page (`/r/...`);
 - the owner cabinet (`web/`) and its server routes (`/api/backend/*`);
 - the background worker, the migration runner and the Docker images built
   from this repository;
@@ -68,19 +69,38 @@ before disclosure.
 
 ## How the code is protected
 
-Every pull request runs (`.github/workflows/`):
+Every pull request and every push to `main` runs (`.github/workflows/`):
 
 | Gate | Tool | Fails on |
 | --- | --- | --- |
-| Python dependencies | `pip-audit --strict` on the locked set (`uv export`) | any known vulnerability |
-| Cabinet dependencies | `npm audit --omit=dev --audit-level=high` | high or critical in runtime packages |
+| Python dependencies | `pip-audit --strict` on the locked set (`uv export`), pip-audit itself hash-pinned | any known vulnerability |
+| Cabinet dependencies | `npm audit --audit-level=high`, runtime and dev packages | high or critical |
 | Secrets in the whole history | `gitleaks` | any secret not reviewed in `.gitleaksignore` |
 | Python static analysis | `bandit` with `bandit-baseline.json` | any finding not in the dated baseline |
-| Semantic analysis | CodeQL (Python, JavaScript/TypeScript, `security-extended`) | new high-severity alerts |
-| Container images | Trivy on the backend and cabinet images | HIGH or CRITICAL with a fix available |
+| Semantic analysis | CodeQL (Python, JavaScript/TypeScript and the workflows themselves, `actions`; `security-extended`) | new high-severity alerts |
+| Workflows | `Workflow audit (actionlint, zizmor)`: syntax, shellcheck, template injection, credentials left in checkouts, dangerous triggers, unpinned or impostor actions, permissions | any finding not commented where it occurs |
+| Container images | Trivy on the backend and cabinet images with its vulnerability, misconfiguration and secret scanners (`.github/trivy-secret.yaml` exempts only third-party package folders) | HIGH or CRITICAL with a fix available, any misconfiguration or secret |
 | Software bill of materials | syft (SPDX JSON per image, kept 30 days as a CI artifact) | — |
 | API contract | `oasdiff breaking` against the merge base | breaking changes without the `api-breaking` label |
-| Action pinning | `tests/platform/test_ci_workflows.py` | an action not pinned to a commit SHA |
+| API fuzzing | `Backend tests (api-fuzz 1/1)`: hypothesis over every documented operation, signed in, and hostile bodies (`tests/api_fuzz`) | any server error other than an unavailable provider |
+| Action and image pinning | `tests/platform/test_ci_workflows.py`, `tests/platform/test_image_pins.py` | an action not pinned to a commit SHA, an image without its digest |
+
+A pull request that touches a security boundary (sign-in, keys,
+payments, webhooks, tenant isolation, the assistant's tools, CI) gets the
+label `risk:high` from `.github/workflows/risk-labels.yml`
+(`.github/labeler.yml`) and the differential review of
+`docs/security/change-risk.md`.
+
+On a schedule, so that what was safe yesterday is checked again today
+(`schedule-watch.yml` opens an issue when one has not succeeded for 8 days):
+
+| When | Workflow | What |
+| --- | --- | --- |
+| nightly | `dependency-audit.yml` | `uv.lock`, `web/` and the Zapier app's lockfile (runtime and dev, every severity) against today's advisories; the issue "Dependency advisories" lists each with its remediation deadline (below) and the run fails while a critical or high one is past it |
+| weekly | `image-rescan.yml` | the images of what production runs (`release`) rebuilt from their pinned bases and scanned again with today's Trivy database; an image base or release older than 90 days fails |
+| weekly | `zap-staging.yml` | the active scan of staging (below) |
+| hourly | `synthetics.yml` | production as customers meet it: health, a widget chat round trip, and a booking made and cancelled through the public API |
+| daily | `repo-settings.yml` | the repository settings below |
 
 ### Signed images and build provenance
 
@@ -104,92 +124,129 @@ against the running docker compose stack on every push to `main`, weekly,
 and on pull requests that change the scan: the cabinet's public pages and
 sign-in, a business's hosted chat page (`/c/{slug}`), the website widget,
 and every read-only `/v1` operation with a seeded owner's bearer token.
-`automerge.yml` starts it for the commits it merges, like every other
-workflow a push to `main` starts. The `/v1` scan must prove it was signed
-in: a hook records every answer ZAP received (`scripts/zap_status_hook.py`)
-and `scripts/zap_auth_check.py` fails the job unless the seeded business's
-routes answered 2xx at least once and 401 for fewer than half of them, so a
-bearer header that never reached the API cannot pass on refusals alone.
-The job fails on every Medium or High finding that `.zap/rules.tsv` has not
-reviewed, and on any finding of a rule marked `FAIL` there (the security
-headers the cabinet and the API promise). A reviewed exception names its
-rule (or one variant of it), the addresses it covers and the reason, which
-the job summary repeats next to the finding. The scan never attacks
-(no active scan). It runs over plain http, so the https-only rules (HSTS,
-the `Secure` cookie flag) are left to the header tests
+The `/v1` scan must prove it was signed in: a hook records every answer
+ZAP received (`scripts/zap_status_hook.py`) and `scripts/zap_auth_check.py`
+fails the job unless the seeded business's routes answered 2xx at least
+once and 401 for fewer than half of them. The job fails on every Medium or
+High finding that `.zap/rules.tsv` has not reviewed, and on any finding of
+a rule marked `FAIL` there (the security headers the cabinet and the API
+promise). A reviewed exception names its rule (or one variant of it), the
+addresses it covers and the reason, which the job summary repeats next to
+the finding. It runs over plain http, so the https-only rules (HSTS, the
+`Secure` cookie flag) are left to the header tests
 (`tests/security/test_api_security_headers.py`, `web/e2e/security.spec.ts`).
+
+`.github/workflows/zap-staging.yml` attacks as well: every Sunday an active
+scan (injection, path traversal, server-side request forgery, ...) of
+every operation of staging's public API, reads and writes, signed in with
+an API key of a business that exists for the scan
+(`STAGING_SCAN_API_KEY`), through the same `.zap/rules.tsv` gate. It never
+runs against production, and it fails loudly when `STAGING_URL` or the key
+is missing or never reached the API.
 
 ### Repository settings
 
-Two settings this policy relies on live in GitHub, not in a file:
+These settings live in GitHub, not in a file:
 
 - **Private vulnerability reporting** must stay on (*Settings > Code
   security > Private vulnerability reporting*): it is the first way to
   report above.
-- **Branch protection of `main`** (a classic rule or a ruleset): changes
-  arrive only through pull requests, the CI, CodeQL and API contract
-  checks must pass, force pushes and deleting the branch are blocked.
-  The CI check required is `CI passed (every gate)`, one job that always
-  runs and fails unless every other CI job succeeded: GitHub counts a
-  required check whose job was skipped as passed, and a job is skipped when
-  one it needs failed, so requiring e.g. `Backend coverage` alone would let
-  a red backend test part through.
-  Approvals are not required while one maintainer reviews every change
-  and Dependabot's grouped patch updates merge themselves
-  (`automerge.yml`); raise `required_approving_review_count` when a second
-  maintainer joins. Automerge runs after each workflow that owns a required
-  check (CI, CodeQL, API contract) and merges only once none of the
-  required checks is pending, so the last of them to finish merges; adding
-  a required check of another workflow means adding that workflow to its
-  `workflow_run` list (`tests/platform/test_release_paths.py` fails until
-  both agree).
+- **`main`** (a classic rule or a ruleset): changes arrive only through
+  pull requests; the checks `CI passed (every gate)`, `Analyze (python)`,
+  `Analyze (javascript-typescript)`, `Analyze (actions)`, `OpenAPI breaking
+  changes (oasdiff)` and `Workflow audit (actionlint, zizmor)` must pass;
+  force pushes and deleting the branch are blocked. `CI passed (every
+  gate)` is one job that always runs and fails unless every other CI job
+  succeeded: GitHub counts a required check whose job was skipped as
+  passed. Approvals are not required while one maintainer reviews every
+  change and Dependabot's grouped patch updates merge themselves
+  (`automerge.yml`, after each workflow that owns a required check, once
+  none is pending); raise `required_approving_review_count` when a second
+  maintainer joins.
+- **`release`**, which production deploys, is protected like `main` by a
+  ruleset whose only bypass is "Deploy keys". The one key with write
+  access lives in the environment **`production-release`** (secret
+  `RELEASE_DEPLOY_KEY`), which only workflows of `main` may use and whose
+  required reviewers approve every promotion: no workflow token, branch
+  workflow or automerged update can move `release` without a person.
+  **`backup-drill`**, which holds the restore drill's private age key, is
+  limited to `main` as well.
 
-`.github/workflows/repo-settings.yml` reads both every morning with
+`.github/workflows/repo-settings.yml` reads all of this every morning with
 `gh api`, together with Dependabot security updates, and fails when one is
 off or weaker than `.github/repository-settings.json`
-(`scripts/check_repository_settings.py`). The workflow's own token cannot
-read these settings: it uses the repository secret `REPO_SETTINGS_TOKEN`, a
-fine-grained token for this repository only with *Administration:
-Read-only*, which can change nothing. A missing or expired token fails the
-check too (renew it before it expires), and `schedule-watch.yml` opens an
-issue when the check has not succeeded for eight days. Change the expected
-settings only together with the settings themselves, in a reviewed pull
-request.
+(`scripts/check_repository_settings.py`, `scripts/repository_environments.py`:
+each environment exists, with exactly the expected reviewers and branch
+rule). The workflow's own token cannot read these settings: it uses the
+repository secret `REPO_SETTINGS_TOKEN`, a fine-grained token for this
+repository only with *Administration: Read-only* and *Actions: Read-only*,
+which can change nothing. A missing or expired token fails the check too
+(renew it before it expires). The check cannot see a ruleset's bypass
+actors or a reviewer team's members; the quarterly access review does
+(`docs/security/access-review.md`). Change the expected settings only
+together with the settings themselves, in a reviewed pull request.
 
-### Dependency updates
+### Dependency updates and the supply chain
 
-Dependabot (`.github/dependabot.yml`) proposes updates for Python, npm,
-GitHub Actions and Docker base images every week, grouped, after a short
-cooldown; security updates arrive as soon as an advisory is published. This
-is how the DPA's promise of "regular updates of software dependencies"
-(section 9.1) is kept; the daily repository settings check above keeps
-Dependabot security updates switched on.
+- Dependabot (`.github/dependabot.yml`) proposes updates for Python, npm
+  (the cabinet, the Zapier app, the Lighthouse tool), GitHub Actions,
+  pip-audit's pins, Docker base images and the compose files every week,
+  grouped; a new release waits 7 days (cooldown), so a compromised version
+  is usually yanked before it arrives, while security updates come as soon
+  as an advisory is published. This is how the DPA's promise of "regular
+  updates of software dependencies" (section 9.1) is kept.
+- Every image is pinned by tag and digest: Dockerfile bases and syntax
+  image, workflow services, k6, the compose files.
+- Nothing runs at install: npm install scripts are off (`ignore-scripts`
+  in `web/`, the Zapier app and the Lighthouse tool) and uv builds no
+  source distribution (`no-build`). CI's own tools come pinned by version
+  and SHA-256 or from hashed lockfiles (pip-audit, Lighthouse CI,
+  actionlint, zizmor).
+- Secrets reach only the steps that use them, every checkout drops its
+  token (`persist-credentials: false`) and each job asks for the smallest
+  permissions.
 
 ### At run time
 
-- Sign-in codes cannot be guessed in parallel: each check takes one of the
-  challenge's attempts atomically before the code is compared, checks are
-  limited per client network and per challenge, and a right code opens one
-  session (compare-and-swap).
-- Codes are not sent to premium-rate, shared-cost or satellite numbers;
-  codes to new phones are capped per country, verified users have a budget
-  of their own, a cap that trips alerts the platform admins, and risky
-  requests need a Cloudflare Turnstile check
-  ([docs/dev/login-codes.md](docs/dev/login-codes.md#protection)).
-- The API sends `nosniff`, `Referrer-Policy`, `X-Frame-Options`,
-  `frame-ancestors 'none'`, `no-store` on `/v1` and HSTS in production,
-  serves no `/docs` or `/openapi.json` in production and refuses request
-  bodies over the route's limit (413). The cabinet sends a nonce-based CSP,
-  HSTS, COOP and CORP, keeps the session in a `__Host-` cookie and applies
-  the same body limits (web/README.md, "Security notes").
-- Channel and calendar tokens are stored sealed with the newest key of
-  `ENCRYPTION_KEYS`; older keys only open what they sealed until a platform
-  admin's re-encryption run (`POST /v1/admin/security/encryption-keys/rotate`)
-  moves everything to the newest one. Off-site backups are encrypted with
-  age before they leave Render; their private keys are held by the restore
-  drill (a GitHub environment secret) and in escrow, never by the service
-  that writes the backups. Custody, escrow and the rotation runbook:
-  [docs/operations/backup-restore.md](docs/operations/backup-restore.md).
+Production fails closed: with `APP_ENV=production` the API and every
+worker refuse to start on an unsafe setting and name each one. Sign-in
+codes are hashed under a server key, sensitive actions (deposit payment
+pages included) need a fresh sign-in, people can sign out everywhere and
+platform admins can end a member's sessions; new-country sign-ins and
+code spraying are reported. The API checks webhook signature headers
+before reading a body, limits anonymous callers, bodies, JSON depth and
+request time, sends strict security headers and writes refusals to a
+security log without personal data; the cabinet adds its own CSRF rule,
+`Clear-Site-Data` at sign-out and a cookie banner. Sentry and the logs
+receive no personal data. The assistant reads customers' and owners'
+words only as fenced values, its tools and contacts are capped, its
+replies are checked for team notes and foreign links, it says it is an AI
+and names 112 in an emergency. A caller ID never authenticates, calls go
+only to ordinary EU numbers, recordings are off by default; the platform
+can be paused and stops at its daily budget; queued jobs stay in their
+tenant; payments are reconciled daily; erasures survive a restore and
+marketing waits for consent. Each measure with its code and test:
+[docs/security/runtime-protections.md](docs/security/runtime-protections.md).
+
+Channel and calendar tokens are stored sealed with the newest key of
+`ENCRYPTION_KEYS`; older keys only open what they sealed until a platform
+admin's re-encryption run (`POST /v1/admin/security/encryption-keys/rotate`)
+moves everything to the newest one. Off-site backups are encrypted with
+age before they leave Render; their private keys are held by the restore
+drill (a GitHub environment secret) and in escrow, never by the service
+that writes the backups. Custody, escrow and the rotation runbook:
+[docs/operations/backup-restore.md](docs/operations/backup-restore.md).
+
+### Governance documents
+
+[docs/security/README.md](docs/security/README.md) lists the documents
+that describe the platform's security, each with the test that keeps it
+true: the generated inventory of every entry point and its access class,
+the permission matrix, the secrets inventory with rotation, the data
+classification with transfers and retention, the DPIA and the change risk
+classes. A pull request carries a risk class; one labelled `risk:high` is
+HIGH and needs the differential review of
+[docs/security/change-risk.md](docs/security/change-risk.md).
 
 ## Triage of automated findings
 
@@ -210,8 +267,15 @@ Dependabot security updates switched on.
     exception without a reason.
 - **A real secret that reached git** is revoked and rotated at once;
   removing it from history comes second.
+- **Dependency advisories** of the nightly audit are fixed within a
+  deadline counted from the day it first reported them: critical 2 days,
+  high 7, moderate 30, low 90 (the next quarterly review). A Python
+  advisory counts as high (pip-audit names no severity). The issue
+  "Dependency advisories" lists each one with its deadline, and a critical
+  or high one past its deadline turns `dependency-audit.yml` red. An
+  advisory that cannot be fixed is accepted below, with its reason.
 
-### Accepted findings (baseline of 2026-10-07)
+### Accepted findings (baseline of 2026-10-07, reviewed 2026-11-02)
 
 | Tool | Where | Finding | Why it is accepted |
 | --- | --- | --- | --- |
@@ -219,3 +283,5 @@ Dependabot security updates switched on.
 | gitleaks | `tests/billing/test_return_urls.py`, `tests/e2e/harness.py`, `tests/e2e/harness_settings.py` | generic API key | Made-up values of test settings in past commits. |
 | gitleaks | `evals/cassettes/*.json` in commit `266501b` (1778 lines) | generic API key | SHA-256 digests of recorded model requests under a JSON field named `key`; the field is `request_digest` since, so re-recordings do not match. |
 | gitleaks | `app/registries/niches/templates/b2b_supply_template.py` (commit `56f9e17`) and the `.gitleaksignore` comment that names it (commit `0d2c2e8`) | generic API key | The line `NICHE: NicheKey = …` assigns an enum member of the niche template; the name looks like a key to the generic rule but holds no secret. |
+| gitleaks | `render.staging.yaml` in commit `c53c0e7` (lines 134, 267, 271) | generic API key | Names of environment variables (`RECORDINGS_S3_BUCKET`) of the staging API and worker, not values (reviewed 2026-11-02). |
+| npm audit (not gated) | `.github/tools/lhci` (`@lhci/cli` 0.15.1, the latest release) | 13 high advisories (extract-zip, tmp, basic-ftp, zod, through lighthouse and puppeteer-core), no compatible fix | Lighthouse CI runs only on ephemeral CI runners against the locally built cabinet, from a lockfile with install scripts off; it never reaches users or production. Dependabot and GitHub's dependency alerts watch the tool; the nightly audit covers only what users and production run. Look again with every `@lhci/cli` release (reviewed 2026-11-02). |

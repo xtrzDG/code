@@ -7,7 +7,9 @@ stops managing it) and its expiry (whole seconds), followed by an
 HMAC-SHA256 over all of them truncated to 128 bits, base64url without
 padding (76 characters, token version 2). Links of version 1 (a 96-bit MAC,
 71 characters) are still read until they expire, so nothing sent before
-the change stops opening early. Nothing is stored: the signature proves
+the change stops opening early. Version 3 is the same shape for a booking
+page's short-lived credential (`BookingManageClaims.is_page_session`),
+which is never sent in a message. Nothing is stored: the signature proves
 the platform made the link. The key
 derives from ENCRYPTION_KEY with its own label, so it is never the key that
 encrypts channel secrets nor the one of staff notification links; after a
@@ -40,11 +42,12 @@ from app.schemas.typings.platform.strings import PlatformSecret
 logger: logging.Logger = logging.getLogger(__name__)
 
 TOKEN_VERSION: int = 2
+PAGE_SESSION_VERSION: int = 3
 KEY_LABEL: bytes = b"assistant-workshop/booking-manage-links/v1"
 # Bytes of the MAC by token version: 128 bits now, 96 for the links of
 # version 1, which are read until they expire (at most a day after their
 # booking ends) and never signed again.
-SIGNATURE_LENGTHS: dict[int, int] = {TOKEN_VERSION: 16, 1: 12}
+SIGNATURE_LENGTHS: dict[int, int] = {PAGE_SESSION_VERSION: 16, TOKEN_VERSION: 16, 1: 12}
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # version, business uuid, booking uuid, booking start (seconds), expiry.
 PAYLOAD_FORMAT: str = "!B16s16sII"
@@ -85,16 +88,17 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
         ]
 
     def sign(self, claims: BookingManageClaims) -> BookingManageToken:
+        version: int = PAGE_SESSION_VERSION if claims.is_page_session else TOKEN_VERSION
         payload: bytes = struct.pack(
             PAYLOAD_FORMAT,
-            TOKEN_VERSION,
+            version,
             prefixed_uuid_bytes(str(claims.business_id), BusinessId.prefix),
             prefixed_uuid_bytes(str(claims.booking_id), BookingId.prefix),
             min(int(claims.booking_version), LARGEST_SECONDS),
             min(int(claims.expires_at) // MICROSECONDS_PER_SECOND, LARGEST_SECONDS),
         )
         token: bytes = payload + sign_payload(
-            self._key, payload, SIGNATURE_LENGTHS[TOKEN_VERSION]
+            self._key, payload, SIGNATURE_LENGTHS[version]
         )
         return BookingManageToken(base64.urlsafe_b64encode(token).rstrip(b"=").decode())
 
@@ -124,7 +128,7 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
         ):
             return None
 
-        _version, business, booking, starts_at, expires = struct.unpack(
+        version, business, booking, starts_at, expires = struct.unpack(
             PAYLOAD_FORMAT, payload
         )
 
@@ -133,6 +137,7 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
             booking_id=BookingId(UUID(bytes=booking)),
             booking_version=BookingStartsAtUnixSeconds(starts_at),
             expires_at=Microseconds(expires * MICROSECONDS_PER_SECOND),
+            is_page_session=version == PAGE_SESSION_VERSION,
         )
 
 

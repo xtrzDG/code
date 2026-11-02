@@ -9,9 +9,12 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.dto.conversations import VoiceToolCallRequest
-from app.schemas.typings.channels.strings import ProviderCallId
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.conversations.strings import ChannelUserId, LlmToolInputJson
+from app.schemas.typings.conversations.strings import (
+    ChannelUserId,
+    LlmToolInputJson,
+    ProviderCallId,
+)
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,

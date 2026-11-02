@@ -11,11 +11,11 @@ from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.dto.platform_pause import PlatformPauseQuery, PlatformPauseView
-from app.use_cases.spend_guard.platform_pause.platform_brakes import (
-    read_budget_stop,
-)
 from app.use_cases.spend_guard.platform_pause.platform_pause_views import (
     build_platform_pause_view,
+)
+from app.utilities.spend.platform_brakes import (
+    read_budget_stop,
 )
 
 

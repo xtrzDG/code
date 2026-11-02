@@ -1,7 +1,8 @@
 """
 The platform's safety switches and watchers: the global pause, the daily
-budget stop's spend reading, the periodic jobs' heartbeats and the daily
-payment reconciliation with the payment providers.
+budget stop's spend reading, the brake they make together, the periodic
+jobs' heartbeats and the daily payment reconciliation with the payment
+providers.
 """
 
 from collections.abc import Sequence
@@ -15,6 +16,7 @@ from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocument
+from app.schemas.constants.spend import PlatformBrake
 from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.dto.payment_reconciliation import ProviderPaymentState
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -37,6 +39,18 @@ class PlatformSpendGaugeContract(RegistryContract, Protocol):
         """
         The platform's provider spend of the UTC day of `now`, read at most
         once a minute per process (the daily budget stop's reading).
+        """
+        raise NotImplementedError
+
+
+class PlatformBrakeRegistryContract(RegistryContract, Protocol):
+    def current_brake(self, now: Microseconds) -> PlatformBrake | None:
+        """
+        The platform brake that holds every assistant's model work back at
+        `now`: a platform admin's pause first, else the daily budget stop;
+        None when neither holds. Background model work (quality samples,
+        topics, summaries, aliases, website reading) and the owners' costly
+        actions skip or refuse while one holds.
         """
         raise NotImplementedError
 

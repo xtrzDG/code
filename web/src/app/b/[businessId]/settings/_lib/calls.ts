@@ -21,6 +21,21 @@ export type TextBackSkipReason = Schema<"TextBackSkipReason">;
 /** Settings → Calls lists the latest text-backs only (the API pages further). */
 export const TEXT_BACK_LIST_SIZE = 20;
 
+/**
+ * What a caller hears at the start of every call, sentence by sentence, as
+ * the API's greeting says it (BuildCallGreetingUseCase): who answers, that
+ * the call is recorded only while recording is on, how to reach a person,
+ * and always where the privacy notice is (said once, last).
+ */
+export function callerNoticeKeys(isRecording: boolean): MessageKey[] {
+  return [
+    "callSettings.recording.noticeGreeting",
+    ...(isRecording ? (["callSettings.recording.noticeRecorded"] as const) : []),
+    "callSettings.recording.noticeOperator",
+    "callSettings.recording.noticePrivacy",
+  ];
+}
+
 /** What Meta accepts as a template name (the API checks the same). */
 const TEMPLATE_NAME_PATTERN = /^[a-z0-9_]{1,512}$/;
 

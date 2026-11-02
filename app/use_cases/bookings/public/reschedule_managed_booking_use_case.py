@@ -80,7 +80,7 @@ class RescheduleManagedBookingUseCase(
             raise NotFoundError("The booking was not found.")
 
         self._confirm(moved)
-        return self._pages.view(moved, self._pages.token_for(moved.booking))
+        return self._pages.view(moved, self._pages.token_for(moved.booking, input_data.claims))
 
     def _confirm(self, moved: GuestBooking) -> None:
         """The new confirmation; a failure leaves the move in place."""

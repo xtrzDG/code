@@ -13,6 +13,7 @@ from app.schemas.dto.bookings import (
     CreateBookingCommand,
     RescheduleBookingCommand,
 )
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from tests.brain.brain_world import build_world
 from tests.brain.business_setups import ISRAEL
@@ -123,3 +124,26 @@ def test_bookings_are_found_by_the_phone_the_channel_proved() -> None:
     # Without a proved phone only the conversation's own contact counts.
     assert reschedule_command.contact_phone_number is None
     assert reschedule_command.is_sandbox is False
+    # The channel the request came from: a phone call's request is refused
+    # by the booking use cases (a caller id proves nobody).
+    assert cancel_command.source_channel is ChannelKind.WHATSAPP
+    assert reschedule_command.source_channel is ChannelKind.TELEGRAM
+
+
+def test_a_booking_carries_the_website_visitors_network() -> None:
+    world = build_world(scripted())
+    web_chat = build_context(
+        world,
+        channel=ChannelKind.WEB_CHAT,
+        client_ip_address=ClientIpAddress("203.0.113.7"),
+    )
+
+    run_tool(world, AssistantToolName.CREATE_BOOKING, BOOKING_ARGUMENTS, web_chat)
+    run_tool(world, AssistantToolName.CREATE_BOOKING, BOOKING_ARGUMENTS)
+
+    from_web, from_telegram = world.bookings.commands
+    assert isinstance(from_web, CreateBookingCommand)
+    assert isinstance(from_telegram, CreateBookingCommand)
+    # Anonymous bookings are capped per client network (booking_limits).
+    assert from_web.client_ip_address == "203.0.113.7"
+    assert from_telegram.client_ip_address is None

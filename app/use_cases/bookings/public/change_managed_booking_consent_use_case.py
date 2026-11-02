@@ -121,4 +121,4 @@ class ChangeManagedBookingConsentUseCase(
                 updated_at=now,
             )
         )
-        return self._pages.view(guest_booking, self._pages.token_for(booking))
+        return self._pages.view(guest_booking, self._pages.token_for(booking, input_data.claims))

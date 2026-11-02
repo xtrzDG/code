@@ -143,6 +143,7 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
 
       <RecordingCard
         isRecording={values.isRecordingEnabled}
+        businessName={business.name}
         switchRow={
           <SwitchRow
             label={t("callSettings.recording.toggle")}

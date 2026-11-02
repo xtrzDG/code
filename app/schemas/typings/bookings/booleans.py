@@ -13,6 +13,7 @@ IsCalendarConnected = bool
 IsCalendarIntegrationConfigured = bool
 IsClosedAllDay = bool
 IsBookingGridTruncated = bool
+IsBookingPageSession = bool
 IsFullDayAvailability = bool
 IsManagedBookingOver = bool
 IsManagedStayAvailable = bool
