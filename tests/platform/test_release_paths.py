@@ -211,17 +211,22 @@ def test_a_person_approves_every_promotion_to_production() -> None:
     assert '[ -z "$RELEASE_DEPLOY_KEY" ]' in run
     assert "StrictHostKeyChecking=yes" in run and "github.com ssh-ed25519 " in run
     assert run.index("GIT_SSH_COMMAND") < run.index('git push origin "$SHA')
-    # Production's own smoke run never promotes anything.
-    assert (
-        runs(
+
+    # Production's own smoke run never promotes anything; with the automatic
+    # request turned off, only a run started by hand asks for approval.
+    def asks(environment: str, promote_variable: str, event: str) -> bool:
+        condition = (
             str(promote["if"])
-            .replace("needs.target.outputs.environment", repr("production"))
-            .replace("vars.PROMOTE_AFTER_STAGING_SMOKE", repr("")),
-            "deployment_status",
-            MAIN,
+            .replace("needs.target.outputs.environment", repr(environment))
+            .replace("vars.PROMOTE_AFTER_STAGING_SMOKE", repr(promote_variable))
         )
-        is False
-    )
+        return runs(condition, event, MAIN)
+
+    assert asks("staging", "", "deployment_status")
+    assert not asks("production", "", "deployment_status")
+    assert not asks("production", "", "workflow_dispatch")
+    assert not asks("staging", "false", "deployment_status")
+    assert asks("staging", "false", "workflow_dispatch")
 
 
 def test_every_named_environment_is_declared_with_its_protection() -> None:

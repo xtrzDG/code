@@ -30,6 +30,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
+from app.use_cases.channels.widget_visitor_keys import readable_conversations
 from app.use_cases.shared.widget_chats import require_open_widget_chat
 from app.utilities.channels.widget_rate_limits import (
     WIDGET_RATING_LIMITS,
@@ -39,7 +40,6 @@ from app.utilities.channels.widget_rate_limits import (
 # The latest answer a bad rating is about is among the newest messages.
 LATEST_ANSWER_LOOKBACK: KeysetReadLimit = KeysetReadLimit(10)
 NOTHING_TO_RATE: str = "There is no answer to rate yet."
-from app.use_cases.channels.widget_visitor_keys import readable_conversations
 
 
 class RateWidgetConversationUseCase(

@@ -38,7 +38,10 @@ from app.use_cases.channels.widget_message_window import (
 )
 from app.use_cases.channels.widget_poll_answers import build_widget_answer
 from app.use_cases.channels.widget_poll_reading import read_poll_through_repositories
-from app.use_cases.channels.widget_visitor_keys import readable_conversations
+from app.use_cases.channels.widget_visitor_keys import (
+    after_last_idle_gap,
+    readable_conversations,
+)
 from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_rate_limits import (
@@ -179,7 +182,10 @@ class GetWidgetMessagesUseCase(
         if settled is not None:
             later, latest_id = settled
             return build_widget_answer(
-                later, latest_id, is_handed_off, self._language_registry
+                after_last_idle_gap(later),
+                latest_id,
+                is_handed_off,
+                self._language_registry,
             )
 
         with in_read_session(self._read_session):
@@ -193,6 +199,7 @@ class GetWidgetMessagesUseCase(
                 ),
                 key=message_order,
             )
+        messages = after_last_idle_gap(messages)
         last_id: MessageId | None = messages[-1].id if messages else None
         start: int | None = find_position_after(messages, input_data.after)
         if start is None:

@@ -16,11 +16,11 @@ name: Deploy smoke test
 # as its only branch and the secret RELEASE_DEPLOY_KEY. Render reports
 # deploys to GitHub as deployments of the service's name; a Render deploy
 # webhook relayed as a repository dispatch works too. Repository variable
-# PROMOTE_AFTER_STAGING_SMOKE=false leaves the approval request out (the
-# promotion is then started by hand). The promotion waits until production
-# has finished the post-deploy data tasks of the release it runs (repository
-# variable PRODUCTION_API_URL, scripts/check_data_tasks.sh): re-run the
-# promote job once they are done.
+# PROMOTE_AFTER_STAGING_SMOKE=false leaves the approval request out of the
+# automatic runs: a run started by hand (staging) still asks. The promotion
+# waits until production has finished the post-deploy data tasks of the
+# release it runs (repository variable PRODUCTION_API_URL,
+# scripts/check_data_tasks.sh): re-run the promote job once they are done.
 on:
   deployment_status:
   repository_dispatch:
@@ -149,9 +149,10 @@ jobs:
   promote:
     name: Promote to production (release branch, approved by a person)
     needs: [target, smoke, images]
+    # PROMOTE_AFTER_STAGING_SMOKE=false: only a run started by hand asks.
     if: >-
       needs.target.outputs.environment == 'staging'
-      && vars.PROMOTE_AFTER_STAGING_SMOKE != 'false'
+      && (vars.PROMOTE_AFTER_STAGING_SMOKE != 'false' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: production-release

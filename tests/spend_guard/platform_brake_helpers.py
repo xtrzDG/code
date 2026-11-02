@@ -50,7 +50,7 @@ def spend_elsewhere(world: SpendWorld, cost_micro_usd: int, at: datetime = NOON)
     world.usage_events.append(
         UsageEventDocument(
             business_id=BusinessId(),
-            kind=UsageKind.LLM_TOKENS_INPUT,
+            kind=UsageKind.LLM_INPUT_TOKENS,
             quantity=UsageQuantity(1_000),
             cost_micro_usd=CostMicroUsd(cost_micro_usd),
             occurred_at=moment,
