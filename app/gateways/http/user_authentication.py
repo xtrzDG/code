@@ -22,6 +22,7 @@ from app.schemas.exceptions.application_errors import AuthenticationRequiredErro
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from app.utilities.observability.request_origin import note_request_actor
 from app.utilities.security.user_agents import read_user_agent
 
 type UserAuthenticationOperator = OperatorContract[SessionCheck, SessionAssurance]
@@ -94,6 +95,7 @@ def build_current_user_dependency(
             raise
 
         session_assurance.bind(assurance)
+        note_request_actor(assurance.user_id)
         if admit_request is not None:
             await run_in_threadpool(
                 admit_request.operate,

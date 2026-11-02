@@ -1,19 +1,14 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
     CallSettingsRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.localization import RecordingConsentRule
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.localization import LocalizedText
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-    UnknownCountryError,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.calls.call_privacy_texts import CALL_PRIVACY_NOTICE_HINT
@@ -30,7 +25,6 @@ from app.utilities.conversations.assistant_texts.call_language_offer import (
 from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
-    CALL_RECORDING_NOTICE,
 )
 from app.utilities.localization.language_tags import base_language_code
 from app.utilities.scheduling.localized_formatting import choose_template_language
@@ -49,13 +43,16 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
 
     Recording is off unless the owner switched it on (call settings): then
     the recording sentence is said, since recording without telling the
-    caller is not allowed in any country. Where the business's country asks
-    every party's consent (`RecordingConsentRule`), the sentence also tells
+    caller is not allowed in any country, and in every country it tells
     the caller they may say no and go on without a recording
-    (CALL_RECORDING_CONSENT; the agent then calls decline_recording). With
-    recording off nothing is said about a recording. Every greeting ends
-    with where the privacy notice is (CALL_PRIVACY_NOTICE_HINT), once: the
-    agent's default first message and each call's greeting alike. The
+    (CALL_RECORDING_CONSENT; the agent then calls decline_recording): where
+    the law asks every party's consent as the consent, elsewhere as the
+    non-recorded path the GDPR asks for when a recording is not necessary.
+    With recording off nothing is said about a recording. Every greeting
+    ends with the first layer of the privacy notice
+    (CALL_PRIVACY_NOTICE_HINT: the business as the one responsible for the
+    data, the purpose, where the full notice is), once: the agent's default
+    first message and each call's greeting alike. The
     greeting reports the language it is actually written in: English when
     the requested language has no text, so the voice agent never labels
     English as another language.
@@ -65,7 +62,6 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
         self,
         business_repo: BusinessRepoContract,
         localized_text_resolver: LocalizedTextResolverContract,
-        country_registry: CountryRegistryContract,
         call_settings_repo: CallSettingsRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -73,7 +69,6 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
         self._localized_text_resolver: LocalizedTextResolverContract = (
             localized_text_resolver
         )
-        self._country_registry: CountryRegistryContract = country_registry
 
     def run(self, input_data: CallGreetingRequest) -> CallGreeting:
         business: BusinessDocument | None = self._business_repo.get(
@@ -104,15 +99,20 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
                 else [self._localized_text_resolver.resolve(recording, language)]
             ),
             self._localized_text_resolver.resolve(CALL_OPERATOR_HINT, language),
-            self._localized_text_resolver.resolve(CALL_PRIVACY_NOTICE_HINT, language),
+            fill_business_name(
+                self._localized_text_resolver.resolve(
+                    CALL_PRIVACY_NOTICE_HINT, language
+                ),
+                str(business.name),
+            ),
         ]
         return CallGreeting(text=MessageText(" ".join(sentences)), language=language)
 
     def _recording_sentence(self, business: BusinessDocument) -> LocalizedText | None:
         """
         None while the business does not record calls (the default); else
-        the consent sentence where every party must agree (or where the
-        country is not known, the careful choice), else the notice.
+        the sentence that the call is recorded and the caller may go on
+        without a recording.
         """
 
         settings: CallSettingsDocument | None = (
@@ -121,17 +121,7 @@ class BuildCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting
         if settings is None or not settings.is_recording_enabled:
             return None
 
-        try:
-            rule: RecordingConsentRule = self._country_registry.get(
-                business.country_code
-            ).recording_consent_rule
-        except UnknownCountryError:
-            return CALL_RECORDING_CONSENT
-
-        if rule is RecordingConsentRule.ALL_PARTY_CONSENT:
-            return CALL_RECORDING_CONSENT
-
-        return CALL_RECORDING_NOTICE
+        return CALL_RECORDING_CONSENT
 
 
 def select_greeting_language(requested_language: LanguageTag) -> LanguageTag:

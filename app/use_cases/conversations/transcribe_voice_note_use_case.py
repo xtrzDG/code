@@ -34,6 +34,7 @@ from app.use_cases.conversations.voice_note_hints import (
     read_language_hints,
 )
 from app.utilities.media.transcription_pricing import transcription_cost
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 logger: logging.Logger = logging.getLogger(__name__)
 # Longer transcripts are cut, like typed messages: no customer needs more.
@@ -55,7 +56,8 @@ class TranscribeVoiceNoteUseCase(
     the job to try again; its last attempt gives the voice note up. Each
     transcription is metered as TRANSCRIPTION_SECONDS with its cost: the
     longer of the voice note's measured length and the seconds the service
-    says it billed.
+    says it billed. Card, security code, IBAN and ID numbers said in it
+    are masked before the transcript is kept.
     """
 
     def __init__(
@@ -141,7 +143,10 @@ class TranscribeVoiceNoteUseCase(
         attachment: MessageAttachment,
         result: VoiceTranscriptionResult,
     ) -> VoiceNoteTranscription:
-        text: str = str(result.text).strip()[:MAX_TRANSCRIPT_LENGTH]
+        # A card, account or ID number said aloud is never kept.
+        text: str = mask_sensitive_numbers(
+            str(result.text).strip()[:MAX_TRANSCRIPT_LENGTH]
+        )
         seconds: AudioDurationSeconds = (
             media.duration_seconds
             or result.billed_seconds

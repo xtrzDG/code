@@ -168,7 +168,7 @@ describe("the labels", () => {
 });
 
 describe("what callers hear", () => {
-  it("says the call is recorded only while recording is on, and where the privacy notice is once, last", () => {
+  it("says the call is recorded (and how to go on without) only while recording is on, and the privacy notice once, last", () => {
     const { t } = createTranslator("en", en);
     const said = (isRecording: boolean) =>
       callerNoticeKeys(isRecording)
@@ -176,13 +176,18 @@ describe("what callers hear", () => {
         .join(" ");
 
     // The API's greeting, sentence by sentence (BuildCallGreetingUseCase).
+    const privacy =
+      "Trattoria Da Mario is responsible for your data and uses it only to handle your request. " +
+      "For the full privacy notice, ask me for the link or see our web page.";
     expect(said(false)).toBe(
       'Hello! This is the AI assistant of Trattoria Da Mario. To talk to a staff member, say "operator". ' +
-        "Our privacy notice is on our web page.",
+        privacy,
     );
     expect(said(true)).toBe(
       "Hello! This is the AI assistant of Trattoria Da Mario. The call is recorded. " +
-        'To talk to a staff member, say "operator". Our privacy notice is on our web page.',
+        "If you do not want it recorded, just say so and we will continue without a recording. " +
+        'To talk to a staff member, say "operator". ' +
+        privacy,
     );
   });
 
@@ -192,7 +197,8 @@ describe("what callers hear", () => {
     expect(callerNoticeKeys(false).map((key) => t(key, { business: "Da Mario" }))).toEqual([
       "Buongiorno! Risponde l'assistente IA di Da Mario.",
       "Per parlare con un membro dello staff, dica «operatore».",
-      "L'informativa sulla privacy è sulla nostra pagina web.",
+      "Da Mario è titolare del trattamento dei suoi dati e li usa solo per gestire la sua richiesta. " +
+        "Per l'informativa privacy completa, mi chieda il link o consulti la nostra pagina web.",
     ]);
   });
 });

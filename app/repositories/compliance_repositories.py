@@ -20,6 +20,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDo
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import AuditViewCount
 from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId
+from app.utilities.compliance.audit_origin import stamp_audit_origin
 
 
 class AuditLogRepository(AuditLogListing, AuditLogRepoContract):
@@ -46,10 +47,13 @@ class AuditLogRepository(AuditLogListing, AuditLogRepoContract):
         )
 
     def append(self, entry: AuditLogEntryDocument) -> None:
-        if self._views.count_if_repeated(entry):
+        # The request's id, client and outcome where the use case named
+        # none (version 7, app/utilities/compliance/audit_origin.py).
+        stamped: AuditLogEntryDocument = stamp_audit_origin(entry)
+        if self._views.count_if_repeated(stamped):
             return
 
-        self._chain.append(entry)
+        self._chain.append(stamped)
 
     def view_counts(
         self,

@@ -13,6 +13,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CallCollectedTime": "19:30",
     "AuditChainKey": "business_fd43b272-3035-4a74-a29f-96b1631dd8b5",
     "AuditEntryHash": "a1" * 32,
+    "AuditUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) Safari/605.1.15",
     "DepositReference": "DK7Q3M9X",
     "PaymentLinkAddress": "https://pay.example.com/deposit?sum={amount}&ref={reference}",
     "CampaignMonthKey": "2026-10",

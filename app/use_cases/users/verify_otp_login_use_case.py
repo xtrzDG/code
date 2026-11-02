@@ -100,6 +100,7 @@ class VerifyOtpLoginUseCase(
             recovery_code_repo,
             passkey_ceremony,
             wall_clock,
+            app_settings.sessions.is_admin_passkey_required,
         )
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._legal_text_registry: LegalTextRegistryContract = legal_text_registry

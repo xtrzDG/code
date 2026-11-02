@@ -5,6 +5,7 @@ Example:
 """
 
 ArePasskeysAvailable = bool
+IsAdminPasskeyRequired = bool
 IsPasskeyBackedUp = bool
 IsPasskeyChallengeConsumed = bool
 IsPasskeyRecommended = bool

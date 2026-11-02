@@ -47,10 +47,10 @@ export const callSettingsEn = {
     toggle: "Record calls",
     noticeTitle: "What callers hear at the start of every call",
     noticeGreeting: "Hello! This is the AI assistant of {business}.",
-    noticeRecorded: "The call is recorded.",
+    noticeRecorded: "The call is recorded. If you do not want it recorded, just say so and we will continue without a recording.",
     noticeOperator: 'To talk to a staff member, say "operator".',
-    noticePrivacy: "Our privacy notice is on our web page.",
-    noticeHint: "In each language of your business. Where the law asks for consent, callers may say no and the call goes on without a recording; where to read the privacy notice is said whether or not you record.",
+    noticePrivacy: "{business} is responsible for your data and uses it only to handle your request. For the full privacy notice, ask me for the link or see our web page.",
+    noticeHint: "In each language of your business. Callers may say no to the recording and the call goes on without one; who is responsible for their data, what it is used for and where to read the full privacy notice are said whether or not you record.",
     turnedOff: "Call recording is off",
   },
   transfers: {

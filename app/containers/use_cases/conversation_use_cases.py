@@ -223,7 +223,6 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         BuildCallGreetingUseCase,
         business_repo=repositories.business_repo,
         localized_text_resolver=utilities.localized_text_resolver,
-        country_registry=registries.country_registry,
         call_settings_repo=repositories.call_settings_repo,
     )
     # Voice notes and photos customers send: transcription, the cabinet.

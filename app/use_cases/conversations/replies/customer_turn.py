@@ -18,6 +18,7 @@ from app.utilities.conversations.turn_context import (
     build_user_turn_text,
 )
 from app.utilities.media.attachment_texts import is_readable
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 
 def build_customer_turn(
@@ -31,7 +32,9 @@ def build_customer_turn(
     The context line (and what the message refers to, such as a reply to
     the business's Instagram story), the messages the assistant stayed
     silent on, then this message as the model reads it (fenced, with a line
-    per attachment) and its photos as pictures.
+    per attachment) and its photos as pictures. Card, security code, IBAN
+    and ID numbers are masked before the provider sees the turn, also in
+    messages stored before masking at intake.
     """
 
     context: str = str(turn.context_line)
@@ -39,14 +42,16 @@ def build_customer_turn(
         context = f"{context}\n{describe_context_note(turn.context_note)}"
 
     text = MessageText(
-        build_user_turn_text(
-            context,
-            build_text_with_unanswered_messages(
-                collect_unanswered_messages(message_repo, turn, stored_turns),
-                str(turn.model_text),
+        mask_sensitive_numbers(
+            build_user_turn_text(
+                context,
+                build_text_with_unanswered_messages(
+                    collect_unanswered_messages(message_repo, turn, stored_turns),
+                    str(turn.model_text),
+                    fence_key,
+                ),
                 fence_key,
-            ),
-            fence_key,
+            )
         )
     )
     images: list[LlmImageInput] = turn_photos(turn)

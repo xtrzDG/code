@@ -23,6 +23,7 @@ from app.utilities.channels.json_values import (
 )
 from app.utilities.channels.language_codes import from_voice_platform_language
 from app.utilities.channels.voice_service import TRANSFER_TOOL_NAME
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 MICRO_USD_PER_USD: int = 1_000_000
 TRANSCRIPT_AUTHORS: dict[str, MessageAuthor] = {
@@ -76,6 +77,12 @@ def read_raw_number(
 
 
 def read_transcript(items: list[JsonObject]) -> list[FinishedCallTranscriptLine]:
+    """
+    The spoken lines of the call, card, security code, IBAN and ID numbers
+    masked: a recorded call's transcript, its summary, its audit and its
+    conversation never keep a number a caller read out.
+    """
+
     lines: list[FinishedCallTranscriptLine] = []
     for item in items:
         author: MessageAuthor | None = TRANSCRIPT_AUTHORS.get(
@@ -88,7 +95,7 @@ def read_transcript(items: list[JsonObject]) -> list[FinishedCallTranscriptLine]
         lines.append(
             FinishedCallTranscriptLine(
                 author=author,
-                text=MessageText(text.strip()),
+                text=MessageText(mask_sensitive_numbers(text.strip())),
                 offset_seconds=CallOffsetSeconds(
                     max(read_integer(item, "time_in_call_secs") or 0, 0)
                 ),

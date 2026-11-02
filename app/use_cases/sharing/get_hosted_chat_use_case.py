@@ -126,7 +126,7 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
             self._note_first_visit(business)
 
         retention: BusinessPrivacySettingsDocument = (
-            self._privacy_settings_repo.get_or_default(business.id)
+            self._privacy_settings_repo.get_or_default(business)
         )
         return HostedChatView(
             business_id=business.id,

@@ -71,8 +71,9 @@ here, and nothing else is. A new variable goes to its settings section,
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` | no sign-in by e-mail; the port defaults to 587 (`starttls`), 465 (`ssl`), 25 (`none`; `production` refuses it). Without any code provider sign-in works only outside `production` (codes in the log); `production` refuses to start without one |
 | `SESSION_LIFETIME_SECONDS` | a cabinet session lasts 30 days |
 | `SESSION_IDLE_TIMEOUT_SECONDS` | 604800: an owner's or staff member's session unused for 7 days ends by itself (300–31536000) |
-| `ADMIN_SESSION_IDLE_TIMEOUT_SECONDS` | 43200: a platform admin's session idle for 12 hours ends (300–31536000) |
+| `ADMIN_SESSION_IDLE_TIMEOUT_SECONDS` | 900: a platform admin's session idle for 15 minutes ends (300–31536000) |
 | `ADMIN_SESSION_LIFETIME_SECONDS` | 86400: a platform admin's session lasts at most a day |
+| `ADMIN_PASSKEY_REQUIRED` | true in production (which refuses `false`), false elsewhere: platform admins prove it is them with a passkey; an admin with only the authenticator app signs in, adds a passkey in Account → Security, and only then opens the admin pages |
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | no platform admins. The lists only found the team: the first of them to sign in becomes the first SUPER admin and adds the others in Admin → Team (the roles SUPER, SUPPORT_READONLY and BILLING are read from the `platform_admins` collection on every request; the admin area needs a two-factor sign-in) |
 | `STEP_UP_MAX_AGE_SECONDS` | 600: exporting and deleting a contact's data, team changes, connecting a channel, an admin entering a client's cabinet and key rotation need a sign-in or confirmation code no older than 10 minutes (60–86400) |
 | `MFA_ISSUER_NAME` | `Assistant Workshop`: the name under which the authenticator app shows the account |

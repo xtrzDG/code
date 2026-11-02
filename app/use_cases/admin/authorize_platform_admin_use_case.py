@@ -12,6 +12,7 @@ from app.utilities.security.admin_permissions import has_permission
 from app.utilities.security.two_factor_policy import (
     is_two_factor_session,
     mfa_required,
+    passkey_required,
 )
 
 ADMINS_ONLY_MESSAGE: str = "Only platform admins may open the admin pages."
@@ -19,6 +20,10 @@ ROLE_MESSAGE: str = "Your platform admin role does not include this."
 TWO_FACTOR_MESSAGE: str = (
     "The admin pages need a sign-in with two factors: set up an "
     "authenticator app and sign in again."
+)
+PASSKEY_MESSAGE: str = (
+    "The admin pages need a passkey: add one in Account → Security, then "
+    "open them again."
 )
 
 
@@ -35,7 +40,10 @@ class AuthorizePlatformAdminUseCase(
     role is refused at their next request; owning or working for a
     business never grants admin pages. The request's session must be
     signed in with two factors (MfaRequiredError, reason `mfa_required`,
-    otherwise); a role without the permission gets AccessDeniedError.
+    otherwise), and where admins must use passkeys (ADMIN_PASSKEY_REQUIRED,
+    production) the admin must have one (MfaRequiredError, reason
+    `passkey_required`); a role without the permission gets
+    AccessDeniedError.
     """
 
     def __init__(
@@ -58,6 +66,9 @@ class AuthorizePlatformAdminUseCase(
 
         if not is_two_factor_session(self._session_assurance.current(), user.id):
             raise mfa_required(TWO_FACTOR_MESSAGE)
+
+        if self._platform_admins.needs_passkey(user):
+            raise passkey_required(PASSKEY_MESSAGE)
 
         if not has_permission(role, input_data.permission):
             raise AccessDeniedError(ROLE_MESSAGE)

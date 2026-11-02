@@ -5,14 +5,13 @@ and booking references that merely look alike stay readable.
 """
 
 # Countries that issue IBANs (ISO 13616 registry).
-IBAN_COUNTRY_CODES: frozenset[str] = frozenset(
-    (
-        "AD AE AL AT AZ BA BE BG BH BI BR BY CH CR CY CZ DE DJ DK DO EE EG ES "
-        "FI FK FO FR GB GE GI GL GR GT HR HU IE IL IQ IS IT JO KW KZ LB LC LI "
-        "LT LU LV LY MC MD ME MK MN MR MT MU NI NL NO OM PK PL PS PT QA RO RS "
-        "RU SA SC SD SE SI SK SM SO ST SV TL TN TR UA VA VG XK YE"
-    ).split()
+IBAN_COUNTRIES: str = (
+    "AD AE AL AT AZ BA BE BG BH BI BR BY CH CR CY CZ DE DJ DK DO EE EG ES "
+    "FI FK FO FR GB GE GI GL GR GT HR HU IE IL IQ IS IT JO KW KZ LB LC LI "
+    "LT LU LV LY MC MD ME MK MN MR MT MU NI NL NO OM PK PL PS PT QA RO RS "
+    "RU SA SC SD SE SI SK SM SO ST SV TL TN TR UA VA VG XK YE"
 )
+IBAN_COUNTRY_CODES: frozenset[str] = frozenset(IBAN_COUNTRIES.split())
 MIN_IBAN_LENGTH: int = 15
 MAX_IBAN_LENGTH: int = 34
 MIN_CARD_DIGITS: int = 13
@@ -92,9 +91,7 @@ def is_italian_tax_code(candidate: str) -> bool:
             TAX_CODE_DIGIT_LETTERS[int(character)] if character.isdigit() else character
         )
         total += (
-            TAX_CODE_ODD_VALUES[letter]
-            if position % 2 == 0
-            else ord(letter) - ord("A")
+            TAX_CODE_ODD_VALUES[letter] if position % 2 == 0 else ord(letter) - ord("A")
         )
 
     return code[-1] == chr(ord("A") + total % ALPHABET_SIZE)

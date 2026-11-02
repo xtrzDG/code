@@ -9,7 +9,9 @@ from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.media.strings import AttachmentCaption
 from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 NUL_CHARACTER: str = "\x00"
 
@@ -27,7 +29,9 @@ def build_inbound_customer_message(
     """
     The message without NUL characters in its text and name: no customer
     means them, and Postgres JSONB cannot store them, so the inbox would
-    refuse the message (the engine strips them the same way).
+    refuse the message (the engine strips them the same way). Card,
+    security code, IBAN and ID numbers in the text and the captions are
+    masked before the inbox keeps them (`mask_sensitive_numbers`).
     """
 
     name: str | None = (
@@ -37,14 +41,30 @@ def build_inbound_customer_message(
     )
     return InboundCustomerMessage(
         channel_user_id=channel_user_id,
-        text=MessageText(str(text).replace(NUL_CHARACTER, "")),
+        text=MessageText(
+            mask_sensitive_numbers(str(text).replace(NUL_CHARACTER, ""))
+        ),
         contact_name=None if not name else ContactName(name),
         contact_phone_number=contact_phone_number,
-        attachments=list(attachments),
+        attachments=[masked_caption(attachment) for attachment in attachments],
         acquisition_source=acquisition_source,
         context_note=context_note,
         client_ip_address=client_ip_address,
     )
+
+
+def masked_caption(attachment: InboundAttachment) -> InboundAttachment:
+    """The attachment with the sensitive numbers of its caption masked."""
+
+    if attachment.caption is None:
+        return attachment
+
+    caption: str = str(attachment.caption)
+    masked: str = mask_sensitive_numbers(caption)
+    if masked == caption:
+        return attachment
+
+    return attachment.model_copy(update={"caption": AttachmentCaption(masked)})
 
 
 def customer_written_text(customer: InboundCustomerMessage) -> MessageText:

@@ -101,6 +101,8 @@ def test_a_line_carries_its_stable_fields(caplog: pytest.LogCaptureFixture) -> N
             "path": "/v1/channels/meta/webhook",
             "reason": "missing_signature",
             "client_network": "203.0.113.0/24",
+            # Outside any request: the platform itself.
+            "actor": "system",
             "provider": "meta",
         }
     ]

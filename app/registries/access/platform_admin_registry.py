@@ -6,6 +6,7 @@ from app.contracts.platform_admins import (
     PlatformAdminRegistryContract,
     PlatformAdminRepoContract,
 )
+from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.access import PlatformAdminRole
 from app.schemas.constants.users import LoginMethod
@@ -29,6 +30,10 @@ class PlatformAdminRegistry(PlatformAdminRegistryContract):
     Once a SUPER admin exists the lists grant nothing; the Team page adds
     and removes admins. Should the last SUPER record ever disappear, the
     lists work again (the way back in).
+
+    Where ADMIN_PASSKEY_REQUIRED is on (production), an admin without a
+    passkey is told to add one before the admin pages open; without the
+    passkey store every admin is (fail closed).
     """
 
     def __init__(
@@ -36,7 +41,9 @@ class PlatformAdminRegistry(PlatformAdminRegistryContract):
         platform_admin_repo: PlatformAdminRepoContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        passkey_repo: PasskeyRepoContract | None = None,
     ) -> None:
+        self._passkey_repo: PasskeyRepoContract | None = passkey_repo
         self._platform_admin_repo: PlatformAdminRepoContract = platform_admin_repo
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -54,6 +61,15 @@ class PlatformAdminRegistry(PlatformAdminRegistryContract):
 
         record = self._bootstrap(user)
         return None if record is None else record.role
+
+    def needs_passkey(self, user: UserDocument) -> bool:
+        if not self._app_settings.sessions.is_admin_passkey_required:
+            return False
+
+        return (
+            self._passkey_repo is None
+            or int(self._passkey_repo.count_for_user(user.id)) == 0
+        )
 
     def _record_of(self, user: UserDocument) -> PlatformAdminDocument | None:
         if user.login_method is LoginMethod.PHONE and user.phone_number is not None:

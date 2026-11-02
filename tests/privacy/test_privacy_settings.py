@@ -143,7 +143,7 @@ def test_a_longer_period_is_saved_and_audited_without_a_step_up() -> None:
 
     bed.change(conversations=1825, model_records=30)
 
-    stored = bed.settings.get_or_default(bed.business.id)
+    stored = bed.settings.get_or_default(bed.business)
     assert stored.conversation_retention_days == 1825
     assert bed.step_up.checks == []
     entry = bed.testbed.audit_log_repo.list_by_business(bed.business.id)[-1]
@@ -165,12 +165,12 @@ def test_a_shorter_period_asks_for_a_recent_sign_in_first(
     with pytest.raises(StepUpRequiredError):
         bed.change(conversations, model_records)
     assert (
-        bed.settings.get_or_default(bed.business.id).conversation_retention_days == 730
+        bed.settings.get_or_default(bed.business).conversation_retention_days == 730
     )
 
     bed.step_up.is_required = False
     bed.change(conversations, model_records)
-    stored = bed.settings.get_or_default(bed.business.id)
+    stored = bed.settings.get_or_default(bed.business)
     assert (stored.conversation_retention_days, stored.llm_turn_retention_days) == (
         conversations,
         model_records,

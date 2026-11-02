@@ -31,6 +31,10 @@ from app.schemas.exceptions.mfa_errors import WrongCodeError
 from app.schemas.typings.mfa.constrained_integers import MfaAttemptCount
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.use_cases.shared.session_sweeps import end_sessions
+from app.use_cases.users.mfa.admin_passkey_rule import (
+    refuse_admin_app_code,
+    refuse_admin_app_enrollment,
+)
 from app.use_cases.users.mfa.mfa_challenges import (
     MFA_MAX_FAILED_ATTEMPTS,
     consume_mfa_challenge,
@@ -62,8 +66,10 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
     it on, a new set of recovery codes comes back with the session (shown
     once), the admin's earlier sessions end (they were signed in without
     it; SESSION_REVOKED with the count) and the change is audited as
-    MFA_CHANGED. Checks are limited per
-    step and per client network, the step locks after five wrong codes and
+    MFA_CHANGED. Where admins must use passkeys (ADMIN_PASSKEY_REQUIRED),
+    an admin with a passkey cannot answer with the app's code, and an
+    admin cannot set up the app here (admin_passkey_rule.py). Checks are
+    limited per step and per client network, the step locks after five wrong codes and
     is used by compare-and-swap, so it opens one session only. A wrong code
     is audited as LOGIN_FAILED, the one that locks the step as MFA_LOCKED.
     """
@@ -128,6 +134,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         challenge, user = open_mfa_step(
             self._mfa_challenge_repo, self._user_repo, input_data.mfa_challenge_id, now
         )
+        refuse_admin_app_code(
+            self._app_settings, self._passkey_repo, user, input_data.code
+        )
 
         attempt: MfaAttemptCount = take_mfa_attempt(
             self._mfa_challenge_repo, challenge, now
@@ -173,6 +182,7 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         if factor is None or input_data.code is None:
             raise ValidationFailedError(SET_UP_FIRST_MESSAGE)
 
+        refuse_admin_app_enrollment(self._app_settings, user)
         self._check.confirm_pending(factor, input_data.code, now)
         codes: list[RecoveryCode] = issue_recovery_codes(
             self._recovery_code_repo, user.id, now

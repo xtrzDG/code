@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import httpcore
 
 from app.clients.http.fetch_errors import fetch_error
+from app.clients.http.refused_fetch_log import log_refused_fetch
 from app.clients.http.response_body import read_limited_body, too_large
 from app.clients.http.response_headers import (
     header_value,
@@ -32,20 +33,25 @@ from app.schemas.typings.web_fetching.constrained_strings import (
 MAX_REDIRECTS: int = 3
 REDIRECT_STATUSES: frozenset[int] = frozenset({301, 302, 303, 307, 308})
 USER_AGENT: str = "AssistantWorkshop-Reader/1.0 (reads a page its owner asked for)"
+# The `purpose` of the security line of a refused address.
+FETCH_PURPOSE: str = "read"
 
 
 class SafeHttpFetcher(SafeHttpFetcherContract):
     """
     Reads public web addresses for the platform (SSRF guard):
 
-    - only http(s) on ports 80 and 443, without credentials in the address;
+    - only http(s) on ports 80 and 443, without credentials in the address,
+      and always read over https (an http address is upgraded);
     - every host is resolved and must resolve to public addresses only
       (no loopback, private, link-local, CGNAT or metadata ranges); the
       connection is made to the vetted address itself, which defeats DNS
       rebinding;
     - at most three redirects, each target checked the same way;
     - the body is limited in bytes (after unpacking) and the whole fetch in
-      time, and only the requested media types are accepted.
+      time, and only the requested media types are accepted;
+    - a refused address (the first or a redirect's) is logged as an
+      `outbound_fetch_refused` security event.
 
     No proxy is used: the guard must see the address it connects to.
     `resolver`, `connector` and `clock` are replaceable for tests.
@@ -75,10 +81,15 @@ class SafeHttpFetcher(SafeHttpFetcherContract):
             retries=0,
         ) as pool:
             for _ in range(MAX_REDIRECTS + 1):
-                vetted: VettedUrl = vet_url(current_url)
-                outcome: FetchedWebResource | str = self._fetch_once(
-                    pool, vetted, request, deadline
-                )
+                try:
+                    vetted: VettedUrl = vet_url(current_url)
+                    outcome: FetchedWebResource | str = self._fetch_once(
+                        pool, vetted, request, deadline
+                    )
+                except WebFetchError as error:
+                    log_refused_fetch(error, current_url, FETCH_PURPOSE)
+                    raise
+
                 if isinstance(outcome, FetchedWebResource):
                     return outcome
 
@@ -90,7 +101,11 @@ class SafeHttpFetcher(SafeHttpFetcherContract):
         )
 
     def vet(self, url: WebResourceUrl) -> None:
-        vet_url(str(url))
+        try:
+            vet_url(str(url))
+        except WebFetchError as error:
+            log_refused_fetch(error, str(url), FETCH_PURPOSE)
+            raise
 
     def _fetch_once(
         self,

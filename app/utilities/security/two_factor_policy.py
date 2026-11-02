@@ -9,6 +9,7 @@ from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
 
 MFA_REQUIRED_CODE: ErrorReasonCode = ErrorReasonCode("mfa_required")
+PASSKEY_REQUIRED_CODE: ErrorReasonCode = ErrorReasonCode("passkey_required")
 WRONG_CODE_CODE: ErrorReasonCode = ErrorReasonCode("wrong_code")
 
 
@@ -30,6 +31,23 @@ def mfa_required(message: str) -> MfaRequiredError:
         reasons=[
             ErrorReason(
                 code=MFA_REQUIRED_CODE,
+                message=ErrorReasonMessage(message),
+            )
+        ],
+    )
+
+
+def passkey_required(message: str) -> MfaRequiredError:
+    """
+    HTTP 403 with the reason `passkey_required`: a platform admin signs in
+    with a passkey where ADMIN_PASSKEY_REQUIRED is on (production).
+    """
+
+    return MfaRequiredError(
+        message,
+        reasons=[
+            ErrorReason(
+                code=PASSKEY_REQUIRED_CODE,
                 message=ErrorReasonMessage(message),
             )
         ],

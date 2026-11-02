@@ -6,8 +6,10 @@ from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.retention_purges import RetentionPurgeStateDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.utilities.privacy.quality_sampling_defaults import default_privacy_settings
 from app.utilities.privacy.retention_keys import (
     privacy_settings_id_of,
     retention_purge_state_id_of,
@@ -21,16 +23,15 @@ class BusinessPrivacySettingsRepository(
     """One privacy settings document per business, keyed by the derived id."""
 
     def get_or_default(
-        self, business_id: BusinessId
+        self, business: BusinessDocument
     ) -> BusinessPrivacySettingsDocument:
-        settings_id = privacy_settings_id_of(business_id)
         stored: BusinessPrivacySettingsDocument | None = self._load(
-            business_id, str(settings_id)
+            business.id, str(privacy_settings_id_of(business.id))
         )
         if stored is not None:
             return stored
 
-        return BusinessPrivacySettingsDocument(id=settings_id, business_id=business_id)
+        return default_privacy_settings(business)
 
     def save(self, settings: BusinessPrivacySettingsDocument) -> None:
         self._store(str(settings.id), settings)

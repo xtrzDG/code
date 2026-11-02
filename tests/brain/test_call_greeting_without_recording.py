@@ -1,6 +1,8 @@
 """
 The call greeting while the business does not record calls (the default):
-nothing about a recording, and the privacy notice sentence once.
+nothing about a recording, and the first layer of the privacy notice once
+(the business as the one responsible for the data, the purpose, where the
+full notice is).
 """
 
 import pytest
@@ -30,7 +32,9 @@ def test_a_business_without_call_settings_says_nothing_about_a_recording() -> No
 
     assert greeting_of(world, "en") == (
         "Hello! This is the AI assistant of Sakhli. To talk to a staff member, "
-        'say "operator". Our privacy notice is on our web page.'
+        'say "operator". Sakhli is responsible for your data and uses it only to '
+        "handle your request. For the full privacy notice, ask me for the link "
+        "or see our web page."
     )
 
 
@@ -43,7 +47,11 @@ def test_recording_switched_off_asks_no_consent_anywhere(country: str) -> None:
 
     assert "recorded" not in greeting
     assert "without a recording" not in greeting
-    assert greeting.endswith("Our privacy notice is on our web page.")
+    assert greeting.endswith(
+        "Sakhli is responsible for your data and uses it only to handle your "
+        "request. For the full privacy notice, ask me for the link or see our "
+        "web page."
+    )
 
 
 @pytest.mark.parametrize("is_recording_enabled", [True, False])
@@ -53,7 +61,11 @@ def test_the_privacy_notice_is_said_once(is_recording_enabled: bool) -> None:
 
     greeting = greeting_of(world, "it")
 
-    hint = "L'informativa sulla privacy è sulla nostra pagina web."
+    hint = (
+        "Sakhli è titolare del trattamento dei suoi dati e li usa solo per "
+        "gestire la sua richiesta. Per l'informativa privacy completa, mi "
+        "chieda il link o consulti la nostra pagina web."
+    )
     assert greeting.count(hint) == 1
     assert greeting.endswith(hint)
     assert ("registrata" in greeting) is is_recording_enabled
@@ -67,3 +79,13 @@ def test_the_privacy_notice_exists_in_every_supported_text_language() -> None:
     )
 
     assert missing == []
+
+
+def test_every_language_names_the_business_as_the_one_responsible() -> None:
+    unnamed = sorted(
+        str(tag)
+        for tag, text in CALL_PRIVACY_NOTICE_HINT.values.items()
+        if str(text).count("{business}") != 1
+    )
+
+    assert unnamed == []

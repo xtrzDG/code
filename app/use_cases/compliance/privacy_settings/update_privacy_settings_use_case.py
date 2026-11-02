@@ -74,7 +74,7 @@ class UpdatePrivacySettingsUseCase(
             )
         )
         settings: BusinessPrivacySettingsDocument = (
-            self._privacy_settings_repo.get_or_default(business.id)
+            self._privacy_settings_repo.get_or_default(business)
         )
         request = input_data.request
         is_shorter: bool = int(request.conversation_retention_days) < int(

@@ -50,8 +50,8 @@ from app.use_cases.conversations.turns.contact_resolution import (
     resolve_contact,
 )
 from app.use_cases.conversations.turns.inbound_message_rules import (
+    clean_inbound_message,
     is_sandbox_message,
-    remove_nul_characters,
 )
 from app.use_cases.conversations.turns.prepared_turn_parts import (
     build_tool_context,
@@ -154,7 +154,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         ] = recall_customer_memory
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
-        input_data = remove_nul_characters(input_data)
+        input_data = clean_inbound_message(input_data)
         now: Microseconds = self._wall_clock.now_unix()
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id

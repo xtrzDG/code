@@ -2,7 +2,8 @@
 The request id of every HTTP request: taken from X-Request-ID when the
 caller sent a usable one, otherwise generated; bound to the log context for
 the whole request (also inside the request threads) and echoed in the
-response.
+response. The request's client address and User-Agent are bound as its
+origin, which audit entries and security lines name (request_origin.py).
 """
 
 import uuid
@@ -12,6 +13,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.schemas.typings.platform.constrained_strings import RequestId
 from app.utilities.observability.log_context import bound_log_context
+from app.utilities.observability.request_origin import bound_request_origin
 
 REQUEST_ID_HEADER: str = "X-Request-ID"
 MAX_REQUEST_ID_LENGTH: int = 128
@@ -41,7 +43,16 @@ class RequestContextMiddleware:
                 MutableHeaders(scope=message)[REQUEST_ID_HEADER] = str(request_id)
             await send(message)
 
-        with bound_log_context(request_id=request_id):
+        client: object = scope.get("client")
+        client_address: str | None = (
+            str(client[0]) if isinstance(client, tuple) and client else None
+        )
+        with (
+            bound_log_context(request_id=request_id),
+            bound_request_origin(
+                client_address, Headers(scope=scope).get("user-agent")
+            ),
+        ):
             await self._app(scope, receive, send_with_request_id)
 
 

@@ -14,6 +14,7 @@ from app.schemas.dto.mfa import StartMfaEnrollmentCommand, TotpEnrollmentView
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.use_cases.shared.second_factors import has_second_factor
+from app.use_cases.users.mfa.admin_passkey_rule import refuse_admin_app_enrollment
 from app.use_cases.users.mfa.mfa_challenges import open_mfa_step
 from app.use_cases.users.mfa.mfa_check_limits import (
     refuse_too_frequent_second_factor_checks,
@@ -37,7 +38,9 @@ class StartMfaLoginEnrollmentUseCase(
     step that asks for enrollment may: a person who already has a second
     factor (an authenticator that is on, or a passkey) cannot add one here
     (ConflictError), so a login code alone never plants an authenticator
-    secret on their account.
+    secret on their account. Where admins must use passkeys
+    (ADMIN_PASSKEY_REQUIRED, production) an admin sets up a passkey
+    instead (403 `passkey_required`).
     """
 
     def __init__(
@@ -77,6 +80,7 @@ class StartMfaLoginEnrollmentUseCase(
 
         if has_second_factor(self._totp_factor_repo, self._passkey_repo, user.id):
             raise ConflictError(HAS_FACTOR_MESSAGE)
+        refuse_admin_app_enrollment(self._app_settings, user)
 
         return begin_totp_enrollment(
             self._totp_factor_repo,

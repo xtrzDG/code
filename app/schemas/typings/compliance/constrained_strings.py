@@ -32,6 +32,21 @@ class AuditEntryHash(BaseConstrainedTypedString):
     pattern = r"^[0-9a-f]{64}$"
 
 
+class AuditUserAgent(BaseConstrainedTypedString):
+    """
+    The User-Agent header of the request that made an audit entry,
+    printable ASCII cut to 512 characters at the transport boundary
+    (`read_audit_user_agent`): the browser and system a person acted from.
+
+    Example:
+        user_agent = AuditUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)")
+    """
+
+    min_length = 1
+    max_length = 512
+    pattern = r"^[\x20-\x7e]+$"
+
+
 class DpaAcceptanceDueDate(BaseConstrainedTypedString):
     """
     The day by which owners accept a new agreement version, ISO 8601

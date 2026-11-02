@@ -11,6 +11,7 @@ from collections.abc import Callable
 
 import httpcore
 
+from app.clients.http.refused_fetch_log import log_refused_fetch
 from app.clients.http.url_vetting import VettedUrl, vet_url
 from app.clients.http.vetting_network_backend import (
     HostResolver,
@@ -43,6 +44,8 @@ USER_AGENT: str = "AssistantWorkshop-Webhooks/1.0"
 TIMEOUT_SECONDS: float = 10.0
 # The answer's body is read (so the connection ends cleanly) and dropped.
 MAX_ANSWER_BYTES: int = 64 * 1024
+# The `purpose` of the security line of a refused address.
+WEBHOOK_PURPOSE: str = "webhook"
 REFUSALS: dict[WebFetchProblem, WebhookDeliveryProblem] = {
     WebFetchProblem.UNKNOWN_HOST: WebhookDeliveryProblem.UNKNOWN_HOST,
     WebFetchProblem.TIMEOUT: WebhookDeliveryProblem.TIMEOUT,
@@ -73,6 +76,7 @@ class WebhookPoster(WebhookPosterContract):
         try:
             vet_url(str(url))
         except WebFetchError as error:
+            log_refused_fetch(error, str(url), WEBHOOK_PURPOSE)
             return refused(error)
 
         return None
@@ -82,6 +86,7 @@ class WebhookPoster(WebhookPosterContract):
             vetted: VettedUrl = vet_url(str(request.url))
             return self._post(vetted, request)
         except WebFetchError as error:
+            log_refused_fetch(error, str(request.url), WEBHOOK_PURPOSE)
             return refused(error)
         except httpcore.TimeoutException:
             return failure(WebhookDeliveryProblem.TIMEOUT, "The address took too long.")

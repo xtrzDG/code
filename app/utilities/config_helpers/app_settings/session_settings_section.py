@@ -1,7 +1,9 @@
 """
 SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_IDLE_TIMEOUT_SECONDS and
 ADMIN_SESSION_LIFETIME_SECONDS: when unused and admin sessions end;
-WEBAUTHN_RP_ID and GEOIP_COUNTRY_DATABASE_PATH (sign_in_security_settings).
+ADMIN_PASSKEY_REQUIRED (on by default in production): platform admins
+sign in with a passkey; WEBAUTHN_RP_ID and GEOIP_COUNTRY_DATABASE_PATH
+(sign_in_security_settings).
 """
 
 from collections.abc import Mapping
@@ -19,6 +21,7 @@ from app.schemas.typings.users.constrained_integers import (
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     parse_setting,
+    read_boolean,
     read_integer,
 )
 from app.utilities.config_helpers.app_settings.public_address_settings_section import (
@@ -75,6 +78,9 @@ def read_session_settings(
             ),
             geoip_country_database_path=read_geoip_country_database_path(
                 environment_variables
+            ),
+            is_admin_passkey_required=read_boolean(
+                environment_variables, "ADMIN_PASSKEY_REQUIRED", not is_development
             ),
         )
     )

@@ -1,10 +1,12 @@
 """
-The recording sentence of a call's first phrase where the law asks every
-party's consent (`RecordingConsentRule.ALL_PARTY_CONSENT`, e.g. Germany,
-France, Switzerland, Australia and the United States): the caller hears that
-the call is recorded and that they may say no and go on without it (the
-phone assistant then calls decline_recording). Elsewhere the call says
-CALL_RECORDING_NOTICE (call_texts.py).
+The recording sentence of a call's first phrase, in every country while
+the business records calls: the caller hears that the call is recorded and
+that they may say no and go on without it (the phone assistant then calls
+decline_recording). Where the law asks every party's consent
+(`RecordingConsentRule.ALL_PARTY_CONSENT`, e.g. Germany, France,
+Switzerland, Australia and the United States) that is the consent; where a
+notice is enough (Italy, Georgia) it is the non-recorded path the GDPR asks
+for when a recording is not necessary.
 
 The languages are those of the notice; resolution falls back to the base
 language and then English.

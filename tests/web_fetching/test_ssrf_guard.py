@@ -117,17 +117,18 @@ def test_dns_rebinding_cannot_swap_the_vetted_address() -> None:
 
     fetched = fetch(fetcher, "http://rebind.example/")
 
-    # One lookup, and the connection went to the very address it vetted.
+    # One lookup, and the connection went to the very address it vetted
+    # (over https: an http address is never read in plain text).
     assert fetched.body == b"<p>Hello</p>"
     assert network.lookups == ["rebind.example"]
-    assert network.connections == [(PUBLIC_ADDRESS, 80)]
+    assert network.connections == [(PUBLIC_ADDRESS, 443)]
 
     # The next lookup answers a private address: nothing is connected.
     with pytest.raises(WebFetchError) as refused:
         fetch(fetcher, "http://rebind.example/admin")
 
     assert refused.value.problem is WebFetchProblem.NOT_PUBLIC
-    assert network.connections == [(PUBLIC_ADDRESS, 80)]
+    assert network.connections == [(PUBLIC_ADDRESS, 443)]
 
 
 def test_redirects_are_followed_three_times_at_most() -> None:
@@ -154,7 +155,7 @@ def test_a_followed_redirect_reports_where_the_page_came_from() -> None:
     assert str(fetched.url) == "http://cafe.example/"
     assert str(fetched.final_url) == "https://www.cafe.example/home"
     assert str(fetched.charset) == "utf-8"
-    assert network.connections == [(PUBLIC_ADDRESS, 80), (OTHER_PUBLIC_ADDRESS, 443)]
+    assert network.connections == [(PUBLIC_ADDRESS, 443), (OTHER_PUBLIC_ADDRESS, 443)]
 
 
 @pytest.mark.parametrize(
@@ -182,7 +183,7 @@ def test_only_http_on_standard_ports_without_credentials(
 
 def test_standard_ports_and_international_names_pass_the_static_check() -> None:
     assert vet_url("http://cafe.example:443/a?b=1#top").request_url == (
-        "http://cafe.example:443/a?b=1"
+        "https://cafe.example:443/a?b=1"
     )
     assert vet_url("https://CAFE.example").request_url == "https://cafe.example/"
     vetted = vet_url("https://кафе.example/меню")

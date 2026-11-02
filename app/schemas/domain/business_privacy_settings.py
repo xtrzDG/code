@@ -30,7 +30,10 @@ class BusinessPrivacySettingsDocument(BaseDocument):
     day, so no open conversation loses its model records.
     `quality_sampling_allowed`: the nightly judge may score a sample of the
     business's real conversations (production quality); off, none of them
-    is ever sent to the judge.
+    is ever sent to the judge. A business without a document created from
+    3 November 2026 on reads it off, an older one on
+    (`app/utilities/privacy/quality_sampling_defaults.py`); the field's own
+    default only serves version 1 rows, which predate the choice.
     """
 
     # 2: `quality_sampling_allowed` (optional with its default, so version 1

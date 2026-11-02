@@ -33,6 +33,7 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.campaigns.campaign_targets import came_back, due_bookings
 from app.use_cases.campaigns.campaign_writer import CampaignWriter
+from app.use_cases.campaigns.quiet_hours import is_quiet_hour
 from app.use_cases.shared.customer_segment_members import (
     SegmentReaders,
     members_among,
@@ -61,9 +62,10 @@ class RunRebookingCampaignsUseCase(UseCaseContract[JobTick, JobReport]):
     due, or a pre-arrival note the rule's days before an arrival. With a
     segment as audience only its members hear from it. A customer hears
     from a campaign at most once in two weeks, and a business sends at most
-    its monthly cap in a calendar month of its time zone; STOP, the
-    suppression list and a block always win. One business failing never
-    stops the others.
+    its monthly cap in a calendar month of its time zone; nothing is
+    written from 21:00 to 09:00 there (`quiet_hours`: the due bookings
+    wait for the morning); STOP, the suppression list and a block always
+    win. One business failing never stops the others.
     """
 
     def __init__(
@@ -110,6 +112,10 @@ class RunRebookingCampaignsUseCase(UseCaseContract[JobTick, JobReport]):
     ) -> int:
         now: Microseconds = self._wall_clock.now_unix()
         zone: ZoneInfo = load_time_zone(business.timezone)
+        if is_quiet_hour(now, zone):
+            # Nothing is decided at night: the morning's run writes instead.
+            return 0
+
         month: CampaignMonthKey = campaign_month_of(now, zone)
         left: int = int(settings.monthly_cap) - int(
             self._message_repo.count_sent_in_month(business.id, month)

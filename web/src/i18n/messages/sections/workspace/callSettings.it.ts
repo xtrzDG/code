@@ -45,10 +45,10 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     toggle: "Registra le chiamate",
     noticeTitle: "Cosa sente chi chiama all'inizio di ogni chiamata",
     noticeGreeting: "Buongiorno! Risponde l'assistente IA di {business}.",
-    noticeRecorded: "La chiamata viene registrata.",
+    noticeRecorded: "La chiamata viene registrata. Se non desidera la registrazione, lo dica pure e continueremo senza registrare.",
     noticeOperator: "Per parlare con un membro dello staff, dica «operatore».",
-    noticePrivacy: "L'informativa sulla privacy è sulla nostra pagina web.",
-    noticeHint: "In ogni lingua della tua attività. Dove la legge richiede il consenso, chi chiama può rifiutare e la chiamata prosegue senza registrazione; dove leggere l'informativa sulla privacy viene detto sia che tu registri sia che non registri.",
+    noticePrivacy: "{business} è titolare del trattamento dei suoi dati e li usa solo per gestire la sua richiesta. Per l'informativa privacy completa, mi chieda il link o consulti la nostra pagina web.",
+    noticeHint: "In ogni lingua della tua attività. Chi chiama può rifiutare la registrazione e la chiamata prosegue senza; chi è titolare dei suoi dati, per cosa li usa e dove leggere l'informativa completa vengono detti sia che tu registri sia che non registri.",
     turnedOff: "La registrazione delle chiamate è disattivata",
   },
   transfers: {

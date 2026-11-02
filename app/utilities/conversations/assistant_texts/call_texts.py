@@ -1,5 +1,6 @@
 """
-What the assistant says on the phone: greeting, recording notice, operator hint.
+What the assistant says on the phone: greeting and operator hint (the
+recording sentence: call_consent_texts.py).
 
 They exist for every language with text support: an English opener in
 another language confuses customers and the autotest language check.
@@ -66,62 +67,6 @@ CALL_GREETING: LocalizedText = build_localized_text(
     ur="السلام علیکم! یہ {business} کا AI معاون ہے۔",
     uz="Assalomu alaykum! Bu {business} AI yordamchisi.",
     vi="Xin chào! Đây là trợ lý AI của {business}.",
-)
-
-CALL_RECORDING_NOTICE: LocalizedText = build_localized_text(
-    en="The call is recorded.",
-    ru="Разговор записывается.",
-    ka="საუბარი იწერება.",
-    tr="Görüşme kaydedilmektedir.",
-    he="השיחה מוקלטת.",
-    ar="يتم تسجيل المكالمة.",
-    hy="Զանգը ձայնագրվում է։",
-    uk="Розмова записується.",
-    de="Das Gespräch wird aufgezeichnet.",
-    fr="L'appel est enregistré.",
-    es="La llamada se está grabando.",
-    it="La chiamata viene registrata.",
-    pt="A ligação está sendo gravada.",
-    pl="Rozmowa jest nagrywana.",
-    az="Zəng qeydə alınır.",
-    kk="Әңгіме жазылып жатыр.",
-    zh="本次通话将被录音。",
-    ja="この通話は録音されます。",
-    be="Размова запісваецца.",
-    bg="Разговорът се записва.",
-    bn="এই কলটি রেকর্ড করা হচ্ছে।",
-    bs="Poziv se snima.",
-    ca="La trucada s'està enregistrant.",
-    cs="Hovor je nahráván.",
-    da="Opkaldet bliver optaget.",
-    el="Η κλήση καταγράφεται.",
-    et="Kõne salvestatakse.",
-    fa="این تماس ضبط می\u200cشود.",
-    fi="Puhelu nauhoitetaan.",
-    fil="Nire-record ang tawag na ito.",
-    hi="यह कॉल रिकॉर्ड की जा रही है।",
-    hr="Poziv se snima.",
-    hu="A hívást rögzítjük.",
-    id="Panggilan ini direkam.",
-    ko="이 통화는 녹음됩니다.",
-    lt="Pokalbis įrašomas.",
-    lv="Saruna tiek ierakstīta.",
-    mk="Разговорот се снима.",
-    ms="Panggilan ini dirakam.",
-    nb="Samtalen blir tatt opp.",
-    nl="Het gesprek wordt opgenomen.",
-    no="Samtalen blir tatt opp.",
-    ro="Apelul este înregistrat.",
-    sk="Hovor sa nahráva.",
-    sl="Klic se snema.",
-    sq="Telefonata po regjistrohet.",
-    sr="Позив се снима.",
-    sv="Samtalet spelas in.",
-    sw="Simu hii inarekodiwa.",
-    th="การสนทนานี้มีการบันทึกเสียง",
-    ur="یہ کال ریکارڈ کی جا رہی ہے۔",
-    uz="Qo'ng'iroq yozib olinmoqda.",
-    vi="Cuộc gọi này đang được ghi âm.",
 )
 
 CALL_OPERATOR_HINT: LocalizedText = build_localized_text(

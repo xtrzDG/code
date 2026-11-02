@@ -22,6 +22,7 @@ from app.schemas.typings.platform.strings import CorrelationId, JobErrorText
 from app.utilities.observability.log_context import current_log_context
 from app.utilities.observability.trace_redaction import redact_contact_details
 from app.utilities.observability.tracing.trace_context import current_trace_id
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 NANOSECONDS_PER_MILLISECOND: int = 1_000_000
 
@@ -34,8 +35,9 @@ class TracingLlmAdapter(LlmAdapterContract):
 
     Each trace names the business, contact and conversation of the call
     (the log context), so erasure and retention find its copy. Texts go
-    only with content tracing on, and without phone numbers and e-mail
-    addresses unless raw text is allowed (LANGFUSE_RAW_TEXT).
+    only with content tracing on, never with card, security code, IBAN or
+    ID numbers, and without phone numbers and e-mail addresses unless raw
+    text is allowed (LANGFUSE_RAW_TEXT).
     """
 
     def __init__(
@@ -136,12 +138,19 @@ class TracingLlmAdapter(LlmAdapterContract):
         self._trace_facilitator.record_generation(trace)
 
     def _traced_text(self, text: MessageText | None) -> MessageText | None:
-        """The text as the journal may keep it (contact details out)."""
+        """
+        The text as the journal may keep it: never a card, security code,
+        IBAN or ID number, and no contact details unless raw text is allowed.
+        """
 
-        if text is None or self._is_raw_text_traced:
-            return text
+        if text is None:
+            return None
 
-        return MessageText(redact_contact_details(str(text)))
+        masked: str = mask_sensitive_numbers(str(text))
+        if self._is_raw_text_traced:
+            return MessageText(masked)
+
+        return MessageText(redact_contact_details(masked))
 
     def _last_user_text(self, request: LlmRequest) -> MessageText | None:
         if not self._is_content_traced or not request.transcript:

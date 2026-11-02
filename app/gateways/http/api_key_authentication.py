@@ -27,6 +27,7 @@ from app.schemas.exceptions.application_errors import AuthenticationRequiredErro
 from app.schemas.typings.integrations.constrained_strings import ApiKeyToken
 from app.schemas.typings.integrations.prefixed_id import ApiKeyId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.observability.request_origin import note_request_actor
 
 type ApiKeyAuthentication = Callable[
     [Request, str | None], Coroutine[Any, Any, ApiKeyPrincipal]
@@ -79,6 +80,8 @@ def build_api_key_authentication(
             raise
 
         setattr(request.state, PRINCIPAL_STATE, principal)
+        # A key acts for the owner who made it (audit entries, security lines).
+        note_request_actor(principal.created_by)
         return principal
 
     async def resolve_key_owner(

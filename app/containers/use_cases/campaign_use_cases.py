@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import Callable, DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
@@ -27,6 +27,7 @@ from app.use_cases.campaigns.get_campaign_settings_use_case import (
 from app.use_cases.campaigns.list_campaign_messages_use_case import (
     ListCampaignMessagesUseCase,
 )
+from app.use_cases.campaigns.marketing_template import dedicated_marketing_template
 from app.use_cases.campaigns.run_rebooking_campaigns_use_case import (
     RunRebookingCampaignsUseCase,
 )
@@ -99,8 +100,8 @@ class CampaignUseCasesContainer(containers.DeclarativeContainer):
                 text_resolver=utilities.localized_text_resolver,
                 live_events=facilitators.event_publisher,
                 suppression_list=facilitators.suppression_list,
-                whatsapp_template=(
-                    config.app_settings.provided.growth.rebooking_template_name
+                whatsapp_template=Callable(
+                    dedicated_marketing_template, settings=config.app_settings
                 ),
             ),
             wall_clock=wall_clock,

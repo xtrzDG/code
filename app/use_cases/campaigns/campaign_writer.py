@@ -27,6 +27,7 @@ from app.schemas.typings.campaigns.constrained_strings import CampaignMonthKey
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.campaigns.quiet_hours import quiet_hours_start
 from app.use_cases.shared.proactive_letters import ProactiveLetter, ProactiveSender
 from app.use_cases.shared.proactive_routes import ProactiveRouting, RouteChoice
 from app.utilities.campaigns.campaign_keys import (
@@ -70,6 +71,11 @@ class CampaignWriter:
     the booking's own source channel, never to another messenger they are
     known in. A booking made by phone or in the website chat, which cannot
     carry a message the business starts, gets none (NO_CHANNEL).
+
+    `whatsapp_template` is the campaigns' own MARKETING template
+    (`marketing_template`), never a service message's utility template;
+    a message the outbox has not delivered when the business's quiet hours
+    begin (21:00, `quiet_hours`) is dropped.
     """
 
     message_repo: CampaignMessageRepoContract
@@ -180,7 +186,11 @@ class CampaignWriter:
             business=str(business.name),
             date=format_full_date(starts.date(), language),
         )
-        deadline: int = int(now) + SEND_WITHIN_SECONDS * MICROSECONDS_PER_SECOND
+        # Never delivered late at night: dropped once the quiet hours begin.
+        deadline: int = min(
+            int(now) + SEND_WITHIN_SECONDS * MICROSECONDS_PER_SECOND,
+            int(quiet_hours_start(now, zone)),
+        )
         if message.rule_kind is RebookingRuleKind.PRE_ARRIVAL:
             deadline = min(deadline, int(booking.starts_at) * MICROSECONDS_PER_SECOND)
 

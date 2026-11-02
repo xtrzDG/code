@@ -70,14 +70,10 @@ FIXED_COUNTRY_REGISTRY = FixedCountryRegistry()
 def build_call_greeting(
     repos: BrainRepositories, texts: LocalizedTextResolverContract
 ) -> BuildCallGreetingUseCase:
-    """
-    The call greeting over the fixed countries (their consent rules) and
-    the businesses' call settings (recording off without them).
-    """
+    """The call greeting over the businesses' call settings (none: no recording)."""
 
     return BuildCallGreetingUseCase(
         business_repo=repos.business_repo,
         localized_text_resolver=texts,
-        country_registry=FIXED_COUNTRY_REGISTRY,
         call_settings_repo=repos.call_settings_repo,
     )

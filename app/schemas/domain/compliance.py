@@ -2,7 +2,11 @@ from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.compliance import AuditAction, AuditSecurityEvent
+from app.schemas.constants.compliance import (
+    AuditAction,
+    AuditOutcome,
+    AuditSecurityEvent,
+)
 from app.schemas.typings.access.constrained_strings import AdminActionReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import (
@@ -12,6 +16,7 @@ from app.schemas.typings.compliance.constrained_integers import (
 from app.schemas.typings.compliance.constrained_strings import (
     AuditChainKey,
     AuditEntryHash,
+    AuditUserAgent,
     DpaDocumentVersion,
 )
 from app.schemas.typings.compliance.prefixed_id import (
@@ -23,6 +28,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
     ClientIpAddress,
 )
+from app.schemas.typings.platform.constrained_strings import RequestId
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -58,7 +64,11 @@ class AuditLogEntryDocument(BaseDocument):
     # sign-outs, key rotations), all optional: a version 5 row reads as an
     # entry from before the chain. The previous release ignores the new
     # fields, and every security event rides on an action it reads.
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: where a request-made entry came from and how it ended (LOG-01):
+    # the request's `user_agent` and `request_id`, its `outcome`, all
+    # optional and outside the hash (format 1): the previous release
+    # ignores them and its chain check still holds.
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None
@@ -69,6 +79,9 @@ class AuditLogEntryDocument(BaseDocument):
     record_count: AuditRecordCount | None = None
     reason: AdminActionReason | None = None
     security_event: AuditSecurityEvent | None = None
+    user_agent: AuditUserAgent | None = None
+    request_id: RequestId | None = None
+    outcome: AuditOutcome | None = None
     chain_key: AuditChainKey | None = None
     chain_position: AuditChainPosition | None = None
     prev_hash: AuditEntryHash | None = None

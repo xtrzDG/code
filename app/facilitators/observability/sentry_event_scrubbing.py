@@ -1,10 +1,11 @@
 """
 What reaches Sentry: no request data (bodies, headers, cookies, query
 strings), users, breadcrumbs, extra data or local variables of a frame
-(conversations hold customers' personal data), no e-mail address, phone
-number or secret in an error's message, no secrets in span descriptions (a
-call to a provider is `METHOD https://host/path-template`, ids and tokens
-of the path as `*`), and the log context as tags.
+(conversations hold customers' personal data), no card, security code,
+IBAN or ID number, e-mail address, phone number or secret in an error's
+message, no secrets in span descriptions (a call to a provider is
+`METHOD https://host/path-template`, ids and tokens of the path as `*`),
+and the log context as tags.
 """
 
 import re
@@ -17,6 +18,7 @@ from sentry_sdk.types import Event, Hint
 from app.utilities.observability.log_context import current_log_context
 from app.utilities.observability.log_formatting import redact_secrets
 from app.utilities.observability.tracing.http_client_spans import path_template
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 SCRUBBED_EVENT_KEYS: tuple[str, ...] = ("request", "user", "breadcrumbs", "extra")
 # Contexts an integration may fill from a request or a response.
@@ -107,10 +109,15 @@ def scrub_messages(event: Event) -> None:
 
 
 def mask_personal_data(text: str) -> str:
-    """E-mail addresses, phone-like numbers and secrets of a text, masked."""
+    """
+    Card, security code, IBAN and ID numbers, e-mail addresses, phone-like
+    numbers and secrets of a text, masked.
+    """
 
-    masked: str = EMAIL_PATTERN.sub(REDACTED_EMAIL, text)
-    return redact_secrets(PHONE_PATTERN.sub(REDACTED_NUMBER, masked))
+    masked: str = EMAIL_PATTERN.sub(
+        REDACTED_EMAIL, mask_sensitive_numbers(redact_secrets(text))
+    )
+    return PHONE_PATTERN.sub(REDACTED_NUMBER, masked)
 
 
 def scrub_transaction(event: Event, hint: Hint) -> Event | None:

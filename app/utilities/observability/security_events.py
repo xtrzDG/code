@@ -3,16 +3,19 @@ Security events as structured log lines: one logger (`app.security`), one
 helper and a few stable event names, so a log search or an alert finds
 every refusal of one kind by its `security_event` field.
 
-A line names what happened and where, never who: the route template, the
-provider of a webhook, the reason (a short code) and the client network
-(an IPv4 /24 or an IPv6 /48, never the address itself). No tokens, bodies,
-names, phone numbers or e-mail addresses.
+A line names what happened, where and for whom: the route template, the
+provider of a webhook, the reason (a short code), the client network (an
+IPv4 /24 or an IPv6 /48, never the address itself) and the actor (the
+signed-in person's pseudonymous user id, `anonymous` or `system`,
+request_origin.py). No tokens, bodies, names, phone numbers or e-mail
+addresses.
 """
 
 import ipaddress
 import logging
 
 from app.utilities.observability.log_formatting import log_fields
+from app.utilities.observability.request_origin import current_security_actor
 
 SECURITY_LOGGER: logging.Logger = logging.getLogger("app.security")
 
@@ -72,8 +75,9 @@ def log_security_event(
     """
     One warning line of `event` with its fields: `path` (a route template
     or a fixed path, never one with ids or a query), `reason` (a short
-    code), the client network of `client_address` and the event's own
-    fields (`provider`, `method`, `status`).
+    code), the client network of `client_address`, the `actor` of the
+    request being served and the event's own fields (`provider`,
+    `method`, `status`).
     """
 
     SECURITY_LOGGER.warning(
@@ -86,6 +90,7 @@ def log_security_event(
             path=path,
             reason=reason,
             client_network=describe_logged_network(client_address),
+            actor=current_security_actor(),
             **fields,
         ),
     )

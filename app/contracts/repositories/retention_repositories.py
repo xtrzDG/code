@@ -14,6 +14,7 @@ from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.retention_purges import RetentionPurgeStateDocument
 from app.schemas.dto.retention import RetentionWindow
@@ -25,9 +26,13 @@ from app.schemas.typings.storage.constrained_integers import DocumentCount
 
 class BusinessPrivacySettingsRepoContract(RepoContract, Protocol):
     def get_or_default(
-        self, business_id: BusinessId
+        self, business: BusinessDocument
     ) -> BusinessPrivacySettingsDocument:
-        """The stored settings, or the defaults of a business without any."""
+        """
+        The stored settings, or the defaults of a business without any (the
+        quality sample off for a business created from 3 November 2026 on:
+        `quality_sampling_defaults`).
+        """
         raise NotImplementedError
 
     def save(self, settings: BusinessPrivacySettingsDocument) -> None:

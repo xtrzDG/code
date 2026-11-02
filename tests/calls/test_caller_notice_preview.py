@@ -12,10 +12,12 @@ import pytest
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.calls.call_privacy_texts import CALL_PRIVACY_NOTICE_HINT
+from app.utilities.conversations.assistant_texts.call_consent_texts import (
+    CALL_RECORDING_CONSENT,
+)
 from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
-    CALL_RECORDING_NOTICE,
 )
 
 DICTIONARIES: Path = (
@@ -23,7 +25,7 @@ DICTIONARIES: Path = (
 )
 NOTICE_TEXTS: dict[str, LocalizedText] = {
     "noticeGreeting": CALL_GREETING,
-    "noticeRecorded": CALL_RECORDING_NOTICE,
+    "noticeRecorded": CALL_RECORDING_CONSENT,
     "noticeOperator": CALL_OPERATOR_HINT,
     "noticePrivacy": CALL_PRIVACY_NOTICE_HINT,
 }

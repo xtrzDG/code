@@ -2,8 +2,9 @@
 Log line formats: JSON for production log search, readable text for a
 terminal. Both carry the log context (request, business, conversation,
 channel, job), the measured fields of the line itself (`log_fields`, e.g.
-how long a job waited before a worker took it) and hide secrets that
-libraries put into URLs.
+how long a job waited before a worker took it) and hide secrets (tokens in
+URLs, Authorization credentials, provider keys), card and account numbers
+and contacts in messages and tracebacks (`redact_log_text`).
 """
 
 import json
@@ -12,7 +13,9 @@ import re
 from datetime import UTC, datetime
 from typing import cast
 
+from app.utilities.observability.contact_log_masking import mask_contact_details
 from app.utilities.observability.log_context import current_log_context
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 # Set on every record by LogContextFilter: the context fields of the line.
 CONTEXT_FIELDS_ATTRIBUTE: str = "log_context_fields"
@@ -26,8 +29,23 @@ SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"(?i)\b(access_token|api_key|token|key|secret)=[^&\s\"']+"),
         r"\1=<redacted>",
     ),
+    # The credentials of an Authorization header ("Bearer eyJ...").
+    (re.compile(r"(?i)\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}"), r"\1 <redacted>"),
+    # Stripe secret and restricted keys, webhook signing secrets (Stripe's
+    # and the platform's), and the platform's API keys past their prefix.
+    (
+        re.compile(r"\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]+|\bwhsec_[A-Za-z0-9_+/=-]+"),
+        "<redacted>",
+    ),
+    (re.compile(r"\b(awk_[a-z2-7]{8})_[A-Za-z0-9]+"), r"\1_<redacted>"),
 )
 TEXT_FORMAT: str = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+# NEL, LINE SEPARATOR and PARAGRAPH SEPARATOR as JSON escapes.
+JSON_LINE_BREAK_ESCAPES: dict[int, str] = {
+    0x85: "\\u0085",
+    0x2028: "\\u2028",
+    0x2029: "\\u2029",
+}
 
 
 class LogContextFilter(logging.Filter):
@@ -58,16 +76,21 @@ class JsonLogFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "thread": record.threadName,
-            "message": redact_secrets(record.getMessage()),
+            "message": redact_log_text(record.getMessage()),
         }
         entry.update(read_context_fields(record))
         entry.update(read_line_fields(record))
         if record.exc_info:
-            entry["exception"] = redact_secrets(self.formatException(record.exc_info))
+            entry["exception"] = redact_log_text(self.formatException(record.exc_info))
         if record.stack_info:
             entry["stack"] = self.formatStack(record.stack_info)
 
-        return json.dumps(entry, ensure_ascii=False, default=str)
+        # json.dumps escapes \n, \r and the other C0 controls; the line
+        # separators some readers also break on are escaped here, so a
+        # value never starts a line of its own (log injection, LOG-03).
+        return json.dumps(entry, ensure_ascii=False, default=str).translate(
+            JSON_LINE_BREAK_ESCAPES
+        )
 
 
 class TextLogFormatter(logging.Formatter):
@@ -77,7 +100,7 @@ class TextLogFormatter(logging.Formatter):
         super().__init__(TEXT_FORMAT)
 
     def format(self, record: logging.LogRecord) -> str:
-        line: str = redact_secrets(super().format(record))
+        line: str = redact_log_text(super().format(record))
         fields: dict[str, object] = {
             **read_context_fields(record),
             **read_line_fields(record),
@@ -127,8 +150,21 @@ def read_line_fields(record: logging.LogRecord) -> dict[str, object]:
     return {str(name): value for name, value in items}
 
 
+def redact_log_text(text: str) -> str:
+    """
+    A log text (a message, a traceback) without secrets, card, security
+    code, IBAN and ID numbers, e-mail addresses and international phone
+    numbers.
+    """
+
+    return mask_contact_details(mask_sensitive_numbers(redact_secrets(text)))
+
+
 def redact_secrets(text: str) -> str:
-    """Hide bot tokens and credential query parameters in a log text."""
+    """
+    Hide bot tokens, credential query parameters, Authorization credentials
+    and provider keys in a log text.
+    """
 
     for pattern, replacement in SECRET_PATTERNS:
         text = pattern.sub(replacement, text)

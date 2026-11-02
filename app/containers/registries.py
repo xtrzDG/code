@@ -87,6 +87,7 @@ class RegistriesContainer(containers.DeclarativeContainer):
     platform_admin_registry: Singleton[PlatformAdminRegistry] = Singleton(
         PlatformAdminRegistry,
         platform_admin_repo=repositories.platform_admin_repo,
+        passkey_repo=repositories.passkey_repo,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

@@ -67,6 +67,17 @@ class AuditSecurityEvent(StrEnum):
     KEY_ROTATION = "key_rotation"
 
 
+class AuditOutcome(StrEnum):
+    """
+    How the operation an audit entry records ended (version 7 of the
+    entry): it was done (SUCCESS) or it was refused (FAILURE: a wrong
+    sign-in or second-factor code, a code locked by its last attempt).
+    """
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+
 class AuditChainStatus(StrEnum):
     """
     What the latest check of one audit hash chain found: every entry it

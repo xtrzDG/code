@@ -13,7 +13,7 @@ def test_a_business_that_turned_the_sample_off_is_never_read() -> None:
     bench = QualityBench()
     sampled = bench.live_business()
     private = bench.live_business()
-    settings = bench.privacy_settings_repo.get_or_default(private.id)
+    settings = bench.privacy_settings_repo.get_or_default(private)
     settings.quality_sampling_allowed = False
     bench.privacy_settings_repo.save(settings)
     kept = bench.conversation(sampled)

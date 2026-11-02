@@ -13,6 +13,7 @@ from app.schemas.constants.passkeys import SecondFactorMethod
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.passkeys.booleans import IsAdminPasskeyRequired
 from app.schemas.typings.users.booleans import IsNewUser
 from app.use_cases.shared.second_factors import has_second_factor, second_factor_methods
 from app.use_cases.users.mfa.mfa_challenges import issue_mfa_challenge
@@ -26,6 +27,10 @@ class SecondStepOffer:
     answered, a passkey first (phishing resistant), and, for an admin
     without a factor, how one can be set up: a passkey first when this
     server offers them, else the authenticator app.
+
+    Where admins must use passkeys (`is_admin_passkey_required`,
+    ADMIN_PASSKEY_REQUIRED), an admin sets up a passkey only, and an admin
+    who has one is not offered the app's code (admin_passkey_rule.py).
     """
 
     def __init__(
@@ -36,7 +41,11 @@ class SecondStepOffer:
         recovery_code_repo: RecoveryCodeRepoContract,
         ceremony: PasskeyCeremonyAdapterContract,
         wall_clock: WallClock[Microseconds],
+        is_admin_passkey_required: IsAdminPasskeyRequired = False,
     ) -> None:
+        self._is_admin_passkey_required: IsAdminPasskeyRequired = (
+            is_admin_passkey_required
+        )
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._passkey_repo: PasskeyRepoContract = passkey_repo
@@ -59,11 +68,29 @@ class SecondStepOffer:
             return None
 
         are_passkeys_available: bool = self._ceremony.is_available()
+        held_to_passkeys: bool = bool(
+            self._is_admin_passkey_required
+            and user.is_platform_admin
+            and are_passkeys_available
+        )
         enrollment_methods: list[SecondFactorMethod] = []
         if not has_factor:
             if are_passkeys_available:
                 enrollment_methods.append(SecondFactorMethod.PASSKEY)
-            enrollment_methods.append(SecondFactorMethod.TOTP)
+            if not held_to_passkeys:
+                enrollment_methods.append(SecondFactorMethod.TOTP)
+
+        methods: list[SecondFactorMethod] = second_factor_methods(
+            self._totp_factor_repo,
+            self._passkey_repo,
+            self._recovery_code_repo,
+            user.id,
+            are_passkeys_available,
+        )
+        if held_to_passkeys and SecondFactorMethod.PASSKEY in methods:
+            methods = [
+                method for method in methods if method is not SecondFactorMethod.TOTP
+            ]
 
         return issue_mfa_challenge(
             self._mfa_challenge_repo,
@@ -72,12 +99,6 @@ class SecondStepOffer:
             is_new_user,
             client_ip_address,
             requires_enrollment=not has_factor,
-            methods=second_factor_methods(
-                self._totp_factor_repo,
-                self._passkey_repo,
-                self._recovery_code_repo,
-                user.id,
-                are_passkeys_available,
-            ),
+            methods=methods,
             enrollment_methods=enrollment_methods,
         )

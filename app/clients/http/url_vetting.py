@@ -10,6 +10,7 @@ platform's requests and what comes back are never readable or changeable
 on the way (ASVS V12.3.2).
 """
 
+import re
 from dataclasses import dataclass
 from urllib.parse import SplitResult, quote, urlsplit, urlunsplit
 
@@ -25,6 +26,8 @@ from app.schemas.constants.web_fetching import WebFetchProblem
 DEFAULT_PORTS: dict[str, int] = {"http": 80, "https": 443}
 # The only scheme requests go out with; http addresses are upgraded to it.
 REQUEST_SCHEME: str = "https"
+# A decimal, octal or hexadecimal number: no top-level domain looks so.
+NUMERIC_LABEL: re.Pattern[str] = re.compile(r"0x[0-9a-f]*|[0-9]+")
 # Characters kept as they are when a path or query is percent-encoded.
 SAFE_PATH_CHARACTERS: str = "/%:@!$&'()*+,;=-._~"
 SAFE_QUERY_CHARACTERS: str = SAFE_PATH_CHARACTERS + "?"
@@ -77,7 +80,12 @@ def vet_url(url: str) -> VettedUrl:
         )
 
     host: str = to_ascii_host(raw_host)
-    is_literal: bool = parse_ip_address(host) is not None
+    # A host whose last label is a number ("2130706433", "127.1",
+    # "0x7f.1") is an IP address in a form resolvers still accept: only
+    # the canonical form of a public address passes.
+    is_literal: bool = parse_ip_address(host) is not None or (
+        NUMERIC_LABEL.fullmatch(host.rsplit(".", 1)[-1]) is not None
+    )
     if is_blocked_host_name(host) or (is_literal and not is_public_address(host)):
         raise fetch_error(
             WebFetchProblem.NOT_PUBLIC, "The address must be a public address."

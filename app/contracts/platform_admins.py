@@ -61,3 +61,11 @@ class PlatformAdminRegistryContract(RegistryContract, Protocol):
         a new platform); after that the lists grant nothing.
         """
         raise NotImplementedError
+
+    def needs_passkey(self, user: UserDocument) -> bool:
+        """
+        The admin must add a passkey before the admin pages open: admins
+        prove it is them with a passkey where ADMIN_PASSKEY_REQUIRED is on
+        (production), and this one has none yet.
+        """
+        raise NotImplementedError

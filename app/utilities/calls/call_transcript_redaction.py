@@ -3,8 +3,9 @@ What a call's transcript keeps when the caller declined the recording: the
 words, without the numbers and addresses that identify or reach a person.
 
 E-mail addresses, IBAN-style account numbers, payment card numbers (13 to
-19 digits) and phone or other long numbers (7 to 15 digits, the shape
-`PHONE_PATTERN` finds) become placeholders. Dates, times, prices, party
+19 digits), security codes and ID numbers (`mask_sensitive_numbers`,
+which every transcript gets) and phone or other long numbers (7 to 15
+digits, the shape `PHONE_PATTERN` finds) become placeholders. Dates, times, prices, party
 sizes and room numbers stay, so staff still see what was agreed: a long
 number written as a date (25.10.2026, 25/10/2026, 2026-10-25) or as an
 amount next to its currency (1 500 000 som, $ 2 400 000, 1500000 UZS) is
@@ -18,6 +19,7 @@ from app.utilities.observability.trace_redaction import (
     PHONE_PATTERN,
     PHONE_PLACEHOLDER,
 )
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 from app.utilities.reply_guard.contact_details import EMAIL_PATTERN
 
 EMAIL_PLACEHOLDER: str = "[email]"
@@ -53,7 +55,9 @@ AMOUNT_AFTER: re.Pattern[str] = re.compile(
 def redact_call_text(text: str) -> str:
     """One spoken line without e-mail, account, card and phone numbers."""
 
-    without_emails: str = EMAIL_PATTERN.sub(EMAIL_PLACEHOLDER, text)
+    without_emails: str = EMAIL_PATTERN.sub(
+        EMAIL_PLACEHOLDER, mask_sensitive_numbers(text)
+    )
     without_accounts: str = ACCOUNT_PATTERN.sub(ACCOUNT_PLACEHOLDER, without_emails)
     without_cards: str = CARD_PATTERN.sub(CARD_PLACEHOLDER, without_accounts)
     return PHONE_PATTERN.sub(_number_placeholder, without_cards)

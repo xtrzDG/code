@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Iterator
 
 from typed_time_provider import Microseconds, Seconds, WallClock
 
@@ -28,6 +27,7 @@ from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.retention_purges import (
     RetentionPurgeCounts,
@@ -133,13 +133,14 @@ class PurgeExpiredPersonalDataUseCase(UseCaseContract[JobTick, JobReport]):
         del input_data
         processed: int = 0
         failure: ApplicationError | None = None
-        for business_id in self._business_ids():
+        # Every business, a keyset batch at a time (a job over the platform).
+        for business in walk_businesses(self._business_repo):
             try:
-                processed += self._purge(business_id)
+                processed += self._purge(business)
             except ApplicationError as error:
                 LOGGER.warning(
                     "Retention purge of %s failed: %s",
-                    business_id,
+                    business.id,
                     type(error).__name__,
                 )
                 failure = failure or error
@@ -149,14 +150,10 @@ class PurgeExpiredPersonalDataUseCase(UseCaseContract[JobTick, JobReport]):
 
         return JobReport(processed_count=ProcessedItemCount(processed))
 
-    def _business_ids(self) -> Iterator[BusinessId]:
-        # Every business, a keyset batch at a time (a job over the platform).
-        for business in walk_businesses(self._business_repo):
-            yield business.id
-
-    def _purge(self, business_id: BusinessId) -> int:
+    def _purge(self, business: BusinessDocument) -> int:
+        business_id: BusinessId = business.id
         settings: BusinessPrivacySettingsDocument = (
-            self._privacy_settings_repo.get_or_default(business_id)
+            self._privacy_settings_repo.get_or_default(business)
         )
         state: RetentionPurgeStateDocument = self._purge_state_repo.get_or_new(
             business_id

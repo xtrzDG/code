@@ -175,7 +175,7 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         for business in walk_businesses(self._business_repo):
             if business.status not in SAMPLED_STATUSES or not (
                 self._privacy_settings_repo.get_or_default(
-                    business.id
+                    business
                 ).quality_sampling_allowed
             ):
                 continue

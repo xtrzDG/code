@@ -51,7 +51,7 @@ class GetPrivacySettingsUseCase(
         )
         return build_privacy_settings_view(
             business,
-            self._privacy_settings_repo.get_or_default(business.id),
+            self._privacy_settings_repo.get_or_default(business),
             self._purge_state_repo,
             self._processor_erasure,
         )
