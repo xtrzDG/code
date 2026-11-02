@@ -80,6 +80,38 @@ describe("ManagedBooking: the link's token leaves the address bar", () => {
     expect(calendar === null || !calendar.getAttribute("href")?.includes(LINK)).toBe(true);
   });
 
+  it("says the page closed, not that the link expired, once its credential ended", async () => {
+    const expired = () =>
+      failure(404, { error: "not_found", message: "expired", reasons: [{ code: "link_expired", message: "expired" }] });
+    answerPost({ [CANCEL]: expired });
+    renderInLocale(
+      <ManagedBooking initialView={{ ...view, token: CREDENTIAL }} texts={it_texts} language="it" sessionExpiresAt={ENDS} />,
+      { locale: "it" },
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: it_texts.cancel }));
+    await userEvent.click(screen.getByRole("button", { name: it_texts.confirmCancel }));
+
+    expect(await screen.findByText(it_texts.pageClosed)).toBeTruthy();
+    expect(screen.queryByText(it_texts.linkExpired)).toBeNull();
+    expect(screen.queryByRole("button", { name: it_texts.cancel })).toBeNull();
+    expect(api.POST).not.toHaveBeenCalledWith(SESSION, expect.anything());
+  });
+
+  it("keeps telling a guest on their link that the link expired", async () => {
+    const expired = () =>
+      failure(404, { error: "not_found", message: "expired", reasons: [{ code: "link_expired", message: "expired" }] });
+    answerPost({ [SESSION]: () => failure(429, { message: "Too many requests", reasons: [] }), [CANCEL]: expired });
+    renderInLocale(<ManagedBooking initialView={view} texts={it_texts} language="it" />, { locale: "it" });
+    await waitFor(() => expect(api.POST).toHaveBeenCalledTimes(1));
+
+    await userEvent.click(screen.getByRole("button", { name: it_texts.cancel }));
+    await userEvent.click(screen.getByRole("button", { name: it_texts.confirmCancel }));
+
+    expect(await screen.findByText(it_texts.linkExpired)).toBeTruthy();
+    expect(screen.queryByText(it_texts.pageClosed)).toBeNull();
+  });
+
   it("keeps the link when the trade is refused", async () => {
     const replace = vi.spyOn(window.history, "replaceState");
     answerPost({ [SESSION]: () => failure(429, { message: "Too many requests", reasons: [] }) });

@@ -20,7 +20,7 @@ import { prepareBackendCall } from "./relay";
 import { clearSessionCookie } from "./sessionCookie";
 import { openSession } from "./sessionOpening";
 
-export const ROTATE_SESSION_PATH = "/v1/auth/session/rotate";
+const ROTATE_SESSION_PATH = "/v1/auth/session/rotate";
 
 export async function rotateSession(request: NextRequest): Promise<Response> {
   const prepared = prepareBackendCall(request, { useSession: true, backendPath: ROTATE_SESSION_PATH });

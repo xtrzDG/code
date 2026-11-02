@@ -19,7 +19,6 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_waitlist import channel_of
-from app.schemas.constants.channels import ChannelKind
 from app.registries.niches.rebooking_rule_catalog import NICHE_REBOOKING_RULES
 from app.schemas.constants.bookings import BookingOrigin, BookingStatus
 from app.schemas.constants.campaigns import (
@@ -27,6 +26,7 @@ from app.schemas.constants.campaigns import (
     CampaignSkipReason,
     RebookingRuleKind,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.marketing_consent import (
     CURRENT_MARKETING_CONSENT_TEXT,
     MarketingConsentSource,

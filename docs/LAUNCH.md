@@ -265,9 +265,12 @@ past 1200».
    выпуска (`scripts/check_data_tasks.sh` читает её `/readyz`): задайте
    переменной репозитория `PRODUCTION_API_URL` адрес рабочего API.
 
-Без staging запустите Deploy smoke test вручную (Run workflow → staging) и
-подтвердите перенос в окружении `production-release`: прямой push в
-`release` защита ветки не пропускает. Настройка окружений GitHub, правила
+Без staging выпуск не идёт: в `release` попадает только коммит с зелёной
+проверкой staging, одобренный в окружении `production-release`, а прямой
+push в `release` защита ветки не пропускает. Если автоматический перенос
+выключен (`PROMOTE_AFTER_STAGING_SMOKE=false`), дождитесь, пока staging
+развернёт последний коммит `main`, запустите Deploy smoke test вручную
+(Run workflow → staging) и подтвердите перенос. Настройка окружений GitHub, правила
 изменения данных между версиями, `workshop migrate-documents` и откат на
 прошлую версию — в `docs/operations/deploys.md`.
 

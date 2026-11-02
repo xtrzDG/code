@@ -10,6 +10,7 @@ import { interfaceSentence, type SentenceWithUserValues } from "@/i18n/userValue
 import { bookingProblem, isPageProblem, type BookingProblem } from "@/lib/bookingPage/refusals";
 import type { BookingPageTexts } from "@/lib/bookingPage/texts";
 
+import { pageProblemOf, type PageProblem } from "../_lib/pageSession";
 import { usePageSession } from "../_lib/usePageSession";
 import { BookingContacts } from "./BookingContacts";
 import { BookingFacts } from "./BookingFacts";
@@ -69,26 +70,29 @@ export function ManagedBooking({
   }, []);
   usePageSession({ token: view.token, language, isSession, expiresAt: sessionEnds, onCredential: adoptCredential });
   const [notice, setNotice] = useState<SentenceWithUserValues | null>(null);
-  const [problem, setProblem] = useState<BookingProblem | null>(null);
+  const [problem, setProblem] = useState<PageProblem | null>(null);
   const [isMoving, setMoving] = useState(false);
   const [isCancelling, setCancelling] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const messages = useRef<HTMLDivElement>(null);
 
   const isActive = view.status === "pending" || view.status === "confirmed";
-  const isStale = problem !== null && isPageProblem(problem);
+  const isStale = problem !== null && (problem === "pageClosed" || isPageProblem(problem));
   const canChange = view.can_cancel && !isStale;
   const canMove = view.can_reschedule && !isStale;
   const hasStarted = isActive && !view.can_cancel && !view.is_over;
   const standing = view.is_over ? texts.overNotice : hasStarted ? texts.startedNotice : null;
   const calendarUrl = `${BFF_BASE_PATH}/v1/public/bookings/${encodeURIComponent(view.token)}/calendar.ics`;
 
-  const report = useCallback((next: SentenceWithUserValues | null, failure: BookingProblem | null) => {
-    setNotice(next);
-    setProblem(failure);
-    // Focus follows the outcome (the button that led here may be gone).
-    requestAnimationFrame(() => messages.current?.focus());
-  }, []);
+  const report = useCallback(
+    (next: SentenceWithUserValues | null, failure: BookingProblem | null) => {
+      setNotice(next);
+      setProblem(failure === null ? null : pageProblemOf(failure, isSession));
+      // Focus follows the outcome (the button that led here may be gone).
+      requestAnimationFrame(() => messages.current?.focus());
+    },
+    [isSession],
+  );
 
   const showProblem = useCallback(
     (failure: BookingProblem | null) => {

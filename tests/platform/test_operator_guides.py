@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 
+from app.gateways.http.widget_accessibility_routes import WIDGET_ACCESSIBILITY_PATH
 from app.utilities.channels.channel_endpoints import (
     WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
@@ -32,7 +33,13 @@ OPENAPI_DESCRIPTION: str = "web/openapi.json"
 
 # Routes outside the OpenAPI description (include_in_schema=False).
 UNDESCRIBED_ROUTES: frozenset[str] = frozenset(
-    {"/healthz", "/readyz", WIDGET_SCRIPT_PATH, WIDGET_DEMO_PATH}
+    {
+        "/healthz",
+        "/readyz",
+        WIDGET_SCRIPT_PATH,
+        WIDGET_DEMO_PATH,
+        WIDGET_ACCESSIBILITY_PATH,
+    }
 )
 
 # The guide names the curated country data relative to this folder.

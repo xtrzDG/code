@@ -45,7 +45,8 @@ export function businessIdOfLinkToken(token: string): string | null {
     return null;
   }
   const bytes = decodeBase64Url(token);
-  const signatureLength = bytes === null ? undefined : SIGNATURE_LENGTH_BYTES[bytes[0]];
+  const version = bytes?.[0];
+  const signatureLength = version === undefined ? undefined : SIGNATURE_LENGTH_BYTES[version];
   if (bytes === null || signatureLength === undefined || bytes.length !== PAYLOAD_LENGTH_BYTES + signatureLength) {
     return null;
   }

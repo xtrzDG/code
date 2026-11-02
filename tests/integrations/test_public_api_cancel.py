@@ -72,3 +72,17 @@ def test_a_key_without_bookings_write_cannot_cancel() -> None:
 
     assert refused.status_code == 403
     assert kept.json()["status"] == "confirmed"
+
+
+def test_a_key_that_only_writes_bookings_cancels_and_reads_the_answer() -> None:
+    # The answer is the cancelled booking itself, not a read the key would
+    # need `bookings:read` for.
+    with open_integration_shop() as shop:
+        booking = shop.book()
+        writer = shop.add_api_key(["bookings:write"], name="Writer")
+        cancelled = shop.api("POST", f"/bookings/{booking['id']}/cancel", writer)
+        read = shop.api("GET", f"/bookings/{booking['id']}", writer)
+
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    assert read.status_code == 403

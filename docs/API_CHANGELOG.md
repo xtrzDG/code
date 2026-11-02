@@ -103,8 +103,22 @@ that follows the description already handles as errors.
   payment page, choose another default or point a rule at another page
   may answer 401 `step_up_required`. Booking manage tokens are 76
   characters (version 2, a 128-bit MAC); 71-character links keep working
-  until they expire. The Google Calendar consent URL carries
-  `code_challenge` and `code_challenge_method=S256`.
+  until they expire. Staff notification link tokens (`/n/{token}`, read by
+  `GET …/notification-links/{token}`) are 72 characters (version 2, a
+  128-bit MAC); 67-character ones keep working until they expire. The
+  Google Calendar consent URL carries `code_challenge` and
+  `code_challenge_method=S256`.
+- **Changed** (new refusals) while a platform brake holds, starting a menu
+  import (`POST …/knowledge/import`), a website import (`POST
+  …/knowledge/import-website`), an autotest run (`POST
+  …/assistant-versions/{version_id}/autotests`), an alias suggestion
+  (`POST …/knowledge/{item_id}/aliases/suggest`) or renting a number
+  (`POST …/phone-line/number`) answers 409 with reason `platform_brake`
+  (detail `paused` or `budget_stop`). Saving the profile (`PUT·PATCH
+  …/profile`, `PUT …/profile/steps/{step}`) refuses (422) a
+  `handoff_phone_number` calls may not be put through to: not a mobile or
+  landline of the business's country or the EU, or a premium, shared-cost
+  or satellite number.
 - **Changed** (new refusals, no schema change): 504
   (`external_service_error`) for a request that has not started answering
   within 60 s (170 s for model-backed and upload routes); 422
@@ -137,7 +151,14 @@ that follows the description already handles as errors.
   connect messages) no longer name server settings; reason codes are
   unchanged. Setup progress `phone_test_links` no longer has a `web_chat`
   entry (the website chat is tried at the share links' `hosted_chat_url`).
-  `GET /widget/demo` answers 404 in production.
+  `GET /widget/demo` answers 404 in production. Campaign messages go only
+  to the chat the booking was made in, so `CampaignSkipReason`
+  `no_channel` now also covers a booking made by phone or in the website
+  chat.
+- **Added** outside the description: `GET /widget/accessibility`
+  (`?language=`), the widget footer's link: a 302 to the public site's
+  accessibility statement in English or Italian, 404 without
+  `CABINET_BASE_URL`.
 - **Deprecated** (sunset 2027-05-02, removed in `/v2`)
   `FeedbackTemplatePreview.example` (`GET …/review-settings`) and
   `TextBackTemplatePreview.example` (`GET …/call-settings`), still filled,

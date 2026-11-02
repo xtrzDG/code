@@ -79,7 +79,7 @@ Every pull request and every push to `main` runs (`.github/workflows/`):
 | Python static analysis | `bandit` with `bandit-baseline.json` | any finding not in the dated baseline |
 | Semantic analysis | CodeQL (Python, JavaScript/TypeScript and the workflows themselves, `actions`; `security-extended`) | new high-severity alerts |
 | Workflows | `Workflow audit (actionlint, zizmor)`: syntax, shellcheck, template injection, credentials left in checkouts, dangerous triggers, unpinned or impostor actions, permissions | any finding not commented where it occurs |
-| Container images | Trivy on the backend and cabinet images with its vulnerability, misconfiguration and secret scanners (`.github/trivy-secret.yaml` exempts only third-party package folders) | HIGH or CRITICAL with a fix available, any misconfiguration or secret |
+| Container images | Trivy on the backend and cabinet images with its vulnerability, misconfiguration and secret scanners (`.github/trivy-secret.yaml` exempts only third-party package folders) | HIGH or CRITICAL: a vulnerability with a fix available, a misconfiguration or a secret |
 | Software bill of materials | syft (SPDX JSON per image, kept 30 days as a CI artifact) | — |
 | API contract | `oasdiff breaking` against the merge base | breaking changes without the `api-breaking` label |
 | API fuzzing | `Backend tests (api-fuzz 1/1)`: hypothesis over every documented operation, signed in, and hostile bodies (`tests/api_fuzz`) | any server error other than an unavailable provider |
@@ -214,20 +214,25 @@ codes are hashed under a server key, sensitive actions (deposit payment
 pages included) need a fresh sign-in, which also gives the session a new
 token, people can sign out everywhere and platform admins can end a
 member's sessions; new-country sign-ins and code spraying are reported.
-Webhook secrets rotate without refusing callbacks. The API checks webhook signature headers
-before reading a body, limits anonymous callers, bodies, JSON depth and
-request time, sends strict security headers and writes refusals to a
-security log without personal data; the cabinet adds its own CSRF rule,
-`Clear-Site-Data` at sign-out and a cookie banner. Sentry and the logs
-receive no personal data. The assistant reads customers' and owners'
-words only as fenced values, its tools and contacts are capped, its
-replies are checked for team notes and foreign links, it says it is an AI
-and names 112 in an emergency. A caller ID never authenticates, calls go
-only to ordinary EU numbers, recordings are off by default; the platform
-can be paused and stops at its daily budget; queued jobs stay in their
-tenant; payments are reconciled daily; erasures survive a restore and
-marketing waits for consent. Each measure with its code and test:
-[docs/security/runtime-protections.md](docs/security/runtime-protections.md).
+Webhook secrets rotate without refusing callbacks. The API checks webhook
+signature headers before reading a body, limits anonymous callers,
+bodies, JSON depth and request time, sends strict security headers and
+writes refusals to a security log without personal data; the cabinet adds
+its own CSRF rule, `Clear-Site-Data` at sign-out and a cookie banner.
+Sentry events are scrubbed of personal data and log lines mask e-mail
+addresses and phone numbers (the residuals are named on the page below).
+The assistant reads customers' and owners' words only as fenced values,
+its tools and contacts are capped, its replies are checked for team notes
+and foreign links, it says it is an AI and names 112 in an emergency. A
+caller ID never authenticates, calls are put through only to ordinary
+numbers of the business's country or the EU, recordings are off by
+default; the platform can be paused and stops at its daily budget; queued
+jobs stay in their tenant; payments are reconciled daily; erasures survive
+a restore and marketing waits for consent. Each measure with its code and
+test: [docs/security/runtime-protections.md](docs/security/runtime-protections.md)
+(the platform's edge) and
+[docs/security/product-protections.md](docs/security/product-protections.md)
+(the assistant, calls, bookings and money).
 
 Channel and calendar tokens are stored sealed with the newest key of
 `ENCRYPTION_KEYS`; older keys only open what they sealed until a platform

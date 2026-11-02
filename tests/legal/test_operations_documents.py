@@ -46,6 +46,7 @@ DOCUMENTS: tuple[str, ...] = (
     "docs/security/README.md",
     "docs/security/change-risk.md",
     "docs/security/runtime-protections.md",
+    "docs/security/product-protections.md",
 )
 # The register's name of each sub-processor of app/registries/legal/.
 REGISTER_NAME_OF: dict[str, str] = {

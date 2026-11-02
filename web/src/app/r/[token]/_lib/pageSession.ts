@@ -11,6 +11,7 @@
 
 import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
+import type { BookingProblem } from "@/lib/bookingPage/refusals";
 
 import { PAGE_SESSION_PATH } from "./pageSessionPath";
 
@@ -63,6 +64,19 @@ export function lastPageLanguage(): string | null {
   } catch {
     return null;
   }
+}
+
+/** A problem of the page: the API's, or `pageClosed` once the page's credential ended. */
+export type PageProblem = BookingProblem | "pageClosed";
+
+/**
+ * What the guest reads about a refusal: on the page's credential an
+ * expired or refused one only closes this page (the link in their
+ * confirmation still opens the booking), so it says so instead of
+ * calling their link expired or invalid.
+ */
+export function pageProblemOf(failure: BookingProblem, isSession: boolean): PageProblem {
+  return isSession && (failure === "linkExpired" || failure === "linkInvalid") ? "pageClosed" : failure;
 }
 
 /** The address bar without the link's token (the page's history entry is replaced). */
