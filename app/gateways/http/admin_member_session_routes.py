@@ -41,7 +41,7 @@ def build_admin_member_session_router(
                                                 end every session of that
                                                 member (SUPER, step-up;
                                                 audited in the platform's
-                                                and the client's log)
+                                                chain)
     (… is /v1/admin/clients/{business_id}).
     """
 
@@ -55,7 +55,7 @@ def build_admin_member_session_router(
         return list_client_member_sessions_operator.operate(
             ClientMembersQuery(
                 user_id=user_id,
-                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                client_id=parse_path_identifier(business_id, BusinessId, "Business"),
             )
         )
 
@@ -69,7 +69,7 @@ def build_admin_member_session_router(
         return end_member_sessions_operator.operate(
             EndMemberSessionsCommand(
                 user_id=user_id,
-                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                client_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 member_user_id=parse_path_identifier(member_user_id, UserId, "Member"),
                 client_ip_address=read_client_ip_address(request),
             )

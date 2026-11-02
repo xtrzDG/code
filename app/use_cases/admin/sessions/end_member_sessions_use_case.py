@@ -10,25 +10,16 @@ from app.contracts.session_assurance import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin_sessions import EndMemberSessionsCommand
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.dto.sessions import RevokedSessionsView, SessionSweep
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
-from app.schemas.typings.compliance.strings import (
-    AuditEntityName,
-    AuditEntityReference,
-)
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.use_cases.shared.business_access import require_business
 from app.use_cases.shared.session_sweeps import end_sessions, own_session
-
-MEMBER_SESSIONS_ENTITY: AuditEntityName = AuditEntityName("user_session")
 
 
 class EndMemberSessionsUseCase(
@@ -39,11 +30,12 @@ class EndMemberSessionsUseCase(
     session of one member of a client's team, at once, on every device: a
     stolen phone, a suspected takeover. The person signs in again; their
     next request with an old token is refused. Needs a fresh confirmation
-    (step-up). Audited twice: in the platform's chain (SESSION_REVOKED
-    about the person, with the count) and in the client's own log, where
-    the owner sees which admin did it and when. Admins ending their own
-    sessions keep the one they act from. A member of another business, or
-    an unknown one, is not found.
+    (step-up). Audited in the platform's chain as SESSION_REVOKED about the
+    person, by the admin, with the count and the admin's address (people
+    and sessions are platform rows: the operation runs outside any
+    business's scope). Admins ending their own sessions keep the one they
+    act from. A member of another business, or an unknown one, is not
+    found.
     """
 
     def __init__(
@@ -73,7 +65,7 @@ class EndMemberSessionsUseCase(
         )
         self._step_up.require_recent_authentication()
         business: BusinessDocument = require_business(
-            self._business_repo, input_data.business_id
+            self._business_repo, input_data.client_id
         )
         if not any(
             member.user_id == input_data.member_user_id for member in business.members
@@ -97,21 +89,5 @@ class EndMemberSessionsUseCase(
                 client_ip_address=input_data.client_ip_address,
                 now=now,
             ),
-        )
-        self._audit_log_repo.append(
-            AuditLogEntryDocument(
-                business_id=business.id,
-                actor_id=admin.id,
-                action=AuditAction.SESSION_REVOKED,
-                entity=MEMBER_SESSIONS_ENTITY,
-                entity_id=AuditEntityReference(
-                    f"{input_data.member_user_id}:"
-                    f"{SessionSweepReason.ENDED_BY_PLATFORM_ADMIN.value}"
-                ),
-                ip_address=input_data.client_ip_address,
-                record_count=AuditRecordCount(int(ended)),
-                created_at=now,
-                updated_at=now,
-            )
         )
         return RevokedSessionsView(revoked_count=ended)

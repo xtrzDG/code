@@ -12,10 +12,14 @@ from app.schemas.typings.users.strings import MaskedLoginDestination, UserDispla
 
 
 class ClientMembersQuery(ImmutableDTO):
-    """`user_id` is the platform admin asking."""
+    """
+    `user_id` is the platform admin asking, `client_id` the business. It
+    is not `business_id`: people and their sessions are platform rows, so
+    the operation runs outside any business's storage scope.
+    """
 
     user_id: UserId
-    business_id: BusinessId
+    client_id: BusinessId
 
 
 class ClientMemberSessionsView(ImmutableDTO):
@@ -38,9 +42,12 @@ class ClientMemberSessionList(ImmutableDTO):
 
 
 class EndMemberSessionsCommand(ImmutableDTO):
-    """A platform admin (`user_id`) ends every session of a client's member."""
+    """
+    A platform admin (`user_id`) ends every session of a member of the
+    business `client_id` (platform rows: outside any business's scope).
+    """
 
     user_id: UserId
-    business_id: BusinessId
+    client_id: BusinessId
     member_user_id: UserId
     client_ip_address: ClientIpAddress | None = None

@@ -48,7 +48,7 @@ class ListClientMemberSessionsUseCase(
             )
         )
         business: BusinessDocument = require_business(
-            self._business_repo, input_data.business_id
+            self._business_repo, input_data.client_id
         )
         now: Microseconds = self._wall_clock.now_unix()
         return ClientMemberSessionList(

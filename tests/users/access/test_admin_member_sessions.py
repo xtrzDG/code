@@ -1,8 +1,8 @@
 """
 A platform admin sees a client team's sign-ins (counts, last use, masked
 logins) and a SUPER admin ends every session of one member: their tokens
-stop working, a fresh confirmation is needed, and both the platform's
-chain and the client's own log say which admin did it.
+stop working, a fresh confirmation is needed, and the platform's chain
+says which admin did it.
 """
 
 import pytest
@@ -63,7 +63,7 @@ def members(world: SupportWorld) -> ClientMemberSessionList:
     )
     return world.as_support(
         lambda: use_case.run(
-            ClientMembersQuery(user_id=world.support.id, business_id=world.business.id)
+            ClientMembersQuery(user_id=world.support.id, client_id=world.business.id)
         )
     )
 
@@ -87,7 +87,7 @@ def end_sessions_of(
         lambda: use_case.run(
             EndMemberSessionsCommand(
                 user_id=world.support.id,
-                business_id=world.business.id,
+                client_id=world.business.id,
                 member_user_id=member_id,
                 client_ip_address=ClientIpAddress(SUPPORT_IP),
             )
@@ -113,7 +113,7 @@ def test_the_team_list_counts_live_sessions_without_contacts() -> None:
     assert GERMANY_MOBILE.replace(" ", "") not in str(staff.masked_login)
 
 
-def test_a_super_admin_ends_every_session_of_a_member_audited_twice() -> None:
+def test_a_super_admin_ends_every_session_of_a_member_audited() -> None:
     world = SupportWorld()
     world.testbed.clock.advance(MINUTE)
     second = world.testbed.sign_in_with_phone(GERMANY_MOBILE)
@@ -123,17 +123,16 @@ def test_a_super_admin_ends_every_session_of_a_member_audited_twice() -> None:
     assert int(ended.revoked_count) == 2
     with pytest.raises(AuthenticationRequiredError):
         world.testbed.authenticate_user.run(check(second))
-    entries = [
+    [entry] = [
         entry
         for entry in world.testbed.audit_log_collection.list_all()
         if entry.action is AuditAction.SESSION_REVOKED
     ]
-    assert {entry.business_id for entry in entries} == {None, world.business.id}
-    for entry in entries:
-        assert entry.actor_id == world.support.id
-        assert str(entry.entity_id) == f"{world.staff_id}:ended_by_platform_admin"
-        assert entry.record_count is not None and int(entry.record_count) == 2
-        assert str(entry.ip_address) == SUPPORT_IP
+    assert entry.business_id is None
+    assert entry.actor_id == world.support.id
+    assert str(entry.entity_id) == f"{world.staff_id}:ended_by_platform_admin"
+    assert entry.record_count is not None and int(entry.record_count) == 2
+    assert str(entry.ip_address) == SUPPORT_IP
     [staff] = [item for item in members(world).items if item.user_id == world.staff_id]
     assert int(staff.live_session_count) == 0
 

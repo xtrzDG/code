@@ -131,4 +131,19 @@ describe("tags on a card", () => {
     expect(blocked.blocked_at).toBe(5);
     expect(blocked.contact).toMatchObject({ is_blocked: true, tags: [], is_vip: false });
   });
+
+  it("takes the marketing consent the card answered, else keeps the page's", () => {
+    const detail: CustomerDetail = {
+      contact: contact(),
+      visit_count: 1,
+      standing: "visited",
+      blocked_at: null,
+      marketing_consent: { status: "not_given" },
+    };
+    expect(withCard(detail, card({ marketing_consent: { status: "agreed", source: "in_person" } })).marketing_consent).toEqual({
+      status: "agreed",
+      source: "in_person",
+    });
+    expect(withCard(detail, card()).marketing_consent).toEqual({ status: "not_given" });
+  });
 });
