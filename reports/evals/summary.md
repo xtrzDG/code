@@ -1,8 +1,8 @@
-### Evaluation: scripted (replay)
+### Evaluation: scripted (record)
 
-- pass^1: **100.0%** (46/46), pass@1 100.0%
+- pass^1: **100.0%** (878/878), pass@1 100.0%
 - stale 0, errors 0, cost $0.0000, model time p50 0 ms, p95 0 ms
-- baseline 100.0% -> 100.0% (+0.0 pt over 46 scenarios, tolerance 3.0 pt): within tolerance
+- baseline 100.0% -> 100.0% (+0.0 pt over 878 scenarios, tolerance 3.0 pt): within tolerance
 
 | Criterion | Rate | Change |
 | --- | --- | --- |
@@ -15,7 +15,7 @@
 | guard | 100.0% | +0.0 pt |
 | records | 100.0% | +0.0 pt |
 | booking_fields | 100.0% | +0.0 pt |
-| required_facts | 100.0% | +0.0 pt |
 | forbidden_values | 100.0% | +0.0 pt |
 | no_leak | 100.0% | +0.0 pt |
+| required_facts | 100.0% | +0.0 pt |
 | memory | 100.0% | +0.0 pt |
