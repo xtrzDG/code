@@ -2,9 +2,10 @@
 The abuse alert rules (ABUSE-04, VOICE-09), the code's copy of
 ops/alerts/{booking_spike,cancellation_spike,whatsapp_quality}.yaml. Each
 fires on any counted event in the shared signal windows: a business past
-its hourly cap of new bookings or of cancellations (counted where the
-change is announced, `booking_surge_signals`), or a warning of Meta about a
-WhatsApp number or template (counted by the WhatsApp webhook).
+40 new bookings or 15 cancellations in an hour (counted where the change
+is announced, `BookingSurgeObserverFacilitator`), or a warning of Meta
+about a WhatsApp number or template (counted by the WhatsApp webhook,
+`report_quality_warnings`).
 """
 
 from app.schemas.constants.incidents import IncidentSeverity
@@ -32,8 +33,8 @@ ABUSE_ALERT_RULES: tuple[PlatformAlertRule, ...] = (
         code=PlatformAlertCode.BOOKING_SPIKE,
         severity=IncidentSeverity.SEV3,
         summary=AlertRuleSummary(
-            "A business got more new bookings in an hour than its hourly cap "
-            "(fake bookings holding every slot)."
+            "A business got more than 40 new bookings in an hour (fake "
+            "bookings holding every slot)."
         ),
         threshold=ANY_EVENT,
         unit=AlertUnit.COUNT,
@@ -45,8 +46,8 @@ ABUSE_ALERT_RULES: tuple[PlatformAlertRule, ...] = (
         code=PlatformAlertCode.CANCELLATION_SPIKE,
         severity=IncidentSeverity.SEV3,
         summary=AlertRuleSummary(
-            "A business had more bookings cancelled in an hour than its hourly "
-            "cap (a mass cancellation)."
+            "A business had more than 15 bookings cancelled in an hour (a "
+            "mass cancellation)."
         ),
         threshold=ANY_EVENT,
         unit=AlertUnit.COUNT,

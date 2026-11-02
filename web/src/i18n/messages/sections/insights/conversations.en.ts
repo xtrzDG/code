@@ -26,6 +26,7 @@ export const conversationsEn = {
     playLabel: "Play recording of the call on {date}",
     loading: "Loading the recording…",
     playMissing: "This recording is no longer available: it was deleted after the retention period or with the customer's data.",
+    playForbidden: "Only owners play call recordings here. An owner can let staff play them in Settings → Team.",
     playError: "The recording could not be loaded: the voice service is not responding. Try again in a minute.",
     playRetry: "Try again",
     summary: "Summary",

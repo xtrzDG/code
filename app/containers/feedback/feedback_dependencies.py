@@ -14,6 +14,7 @@ from app.contracts.repositories.business_repositories import (
     ChannelRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
@@ -65,3 +66,5 @@ class FeedbackDependencies:
     storage_scope: StorageScopeContract
     wall_clock: WallClock[Microseconds]
     app_base_url: PublicBaseUrl | None
+    # The consent ledger a STOP's withdrawal is written to.
+    consent_record_repo: ConsentRecordRepoContract | None = None

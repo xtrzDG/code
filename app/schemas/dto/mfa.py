@@ -11,6 +11,7 @@ from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.mfa import AuthLevel, StepUpMethod, TotpFactorStatus
 from app.schemas.dto.users import OtpChallengeView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calls.booleans import IsStaffRecordingPlaybackAllowed
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.mfa.booleans import (
     IsMfaRequired,
@@ -222,7 +223,9 @@ class BusinessSecurityView(ImmutableDTO):
     """
     Whether the team must sign in with two factors, how many members have
     no authenticator yet (they cannot open the business while it is on),
-    and whether the viewer's own session is signed in with two factors.
+    whether the viewer's own session is signed in with two factors, and
+    whether staff may play the call recordings (`staff_may_play_recordings`;
+    off: owners only).
     """
 
     business_id: BusinessId
@@ -231,14 +234,23 @@ class BusinessSecurityView(ImmutableDTO):
         MemberWithoutTwoFactorCount(0)
     )
     viewer_auth_level: AuthLevel | None = None
+    staff_may_play_recordings: IsStaffRecordingPlaybackAllowed = False
 
 
 class UpdateBusinessSecurityRequest(ImmutableDTO):
-    require_mfa_for_members: IsMfaRequiredForMembers
+    """
+    The owner's choices; a field left out (null) stays as it is:
+    `require_mfa_for_members` (the team signs in with two factors) and
+    `staff_may_play_recordings` (staff play the call recordings too).
+    """
+
+    require_mfa_for_members: IsMfaRequiredForMembers | None = None
+    staff_may_play_recordings: IsStaffRecordingPlaybackAllowed | None = None
 
 
 class UpdateBusinessSecurityCommand(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
-    require_mfa_for_members: IsMfaRequiredForMembers
+    require_mfa_for_members: IsMfaRequiredForMembers | None = None
+    staff_may_play_recordings: IsStaffRecordingPlaybackAllowed | None = None
     client_ip_address: ClientIpAddress | None = None

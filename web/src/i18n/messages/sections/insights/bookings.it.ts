@@ -83,6 +83,8 @@ export const bookingsIt: Translation<typeof bookingsEn> = {
     noShow: "No-show",
     reschedule: "Sposta",
     cancel: "Annulla la prenotazione",
+    revokeLinks: "Disattiva i link della prenotazione del cliente",
+    linksRevoked: "I link della prenotazione inviati finora non si aprono più. Il cliente può sempre scriverti in chat.",
   },
   confirmCancel: {
     title: "Annullare questa prenotazione?",

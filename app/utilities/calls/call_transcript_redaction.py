@@ -5,8 +5,9 @@ words, without the numbers and addresses that identify or reach a person.
 E-mail addresses, IBAN-style account numbers, payment card numbers (13 to
 19 digits), security codes and ID numbers (`mask_sensitive_numbers`,
 which every transcript gets) and phone or other long numbers (7 to 15
-digits, the shape `PHONE_PATTERN` finds) become placeholders. Dates, times, prices, party
-sizes and room numbers stay, so staff still see what was agreed: a long
+digits, the shape `PHONE_PATTERN` finds) become placeholders. Dates,
+times, prices, party sizes and room numbers stay, so staff still see what
+was agreed: a long
 number written as a date (25.10.2026, 25/10/2026, 2026-10-25) or as an
 amount next to its currency (1 500 000 som, $ 2 400 000, 1500000 UZS) is
 not a phone number. Numbers the speech recognizer wrote as words are not

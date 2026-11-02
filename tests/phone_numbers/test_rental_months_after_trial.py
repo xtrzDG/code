@@ -14,7 +14,6 @@ from app.schemas.constants.phone_numbers import (
 from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
-from app.schemas.dto.billing_cabinet import StartTrialCommand, StartTrialRequest
 from app.schemas.typings.maintenance.booleans import IsReleaseGateOpen
 from app.schemas.typings.maintenance.constrained_strings import ReleaseGateName
 from app.use_cases.shared.billing_records import find_current_subscription
@@ -28,13 +27,9 @@ MONTH_DAYS: int = 31
 
 
 def trial_business(world: PhoneWorld) -> tuple[UserDocument, BusinessDocument]:
-    owner, business = world.owner_and_business()
-    world.start_trial.run(
-        StartTrialCommand(
-            user_id=owner.id, business_id=business.id, request=StartTrialRequest()
-        )
-    )
-    return owner, business
+    """In its free trial, with the card the owner saved (a number needs one)."""
+
+    return world.owner_and_business()
 
 
 def bill(world: PhoneWorld) -> int:

@@ -49,6 +49,18 @@ class BookingGridReadCeiling(BaseConstrainedTypedInt):
     le = 20000
 
 
+class BookingLinkGeneration(BaseConstrainedTypedInt):
+    """
+    The generation of a booking's manage links, signed inside each link
+    (24 bits): a link opens only while the booking keeps the generation it
+    was issued with. 0 for every booking until its links are first revoked;
+    a revocation draws a new random one.
+    """
+
+    ge = 0
+    le = 16_777_215
+
+
 class BookingReminderLeadSeconds(BaseConstrainedTypedInt):
     """How long before a booking starts its reminder is sent (1 min to 7 days)."""
 

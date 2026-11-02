@@ -75,5 +75,6 @@ export const phoneNumbersIt: Translation<typeof phoneNumbersEn> = {
   refusals: {
     numberTaken: "Qualcuno ha appena preso questo numero. Cerca di nuovo e scegline un altro.",
     priceChanged: "Il prezzo di questo tipo di numero è cambiato. Cerca di nuovo per vedere il nuovo prezzo.",
+    paymentMethodRequired: "I numeri sono disponibili con un piano a pagamento o una carta salvata. Aggiungi una carta in Fatturazione, poi prendi il numero.",
   },
 };

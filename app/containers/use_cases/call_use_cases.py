@@ -46,6 +46,9 @@ from app.use_cases.voice.call_settings.list_text_backs_use_case import (
 from app.use_cases.voice.call_settings.update_call_settings_use_case import (
     UpdateCallSettingsUseCase,
 )
+from app.use_cases.voice.call_settings.text_back_template_check import (
+    TextBackTemplateCheck,
+)
 from app.use_cases.voice.fallback.notify_call_fallback_use_case import (
     NotifyCallFallbackUseCase,
 )
@@ -183,6 +186,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         suppression_list=facilitators.suppression_list,
         sms_destinations=text_back_sms_destinations,
+        subscription_repo=repositories.subscription_repo,
     )
     notify_missed_call_use_case: Factory[
         UseCaseContract[RegisteredMissedCall | None, DeliveredNotificationCount]
@@ -280,6 +284,14 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
         assistant_version_repo=repositories.assistant_version_repo,
+        # A text-back's template must not be a MARKETING one (VOICE-09).
+        template_check=Factory(
+            TextBackTemplateCheck,
+            catalog=clients.meta_template_catalog_client,
+            channel_repo=repositories.channel_repo,
+            secret_cipher=adapters.secret_cipher,
+            app_settings=config.app_settings,
+        ),
     )
     list_text_backs_use_case: Factory[
         UseCaseContract[TextBackPageQuery, TextBackPage]

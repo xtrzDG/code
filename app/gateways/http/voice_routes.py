@@ -6,6 +6,7 @@ from typing import Annotated
 import anyio
 import anyio.to_thread
 from fastapi import APIRouter, Depends, Header, Response
+from fastapi.responses import JSONResponse
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.openapi_error_contract import standard_error_responses
@@ -56,6 +57,18 @@ from app.utilities.conversations.tool_payloads import render_tool_error
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 CALL_INITIATION_RESPONSE_TYPE: str = "conversation_initiation_client_data"
+# The call initiation's answer as the API description shows it.
+CALL_INITIATION_ANSWER: dict[int | str, dict[str, object]] = {
+    200: {
+        "description": "ElevenLabs' conversation initiation data: the first "
+        "message, its language and the call's dynamic variables.",
+        "content": {
+            "application/json": {
+                "schema": {"type": "object", "additionalProperties": True}
+            }
+        },
+    }
+}
 JSON_MEDIA_TYPE: str = "application/json"
 # A caller waits in silence while a tool runs; ElevenLabs gives up after
 # TOOL_RESPONSE_TIMEOUT_SECONDS (10 s). Past this deadline the agent hears
@@ -148,7 +161,7 @@ def build_voice_router(
 
         return Response(content=str(result.result_json), media_type=JSON_MEDIA_TYPE)
 
-    @router.post(VOICE_CALL_INITIATION_PATH)
+    @router.post(VOICE_CALL_INITIATION_PATH, responses=CALL_INITIATION_ANSWER)
     def start_voice_call(
         body: Annotated[bytes, Depends(read_raw_request_body)],
         business_id: Annotated[
@@ -163,23 +176,26 @@ def build_voice_router(
             str | None,
             Header(alias=VOICE_BODY_SIGNATURE_HEADER),
         ] = None,
-    ) -> dict[str, object]:
+    ) -> Response:
         initiation: CallInitiationData = call_initiation_operator.operate(
             CallInitiationWebhookRequest(
                 credentials=build_credentials(business_id, tool_secret, body_signature),
                 body=body,
             )
         )
-        return {
-            "type": CALL_INITIATION_RESPONSE_TYPE,
-            "conversation_config_override": {
-                "agent": {
-                    "first_message": str(initiation.first_message),
-                    "language": to_voice_platform_language(initiation.language),
-                }
-            },
-            "dynamic_variables": build_call_variables(initiation),
-        }
+        # ElevenLabs' own format, built here field by field from the DTO.
+        return JSONResponse(
+            {
+                "type": CALL_INITIATION_RESPONSE_TYPE,
+                "conversation_config_override": {
+                    "agent": {
+                        "first_message": str(initiation.first_message),
+                        "language": to_voice_platform_language(initiation.language),
+                    }
+                },
+                "dynamic_variables": build_call_variables(initiation),
+            }
+        )
 
     @router.post(VOICE_POST_CALL_PATH)
     def receive_post_call(

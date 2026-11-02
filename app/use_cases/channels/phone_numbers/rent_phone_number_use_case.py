@@ -15,6 +15,7 @@ from app.contracts.phone_numbers import (
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_closure_repositories import (
     BusinessClosureRepoContract,
 )
@@ -60,6 +61,7 @@ from app.use_cases.channels.phone_numbers.rental_checks import (
     label_of,
     require_free_line,
     require_offered,
+    require_payment_method,
     require_quoted_price,
     require_unclaimed_number,
 )
@@ -67,6 +69,7 @@ from app.use_cases.channels.phone_numbers.voice_attachment import (
     attach_to_agent,
     route_to_fallback,
 )
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.shared.closure_guard import refuse_while_closing
 from app.utilities.analytics.product_event_drafts import channel_connected_events
 from app.utilities.telephony.rental_prices import as_rental_minor
@@ -76,7 +79,8 @@ class RentPhoneNumberUseCase(
     UseCaseContract[RentPhoneNumberCommand, RentedPhoneNumberView]
 ):
     """
-    The owner (just signed in or confirmed: step-up) takes the number they
+    The owner (just signed in or confirmed: step-up) of a business that pays
+    or has a card on file (`require_payment_method`) takes the number they
     picked from a search's offers (the offer's token vouches for the number
     and its kind: `require_offered`), at the monthly price the cabinet
     showed. Under the business's
@@ -119,9 +123,11 @@ class RentPhoneNumberUseCase(
         product_events: RecordProductEventFacilitatorContract,
         offer_signer: PhoneNumberOfferSignerContract,
         wall_clock: WallClock[Microseconds],
+        subscription_repo: SubscriptionRepoContract,
         closure_repo: BusinessClosureRepoContract | None = None,
     ) -> None:
         self._closure_repo: BusinessClosureRepoContract | None = closure_repo
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -164,6 +170,10 @@ class RentPhoneNumberUseCase(
             )
         )
         refuse_while_closing(self._closure_repo, business.id, "rent a number")
+        require_payment_method(
+            find_current_subscription(self._subscription_repo, business.id),
+            self._wall_clock.now_unix(),
+        )
         # Renting costs money every month: only a recently proved person.
         self._step_up.require_recent_authentication()
         require_offered(

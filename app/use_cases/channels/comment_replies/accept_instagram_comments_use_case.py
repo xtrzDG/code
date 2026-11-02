@@ -20,6 +20,7 @@ from app.schemas.dto.channels.comment_replies import InstagramComment
 from app.schemas.dto.deliveries import InboxIntake
 from app.schemas.typings.channels.constrained_integers import WebhookMessageCount
 from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.conversations.strings import MessageText
 from app.use_cases.shared.inbox_queue import store_and_queue
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.comment_keywords import matching_keyword
@@ -29,6 +30,7 @@ from app.utilities.deliveries.delivery_keys import (
     derive_inbound_event_id,
     inbound_serial_key,
 )
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 from app.utilities.storage.release_gates import COMMENT_REPLIES_GATE, is_gate_open
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -126,9 +128,10 @@ class AcceptInstagramCommentsUseCase(UseCaseContract[MetaWebhookRequest, InboxIn
             channel=ChannelKind.INSTAGRAM,
             channel_id=channel.id,
             provider_message_id=provider_message_id,
+            # A card, account or ID number in a comment is never kept.
             customer_message=InboundCustomerMessage(
                 channel_user_id=comment.author_id,
-                text=comment.text,
+                text=MessageText(mask_sensitive_numbers(str(comment.text))),
                 contact_name=comment.author_username,
             ),
             created_at=now,

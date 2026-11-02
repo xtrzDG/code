@@ -15,12 +15,12 @@ Every entry point with its access class, one per line:
 | Provider | Meta, Telegram, the voice platform, Zadarma, Twilio, Flitt, Stripe | the `signed_webhook` operations, each after its signature or secret | `app/utilities/channels/webhook_signatures.py`, `app/utilities/channels/voice_webhook_auth.py` | `tests/channels/test_webhook_signatures.py`, `tests/channels/test_webhook_isolation.py` |
 | Customer | a business's customer in the website chat, the hosted chat or with a link from a message | their own chat and their own booking, review or calendar feed | `app/utilities/security/booking_manage_token_signer.py`, `app/utilities/security/widget_stream_ticket_signer.py` | `tests/bookings/test_booking_manage_page.py`, `tests/channels/test_widget.py`, `tests/channels/test_widget_events.py` |
 | Account | any signed-in person | their own profile, sessions, authenticators, businesses and brands | `app/gateways/http/user_authentication.py` | `tests/users/access/test_device_sessions.py`, `tests/users/access/test_access_routes.py` |
-| Staff | a member of the business | every business operation outside the owner-only ones; customers' phone numbers masked | `app/use_cases/authorize_business_access_use_case.py` | `tests/platform/test_authorization_matrix.py` (403 on each owner-only operation) |
+| Staff | a member of the business | every business operation outside the owner-only ones; customers' phone numbers masked; call recordings only when the owner allows it (Settings → Team) | `app/use_cases/authorize_business_access_use_case.py` | `tests/platform/test_authorization_matrix.py` (403 on each owner-only operation), `tests/brain/test_call_recording_permission.py` |
 | Agency | an outside helper the owner let in (a partner's agency) | staff's operations, plus building and publishing the assistant; never billing, the team, channels, security or copies of customers' data | `require_agency_may` in `app/use_cases/authorize_business_access_use_case.py` | `tests/referrals/test_agency_member_access.py` |
 | Owner | the business's owner | every operation of the business | `app/use_cases/authorize_business_access_use_case.py` | `tests/platform/test_authorization_matrix.py` |
 | Regional manager | a brand's manager of the locations assigned to them | staff's operations on those locations; reads of the brand | `app/utilities/brands/brand_access.py` | `tests/platform/test_brand_authorization_matrix.py` |
 | Brand owner | the owner of a chain of locations | owner of every location and of the brand | `app/utilities/brands/brand_access.py` | `tests/platform/test_brand_authorization_matrix.py` |
-| Platform admin | the platform team, with two factors and an admin role | the `/v1/admin/*` operations their role's permissions open (table below); a client's cabinet only through a reasoned, time-boxed look, read-only unless the owner consented | `app/utilities/security/admin_permissions.py`, `app/use_cases/admin/access/` | `tests/platform/test_route_authentication.py` (an owner gets 403), `tests/users/access/test_support_access_roles.py` |
+| Platform admin | the platform team, with two factors (a passkey in production) and an admin role | the `/v1/admin/*` operations their role's permissions open (table below); a client's cabinet only through a reasoned, time-boxed look, read-only unless the owner consented | `app/utilities/security/admin_permissions.py`, `app/use_cases/admin/access/` | `tests/platform/test_route_authentication.py` (an owner gets 403), `tests/users/access/test_support_access_roles.py`, `tests/users/passkeys/test_admin_passkey_rule.py` |
 | API key | a business's integration | `/v1/public-api/*` of that business only; a cabinet token is refused | `app/gateways/http/api_key_authentication.py` | `tests/integrations/test_api_key_routes.py`, `tests/platform/test_route_authentication.py` |
 
 Nobody can raise their own role: changing a member's role is an owner-only
@@ -36,8 +36,8 @@ at each request, so a change takes effect at the next one.
 | `signed_webhook` | 13 | 11 | 0 |
 | `customer` | 17 | 8 | 0 |
 | `account` | 38 | 26 | 2 |
-| `staff` | 115 | 39 | 0 |
-| `owner` | 154 | 115 | 1 |
+| `staff` | 114 | 39 | 0 |
+| `owner` | 155 | 115 | 1 |
 | `platform_admin` | 58 | 33 | 0 |
 | `api_key` | 14 | 5 | 0 |
 | `operator_token` | 1 | 0 | 0 |
@@ -73,7 +73,7 @@ owner's consent.
 | `/business-exports` | 3 | 3 | 0 | 0 |
 | `/call-forwarding-instructions` | 1 | 0 | 1 | 0 |
 | `/call-settings` | 2 | 2 | 0 | 0 |
-| `/calls` | 1 | 0 | 1 | 0 |
+| `/calls` | 1 | 1 | 0 | 0 |
 | `/campaign-messages` | 1 | 1 | 0 | 0 |
 | `/campaign-settings` | 2 | 1 | 1 | 0 |
 | `/channels` | 15 | 11 | 4 | 0 |

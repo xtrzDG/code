@@ -78,5 +78,6 @@ def feedback_root(
             storage_scope=utilities.storage_scope,
             wall_clock=time_provider.microsecond_wall_clock,
             app_base_url=config.app_settings.provided.app_base_url,
+            consent_record_repo=repositories.consent_record_repo,
         ),
     )

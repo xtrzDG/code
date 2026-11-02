@@ -12,6 +12,9 @@ from app.facilitators.integrations.public_record_reader_facilitator import (
     PublicRecordReaderFacilitator,
 )
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
+from app.facilitators.monitoring.booking_surge_observer_facilitator import (
+    BookingSurgeObserverFacilitator,
+)
 
 
 class IntegrationFacilitatorsContainer(containers.DeclarativeContainer):
@@ -60,4 +63,13 @@ class IntegrationFacilitatorsContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    business_event_observers = List(emit_business_event)
+    # Mass bookings and cancellations of a business, for their alerts (ABUSE-04).
+    booking_surge_observer: Singleton[BookingSurgeObserverFacilitator] = Singleton(
+        BookingSurgeObserverFacilitator,
+        booking_repo=repositories.booking_repo,
+        buckets=adapters.rate_limit_buckets,
+        signal_counter=adapters.signal_counter,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    business_event_observers = List(emit_business_event, booking_surge_observer)

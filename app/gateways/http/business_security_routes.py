@@ -1,4 +1,4 @@
-"""A business's two-factor requirement for its team."""
+"""A business's two-factor requirement for its team and its recording permission."""
 
 from typing import Annotated
 
@@ -38,8 +38,9 @@ def build_business_security_router(
     Routes:
         GET /v1/businesses/{business_id}/security  whether the team must sign
             in with two factors, members without an authenticator (members)
-        PUT /v1/businesses/{business_id}/security  turn it on or off (owner,
-            step-up; on needs the owner's own two-factor session; audited)
+        PUT /v1/businesses/{business_id}/security  turn it on or off, and
+            let staff play call recordings or not (owner, step-up; two
+            factors on needs the owner's own two-factor session; audited)
     """
 
     router = APIRouter(tags=["businesses"], responses=standard_error_responses())
@@ -71,6 +72,7 @@ def build_business_security_router(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 require_mfa_for_members=body.require_mfa_for_members,
+                staff_may_play_recordings=body.staff_may_play_recordings,
                 client_ip_address=read_client_ip_address(request),
             )
         )

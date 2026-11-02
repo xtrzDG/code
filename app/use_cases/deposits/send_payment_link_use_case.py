@@ -21,7 +21,11 @@ from app.schemas.dto.deposits.payment_link_requests import (
     PaymentLinkReceipt,
     SendPaymentLinkCommand,
 )
-from app.use_cases.deposits.deposit_issuing import DepositIssuing, subject_of
+from app.use_cases.deposits.deposit_issuing import (
+    DepositIssuing,
+    starts_at_of,
+    subject_of,
+)
 from app.use_cases.deposits.deposit_quotes import (
     QuotedDeposit,
     quote_banquet,
@@ -106,7 +110,9 @@ class SendPaymentLinkUseCase(
                 (r for r in earlier if r.status is DepositStatus.AWAITING), None
             )
             if waiting is not None:
-                return self._issuing.receipt(business, settings, waiting, now)
+                return self._issuing.receipt(
+                    business, settings, waiting, starts_at_of(subject), now
+                )
 
             if any(request.status in PAID_DEPOSIT_STATUSES for request in earlier):
                 return PaymentLinkReceipt(
@@ -139,7 +145,9 @@ class SendPaymentLinkUseCase(
             (subject.id,),
             is_sandbox=subject.is_sandbox,
         )
-        return self._issuing.receipt(business, settings, request, now)
+        return self._issuing.receipt(
+            business, settings, request, starts_at_of(subject), now
+        )
 
     def _earlier_requests(
         self, subject: BookingDocument | LeadDocument

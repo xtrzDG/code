@@ -201,8 +201,8 @@ def test_the_token_carries_only_ids_and_times(workshop: Workshop) -> None:
 
     raw = base64.urlsafe_b64decode(booked.token + "=" * (-len(booked.token) % 4))
 
-    # 41 bytes of ids and times and a 128-bit MAC.
-    assert len(raw) == 57
+    # 41 bytes of ids and times, the 3-byte link generation, a 128-bit MAC.
+    assert len(raw) == 60
     assert b"Salobie" not in raw
     claims = workshop.container.utilities.booking_manage_token_signer().read(
         BookingManageToken(booked.token)

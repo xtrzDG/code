@@ -114,6 +114,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
         app_settings=config.app_settings,
+        subscription_repo=repositories.subscription_repo,
         check_spend=spend_guard_use_cases.check_business_spend_use_case,
     )
     audit_call_replies_use_case: Factory[

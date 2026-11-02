@@ -167,6 +167,7 @@ def build_brain_orchestrators(
             app_base_url=app_base_url,
             suppression_list=build_suppression_list(repos.suppression_entry_repo),
             card_repo=repos.contact_repo,
+            consent_record_repo=repos.consent_record_repo,
         ),
         check_spend=options.spend_check,
     )

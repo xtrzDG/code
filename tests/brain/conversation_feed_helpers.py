@@ -9,11 +9,16 @@ from tests.brain.cabinet_fakes import UnusedMenuExtractor
 from tests.brain.cabinet_http import build_cabinet_client
 
 
-def cabinet(world: BrainWorld) -> TestClient:
+def cabinet(
+    world: BrainWorld, platform_admins: frozenset[UserId] = frozenset()
+) -> TestClient:
+    """`platform_admins`: who of the world's people is on the admin team."""
+
     return build_cabinet_client(
         world,
         UnusedMenuExtractor(),
         {"owner": world.owner_id, "staff": world.staff_id, "stranger": UserId()},
+        platform_admins=platform_admins,
     )
 
 

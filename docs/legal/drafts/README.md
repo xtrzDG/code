@@ -24,6 +24,12 @@ duty of Article 28(3) GDPR for a reviewing lawyer, an auditor or a
 business's DPO, and collects what the next DPA version should fix
 (`tests/legal/test_dpa_art28_annex.py`).
 
+`data-act-switching.md` is not a translation either: it describes the full
+export's archive (format 2: every file and its meaning), what happens after
+the end, and the switching clauses (notice, transitional and retrieval
+periods, charges) the next terms version must carry under the Data Act, for
+the lawyer and for the switching information published before contracting.
+
 ## Publishing a draft
 
 1. A lawyer who is a native speaker of the language reviews the draft

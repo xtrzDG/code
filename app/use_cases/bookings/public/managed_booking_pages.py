@@ -63,6 +63,9 @@ MICROSECONDS_PER_SECOND: int = 1_000_000
 CHANGED_MESSAGE: str = (
     "This booking was changed after the link was sent; open the latest confirmation."
 )
+REVOKED_MESSAGE: str = (
+    "This booking link no longer works; ask the business for a new one."
+)
 NOT_ACTIVE_MESSAGE: str = "This booking can no longer be changed."
 STARTED_MESSAGE: str = "This booking has started and can no longer be changed here."
 
@@ -104,7 +107,8 @@ class ManagedBookingPages:
     def current(self, claims: BookingManageClaims) -> GuestBooking:
         """
         The booking as it still is; NotFoundError (`booking_changed`) when it
-        is gone or was moved after the link was issued.
+        is gone or was moved after the link was issued, (`link_expired`)
+        when staff revoked its links since (another link generation).
         """
 
         guest_booking: GuestBooking | None = self.guest_bookings.read(
@@ -120,6 +124,12 @@ class ManagedBookingPages:
                 reasons=refusal(
                     ManagedBookingRefusalCode.BOOKING_CHANGED, CHANGED_MESSAGE
                 ),
+            )
+
+        if guest_booking.booking.manage_link_generation != claims.link_generation:
+            raise NotFoundError(
+                REVOKED_MESSAGE,
+                reasons=refusal(ManagedBookingRefusalCode.LINK_EXPIRED, REVOKED_MESSAGE),
             )
 
         return guest_booking
@@ -174,6 +184,7 @@ class ManagedBookingPages:
                 booking_version=booking.starts_at,
                 expires_at=expires_at,
                 is_page_session=is_page_session,
+                link_generation=booking.manage_link_generation,
             )
         )
 

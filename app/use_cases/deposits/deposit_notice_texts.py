@@ -1,7 +1,8 @@
 """
 The texts of a waiting deposit's notices in the customer's language: the
 reminder names the booking (or the banquet request), until when it holds,
-the amount and the same link; the release names the booking that was let go.
+the amount and the same link, and ends with the refund terms; the release
+names the booking that was let go.
 """
 
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.deposits.payment_lines import PaymentLines
+from app.utilities.deposits.deposit_refund_terms import refund_terms_text
 from app.utilities.deposits.deposit_reminder_texts import (
     DEPOSIT_BANQUET_REMINDER,
     DEPOSIT_BOOKING_RELEASED,
@@ -76,7 +78,15 @@ class DepositNoticeTexts:
             "link": str(self.lines.url(link, amount, request.reference)),
             **booking_moment(booking, zone, language),
         }
-        return self._render(template, language, values)
+        terms = refund_terms_text(
+            self.text_resolver,
+            settings.refund_cutoff_hours,
+            None if booking is None or not is_booking else booking.starts_at,
+            now,
+            zone,
+            language,
+        )
+        return MessageText(f"{self._render(template, language, values)}\n{terms}")
 
     def released(
         self,

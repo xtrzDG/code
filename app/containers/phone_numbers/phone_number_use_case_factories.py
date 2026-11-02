@@ -105,6 +105,7 @@ class PhoneNumberUseCaseFactories:
             product_events=given.product_events,
             offer_signer=given.offer_signer,
             wall_clock=given.wall_clock,
+            subscription_repo=given.subscription_repo,
             closure_repo=given.closure_repo,
         )
 

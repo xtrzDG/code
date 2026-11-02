@@ -9,6 +9,7 @@ from app.contracts.repositories.audit_chain_repositories import (
 )
 from app.contracts.service_levels import ServiceLevelSlotRepoContract
 from app.schemas.constants.monitoring import PlatformAlertCode
+from app.use_cases.admin.alerts.abuse_alert_checks import AbuseAlertChecks
 from app.use_cases.admin.alerts.alert_checks import AlertCheck
 from app.use_cases.admin.alerts.audit_alert_checks import AuditAlertChecks
 from app.use_cases.admin.alerts.burn_rate_alert_checks import burn_rate_alert_checks
@@ -30,6 +31,7 @@ def extra_alert_checks(
     spend_checks: SpendAlertChecks,
     safety_checks: PlatformSafetyAlertChecks,
     health_checks: PlatformHealthAlertChecks,
+    abuse_checks: AbuseAlertChecks,
 ) -> Mapping[PlatformAlertCode, AlertCheck]:
     """
     The SLOs' burn rates (1163), WORKER_DOWN from the freshest pulse (1173),
@@ -37,7 +39,8 @@ def extra_alert_checks(
     platform's health (W20), the daily budget stop, the periodic jobs'
     heartbeats and the daily payment reconciliation (1230), and the
     platform's health: webhook refusals, storage errors, API latency,
-    backups, SMS volume and login code conversion (LOG-04, LOG-05).
+    backups, SMS volume and login code conversion (LOG-04, LOG-05), and
+    mass bookings, cancellations and WhatsApp quality (ABUSE-04, VOICE-09).
     """
 
     return {
@@ -48,4 +51,5 @@ def extra_alert_checks(
         PlatformAlertCode.SPEND_BUDGET_STOP: spend_checks.spend_budget_stop,
         **safety_checks.checks(),
         **health_checks.checks(),
+        **abuse_checks.checks(),
     }

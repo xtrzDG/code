@@ -37,6 +37,9 @@ GUARDED_PROVIDERS: tuple[OutboundProvider, ...] = (
     OutboundProvider.FLITT,
     OutboundProvider.STRIPE,
     OutboundProvider.ELEVENLABS,
+    OutboundProvider.GOOGLE_CALENDAR,
+    OutboundProvider.CAL_COM,
+    OutboundProvider.TWILIO_NUMBERS,
 )
 CUSTOMER_CHANNEL_PROVIDERS: dict[ChannelKind, OutboundProvider] = {
     ChannelKind.WHATSAPP: OutboundProvider.META,

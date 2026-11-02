@@ -13,6 +13,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage, TokenAuthenticationOperator
 from tests.brain.cabinet_operators import CabinetOperators, build_cabinet_operators
+from tests.brain.platform_details_fakes import see_platform_details
 
 
 def build_cabinet_client(
@@ -20,9 +21,15 @@ def build_cabinet_client(
     menu_extractor: MenuExtractionAdapterContract,
     users_by_token: dict[str, UserId],
     storage: CabinetStorage | None = None,
+    platform_admins: frozenset[UserId] = frozenset(),
 ) -> TestClient:
+    """`platform_admins`: the people who see platform details (none by default)."""
+
     operators: CabinetOperators = build_cabinet_operators(
-        world, menu_extractor, storage or CabinetStorage()
+        world,
+        menu_extractor,
+        storage or CabinetStorage(),
+        see_platform_details(world, platform_admins),
     )
     current_user = build_current_user_dependency(
         TokenAuthenticationOperator(users_by_token), SessionAssuranceContext()

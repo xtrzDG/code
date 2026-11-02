@@ -42,12 +42,15 @@ class UpdateBusinessSecurityUseCase(
 ):
     """
     The owner asks the whole team (owners included) to sign in with two
-    factors, or stops asking. Like every team change it needs a recent
-    sign-in or confirmation (step-up), and turning it on needs the owner's
-    own session to be signed in with two factors, so nobody locks
-    themselves out. From the next request on, members whose session was
-    signed in with the login code alone are refused (`mfa_required`).
-    Audited (entity `business_security`).
+    factors, or stops asking, and lets staff play the call recordings or
+    keeps them to owners (`staff_may_play_recordings`, off by default); a
+    choice left out stays as it is. Like every team change it needs a
+    recent sign-in or confirmation (step-up), and turning two factors on
+    needs the owner's own session to be signed in with two factors, so
+    nobody locks themselves out. Both take effect at the next request:
+    members whose session was signed in with the login code alone are
+    refused (`mfa_required`), staff's next playback is refused
+    (GetCallRecordingUseCase). Audited (entity `business_security`).
     """
 
     def __init__(
@@ -84,13 +87,18 @@ class UpdateBusinessSecurityUseCase(
         )
         self._step_up.require_recent_authentication()
         assurance: SessionAssurance | None = self._session_assurance.current()
-        if input_data.require_mfa_for_members and not is_two_factor_session(
+        if input_data.require_mfa_for_members is True and not is_two_factor_session(
             assurance, input_data.user_id
         ):
             raise mfa_required(OWN_TWO_FACTOR_FIRST_MESSAGE)
 
         def apply(current: BusinessDocument) -> None:
-            current.require_mfa_for_members = input_data.require_mfa_for_members
+            if input_data.require_mfa_for_members is not None:
+                current.require_mfa_for_members = input_data.require_mfa_for_members
+            if input_data.staff_may_play_recordings is not None:
+                current.staff_may_play_recordings = (
+                    input_data.staff_may_play_recordings
+                )
 
         stored: BusinessDocument = self._business_repo.update(business.id, apply)
         now: Microseconds = self._wall_clock.now_unix()

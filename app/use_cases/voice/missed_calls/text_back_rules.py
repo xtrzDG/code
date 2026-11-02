@@ -16,9 +16,11 @@ from app.contracts.registries import CountryRegistryContract
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
 )
+from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.constants.calls import TextBackChannel, TextBackSkipReason
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -57,6 +59,9 @@ CALLER_DAILY_LIMIT: RequestsPerWindow = RequestsPerWindow(1)
 # Every text-back costs a WhatsApp template or an SMS; a flood of calls
 # from many numbers is someone abusing the line.
 BUSINESS_DAILY_LIMIT: RequestsPerWindow = RequestsPerWindow(200)
+# A free trial without a card on file (ABUSE-05): a trial nobody pays for
+# sends a tenth of that.
+TRIAL_BUSINESS_DAILY_LIMIT: RequestsPerWindow = RequestsPerWindow(20)
 
 
 def text_back_deadline(called_at: Microseconds) -> Microseconds:
@@ -179,14 +184,32 @@ def is_caller_suppressed(
     )
 
 
+def business_daily_limit(subscription: SubscriptionDocument | None) -> RequestsPerWindow:
+    """
+    The text-backs a business's day allows: TRIAL_BUSINESS_DAILY_LIMIT in a
+    free trial without a card on file, else BUSINESS_DAILY_LIMIT.
+    """
+
+    if (
+        subscription is not None
+        and subscription.status is SubscriptionStatus.TRIALING
+        and subscription.payment_method_summary is None
+    ):
+        return TRIAL_BUSINESS_DAILY_LIMIT
+
+    return BUSINESS_DAILY_LIMIT
+
+
 def text_back_counters(
     business: BusinessDocument,
     caller_phone_number: E164PhoneNumber,
     contact: ContactDocument | None,
+    daily_limit: RequestsPerWindow = BUSINESS_DAILY_LIMIT,
 ) -> list[RateLimitCounter]:
     """
-    One text-back per caller and day, a daily cap per business, and, for a
-    known customer, their shared daily cap of unrequested messages.
+    One text-back per caller and day, a daily cap per business
+    (`business_daily_limit`), and, for a known customer, their shared daily
+    cap of unrequested messages.
     """
 
     counters: list[RateLimitCounter] = [
@@ -194,9 +217,7 @@ def text_back_counters(
             key=caller_text_back_key(business.id, caller_phone_number),
             limit=CALLER_DAILY_LIMIT,
         ),
-        RateLimitCounter(
-            key=business_text_back_key(business.id), limit=BUSINESS_DAILY_LIMIT
-        ),
+        RateLimitCounter(key=business_text_back_key(business.id), limit=daily_limit),
     ]
     if contact is not None:
         counters.append(proactive_message_counter(business.id, contact.id))

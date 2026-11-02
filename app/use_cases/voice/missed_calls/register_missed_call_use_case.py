@@ -10,6 +10,7 @@ from app.contracts.registries import (
     CountryRegistryContract,
     RequestRateLimitRegistryContract,
 )
+from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
@@ -38,6 +39,7 @@ from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.calls.missed_calls import MissedCallReport, RegisteredMissedCall
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.voice.missed_calls.missed_call_business import (
     find_missed_call_business,
     read_caller_number,
@@ -50,6 +52,7 @@ from app.use_cases.voice.missed_calls.text_back_destinations import (
 )
 from app.use_cases.voice.missed_calls.text_back_rules import (
     DAY_WINDOW,
+    business_daily_limit,
     choose_text_back_channel,
     choose_text_back_language,
     is_caller_suppressed,
@@ -88,7 +91,8 @@ class RegisterMissedCallUseCase(
     any contact holding the number or the suppression list, which outlives
     an erasure) or already writes with the business in a messenger, and a
     caller texted in the last day (one per caller per day, at most 200 per
-    business per day, and within the customer's shared daily cap of
+    business per day, 20 in a free trial without a card on file:
+    `business_daily_limit`, and within the customer's shared daily cap of
     unrequested messages, counted for every API instance together). A
     report of the same call again changes nothing; None when no business
     has the line.
@@ -110,7 +114,9 @@ class RegisterMissedCallUseCase(
         wall_clock: WallClock[Microseconds],
         suppression_list: SuppressionListContract,
         sms_destinations: TextBackSmsDestinations,
+        subscription_repo: SubscriptionRepoContract,
     ) -> None:
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._contact_repo: ContactRepoContract = contact_repo
@@ -249,8 +255,11 @@ class RegisterMissedCallUseCase(
         contact: ContactDocument | None = find_caller_contact(
             self._contact_repo, business, caller
         )
+        daily_limit = business_daily_limit(
+            find_current_subscription(self._subscription_repo, business.id)
+        )
         refused: RateLimitKey | None = self._rate_limits.try_acquire_all(
-            text_back_counters(business, caller, contact), DAY_WINDOW, now
+            text_back_counters(business, caller, contact, daily_limit), DAY_WINDOW, now
         )
         if refused is not None:
             return refusal_reason(business, caller, refused)

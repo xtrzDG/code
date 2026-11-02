@@ -3,7 +3,8 @@ The link a customer pays a deposit on, and the line that carries it: the
 policy's page (else the business's default template) filled with the
 request's amount and reference, a sealed address opened only here, and
 the text in the customer's language (the line's own language decides how
-the money is written, so the two always agree).
+the money is written, so the two always agree), ending with the refund
+terms.
 """
 
 from dataclasses import dataclass
@@ -22,7 +23,10 @@ from app.schemas.typings.deposits.constrained_strings import (
     PaymentLinkUrl,
 )
 from app.schemas.typings.deposits.prefixed_id import PaymentLinkId
-from app.schemas.typings.deposits.strings import DepositHoldEndText
+from app.schemas.typings.deposits.strings import (
+    DepositHoldEndText,
+    DepositRefundTermsText,
+)
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedMoneyText
 from app.utilities.deposits.payment_link_addresses import render_payment_link
@@ -58,6 +62,7 @@ class LineValues:
     link: PaymentLinkUrl
     until: DepositHoldEndText
     reference: DepositReference
+    refund_terms: DepositRefundTermsText
 
 
 @dataclass(frozen=True)
@@ -104,7 +109,9 @@ class PaymentLines:
         """
         The template in the customer's language, the amount and reference
         isolated for right-to-left text; the link stays bare on a line of
-        its own, so every messenger still recognizes it.
+        its own, so every messenger still recognizes it. The refund terms
+        close it on a line of their own, so the customer reads them before
+        paying.
         """
 
         line_language: LanguageTag = choose_template_language(template, language)
@@ -116,4 +123,5 @@ class PaymentLines:
                 until=str(values.until),
                 reference=isolate(str(values.reference), line_language),
             )
+            + f"\n{values.refund_terms}"
         )

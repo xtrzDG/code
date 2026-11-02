@@ -13,8 +13,12 @@ from typing import Any
 import pytest
 
 from app.containers.app import AppContainer
+from app.schemas.constants.payments import PaymentProvider
+from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.dto.jobs import JobTick
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.shared.billing_records import find_current_subscription
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.journeys import sign_in_and_create_restaurant
 from tests.e2e.workshop_container import replace_provider
@@ -54,8 +58,53 @@ def teamless_workshop() -> Iterator[Workshop]:
 
 
 def open_business(workshop: Workshop) -> tuple[str, dict[str, str]]:
+    """A restaurant in its free trial, with a card on file (a number needs one)."""
+
     token, _, business_id = sign_in_and_create_restaurant(workshop)
-    return f"/v1/businesses/{business_id}", bearer(token)
+    base, headers = f"/v1/businesses/{business_id}", bearer(token)
+    trial = workshop.client.post(f"{base}/billing/trial", json={}, headers=headers)
+    assert trial.status_code == 201, trial.text
+    save_card(workshop, BusinessId(business_id))
+    return base, headers
+
+
+def save_card(workshop: Workshop, business_id: BusinessId) -> None:
+    """The card the owner saved, as the payment provider reported it."""
+
+    container = workshop.container
+    repo = container.repositories.subscription_repo()
+    now = container.time_provider.microsecond_wall_clock().now_unix()
+    with container.utilities.storage_scope().platform_wide():
+        subscription = find_current_subscription(repo, business_id)
+        assert subscription is not None
+        subscription.payment_method_summary = PaymentMethodSummary(
+            provider=PaymentProvider.FLITT, saved_at=now
+        )
+        repo.save(subscription)
+
+
+def test_a_trial_without_a_card_rents_no_number(workshop: Workshop) -> None:
+    token, _, business_id = sign_in_and_create_restaurant(workshop)
+    base, headers = f"/v1/businesses/{business_id}", bearer(token)
+    trial = workshop.client.post(f"{base}/billing/trial", json={}, headers=headers)
+    assert trial.status_code == 201, trial.text
+    offers = search_austin(workshop, base, headers)
+
+    refused = workshop.client.post(
+        f"{base}/phone-line/number",
+        json={
+            "phone_number": AUSTIN_NUMBERS[0],
+            "number_type": "local",
+            "offer_token": offers["offers"][0]["offer_token"],
+            "monthly_price": offers["monthly_price"]["money"],
+        },
+        headers=headers,
+    )
+
+    assert refused.status_code == 409, refused.text
+    assert [reason["code"] for reason in refused.json()["reasons"]] == [
+        "payment_method_required"
+    ]
 
 
 def search_austin(workshop: Workshop, base: str, headers: dict[str, str]) -> JsonObject:

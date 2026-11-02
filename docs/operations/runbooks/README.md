@@ -40,6 +40,8 @@ which runbook is `../dependency-map.md`.
 | [api-latency](api-latency.md) | `api_latency` | SEV2 |
 | [backup-failed](backup-failed.md) | `backup_failed`, the last backup on Admin → System, Sentry Crons | SEV2 |
 | [tenant-sms-volume](tenant-sms-volume.md) | `tenant_sms_volume`, `otp_conversion` | SEV2 |
+| [booking-abuse](booking-abuse.md) | `booking_spike`, `cancellation_spike` | SEV3 |
+| [whatsapp-quality](whatsapp-quality.md) | `whatsapp_quality` | SEV2 |
 | [secret-rotation](secret-rotation.md) | none: the yearly rotation, an offboarding or a leak of a webhook secret | none; SEV1 for a leak |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,

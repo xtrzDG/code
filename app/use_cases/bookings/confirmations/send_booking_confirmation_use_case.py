@@ -124,6 +124,7 @@ class SendBookingConfirmationUseCase(
                 booking_id=booking.id,
                 booking_version=booking.starts_at,
                 expires_at=Microseconds(int(manage_link_expiry(booking.ends_at))),
+                link_generation=booking.manage_link_generation,
             )
         )
         return build_manage_link(self._cabinet_base_url, token)

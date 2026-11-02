@@ -6,6 +6,7 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
+from app.use_cases.admin.alerts.abuse_alert_checks import AbuseAlertChecks
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
 from app.use_cases.admin.alerts.platform_health_alert_checks import (
@@ -71,6 +72,9 @@ def platform_alert_checks_factory(
                 slot_repo=repositories.service_level_slot_repo,
                 maintenance_run_repo=repositories.maintenance_run_repo,
                 otp_challenge_repo=repositories.otp_challenge_repo,
+            ),
+            abuse_checks=Factory(
+                AbuseAlertChecks, signal_counter=adapters.signal_counter
             ),
         ),
     )

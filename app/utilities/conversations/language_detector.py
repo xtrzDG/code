@@ -19,6 +19,7 @@ from app.utilities.conversations.language_scoring import (
 )
 from app.utilities.localization.language_scripts import find_likely_script_code
 from app.utilities.localization.language_tags import base_language_code
+from app.utilities.privacy.sensitive_numbers import without_placeholders
 
 
 class LanguageDetector(LanguageDetectorContract):
@@ -45,7 +46,8 @@ class LanguageDetector(LanguageDetectorContract):
 
     `detect_any` reads any language a customer may write, with the
     conversation's language kept when the text tells too little
-    (`any_language_detection`).
+    (`any_language_detection`); the placeholders of a masked card or
+    account number are not read as the customer's words.
     """
 
     def detect(
@@ -93,7 +95,7 @@ class LanguageDetector(LanguageDetectorContract):
         contact_language: LanguageTag | None,
     ) -> DetectedLanguage:
         return detect_any_language(
-            str(text),
+            without_placeholders(str(text)),
             LanguageContext(
                 version_languages=tuple(unique_tags(version_languages)),
                 default_language=default_language,

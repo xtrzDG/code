@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 from app.containers.use_cases.booking_link_use_cases import (
     BookingLinkUseCasesContainer,
 )
+from app.containers.provider_chains import use_case_orchestrator
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.bookings.managed_booking_orchestrator import (
@@ -86,4 +87,8 @@ class BookingLinkOrchestratorsContainer(containers.DeclarativeContainer):
         open_link=booking_link_use_cases.open_booking_manage_link_use_case,
         act=booking_link_use_cases.change_managed_booking_consent_use_case,
         storage_scope=utilities.storage_scope,
+    )
+    # Staff, in the cabinet (the business is the request's).
+    revoke_booking_links_orchestrator = use_case_orchestrator(
+        booking_link_use_cases.revoke_booking_links_use_case
     )

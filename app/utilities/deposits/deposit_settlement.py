@@ -40,14 +40,24 @@ def settled_status(
     if starts_at is None or cancelled_at is None:
         return DepositStatus.KEPT
 
-    last_free_moment: int = (
-        int(starts_at) * MICROSECONDS_PER_SECOND
-        - int(refund_cutoff) * MICROSECONDS_PER_HOUR
-    )
-    if int(cancelled_at) <= last_free_moment:
+    if int(cancelled_at) <= int(refund_deadline(starts_at, refund_cutoff)):
         return DepositStatus.REFUND_DUE
 
     return DepositStatus.KEPT
+
+
+def refund_deadline(
+    starts_at: BookingStartsAtUnixSeconds, refund_cutoff: DepositRefundCutoffHours
+) -> Microseconds:
+    """
+    The last moment a cancellation still gets the deposit back: the start
+    less the cutoff. The customer's line states it; settling applies it.
+    """
+
+    return Microseconds(
+        int(starts_at) * MICROSECONDS_PER_SECOND
+        - int(refund_cutoff) * MICROSECONDS_PER_HOUR
+    )
 
 
 def settle_after(now: Microseconds, is_staff_change: bool) -> Microseconds:

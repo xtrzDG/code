@@ -15,6 +15,7 @@ from app.schemas.dto.booking_manage import (
     ManagedBookingSession,
     ManagedBookingSlots,
     ManagedBookingView,
+    RevokeBookingLinksCommand,
 )
 from app.schemas.typings.bookings.constrained_strings import BookingManageToken
 from app.use_cases.bookings.public.cancel_managed_booking_use_case import (
@@ -42,6 +43,9 @@ from app.use_cases.bookings.public.open_managed_booking_session_use_case import 
 from app.use_cases.bookings.public.reschedule_managed_booking_use_case import (
     RescheduleManagedBookingUseCase,
 )
+from app.use_cases.bookings.revoke_booking_links_use_case import (
+    RevokeBookingLinksUseCase,
+)
 
 type ManagedBookingUseCase[Output] = Factory[
     UseCaseContract[ManagedBookingAction, Output]
@@ -52,8 +56,8 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
     """
     A guest's booking page behind its manage link (/r/{token}): opening the
     link, the page's short-lived credential, the page, its calendar file,
-    free times, cancelling and moving.
-    Changes run through the booking use cases a chat customer's do.
+    free times, cancelling and moving; and staff revoking a booking's
+    links. Changes run through the booking use cases a chat customer's do.
     """
 
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -125,4 +129,12 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         consent_record_repo=repositories.consent_record_repo,
+    )
+    revoke_booking_links_use_case: Factory[
+        UseCaseContract[RevokeBookingLinksCommand, None]
+    ] = Factory(
+        RevokeBookingLinksUseCase,
+        booking_repo=repositories.booking_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

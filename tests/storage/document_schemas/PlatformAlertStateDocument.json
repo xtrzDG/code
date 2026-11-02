@@ -1,7 +1,7 @@
 {
   "collection": "platform_alert_states",
   "document_type": "PlatformAlertStateDocument",
-  "schema_version": 8,
+  "schema_version": 9,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -34,7 +34,16 @@
           "voice_health",
           "spend_budget_stop",
           "missed_job_runs",
-          "payment_mismatch"
+          "payment_mismatch",
+          "webhook_signature_failures",
+          "storage_errors",
+          "api_latency",
+          "backup_failed",
+          "tenant_sms_volume",
+          "otp_conversion",
+          "booking_spike",
+          "cancellation_spike",
+          "whatsapp_quality"
         ],
         "type": "string"
       },
@@ -79,7 +88,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "8",
+        "default": "9",
         "type": "string"
       },
       "status": {

@@ -22,12 +22,14 @@ def call_through_circuit[T](
     circuit_breaker: CircuitBreakerContract,
     circuit: CircuitName,
     call: Callable[[], T],
+    is_outage: Callable[[ApplicationError], bool] = is_provider_outage,
 ) -> T:
     """
     The call's result. A provider outage (a timeout, a connection error, a
-    5xx) counts against the circuit; an answer of the provider (a success,
-    a refusal, a rate limit) or a call the business's own setting stopped
-    closes a half-open circuit and resets the failures of a closed one.
+    5xx; `is_outage` says which errors are one) counts against the circuit;
+    an answer of the provider (a success, a refusal, a rate limit) or a
+    call the business's own setting stopped closes a half-open circuit and
+    resets the failures of a closed one.
 
     Raises:
         ProviderCircuitOpenError: the circuit is open, nothing was sent;
@@ -41,7 +43,7 @@ def call_through_circuit[T](
     try:
         result: T = call()
     except ApplicationError as error:
-        if is_provider_outage(error):
+        if is_outage(error):
             circuit_breaker.record_failure(circuit)
         else:
             circuit_breaker.record_success(circuit)

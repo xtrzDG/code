@@ -28,6 +28,21 @@ class BusinessExportStatus(StrEnum):
     FAILED = "failed"
 
 
+class ArchivedRecordingStatus(StrEnum):
+    """
+    What a full export holds of one call's recording (recordings.json):
+    INCLUDED as a file under recordings/, LEFT_OUT because the archive's
+    recordings reached their size limit (download it by its path instead),
+    UNAVAILABLE when the storage no longer had it, INCOMPLETE when reading
+    it stopped part way (the file holds the part read).
+    """
+
+    INCLUDED = "included"
+    LEFT_OUT = "left_out"
+    UNAVAILABLE = "unavailable"
+    INCOMPLETE = "incomplete"
+
+
 class SubProcessor(StrEnum):
     """
     The sub-processors that may keep copies of a business's customer data

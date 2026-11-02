@@ -26,11 +26,12 @@ describe("loading a call recording", () => {
     expect(calls).toEqual([{ url: URL_OF_RECORDING, init: { credentials: "same-origin", cache: "no-store" } }]);
   });
 
-  it("tells an expired session, a missing recording and an outage apart", async () => {
+  it("tells an expired session, a refusal, a missing recording and an outage apart", async () => {
     const answer = (status: number) =>
       fakeFetch(async () => new Response(JSON.stringify({ error: "x", message: "y" }), { status })).fetchImpl;
 
     expect(await loadRecording(URL_OF_RECORDING, answer(401))).toEqual({ ok: false, failure: "expired" });
+    expect(await loadRecording(URL_OF_RECORDING, answer(403))).toEqual({ ok: false, failure: "forbidden" });
     expect(await loadRecording(URL_OF_RECORDING, answer(404))).toEqual({ ok: false, failure: "missing" });
     expect(await loadRecording(URL_OF_RECORDING, answer(502))).toEqual({ ok: false, failure: "unavailable" });
     const offline = fakeFetch(() => Promise.reject(new TypeError("Failed to fetch"))).fetchImpl;

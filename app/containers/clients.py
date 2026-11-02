@@ -23,6 +23,7 @@ from app.clients.meta.meta_oauth_client import MetaOAuthClient
 from app.clients.meta.meta_pages_client import MetaPagesClient
 from app.clients.meta.meta_private_reply_client import MetaPrivateReplyClient
 from app.clients.meta.meta_subscription_client import MetaSubscriptionClient
+from app.clients.meta.meta_template_catalog_client import MetaTemplateCatalogClient
 from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
 from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.whatsapp_authentication_client import (
@@ -134,6 +135,10 @@ class ClientsContainer(containers.DeclarativeContainer):
     # The app's webhook subscriptions given back when a channel is switched off.
     meta_subscription_client: Singleton[MetaSubscriptionClient] = Singleton(
         MetaSubscriptionClient
+    )
+    # The categories of a business's WhatsApp templates (text-backs, VOICE-09).
+    meta_template_catalog_client: Singleton[MetaTemplateCatalogClient] = Singleton(
+        MetaTemplateCatalogClient
     )
     # Files customers send: platform downloads, speech-to-text (EU project).
     meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)

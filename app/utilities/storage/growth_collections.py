@@ -13,7 +13,9 @@ rebooking campaigns. Part of DOCUMENT_COLLECTIONS
   businesses (`is_enabled`);
 - campaign_messages: a customer's invitations still waiting for a booking
   (`contact_id`, `status`, `sent_at`), the monthly cap's count (`month`),
-  the cabinet's latest first (`created_at`).
+  the cabinet's latest first (`created_at`);
+- consent_records: the campaigns' consent ledger (1246,
+  consent_collections.py), append-only.
 """
 
 from collections.abc import Mapping
@@ -25,6 +27,10 @@ from app.schemas.domain.campaigns import (
 from app.schemas.domain.waitlist import WaitlistEntryDocument, WaitlistSettingsDocument
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.consent_collections import (
+    CONSENT_COLLECTIONS,
+    CONSENT_LOOKUP_FIELDS,
+)
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
@@ -44,6 +50,7 @@ GROWTH_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(WAITLIST_SETTINGS, WaitlistSettingsDocument),
     DocumentCollectionDefinition(CAMPAIGN_SETTINGS, CampaignSettingsDocument),
     DocumentCollectionDefinition(CAMPAIGN_MESSAGES, CampaignMessageDocument),
+    *CONSENT_COLLECTIONS,
 )
 
 GROWTH_LOOKUP_FIELDS: Mapping[
@@ -66,4 +73,5 @@ GROWTH_LOOKUP_FIELDS: Mapping[
         integer_field("sent_at"),
         integer_field("created_at"),
     ),
+    **CONSENT_LOOKUP_FIELDS,
 }

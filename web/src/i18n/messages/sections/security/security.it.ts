@@ -86,4 +86,13 @@ export const securityIt: Translation<typeof securityEn> = {
     ownerOnly: "Solo un titolare può modificare questa impostazione.",
     saved: "Salvato",
   },
+  recordings: {
+    title: "Registrazioni delle chiamate",
+    description:
+      "Le registrazioni contengono la voce di chi chiama e ciò che ha detto. I titolari possono sempre ascoltarle; lo staff solo se lo consenti qui.",
+    toggle: "Lo staff può ascoltare le registrazioni delle chiamate",
+    on: "Titolari e staff possono ascoltarle",
+    off: "Solo i titolari possono ascoltarle",
+    saved: "Salvato",
+  },
 };

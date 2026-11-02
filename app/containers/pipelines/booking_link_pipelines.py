@@ -35,3 +35,6 @@ class BookingLinkPipelinesContainer(containers.DeclarativeContainer):
     change_managed_booking_consent_pipeline = orchestrator_pipeline(
         booking_link_orchestrators.change_managed_booking_consent_orchestrator
     )
+    revoke_booking_links_pipeline = orchestrator_pipeline(
+        booking_link_orchestrators.revoke_booking_links_orchestrator
+    )

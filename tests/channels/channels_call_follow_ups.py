@@ -176,6 +176,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.wall_clock,
             self.suppression_list,
             self.text_back_sms_destinations,
+            self.subscription_repo,
         )
         self.missed_calls = MissedCallOrchestrator(
             self.register_missed_call,

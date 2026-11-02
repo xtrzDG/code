@@ -160,6 +160,26 @@ describe("the phone card's number from us", () => {
     expect(await within(dialog).findByText(t("phoneNumbers.refusals.numberTaken"))).toBeTruthy();
   });
 
+  it("asks for a card when the trial has none", async () => {
+    answer(EMPTY_LINE);
+    vi.mocked(api.POST).mockImplementation((() =>
+      failure(409, {
+        error: "conflict",
+        message: "Numbers are rented with a paid plan or a card on file.",
+        reasons: [{ code: "payment_method_required", message: "Add a card in Billing.", details: [] }],
+      })) as never);
+    renderPanel();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByText(t("phoneNumbers.panel.getNumber")));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
+    await user.click(await within(dialog).findByRole("button", { name: t("phoneNumbers.offers.takeLabel", { number: "+1 512-555-0142" }) }));
+    await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.confirm.take") }));
+
+    expect(await within(dialog).findByText(t("phoneNumbers.refusals.paymentMethodRequired"))).toBeTruthy();
+  });
+
   it("shows the rented number, its price and that it answers", async () => {
     answer({ ...EMPTY_LINE, rented_number: RENTED });
     renderPanel();

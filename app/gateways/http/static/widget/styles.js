@@ -84,6 +84,8 @@
     ".aw-error-detail{display:block;margin-top:2px;opacity:.8;font-size:12px;}",
     ".aw-retry{border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;",
     "padding:3px 10px;cursor:pointer;font-size:13px;}",
+    ".aw-fallback{align-self:flex-end;display:flex;flex-wrap:wrap;align-items:center;gap:6px;",
+    "max-width:92%;margin:0;font-size:13px;color:var(--aw-muted);}",
     ".aw-typing{align-self:flex-start;background:var(--aw-bubble);border-radius:16px;",
     "padding:12px 14px;display:flex;gap:4px;}",
     ".aw-typing span{width:7px;height:7px;border-radius:50%;background:var(--aw-muted);",

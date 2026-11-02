@@ -1,11 +1,18 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Dependency, Factory
+from dependency_injector.providers import (
+    DependenciesContainer,
+    Dependency,
+    Factory,
+    Singleton,
+)
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
+from app.containers.integration_guards import guard_google_calendar_client
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.contracts.operations import GoogleCalendarClientContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.booking_grid import BookingGrid, BookingGridQuery
 from app.schemas.dto.calendar import (
@@ -149,7 +156,12 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
-    # --- Google Calendar.
+    # --- Google Calendar (the consent's calls behind its circuit, REL-04).
+    google_calendar_client: Singleton[GoogleCalendarClientContract] = Singleton(
+        guard_google_calendar_client,
+        inner_client=clients.google_calendar_client,
+        circuit_breaker=adapters.circuit_breaker,
+    )
     start_google_calendar_connection_use_case: Factory[
         UseCaseContract[StartCalendarConnectionCommand, CalendarConnectUrlView]
     ] = Factory(
@@ -167,7 +179,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         CompleteGoogleCalendarConnectionUseCase,
         authorization_state_repo=repositories.calendar_authorization_state_repo,
         connection_repo=repositories.calendar_connection_repo,
-        calendar_client=clients.google_calendar_client,
+        calendar_client=google_calendar_client,
         secret_cipher=adapters.secret_cipher,
         wall_clock=time_provider.microsecond_wall_clock,
         session_assurance=session_assurance,
@@ -179,7 +191,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         DisconnectGoogleCalendarUseCase,
         connection_repo=repositories.calendar_connection_repo,
         event_link_repo=repositories.calendar_event_link_repo,
-        calendar_client=clients.google_calendar_client,
+        calendar_client=google_calendar_client,
         secret_cipher=adapters.secret_cipher,
     )
     get_google_calendar_connection_use_case: Factory[

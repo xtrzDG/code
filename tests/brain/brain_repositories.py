@@ -16,6 +16,7 @@ from app.repositories.business_repositories import (
 from app.repositories.call_follow_up_repositories import CallSettingsRepository
 from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import AuditLogRepository
+from app.repositories.consent_record_repository import ConsentRecordRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
@@ -35,6 +36,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.consent_records import ConsentRecordDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
@@ -73,6 +75,7 @@ class BrainRepositories:
     knowledge_item_repo: KnowledgeItemRepository
     feedback_request_repo: FeedbackRequestRepository
     suppression_entry_repo: SuppressionEntryRepository
+    consent_record_repo: ConsentRecordRepository
     memory: BrainMemory
 
 
@@ -141,6 +144,9 @@ def build_brain_repositories() -> BrainRepositories:
         ),
         suppression_entry_repo=SuppressionEntryRepository(
             InMemoryDocumentCollectionAdapter(SuppressionEntryDocument)
+        ),
+        consent_record_repo=ConsentRecordRepository(
+            InMemoryDocumentCollectionAdapter(ConsentRecordDocument)
         ),
         memory=build_brain_memory(),
     )

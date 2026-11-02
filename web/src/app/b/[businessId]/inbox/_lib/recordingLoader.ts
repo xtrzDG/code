@@ -4,11 +4,11 @@
  * The player plays the downloaded file from memory (an object URL): it can
  * seek anywhere, Safari and iOS play it, and the API writes one audit entry
  * per playback. Unlike the media element, a fetch also sees the status, so
- * an expired session, a deleted recording and an unreachable service are
- * told apart.
+ * an expired session, a recording the viewer may not play, a deleted
+ * recording and an unreachable service are told apart.
  */
 
-type RecordingLoadFailure = "expired" | "missing" | "unavailable";
+type RecordingLoadFailure = "expired" | "forbidden" | "missing" | "unavailable";
 
 export type RecordingLoad = { ok: true; blob: Blob } | { ok: false; failure: RecordingLoadFailure };
 
@@ -17,6 +17,10 @@ export async function loadRecording(url: string, fetchImpl: typeof fetch = fetch
     const response = await fetchImpl(url, { credentials: "same-origin", cache: "no-store" });
     if (response.status === 401) {
       return { ok: false, failure: "expired" };
+    }
+    if (response.status === 403) {
+      // Staff, while the owner keeps recordings to owners.
+      return { ok: false, failure: "forbidden" };
     }
     if (response.status === 404) {
       return { ok: false, failure: "missing" };

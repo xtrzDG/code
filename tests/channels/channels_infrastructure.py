@@ -23,7 +23,10 @@ from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
-from app.repositories.billing_repositories import UsageEventRepository
+from app.repositories.billing_repositories import (
+    SubscriptionRepository,
+    UsageEventRepository,
+)
 from app.repositories.booking_repositories import (
     BookingRepository,
     HandoffRepository,
@@ -56,7 +59,7 @@ from app.repositories.user_repositories import UserRepository
 from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.assistants import AssistantVersionDocument
-from app.schemas.domain.billing import UsageEventDocument
+from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
@@ -134,6 +137,10 @@ class ChannelsInfrastructure:
         usage_events = InMemoryDocumentCollectionAdapter(UsageEventDocument)
         self.usage_event_repo = UsageEventRepository(usage_events)
         self.usage_spend_repo = UsageSpendRepository(usage_events)
+        # The business's subscription (trial caps; none unless a test adds one).
+        self.subscription_repo = SubscriptionRepository(
+            InMemoryDocumentCollectionAdapter(SubscriptionDocument)
+        )
         self.call_settings_repo = CallSettingsRepository(
             InMemoryDocumentCollectionAdapter(CallSettingsDocument)
         )

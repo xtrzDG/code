@@ -26,6 +26,7 @@ export const conversationsIt: Translation<typeof conversationsEn> = {
     playLabel: "Riproduci la registrazione della chiamata del {date}",
     loading: "Caricamento della registrazione…",
     playMissing: "Questa registrazione non è più disponibile: è stata eliminata alla scadenza del periodo di conservazione o insieme ai dati del cliente.",
+    playForbidden: "Qui solo i titolari possono ascoltare le registrazioni delle chiamate. Un titolare può consentirlo allo staff in Impostazioni → Team.",
     playError: "Impossibile caricare la registrazione: il servizio vocale non risponde. Riprova tra un minuto.",
     playRetry: "Riprova",
     summary: "Riepilogo",

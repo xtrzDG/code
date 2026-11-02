@@ -17,6 +17,7 @@ from app.facilitators.observability.sentry_event_scrubbing import (
 from app.utilities.observability.log_formatting import (
     JsonLogFormatter,
     TextLogFormatter,
+    log_fields,
     redact_log_text,
     redact_secrets,
 )
@@ -108,7 +109,7 @@ def test_sentry_reports_lose_cards_and_security_codes() -> None:
     text: str = str(scrubbed)
     assert "4242" not in text and "123" not in text
     assert "abcdefghijklmnop" not in text
-    assert scrubbed["message"] == (
+    assert scrubbed.get("message") == (
         "Payment failed for [card number] cvv [security code]"
     )
 
@@ -117,3 +118,45 @@ def test_sentry_masks_a_bot_token_before_its_digits() -> None:
     assert mask_personal_data("GET /bot123456789:fake-token-of-tests") == (
         "GET /bot<redacted>"
     )
+
+
+@pytest.mark.parametrize(
+    ("text", "masked"),
+    [
+        ("WhatsApp 393331234567 replied", "WhatsApp [phone] replied"),
+        ("wa_id=995555123456.", "wa_id=[phone]."),
+    ],
+)
+def test_a_bare_phone_id_is_masked(text: str, masked: str) -> None:
+    assert redact_log_text(text) == masked
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Telegram chat 123456789 at 1760000000",
+        "took 1760000000000000 us at 10.123.45.67:41234",
+        "group -1001234567890 of order ord_393331234567",
+    ],
+)
+def test_short_ids_times_and_prefixed_ids_stay(text: str) -> None:
+    assert redact_log_text(text) == text
+
+
+def test_a_text_line_field_is_redacted_like_the_message() -> None:
+    record = logging.LogRecord(
+        "app.channels",
+        logging.INFO,
+        __file__,
+        1,
+        "Delivered",
+        None,
+        None,
+    )
+    for name, value in log_fields(recipient="393331234567", attempts=2).items():
+        setattr(record, name, value)
+
+    line: str = JsonLogFormatter().format(record)
+
+    assert "393331234567" not in line
+    assert '"recipient": "[phone]"' in line and '"attempts": 2' in line

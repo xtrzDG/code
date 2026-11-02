@@ -7,7 +7,8 @@ number. So the agent learns nothing about the caller from it (no name, no
 bookings), and the number only ever counts against the caller: a number
 a staff member blocked is refused, so a blocked customer cannot reach the
 voice agent by phone either. The business's daily call minutes are
-capped (`MAX_DAILY_CALL_MINUTES`), and a call is put through to staff only
+capped (`MAX_DAILY_CALL_MINUTES`; `MAX_TRIAL_DAILY_CALL_MINUTES` in a free
+trial without a card on file), and a call is put through to staff only
 while the business is open, the owner confirmed the staff notice of
 transfers (Settings → Calls) and the staff number is an allowed
 destination (`find_transfer_phone_number`).
@@ -21,7 +22,8 @@ from app.contracts.repositories.conversation_repositories import ContactRepoCont
 from app.contracts.repositories.spend_guard_repositories import (
     UsageSpendRepoContract,
 )
-from app.schemas.constants.billing import UsageKind
+from app.schemas.constants.billing import SubscriptionStatus, UsageKind
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -33,6 +35,7 @@ from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.calls.call_contacts import contacts_holding_number
 from app.utilities.channels.voice_service import (
     MAX_DAILY_CALL_MINUTES,
+    MAX_TRIAL_DAILY_CALL_MINUTES,
     find_transfer_phone_number,
 )
 from app.utilities.scheduling.zoned_time import (
@@ -49,9 +52,26 @@ BLOCKED_CALLER_REFUSAL: str = (
     "not take the call."
 )
 DAILY_MINUTES_REFUSAL: str = (
-    f"The business used its {MAX_DAILY_CALL_MINUTES} call minutes of today: the "
-    "voice assistant takes no calls until its midnight."
+    "The business used its {minutes} call minutes of today: the voice "
+    "assistant takes no calls until its midnight."
 )
+
+
+def daily_call_minutes(subscription: SubscriptionDocument | None) -> int:
+    """
+    The call minutes a business's day allows: MAX_TRIAL_DAILY_CALL_MINUTES
+    in a free trial without a card on file, MAX_DAILY_CALL_MINUTES once a
+    card is saved or the plan is paid.
+    """
+
+    if (
+        subscription is not None
+        and subscription.status is SubscriptionStatus.TRIALING
+        and subscription.payment_method_summary is None
+    ):
+        return MAX_TRIAL_DAILY_CALL_MINUTES
+
+    return MAX_DAILY_CALL_MINUTES
 
 
 def is_blocked_caller(
@@ -100,10 +120,12 @@ def refuse_past_daily_minutes(
     usage_spend_repo: UsageSpendRepoContract,
     business: BusinessDocument,
     now: Microseconds,
+    daily_minutes: int = MAX_DAILY_CALL_MINUTES,
 ) -> None:
     """
     Refuse a call once the business's calls of its local day lasted
-    MAX_DAILY_CALL_MINUTES (summed by the database from the calls' usage).
+    `daily_minutes` (`daily_call_minutes`; summed by the database from the
+    calls' usage).
 
     Raises:
         ConflictError: the day's call minutes are used up.
@@ -119,8 +141,8 @@ def refuse_past_daily_minutes(
     voice_seconds: int = sum(
         int(total.quantity) for total in totals if total.kind is UsageKind.VOICE_SECONDS
     )
-    if voice_seconds >= MAX_DAILY_CALL_MINUTES * SECONDS_PER_MINUTE:
-        raise ConflictError(DAILY_MINUTES_REFUSAL)
+    if voice_seconds >= daily_minutes * SECONDS_PER_MINUTE:
+        raise ConflictError(DAILY_MINUTES_REFUSAL.format(minutes=daily_minutes))
 
 
 def find_call_transfer_number(

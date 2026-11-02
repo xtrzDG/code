@@ -1,4 +1,7 @@
-"""The two-factor requirement of a business as the cabinet shows it."""
+"""
+The two-factor requirement of a business and who may play its call
+recordings, as the cabinet shows them.
+"""
 
 from app.contracts.repositories.mfa_repositories import TotpFactorRepoContract
 from app.contracts.repositories.passkey_repositories import PasskeyRepoContract
@@ -31,4 +34,5 @@ def build_business_security_view(
         viewer_auth_level=assurance.auth_level
         if assurance is not None and assurance.user_id == viewer_id
         else None,
+        staff_may_play_recordings=business.staff_may_play_recordings,
     )

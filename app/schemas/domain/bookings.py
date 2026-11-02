@@ -14,6 +14,7 @@ from app.schemas.domain.calendar_sync import BookingSystemBookingRef
 from app.schemas.domain.deposits import BookingDeposit
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
+    BookingLinkGeneration,
     BookingStartsAtUnixSeconds,
     BookingValueMinor,
     PartySize,
@@ -75,6 +76,10 @@ class BookingDocument(BaseDocument):
     `deposit` is the deposit asked for the booking (`DepositRequestDocument`
     holds the rest), None when none was; `deposit_status` repeats its state
     at the top level, where the reports' grouped counts read it (1190).
+
+    `manage_link_generation` is signed inside every manage link of the
+    booking: staff revoking the links sent so far draw a new one, and only
+    links of the current generation open (0 until the first revocation).
     """
 
     # 2: `service_item_id`, `buffer_minutes`, `value_minor` and
@@ -82,7 +87,9 @@ class BookingDocument(BaseDocument):
     # 4: `origin` (optional). 5: `booking_system_booking` (optional; the
     # upcaster writes it empty on older rows). 6: `deposit` and
     # `deposit_status` (optional; no deposit was ever asked of older rows).
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: `manage_link_generation` (optional; 0, the generation of every link
+    # sent before revocations existed).
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: BookingId = Field(default_factory=BookingId)
     business_id: BusinessId
     resource_id: ResourceId
@@ -108,6 +115,7 @@ class BookingDocument(BaseDocument):
     booking_system_booking: BookingSystemBookingRef | None = None
     deposit: BookingDeposit | None = None
     deposit_status: DepositStatus | None = None
+    manage_link_generation: BookingLinkGeneration = BookingLinkGeneration(0)
 
 
 class LeadDocument(BaseDocument):

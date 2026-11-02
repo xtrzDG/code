@@ -2,6 +2,9 @@
 
 import pytest
 
+from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.privacy.sensitive_number_checks import (
     is_card_number,
     is_iban,
@@ -14,6 +17,7 @@ from app.utilities.privacy.sensitive_numbers import (
     ID_NUMBER_PLACEHOLDER,
     SECURITY_CODE_PLACEHOLDER,
     holds_card_number,
+    holds_masked_card_data,
     mask_sensitive_numbers,
 )
 
@@ -143,3 +147,26 @@ def test_the_checks() -> None:
 def test_a_run_grouped_in_thousands_is_an_amount() -> None:
     assert not holds_card_number(["4", "242", "424", "242", "424", "242"])
     assert holds_card_number(["4242", "4242", "4242", "4242"])
+
+
+def test_a_masked_card_or_security_code_is_told_apart_from_an_account() -> None:
+    assert holds_masked_card_data(mask_sensitive_numbers("4242 4242 4242 4242"))
+    assert holds_masked_card_data(mask_sensitive_numbers("cvv 123"))
+    assert not holds_masked_card_data(
+        mask_sensitive_numbers("IBAN IT60 X054 2811 1010 0000 0123 456")
+    )
+
+
+def test_placeholders_never_sway_the_customers_language() -> None:
+    masked: str = mask_sensitive_numbers("ecco la mia carta 4242 4242 4242 4242")
+
+    detected = LanguageDetector().detect_any(
+        MessageText(masked),
+        [LanguageTag("en"), LanguageTag("it")],
+        LanguageTag("en"),
+        None,
+        None,
+    )
+
+    assert masked == f"ecco la mia carta {CARD_PLACEHOLDER}"
+    assert detected.language == LanguageTag("it")

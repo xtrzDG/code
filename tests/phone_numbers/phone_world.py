@@ -31,6 +31,7 @@ from app.repositories.phone_number_repositories import (
 )
 from app.schemas.constants.assistants import AssistantToolName, AssistantVersionStatus
 from app.schemas.constants.niches import NicheKey
+from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.phone_numbers import PhoneNumberType
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -40,7 +41,9 @@ from app.schemas.domain.phone_numbers import (
     PhoneNumberRequestDocument,
 )
 from app.schemas.domain.users import UserDocument
+from app.schemas.domain.payment_methods import PaymentMethodSummary
 from app.schemas.dto.billing import Money
+from app.schemas.dto.billing_cabinet import StartTrialCommand, StartTrialRequest
 from app.schemas.dto.phone_numbers.phone_line import (
     RentedPhoneNumberView,
     RentPhoneNumberCommand,
@@ -85,6 +88,7 @@ from app.use_cases.channels.phone_numbers import (
 from app.use_cases.channels.phone_numbers import (
     search_phone_numbers_use_case as search,
 )
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.spend_guard.admit_owner_action_use_case import (
     AdmitOwnerActionUseCase,
     CheckOwnerActionRoomUseCase,
@@ -183,6 +187,7 @@ class PhoneWorld(BillingTestbed):
             product_events=self.product_events,
             offer_signer=self.offer_signer,
             wall_clock=wall_clock,
+            subscription_repo=self.subscription_repo,
         )
         self.request_number = request_number.RequestPhoneNumberUseCase(
             self.authorize,
@@ -228,10 +233,35 @@ class PhoneWorld(BillingTestbed):
         )
 
     def owner_and_business(
-        self, email: str = "owner@example.com"
+        self, email: str = "owner@example.com", card_on_file: bool = True
     ) -> tuple[UserDocument, BusinessDocument]:
+        """
+        An owner and their business; by default in its free trial with a
+        card on file, as a number may be rented only then or once paid.
+        """
+
         owner = self.add_user(email=email, locale="en", display_name="Nino")
-        return owner, self.add_business(owner)
+        business = self.add_business(owner)
+        if card_on_file:
+            self.start_trial.run(
+                StartTrialCommand(
+                    user_id=owner.id,
+                    business_id=business.id,
+                    request=StartTrialRequest(),
+                )
+            )
+            self.save_card(business)
+        return owner, business
+
+    def save_card(self, business: BusinessDocument) -> None:
+        """The card the owner saved, as the payment provider reported it."""
+
+        subscription = find_current_subscription(self.subscription_repo, business.id)
+        assert subscription is not None
+        subscription.payment_method_summary = PaymentMethodSummary(
+            provider=PaymentProvider.FLITT, saved_at=Microseconds(self.clock.now())
+        )
+        self.subscription_repo.save(subscription)
 
     def rent_austin_number(
         self,

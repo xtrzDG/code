@@ -149,10 +149,15 @@ def test_test_chat_reply_carries_the_tool_calls_of_the_turn() -> None:
     body: dict[str, Any] = first.json()
     assert body["assistant_version_id"] == str(world.version.id)
     assert body["assistant_version_number"] == 1
-    assert [call["tool_name"] for call in body["tool_calls"]] == ["get_price"]
-    assert body["tool_calls"][0]["input_json"] == '{"item_name":"khinkali"}'
-    assert '"price":"1.20"' in body["tool_calls"][0]["result_json"]
-    assert body["tool_calls"][0]["is_error"] is False
+    # The owner sees the action; its input and result are for platform admins.
+    assert body["tool_calls"] == [
+        {
+            "tool_name": "get_price",
+            "input_json": None,
+            "result_json": None,
+            "is_error": False,
+        }
+    ]
     assert second.json()["tool_calls"] == []
     # The reply is enough: no conversation card was opened, nothing audited.
     assert world.audit_log_repo.list_by_business(world.business.id) == []

@@ -19,6 +19,9 @@ IsNewMissedCall = bool
 # status were already handled: a signed request sent again.
 IsRepeatedCarrierRequest = bool
 IsSmsFallbackEnabled = bool
+# The owner lets staff play the business's call recordings (off by
+# default: owners only).
+IsStaffRecordingPlaybackAllowed = bool
 # The owner confirmed that the staff who take transferred calls were told,
 # as Italian labour law asks of tools that can monitor staff, that the
 # voice platform may process the call after the transfer.

@@ -7,8 +7,11 @@ record, so the record itself (and every other handler: tests, Sentry) is
 untouched, and the structured fields stay as they are.
 
 Phone numbers are written the international way in this platform's
-messages (E.164, `+` and 7 to 15 digits, possibly grouped): a bare run of
-digits there is an id, an amount or a time, never masked.
+messages (E.164, `+` and 7 to 15 digits, possibly grouped), except the ids
+WhatsApp and other channels give a customer: the whole number without the
+`+`, 11 to 15 digits in one run ("393331234567"), masked too. A shorter
+bare run is an id, an amount or a time (a Telegram chat id, unix seconds)
+and stays.
 """
 
 import copy
@@ -24,13 +27,25 @@ PHONE_PLACEHOLDER: str = "[phone]"
 INTERNATIONAL_PHONE_PATTERN: re.Pattern[str] = re.compile(
     r"(?<![\w+])\+\(?\d(?:[ ().\-]{0,2}\d){6,14}(?!\d)"
 )
+# A channel's id of a customer: a whole international number without the
+# "+", in one run of 11 to 15 digits (not part of a word, an address, a
+# decimal or a longer number).
+BARE_PHONE_ID_PATTERN: re.Pattern[str] = re.compile(
+    r"(?<![\w+.:/\-])\d{11,15}(?![\w.]?\d)(?!\w)"
+)
 
 
 def mask_contact_details(text: str) -> str:
-    """The text with e-mail addresses and international phone numbers masked."""
+    """
+    The text with e-mail addresses, international phone numbers and bare
+    phone ids masked.
+    """
 
     without_emails: str = EMAIL_PATTERN.sub(EMAIL_PLACEHOLDER, text)
-    return INTERNATIONAL_PHONE_PATTERN.sub(PHONE_PLACEHOLDER, without_emails)
+    without_phones: str = INTERNATIONAL_PHONE_PATTERN.sub(
+        PHONE_PLACEHOLDER, without_emails
+    )
+    return BARE_PHONE_ID_PATTERN.sub(PHONE_PLACEHOLDER, without_phones)
 
 
 class ContactDetailsLogFilter(logging.Filter):

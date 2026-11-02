@@ -31,6 +31,9 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.voice.call_settings.text_back_template_check import (
+    TextBackTemplateCheck,
+)
 from app.use_cases.voice.call_settings.call_settings_views import (
     CallSettingsSources,
     build_call_settings_view,
@@ -51,6 +54,8 @@ class UpdateCallSettingsUseCase(
     the recording of calls on or off and confirms (or withdraws) the
     staff notice of transfers; the confirmation keeps who gave it and
     when, and a request that leaves either out changes neither. Audited.
+    A newly named template in Meta's MARKETING category is refused
+    (`TextBackTemplateCheck`): a text-back is a service message.
 
     The voice platform records the caller's voice only while recording is
     on (`VoiceAgentSpec.is_recording_enabled`), so switching it marks the
@@ -72,7 +77,9 @@ class UpdateCallSettingsUseCase(
         sms_client: SmsMessagingClientContract | None,
         wall_clock: WallClock[Microseconds],
         assistant_version_repo: AssistantVersionRepoContract,
+        template_check: TextBackTemplateCheck,
     ) -> None:
+        self._template_check: TextBackTemplateCheck = template_check
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -102,6 +109,14 @@ class UpdateCallSettingsUseCase(
             business, self._call_settings_repo.get_by_business(business.id)
         )
         request = input_data.request
+        if (
+            request.text_back_template_name is not None
+            and request.text_back_template_name != settings.text_back_template_name
+        ):
+            self._template_check.refuse_marketing(
+                business.id, request.text_back_template_name
+            )
+
         was_recording: bool = settings.is_recording_enabled
         settings.is_summary_enabled = request.is_summary_enabled
         settings.is_text_back_enabled = request.is_text_back_enabled

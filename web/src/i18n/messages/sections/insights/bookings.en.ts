@@ -83,6 +83,8 @@ export const bookingsEn = {
     noShow: "No-show",
     reschedule: "Move",
     cancel: "Cancel the booking",
+    revokeLinks: "End the guest's booking links",
+    linksRevoked: "The booking links sent so far no longer open. The guest can still write to you in the chat.",
   },
   confirmCancel: {
     title: "Cancel this booking?",

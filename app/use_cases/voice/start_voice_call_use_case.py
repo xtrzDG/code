@@ -6,6 +6,7 @@ from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -39,7 +40,9 @@ from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.channels.strings import CallLocalTimeText, CallNextDaysText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.voice.call_admission import (
+    daily_call_minutes,
     find_call_transfer_number,
     refuse_blocked_caller,
     refuse_past_daily_minutes,
@@ -76,7 +79,8 @@ class StartVoiceCallUseCase(
     business is not live, its live version or its plan has no voice, or its
     phone number is disconnected; past its hard daily spend limit (the
     spend guard, the platform's budget stop or pause) or its daily call
-    minutes, until its midnight; and from a
+    minutes (fewer in a free trial without a card: `daily_call_minutes`),
+    until its midnight; and from a
     number staff blocked (`call_admission`). A refused call goes to the
     missed-call flow. The agent learns whether the business is open now,
     the staff number a transfer may go to (only while open and allowed,
@@ -101,8 +105,10 @@ class StartVoiceCallUseCase(
         phone_number_parser: PhoneNumberParserContract,
         build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
         app_settings: AppSettings,
+        subscription_repo: SubscriptionRepoContract,
         check_spend: UseCaseContract[SpendCheckRequest, SpendVerdict] | None = None,
     ) -> None:
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._check_spend: UseCaseContract[SpendCheckRequest, SpendVerdict] | None = (
             check_spend
         )
@@ -171,7 +177,14 @@ class StartVoiceCallUseCase(
         )
         refuse_blocked_caller(self._contact_repo, business, caller_phone_number)
         now: Microseconds = self._wall_clock.now_unix()
-        refuse_past_daily_minutes(self._usage_spend_repo, business, now)
+        refuse_past_daily_minutes(
+            self._usage_spend_repo,
+            business,
+            now,
+            daily_call_minutes(
+                find_current_subscription(self._subscription_repo, business.id)
+            ),
+        )
         greeting: CallGreeting = self._build_call_greeting.run(
             CallGreetingRequest(business_id=business.id)
         )

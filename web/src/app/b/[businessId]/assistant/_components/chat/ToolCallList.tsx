@@ -25,17 +25,26 @@ export function ToolCallList({ toolCalls }: { toolCalls: ToolCallView[] }) {
               <code className="text-xs font-normal text-ink-subtle">{call.tool_name}</code>
               {call.is_error ? <Badge tone="danger">{t("assistant.chat.toolError")}</Badge> : null}
             </p>
-            <p className="text-xs font-medium text-ink-subtle">{t("assistant.chat.toolInput")}</p>
-            <pre className="max-h-48 overflow-auto rounded-lg bg-surface-muted p-2 text-xs break-words whitespace-pre-wrap text-ink">
-              {prettyJson(call.input_json)}
-            </pre>
-            <p className="text-xs font-medium text-ink-subtle">{t("assistant.chat.toolResult")}</p>
-            <pre className="max-h-48 overflow-auto rounded-lg bg-surface-muted p-2 text-xs break-words whitespace-pre-wrap text-ink">
-              {prettyJson(call.result_json)}
-            </pre>
+            <JsonPart label={t("assistant.chat.toolInput")} json={call.input_json} />
+            <JsonPart label={t("assistant.chat.toolResult")} json={call.result_json} />
           </li>
         ))}
       </ol>
     </details>
+  );
+}
+
+/** A tool call's input or result; the API sends them to platform admins only. */
+function JsonPart({ label, json }: { label: string; json: string | null | undefined }) {
+  if (json == null) {
+    return null;
+  }
+  return (
+    <>
+      <p className="text-xs font-medium text-ink-subtle">{label}</p>
+      <pre className="max-h-48 overflow-auto rounded-lg bg-surface-muted p-2 text-xs break-words whitespace-pre-wrap text-ink">
+        {prettyJson(json)}
+      </pre>
+    </>
   );
 }

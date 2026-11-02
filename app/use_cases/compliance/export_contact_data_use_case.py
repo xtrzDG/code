@@ -21,6 +21,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.use_cases.compliance.contact_record_counts import exported_record_count
 from app.utilities.privacy.suppressed_identities import (
     channel_identity,
     contact_identities,
@@ -34,9 +35,10 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
     The export holds the contact, their conversations and messages, calls,
     bookings, leads, handoffs and the team's notes on their conversations,
     their missed calls, the messages queued to them, the webhook events they
-    sent, their feedback ratings and their opt-out state (the channels they
-    sent STOP in, and whether the suppression list holds one of their
-    numbers or accounts), and is written to the audit log.
+    sent, their feedback ratings, their consent ledger's entries and their
+    opt-out state (the channels they sent STOP in, and whether the
+    suppression list holds one of their numbers or accounts), and is written
+    to the audit log with how many records it copied.
     """
 
     def __init__(
@@ -91,6 +93,7 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
                 entity=AuditEntityName("contact"),
                 entity_id=AuditEntityReference(str(records.contact.id)),
                 ip_address=input_data.client_ip_address,
+                record_count=exported_record_count(records),
                 created_at=now,
                 updated_at=now,
             )

@@ -1,5 +1,7 @@
 """The widget script route, its agreement with the API and the demo page."""
 
+import base64
+import hashlib
 import re
 import shutil
 import subprocess
@@ -55,6 +57,12 @@ def build_client() -> TestClient:
         build_widget_script_router(DeploymentEnvironment.DEVELOPMENT)
     )
     return TestClient(http_application)
+
+
+def sri_of(content: bytes) -> str:
+    """The Subresource Integrity value a browser computes (SHA-384)."""
+
+    return "sha384-" + base64.b64encode(hashlib.sha384(content).digest()).decode()
 
 
 def read_script_constant(name: str) -> str:
@@ -167,13 +175,22 @@ class TestScriptAgreesWithTheApi:
         )
 
         assert snippet_response.status_code == 200
-        [tag] = parse_script_tags(snippet_response.json()["snippet"])
-        script_url = tag["src"]
-        assert script_url is not None
-        assert script_url == snippet_response.json()["script_url"]
+        body = snippet_response.json()
+        [tag] = parse_script_tags(body["snippet"])
+        loader_url = tag["src"]
+        assert loader_url is not None
+        assert loader_url == body["loader_url"]
+        assert tag["integrity"] == body["loader_integrity"]
+        assert tag["crossorigin"] == "anonymous"
         assert tag[WIDGET_BUSINESS_ATTRIBUTE] == str(business.id)
         assert "async" in tag
-        served = build_client().get(urlsplit(script_url).path)
+        client = build_client()
+        loader = client.get(urlsplit(loader_url).path)
+        assert loader.status_code == 200
+        assert sri_of(loader.content) == tag["integrity"]
+        # The loader adds the widget, next to its /widget/v/ folder.
+        assert '"/widget.js"' in loader.text
+        served = client.get(urlsplit(body["script_url"]).path)
         assert served.status_code == 200
         assert served.text == SCRIPT_SOURCE
 

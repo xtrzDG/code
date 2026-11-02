@@ -77,5 +77,6 @@ export const phoneNumbersEn = {
   refusals: {
     numberTaken: "Someone has just taken this number. Search again and pick another one.",
     priceChanged: "The price of this kind of number has changed. Search again to see the new price.",
+    paymentMethodRequired: "Numbers come with a paid plan or a card on file. Add a card in Billing, then take the number.",
   },
 } as const;

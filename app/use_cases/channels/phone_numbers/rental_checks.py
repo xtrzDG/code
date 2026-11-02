@@ -8,8 +8,10 @@ from app.contracts.phone_numbers import (
 )
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.storage import StorageScopeContract
+from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.phone_numbers import PhoneNumberStatus
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.phone_numbers import PhoneNumberDocument
@@ -18,6 +20,7 @@ from app.schemas.dto.phone_numbers.phone_line import RentPhoneNumberRequest
 from app.schemas.dto.phone_numbers.provisioning import PhoneNumberOfferClaims
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.exceptions.phone_number_errors import (
+    PhoneNumberNeedsPaymentError,
     PhoneNumberPriceChangedError,
     PhoneNumberUnavailableError,
 )
@@ -31,6 +34,7 @@ from app.schemas.typings.telephony.constrained_strings import (
     PhoneNumberLabel,
     RentedLineNumber,
 )
+from app.use_cases.shared.billing_records import is_service_paid_for
 from app.use_cases.channels.phone_numbers.rented_line_channel import (
     connected_number,
     find_phone_channel,
@@ -38,8 +42,42 @@ from app.use_cases.channels.phone_numbers.rented_line_channel import (
 from app.utilities.money.money_formatting import format_money
 
 LABEL_LENGTH: int = 64
+# Where a card on file is what lets the business rent a number.
+CARD_BACKED_STATUSES: frozenset[SubscriptionStatus] = frozenset(
+    {SubscriptionStatus.TRIALING, SubscriptionStatus.PAST_DUE}
+)
 # Refusals are English, like every API error; the cabinet words its own.
 REFUSAL_LANGUAGE: LanguageTag = LanguageTag("en")
+
+
+def require_payment_method(
+    subscription: SubscriptionDocument | None, now: Microseconds
+) -> None:
+    """
+    The business pays for its plan (ACTIVE), or has a card on file while
+    its trial runs or a missed payment is retried within its grace: a free
+    trial without a card, a subscription unpaid past its grace, paused or
+    cancelled, or none at all, rents no number (ABUSE-05: toll fraud and
+    SMS pumping through accounts nobody pays for).
+
+    Raises:
+        PhoneNumberNeedsPaymentError: neither holds.
+    """
+
+    if subscription is not None and (
+        subscription.status is SubscriptionStatus.ACTIVE
+        or (
+            subscription.status in CARD_BACKED_STATUSES
+            and subscription.payment_method_summary is not None
+            and is_service_paid_for(subscription, now)
+        )
+    ):
+        return
+
+    raise PhoneNumberNeedsPaymentError(
+        "Numbers are rented with a paid plan or a card on file: add a card in "
+        "Billing first."
+    )
 
 
 def require_offered(

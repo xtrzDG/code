@@ -38,10 +38,7 @@ from app.schemas.typings.compliance.constrained_strings import (
     DpaDocumentUrl,
     DpaDocumentVersion,
 )
-from app.schemas.typings.compliance.prefixed_id import (
-    AuditLogEntryId,
-    DpaAcceptanceId,
-)
+from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId, DpaAcceptanceId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -193,7 +190,7 @@ class ContactRecords(ImmutableDTO):
     they sent (`inbound_events`) by their accounts and conversations, and
     the requests for feedback after their visits, their places on the
     waitlist, the rebooking campaign's messages and the consent ledger's
-    entries by the contact.
+    entries by the contact (1246, oldest first; kept after an erasure).
     """
 
     contact: ContactDocument
@@ -226,7 +223,6 @@ class ContactRecords(ImmutableDTO):
     campaign_messages: list[CampaignMessageDocument] = Field(
         default_factory=list[CampaignMessageDocument]
     )
-    # Their consent ledger (1246), oldest first: kept after an erasure.
     consent_records: list[ConsentRecordDocument] = Field(
         default_factory=list[ConsentRecordDocument]
     )

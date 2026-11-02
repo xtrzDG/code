@@ -36,6 +36,12 @@
       return result.retryAfterMs > 0 ? result.retryAfterMs : RATE_LIMIT_DEFAULT_WAIT_MS;
     }
 
+    // The chat cannot answer now (switched off, the assistant not live, the
+    // API failing or out of reach): the business's phone is offered.
+    function isOutage(statusCode) {
+      return statusCode === 0 || statusCode === 404 || statusCode === 409 || statusCode >= 500;
+    }
+
     function errorTextFor(statusCode) {
       // 404: unknown business or chat switched off; 409: assistant not live.
       if (statusCode === 404 || statusCode === 409) {
@@ -86,6 +92,10 @@
         log.appendChild(row);
         if (item.failed) {
           log.appendChild(errorRow(item));
+          var fallback = item.isOutage ? fallbackContact() : null;
+          if (fallback) {
+            log.appendChild(fallback);
+          }
         }
       });
       appendRating();
@@ -160,6 +170,39 @@
         row.appendChild(retry);
       }
       return row;
+    }
+
+    // "Other ways to reach us: Call +39 …", a tel: link to the business's
+    // public phone (else the assistant's phone line); null when none is known.
+    function fallbackContact() {
+      var number = fallbackPhoneNumber();
+      if (!number) {
+        return null;
+      }
+      var row = el("p", "aw-fallback");
+      row.appendChild(document.createTextNode(text("otherWays") + ": "));
+      var link = el("a", "aw-contact aw-fallback-call");
+      link.href = "tel:" + number;
+      link.appendChild(phoneIcon());
+      var name = el("span", "");
+      name.textContent = text("call") + " " + number;
+      link.appendChild(name);
+      row.appendChild(link);
+      return row;
+    }
+
+    function fallbackPhoneNumber() {
+      if (typeof config.business_phone_number === "string" && PHONE_NUMBER_PATTERN.test(config.business_phone_number)) {
+        return config.business_phone_number;
+      }
+      var links = Array.isArray(config.contact_links) ? config.contact_links : [];
+      for (var index = 0; index < links.length; index += 1) {
+        var url = links[index] && links[index].kind === "phone" ? String(links[index].url) : "";
+        if (url.indexOf("tel:") === 0 && PHONE_NUMBER_PATTERN.test(url.slice(4))) {
+          return url.slice(4);
+        }
+      }
+      return "";
     }
 
     function showTyping(isTyping) {

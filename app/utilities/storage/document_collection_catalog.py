@@ -68,7 +68,6 @@ from app.utilities.storage.business_closure_collections import (
 )
 from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
-from app.utilities.storage.consent_collections import CONSENT_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
 from app.utilities.storage.deposit_collections import DEPOSIT_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
@@ -271,7 +270,6 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *MEMORY_COLLECTIONS,  # How the assistant remembers customers (1121).
     *LEGAL_COLLECTIONS,  # Sub-processor change notices (1124).
     *CUSTOMER_COLLECTIONS,  # Saved segments, customer settings (1140).
-    *CONSENT_COLLECTIONS,  # The append-only consent ledger (1246).
     *SPEND_GUARD_COLLECTIONS,  # Spend limits, allowed chat websites (1142).
     *CLIENT_CARE_COLLECTIONS,  # Credits, notes, health changes, digests (1143).
     *REFERRAL_COLLECTIONS,  # Partners, codes, referrals, commissions (1150).

@@ -82,10 +82,17 @@ def test_conversation_card_shows_tool_calls_and_is_audited() -> None:
         "inbound",
         "outbound",
     ]
-    tool_call = body["messages"][1]["tool_calls"][0]
-    assert tool_call["tool_name"] == "get_price"
-    assert '"price":"1.20"' in tool_call["result_json"]
-    assert body["messages"][1]["model_id"] == "scripted"
+    # Staff see the action, never what went in and came out (platform admins only).
+    assert body["messages"][1]["tool_calls"] == [
+        {
+            "tool_name": "get_price",
+            "input_json": None,
+            "result_json": None,
+            "is_error": False,
+        }
+    ]
+    assert body["messages"][1]["model_id"] is None
+    assert body["usage"] is None
     audit = world.audit_log_repo.list_by_business(world.business.id)
     assert [(entry.action, entry.entity, entry.actor_id) for entry in audit] == [
         (AuditAction.VIEW, "conversation", world.staff_id)

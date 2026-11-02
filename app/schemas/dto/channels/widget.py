@@ -37,13 +37,20 @@ from app.schemas.typings.conversations.booleans import IsConversationHandedOff
 from app.schemas.typings.conversations.constrained_strings import ChoiceLabel
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from app.schemas.typings.localization.strings import LanguageDisplayName
 from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.constrained_strings import ShareLinkUrl
 from app.schemas.typings.spend.constrained_strings import WidgetPageOrigin
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.widget_embedding.constrained_strings import (
+    WidgetLoaderIntegrity,
+    WidgetLoaderUrl,
+)
 
 # The photos and voice notes one widget message may carry.
 MAX_MESSAGE_ATTACHMENTS: int = 4
@@ -98,7 +105,9 @@ class WidgetConfigView(ImmutableDTO):
     chat page. `powered_by_url` is the footer's "Powered by" link with the
     business's referral code (None when a Plus owner switched it off).
     `attachments` says which photos and voice notes the visitor may send
-    and how large or long they may be.
+    and how large or long they may be. `business_phone_number` is the
+    business's public phone (its profile), offered when the chat cannot
+    answer (the assistant or the API is down); None when not given.
     """
 
     business_id: BusinessId
@@ -118,6 +127,7 @@ class WidgetConfigView(ImmutableDTO):
         default_factory=list[WidgetContactLinkView]
     )
     attachments: WidgetAttachmentRulesView | None = None
+    business_phone_number: E164PhoneNumber | None = None
 
 
 class WidgetMessageRequest(ImmutableDTO):
@@ -212,7 +222,10 @@ class WidgetSnippetQuery(ImmutableDTO):
 
 class WidgetSnippetView(ImmutableDTO):
     """
-    Embed code the owner pastes into the website.
+    Embed code the owner pastes into the website: a tag naming the
+    loader (`loader_url`, an address that never changes) with its
+    integrity hash (`loader_integrity`), which loads the current widget
+    (`script_url`; an older embed code names that one directly).
 
     `demo_url` is deprecated: the API's widget demo page is served in
     development and tests only (404 in production); owners preview the
@@ -221,5 +234,7 @@ class WidgetSnippetView(ImmutableDTO):
 
     business_id: BusinessId
     script_url: WidgetScriptUrl
+    loader_url: WidgetLoaderUrl
+    loader_integrity: WidgetLoaderIntegrity
     snippet: WidgetEmbedSnippet
     demo_url: WidgetDemoUrl = Field(deprecated=True)

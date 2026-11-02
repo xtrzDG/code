@@ -36,6 +36,12 @@ CARD_PLACEHOLDER: str = "[card number]"
 SECURITY_CODE_PLACEHOLDER: str = "[security code]"
 ACCOUNT_PLACEHOLDER: str = "[account number]"
 ID_NUMBER_PLACEHOLDER: str = "[id number]"
+MASKING_PLACEHOLDERS: tuple[str, ...] = (
+    CARD_PLACEHOLDER,
+    SECURITY_CODE_PLACEHOLDER,
+    ACCOUNT_PLACEHOLDER,
+    ID_NUMBER_PLACEHOLDER,
+)
 # A run of at least 13 digits with single spaces or hyphens between them. A
 # run right after "+" is a phone number, one after a decimal point or
 # before a decimal part (0.30000000000000004) a fraction.
@@ -91,6 +97,26 @@ def mask_sensitive_numbers(text: str) -> str:
     masked = DOCUMENT_NUMBER_PATTERN.sub(rf"\1{ID_NUMBER_PLACEHOLDER}", masked)
     masked = DIGIT_RUN_PATTERN.sub(_card_placeholder, masked)
     return SECURITY_CODE_PATTERN.sub(rf"\1{SECURITY_CODE_PLACEHOLDER}", masked)
+
+
+def without_placeholders(text: str) -> str:
+    """
+    The masked text without its placeholders: they are English words, and
+    a reading of the customer's language must not count them.
+    """
+
+    for placeholder in MASKING_PLACEHOLDERS:
+        text = text.replace(placeholder, " ")
+    return text
+
+
+def holds_masked_card_data(text: str) -> bool:
+    """
+    Whether a masked text had a card number or a security code: a call
+    whose caller read one out keeps no audio (PCI DSS: no card data stored).
+    """
+
+    return CARD_PLACEHOLDER in text or SECURITY_CODE_PLACEHOLDER in text
 
 
 def holds_card_number(groups: list[str]) -> bool:

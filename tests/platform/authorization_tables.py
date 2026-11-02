@@ -65,6 +65,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/billing/trial",
         f"GET {B}/call-settings",
         f"PUT {B}/call-settings",
+        # Staff play recordings only when the owner allows it (off here).
+        f"GET {B}/calls/{{call_id}}/recording",
         f"POST {B}/channels/telegram/validate-token",
         f"PUT {B}/channels/web/allowed-origins",
         f"PUT {B}/channels/whatsapp/staff-template",

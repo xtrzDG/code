@@ -73,6 +73,7 @@ class OpenManagedBookingSessionUseCase(
             booking_version=guest_booking.booking.starts_at,
             expires_at=Microseconds(ends_seconds * MICROSECONDS_PER_SECOND),
             is_page_session=True,
+            link_generation=guest_booking.booking.manage_link_generation,
         )
         return ManagedBookingSession(
             token=self._pages.token_for(guest_booking.booking, session_claims),

@@ -6,6 +6,7 @@ import httpx
 
 from app.schemas.dto.operations.calendar_connection import CalendarTokenGrant
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.provider_errors import ProviderOutageError
 from app.schemas.typings.bookings.constrained_integers import (
     CalendarTokenLifetimeSeconds,
 )
@@ -14,15 +15,24 @@ from app.schemas.typings.bookings.strings import (
     CalendarRefreshToken,
 )
 
+SERVER_ERROR_STATUS: int = 500
+
 
 def ensure_success(response: httpx.Response, operation: str) -> None:
+    """
+    Raises:
+        ProviderOutageError: Google answered with a server error (5xx).
+        ExternalServiceError: Google refused the request (4xx).
+    """
+
     if response.status_code < 400:
         return
 
     reason: str = describe_google_error(response)
-    raise ExternalServiceError(
-        f"{operation} returned HTTP {response.status_code}{reason}."
-    )
+    message: str = f"{operation} returned HTTP {response.status_code}{reason}."
+    if response.status_code >= SERVER_ERROR_STATUS:
+        raise ProviderOutageError(message)
+    raise ExternalServiceError(message)
 
 
 def describe_google_error(response: httpx.Response) -> str:

@@ -12,7 +12,11 @@ import pytest
 
 from app.transformers.notifications import booking_reminder_transformer
 from app.utilities.bookings import booking_confirmation_texts
-from app.utilities.deposits import deposit_line_texts, deposit_reminder_texts
+from app.utilities.deposits import (
+    deposit_line_texts,
+    deposit_refund_terms_texts,
+    deposit_reminder_texts,
+)
 from tests.campaigns.promotion_lint import (
     lint_module,
     localized_texts,
@@ -23,6 +27,7 @@ SERVICE_TEXT_MODULES: tuple[ModuleType, ...] = (
     booking_confirmation_texts,
     booking_reminder_transformer,
     deposit_line_texts,
+    deposit_refund_terms_texts,
     deposit_reminder_texts,
 )
 

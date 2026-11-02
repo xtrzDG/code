@@ -289,8 +289,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     invoice_issuing_facilitator = invoicing.invoice_issuing_facilitator
     billing_document_facilitator = invoicing.billing_document_facilitator
     billing_email_attachments = invoicing.billing_email_attachments_facilitator
-    # The referral program (1150): "Powered by" and invitation links, who
-    # brought a business, what its paid invoices earn.
+    # Referrals (1150): "Powered by" and invitation links, attribution, earnings.
     referrals: ReferralFacilitatorsContainer = Container(  # type: ignore[assignment]
         ReferralFacilitatorsContainer, config=config, registries=registries,
         repositories=repositories, time_provider=time_provider,

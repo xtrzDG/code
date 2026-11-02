@@ -156,6 +156,7 @@
             if (result.status === 429) {
               holdSending(result.retryAfterMs);
             }
+            item.isOutage = isOutage(result.status);
             markFailed(item, errorTextFor(result.status), previewDetail(result));
           }
           updateSendButton();
@@ -172,6 +173,7 @@
           showTyping(false);
           state.isSending = false;
           state.pendingItem = null;
+          item.isOutage = true;
           markFailed(item, text("failed"), "", true);
           updateSendButton();
           schedulePoll(POLL_FIRST_DELAY_MS);

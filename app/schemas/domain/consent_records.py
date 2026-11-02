@@ -19,7 +19,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 class ConsentRecordDocument(BaseDocument):
     """
-    One entry of a business's consent ledger (migration 1240): a customer
+    One entry of a business's consent ledger (migration 1246): a customer
     gave (`GIVEN`) or took back (`WITHDRAWN`) their consent for `purpose`,
     at `created_at` (UTC microseconds). Append-only: an entry is never
     changed or deleted (the database refuses it to the application's

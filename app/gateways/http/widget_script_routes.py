@@ -5,6 +5,7 @@ The website chat widget script and, outside production, its demo page
 
 import hashlib
 import html
+from collections.abc import Callable
 from pathlib import Path
 from string import Template
 from typing import Annotated
@@ -30,6 +31,7 @@ from app.utilities.channels.channel_endpoints import (
     WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
 )
+from app.utilities.channels.widget_loader import WidgetLoader, published_widget_loaders
 
 STATIC_DIRECTORY: Path = Path(__file__).resolve().parent / "static"
 WIDGET_DEMO_TEMPLATE_FILE_NAME: str = "widget_demo.html"
@@ -41,6 +43,11 @@ WIDGET_SCRIPT_HEADERS: dict[str, str] = {
     "Access-Control-Allow-Origin": "*",
     "Cross-Origin-Resource-Policy": "cross-origin",
     "X-Content-Type-Options": "nosniff",
+}
+# A loader's address names its content: it is cached for a year as is.
+WIDGET_LOADER_HEADERS: dict[str, str] = {
+    **WIDGET_SCRIPT_HEADERS,
+    "Cache-Control": "public, max-age=31536000, immutable",
 }
 # The demo page talks only to this API: its own script and the widget routes.
 WIDGET_DEMO_HEADERS: dict[str, str] = {
@@ -67,6 +74,10 @@ def build_widget_script_router(
     Routes (public, no bearer token):
         GET /widget.js                       the chat widget (any site may load
                                              it; HEAD too)
+        GET /widget/v/<version>.js           the loader embed codes name, with
+                                             its integrity hash: immutable,
+                                             cached for a year; it loads
+                                             /widget.js (HEAD too)
         GET /widget/demo?business_id=...     development and tests only (404 in
                                              production): a page that embeds
                                              the widget;
@@ -108,6 +119,14 @@ def build_widget_script_router(
             content=script_body,
             media_type=WIDGET_SCRIPT_MEDIA_TYPE,
             headers=headers,
+        )
+
+    for loader in published_widget_loaders().values():
+        router.add_api_route(
+            loader.path,
+            build_loader_endpoint(loader),
+            methods=["GET", "HEAD"],
+            include_in_schema=False,
         )
 
     if environment is DeploymentEnvironment.PRODUCTION:
@@ -158,6 +177,22 @@ def build_widget_script_router(
         )
 
     return router
+
+
+def build_loader_endpoint(loader: WidgetLoader) -> Callable[[], Response]:
+    """One published loader, byte for byte as its integrity hash says."""
+
+    headers: dict[str, str] = {
+        **WIDGET_LOADER_HEADERS,
+        "ETag": '"' + loader.path.rsplit("/", 1)[-1].removesuffix(".js") + '"',
+    }
+
+    def get_widget_loader() -> Response:
+        return Response(
+            content=loader.body, media_type=WIDGET_SCRIPT_MEDIA_TYPE, headers=headers
+        )
+
+    return get_widget_loader
 
 
 def is_etag_matched(if_none_match: str, etag: str) -> bool:

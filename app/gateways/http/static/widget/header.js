@@ -124,6 +124,8 @@
   var PREVIEW_READY_MESSAGE = "assistant-workshop:preview-ready";
   var WEB_LINK_PATTERN = /^https?:\/\/[^\s]+$/;
   var CONTACT_LINK_PATTERN = /^(?:https:\/\/[^\s]+|tel:\+[0-9]{7,15})$/;
+  // An E.164 phone number (the business's public phone in the config).
+  var PHONE_NUMBER_PATTERN = /^\+[0-9]{7,15}$/;
   var CONTACT_NAMES = {
     whatsapp: "WhatsApp",
     telegram: "Telegram",

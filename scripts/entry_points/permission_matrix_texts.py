@@ -57,9 +57,11 @@ ROLES: tuple[tuple[str, str, str, str, str], ...] = (
         "Staff",
         "a member of the business",
         "every business operation outside the owner-only ones; customers' "
-        "phone numbers masked",
+        "phone numbers masked; call recordings only when the owner allows it "
+        "(Settings → Team)",
         AUTHORIZE,
-        f"{BUSINESS_MATRIX} (403 on each owner-only operation)",
+        f"{BUSINESS_MATRIX} (403 on each owner-only operation), "
+        "`tests/brain/test_call_recording_permission.py`",
     ),
     (
         "Agency",
@@ -93,13 +95,15 @@ ROLES: tuple[tuple[str, str, str, str, str], ...] = (
     ),
     (
         "Platform admin",
-        "the platform team, with two factors and an admin role",
+        "the platform team, with two factors (a passkey in production) and "
+        "an admin role",
         "the `/v1/admin/*` operations their role's permissions open (table "
         "below); a client's cabinet only through a reasoned, time-boxed look, "
         "read-only unless the owner consented",
         "`app/utilities/security/admin_permissions.py`, `app/use_cases/admin/access/`",
         f"{ROUTE_TEST} (an owner gets 403), "
-        "`tests/users/access/test_support_access_roles.py`",
+        "`tests/users/access/test_support_access_roles.py`, "
+        "`tests/users/passkeys/test_admin_passkey_rule.py`",
     ),
     (
         "API key",

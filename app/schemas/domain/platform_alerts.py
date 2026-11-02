@@ -42,7 +42,11 @@ class PlatformAlertStateDocument(BaseDocument):
     # 8: `code` may be `spend_budget_stop` (the platform's daily budget
     # stop), `missed_job_runs` (periodic job heartbeats) or
     # `payment_mismatch` (the daily payment reconciliation), migration 1230.
-    schema_version: SchemaVersion = SchemaVersion("8")
+    # 9: `code` may be `webhook_signature_failures`, `storage_errors`,
+    # `api_latency`, `backup_failed`, `tenant_sms_volume` or
+    # `otp_conversion` (platform health, LOG-04/05), `booking_spike`,
+    # `cancellation_spike` or `whatsapp_quality` (abuse and number quality).
+    schema_version: SchemaVersion = SchemaVersion("9")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

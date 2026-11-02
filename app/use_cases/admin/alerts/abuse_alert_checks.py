@@ -39,7 +39,7 @@ class AbuseAlertChecks:
         return observe(
             rule,
             over,
-            f"{over} bookings past a business's hourly cap in the last "
+            f"{over} businesses past 40 new bookings an hour in the last "
             f"{minutes(rule)} minutes; the log names the business.",
         )
 
@@ -50,7 +50,7 @@ class AbuseAlertChecks:
         return observe(
             rule,
             over,
-            f"{over} cancellations past a business's hourly cap in the last "
+            f"{over} businesses past 15 cancellations an hour in the last "
             f"{minutes(rule)} minutes; the log names the business.",
         )
 

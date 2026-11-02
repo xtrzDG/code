@@ -40,3 +40,7 @@ class BookingLinkOperatorsContainer(containers.DeclarativeContainer):
     change_managed_booking_consent_operator = pipeline_operator(
         booking_link_pipelines.change_managed_booking_consent_pipeline, storage_scope
     )
+    # Staff revoking a booking's links: scoped to the command's business.
+    revoke_booking_links_operator = pipeline_operator(
+        booking_link_pipelines.revoke_booking_links_pipeline, storage_scope
+    )

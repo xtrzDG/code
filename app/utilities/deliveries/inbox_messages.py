@@ -41,9 +41,7 @@ def build_inbound_customer_message(
     )
     return InboundCustomerMessage(
         channel_user_id=channel_user_id,
-        text=MessageText(
-            mask_sensitive_numbers(str(text).replace(NUL_CHARACTER, ""))
-        ),
+        text=MessageText(mask_sensitive_numbers(str(text).replace(NUL_CHARACTER, ""))),
         contact_name=None if not name else ContactName(name),
         contact_phone_number=contact_phone_number,
         attachments=[masked_caption(attachment) for attachment in attachments],

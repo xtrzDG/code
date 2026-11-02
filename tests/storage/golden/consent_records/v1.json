@@ -1,0 +1,18 @@
+{
+  "booking_id": "booking_ab5cfd21-af9e-41cb-8147-dfdd26d0e177",
+  "business_id": "business_5be797a2-ba4d-46d6-b043-0779ebe71bba",
+  "channel": "phone",
+  "client_ip_address": "203.0.113.7",
+  "contact_id": "contact_c885c638-7a61-464d-bed0-417df682b4ae",
+  "conversation_id": "conversation_e382aa7c-9479-4dfb-b75e-c79433f25ba0",
+  "created_at": 1790000000000000,
+  "event": "given",
+  "id": "consent_record_c3b51090-420a-4115-af11-204dd05e6e0e",
+  "language": "ka",
+  "purpose": "marketing",
+  "recorded_by": "user_56a474a5-c11e-4f95-bc03-6f88feaa8bb8",
+  "schema_version": "1",
+  "source": "booking_page",
+  "text_version": "2026-11-02",
+  "updated_at": 1790000000000000
+}

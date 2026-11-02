@@ -56,7 +56,11 @@ function Disclosure({ label, children, className }: { label: string; children: R
   );
 }
 
-function JsonBlock({ label, json }: { label: string; json: string }) {
+function JsonBlock({ label, json }: { label: string; json: string | null | undefined }) {
+  // The API sends a tool call's input and result to platform admins only.
+  if (json == null) {
+    return null;
+  }
   return (
     <div>
       <p className="text-xs text-ink-subtle">{label}</p>
@@ -98,7 +102,7 @@ export function MessageTechnicalDetails({ message, className }: { message: Messa
   if (!isPlatformAdmin) {
     return null;
   }
-  const tokens = message.input_tokens + message.output_tokens;
+  const tokens = (message.input_tokens ?? 0) + (message.output_tokens ?? 0);
   return (
     <Disclosure label={t("inboxCard.technical.message")} className={className}>
       {message.model_id || tokens > 0 ? (
@@ -106,7 +110,7 @@ export function MessageTechnicalDetails({ message, className }: { message: Messa
           {[
             message.model_id,
             tp("conversations.messageTokens", tokens, { count: format.number(tokens) }),
-            formatMicroUsd(message.cost_micro_usd, locale),
+            formatMicroUsd(message.cost_micro_usd ?? 0, locale),
           ]
             .filter(Boolean)
             .join(" · ")}

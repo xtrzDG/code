@@ -67,6 +67,9 @@ CALLER_ID_REFUSAL: str = (
 MAX_CONCURRENT_CALLS: int = 5
 MAX_DAILY_CALLS: int = 300
 MAX_DAILY_CALL_MINUTES: int = 600
+# A free trial without a card on file (ABUSE-05: a trial nobody pays for
+# is the cheapest way to run toll fraud through the platform).
+MAX_TRIAL_DAILY_CALL_MINUTES: int = 60
 PHONE_CONTACT_CHANNELS: frozenset[ManagerContactChannel] = frozenset(
     {ManagerContactChannel.WHATSAPP, ManagerContactChannel.SMS}
 )

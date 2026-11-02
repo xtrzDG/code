@@ -24,6 +24,7 @@ export const PHONE_NUMBER_TYPES: readonly PhoneNumberType[] = ["local", "mobile"
 export const PHONE_NUMBER_REFUSALS: ReasonMessages = {
   number_taken: () => ({ key: "phoneNumbers.refusals.numberTaken" }),
   price_changed: () => ({ key: "phoneNumbers.refusals.priceChanged" }),
+  payment_method_required: () => ({ key: "phoneNumbers.refusals.paymentMethodRequired" }),
 };
 
 /**

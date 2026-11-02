@@ -86,6 +86,7 @@ class FeedbackUseCaseFactories:
             app_base_url=given.app_base_url,
             suppression_list=given.suppression_list,
             card_repo=given.card_repo,
+            consent_record_repo=given.consent_record_repo,
         )
 
     def open_review_link(self) -> UseCaseContract[ReviewLinkVisit, ReviewLinkTarget]:

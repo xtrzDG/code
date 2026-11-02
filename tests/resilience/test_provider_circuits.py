@@ -79,6 +79,9 @@ def test_each_provider_has_its_own_circuit_and_web_push_has_none() -> None:
         "provider:flitt",
         "provider:stripe",
         "provider:elevenlabs",
+        "provider:google_calendar",
+        "provider:cal_com",
+        "provider:twilio_numbers",
     ]
     assert customer_channel_provider(ChannelKind.INSTAGRAM) is OutboundProvider.META
     assert customer_channel_provider(ChannelKind.MESSENGER) is OutboundProvider.META

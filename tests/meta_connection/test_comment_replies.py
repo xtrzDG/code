@@ -89,6 +89,21 @@ class TestCommentToDm:
         assert events(world) == []
         assert world.private_replies() == []
 
+    def test_a_card_number_in_a_comment_is_never_kept(self) -> None:
+        world = CommentWorld()
+
+        world.post(
+            comments_webhook([comment("910", "menu, card 4242 4242 4242 4242 cvv 123")])
+        )
+        world.run_worker()
+
+        [event] = events(world)
+        assert event.customer_message is not None
+        assert str(event.customer_message.text) == (
+            "menu, card [card number] cvv [security code]"
+        )
+        assert len(world.private_replies()) == 1
+
     def test_one_reply_a_day_per_person(self) -> None:
         world = CommentWorld()
 

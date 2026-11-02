@@ -1907,7 +1907,7 @@
       },
       "AssistantReply": {
         "additionalProperties": false,
-        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout. `assistant_version_id` and `assistant_version_number` name the\nversion that answered (the one the conversation is pinned to);\n`tool_calls` are the tools the model called in this turn, with their\ninput and result (the owner's test chat shows them). `choices` are the\noptions the reply offers to tap (the text already ends with their\nprompt); every channel shows them its own way.",
+        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout. `assistant_version_id` and `assistant_version_number` name the\nversion that answered (the one the conversation is pinned to);\n`tool_calls` are the tools the model called in this turn; their input\nand result reach platform admins only (`platform_details.py`; the\nowner's test chat shows them to admins). `choices` are the\noptions the reply offers to tap (the text already ends with their\nprompt); every channel shows them its own way.",
         "properties": {
           "assistant_version_id": {
             "anyOf": [
@@ -4056,7 +4056,7 @@
       },
       "BookingDocument": {
         "additionalProperties": false,
-        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.\n\n`booking_system_booking` is the booking as the platform wrote it to the\nbooking system its resource follows (Cal.com), None until written.\n\n`deposit` is the deposit asked for the booking (`DepositRequestDocument`\nholds the rest), None when none was; `deposit_status` repeats its state\nat the top level, where the reports' grouped counts read it (1190).",
+        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.\n\n`booking_system_booking` is the booking as the platform wrote it to the\nbooking system its resource follows (Cal.com), None until written.\n\n`deposit` is the deposit asked for the booking (`DepositRequestDocument`\nholds the rest), None when none was; `deposit_status` repeats its state\nat the top level, where the reports' grouped counts read it (1190).\n\n`manage_link_generation` is signed inside every manage link of the\nbooking: staff revoking the links sent so far draw a new one, and only\nlinks of the current generation open (0 until the first revocation).",
         "properties": {
           "booking_system_booking": {
             "anyOf": [
@@ -4177,6 +4177,13 @@
               }
             ]
           },
+          "manage_link_generation": {
+            "default": 0,
+            "maximum": 16777215.0,
+            "minimum": 0.0,
+            "title": "Manage Link Generation",
+            "type": "integer"
+          },
           "notes": {
             "anyOf": [
               {
@@ -4220,7 +4227,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "6",
+            "default": "7",
             "title": "Schema Version",
             "type": "string"
           },
@@ -6418,7 +6425,7 @@
       },
       "BusinessSecurityView": {
         "additionalProperties": false,
-        "description": "Whether the team must sign in with two factors, how many members have\nno authenticator yet (they cannot open the business while it is on),\nand whether the viewer's own session is signed in with two factors.",
+        "description": "Whether the team must sign in with two factors, how many members have\nno authenticator yet (they cannot open the business while it is on),\nwhether the viewer's own session is signed in with two factors, and\nwhether staff may play the call recordings (`staff_may_play_recordings`;\noff: owners only).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -6432,6 +6439,11 @@
           },
           "require_mfa_for_members": {
             "title": "Require Mfa For Members",
+            "type": "boolean"
+          },
+          "staff_may_play_recordings": {
+            "default": false,
+            "title": "Staff May Play Recordings",
             "type": "boolean"
           },
           "viewer_auth_level": {
@@ -10195,6 +10207,164 @@
         "title": "ConfirmImportedItemsResult",
         "type": "object"
       },
+      "ConsentEvent": {
+        "description": "An entry gives the consent or takes it back.",
+        "enum": [
+          "given",
+          "withdrawn"
+        ],
+        "title": "ConsentEvent",
+        "type": "string"
+      },
+      "ConsentEventSource": {
+        "description": "Where it happened: the box on the booking's page (/r/{token}), the team\nrecording what the customer told them (the customer's card), the\ncustomer's STOP in a chat, or the erasure of the customer's data (which\ntakes every consent back).",
+        "enum": [
+          "booking_page",
+          "in_person",
+          "stop",
+          "erasure"
+        ],
+        "title": "ConsentEventSource",
+        "type": "string"
+      },
+      "ConsentPurpose": {
+        "description": "What the customer agreed to: marketing messages (the campaigns).",
+        "enum": [
+          "marketing"
+        ],
+        "title": "ConsentPurpose",
+        "type": "string"
+      },
+      "ConsentRecordDocument": {
+        "additionalProperties": false,
+        "description": "One entry of a business's consent ledger (migration 1246): a customer\ngave (`GIVEN`) or took back (`WITHDRAWN`) their consent for `purpose`,\nat `created_at` (UTC microseconds). Append-only: an entry is never\nchanged or deleted (the database refuses it to the application's\ntenant role); only the deletion of the whole business removes the\nbusiness's ledger.\n\nWhat the entry proves (GDPR art. 7(1)): the customer (`contact_id`),\nwhere it happened (`source`: the booking's page, the team in person, a\nSTOP, the erasure) and its reference (`booking_id` of the page,\n`conversation_id` of the chat a STOP came in), the chat it covers or\ncame from (`channel`), the exact wording (`text_version`) and the\nlanguage it was shown in (`language`), who recorded it (`recorded_by`,\nthe team member; None: the customer themselves or the platform) and\nthe client's network (`client_ip_address`, when the customer acted on\na page).\n\nThe ledger outlives the customer's erasure as pseudonymous proof: it\nnames the contact only by its id (an erased contact keeps only that)\nand holds no name, number, account or words of theirs.",
+        "properties": {
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "client_ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Ip Address"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "event": {
+            "$ref": "#/components/schemas/ConsentEvent"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/ConsentPurpose",
+            "default": "marketing"
+          },
+          "recorded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded By"
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ConsentEventSource"
+          },
+          "text_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsentText"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "contact_id",
+          "event",
+          "source"
+        ],
+        "title": "ConsentRecordDocument",
+        "type": "object"
+      },
       "ContactBlock": {
         "additionalProperties": false,
         "description": "Why the assistant no longer answers a customer: who blocked them, when.",
@@ -10636,7 +10806,7 @@
       },
       "ContactRecords": {
         "additionalProperties": false,
-        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits, their places on the\nwaitlist and the rebooking campaign's messages by the contact.",
+        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits, their places on the\nwaitlist, the rebooking campaign's messages and the consent ledger's\nentries by the contact (1246, oldest first; kept after an erasure).",
         "properties": {
           "bookings": {
             "items": {
@@ -10657,6 +10827,13 @@
               "$ref": "#/components/schemas/CampaignMessageDocument"
             },
             "title": "Campaign Messages",
+            "type": "array"
+          },
+          "consent_records": {
+            "items": {
+              "$ref": "#/components/schemas/ConsentRecordDocument"
+            },
+            "title": "Consent Records",
             "type": "array"
           },
           "contact": {
@@ -11053,7 +11230,7 @@
       },
       "ConversationDetailView": {
         "additionalProperties": false,
-        "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, whether\nstaff can reply, and who of the team is assigned to it (its\n`assignment_revision` is what an assignment from the card must name).",
+        "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, whether\nstaff can reply, and who of the team is assigned to it (its\n`assignment_revision` is what an assignment from the card must name).\n`usage` goes to platform admins only (None for the team).",
         "properties": {
           "assignment": {
             "anyOf": [
@@ -11128,7 +11305,14 @@
             ]
           },
           "usage": {
-            "$ref": "#/components/schemas/ConversationUsageView"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationUsageView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -19874,7 +20058,7 @@
       },
       "LoginSessionView": {
         "additionalProperties": false,
-        "description": "A new session. The bearer token is shown only here; the server keeps\nnothing but its hash. `auth_level` says how it was signed in; a session\nopened while setting up an authenticator carries the new\n`recovery_codes` (shown once).",
+        "description": "A new session. The bearer token is shown only here; the server keeps\nnothing but its hash. `auth_level` says how it was signed in; a session\nopened while setting up an authenticator carries the new\n`recovery_codes` (shown once). `second_factor_suggested`: the person\nowns a business and has no second factor yet; the cabinet asks them to\nset one up (a passkey or the authenticator app) before going on, which\nthey may put off until their next sign-in.",
         "properties": {
           "access_token": {
             "title": "Access Token",
@@ -19901,6 +20085,11 @@
             },
             "title": "Recovery Codes",
             "type": "array"
+          },
+          "second_factor_suggested": {
+            "default": false,
+            "title": "Second Factor Suggested",
+            "type": "boolean"
           },
           "user": {
             "$ref": "#/components/schemas/UserView"
@@ -21310,7 +21499,7 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it. `sent_by`: who wrote a staff\nmessage in the cabinet; `delivery`: how it travels (None otherwise and\nfor the website chat); `attachments`: a customer's voice notes, photos\nand places; `context_note`: what a customer message refers to (a story);\n`choices`: the options a reply offered to tap; `guard`: what the reply\nguard did (None: nothing to show).",
+        "description": "A message with the model usage behind it. `sent_by`: who wrote a staff\nmessage in the cabinet; `delivery`: how it travels (None otherwise and\nfor the website chat); `attachments`: a customer's voice notes, photos\nand places; `context_note`: what a customer message refers to (a story);\n`choices`: the options a reply offered to tap; `guard`: what the reply\nguard did (None: nothing to show). Model, tokens and cost: platform\nadmins only (None for the team, `platform_details.py`).",
         "properties": {
           "attachments": {
             "items": {
@@ -21343,9 +21532,16 @@
             ]
           },
           "cost_micro_usd": {
-            "minimum": 0.0,
-            "title": "Cost Micro Usd",
-            "type": "integer"
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Micro Usd"
           },
           "created_at": {
             "title": "Created At",
@@ -21379,9 +21575,16 @@
             "type": "string"
           },
           "input_tokens": {
-            "minimum": 0.0,
-            "title": "Input Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
           },
           "language": {
             "anyOf": [
@@ -21412,9 +21615,16 @@
             "title": "Model Id"
           },
           "output_tokens": {
-            "minimum": 0.0,
-            "title": "Output Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
           },
           "sent_by": {
             "anyOf": [
@@ -21444,9 +21654,6 @@
           "direction",
           "author",
           "text",
-          "input_tokens",
-          "output_tokens",
-          "cost_micro_usd",
           "created_at"
         ],
         "title": "MessageView",
@@ -26152,7 +26359,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day. SPEND_BUDGET_STOP: today's provider\nspend reached the share of the daily budget where every assistant\nstops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).\nMISSED_JOB_RUNS: a periodic job has not succeeded within its interval\nand grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).\nPAYMENT_MISMATCH: the daily reconciliation found payments whose status\nat Flitt or Stripe differs from the platform's record.",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day. SPEND_BUDGET_STOP: today's provider\nspend reached the share of the daily budget where every assistant\nstops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).\nMISSED_JOB_RUNS: a periodic job has not succeeded within its interval\nand grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).\nPAYMENT_MISMATCH: the daily reconciliation found payments whose status\nat Flitt or Stripe differs from the platform's record.\nWEBHOOK_SIGNATURE_FAILURES: a burst of webhook deliveries refused as\nunsigned, badly signed or stale (a secret out of step, or probing).\nSTORAGE_ERRORS: the database or the object storage failed requests and\njobs. API_LATENCY: too many API requests took longer than 2 s.\nBACKUP_FAILED: the last off-site backup failed, or none succeeded for\n26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume\n(an alert at 60, refused from 200: SMS pumping through a tenant).\nOTP_CONVERSION: most login codes of the last hour were never used\n(SMS pumping through sign-in).\nBOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,\nor more cancellations, in an hour than its hourly cap of either (fake\nbookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:\nMeta flagged or downgraded a business's WhatsApp number, lowered a\ntemplate's quality, paused or disabled a template, or moved one into\nthe marketing category (the number risks a restriction).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -26178,7 +26385,16 @@
           "voice_health",
           "spend_budget_stop",
           "missed_job_runs",
-          "payment_mismatch"
+          "payment_mismatch",
+          "webhook_signature_failures",
+          "storage_errors",
+          "api_latency",
+          "backup_failed",
+          "tenant_sms_volume",
+          "otp_conversion",
+          "booking_spike",
+          "cancellation_spike",
+          "whatsapp_quality"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -32217,7 +32433,7 @@
         "type": "object"
       },
       "TextBackSkipReason": {
-        "description": "Why a caller who did not get through was not texted.\n\nTURNED_OFF: the owner keeps text-backs off. OPTED_OUT: the customer\nasked for no more messages. ALREADY_TEXTED: the caller got one in the\nlast day. DAILY_LIMIT: the business reached its daily number of\ntext-backs. IN_CONVERSATION: the caller is already writing with the\nbusiness. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it.\nNOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was\nhidden. TOO_LATE: the call is too long ago to text about it now.",
+        "description": "Why a caller who did not get through was not texted.\n\nTURNED_OFF: the owner keeps text-backs off. OPTED_OUT: the customer\nasked for no more messages. ALREADY_TEXTED: the caller got one in the\nlast day. DAILY_LIMIT: the business reached its daily number of\ntext-backs. IN_CONVERSATION: the caller is already writing with the\nbusiness. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it\n(an SMS never goes to a premium, satellite, landline or foreign\nnumber). NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was\nhidden. TOO_LATE: the call is too long ago to text about it now.",
         "enum": [
           "turned_off",
           "opted_out",
@@ -32483,19 +32699,33 @@
       },
       "ToolCallView": {
         "additionalProperties": false,
-        "description": "One tool call made while producing a message.",
+        "description": "One tool call of a message; input and result for platform admins only.",
         "properties": {
           "input_json": {
-            "title": "Input Json",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Json"
           },
           "is_error": {
             "title": "Is Error",
             "type": "boolean"
           },
           "result_json": {
-            "title": "Result Json",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Json"
           },
           "tool_name": {
             "$ref": "#/components/schemas/AssistantToolName"
@@ -32503,8 +32733,6 @@
         },
         "required": [
           "tool_name",
-          "input_json",
-          "result_json",
           "is_error"
         ],
         "title": "ToolCallView",
@@ -84092,15 +84320,31 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
+                "description": "The owner's choices; a field left out (null) stays as it is:\n`require_mfa_for_members` (the team signs in with two factors) and\n`staff_may_play_recordings` (staff play the call recordings too).",
                 "properties": {
                   "require_mfa_for_members": {
-                    "title": "Require Mfa For Members",
-                    "type": "boolean"
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Require Mfa For Members"
+                  },
+                  "staff_may_play_recordings": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Staff May Play Recordings"
                   }
                 },
-                "required": [
-                  "require_mfa_for_members"
-                ],
                 "title": "UpdateBusinessSecurityRequest",
                 "type": "object"
               }
@@ -100379,12 +100623,11 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Voice Start Voice Call",
                   "type": "object"
                 }
               }
             },
-            "description": "Successful Response"
+            "description": "ElevenLabs' conversation initiation data: the first message, its language and the call's dynamic variables."
           },
           "401": {
             "content": {

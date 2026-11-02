@@ -88,6 +88,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage, KeepTestChatVersions
+from tests.brain.platform_details_fakes import SeePlatformDetails
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
@@ -116,6 +117,7 @@ def build_cabinet_operators(
     world: BrainWorld,
     menu_extractor: MenuExtractionAdapterContract,
     storage: CabinetStorage,
+    see_platform_details: SeePlatformDetails,
 ) -> CabinetOperators:
     summary_transformer = ConversationSummaryTransformer()
     return CabinetOperators(
@@ -154,6 +156,7 @@ def build_cabinet_operators(
                         resource_repo=storage.resource_repo,
                         channel_repo=world.channel_repo,
                         outbound_message_repo=storage.outbox.outbound_message_repo,
+                        see_platform_details=see_platform_details,
                     )
                 )
             )
@@ -187,6 +190,7 @@ def build_cabinet_operators(
                         audit_log_repo=world.audit_log_repo,
                         wall_clock=world.clock.wall_clock(),
                         outbound_message_repo=storage.outbox.outbound_message_repo,
+                        see_platform_details=see_platform_details,
                     )
                 )
             )
@@ -253,6 +257,7 @@ def build_cabinet_operators(
                     )
                 ),
                 test_chat_slots=build_test_chat_slots(assemble_app_settings({})),
+                see_platform_details=UseCaseOrchestrator(see_platform_details),
             )
         ),
         import_menu=PipelineOperator(

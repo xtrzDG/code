@@ -5,6 +5,7 @@ from app.contracts.repositories.compliance_repositories import AuditLogRepoContr
 from app.contracts.repositories.conversation_repositories import CallRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument
@@ -29,8 +30,10 @@ NO_RECORDING_MESSAGE: str = (
 
 class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingPart]):
     """
-    Owners and staff play back the recording of a phone call from the
-    conversation card (concept sections 7 and 8). The audio stays in the
+    Owners play back the recording of a phone call from the conversation
+    card (concept sections 7 and 8), and staff too when the owner allows it
+    (`staff_may_play_recordings`, Settings → Team; off by default: staff
+    get AccessDeniedError, read again at every request). The audio stays in the
     business's encrypted EU object storage (or with the voice platform until
     it is archived) and is read only when someone presses play, and only
     the part a player asks for (a byte range). Each playback is a view of
@@ -69,6 +72,16 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingPart]
                 business_id=input_data.business_id,
             )
         )
+        if not business.staff_may_play_recordings:
+            # Owners only: staff (and every owner-only refusal) stop here.
+            business = self._authorize_business_access.run(
+                BusinessAccessRequest(
+                    user_id=input_data.user_id,
+                    business_id=input_data.business_id,
+                    required_role=BusinessMemberRole.OWNER,
+                )
+            )
+
         call: CallDocument | None = self._call_repo.get(business.id, input_data.call_id)
         if call is None:
             raise NotFoundError(f"Call {input_data.call_id} was not found.")

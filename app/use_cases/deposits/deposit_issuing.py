@@ -2,7 +2,8 @@
 Asking a deposit: the request (amount, reference, page, hold and the
 reminder halfway through), the booking held for it, and the payment line
 the customer receives (built again from the request when it is sent once
-more, so the amount and the reference never change).
+more, so the amount and the reference never change), with the refund
+terms the customer reads before paying.
 """
 
 from dataclasses import dataclass
@@ -34,6 +35,9 @@ from app.schemas.dto.deposits.payment_link_requests import (
     PaymentLinkReceipt,
     SendPaymentLinkCommand,
 )
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingStartsAtUnixSeconds,
+)
 from app.schemas.typings.deposits.strings import DepositHoldEndText
 from app.use_cases.deposits.deposit_quotes import QuotedDeposit
 from app.use_cases.deposits.payment_lines import LineValues, PaymentLines, chosen_link
@@ -43,6 +47,7 @@ from app.utilities.deposits.deposit_line_texts import (
     DEPOSIT_BANQUET_LINE,
     DEPOSIT_BOOKING_LINE,
 )
+from app.utilities.deposits.deposit_refund_terms import refund_terms_text
 from app.utilities.deposits.deposit_refusals import deposit_refusal
 from app.utilities.deposits.deposit_times import hold_end_text, minutes_later
 from app.utilities.deposits.lead_deposit_state import show_lead_deposit
@@ -135,9 +140,14 @@ class DepositIssuing:
         business: BusinessDocument,
         settings: DepositSettingsDocument,
         request: DepositRequestDocument,
+        starts_at: BookingStartsAtUnixSeconds | None,
         now: Microseconds,
     ) -> PaymentLinkReceipt:
-        """The payment line of a waiting request, in its customer's language."""
+        """
+        The payment line of a waiting request, in its customer's language,
+        with the refund terms of its booking (`starts_at`) or banquet
+        request (None).
+        """
 
         # The page it was asked on, even one the owner removed since.
         link: PaymentLink | None = issued_page(settings, request.payment_link_id)
@@ -167,6 +177,14 @@ class DepositIssuing:
                 link=self.lines.url(link, amount, request.reference),
                 until=until,
                 reference=request.reference,
+                refund_terms=refund_terms_text(
+                    self.lines.text_resolver,
+                    settings.refund_cutoff_hours,
+                    starts_at,
+                    now,
+                    zone,
+                    request.language,
+                ),
             ),
             request.language,
         )
@@ -181,6 +199,14 @@ class DepositIssuing:
             reference=request.reference,
             issued=IssuedDepositLine(request_id=request.id, line=line, amount=amount),
         )
+
+
+def starts_at_of(
+    subject: BookingDocument | LeadDocument,
+) -> BookingStartsAtUnixSeconds | None:
+    """A booking's start; None for a banquet request (no start time)."""
+
+    return subject.starts_at if isinstance(subject, BookingDocument) else None
 
 
 def subject_of(subject: BookingDocument | LeadDocument) -> DepositSubject:

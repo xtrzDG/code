@@ -25,12 +25,13 @@ def test_concurrent_copies_of_one_notification_apply_once() -> None:
     world.testbed.flitt.status_delay_seconds = 0.2
     start = threading.Barrier(COPIES)
 
-    def deliver() -> PaymentWebhookReceipt:
+    def deliver(copy: int) -> PaymentWebhookReceipt:
+        del copy
         start.wait()
         return world.testbed.deliver_flitt_callback(parameters)
 
     with ThreadPoolExecutor(max_workers=COPIES) as pool:
-        receipts = list(pool.map(lambda _: deliver(), range(COPIES)))
+        receipts = list(pool.map(deliver, range(COPIES)))
 
     outcomes = sorted(receipt.outcome.value for receipt in receipts)
     assert outcomes == sorted(

@@ -1,7 +1,8 @@
 """
 Why a number could not be taken. Each refusal carries one stable reason
-code (`number_taken`, `price_changed`) so the cabinet words it in the
-owner's language instead of showing the English message.
+code (`number_taken`, `price_changed`, `payment_method_required`) so the
+cabinet words it in the owner's language instead of showing the English
+message.
 """
 
 from collections.abc import Sequence
@@ -13,6 +14,9 @@ from app.schemas.typings.platform.strings import ErrorReasonMessage
 
 NUMBER_TAKEN_REASON: ErrorReasonCode = ErrorReasonCode("number_taken")
 PRICE_CHANGED_REASON: ErrorReasonCode = ErrorReasonCode("price_changed")
+PAYMENT_METHOD_REQUIRED_REASON: ErrorReasonCode = ErrorReasonCode(
+    "payment_method_required"
+)
 
 
 class PhoneNumberUnavailableError(ConflictError):
@@ -51,6 +55,30 @@ class PhoneNumberPriceChangedError(ConflictError):
                 ErrorReason(
                     code=PRICE_CHANGED_REASON,
                     message=ErrorReasonMessage("Search again to see the new price."),
+                )
+            ],
+        )
+
+
+class PhoneNumberNeedsPaymentError(ConflictError):
+    """
+    The business neither pays for its plan nor has a card on file (a trial
+    without a card, no subscription, an unpaid or paused one): a number,
+    and the calls and text-backs it brings, costs money every month, so
+    the owner adds a card in Billing first. Reason
+    `payment_method_required`.
+    """
+
+    def __init__(self, *args: object, reasons: Sequence[ErrorReason] = ()) -> None:
+        super().__init__(
+            *args,
+            reasons=reasons
+            or [
+                ErrorReason(
+                    code=PAYMENT_METHOD_REQUIRED_REASON,
+                    message=ErrorReasonMessage(
+                        "Add a card in Billing, then take the number."
+                    ),
                 )
             ],
         )

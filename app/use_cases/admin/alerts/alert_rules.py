@@ -16,6 +16,7 @@ from app.schemas.typings.monitoring.constrained_integers import (
 )
 from app.schemas.typings.monitoring.constrained_strings import AlertRunbookPath
 from app.schemas.typings.monitoring.strings import AlertRuleSummary
+from app.use_cases.admin.alerts.abuse_alert_rules import ABUSE_ALERT_RULES
 from app.use_cases.admin.alerts.audit_alert_rules import AUDIT_ALERT_RULES
 from app.use_cases.admin.alerts.burn_rate_rules import BURN_RATE_RULES
 from app.use_cases.admin.alerts.platform_health_alert_rules import (
@@ -223,5 +224,6 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
         *BURN_RATE_RULES,  # The SLOs' multi-window burn rates (1163).
         *AUDIT_ALERT_RULES,  # The audit log's anomalies and chains (1193).
         *PLATFORM_HEALTH_ALERT_RULES,  # Storage, latency, backups, SMS (LOG-04/05).
+        *ABUSE_ALERT_RULES,  # Booking spikes, WhatsApp quality (ABUSE-04, VOICE-09).
     )
 }

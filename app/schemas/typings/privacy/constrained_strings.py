@@ -3,6 +3,21 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class ArchivedRecordingFile(BaseConstrainedTypedString):
+    """
+    Where one call's recording sits inside a full export: under
+    recordings/, named by the call's id, with the extension of its audio
+    type (.bin when the type has none of its own).
+
+    Example:
+        file = ArchivedRecordingFile("recordings/call_7c1e.mp3")
+    """
+
+    min_length = 16
+    max_length = 120
+    pattern = r"^recordings/[a-z0-9_\-]+\.(mp3|wav|ogg|webm|m4a|bin)$"
+
+
 class BusinessExportDownloadPath(BaseConstrainedTypedString):
     """
     API path of the one-time download of one full business export: opened
@@ -36,6 +51,22 @@ class BusinessExportToken(BaseConstrainedTypedString):
     min_length = 16
     max_length = 200
     pattern = r"^[A-Za-z0-9_\-]+$"
+
+
+class CallRecordingDownloadPath(BaseConstrainedTypedString):
+    """
+    API path that plays or downloads one call's recording (owners, and
+    staff when the owner allows it), as a full export lists it.
+
+    Example:
+        path = CallRecordingDownloadPath(
+            "/v1/businesses/business_1f/calls/call_7c1e/recording"
+        )
+    """
+
+    min_length = 30
+    max_length = 300
+    pattern = r"^/v1/businesses/[a-z0-9_\-]+/calls/[a-z0-9_\-]+/recording$"
 
 
 class ExportDownloadTokenHash(BaseConstrainedTypedString):

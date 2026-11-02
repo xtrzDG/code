@@ -27,6 +27,7 @@ from app.schemas.typings.bookings.booleans import (
 )
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
+    BookingLinkGeneration,
     BookingStartsAtUnixSeconds,
     PartySize,
 )
@@ -55,6 +56,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.profiles.strings import CancellationPolicyText
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class BookingManageClaims(ImmutableDTO):
@@ -68,6 +70,10 @@ class BookingManageClaims(ImmutableDTO):
     a message; it opens the same booking until its own `expires_at`, every
     answer to it carries a credential that ends no later, and it cannot be
     exchanged again.
+
+    `link_generation`: the booking's manage link generation it was issued
+    with; once staff revoke the booking's links (a new generation), it no
+    longer opens. Links signed before generations existed carry 0.
     """
 
     business_id: BusinessId
@@ -75,6 +81,19 @@ class BookingManageClaims(ImmutableDTO):
     booking_version: BookingStartsAtUnixSeconds
     expires_at: Microseconds
     is_page_session: IsBookingPageSession = False
+    link_generation: BookingLinkGeneration = BookingLinkGeneration(0)
+
+
+class RevokeBookingLinksCommand(ImmutableDTO):
+    """
+    Staff end every manage link of one booking sent so far (a forwarded or
+    leaked link): the booking gets a new link generation.
+    """
+
+    business_id: BusinessId
+    booking_id: BookingId
+    actor_id: UserId
+    client_ip_address: ClientIpAddress | None = None
 
 
 class BookingConfirmationRequest(ImmutableDTO):

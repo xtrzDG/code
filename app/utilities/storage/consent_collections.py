@@ -1,5 +1,6 @@
 """
-The catalog entry of the consent ledger (1246). Part of DOCUMENT_COLLECTIONS
+The catalog entry of the consent ledger (1246), with the campaigns' entries
+(growth_collections.py) part of DOCUMENT_COLLECTIONS
 (document_collection_catalog.py) and DOCUMENT_LOOKUP_FIELDS
 (document_lookup_catalog.py).
 

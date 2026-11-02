@@ -13,6 +13,7 @@ from app.clients.elevenlabs.elevenlabs_phone_numbers_client import (
     ElevenLabsPhoneNumbersClient,
 )
 from app.clients.twilio.twilio_phone_numbers_client import TwilioPhoneNumbersClient
+from app.containers.integration_guards import guard_twilio_phone_numbers
 from app.contracts.phone_numbers import PhoneNumberProvisionerAdapterContract
 from app.contracts.resilience import CircuitBreakerContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -54,7 +55,10 @@ def build_phone_number_provisioner(
         )
 
     return TwilioPhoneNumberProvisionerAdapter(
-        twilio_client=TwilioPhoneNumbersClient(account_sid, auth_token),
+        # Twilio's numbers behind their own circuit (REL-04).
+        twilio_client=guard_twilio_phone_numbers(
+            TwilioPhoneNumbersClient(account_sid, auth_token), circuit_breaker
+        ),
         # ElevenLabs' numbers behind the voice platform's circuit.
         elevenlabs_client=GuardedElevenLabsPhoneNumbersClient(
             ElevenLabsPhoneNumbersClient(api_key, settings.elevenlabs_api_base_url),

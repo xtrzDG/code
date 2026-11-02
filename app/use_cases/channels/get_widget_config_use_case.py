@@ -134,6 +134,9 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
                 business, POWERED_BY_SOURCE_TAG
             ),
             attachments=widget_attachment_rules(self._app_settings.media),
+            business_phone_number=(
+                None if profile is None else profile.contacts.public_phone_number
+            ),
         )
 
     def _starter_questions(

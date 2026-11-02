@@ -11,15 +11,15 @@ import { loginPath } from "@/lib/navigation";
 import { callRecordingUrl } from "../../_lib/conversationModel";
 import { loadRecording } from "../../_lib/recordingLoader";
 
-type PlayerProblem = "missing" | "failed" | null;
+type PlayerProblem = "forbidden" | "missing" | "failed" | null;
 
 /**
  * One call recording. Nothing is fetched (and nothing written to the audit
  * log) until someone presses play; the recording is then downloaded once
  * and played from memory, so the browser's player can seek anywhere and
  * Safari and iOS play it too. An expired session goes to the sign-in page;
- * a deleted recording says so; a service that does not answer can be
- * tried again. Keyboard focus stays on what replaces the pressed button.
+ * staff the owner keeps from recordings and a deleted recording are told
+ * so; a service that does not answer can be tried again. Keyboard focus stays on what replaces the pressed button.
  */
 export function CallRecordingPlayer({ callId, label, playLabel }: { callId: string; label: string; playLabel: string }) {
   const { t } = useI18n();
@@ -74,7 +74,7 @@ export function CallRecordingPlayer({ callId, label, playLabel }: { callId: stri
       window.location.assign(loginPath({ next, reason: "expired" }));
       return;
     }
-    setProblem(result.failure === "missing" ? "missing" : "failed");
+    setProblem(result.failure === "unavailable" ? "failed" : result.failure);
   };
 
   const busyIcon = isLoading ? <Spinner size="sm" /> : undefined;
@@ -107,6 +107,7 @@ export function CallRecordingPlayer({ callId, label, playLabel }: { callId: stri
           {isLoading ? t("conversations.calls.loading") : t("conversations.calls.play")}
         </Button>
       ) : null}
+      {problem === "forbidden" ? <Alert tone="info">{t("conversations.calls.playForbidden")}</Alert> : null}
       {problem === "missing" ? <Alert tone="warning">{t("conversations.calls.playMissing")}</Alert> : null}
       {problem === "failed" ? (
         <Alert

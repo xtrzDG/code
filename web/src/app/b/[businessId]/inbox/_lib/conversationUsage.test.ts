@@ -41,4 +41,19 @@ describe("conversation usage", () => {
       ]),
     ).toEqual({ inputTokens: 5, outputTokens: 7, costMicroUsd: 9 });
   });
+
+  it("counts the numbers the API keeps from owners and staff as nothing", () => {
+    expect(
+      addUsage(
+        { input_tokens: 10, output_tokens: 5, cost_micro_usd: 7 },
+        { input_tokens: null, output_tokens: null, cost_micro_usd: null },
+      ),
+    ).toEqual({ input_tokens: 10, output_tokens: 5, cost_micro_usd: 7 });
+    expect(
+      usageTotals([
+        { input_tokens: null, output_tokens: null, cost_micro_usd: null },
+        { input_tokens: 4, output_tokens: 5, cost_micro_usd: 6 },
+      ]),
+    ).toEqual({ inputTokens: 4, outputTokens: 5, costMicroUsd: 6 });
+  });
 });

@@ -7,6 +7,7 @@ from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.channels.widget_loader import current_widget_loader
 from tests.channels.channels_payloads import bearer
 from tests.channels.channels_settings import ISRAEL, POLAND, build_settings
 from tests.channels.outbox_reads import inbox
@@ -235,10 +236,14 @@ class TestWidgetSnippet:
             )
             assert response.status_code == 200
             body = response.json()
+            loader = current_widget_loader()
+            loader_url = f"https://api.workshop.test{loader.path}"
             assert body["script_url"] == "https://api.workshop.test/widget.js"
+            assert body["loader_url"] == loader_url
+            assert body["loader_integrity"] == loader.integrity
             assert body["snippet"] == (
-                '<script src="https://api.workshop.test/widget.js" '
-                f'data-tenant="{business.id}" async></script>'
+                f'<script src="{loader_url}" integrity="{loader.integrity}" '
+                f'crossorigin="anonymous" data-tenant="{business.id}" async></script>'
             )
             assert body["demo_url"] == (
                 f"https://api.workshop.test/widget/demo?business_id={business.id}"

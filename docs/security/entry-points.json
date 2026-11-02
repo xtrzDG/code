@@ -177,7 +177,7 @@
     {"method": "GET", "path": "/v1/businesses/{business_id}/call-forwarding-instructions", "access": "staff", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "GET", "path": "/v1/businesses/{business_id}/call-settings", "access": "owner", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "PUT", "path": "/v1/businesses/{business_id}/call-settings", "access": "owner", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
-    {"method": "GET", "path": "/v1/businesses/{business_id}/calls/{call_id}/recording", "access": "staff", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
+    {"method": "GET", "path": "/v1/businesses/{business_id}/calls/{call_id}/recording", "access": "owner", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "GET", "path": "/v1/businesses/{business_id}/campaign-messages", "access": "owner", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "GET", "path": "/v1/businesses/{business_id}/campaign-settings", "access": "staff", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "PUT", "path": "/v1/businesses/{business_id}/campaign-settings", "access": "owner", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},

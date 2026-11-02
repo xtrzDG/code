@@ -17,6 +17,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName, CityName
+from app.schemas.typings.calls.booleans import IsStaffRecordingPlaybackAllowed
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
@@ -83,9 +84,11 @@ class BusinessDocument(BaseDocument):
     table card (False, so older rows read as they are).
     Version 7: `brand_id`, the brand (chain of locations) the business is a
     location of (None: a business on its own, as every older row).
+    Version 8: `staff_may_play_recordings`, the owner's permission for staff
+    to play the call recordings (False: owners only, as every older row).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("7")
+    schema_version: SchemaVersion = SchemaVersion("8")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -110,4 +113,5 @@ class BusinessDocument(BaseDocument):
     referred_by: BusinessReferral | None = None
     hides_powered_by: IsPoweredByHidden = False
     brand_id: BrandId | None = None
+    staff_may_play_recordings: IsStaffRecordingPlaybackAllowed = False
     revision: BusinessRevision = BusinessRevision(0)

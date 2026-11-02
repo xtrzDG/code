@@ -138,7 +138,11 @@ def log_fields(**fields: int | str) -> dict[str, object]:
 
 
 def read_line_fields(record: logging.LogRecord) -> dict[str, object]:
-    """The fields the caller attached with `log_fields` (none by default)."""
+    """
+    The fields the caller attached with `log_fields` (none by default), a
+    text value redacted like the message, should one ever carry more than
+    an id.
+    """
 
     fields: object = getattr(record, LINE_FIELDS_ATTRIBUTE, None)
     if not isinstance(fields, dict):
@@ -147,7 +151,10 @@ def read_line_fields(record: logging.LogRecord) -> dict[str, object]:
     items: list[tuple[object, object]] = list(
         cast(dict[object, object], fields).items()
     )
-    return {str(name): value for name, value in items}
+    return {
+        str(name): redact_log_text(value) if isinstance(value, str) else value
+        for name, value in items
+    }
 
 
 def redact_log_text(text: str) -> str:

@@ -87,4 +87,13 @@ export const securityEn = {
     ownerOnly: "Only an owner can change this.",
     saved: "Saved",
   },
+  recordings: {
+    title: "Call recordings",
+    description:
+      "Recordings hold your callers' voices and what they said. Owners can always play them; staff only if you allow it here.",
+    toggle: "Staff may play call recordings",
+    on: "Owners and staff can play them",
+    off: "Only owners can play them",
+    saved: "Saved",
+  },
 } as const;

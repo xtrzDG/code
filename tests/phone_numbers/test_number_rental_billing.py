@@ -22,7 +22,7 @@ MONTH_DAYS: int = 31
 def paying_business(world: PhoneWorld) -> tuple[UserDocument, BusinessDocument]:
     """A monthly subscription paid after the trial, charges automatic."""
 
-    owner, business = world.owner_and_business()
+    owner, business = world.owner_and_business(card_on_file=False)
     world.start_trial.run(
         StartTrialCommand(
             user_id=owner.id, business_id=business.id, request=StartTrialRequest()
@@ -90,12 +90,8 @@ def test_a_paying_customer_gets_a_bill_each_month() -> None:
 @pytest.mark.usefixtures("open_rental_gate")
 def test_a_month_in_the_trial_is_on_the_platform() -> None:
     world = PhoneWorld()
+    # In the trial, with the card the owner saved.
     owner, business = world.owner_and_business()
-    world.start_trial.run(
-        StartTrialCommand(
-            user_id=owner.id, business_id=business.id, request=StartTrialRequest()
-        )
-    )
     world.rent_austin_number(owner, business)
 
     assert bill(world) == 1

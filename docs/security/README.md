@@ -13,6 +13,7 @@ policy and the gates of the code are in `SECURITY.md`.
 | `docs/security/permission-matrix.md` | what each role may do (generated) | `tests/platform/test_entry_point_inventory.py` |
 | `docs/security/secrets-inventory.md` | every secret: purpose, owner, store, rotation | `tests/legal/test_secrets_inventory.py` |
 | `docs/security/data-classification.md` | data categories, transfers outside the EEA, retention and how the purge is watched | `tests/legal/test_data_classification.py` |
+| `docs/security/payments.md` | the payment data flows, why no card data reaches the platform, the SAQ A eligibility and the PCI responsibility matrix for businesses | `tests/legal/test_payments_document.py` |
 | `docs/security/log-inventory.md` | what is logged where (loggers, security events, audit entry fields), its encoding and retention | `tests/security/test_log_inventory.py` |
 | `docs/security/change-risk.md` | the risk classes of a pull request and the differential review of HIGH ones | `tests/legal/test_change_risk.py` |
 | `docs/security/access-review.md` | the quarterly review of who can reach what | `tests/legal/test_security_documents.py` |

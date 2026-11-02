@@ -18,12 +18,23 @@ SAID_CONTACTS: str = (
     "Call me on +995 599 12 34 56 or write to nino@example.ge, "
     "the card is 4111 1111 1111 1111, for Saturday at 19:00, 4 people."
 )
+# A call with a card read out keeps no audio whatever the caller chose
+# (tests/calls/test_card_numbers_in_calls.py): the calls that keep theirs
+# name no card.
+SAID_WITHOUT_CARD: str = (
+    "Call me on +995 599 12 34 56 or write to nino@example.ge, "
+    "for Saturday at 19:00, 4 people."
+)
 
 
 def declined_payload(*, declined: bool = True) -> dict[str, Any]:
     payload = post_call_payload(tool_names=("decline_recording",) if declined else ())
     payload["data"]["transcript"].append(
-        {"role": "user", "message": SAID_CONTACTS, "time_in_call_secs": 80}
+        {
+            "role": "user",
+            "message": SAID_CONTACTS if declined else SAID_WITHOUT_CARD,
+            "time_in_call_secs": 80,
+        }
     )
     return payload
 

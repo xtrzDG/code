@@ -6,6 +6,7 @@ from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     MessageRepoContract,
@@ -74,9 +75,15 @@ class AnswerCustomerSignalUseCase(
         app_base_url: PublicBaseUrl | None,
         suppression_list: SuppressionListContract,
         card_repo: CustomerCardRepoContract,
+        consent_record_repo: ConsentRecordRepoContract | None = None,
     ) -> None:
         self._preferences: MessagingPreferences = MessagingPreferences(
-            contact_repo, audit_log_repo, text_resolver, suppression_list, card_repo
+            contact_repo,
+            audit_log_repo,
+            text_resolver,
+            suppression_list,
+            card_repo,
+            consent_record_repo,
         )
         self._ratings: VisitRatings = VisitRatings(
             feedback_request_repo,

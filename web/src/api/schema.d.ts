@@ -6944,8 +6944,9 @@ export interface components {
          *     reply (part of `text`), so checks of what the model wrote can leave it
          *     out. `assistant_version_id` and `assistant_version_number` name the
          *     version that answered (the one the conversation is pinned to);
-         *     `tool_calls` are the tools the model called in this turn, with their
-         *     input and result (the owner's test chat shows them). `choices` are the
+         *     `tool_calls` are the tools the model called in this turn; their input
+         *     and result reach platform admins only (`platform_details.py`; the
+         *     owner's test chat shows them to admins). `choices` are the
          *     options the reply offers to tap (the text already ends with their
          *     prompt); every channel shows them its own way.
          */
@@ -7740,6 +7741,10 @@ export interface components {
          *     `deposit` is the deposit asked for the booking (`DepositRequestDocument`
          *     holds the rest), None when none was; `deposit_status` repeats its state
          *     at the top level, where the reports' grouped counts read it (1190).
+         *
+         *     `manage_link_generation` is signed inside every manage link of the
+         *     booking: staff revoking the links sent so far draw a new one, and only
+         *     links of the current generation open (0 until the first revocation).
          */
         BookingDocument: {
             booking_system_booking?: components["schemas"]["BookingSystemBookingRef"] | null;
@@ -7772,6 +7777,11 @@ export interface components {
             /** Language */
             language?: string | null;
             last_status_change?: components["schemas"]["BookingStatusChange"] | null;
+            /**
+             * Manage Link Generation
+             * @default 0
+             */
+            manage_link_generation: number;
             /** Notes */
             notes?: string | null;
             origin?: components["schemas"]["BookingOrigin"] | null;
@@ -7783,7 +7793,7 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @default 6
+             * @default 7
              */
             schema_version: string;
             /** Service Item Id */
@@ -8618,7 +8628,9 @@ export interface components {
          * BusinessSecurityView
          * @description Whether the team must sign in with two factors, how many members have
          *     no authenticator yet (they cannot open the business while it is on),
-         *     and whether the viewer's own session is signed in with two factors.
+         *     whether the viewer's own session is signed in with two factors, and
+         *     whether staff may play the call recordings (`staff_may_play_recordings`;
+         *     off: owners only).
          */
         BusinessSecurityView: {
             /** Business Id */
@@ -8630,6 +8642,11 @@ export interface components {
             members_without_two_factor: number;
             /** Require Mfa For Members */
             require_mfa_for_members: boolean;
+            /**
+             * Staff May Play Recordings
+             * @default false
+             */
+            staff_may_play_recordings: boolean;
             viewer_auth_level?: components["schemas"]["AuthLevel"] | null;
         };
         /**
@@ -10078,6 +10095,90 @@ export interface components {
             business_id: string;
         };
         /**
+         * ConsentEvent
+         * @description An entry gives the consent or takes it back.
+         * @enum {string}
+         */
+        ConsentEvent: "given" | "withdrawn";
+        /**
+         * ConsentEventSource
+         * @description Where it happened: the box on the booking's page (/r/{token}), the team
+         *     recording what the customer told them (the customer's card), the
+         *     customer's STOP in a chat, or the erasure of the customer's data (which
+         *     takes every consent back).
+         * @enum {string}
+         */
+        ConsentEventSource: "booking_page" | "in_person" | "stop" | "erasure";
+        /**
+         * ConsentPurpose
+         * @description What the customer agreed to: marketing messages (the campaigns).
+         * @enum {string}
+         */
+        ConsentPurpose: "marketing";
+        /**
+         * ConsentRecordDocument
+         * @description One entry of a business's consent ledger (migration 1246): a customer
+         *     gave (`GIVEN`) or took back (`WITHDRAWN`) their consent for `purpose`,
+         *     at `created_at` (UTC microseconds). Append-only: an entry is never
+         *     changed or deleted (the database refuses it to the application's
+         *     tenant role); only the deletion of the whole business removes the
+         *     business's ledger.
+         *
+         *     What the entry proves (GDPR art. 7(1)): the customer (`contact_id`),
+         *     where it happened (`source`: the booking's page, the team in person, a
+         *     STOP, the erasure) and its reference (`booking_id` of the page,
+         *     `conversation_id` of the chat a STOP came in), the chat it covers or
+         *     came from (`channel`), the exact wording (`text_version`) and the
+         *     language it was shown in (`language`), who recorded it (`recorded_by`,
+         *     the team member; None: the customer themselves or the platform) and
+         *     the client's network (`client_ip_address`, when the customer acted on
+         *     a page).
+         *
+         *     The ledger outlives the customer's erasure as pseudonymous proof: it
+         *     names the contact only by its id (an erased contact keeps only that)
+         *     and holds no name, number, account or words of theirs.
+         */
+        ConsentRecordDocument: {
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Client Ip Address */
+            client_ip_address?: string | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            event: components["schemas"]["ConsentEvent"];
+            /** Id */
+            id?: string;
+            /** Language */
+            language?: string | null;
+            /** @default marketing */
+            purpose: components["schemas"]["ConsentPurpose"];
+            /** Recorded By */
+            recorded_by?: string | null;
+            /**
+             * Schema Version
+             * @description Persistence schema version. This is not the package version or application release version.
+             * @default 1
+             */
+            schema_version: string;
+            source: components["schemas"]["ConsentEventSource"];
+            text_version?: components["schemas"]["MarketingConsentText"] | null;
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+        };
+        /**
          * ContactBlock
          * @description Why the assistant no longer answers a customer: who blocked them, when.
          */
@@ -10309,7 +10410,8 @@ export interface components {
          *     their account in each of the business's channels, the webhook events
          *     they sent (`inbound_events`) by their accounts and conversations, and
          *     the requests for feedback after their visits, their places on the
-         *     waitlist and the rebooking campaign's messages by the contact.
+         *     waitlist, the rebooking campaign's messages and the consent ledger's
+         *     entries by the contact (1246, oldest first; kept after an erasure).
          */
         ContactRecords: {
             /** Bookings */
@@ -10318,6 +10420,8 @@ export interface components {
             calls?: components["schemas"]["CallDocument"][];
             /** Campaign Messages */
             campaign_messages?: components["schemas"]["CampaignMessageDocument"][];
+            /** Consent Records */
+            consent_records?: components["schemas"]["ConsentRecordDocument"][];
             contact: components["schemas"]["ContactDocument"];
             /** Conversations */
             conversations?: components["schemas"]["ConversationDocument"][];
@@ -10485,6 +10589,7 @@ export interface components {
          *     and recordings, the bookings, leads and handoffs made in it, whether
          *     staff can reply, and who of the team is assigned to it (its
          *     `assignment_revision` is what an assignment from the card must name).
+         *     `usage` goes to platform admins only (None for the team).
          */
         ConversationDetailView: {
             assignment?: components["schemas"]["ConversationAssignmentView"] | null;
@@ -10502,7 +10607,7 @@ export interface components {
             /** Messages */
             messages?: components["schemas"]["MessageView"][];
             reply?: components["schemas"]["StaffReplyView"] | null;
-            usage?: components["schemas"]["ConversationUsageView"];
+            usage?: components["schemas"]["ConversationUsageView"] | null;
         };
         /**
          * ConversationDocument
@@ -14036,7 +14141,10 @@ export interface components {
          * @description A new session. The bearer token is shown only here; the server keeps
          *     nothing but its hash. `auth_level` says how it was signed in; a session
          *     opened while setting up an authenticator carries the new
-         *     `recovery_codes` (shown once).
+         *     `recovery_codes` (shown once). `second_factor_suggested`: the person
+         *     owns a business and has no second factor yet; the cabinet asks them to
+         *     set one up (a passkey or the authenticator app) before going on, which
+         *     they may put off until their next sign-in.
          */
         LoginSessionView: {
             /** Access Token */
@@ -14049,6 +14157,11 @@ export interface components {
             is_new_user: boolean;
             /** Recovery Codes */
             recovery_codes?: string[];
+            /**
+             * Second Factor Suggested
+             * @default false
+             */
+            second_factor_suggested: boolean;
             user: components["schemas"]["UserView"];
         };
         /**
@@ -14614,7 +14727,8 @@ export interface components {
          *     for the website chat); `attachments`: a customer's voice notes, photos
          *     and places; `context_note`: what a customer message refers to (a story);
          *     `choices`: the options a reply offered to tap; `guard`: what the reply
-         *     guard did (None: nothing to show).
+         *     guard did (None: nothing to show). Model, tokens and cost: platform
+         *     admins only (None for the team, `platform_details.py`).
          */
         MessageView: {
             /** Attachments */
@@ -14624,7 +14738,7 @@ export interface components {
             choices?: string[];
             context_note?: components["schemas"]["InboundContextNote"] | null;
             /** Cost Micro Usd */
-            cost_micro_usd: number;
+            cost_micro_usd?: number | null;
             /** Created At */
             created_at: number;
             delivery?: components["schemas"]["MessageDeliveryView"] | null;
@@ -14633,13 +14747,13 @@ export interface components {
             /** Id */
             id: string;
             /** Input Tokens */
-            input_tokens: number;
+            input_tokens?: number | null;
             /** Language */
             language?: string | null;
             /** Model Id */
             model_id?: string | null;
             /** Output Tokens */
-            output_tokens: number;
+            output_tokens?: number | null;
             /** Sent By */
             sent_by?: string | null;
             /** Text */
@@ -16537,9 +16651,24 @@ export interface components {
          *     and grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).
          *     PAYMENT_MISMATCH: the daily reconciliation found payments whose status
          *     at Flitt or Stripe differs from the platform's record.
+         *     WEBHOOK_SIGNATURE_FAILURES: a burst of webhook deliveries refused as
+         *     unsigned, badly signed or stale (a secret out of step, or probing).
+         *     STORAGE_ERRORS: the database or the object storage failed requests and
+         *     jobs. API_LATENCY: too many API requests took longer than 2 s.
+         *     BACKUP_FAILED: the last off-site backup failed, or none succeeded for
+         *     26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume
+         *     (an alert at 60, refused from 200: SMS pumping through a tenant).
+         *     OTP_CONVERSION: most login codes of the last hour were never used
+         *     (SMS pumping through sign-in).
+         *     BOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,
+         *     or more cancellations, in an hour than its hourly cap of either (fake
+         *     bookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:
+         *     Meta flagged or downgraded a business's WhatsApp number, lowered a
+         *     template's quality, paused or disabled a template, or moved one into
+         *     the marketing category (the number risks a restriction).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch" | "webhook_signature_failures" | "storage_errors" | "api_latency" | "backup_failed" | "tenant_sms_volume" | "otp_conversion" | "booking_spike" | "cancellation_spike" | "whatsapp_quality";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -18961,8 +19090,9 @@ export interface components {
          *     asked for no more messages. ALREADY_TEXTED: the caller got one in the
          *     last day. DAILY_LIMIT: the business reached its daily number of
          *     text-backs. IN_CONVERSATION: the caller is already writing with the
-         *     business. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it.
-         *     NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was
+         *     business. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it
+         *     (an SMS never goes to a premium, satellite, landline or foreign
+         *     number). NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was
          *     hidden. TOO_LATE: the call is too long ago to text about it now.
          * @enum {string}
          */
@@ -19072,15 +19202,15 @@ export interface components {
         };
         /**
          * ToolCallView
-         * @description One tool call made while producing a message.
+         * @description One tool call of a message; input and result for platform admins only.
          */
         ToolCallView: {
             /** Input Json */
-            input_json: string;
+            input_json?: string | null;
             /** Is Error */
             is_error: boolean;
             /** Result Json */
-            result_json: string;
+            result_json?: string | null;
             tool_name: components["schemas"]["AssistantToolName"];
         };
         /**
@@ -49437,7 +49567,9 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Require Mfa For Members */
-                    require_mfa_for_members: boolean;
+                    require_mfa_for_members?: boolean | null;
+                    /** Staff May Play Recordings */
+                    staff_may_play_recordings?: boolean | null;
                 };
             };
         };
@@ -60682,7 +60814,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description ElevenLabs' conversation initiation data: the first message, its language and the call's dynamic variables. */
             200: {
                 headers: {
                     [name: string]: unknown;

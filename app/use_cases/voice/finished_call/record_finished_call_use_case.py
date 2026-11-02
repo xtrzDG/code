@@ -86,8 +86,9 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
     account, card or phone numbers, and the post-call flow queues the
     deletion of its audio instead of the archive. A call whose audio the
     business does not keep is marked the same way: the recording is off
-    in Settings → Calls (the default), or a person took a transfer, so the
-    audio holds the staff member's conversation (`keeps_call_recording`).
+    in Settings → Calls (the default), a person took a transfer, so the
+    audio holds the staff member's conversation, or the caller read out a
+    card number or a security code (`keeps_call_recording`).
     """
 
     def __init__(

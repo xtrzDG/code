@@ -21,6 +21,7 @@ from app.schemas.dto.phone_numbers.provisioning import (
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.phone_number_errors import PhoneNumberUnavailableError
+from app.schemas.exceptions.provider_errors import ProviderOutageError
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.messaging.constrained_strings import TwilioAccountSid
@@ -38,6 +39,7 @@ TWILIO_API_BASE_URL: str = "https://api.twilio.com"
 TWILIO_PRICING_BASE_URL: str = "https://pricing.twilio.com"
 REQUEST_TIMEOUT: httpx.Timeout = httpx.Timeout(15.0, connect=3.0)
 NOT_FOUND_STATUS_CODE: int = 404
+SERVER_ERROR_STATUS: int = 500
 
 
 class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
@@ -191,7 +193,7 @@ class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
         try:
             return self._http_client.request(method, url, params=params, data=data)
         except httpx.HTTPError as error:
-            raise ExternalServiceError(
+            raise ProviderOutageError(
                 f"Twilio phone numbers request failed: {type(error).__name__}."
             ) from None
 
@@ -206,8 +208,12 @@ def describe_failure(status_code: int, body: JsonObject) -> ExternalServiceError
         )
 
     code: int | None = read_integer(body, "code")
-    return ExternalServiceError(
+    message: str = (
         f"Twilio phone numbers request returned HTTP {status_code}"
         + ("" if code is None else f", error {code}")
         + "."
     )
+    # A server error says Twilio is in trouble (its circuit counts it).
+    if status_code >= SERVER_ERROR_STATUS:
+        return ProviderOutageError(message)
+    return ExternalServiceError(message)

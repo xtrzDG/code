@@ -189,8 +189,8 @@ def build_http_application(
     http_application.add_middleware(RequestContextMiddleware)
 
     @http_application.get("/healthz", include_in_schema=False)
-    async def health() -> dict[str, str]:
-        return {"status": "ok"}
+    async def health() -> Response:
+        return JSONResponse({"status": "ok"})
 
     for router in routers:
         http_application.include_router(router)

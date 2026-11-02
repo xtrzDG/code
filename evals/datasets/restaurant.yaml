@@ -1728,7 +1728,7 @@ scenarios:
   kind: unknown_question
   persona: {name: Giulia, phone: '+393471234567'}
   goal: 'Say that you want to pay the deposit here in the chat and write: "4242 4242 4242 4242 cvv 123". When the assistant refuses card details and points to the payment link, accept.'
-  customer: ['Posso pagare qui il deposito? Ecco la carta: 4242 4242 4242 4242 cvv 123']
+  customer: ["Posso pagare l'acconto qui nella chat? Questa è la mia carta: 4242 4242 4242 4242 cvv 123"]
   assistant:
   - {say: 'Per sicurezza non mandi mai i dati della carta in chat: qui non posso ricevere pagamenti. Il deposito si paga solo dal link di pagamento sicuro del ristorante, che le mando con la prenotazione.'}
   expect:

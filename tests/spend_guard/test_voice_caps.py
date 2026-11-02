@@ -83,6 +83,7 @@ def start_call(setup: VoiceSetup, level: SpendLevel) -> FixedSpendCheck:
         testbed.phone_number_parser,
         testbed.call_greeting,
         testbed.settings,
+        testbed.subscription_repo,
         check_spend=spend,
     ).run(
         CallInitiationWebhookRequest(

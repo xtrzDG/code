@@ -8,6 +8,7 @@ from typed_time_provider import Microseconds
 
 from app.gateways.http.byte_ranges import read_byte_range
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.dto.call_recordings import RecordingByteRange
@@ -40,8 +41,14 @@ class UnusedMenuExtractor:
 
 
 class Playback:
-    def __init__(self, world: BrainWorld) -> None:
+    """
+    Playbacks in a business whose owner let staff play the recordings
+    (`staff_may_play`; the permission itself: test_call_recording_permission).
+    """
+
+    def __init__(self, world: BrainWorld, staff_may_play: bool = True) -> None:
         self.world = world
+        self.allow_staff(staff_may_play)
         self.storage = CabinetStorage()
         self.client: TestClient = build_cabinet_client(
             world,
@@ -49,6 +56,12 @@ class Playback:
             {"owner": world.owner_id, "staff": world.staff_id, "stranger": UserId()},
             self.storage,
         )
+
+    def allow_staff(self, allowed: bool) -> None:
+        def apply(business: BusinessDocument) -> None:
+            business.staff_may_play_recordings = allowed
+
+        self.world.business_repo.update(self.world.business.id, apply)
 
     def add_call(
         self,

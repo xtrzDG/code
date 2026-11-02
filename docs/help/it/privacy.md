@@ -2,7 +2,7 @@
 summary: I dati dei tuoi clienti, l'accordo sul trattamento dei dati, l'esportazione e la cancellazione dei dati di un cliente e il registro attività.
 topic: account
 order: 20
-keywords: privacy, dati personali, gdpr, dpa, accordo sul trattamento dei dati, responsabile del trattamento, esportare, esportazione, cancellare, eliminare cliente, diritto all'oblio, registro attività, conservazione, registrazione, registrazioni delle chiamate, consenso
+keywords: privacy, dati personali, gdpr, dpa, accordo sul trattamento dei dati, responsabile del trattamento, esportare, esportazione, esportazione completa, cambiare fornitore, portabilità dei dati, cancellare, eliminare cliente, diritto all'oblio, registro attività, conservazione, registrazione, registrazioni delle chiamate, consenso
 related: billing, inbox
 status: needs_review
 ---
@@ -19,6 +19,10 @@ Leggi e accetta il DPA in **Impostazioni → [Privacy](cabinet:settings/privacy)
 1. Apri **Impostazioni → [Privacy](cabinet:settings/privacy)** e cerca il cliente per nome o numero di telefono.
 2. **Esporta** ti dà in un unico file tutto ciò che è conservato su quel cliente.
 3. **Elimina dati** cancella per sempre le sue conversazioni, i suoi recapiti e le sue registrazioni.
+
+## Lasciare il servizio o passare a un altro fornitore
+
+**Impostazioni → [Privacy](cabinet:settings/privacy) → Esporta i tuoi dati → Prepara l'esportazione completa** ti dà tutto in un unico archivio: clienti, conversazioni, chiamate e relative registrazioni, prenotazioni, la base di conoscenza, la tua configurazione (ogni versione delle istruzioni dell'assistente, le impostazioni delle chiamate e della privacy, i canali senza le loro password) e i consensi al marketing dei tuoi clienti. Ogni tipo di dato è un file JSON, le tabelle del pannello sono in CSV e il file README nell'archivio ne spiega il formato. Le registrazioni oltre i 2 GB di audio sono elencate con un link per scaricarle una per una. Dopo la chiusura dell'attività l'esportazione resta disponibile per 30 giorni; poi i dati vengono cancellati e ricevi un certificato di cancellazione.
 
 ## Chi ha visto cosa
 

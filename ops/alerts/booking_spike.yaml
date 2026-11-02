@@ -1,0 +1,16 @@
+# Mass bookings of one business (ABUSE-04, OAT-021 denial of inventory):
+# every announced new booking counts in the business's hourly bucket
+# (BookingSurgeObserverFacilitator); the 41st of an hour counts the
+# platform signal booking_surge once and a warning line names the
+# business. Owners' test chats never count. The booking caps refuse; this
+# only tells the platform team.
+code: booking_spike
+severity: sev3
+summary: A business got more than 40 new bookings in an hour (fake bookings holding every slot).
+measure: businesses past 40 new bookings an hour, in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (booking-surge:new:<business>, platform-signal:booking_surge)
+runbook: docs/operations/runbooks/booking-abuse.md

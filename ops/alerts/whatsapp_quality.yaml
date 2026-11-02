@@ -1,0 +1,17 @@
+# Meta's warnings before it restricts a WhatsApp number or template
+# (VOICE-09): phone_number_quality_update FLAGGED or DOWNGRADE,
+# message_template_quality_update to YELLOW or RED,
+# message_template_status_update PAUSED, DISABLED or FLAGGED, and
+# template_category_update into MARKETING. The WhatsApp webhook counts one
+# platform signal whatsapp_quality_drop per warning and logs the number's
+# event or the template's name and language (report_quality_warnings).
+code: whatsapp_quality
+severity: sev2
+summary: Meta flagged or downgraded a WhatsApp number, lowered or paused a template, or moved one into the marketing category.
+measure: quality warnings from Meta's WhatsApp webhooks in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (platform-signal:whatsapp_quality_drop)
+runbook: docs/operations/runbooks/whatsapp-quality.md

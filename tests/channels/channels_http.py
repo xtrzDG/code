@@ -200,6 +200,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                     testbed.phone_number_parser,
                     testbed.call_greeting,
                     testbed.settings,
+                    testbed.subscription_repo,
                 )
             ),
             post_call_operator=wrap(

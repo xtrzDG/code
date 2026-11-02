@@ -45,6 +45,7 @@ from app.use_cases.compliance.retention.purge_expired_personal_data_use_case imp
     PurgeExpiredPersonalDataUseCase,
 )
 from app.use_cases.exports.business_archive import BusinessArchiveBuilder
+from app.use_cases.exports.configuration_archive import ConfigurationArchive
 from app.use_cases.exports.create_export_download_link_use_case import (
     CreateExportDownloadLinkUseCase,
 )
@@ -66,6 +67,7 @@ from app.use_cases.exports.run_business_export_use_case import (
 from app.use_cases.exports.start_business_export_use_case import (
     StartBusinessExportUseCase,
 )
+from app.use_cases.exports.recording_archive import RecordingArchive
 from app.use_cases.exports.start_csv_export_use_case import StartCsvExportUseCase
 
 
@@ -129,6 +131,20 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         waitlist_entry_repo=repositories.waitlist_entry_repo,
         campaign_message_repo=repositories.campaign_message_repo,
+        configuration=Factory(
+            ConfigurationArchive,
+            profile_repo=repositories.business_profile_repo,
+            assistant_version_repo=repositories.assistant_version_repo,
+            call_settings_repo=repositories.call_settings_repo,
+            privacy_settings_repo=repositories.privacy_settings_repo,
+            channel_repo=repositories.channel_repo,
+            consent_record_repo=repositories.consent_record_repo,
+        ),
+        recordings=Factory(
+            RecordingArchive,
+            call_repo=repositories.call_repo,
+            recording_storage=adapters.recording_storage,
+        ),
     )
     start_business_export_use_case: Factory[
         UseCaseContract[StartBusinessExportCommand, BusinessExportView]

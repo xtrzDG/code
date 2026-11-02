@@ -55,7 +55,8 @@ def long_conversation(world: BrainWorld) -> ConversationId:
 def test_the_card_pages_back_through_a_long_transcript() -> None:
     world = build_world(scripted(say("Здравствуйте!")))
     conversation_id = long_conversation(world)
-    client = cabinet(world)
+    # The staff member is on the platform's admin team: the usage is shown.
+    client = cabinet(world, platform_admins=frozenset({world.staff_id}))
     base_url = f"/v1/businesses/{world.business.id}/conversations/{conversation_id}"
 
     card: dict[str, Any] = client.get(base_url, headers=bearer("staff")).json()

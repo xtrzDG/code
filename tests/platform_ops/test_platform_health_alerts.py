@@ -15,25 +15,27 @@ from app.schemas.constants.monitoring import (
     PlatformAlertCode,
     PlatformSignal,
 )
+from app.schemas.constants.platform_status import StatusComponent, StatusLevel
 from app.schemas.constants.telemetry import ServiceLevelSeries
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.users import OtpChallengeDocument
 from app.schemas.dto.platform_alerts import AlertObservation
-from app.schemas.typings.backups.strings import MaintenanceErrorText
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.monitoring.strings import MaintenanceErrorText
 from app.schemas.typings.observability.constrained_integers import (
     ServiceLevelEventCount,
 )
 from app.schemas.typings.users.strings import OtpCodeHash
 from app.use_cases.admin.alerts.alert_rules import PLATFORM_ALERT_RULES
 from app.use_cases.platform_status.component_levels import alert_levels
-from tests.platform_ops.ops_documents import HOUR, MINUTE, NOW, at
+from tests.platform_ops.ops_documents import HOUR, MINUTE, at
 from tests.platform_ops.ops_world import OpsWorld
+from tests.platform_status.status_world import alert
 
 HEALTH_CODES: tuple[PlatformAlertCode, ...] = (
     PlatformAlertCode.WEBHOOK_SIGNATURE_FAILURES,
@@ -227,9 +229,7 @@ def test_unused_login_codes_fire_and_name_their_countries() -> None:
             login_code(at(-(20 + minute) * MINUTE), is_used=False, country="LV")
         )
     for minute in range(5):
-        world.otp_challenges.save(
-            login_code(at(-(20 + minute) * MINUTE), is_used=True)
-        )
+        world.otp_challenges.save(login_code(at(-(20 + minute) * MINUTE), is_used=True))
     # Still in flight (neither used nor expired) and too old: not counted.
     world.otp_challenges.save(login_code(at(-MINUTE), is_used=False))
     world.otp_challenges.save(login_code(at(-2 * HOUR), is_used=False))
@@ -260,27 +260,20 @@ def test_storage_errors_and_latency_degrade_the_status_page() -> None:
     world = OpsWorld()
     count(world, PlatformSignal.DATABASE_ERROR, 6)
     observation = observe(world, PlatformAlertCode.STORAGE_ERRORS)
+    checked: int = int(world.clock.wall_clock.now_unix())
+
+    storage_levels = alert_levels(
+        [alert(PlatformAlertCode.STORAGE_ERRORS, int(observation.figure), checked)]
+    )
+    latency_levels = alert_levels([alert(PlatformAlertCode.API_LATENCY, 9, checked)])
+
     assert observation.is_firing is True
-    assert int(NOW) > 0
-
-    from app.schemas.constants.platform_status import StatusComponent, StatusLevel
-    from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
-    from app.schemas.constants.monitoring import PlatformAlertStatus
-
-    states = [
-        PlatformAlertStateDocument(
-            code=code,
-            status=PlatformAlertStatus.FIRING,
-            figure=observation.figure,
-            started_at=NOW,
-            last_notified_at=NOW,
-            created_at=NOW,
-            updated_at=NOW,
-        )
-        for code in (PlatformAlertCode.STORAGE_ERRORS, PlatformAlertCode.API_LATENCY)
-    ]
-    levels = alert_levels(states)
-
-    assert levels[StatusComponent.CABINET] is StatusLevel.DEGRADED
-    assert levels[StatusComponent.CHAT] is StatusLevel.DEGRADED
-    assert levels[StatusComponent.VOICE] is StatusLevel.DEGRADED
+    for component in (
+        StatusComponent.CHAT,
+        StatusComponent.VOICE,
+        StatusComponent.CABINET,
+    ):
+        assert storage_levels[component] is StatusLevel.DEGRADED, component
+    assert latency_levels[StatusComponent.CHAT] is StatusLevel.DEGRADED
+    assert latency_levels[StatusComponent.CABINET] is StatusLevel.DEGRADED
+    assert latency_levels[StatusComponent.VOICE] is StatusLevel.OPERATIONAL

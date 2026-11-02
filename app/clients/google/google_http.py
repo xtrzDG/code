@@ -9,8 +9,8 @@ from app.clients.http.provider_http_client import (
     build_provider_http_client,
 )
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
-from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
+from app.schemas.exceptions.provider_errors import ProviderOutageError
 from app.schemas.typings.bookings.strings import CalendarAccessToken
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 
@@ -20,9 +20,10 @@ REQUEST_TIMEOUT_SECONDS: float = 10.0
 class GoogleHttp:
     """
     One httpx client for Google's OAuth and Calendar endpoints. Network
-    errors become ExternalServiceError (BusyTimeSourceError for the
-    availability reads, with a timeout of their own); messages name the
-    operation and the error type only.
+    errors become ProviderOutageError (BusyTimeSourceError for the
+    availability reads, with a timeout of their own), which the Google
+    Calendar circuit counts; messages name the operation and the error
+    type only.
     """
 
     def __init__(self, transport: httpx.BaseTransport | None = None) -> None:
@@ -47,7 +48,7 @@ class GoogleHttp:
                 method, url, headers=headers, data=data, json=json, params=params
             )
         except httpx.HTTPError as error:
-            raise ExternalServiceError(
+            raise ProviderOutageError(
                 f"{operation} failed: {type(error).__name__}."
             ) from error
 

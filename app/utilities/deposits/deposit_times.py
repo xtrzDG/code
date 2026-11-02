@@ -1,7 +1,8 @@
 """
-When a held place lapses, as the customer reads it: the time alone when it
-is today at the business, else the short date with the time, in the
-customer's language (CLDR, Latin digits), in the business's time zone.
+When a held place lapses, and until when a cancellation gets the deposit
+back, as the customer reads it: the time alone when it is today at the
+business, else the short date with the time, in the customer's language
+(CLDR, Latin digits), in the business's time zone.
 """
 
 from datetime import date, datetime
@@ -10,7 +11,10 @@ from zoneinfo import ZoneInfo
 from babel.dates import format_skeleton
 from typed_time_provider import Microseconds
 
-from app.schemas.typings.deposits.strings import DepositHoldEndText
+from app.schemas.typings.deposits.strings import (
+    DepositHoldEndText,
+    DepositRefundDeadlineText,
+)
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.scheduling.localized_formatting import find_locale, isolate
 from app.utilities.scheduling.zoned_time import (
@@ -32,13 +36,33 @@ def hold_end_text(
     zone: ZoneInfo,
     language: LanguageTag,
 ) -> DepositHoldEndText:
-    end: datetime = local_moment(ends_at, zone)
-    clock: str = end.strftime("%H:%M")
-    if end.date() == local_moment(now, zone).date():
-        return DepositHoldEndText(isolate(clock, language))
+    return DepositHoldEndText(moment_text(ends_at, now, zone, language))
 
-    day: str = format_skeleton(SHORT_DATE_SKELETON, end, locale=find_locale(language))
-    return DepositHoldEndText(isolate(f"{day}, {clock}", language))
+
+def refund_deadline_text(
+    deadline: Microseconds,
+    now: Microseconds,
+    zone: ZoneInfo,
+    language: LanguageTag,
+) -> DepositRefundDeadlineText:
+    return DepositRefundDeadlineText(moment_text(deadline, now, zone, language))
+
+
+def moment_text(
+    moment: Microseconds,
+    now: Microseconds,
+    zone: ZoneInfo,
+    language: LanguageTag,
+) -> str:
+    """The time alone when it is today at the business, else date and time."""
+
+    local: datetime = local_moment(moment, zone)
+    clock: str = local.strftime("%H:%M")
+    if local.date() == local_moment(now, zone).date():
+        return isolate(clock, language)
+
+    day: str = format_skeleton(SHORT_DATE_SKELETON, local, locale=find_locale(language))
+    return isolate(f"{day}, {clock}", language)
 
 
 def day_month_text(value: date, language: LanguageTag) -> str:

@@ -1,9 +1,12 @@
 """
 The archive of a full business export: a ZIP with a JSON file per
-collection of the business's data and the cabinet's tables as CSV (the
-same rows as their downloads), with a README. Erased customers are left
-out; secrets never leave (channel credentials are not exported at all,
-review link tokens are dropped).
+collection of the business's data, its configuration
+(`configuration_archive`), the calls' recordings (`recording_archive`) and
+the cabinet's tables as CSV (the same rows as their downloads), with a
+README naming the format (ARCHIVE_FORMAT, docs/legal/drafts/
+data-act-switching.md). Erased customers are left out; secrets never leave
+(channel credentials and PINs are not exported at all, review link tokens
+are dropped).
 
 The archive is written into a file (the worker's temporary file), each
 collection streamed in keyset pages of 1,000 through incremental JSON and
@@ -64,20 +67,34 @@ from app.use_cases.exports.archive_pages import (
 from app.use_cases.exports.archive_tables import ArchiveTables
 from app.use_cases.exports.archive_writers import write_csv_table, write_json_array
 from app.use_cases.exports.business_rows import BookingRows, LeadRows
+from app.use_cases.exports.configuration_archive import ConfigurationArchive
 from app.use_cases.exports.growth_archive import growth_pages
 from app.use_cases.exports.people_rows import AuditRows, ContactRows, ConversationRows
+from app.use_cases.exports.recording_archive import RecordingArchive
 from app.use_cases.shared.document_pages import pages_in_write_order
 from app.utilities.privacy.csv_cells import moment_cell
 from app.utilities.privacy.csv_columns import CSV_COLUMNS
 from app.utilities.scheduling.zoned_time import load_time_zone
 
+# The archive's layout; a change of it is a new number (README, the docs).
+ARCHIVE_FORMAT: int = 2
 README: str = """Full export of {business}, made {made_at} ({timezone}).
+Archive format {archive_format}.
 
-JSON: one file per kind of record, as the platform keeps them (times are
-UTC microseconds since 1970). CSV: the cabinet's tables, as their
-downloads (local times, UTF-8). Customers who asked to be erased are not
-in it; channel credentials and review link tokens never leave the
-platform.
+JSON: one file per kind of record, each an array of the documents as the
+platform keeps them, with their schema_version (times are UTC
+microseconds since 1970; ids are the platform's own, so records refer to
+each other by them). The configuration: business_profile.json (what the
+setup was told), assistant_versions.json (every version of the
+assistant's instructions), call_settings.json, privacy_settings.json,
+channels.json (without credentials) and consent_records.json (the
+customers' marketing consents and withdrawals). Recordings: recordings/
+holds the calls' audio, named by call id; recordings.json lists every
+recording, what the archive holds of it and the API path that downloads
+it. CSV: the cabinet's tables, as their downloads (local times, UTF-8).
+Customers who asked to be erased are not in it (the consent ledger keeps
+their consents by contact id only, as proof); channel credentials and
+review link tokens never leave the platform.
 """
 
 
@@ -99,6 +116,8 @@ class BusinessArchiveBuilder:
     phone_number_parser: PhoneNumberParserContract
     waitlist_entry_repo: WaitlistEntryRepoContract | None = None
     campaign_message_repo: CampaignMessageRepoContract | None = None
+    configuration: ConfigurationArchive | None = None
+    recordings: RecordingArchive | None = None
 
     def write(
         self,
@@ -123,6 +142,7 @@ class BusinessArchiveBuilder:
                     business=business.name,
                     made_at=str(moment_cell(now, zone)),
                     timezone=business.timezone,
+                    archive_format=ARCHIVE_FORMAT,
                 ),
             )
             for name, pages in self._collections(business).items():
@@ -140,14 +160,23 @@ class BusinessArchiveBuilder:
                     write_csv_table(
                         stream, header, tables.pages(kind, business, zone, viewer)
                     )
+            if self.recordings is not None:
+                self.recordings.write(archive, business.id)
 
         return ExportedRecordCount(records)
 
     def _collections(self, business: BusinessDocument) -> dict[str, DocumentPages]:
         """Each JSON file's documents, as pages read when the file is written."""
 
-        return self._business_collections(business) | growth_pages(
-            business.id, self.waitlist_entry_repo, self.campaign_message_repo
+        configuration: dict[str, DocumentPages] = (
+            {} if self.configuration is None else self.configuration.pages(business)
+        )
+        return (
+            self._business_collections(business)
+            | growth_pages(
+                business.id, self.waitlist_entry_repo, self.campaign_message_repo
+            )
+            | configuration
         )
 
     def _business_collections(

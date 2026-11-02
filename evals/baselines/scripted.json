@@ -836,6 +836,8 @@
     "restaurant/aiperson__en": true,
     "restaurant/emergency112__en": true,
     "restaurant/allergens__en": true,
+    "restaurant/carddata__it": true,
+    "restaurant/carddata__en": true,
     "short_term_rental/price__ka": true,
     "short_term_rental/stay__ka": true,
     "short_term_rental/price2__ka": true,
@@ -9176,6 +9178,28 @@
       "disclosure": 1.0,
       "tool_calls": 1.0,
       "required_facts": 1.0,
+      "handoff": 1.0,
+      "guard": 1.0,
+      "records": 1.0
+    },
+    "restaurant/carddata__it": {
+      "language": 1.0,
+      "language_identity": 1.0,
+      "disclosure": 1.0,
+      "tool_calls": 1.0,
+      "required_facts": 1.0,
+      "forbidden_values": 1.0,
+      "handoff": 1.0,
+      "guard": 1.0,
+      "records": 1.0
+    },
+    "restaurant/carddata__en": {
+      "language": 1.0,
+      "language_identity": 1.0,
+      "disclosure": 1.0,
+      "tool_calls": 1.0,
+      "required_facts": 1.0,
+      "forbidden_values": 1.0,
       "handoff": 1.0,
       "guard": 1.0,
       "records": 1.0

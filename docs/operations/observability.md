@@ -169,8 +169,9 @@ header (real-time ingestion). Langfuse retired the batch endpoint
   conversation is the session (`langfuse.session.id`), which erasure finds
   traces by.
 - Texts (`langfuse.observation.input`/`output`) go only with
-  `LANGFUSE_CAPTURE_CONTENT=true`, without phone numbers and e-mail
-  addresses unless `LANGFUSE_RAW_TEXT=true`. No user id is sent.
+  `LANGFUSE_CAPTURE_CONTENT=true`, never with card, security code, IBAN or
+  ID numbers, and without phone numbers and e-mail addresses unless
+  `LANGFUSE_RAW_TEXT=true`. No user id is sent.
 - Delivery problems are logged and the batch is dropped; a reply never
   waits for or fails because of the journal.
 
@@ -179,10 +180,16 @@ header (real-time ingestion). Langfuse retired the batch endpoint
 `LOG_FORMAT=json` (production): one JSON object per line with `request_id`,
 `trace_id`, `business_id`, `conversation_id`, `channel`, `job_name`,
 `job_id`. Render keeps logs for a short time only, so production logs go
-to an EU log store through a log drain (below). Each line's message has
-its e-mail addresses and `+` phone numbers masked
-(`app/utilities/observability/contact_log_masking.py`); bare digit runs,
-tracebacks and structured fields are not.
+to an EU log store through a log drain (below). Each line's message,
+traceback and text line fields lose credentials (`Bearer`/`Basic`
+credentials, `sk_`/`rk_` keys, `whsec_` secrets, the secret part of a
+public API key, bot tokens, token query parameters), card numbers (Luhn),
+security codes, IBANs and ID numbers
+(`app/utilities/privacy/sensitive_numbers.py`), e-mail addresses, `+`
+phone numbers and the bare 11 to 15 digit ids a channel gives a customer
+(`app/utilities/observability/log_formatting.py`, `redact_log_text`;
+`contact_log_masking.py`). Shorter bare digit runs (Telegram chat ids,
+unix seconds) and context fields (ids) stay.
 
 ### Security and payment events
 
@@ -198,11 +205,13 @@ tracebacks and structured fields are not.
 - Logger `app.payments`: `payment_order_opened`, `payment_state_changed`
   and `payment_reconciliation_mismatch`, with ids, provider, purpose and
   statuses only, never card data or amounts.
-- Worth an alert in the log store: a burst of `webhook_delivery_refused`
-  for one provider (a misconfigured secret after a rotation, or someone
-  probing the webhook), and any `job_tenant_mismatch`.
+- A burst of `webhook_delivery_refused` (a misconfigured secret after a
+  rotation, or someone probing a webhook) is the platform alert
+  `webhook_signature_failures` (`ops/alerts/`); worth an alert in the log
+  store as well: any `job_tenant_mismatch`. Every log the platform writes
+  is listed in `docs/security/log-inventory.md`.
 
-### Render log drain to an EU log store (30 days)
+### Render log drain to an EU log store (30 days, security 12 months)
 
 1. Create a log source in an EU region of the log store (Better Stack
    Logs in Frankfurt, Grafana Cloud Logs in an EU stack, or Axiom EU) and
@@ -211,7 +220,9 @@ tracebacks and structured fields are not.
    the endpoint (`host:port`) and the token. It applies to every service
    of the workspace (API, workers, cabinet, cron jobs).
 3. In the log store set the retention of the source to 30 days and
-   restrict access to the team.
+   restrict access to the team; route the `app.security` and
+   `app.payments` lines to a second stream kept 12 months, append-only
+   (immutable retention), which the app's credentials cannot delete.
 4. Check: open the store's live tail and call `GET /readyz`; the access
    line appears within a minute with its `request_id`.
 

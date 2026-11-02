@@ -7,10 +7,15 @@ from app.adapters.booking_systems.cal_com_booking_system_adapter import (
 from app.clients.cal_com.cal_com_client import CalComClient
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
+from app.containers.integration_guards import (
+    guard_booking_system,
+    guard_google_calendar_client,
+)
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.operations import GoogleCalendarClientContract
 from app.facilitators.calendar.google_calendar_guest_eraser import (
     GoogleCalendarGuestEraser,
 )
@@ -53,6 +58,13 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
+    # Google Calendar behind its circuit (REL-04): the mirror, the erasure
+    # and the busy times stop waiting on it while it keeps failing.
+    google_calendar_client: Singleton[GoogleCalendarClientContract] = Singleton(
+        guard_google_calendar_client,
+        inner_client=clients.google_calendar_client,
+        circuit_breaker=adapters.circuit_breaker,
+    )
     google_calendar_mirror: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
         GoogleCalendarSyncFacilitator,
         connection_repo=repositories.calendar_connection_repo,
@@ -60,7 +72,7 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         resource_repo=repositories.resource_repo,
         contact_repo=repositories.contact_repo,
-        calendar_client=clients.google_calendar_client,
+        calendar_client=google_calendar_client,
         secret_cipher=adapters.secret_cipher,
         phone_number_parser=utilities.phone_number_parser,
         event_text_transformer=transformers.calendar_event_text_transformer,
@@ -71,7 +83,7 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         GoogleCalendarGuestEraser,
         connection_repo=repositories.calendar_connection_repo,
         event_link_repo=repositories.calendar_event_link_repo,
-        calendar_client=clients.google_calendar_client,
+        calendar_client=google_calendar_client,
         secret_cipher=adapters.secret_cipher,
         mirror=google_calendar_mirror,
         wall_clock=time_provider.microsecond_wall_clock,
@@ -97,7 +109,13 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
     cal_com_client: Singleton[CalComClient] = Singleton(CalComClient)
     booking_system_connectors: Singleton[BookingSystemConnectorRegistry] = Singleton(
         BookingSystemConnectorRegistry,
-        connectors=List(Singleton(CalComBookingSystemAdapter, client=cal_com_client)),
+        connectors=List(
+            Singleton(
+                guard_booking_system,  # behind provider:cal_com (REL-04)
+                connector=Singleton(CalComBookingSystemAdapter, client=cal_com_client),
+                circuit_breaker=adapters.circuit_breaker,
+            )
+        ),
     )
     # Imported iCal feeds, read through the safe fetcher.
     ical_reader: Singleton[IcalBusyReader] = Singleton(
@@ -115,7 +133,7 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         google=Singleton(
             GoogleBusyReader,
             connection_repo=repositories.calendar_connection_repo,
-            calendar_client=clients.google_calendar_client,
+            calendar_client=google_calendar_client,
             secret_cipher=adapters.secret_cipher,
             booking_repo=repositories.booking_repo,
             wall_clock=time_provider.microsecond_wall_clock,

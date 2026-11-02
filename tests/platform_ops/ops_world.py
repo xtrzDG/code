@@ -72,6 +72,7 @@ from app.schemas.typings.spend.constrained_integers import (
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
+from app.use_cases.admin.alerts.abuse_alert_checks import AbuseAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
 )
@@ -233,6 +234,7 @@ class OpsWorld:
                 PlatformHealthAlertChecks(
                     self.signals, self.slot_repo, self.run_repo, self.otp_challenges
                 ),
+                AbuseAlertChecks(self.signals),
             ),
         )
 

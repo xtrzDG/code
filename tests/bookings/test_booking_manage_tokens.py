@@ -11,6 +11,7 @@ from app.schemas.dto.booking_manage import BookingManageClaims
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
+    BookingLinkGeneration,
     BookingStartsAtUnixSeconds,
 )
 from app.schemas.typings.bookings.constrained_strings import BookingManageToken
@@ -31,7 +32,7 @@ from app.utilities.bookings.booking_manage_links import (
 from app.utilities.security.booking_manage_token_signer import (
     BookingManageTokenSigner,
 )
-from tests.bookings.legacy_manage_tokens import legacy_token
+from tests.bookings.legacy_manage_tokens import legacy_token, ungenerational_token
 from tests.operations.fakes import MovableClock
 
 KEY: PlatformSecret = PlatformSecret("test-encryption-key-0000")  # gitleaks:allow
@@ -65,15 +66,16 @@ def test_a_signed_link_reads_back_as_its_claims() -> None:
 
     token = signer.sign(issued)
 
-    # 41 bytes of claims and a 128-bit MAC (token version 2).
-    assert len(str(token)) == 76
-    assert base64.urlsafe_b64decode(str(token))[0] == 2
+    # 41 bytes of claims, the 3-byte link generation and a 128-bit MAC
+    # (token version 4).
+    assert len(str(token)) == 80
+    assert base64.urlsafe_b64decode(str(token))[0] == 4
     assert signer.read(token) == issued
     # Another process with the same ENCRYPTION_KEY reads it too.
     assert BookingManageTokenSigner(KEY).read(token) == issued
 
 
-@pytest.mark.parametrize("position", [0, 5, 20, 40, 52, 60, 70, 75])
+@pytest.mark.parametrize("position", [0, 5, 20, 40, 52, 56, 58, 60, 70, 79])
 def test_an_altered_link_proves_nothing(position: int) -> None:
     signer = BookingManageTokenSigner(KEY)
     token = signer.sign(claims())
@@ -112,7 +114,7 @@ def test_claims_cannot_be_swapped_under_a_kept_signature() -> None:
     )
 
     # Business B's payload with business A's signature.
-    forged = base64.urlsafe_b64encode(raw_b[:41] + raw_a[41:]).rstrip(b"=").decode()
+    forged = base64.urlsafe_b64encode(raw_b[:44] + raw_a[44:]).rstrip(b"=").decode()
 
     assert signer.read(BookingManageToken(forged)) is None
 
@@ -124,6 +126,7 @@ def test_a_link_of_another_key_or_of_garbage_is_refused() -> None:
     garbage = BookingManageToken("A" * 71)
     assert BookingManageTokenSigner(KEY).read(garbage) is None
     assert BookingManageTokenSigner(KEY).read(BookingManageToken("A" * 76)) is None
+    assert BookingManageTokenSigner(KEY).read(BookingManageToken("A" * 80)) is None
     short = BookingManageToken("A" * 40)
     assert BookingManageTokenSigner(KEY).read(short) is None
 
@@ -219,9 +222,9 @@ def test_links_sent_with_the_96_bit_mac_still_open_until_they_expire() -> None:
 def test_new_links_have_no_spare_bits_to_respell() -> None:
     text: str = str(BookingManageTokenSigner(KEY).sign(claims()))
 
-    # 76 characters carry exactly 57 bytes: any other last character is
+    # 80 characters carry exactly 60 bytes: any other last character is
     # other bytes, so another MAC.
-    assert len(text) * 6 == 57 * 8
+    assert len(text) * 6 == 60 * 8
     for replacement in "AQgw":
         if replacement != text[-1]:
             respelled = BookingManageToken(text[:-1] + replacement)
@@ -235,9 +238,35 @@ def test_a_page_credential_is_its_own_version_and_cannot_pass_as_a_link() -> Non
     token = signer.sign(issued)
 
     raw = bytearray(base64.urlsafe_b64decode(str(token)))
-    assert raw[0] == 3
+    assert raw[0] == 5
     assert signer.read(token) == issued
     # Turned into a link by its version byte, the MAC no longer matches.
-    raw[0] = 2
+    raw[0] = 4
     relabelled = base64.urlsafe_b64encode(bytes(raw)).rstrip(b"=").decode()
     assert signer.read(BookingManageToken(relabelled)) is None
+
+
+def test_the_link_generation_is_signed_inside_the_link() -> None:
+    signer = BookingManageTokenSigner(KEY)
+    issued = claims().model_copy(
+        update={"link_generation": BookingLinkGeneration(16_777_215)}
+    )
+    raw = bytearray(base64.urlsafe_b64decode(str(signer.sign(issued))))
+
+    assert signer.read(signer.sign(issued)) == issued
+    # Another generation under the kept signature proves nothing.
+    raw[43] ^= 0x01
+    changed = base64.urlsafe_b64encode(bytes(raw)).rstrip(b"=").decode()
+    assert signer.read(BookingManageToken(changed)) is None
+
+
+@pytest.mark.parametrize("is_page_session", [False, True])
+def test_links_signed_before_generations_read_as_generation_zero(
+    is_page_session: bool,
+) -> None:
+    issued = claims().model_copy(update={"is_page_session": is_page_session})
+    sent_before = ungenerational_token(KEY, issued)
+
+    assert len(str(sent_before)) == 76
+    assert BookingManageTokenSigner(KEY).read(sent_before) == issued
+    assert int(issued.link_generation) == 0

@@ -16,15 +16,21 @@ from app.use_cases.voice.call_settings.get_call_settings_use_case import (
 from app.use_cases.voice.call_settings.list_text_backs_use_case import (
     ListTextBacksUseCase,
 )
+from app.use_cases.voice.call_settings.text_back_template_check import (
+    TextBackTemplateCheck,
+)
 from app.use_cases.voice.call_settings.update_call_settings_use_case import (
     UpdateCallSettingsUseCase,
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.calls.template_catalog_fakes import FakeTemplateCatalog
 from tests.channels.channels_http import wrap, wrap_use_case
 from tests.channels.testbed import ChannelsTestbed
 
 
-def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
+def build_calls_http_client(
+    testbed: ChannelsTestbed, template_catalog: FakeTemplateCatalog | None = None
+) -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(
@@ -62,6 +68,12 @@ def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
                     testbed.sms_client,
                     testbed.wall_clock,
                     testbed.assistant_version_repo,
+                    TextBackTemplateCheck(
+                        template_catalog or FakeTemplateCatalog(),
+                        testbed.channel_repo,
+                        testbed.secret_cipher,
+                        testbed.settings,
+                    ),
                 )
             ),
             list_text_backs=wrap_use_case(
