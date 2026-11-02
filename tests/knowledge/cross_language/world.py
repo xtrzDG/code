@@ -52,6 +52,7 @@ from tests.knowledge.cross_language.fakes import (
     PhraseBookAliasSuggester,
 )
 from tests.knowledge.knowledge_store import KnowledgeStore
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 type AliasSpec = tuple[str, str, KnowledgeAliasStatus]
 
@@ -79,6 +80,7 @@ class CrossLanguageWorld(KnowledgeStore):
         self.embedder = ConceptEmbedder()
         self.embedding_store = InMemoryKnowledgeEmbeddingStoreAdapter()
         self.language_detector = LanguageDetector()
+        self.platform_brakes = SetPlatformBrakes()
         self.lexical_search = SearchKnowledgeUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
@@ -100,6 +102,7 @@ class CrossLanguageWorld(KnowledgeStore):
             language_detector=self.language_detector,
             admit_owner_action=AdmitOwnerActionUseCase(
                 RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
+                self.platform_brakes,
                 self.wall_clock,
             ),
             wall_clock=self.wall_clock,
@@ -113,6 +116,7 @@ class CrossLanguageWorld(KnowledgeStore):
             language_detector=self.language_detector,
             text_embedder=self.embedder,
             embedding_store=self.embedding_store,
+            platform_brakes=self.platform_brakes,
             wall_clock=self.wall_clock,
         )
 

@@ -63,6 +63,7 @@ from tests.knowledge.website_import.site_fixtures import (
     site_pages,
 )
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 PAGE_ADDRESS: re.Pattern[str] = re.compile(r"Page address: (\S+)")
 
@@ -120,6 +121,7 @@ class WebsiteImportWorld(KnowledgeStore):
         )
         self.job_queue = RecordingJobQueue()
         self.events = RecordingEventPublisher()
+        self.platform_brakes = SetPlatformBrakes()
         authorize = build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
@@ -137,6 +139,7 @@ class WebsiteImportWorld(KnowledgeStore):
             ),
             job_queue=self.job_queue,
             live_events=self.events,
+            platform_brakes=self.platform_brakes,
             wall_clock=self.wall_clock,
         )
         self.get = GetWebsiteImportUseCase(
@@ -154,6 +157,7 @@ class WebsiteImportWorld(KnowledgeStore):
             safe_http_fetcher=self.fetcher,
             website_extraction_adapter=self.reader,
             live_events=self.events,
+            platform_brakes=self.platform_brakes,
             wall_clock=self.wall_clock,
         )
 

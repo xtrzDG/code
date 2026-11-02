@@ -12,6 +12,7 @@ from app.schemas.dto.booking_manage import (
     BookingCalendarFile,
     BookingManageClaims,
     ManagedBookingAction,
+    ManagedBookingSession,
     ManagedBookingSlots,
     ManagedBookingView,
 )
@@ -35,6 +36,9 @@ from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPa
 from app.use_cases.bookings.public.open_booking_manage_link_use_case import (
     OpenBookingManageLinkUseCase,
 )
+from app.use_cases.bookings.public.open_managed_booking_session_use_case import (
+    OpenManagedBookingSessionUseCase,
+)
 from app.use_cases.bookings.public.reschedule_managed_booking_use_case import (
     RescheduleManagedBookingUseCase,
 )
@@ -47,7 +51,8 @@ type ManagedBookingUseCase[Output] = Factory[
 class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
     """
     A guest's booking page behind its manage link (/r/{token}): opening the
-    link, the page, its calendar file, free times, cancelling and moving.
+    link, the page's short-lived credential, the page, its calendar file,
+    free times, cancelling and moving.
     Changes run through the booking use cases a chat customer's do.
     """
 
@@ -75,6 +80,9 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
         link_signer=utilities.booking_manage_token_signer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    open_managed_booking_session_use_case: ManagedBookingUseCase[
+        ManagedBookingSession
+    ] = Factory(OpenManagedBookingSessionUseCase, pages=managed_booking_pages)
     get_managed_booking_use_case: ManagedBookingUseCase[ManagedBookingView] = Factory(
         GetManagedBookingUseCase, pages=managed_booking_pages
     )

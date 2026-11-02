@@ -7,6 +7,7 @@ from datetime import timedelta
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -69,6 +70,8 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
     that did not turn the sample off (Settings → Privacy), are sampled
     (QUALITY_SAMPLE_PERCENT, a stable hash of each id), at most
     QUALITY_SAMPLE_PER_BUSINESS per business, never one judged before.
+    While a platform brake holds (the global pause, the daily budget stop)
+    the night judges nothing.
     Businesses take turns, and before each call its worst case (every
     output token) is checked against what is left of the UTC day's
     QUALITY_SAMPLE_BUDGET_CENTS: the night stops at the cap. A failing
@@ -86,6 +89,7 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         quality_totals_repo: QualityTotalsRepoContract,
         privacy_settings_repo: BusinessPrivacySettingsRepoContract,
         llm_adapter: LlmAdapterContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         llm_token_prices: Sequence[LlmTokenPrice] = DEFAULT_LLM_TOKEN_PRICES,
@@ -103,6 +107,7 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         self._judge: ConversationQualityJudge = ConversationQualityJudge(
             llm_adapter, app_settings, llm_token_prices
         )
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: JobTick) -> JobReport:
@@ -111,6 +116,10 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         self._totals_repo.delete_judged_before(Microseconds(int(now) - KEPT_FOR))
         budget: int = budget_micro_usd(self._settings.sample_budget_cents)
         if int(self._settings.sample_percent) == 0 or budget == 0:
+            return JobReport()
+
+        if (brake := self._platform_brakes.current_brake(now)) is not None:
+            logger.info("Quality sampling skipped: platform brake %s.", brake)
             return JobReport()
 
         spent: int = int(

@@ -5,6 +5,7 @@ import { it as italian } from "@/i18n/messages/it";
 import { createTranslator } from "@/i18n/translate";
 
 import {
+  callerNoticeKeys,
   callSettingsBody,
   callSettingsForm,
   isSameCallSettings,
@@ -163,5 +164,35 @@ describe("the labels", () => {
         expect(t(key), `${locale} ${key}`).not.toBe(key);
       }
     }
+  });
+});
+
+describe("what callers hear", () => {
+  it("says the call is recorded only while recording is on, and where the privacy notice is once, last", () => {
+    const { t } = createTranslator("en", en);
+    const said = (isRecording: boolean) =>
+      callerNoticeKeys(isRecording)
+        .map((key) => t(key, { business: "Trattoria Da Mario" }))
+        .join(" ");
+
+    // The API's greeting, sentence by sentence (BuildCallGreetingUseCase).
+    expect(said(false)).toBe(
+      'Hello! This is the AI assistant of Trattoria Da Mario. To talk to a staff member, say "operator". ' +
+        "Our privacy notice is on our web page.",
+    );
+    expect(said(true)).toBe(
+      "Hello! This is the AI assistant of Trattoria Da Mario. The call is recorded. " +
+        'To talk to a staff member, say "operator". Our privacy notice is on our web page.',
+    );
+  });
+
+  it("is said in Italian too", () => {
+    const { t } = createTranslator("it", italian);
+
+    expect(callerNoticeKeys(false).map((key) => t(key, { business: "Da Mario" }))).toEqual([
+      "Buongiorno! Risponde l'assistente IA di Da Mario.",
+      "Per parlare con un membro dello staff, dica «operatore».",
+      "L'informativa sulla privacy è sulla nostra pagina web.",
+    ]);
   });
 });

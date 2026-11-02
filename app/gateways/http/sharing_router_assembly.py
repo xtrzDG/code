@@ -34,6 +34,7 @@ def build_sharing_routers(
         ),
         build_public_booking_router(
             view_operator=booking_links.managed_booking_operator(),
+            session_operator=booking_links.managed_booking_session_operator(),
             calendar_operator=booking_links.managed_booking_calendar_operator(),
             slots_operator=booking_links.managed_booking_slots_operator(),
             cancel_operator=booking_links.cancel_managed_booking_operator(),

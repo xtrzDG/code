@@ -48,7 +48,9 @@ class CancelManagedBookingUseCase(
             )
 
         cancelled: GuestBooking = self._pages.current(input_data.claims)
-        return self._pages.view(cancelled, self._pages.token_for(cancelled.booking, input_data.claims))
+        return self._pages.view(
+            cancelled, self._pages.token_for(cancelled.booking, input_data.claims)
+        )
 
     @staticmethod
     def _is_cancelled_already(guest_booking: GuestBooking) -> bool:

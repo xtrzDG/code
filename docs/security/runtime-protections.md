@@ -289,7 +289,7 @@ worker and cabinet do, each with its code and the test that proves it.
   a reason, audited), and at `PLATFORM_DAILY_SPEND_STOP_PERCENT` of the
   daily budget every assistant stops calling the model until UTC midnight:
   customer turns go to the team, calls to the forwarding number
-  (`app/use_cases/spend_guard/platform_pause/platform_brakes.py`;
+  (`app/utilities/spend/platform_brakes.py`;
   `tests/spend_guard/test_platform_brakes.py`,
   `tests/spend_guard/test_platform_pause_admin.py`;
   `docs/operations/runbooks/platform-brakes.md`).

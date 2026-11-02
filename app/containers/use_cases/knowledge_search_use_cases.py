@@ -182,6 +182,7 @@ def build_knowledge_search_providers(
             language_detector=utilities.language_detector,
             text_embedder=text_embedder,
             embedding_store=embedding_store,
+            platform_brakes=facilitators.platform_brakes,
             wall_clock=time_provider.microsecond_wall_clock,
         ),
     )

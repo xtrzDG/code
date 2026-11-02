@@ -49,6 +49,7 @@ from app.schemas.typings.quality.constrained_integers import (
 from app.use_cases.quality.sample_conversation_quality_use_case import (
     SampleConversationQualityUseCase,
 )
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 from tests.value.value_world import ValueWorld
 
 # The judge's list price in the tests: 0.1 micro-dollar an input token,
@@ -114,6 +115,7 @@ class QualityBench:
                 BusinessPrivacySettingsDocument
             )
         )
+        self.platform_brakes = SetPlatformBrakes()
 
     def now(self) -> Microseconds:
         return self.world.clock.now_microseconds()
@@ -195,6 +197,7 @@ class QualityBench:
             quality_totals_repo=self.totals_repo,
             privacy_settings_repo=self.privacy_settings_repo,
             llm_adapter=judge,
+            platform_brakes=self.platform_brakes,
             app_settings=settings,
             wall_clock=self.world.clock.wall_clock,
             llm_token_prices=JUDGE_PRICES,

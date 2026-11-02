@@ -163,7 +163,9 @@ class ManagedBookingPages:
             request_claims is not None and request_claims.is_page_session
         )
         if request_claims is not None and is_page_session:
-            expires_at = Microseconds(min(int(expires_at), int(request_claims.expires_at)))
+            expires_at = Microseconds(
+                min(int(expires_at), int(request_claims.expires_at))
+            )
 
         return self.link_signer.sign(
             BookingManageClaims(

@@ -112,6 +112,7 @@ class MenuImportUseCasesContainer(containers.DeclarativeContainer):
         rate_limit_registry=registries.request_rate_limit_registry,
         job_queue=facilitators.job_queue_facilitator,
         live_events=facilitators.event_publisher,
+        platform_brakes=facilitators.platform_brakes,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     get_website_import_use_case: Factory[
@@ -134,6 +135,7 @@ class MenuImportUseCasesContainer(containers.DeclarativeContainer):
             safe_http_fetcher=clients.safe_http_fetcher,
             website_extraction_adapter=website_extraction_adapter,
             live_events=facilitators.event_publisher,
+            platform_brakes=facilitators.platform_brakes,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )

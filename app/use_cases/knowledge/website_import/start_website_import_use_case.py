@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.website_import_repositories import (
     WebsiteImportRepoContract,
@@ -38,6 +39,7 @@ from app.utilities.knowledge.website.website_import_keys import (
 from app.utilities.knowledge.website.website_import_limits import (
     refuse_too_many_imports,
 )
+from app.utilities.spend.platform_brakes import platform_brake_refusal
 
 IMPORT_WEBSITE_JOB: JobName = JobName("import_website")
 # An import that has not moved for this long is taken as abandoned.
@@ -67,6 +69,7 @@ class StartWebsiteImportUseCase(
         rate_limit_registry: RequestRateLimitRegistryContract,
         job_queue: JobQueueFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -79,6 +82,7 @@ class StartWebsiteImportUseCase(
         )
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: StartWebsiteImportCommand) -> WebsiteImportView:
@@ -94,6 +98,9 @@ class StartWebsiteImportUseCase(
             raise invalid_address(error) from error
 
         now: Microseconds = self._wall_clock.now_unix()
+        if (brake := self._platform_brakes.current_brake(now)) is not None:
+            raise platform_brake_refusal(brake)
+
         stale_before = Microseconds(int(now) - STALE_IMPORT_MICROSECONDS)
         current: WebsiteImportDocument | None = (
             self._website_import_repo.get_by_business(business.id)

@@ -12,6 +12,7 @@ from app.orchestrators.bookings.managed_booking_orchestrator import (
 from app.schemas.dto.booking_manage import (
     BookingCalendarFile,
     ManagedBookingRequest,
+    ManagedBookingSession,
     ManagedBookingSlots,
     ManagedBookingView,
 )
@@ -37,6 +38,14 @@ class BookingLinkOrchestratorsContainer(containers.DeclarativeContainer):
             act=booking_link_use_cases.get_managed_booking_use_case,
             storage_scope=utilities.storage_scope,
         )
+    )
+    managed_booking_session_orchestrator: ManagedBookingOrchestration[
+        ManagedBookingSession
+    ] = Factory(
+        ManagedBookingOrchestrator[ManagedBookingSession],
+        open_link=booking_link_use_cases.open_booking_manage_link_use_case,
+        act=booking_link_use_cases.open_managed_booking_session_use_case,
+        storage_scope=utilities.storage_scope,
     )
     managed_booking_calendar_orchestrator: ManagedBookingOrchestration[
         BookingCalendarFile

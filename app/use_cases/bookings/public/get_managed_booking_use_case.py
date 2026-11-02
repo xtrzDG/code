@@ -22,5 +22,6 @@ class GetManagedBookingUseCase(
         self._pages.refuse_too_frequent(input_data, MANAGE_VIEW_LIMITS)
         guest_booking: GuestBooking = self._pages.current(input_data.claims)
         return self._pages.view(
-            guest_booking, self._pages.token_for(guest_booking.booking, input_data.claims)
+            guest_booking,
+            self._pages.token_for(guest_booking.booking, input_data.claims),
         )

@@ -2,7 +2,8 @@
 
 Shared by saving one wizard step and saving the whole profile, so both
 paths store the same data. Owner texts are checked (not blank, not too long)
-and stored as written; phones become E.164.
+and stored as written; phones become E.164, and the staff number only one
+calls may be put through to.
 """
 
 from collections.abc import Sequence
@@ -24,6 +25,7 @@ from app.schemas.typings.bookings.constrained_integers import SlotDurationMinute
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.profiles.strings import ToneText
+from app.utilities.channels.transfer_destinations import find_transfer_refusal
 
 MAX_ADDRESS_LENGTH: int = 500
 MAX_RULES: int = 30
@@ -62,12 +64,36 @@ def parse_contacts(
             phone_number_parser,
             business,
         ),
-        handoff_phone_number=parse_optional_phone(
-            contacts_input.handoff_phone_number,
-            phone_number_parser,
-            business,
+        handoff_phone_number=parse_handoff_phone(
+            contacts_input.handoff_phone_number, phone_number_parser, business
         ),
     )
+
+
+def parse_handoff_phone(
+    raw_phone_number: RawPhoneNumberInput | None,
+    phone_number_parser: PhoneNumberParserContract,
+    business: BusinessDocument,
+) -> E164PhoneNumber | None:
+    """
+    The staff number in E.164: calls are put through to it, so only a
+    number `find_transfer_refusal` allows (a mobile or landline of the
+    business's country or the EU; never premium, shared-cost or satellite).
+
+    Raises:
+        ValidationFailedError: the number is one calls may not go to.
+    """
+
+    phone: E164PhoneNumber | None = parse_optional_phone(
+        raw_phone_number, phone_number_parser, business
+    )
+    refusal: str | None = (
+        None if phone is None else find_transfer_refusal(phone, business.country_code)
+    )
+    if refusal is not None:
+        raise ValidationFailedError(f"handoff_phone_number: {refusal}")
+
+    return phone
 
 
 def parse_optional_phone(

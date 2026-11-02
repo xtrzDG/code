@@ -8,6 +8,7 @@ from app.contracts.knowledge_embeddings import (
     TextEmbedderContract,
 )
 from app.contracts.localization_utilities import LanguageDetectorContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.brand_repositories import (
     BrandKnowledgeItemRepoContract,
@@ -54,7 +55,8 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
     A failed alias call does not stop the embeddings; the job then fails so
     the queue retries it (a retry asks only for what is still missing),
-    except on its last attempt.
+    except on its last attempt. While a platform brake holds (the global
+    pause, the daily budget stop) the model is not asked, as if it failed.
     """
 
     def __init__(
@@ -67,6 +69,7 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         language_detector: LanguageDetectorContract,
         text_embedder: TextEmbedderContract,
         embedding_store: KnowledgeEmbeddingStoreContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -79,6 +82,7 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         self._language_detector: LanguageDetectorContract = language_detector
         self._text_embedder: TextEmbedderContract = text_embedder
         self._embedding_store: KnowledgeEmbeddingStoreContract = embedding_store
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: QueuedJobInput) -> JobReport:
@@ -134,6 +138,10 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             business,
             self._language_detector,
         )
+        brake = self._platform_brakes.current_brake(self._wall_clock.now_unix())
+        if planned and brake is not None:
+            raise ExternalServiceError(f"Aliases wait: platform brake {brake}.")
+
         named: int = 0
         for call in range(MAX_ALIAS_CALLS_PER_RUN):
             batch: list[AliasSuggestionItem] = planned[

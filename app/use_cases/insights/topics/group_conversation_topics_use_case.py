@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.booking_repositories import (
     UnansweredQuestionRepoContract,
 )
@@ -75,6 +76,8 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
     is grouped at once. No conversation and no question: an empty document,
     no model call. A failed language keeps the stored topics and is tried
     again the next hour; one failing business never stops the others.
+    While a platform brake holds (the global pause, the daily budget stop)
+    no business is grouped: the next hour of the night tries again.
     """
 
     def __init__(
@@ -84,6 +87,7 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
         topic_input_repo: TopicInputRepoContract,
         unanswered_question_repo: UnansweredQuestionRepoContract,
         llm_adapter: LlmAdapterContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -92,10 +96,16 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
         self._input_repo: TopicInputRepoContract = topic_input_repo
         self._question_repo: UnansweredQuestionRepoContract = unanswered_question_repo
         self._grouper: TopicGrouper = TopicGrouper(llm_adapter, app_settings)
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: JobTick) -> JobReport:
         del input_data
+        brake = self._platform_brakes.current_brake(self._wall_clock.now_unix())
+        if brake is not None:
+            logger.info("Topic grouping skipped: platform brake %s.", brake)
+            return JobReport()
+
         grouped: int = 0
         for business in walk_businesses(self._business_repo):
             if business.status not in GROUPED_STATUSES:

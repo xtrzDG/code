@@ -28,7 +28,10 @@ from app.schemas.typings.platform.constrained_strings import (
 from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 from app.utilities.knowledge.niche_answers import normalize_answer
-from app.utilities.knowledge.profile_sections import parse_optional_phone
+from app.utilities.knowledge.profile_sections import (
+    parse_handoff_phone,
+    parse_optional_phone,
+)
 
 STALE_PROFILE_MESSAGE: str = (
     "The profile was saved from another window after you opened it. Reload it "
@@ -104,7 +107,10 @@ def patch_contacts(
     phone_number_parser: PhoneNumberParserContract,
     business: BusinessDocument,
 ) -> BusinessContacts:
-    """The contact phones with only the numbers present in the input changed."""
+    """
+    The contact phones with only the numbers present in the input changed;
+    the staff number only one calls may be put through to.
+    """
 
     provided: set[str] = contacts_input.model_fields_set
     return BusinessContacts(
@@ -116,7 +122,7 @@ def patch_contacts(
             else current.public_phone_number
         ),
         handoff_phone_number=(
-            parse_optional_phone(
+            parse_handoff_phone(
                 contacts_input.handoff_phone_number, phone_number_parser, business
             )
             if "handoff_phone_number" in provided

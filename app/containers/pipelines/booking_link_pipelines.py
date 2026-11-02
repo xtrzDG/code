@@ -17,6 +17,9 @@ class BookingLinkPipelinesContainer(containers.DeclarativeContainer):
     managed_booking_pipeline = orchestrator_pipeline(
         booking_link_orchestrators.managed_booking_orchestrator
     )
+    managed_booking_session_pipeline = orchestrator_pipeline(
+        booking_link_orchestrators.managed_booking_session_orchestrator
+    )
     managed_booking_calendar_pipeline = orchestrator_pipeline(
         booking_link_orchestrators.managed_booking_calendar_orchestrator
     )

@@ -21,6 +21,7 @@ from app.use_cases.spend_guard.admit_owner_action_use_case import (
 )
 from tests.assembly.autotest_run_helpers import start
 from tests.assembly.testbed import AssemblyTestbed
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 from tests.spend_guard.request_limit_app import MovingClock
 
 MINUTE: int = 60 * 1_000_000
@@ -54,7 +55,9 @@ def admit_until_refused(
 def build_admit() -> tuple[AdmitOwnerActionUseCase, MovingClock]:
     clock = MovingClock()
     admit = AdmitOwnerActionUseCase(
-        RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()), clock.wall_clock
+        RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
+        SetPlatformBrakes(),
+        clock.wall_clock,
     )
     return admit, clock
 

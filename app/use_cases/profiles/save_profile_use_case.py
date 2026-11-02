@@ -17,12 +17,12 @@ from app.schemas.dto.profiles.business_profile import (
     SaveProfileCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.use_cases.profiles.owner_instructions import (
+from app.utilities.knowledge.niche_answers import merge_niche_answers
+from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.owner_instructions import (
     check_rule_instructions,
     check_tone_instruction,
 )
-from app.utilities.knowledge.niche_answers import merge_niche_answers
-from app.utilities.knowledge.opening_hours import validate_opening_intervals
 from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,

@@ -97,6 +97,7 @@ from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.foundation.access_support import AllowStepUp
 from tests.phone_numbers.phone_settings import phone_settings
 from tests.phone_numbers.provisioner_fakes import FakePhoneNumberProvisioner
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 OFFER_KEY: PlatformSecret = PlatformSecret("test-key-0000")
 OFFER_LIFETIME: int = 60 * 60 * 1_000_000
@@ -139,7 +140,8 @@ class PhoneWorld(BillingTestbed):
         self.parser = PhoneNumberParser()
         self.offer_signer = PhoneNumberOfferSigner(OFFER_KEY)
         rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
-        self.admit = AdmitOwnerActionUseCase(rate_limits, wall_clock)
+        self.platform_brakes = brakes = SetPlatformBrakes()
+        self.admit = AdmitOwnerActionUseCase(rate_limits, brakes, wall_clock)
         self.get_line = get_line.GetPhoneLineUseCase(
             self.authorize,
             self.phone_number_repo,
@@ -175,7 +177,7 @@ class PhoneWorld(BillingTestbed):
             phone_number_parser=self.parser,
             phone_line_lock=self.phone_line_lock,
             check_owner_action_room=CheckOwnerActionRoomUseCase(
-                rate_limits, wall_clock
+                rate_limits, brakes, wall_clock
             ),
             admit_owner_action=self.admit,
             product_events=self.product_events,

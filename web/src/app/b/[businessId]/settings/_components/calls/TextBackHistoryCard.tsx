@@ -6,6 +6,7 @@ import type { Query } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPhone } from "@/components/icons";
 import { Badge, Card, EmptyState, ErrorState, SkeletonRows } from "@/components/ui";
+import { DeliveryProblem } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 import { conversationPath } from "@/lib/navigation";
 
@@ -19,7 +20,11 @@ import {
   type TextBackView,
 } from "../../_lib/calls";
 
-/** The latest callers who did not get through, and what became of their message. */
+/**
+ * The latest callers who did not get through, and what became of their
+ * message; a failed one says so plainly (the raw error is for platform
+ * admins only, `DeliveryProblem`).
+ */
 export function TextBackHistoryCard({ textBacks }: { textBacks: Query<TextBackPage> }) {
   const { t } = useI18n();
   const items = textBacks.data?.items ?? [];
@@ -75,9 +80,7 @@ function TextBackRow({ item }: { item: TextBackView }) {
             {t("callSettings.history.notSentBecause", { reason: t(SKIP_REASON_LABELS[item.skip_reason]) })}
           </p>
         ) : null}
-        {item.status === "failed" && item.last_error ? (
-          <p className="text-sm text-danger [overflow-wrap:anywhere]">{item.last_error}</p>
-        ) : null}
+        {item.status === "failed" ? <DeliveryProblem error={item.last_error} /> : null}
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
         <Badge tone={TEXT_BACK_STATUS_TONES[item.status]}>{t(TEXT_BACK_STATUS_LABELS[item.status])}</Badge>

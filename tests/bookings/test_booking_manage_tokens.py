@@ -226,3 +226,18 @@ def test_new_links_have_no_spare_bits_to_respell() -> None:
         if replacement != text[-1]:
             respelled = BookingManageToken(text[:-1] + replacement)
             assert BookingManageTokenSigner(KEY).read(respelled) is None
+
+
+def test_a_page_credential_is_its_own_version_and_cannot_pass_as_a_link() -> None:
+    signer = BookingManageTokenSigner(KEY)
+    issued = claims().model_copy(update={"is_page_session": True})
+
+    token = signer.sign(issued)
+
+    raw = bytearray(base64.urlsafe_b64decode(str(token)))
+    assert raw[0] == 3
+    assert signer.read(token) == issued
+    # Turned into a link by its version byte, the MAC no longer matches.
+    raw[0] = 2
+    relabelled = base64.urlsafe_b64encode(bytes(raw)).rstrip(b"=").decode()
+    assert signer.read(BookingManageToken(relabelled)) is None

@@ -18,6 +18,7 @@ from app.schemas.dto.booking_manage import (
     BookingCalendarFile,
     ManagedBookingConsentBody,
     ManagedBookingRequest,
+    ManagedBookingSession,
     ManagedBookingSlots,
     ManagedBookingView,
     RescheduleManagedBookingBody,
@@ -56,6 +57,7 @@ read_consent_body = build_json_body_dependency(ManagedBookingConsentBody)
 
 def build_public_booking_router(
     view_operator: ManagedBookingOperator[ManagedBookingView],
+    session_operator: ManagedBookingOperator[ManagedBookingSession],
     calendar_operator: ManagedBookingOperator[BookingCalendarFile],
     slots_operator: ManagedBookingOperator[ManagedBookingSlots],
     cancel_operator: ManagedBookingOperator[ManagedBookingView],
@@ -67,6 +69,10 @@ def build_public_booking_router(
         GET  /v1/public/bookings/{token}
             the booking as its page shows it (no contact details), with the
             ways to write to the business and what may still change;
+        POST /v1/public/bookings/{token}/session
+            trade the link's token for the page's short-lived credential
+            (about 30 minutes), which every route here takes in place of
+            the token (a credential cannot open another one);
         GET  /v1/public/bookings/{token}/calendar.ics
             the booking as an .ics file;
         GET  /v1/public/bookings/{token}/slots?date=YYYY-MM-DD
@@ -96,6 +102,13 @@ def build_public_booking_router(
     ) -> ManagedBookingView:
         response.headers.update(PRIVATE_PAGE_HEADERS)
         return view_operator.operate(manage_request(token, request))
+
+    @router.post(f"{PUBLIC_BOOKING_PATH}/session")
+    def open_managed_booking_session(
+        token: str, request: Request, response: Response
+    ) -> ManagedBookingSession:
+        response.headers.update(PRIVATE_PAGE_HEADERS)
+        return session_operator.operate(manage_request(token, request))
 
     @router.get(
         f"{PUBLIC_BOOKING_PATH}/calendar.ics",

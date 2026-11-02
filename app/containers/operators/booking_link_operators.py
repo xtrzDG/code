@@ -22,6 +22,9 @@ class BookingLinkOperatorsContainer(containers.DeclarativeContainer):
     managed_booking_operator = pipeline_operator(
         booking_link_pipelines.managed_booking_pipeline, storage_scope
     )
+    managed_booking_session_operator = pipeline_operator(
+        booking_link_pipelines.managed_booking_session_pipeline, storage_scope
+    )
     managed_booking_calendar_operator = pipeline_operator(
         booking_link_pipelines.managed_booking_calendar_pipeline, storage_scope
     )

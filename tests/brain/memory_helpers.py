@@ -29,6 +29,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from tests.brain.brain_memory import ScheduledJob
 from tests.brain.brain_world import BrainWorld
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 SUMMARY_MODEL: str = "gpt-5-nano"
 
@@ -91,7 +92,9 @@ def summary_jobs(world: BrainWorld) -> list[ScheduledJob]:
 
 
 def build_summarizer(
-    world: BrainWorld, llm: ScriptedLlmAdapter
+    world: BrainWorld,
+    llm: ScriptedLlmAdapter,
+    platform_brakes: SetPlatformBrakes | None = None,
 ) -> SummarizeConversationUseCase:
     return SummarizeConversationUseCase(
         business_repo=world.business_repo,
@@ -102,6 +105,7 @@ def build_summarizer(
         assistant_settings_repo=world.memory.settings_repo,
         job_queue=world.memory.jobs,
         llm_adapter=llm,
+        platform_brakes=platform_brakes or SetPlatformBrakes(),
         app_settings=assemble_app_settings({"LLM_SUMMARY_MODEL_ID": SUMMARY_MODEL}),
         wall_clock=world.clock.wall_clock(),
     )

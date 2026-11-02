@@ -29,6 +29,7 @@ from app.use_cases.insights.topics.group_conversation_topics_use_case import (
 from app.use_cases.insights.value.get_customer_sources_use_case import (
     GetCustomerSourcesUseCase,
 )
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 from tests.value.value_scene import ValueScene, at
 
 
@@ -42,6 +43,7 @@ class InsightBench(ValueScene):
                 ConversationTopicsDocument
             )
         )
+        self.platform_brakes = SetPlatformBrakes()
 
     def tagged(
         self,
@@ -115,6 +117,7 @@ class InsightBench(ValueScene):
             ),
             unanswered_question_repo=self.world.question_repo,
             llm_adapter=llm,
+            platform_brakes=self.platform_brakes,
             app_settings=self.world.settings,
             wall_clock=self.world.clock.wall_clock,
         )

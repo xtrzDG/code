@@ -68,6 +68,7 @@ class MemoryUseCasesContainer(containers.DeclarativeContainer):
         assistant_settings_repo=repositories.assistant_settings_repo,
         job_queue=facilitators.job_queue_facilitator,
         llm_adapter=adapters.llm_adapter,
+        platform_brakes=facilitators.platform_brakes,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

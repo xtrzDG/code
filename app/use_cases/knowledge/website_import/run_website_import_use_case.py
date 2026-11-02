@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
@@ -57,6 +58,7 @@ from app.utilities.knowledge.knowledge_item_checks import ALWAYS_ALLOWED_KINDS
 
 INTERRUPTED_DETAIL: ErrorReasonDetail = ErrorReasonDetail("worker_failed")
 READER_FAILED_DETAIL: ErrorReasonDetail = ErrorReasonDetail("reader_failed")
+BRAKE_DETAIL: ErrorReasonDetail = ErrorReasonDetail("platform_brake")
 
 
 @dataclass
@@ -83,6 +85,8 @@ class RunWebsiteImportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     no page at all. A job of an import that was replaced or finished does
     nothing; a repeated run of an interrupted import starts it over; on the
     job's last attempt an unexpected error marks the import interrupted.
+    While a platform brake holds (the global pause, the daily budget stop)
+    no page is read: the import fails with the reader unavailable.
     """
 
     def __init__(
@@ -95,6 +99,7 @@ class RunWebsiteImportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         safe_http_fetcher: SafeHttpFetcherContract,
         website_extraction_adapter: WebsiteExtractionAdapterContract,
         live_events: EventPublisherFacilitatorContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._website_import_repo: WebsiteImportRepoContract = website_import_repo
@@ -109,6 +114,7 @@ class RunWebsiteImportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             website_extraction_adapter
         )
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: QueuedJobInput) -> JobReport:
@@ -137,6 +143,10 @@ class RunWebsiteImportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             business.id,
             website_import.import_id,
         )
+        if self._platform_brakes.current_brake(self._wall_clock.now_unix()):
+            progress.finish(WebsiteImportProblem.READER_UNAVAILABLE, BRAKE_DETAIL)
+            return JobReport()
+
         try:
             pages_read: int = self._read_site(business, website_import, progress)
         except Exception:

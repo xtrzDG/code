@@ -69,13 +69,15 @@ class UpdateCallSettingsCommand(ImmutableDTO):
 class TextBackTemplatePreview(ImmutableDTO):
     """
     The text-back in one language: the body to register as the WhatsApp
-    template (its one parameter {{1}} is the business name) and how a
-    caller reads it.
+    template (its one parameter {{1}} is the business name).
+
+    `example` (how a caller reads it) is deprecated: the cabinet no longer
+    shows it; it is still filled for clients of `/v1`.
     """
 
     language: LanguageTag
     template_body: MessageText
-    example: MessageText
+    example: MessageText = Field(deprecated=True)
 
 
 class CallSettingsView(ImmutableDTO):

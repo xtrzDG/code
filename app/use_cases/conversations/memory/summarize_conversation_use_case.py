@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.platform_safety import PlatformBrakeRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
@@ -48,6 +49,8 @@ from app.utilities.privacy.erased_conversations import is_erased_conversation
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 NOTHING_DONE: JobReport = JobReport()
+# While a platform brake holds, the summary waits this long and asks again.
+BRAKE_WAIT_MICROSECONDS: int = 60 * 60 * 1_000_000
 
 
 class SummarizeConversationUseCase(UseCaseContract[QueuedJobInput, JobReport]):
@@ -65,7 +68,9 @@ class SummarizeConversationUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     runs meanwhile wins), a conversation without words of the customer, or
     one already summarized since its latest message. A failed model call
     is tried again by the job queue; after the last attempt the
-    conversation stays without a summary.
+    conversation stays without a summary. While a platform brake holds
+    (the global pause, the daily budget stop) the model is not asked: the
+    job moves an hour on.
     """
 
     def __init__(
@@ -78,6 +83,7 @@ class SummarizeConversationUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         assistant_settings_repo: AssistantSettingsRepoContract,
         job_queue: JobQueueFacilitatorContract,
         llm_adapter: LlmAdapterContract,
+        platform_brakes: PlatformBrakeRegistryContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -93,6 +99,7 @@ class SummarizeConversationUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         )
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._llm_adapter: LlmAdapterContract = llm_adapter
+        self._platform_brakes: PlatformBrakeRegistryContract = platform_brakes
         self._model_id: LlmModelId = (
             app_settings.llm_summary_model_id or app_settings.llm_model_id
         )
@@ -135,6 +142,15 @@ class SummarizeConversationUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             self._message_repo.list_by_conversation(business.id, conversation.id)
         )
         if not has_customer_words(lines):
+            return NOTHING_DONE
+
+        if self._platform_brakes.current_brake(now) is not None:
+            self._job_queue.enqueue(
+                SUMMARIZE_CONVERSATION_JOB,
+                encode_summary_payload(conversation.id),
+                business.id,
+                run_at=Microseconds(int(now) + BRAKE_WAIT_MICROSECONDS),
+            )
             return NOTHING_DONE
 
         summary: ConversationSummaryText | None = self._summarize(

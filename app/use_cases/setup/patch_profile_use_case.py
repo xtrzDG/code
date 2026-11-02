@@ -29,6 +29,10 @@ from app.schemas.typings.profiles.strings import (
     ToneText,
 )
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.owner_instructions import (
+    check_rule_instructions,
+    check_tone_instruction,
+)
 from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
@@ -56,7 +60,9 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
     Autosave of the business profile: only the fields present in the patch
     change, so the cabinet can save every field as the owner edits it.
 
-    Every field is validated like a wizard step before anything is stored.
+    Every field is validated like a wizard step before anything is stored
+    (the owner's tone and rules as instructions, the staff number as a
+    number calls may be put through to).
     The change is made on the profile as stored at that moment (two fields
     saved at once never undo each other); with `expected_updated_at` an
     edit made from an older profile is refused (409 stale_revision).
@@ -110,13 +116,15 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
         booking_rules: BookingRules | None = build_booking_rules(
             patch.booking_rules, template, business
         )
-        handoff_rules: list[HandoffRuleText] = check_rules(
-            patch.handoff_rules or [], subject="handoff"
+        # The owner's texts join the assistant's instruction: checked as
+        # instructions here too, like a wizard step.
+        handoff_rules: list[HandoffRuleText] = check_rule_instructions(
+            check_rules(patch.handoff_rules or [], subject="handoff"), "handoff"
         )
-        forbidden: list[ForbiddenRuleText] = check_rules(
-            patch.forbidden or [], subject="forbidden"
+        forbidden: list[ForbiddenRuleText] = check_rule_instructions(
+            check_rules(patch.forbidden or [], subject="forbidden"), "forbidden"
         )
-        tone: ToneText | None = check_tone(patch.tone)
+        tone: ToneText | None = check_tone_instruction(check_tone(patch.tone))
         links: list[BusinessLink] = validate_links(patch.links or [])
         answer_changes: dict[QuestionKey, ProfileAnswer | None] = (
             normalize_answer_changes(

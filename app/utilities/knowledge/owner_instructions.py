@@ -1,7 +1,8 @@
 """
 The owner's texts that join the assistant's instruction (the tone, the
 cases to hand off, the prohibitions) are checked as instructions before
-they are stored: each must be an `OwnerRuleInstruction` or an
+they are stored, on every save path (a wizard step, the whole profile, the
+setup autosave): each must be an `OwnerRuleInstruction` or an
 `OwnerToneInstruction`, on one line and without the characters of the
 platform's headers and fences. The instruction fences them as the owner's
 text as well (`owner_text_fencing`), also those stored before this check.

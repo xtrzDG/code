@@ -69,6 +69,7 @@ from tests.foundation.support_access_builders import build_authorize_business_ac
 from tests.knowledge.cross_language.fakes import PhraseBookAliasSuggester
 from tests.knowledge.knowledge_store import KnowledgeStore
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
+from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
 
 
 class KnowledgeHarness(KnowledgeStore):
@@ -188,6 +189,7 @@ class KnowledgeHarness(KnowledgeStore):
             language_detector=LanguageDetector(),
             admit_owner_action=AdmitOwnerActionUseCase(
                 RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
+                SetPlatformBrakes(),
                 self.wall_clock,
             ),
             wall_clock=self.wall_clock,

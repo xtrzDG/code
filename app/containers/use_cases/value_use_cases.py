@@ -239,6 +239,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
             topic_input_repo=repositories.topic_input_repo,
             unanswered_question_repo=repositories.unanswered_question_repo,
             llm_adapter=adapters.llm_adapter,
+            platform_brakes=facilitators.platform_brakes,
             app_settings=config.app_settings,
             wall_clock=wall_clock,
         )

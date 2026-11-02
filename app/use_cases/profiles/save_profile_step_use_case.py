@@ -28,15 +28,15 @@ from app.schemas.dto.profiles.profile_steps import (
     SaveProfileStepCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.use_cases.profiles.owner_instructions import (
-    check_rule_instructions,
-    check_tone_instruction,
-)
 from app.utilities.knowledge.faq_items import faq_entry_to_upsert_input
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
 from app.utilities.knowledge.niche_answers import merge_niche_answers
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.owner_instructions import (
+    check_rule_instructions,
+    check_tone_instruction,
+)
 from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,

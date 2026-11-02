@@ -62,6 +62,18 @@ class TestCallSettings:
         assert "Funicular VR" in previews["en"]["example"]
         assert "Funicular VR" in previews["ka"]["example"]
 
+    def test_the_callers_example_is_deprecated_but_still_filled(
+        self, client: TestClient
+    ) -> None:
+        schemas: dict[str, Any] = client.get("/openapi.json").json()["components"][
+            "schemas"
+        ]
+
+        example: dict[str, Any] = schemas["TextBackTemplatePreview"]["properties"][
+            "example"
+        ]
+        assert example["deprecated"] is True
+
     def test_the_owner_changes_them(
         self, setup: VoiceSetup, client: TestClient
     ) -> None:
