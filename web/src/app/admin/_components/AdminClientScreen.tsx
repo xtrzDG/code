@@ -29,22 +29,25 @@ import { QualityCard } from "./client/QualityCard";
 import { ReplyGuardCard } from "./client/ReplyGuardCard";
 import { ReplySpeedCard } from "./client/ReplySpeedCard";
 import { NotesCard } from "./client/story/NotesCard";
+import { TeamSessionsCard } from "./client/TeamSessionsCard";
 import { TimelineCard } from "./client/story/TimelineCard";
 import { HealthBadge, IssueChips } from "./ClientBits";
 
 /**
  * /admin/clients/[businessId]: one client's health explained, an audited
- * way into their cabinet, the account actions, the team's notes and the
- * client's timeline.
+ * way into their cabinet, the account actions, the team's notes, the
+ * client team's sign-ins and the client's timeline.
  */
 export function AdminClientScreen({
   businessId,
   canManageBilling,
   canWriteNotes,
+  canEndSessions,
 }: {
   businessId: string;
   canManageBilling: boolean;
   canWriteNotes: boolean;
+  canEndSessions: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -135,6 +138,7 @@ export function AdminClientScreen({
               <NotesCard businessId={businessId} timeZone={data.timezone} canWrite={canWriteNotes} />
             </div>
 
+            <TeamSessionsCard businessId={businessId} timeZone={data.timezone} canEnd={canEndSessions} />
             <ReplySpeedCard summary={summary} />
             <ReplyGuardCard summary={summary} />
             <QualityCard businessId={businessId} timeZone={data.timezone} />

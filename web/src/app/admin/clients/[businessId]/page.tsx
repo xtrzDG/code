@@ -14,7 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * One client in detail (GET /v1/admin/clients/{business_id}), "open
  * cabinet", and what the admin's role may do there: account actions,
- * writing notes (the API checks the same at every request).
+ * writing notes, ending a team member's sessions (the API checks the same
+ * at every request).
  */
 export default async function AdminClientPage({ params }: PageProps<"/admin/clients/[businessId]">) {
   const [{ businessId }, me] = await Promise.all([params, getCurrentUser()]);
@@ -23,6 +24,7 @@ export default async function AdminClientPage({ params }: PageProps<"/admin/clie
       businessId={businessId}
       canManageBilling={hasAdminPermission(me, "manage_client_billing")}
       canWriteNotes={hasAdminPermission(me, "write_client_notes")}
+      canEndSessions={hasAdminPermission(me, "change_client_cabinet")}
     />
   );
 }

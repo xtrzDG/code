@@ -33,5 +33,5 @@ export const BRAKE_TONES = {
 export function hasMismatches(
   reconciliation: Pick<PaymentReconciliation, "mismatches">,
 ): boolean {
-  return reconciliation.mismatches.length > 0;
+  return (reconciliation.mismatches ?? []).length > 0;
 }

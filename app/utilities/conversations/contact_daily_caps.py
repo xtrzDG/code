@@ -1,8 +1,9 @@
 """
-Per-contact daily caps of what reaches the team: requests (leads) and
-handoffs a customer can set off in 24 hours, so an anonymous visitor cannot
-flood staff with them (bookings have caps of their own; the business-wide
-spend limit still holds).
+Per-contact daily caps of what reaches the team: requests (leads) a
+customer can make in its conversations and staff alerts of handoffs it can
+set off in 24 hours, so an anonymous visitor cannot flood staff with them
+(an emergency always alerts; bookings have caps of their own; the
+business-wide spend limit still holds).
 
 A record of the last 24 hours belongs to a conversation of the contact with
 a message in that time (a lead or a handoff is made while its conversation

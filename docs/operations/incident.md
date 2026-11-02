@@ -1,8 +1,8 @@
 # Incidents: severity, roles, communication and postmortems
 
 What counts as an incident, who does what while it lasts, what owners are
-told and when, how a personal data breach is reported (DPA section 12),
-and how the team learns from it. The objectives and alerts are in
+told and when, how a personal data breach is reported (GDPR articles 33
+and 34, DPA section 12), and how the team learns from it. The objectives and alerts are in
 `docs/operations/slo.md`; each failure has its runbook in
 `docs/operations/runbooks/`.
 
@@ -25,8 +25,12 @@ One person can hold several roles in a small team; the roles still exist.
   lead" in the ops chat. Hands over explicitly.
 - **Fixer**: works the runbook; tells the lead before any risky step
   (rollback, restore, key rotation).
-- **Communicator**: owner notices (templates below), the status page once
-  it exists (R13), the founder for SEV1.
+- **Communicator**: owner notices (templates below), the status page
+  (`docs/operations/status-page.md`), the founder for SEV1.
+- **Privacy lead** (a breach only; the founder unless
+  `docs/operations/contacts.md` names another person): judges the risk to
+  people, files the notification to the Garante, decides whether people
+  are told, keeps the breach register.
 
 ## Timeline of an incident
 
@@ -53,18 +57,64 @@ One person can hold several roles in a small team; the roles still exist.
    spent; post `RESOLVED` with the duration.
 7. **Postmortem** within 5 working days for SEV1 and SEV2 (template below).
 
-## Personal data breach (DPA section 12)
+## Personal data breach (GDPR articles 33 and 34)
 
-The platform is the processor; each business is the controller of its
-customers' data. Under DPA 12.1 the platform tells the controller "without
-undue delay and in any case within 48 hours" of becoming aware; the
-controller has 72 hours under the GDPR to tell the supervisory authority
-(12.2), and the platform helps. Follow
-[runbooks/data-breach.md](runbooks/data-breach.md); the notice itself goes
-out through `POST /v1/admin/incidents` with `kind: data_breach`:
+A breach is any accidental or unlawful destruction, loss, alteration,
+disclosure of or access to personal data: a misdirected export, a leaked
+key or backup, a bug that showed one business's data to another, a
+compromised admin account. It is always SEV1. Write down the moment the
+platform became **aware** of it (reasonably certain that personal data
+was affected): every clock below starts there, and it is the incident's
+`detected_at`.
 
-- `title`, `severity` (SEV1), `started_at`, `detected_at` (the moment the
-  platform became aware: the 48-hour clock starts here);
+### Whose data: processor or controller
+
+| Data concerned | Platform's role | Who tells the Garante (72 h) | Who tells the people (art. 34) |
+| --- | --- | --- | --- |
+| A business's customers: conversations, transcripts, call recordings, voice notes and photos, contacts and their marketing consent, bookings and requests | **processor** (the DPA, `docs/legal/dpa-*.md`); the business is the controller | the business, within 72 hours of *its* awareness (art. 33(1)); the platform tells it first and helps (DPA 12.2) | the business decides and writes; the platform helps word it and never contacts a business's customers on its own |
+| The platform's own: owners' and staff accounts (sign-in phone or e-mail, sign-in codes, sessions, passkeys), billing profiles and invoices, the public site's visitors, support | **controller** | the platform, within 72 hours of awareness, unless the breach is unlikely to result in a risk to people (art. 33(1)) | the platform, without undue delay, when the risk is high (art. 34) |
+
+Both at once is common (a leaked database copy): run both rows.
+
+### Steps and who does what
+
+| By (from awareness) | Step | Who |
+| --- | --- | --- |
+| at once | Declare SEV1 in the ops chat, name the lead, tell the founder; record the awareness time in UTC | whoever detects; the **incident lead** |
+| 1 hour | Contain without destroying evidence and preserve logs, Sentry events and audit entries ([runbooks/data-breach.md](runbooks/data-breach.md)) | the **fixer**, told by the lead |
+| 24 hours | Scope: which role (table above), which businesses, categories and rough numbers of people and records, likely consequences; assess the risk: none, a risk, or a high risk (criteria below) | the lead with the **privacy lead** (the founder unless another person is named in `docs/operations/contacts.md`) |
+| 48 hours | Processor data: notify every owner of each affected business (DPA 12.1, "without undue delay and in any case within 48 hours") through `POST /v1/admin/incidents` with `kind: data_breach` (below) | the **communicator** |
+| 72 hours | Controller data with a risk: notify the Garante per la protezione dei dati personali through its online breach notification procedure (garanteprivacy.it, "Notifica di una violazione dei dati personali"). Facts still missing go in later phases (art. 33(4)); a late notice says why it is late | the **privacy lead** |
+| without undue delay | High risk: tell the people concerned in plain language (art. 34(2): what happened, a contact point, the likely consequences, the measures, what they can do themselves); for processor data, give the owners the facts and the template below | controller data: the communicator; processor data: the owner, helped by the communicator |
+| always | Enter the breach in the breach register (art. 33(5)) with the facts, the effects, the decision on each notice and why, and the remedial action, also when nothing was notified; keep it at least 5 years | the privacy lead |
+| 5 working days | Postmortem (template below) | the lead |
+
+**Risk** (EDPB Guidelines 9/2022 on breach notification): weigh the kind
+of data, how many people, how easily they are identified, how severe and
+how lasting the consequences are, and whether they belong to vulnerable
+groups. Usually **high**: call recordings or transcripts that reveal
+health (a clinic's), names with phone numbers of many customers made
+public, sign-in sessions or codes that let someone act as an owner.
+Usually **no risk**: an archive or a field that stayed unintelligible
+(the age-encrypted backups, `docs/operations/backup-restore.md`, with the
+keys safe; the channel secrets sealed with `ENCRYPTION_KEY`), a file sent
+to a known recipient who confirmed in writing that they deleted it unread.
+
+**Telling the people** is not needed when (art. 34(3)): the data was
+unintelligible to anyone not authorized (encryption with uncompromised
+keys); the measures taken since make the high risk no longer likely; or
+it would take disproportionate effort, in which case a public notice (the
+status announcement and `/status`, `docs/operations/status-page.md`)
+replaces it. The Garante may still require it (art. 34(4)).
+
+### The notice to the businesses (DPA 12.1)
+
+The notice goes out through `POST /v1/admin/incidents` (Admin → System →
+Incidents, "Record incident"; it needs a recent sign-in) with `kind:
+data_breach`:
+
+- `title`, `severity` (SEV1), `started_at`, `detected_at` (the moment of
+  awareness);
 - `affected_business_ids`: only businesses whose data was concerned (at
   most 1,000), or `scope: all_businesses` with none named when every
   business's data was (the `expand_incident` job then reaches each one a
@@ -72,24 +122,31 @@ out through `POST /v1/admin/incidents` with `kind: data_breach`:
   commit together, so a worker that dies mid-walk resumes without telling
   anyone twice);
 - `approximate_subject_count`, `approximate_record_count`;
-- `notice_texts`: for each language (English is required; add Georgian and
-  Russian), the five DPA 12.1 texts: what happened (`nature`), the
-  categories of people (`subject_categories`) and of records
-  (`record_categories`), the likely consequences, and the measures taken
-  or proposed (`measures`).
+- `notice_texts`: for each language (English is required; add Italian, the
+  other cabinet language), the five DPA 12.1 texts: what happened
+  (`nature`), the categories of people (`subject_categories`) and of
+  records (`record_categories`), the likely consequences, and the measures
+  taken or proposed (`measures`).
 
 Every owner (not staff) of each affected business gets the notice in the
-cabinet language, by e-mail to the sign-in address or else by SMS, through
-the outbox (retried; idempotent per incident), and an audit entry in the
-business's log names the incident and the admin. The request needs a
-recent sign-in (step-up). Record later facts as a new incident note in the
-postmortem; a second notice goes out only for new facts.
+cabinet language (Italian or English; the frame is
+`app/use_cases/admin/incidents/incident_notices.py`), by e-mail to the
+sign-in address or else by SMS, through the outbox (retried; idempotent
+per incident), and an audit entry in the business's log names the
+incident and the admin. Check on `/admin/system` that the
+`deliver_outbound` jobs went out and call owners whose notice failed.
+Owners may then ask for the details of their own art. 33 form (the
+nature, categories and numbers, a contact point, the consequences, the
+measures): answer within a working day. Record later facts as a new
+incident note in the postmortem; a second notice goes out only for new
+facts.
 
 ## Communication templates
 
 Fill the parts in angle brackets; keep times in the business's time zone
 for owners and UTC in the ops chat. Never name other businesses, customers
-or internal hosts.
+or internal hosts. Owners read the cabinet's languages, English and
+Italian.
 
 ### Outage or degradation: started
 
@@ -103,25 +160,16 @@ or internal hosts.
 > will update you by <time>. If a customer needs you urgently, the
 > conversation is in your inbox: <link>.
 
-**Русский**
+**Italiano**
 
-> Тема: «Мастерская ассистентов»: перебои — <канал или функция>
+> Oggetto: Assistant Workshop: disservizio su <canale o funzione>
 >
-> С <время> <что видит владелец: ответы в WhatsApp задерживаются / звонки
-> не принимаются>. Сообщения ваших клиентов сохраняются, и помощник ответит
-> на них, как только мы всё исправим, — ничего не потеряно. Мы уже
-> работаем над этим и напишем вам до <время>. Если клиенту нужен ответ
-> срочно, разговор есть во «Входящих»: <ссылка>.
-
-**ქართული**
-
-> თემა: „ასისტენტების სახელოსნო“: შეფერხება — <არხი ან ფუნქცია>
->
-> <დრო>-დან <რას ხედავს მფლობელი: WhatsApp-ში პასუხები იგვიანებს / ზარებს
-> არავინ პასუხობს>. თქვენი კლიენტების შეტყობინებები შენახულია და
-> ასისტენტი უპასუხებს მათ, როგორც კი პრობლემას გამოვასწორებთ — არაფერი
-> დაიკარგება. უკვე ვმუშაობთ ამაზე და <დრო>-მდე მოგწერთ. თუ კლიენტს პასუხი
-> სასწრაფოდ სჭირდება, საუბარი „შემოსულებშია“: <ბმული>.
+> Dalle <ora> <cosa vede il titolare: le risposte su WhatsApp arrivano in
+> ritardo / le chiamate non ricevono risposta>. I messaggi dei tuoi
+> clienti sono conservati e riceveranno risposta appena il problema sarà
+> risolto: non si perde nulla. Ci stiamo lavorando e ti aggiorneremo entro
+> le <ora>. Se un cliente ha bisogno di te con urgenza, la conversazione è
+> nella tua casella: <link>.
 
 ### Outage or degradation: resolved
 
@@ -134,37 +182,52 @@ or internal hosts.
 > we change so it does not happen again: <one sentence>. We are sorry for
 > the trouble.
 
-**Русский**
+**Italiano**
 
-> Тема: Исправлено: <канал или функция>
+> Oggetto: Risolto: <canale o funzione>
 >
-> С <время> <канал или функция> снова работает. Помощник ответил на
-> сообщения, которые ждали. Причина: <одно предложение, без поиска
-> виноватых>. Что мы меняем, чтобы это не повторилось: <одно предложение>.
-> Приносим извинения за неудобства.
+> Dalle <ora> <canale o funzione> funziona di nuovo. L'assistente ha
+> risposto ai messaggi in attesa. Causa: <una frase, senza colpe>. Cosa
+> cambiamo perché non si ripeta: <una frase>. Ci scusiamo per il disagio.
 
-**ქართული**
-
-> თემა: გამოსწორდა: <არხი ან ფუნქცია>
->
-> <დრო>-დან <არხი ან ფუნქცია> ისევ მუშაობს. ასისტენტმა უპასუხა
-> შეტყობინებებს, რომლებიც ელოდებოდა. მიზეზი: <ერთი წინადადება, ბრალის
-> დადების გარეშე>. რას ვცვლით, რომ აღარ განმეორდეს: <ერთი წინადადება>.
-> ბოდიშს გიხდით შეფერხებისთვის.
-
-### Personal data breach
+### Personal data breach: the five texts of the notice
 
 Sent by the platform (`POST /v1/admin/incidents`): the frame is fixed in
-each language (`app/use_cases/admin/incidents/incident_notices.py`), the
-team writes the five texts. Draft them in plain words:
+each language, the team writes the five texts. Draft them in plain words:
 
-| Field | English example | Русский пример | ქართული მაგალითი |
-| --- | --- | --- | --- |
-| `nature` | A support export with customer names and phone numbers was sent to a wrong e-mail address. | Выгрузка поддержки с именами и телефонами клиентов ушла на неверный адрес почты. | მხარდაჭერის ექსპორტი კლიენტების სახელებითა და ტელეფონებით შეცდომით გაიგზავნა არასწორ მისამართზე. |
-| `subject_categories` | Customers who wrote to your business by WhatsApp in September | Клиенты, писавшие вашему бизнесу в WhatsApp в сентябре | კლიენტები, რომლებმაც სექტემბერში თქვენს ბიზნესს WhatsApp-ით მისწერეს |
-| `record_categories` | Names and phone numbers; no messages, payments or passwords | Имена и телефоны; без сообщений, платежей и паролей | სახელები და ტელეფონის ნომრები; შეტყობინებების, გადახდებისა და პაროლების გარეშე |
-| `likely_consequences` | Unwanted calls or messages are possible; misuse beyond that is unlikely. | Возможны нежелательные звонки или сообщения; иное злоупотребление маловероятно. | შესაძლებელია არასასურველი ზარები ან შეტყობინებები; სხვა სახის ბოროტად გამოყენება ნაკლებად სავარაუდოა. |
-| `measures` | The recipient confirmed deletion; exports now need a second person's approval. | Получатель подтвердил удаление; выгрузки теперь подтверждает второй сотрудник. | მიმღებმა წაშლა დაადასტურა; ექსპორტს ახლა მეორე თანამშრომელი ადასტურებს. |
+| Field | English example | Esempio in italiano |
+| --- | --- | --- |
+| `nature` | A support export with customer names and phone numbers was sent to a wrong e-mail address. | Un'esportazione dell'assistenza con nomi e numeri di telefono dei clienti è stata inviata a un indirizzo e-mail sbagliato. |
+| `subject_categories` | Customers who wrote to your business by WhatsApp in September | I clienti che hanno scritto alla tua attività su WhatsApp a settembre |
+| `record_categories` | Names and phone numbers; no messages, recordings, payments or passwords | Nomi e numeri di telefono; nessun messaggio, registrazione, pagamento o password |
+| `likely_consequences` | Unwanted calls or messages are possible; misuse beyond that is unlikely. | Sono possibili chiamate o messaggi indesiderati; altri abusi sono improbabili. |
+| `measures` | The recipient confirmed deletion; exports now need a second person's approval. | Il destinatario ha confermato la cancellazione; ora le esportazioni richiedono l'approvazione di una seconda persona. |
+
+### Personal data breach: what an owner may tell its customers (art. 34)
+
+For the owner to send in its own name when its customers must be told
+(the platform never writes to a business's customers about a breach).
+
+**English**
+
+> Subject: <Business>: about your personal data
+>
+> On <date> we learned that <what happened, in one sentence>. It concerns
+> <which data: your name and phone number / the recording of your call of
+> <date>>. What this may mean for you: <likely consequences>. What we did:
+> <measures>. What you can do: <e.g. be careful with calls or messages
+> that ask for payment details>. For questions write to <contact>.
+
+**Italiano**
+
+> Oggetto: <Attività>: informazioni sui tuoi dati personali
+>
+> Il <data> abbiamo saputo che <cosa è successo, in una frase>. Riguarda
+> <quali dati: il tuo nome e numero di telefono / la registrazione della
+> tua chiamata del <data>>. Cosa può significare per te: <conseguenze
+> probabili>. Cosa abbiamo fatto: <misure adottate>. Cosa puoi fare tu:
+> <ad es. diffidare di chiamate o messaggi che chiedono dati di
+> pagamento>. Per domande scrivi a <contatto>.
 
 ## Postmortem template
 

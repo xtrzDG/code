@@ -93,7 +93,8 @@ the cron's (put, list, delete under the prefix; set on `workshop-backup`
 only, never on the API or a worker), the drill's (get and list only), and
 the deletion ledger's (put, get and list under
 `<BACKUP_S3_PREFIX>deletion-ledger/` only, no delete; set on
-`workshop-batch-worker`, which deletes businesses on its default lane).
+`workshop-batch-worker`, which deletes businesses on its default lane and
+records customers' erasures there too).
 
 ## Keys and custody
 
@@ -202,6 +203,12 @@ everything new; the others only open and verify what they sealed.
    and the report says "Deletion ledger: N deleted businesses, M of their
    rows deleted again, K left." A row left fails the drill. Retention
    never removes the ledger's objects (they are no archives).
+   The ledger of erased customers beside it is counted: "Erasure ledger:
+   N erased customers, M of them with their data in this backup". M is
+   the number of customers erased after the backup was taken; the drill
+   leaves them (an erasure reaches messages, calls, recordings and the
+   sub-processors' copies, which only the application's own erasure
+   does), and after a real restore the worker erases them again (below).
 4. The scratch database and the probe role are dropped (`--keep-database`
    keeps the database: that is a real restore, below).
 
@@ -304,6 +311,35 @@ business's deletion brings that business back. The worker's daily
 `workshop-batch-worker` holds the bucket settings and the ledger's key);
 a restore through
 `restore-check --keep-database` has already applied the ledger.
+
+**Erased customers after either path.** A backup older than a
+customer's erasure (an owner's erasure of a customer's data, Customers →
+a customer → Data requests; GDPR article 17) brings their data back. Each erasure is recorded outside the
+database: the queued job `record_contact_erasure` (retried until the
+bucket takes it) writes one object per erased customer,
+`<BACKUP_S3_PREFIX>deletion-ledger/contacts/<business id>/<contact id>.erasure`
+(ids and the moment only, nothing personal; `.erasure`, so the business
+ledger never reads it as a deletion). The worker's daily
+`reapply_contact_erasures` (`ReapplyContactErasuresUseCase`, the batch
+worker) reads every record and erases again each customer whose contact
+is back with its data, with the same erasure as the owner's, audited as a
+deletion without an actor; a customer still erased, or gone with their
+business, is left alone, and a failed erasure fails the run, which is
+retried the next day. A daily job runs once per UTC day, and the restored
+database may already hold today's run; to apply the ledger at once
+(step 5 of path B, and after a point-in-time recovery), delete that run
+as the migration role and the next worker tick runs it:
+
+```sql
+delete from workshop.periodic_job_runs
+where document ->> 'job_name' = 'reapply_contact_erasures'
+  and document ->> 'period_key' = to_char(now() at time zone 'utc', 'YYYY-MM-DD');
+```
+
+The drill's "Erasure ledger" line says how many customers that run will
+erase. The one gap is an erasure in the minutes between its database
+write and its record reaching the bucket: a record that never arrived
+stays among the dead jobs on `/admin/system` (retry it there).
 
 **Checks after either path.** `GET /readyz` answers 200 (database reached,
 every migration applied); `scripts/smoke.sh` against the API passes; an

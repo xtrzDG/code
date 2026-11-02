@@ -5,7 +5,8 @@
  * (`devices`), platform support's access to a cabinet (`supportAccess`) and
  * the terms a person accepts by signing in (`legalConsent`), and the
  * audit log's tamper check (`auditChain`) with the platform admin's Audit
- * page (`adminAudit`), passkeys (`passkeys`) and the owner's reminder to
+ * page (`adminAudit`), a client team's sign-ins on the admin's client page
+ * (`adminSessions`), passkeys (`passkeys`) and the owner's reminder to
  * turn on a second factor (`securityNudge`).
  *
  * Top-level keys are namespaces, spread into the dictionaries of every
@@ -16,6 +17,8 @@
 import type { Translation } from "../../translate";
 import { adminAuditIt } from "./security/adminAudit.it";
 import { adminAuditEn } from "./security/adminAudit.en";
+import { adminSessionsEn } from "./security/adminSessions.en";
+import { adminSessionsIt } from "./security/adminSessions.it";
 import { auditChainIt } from "./security/auditChain.it";
 import { auditChainEn } from "./security/auditChain.en";
 import { devicesEn } from "./security/devices.en";
@@ -41,6 +44,7 @@ export const securityFlowEn = {
   legalConsent: legalConsentEn,
   auditChain: auditChainEn,
   adminAudit: adminAuditEn,
+  adminSessions: adminSessionsEn,
   passkeys: passkeysEn,
   securityNudge: securityNudgeEn,
 } as const;
@@ -53,6 +57,7 @@ export const securityFlowIt: Translation<typeof securityFlowEn> = {
   legalConsent: legalConsentIt,
   auditChain: auditChainIt,
   adminAudit: adminAuditIt,
+  adminSessions: adminSessionsIt,
   passkeys: passkeysIt,
   securityNudge: securityNudgeIt,
 };

@@ -38,7 +38,7 @@ class CustomerGivenName(BaseConstrainedTypedString):
     pattern = (
         r"^[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
         r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]"
-        r"(?:[^<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
+        r"(?:[^<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b\u200e\u200f"
         r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f]{0,58}"
         r"[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f"
         r"\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\U000e0000-\U000e007f])?\Z"

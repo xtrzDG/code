@@ -115,7 +115,7 @@ function ReconciliationResult({
           </Tr>
         </THead>
         <TBody>
-          {reconciliation.mismatches.map((mismatch) => (
+          {(reconciliation.mismatches ?? []).map((mismatch) => (
             <Tr key={mismatch.payment_order_id}>
               <Td>
                 <Link
