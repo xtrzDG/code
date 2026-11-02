@@ -26,6 +26,8 @@ RATE_LIMIT_TRIGGERED: str = "rate_limit_triggered"
 REQUEST_BODY_REFUSED: str = "request_body_refused"
 # An API request that did not answer within its deadline (504).
 REQUEST_DEADLINE_EXCEEDED: str = "request_deadline_exceeded"
+# A server-side fetch of a tenant's address refused by the SSRF guard.
+OUTBOUND_FETCH_REFUSED: str = "outbound_fetch_refused"
 
 IPV4_LOGGED_PREFIX_LENGTH: int = 24
 IPV6_LOGGED_PREFIX_LENGTH: int = 48

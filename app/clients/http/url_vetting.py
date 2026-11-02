@@ -3,6 +3,11 @@ The checks an address passes before any lookup or connection: http(s),
 no credentials, port 80 or 443, a host name that is not an intranet name
 and, when the host is an IP literal, a public one. The host's DNS answer
 is checked later, when the connection is made (`VettingNetworkBackend`).
+
+Nothing is read over plain http: an http address (an owner's link, a
+redirect hop, an ICS feed) is read over https on port 443 instead, so the
+platform's requests and what comes back are never readable or changeable
+on the way (ASVS V12.3.2).
 """
 
 from dataclasses import dataclass
@@ -18,6 +23,8 @@ from app.clients.http.public_addresses import (
 from app.schemas.constants.web_fetching import WebFetchProblem
 
 DEFAULT_PORTS: dict[str, int] = {"http": 80, "https": 443}
+# The only scheme requests go out with; http addresses are upgraded to it.
+REQUEST_SCHEME: str = "https"
 # Characters kept as they are when a path or query is percent-encoded.
 SAFE_PATH_CHARACTERS: str = "/%:@!$&'()*+,;=-._~"
 SAFE_QUERY_CHARACTERS: str = SAFE_PATH_CHARACTERS + "?"
@@ -76,17 +83,23 @@ def vet_url(url: str) -> VettedUrl:
             WebFetchProblem.NOT_PUBLIC, "The address must be a public address."
         )
 
+    # http goes out as https: port 80 (said or meant) becomes 443.
+    request_port: int | None = port
+    if scheme != REQUEST_SCHEME:
+        effective_port = DEFAULT_PORTS[REQUEST_SCHEME]
+        request_port = None if port in {None, DEFAULT_PORTS[scheme]} else port
+
     netloc: str = f"[{host}]" if ":" in host else host
-    if port is not None:
-        netloc = f"{netloc}:{port}"
+    if request_port is not None:
+        netloc = f"{netloc}:{request_port}"
 
     return VettedUrl(
-        scheme=scheme,
+        scheme=REQUEST_SCHEME,
         host=host,
         port=effective_port,
         request_url=urlunsplit(
             (
-                scheme,
+                REQUEST_SCHEME,
                 netloc,
                 quote(parts.path or "/", safe=SAFE_PATH_CHARACTERS),
                 quote(parts.query, safe=SAFE_QUERY_CHARACTERS),

@@ -6,6 +6,8 @@ person, or a facilitator built without the people's store, tells nobody
 and never raises.
 """
 
+from datetime import timedelta
+
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -27,7 +29,7 @@ from app.transformers.notifications.staff_notification_text_transformer import (
     StaffNotificationTextTransformer,
 )
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
-from tests.notifications.alert_world import AlertWorld
+from tests.notifications.alert_world import NOON, AlertWorld
 from tests.notifications.staff_alert_fakes import TEST_ENCRYPTION_KEY
 from tests.operations.fakes import FakeLocalizedTextResolver
 
@@ -100,7 +102,7 @@ def test_two_changes_in_a_row_are_both_told() -> None:
     notices = build_notices(world, people(world, None))
 
     notices.notice_security_change(world.owner, SecurityChange.PASSKEY_ADDED, None)
-    world.clock.advance(1)
+    world.clock.move_to(NOON + timedelta(seconds=1))
     notices.notice_security_change(world.owner, SecurityChange.PASSKEY_REMOVED, None)
 
     briefs = [str(push.brief.detail) for push in world.push_queue.queued]

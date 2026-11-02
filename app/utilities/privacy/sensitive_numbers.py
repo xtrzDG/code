@@ -36,12 +36,13 @@ CARD_PLACEHOLDER: str = "[card number]"
 SECURITY_CODE_PLACEHOLDER: str = "[security code]"
 ACCOUNT_PLACEHOLDER: str = "[account number]"
 ID_NUMBER_PLACEHOLDER: str = "[id number]"
-# A run of at least 13 digits with single spaces or hyphens between them; a
-# run right after "+" is a phone number.
+# A run of at least 13 digits with single spaces or hyphens between them. A
+# run right after "+" is a phone number, one after a decimal point or
+# before a decimal part (0.30000000000000004) a fraction.
 DIGIT_RUN_PATTERN: re.Pattern[str] = re.compile(
-    r"(?<![\w+])\d(?:[  \-]?\d){12,}(?!\w)"
+    r"(?<!\d[.,])(?<![\d+])\d(?:[ \u00a0\-]?\d){12,}(?![.,]?\d)"
 )
-DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(r"[  \-]")
+DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(r"[ \u00a0\-]")
 # Two letters, two check digits, then 11 to 30 letters or digits.
 IBAN_CANDIDATE_PATTERN: re.Pattern[str] = re.compile(
     r"(?<!\w)[A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){11,30}(?!\w)"
