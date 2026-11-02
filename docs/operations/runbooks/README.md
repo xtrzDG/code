@@ -20,7 +20,7 @@ which runbook is `../dependency-map.md`.
 | [status-page-stale](status-page-stale.md) | `/status` says "monitoring delayed" | SEV2 |
 | [delivery-failures](delivery-failures.md) | `outbound_failures` | SEV2 |
 | [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors`, `quality_drop` | SEV2-SEV3 |
-| [sms-pumping](sms-pumping.md) | `otp_cap_trips` | SEV2 |
+| [sms-pumping](sms-pumping.md) | `otp_cap_trips`; "Sign-in codes sprayed" (e-mail and Sentry) | SEV2 |
 | [spend-spike](spend-spike.md) | provider budget e-mails, margin on Admin → Metrics | SEV2 |
 | [stalled-data-task](stalled-data-task.md) | `backfill_stalled`, the data-task card | SEV3 |
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |
@@ -49,8 +49,12 @@ The scripted game days run with the backend tests on every pull request,
 against a real Postgres and two processes (the API and a worker). The
 guards CI cannot replace run on a schedule instead: the restore drill
 (`restore-drill.yml`), the latency budgets (`perf.yml`), the nightly
-evals (`evals-nightly.yml`), the dynamic scan of the running stack
-(`zap.yml`) and the repository settings check (`repo-settings.yml`). A silent schedule is a failure too: every
+evals (`evals-nightly.yml`), the dynamic scans of the running stack and
+of staging (`zap.yml`, `zap-staging.yml`), the nightly dependency audit
+(`dependency-audit.yml`), the weekly rescan of the release images
+(`image-rescan.yml`), production's hourly synthetic checks
+(`synthetics.yml`) and the repository settings check (`repo-settings.yml`).
+A silent schedule is a failure too: every
 morning `schedule-watch.yml` opens an issue for each of them without a
 successful scheduled run in the last 8 days (once per workflow while it is
 open; a run by hand or by a pull request does not count). Close the issue

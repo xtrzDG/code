@@ -6,19 +6,27 @@ from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.public_api_use_cases import PublicApiUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.integrations.cancel_public_booking_orchestrator import (
+    CancelPublicBookingOrchestrator,
+)
 from app.orchestrators.integrations.create_public_records_orchestrators import (
     CreatePublicBookingOrchestrator,
     CreatePublicLeadOrchestrator,
 )
-from app.schemas.dto.public_api.commands import PublicBookingCommand, PublicLeadCommand
+from app.schemas.dto.public_api.commands import (
+    PublicBookingCancellation,
+    PublicBookingCommand,
+    PublicLeadCommand,
+)
 from app.schemas.dto.public_api.records import PublicBooking, PublicLead
 
 
 class PublicApiOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of the API keys and the public API (1181): one use case
-    each, but the creating operations, which run the cabinet's booking and
-    lead use cases between the API's own steps.
+    each, but the creating operations and the booking cancellation, which
+    run the cabinet's booking and lead use cases between the API's own
+    steps.
     """
 
     public_api_use_cases: PublicApiUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -69,6 +77,14 @@ class PublicApiOrchestratorsContainer(containers.DeclarativeContainer):
         CreatePublicBookingOrchestrator,
         start_booking=cases.start_public_booking_use_case,
         create_booking=booking_use_cases.create_manual_booking_use_case,
+        describe_booking=cases.describe_public_booking_use_case,
+    )
+    cancel_public_booking_orchestrator: Factory[
+        OrchestratorContract[PublicBookingCancellation, PublicBooking]
+    ] = Factory(
+        CancelPublicBookingOrchestrator,
+        start_cancellation=cases.start_public_booking_cancellation_use_case,
+        update_booking=booking_use_cases.update_booking_use_case,
         describe_booking=cases.describe_public_booking_use_case,
     )
     create_public_lead_orchestrator: Factory[

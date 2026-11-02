@@ -179,7 +179,28 @@ header (real-time ingestion). Langfuse retired the batch endpoint
 `LOG_FORMAT=json` (production): one JSON object per line with `request_id`,
 `trace_id`, `business_id`, `conversation_id`, `channel`, `job_name`,
 `job_id`. Render keeps logs for a short time only, so production logs go
-to an EU log store through a log drain (below).
+to an EU log store through a log drain (below). Each line's message has
+its e-mail addresses and `+` phone numbers masked
+(`app/utilities/observability/contact_log_masking.py`); bare digit runs,
+tracebacks and structured fields are not.
+
+### Security and payment events
+
+- Logger `app.security`, field `security_event`:
+  `webhook_delivery_refused`, `authorization_denied`,
+  `rate_limit_triggered`, `request_body_refused`,
+  `request_deadline_exceeded` and `job_tenant_mismatch`, with the path
+  template, `reason`, `client_network` (a /24 or /48, never the address)
+  and, where it applies, `provider`, `method`, `status`; no tokens, ids of
+  people or personal data. A 429 line is written at most once a minute
+  per route and network (`app/utilities/observability/security_events.py`,
+  `app/gateways/http/refusal_logging.py`).
+- Logger `app.payments`: `payment_order_opened`, `payment_state_changed`
+  and `payment_reconciliation_mismatch`, with ids, provider, purpose and
+  statuses only, never card data or amounts.
+- Worth an alert in the log store: a burst of `webhook_delivery_refused`
+  for one provider (a misconfigured secret after a rotation, or someone
+  probing the webhook), and any `job_tenant_mismatch`.
 
 ### Render log drain to an EU log store (30 days)
 

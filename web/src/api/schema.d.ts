@@ -5585,6 +5585,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/public-api/bookings/{booking_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Booking Record */
+        post: operations["public_api_cancel_booking_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/public-api/contacts": {
         parameters: {
             query?: never;
@@ -5852,6 +5869,23 @@ export interface paths {
         put?: never;
         /** Reschedule Managed Booking */
         post: operations["bookings_reschedule_managed_booking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Managed Booking Session */
+        post: operations["bookings_open_managed_booking_session"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9205,9 +9239,11 @@ export interface components {
         /**
          * CampaignSkipReason
          * @description Why a customer the rule found got no message: they said STOP (or are on
-         *     the suppression list, or blocked), are unknown or erased, can be reached
-         *     in no connected messenger, or only where the 24-hour window is closed
-         *     without an approved template.
+         *     the suppression list, or blocked), are unknown or erased, cannot be
+         *     reached in the chat the booking was made in (a messenger the business
+         *     has not connected, or a phone or website chat booking, which cannot
+         *     carry it), or only while its 24-hour window is closed without an
+         *     approved template.
          * @enum {string}
          */
         CampaignSkipReason: "opted_out" | "no_contact" | "no_channel" | "window_closed";
@@ -12668,7 +12704,10 @@ export interface components {
          *     customer came from when the message carried it (a tagged link, an ad):
          *     a conversation this message starts keeps it. `context_note` is what
          *     the message refers to that the assistant cannot see (a reply to the
-         *     business's Instagram story, a story mention).
+         *     business's Instagram story, a story mention). `client_ip_address` is a
+         *     website chat visitor's address (the widget and the hosted chat), kept
+         *     only while the event is: the anonymous bookings of one client network
+         *     are capped.
          */
         InboundCustomerMessage: {
             /** Acquisition Source */
@@ -12677,6 +12716,8 @@ export interface components {
             attachments?: components["schemas"]["InboundAttachment"][];
             /** Channel User Id */
             channel_user_id: string;
+            /** Client Ip Address */
+            client_ip_address?: string | null;
             /** Contact Name */
             contact_name?: string | null;
             /** Contact Phone Number */
@@ -12729,6 +12770,9 @@ export interface components {
          *     its author, its platform id the comment's). Written only once the
          *     comment-replies release gate opens; rows of the earlier kinds read
          *     unchanged.
+         *
+         *     Version 9: the customer message's `client_ip_address` (optional, a
+         *     website chat visitor's address for the anonymous booking cap).
          */
         InboundEventDocument: {
             /**
@@ -12778,7 +12822,7 @@ export interface components {
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 8
+             * @default 9
              */
             schema_version: string;
             /** @default received */
@@ -14012,6 +14056,19 @@ export interface components {
             started_at: number;
         };
         /**
+         * ManagedBookingSession
+         * @description The booking page's short-lived credential for its link: `token` opens
+         *     the same booking on every route of the page (in place of the link's
+         *     token) until `expires_at`, so the page can take the link's token out of
+         *     the address bar.
+         */
+        ManagedBookingSession: {
+            /** Expires At */
+            expires_at: number;
+            /** Token */
+            token: string;
+        };
+        /**
          * ManagedBookingSlots
          * @description When the booking could move to on one local date: the free start times
          *     of a time-slot booking (its length, party and service as booked), or
@@ -14042,6 +14099,9 @@ export interface components {
          *     to the business, the chat the booking was made in first.
          *     `marketing_consent` is whether the guest agreed to marketing messages
          *     and has not taken it back (the page's box, unticked until then).
+         *     `privacy_url` is the business's privacy notice: its own, else the
+         *     platform's default notice for its chat page (None while the cabinet's
+         *     address is not configured).
          */
         ManagedBookingView: {
             /** Address */
@@ -14087,6 +14147,8 @@ export interface components {
             party_size: number;
             /** Phone Number */
             phone_number?: string | null;
+            /** Privacy Url */
+            privacy_url?: string | null;
             /** Service Title */
             service_title?: string | null;
             status: components["schemas"]["BookingStatus"];
@@ -16256,8 +16318,9 @@ export interface components {
         /**
          * PhoneTestLinkView
          * @description A link the owner opens on their phone (or as a QR code) to write to
-         *     their own assistant: the hosted website chat page or the Telegram bot.
-         *     `is_answering` is False until the assistant is live there.
+         *     their own assistant: the Telegram bot (the website chat is tried on the
+         *     share links' `hosted_chat_url`). `is_answering` is False until the
+         *     assistant is live there.
          */
         PhoneTestLinkView: {
             channel: components["schemas"]["ChannelKind"];
@@ -18842,11 +18905,16 @@ export interface components {
         /**
          * TextBackTemplatePreview
          * @description The text-back in one language: the body to register as the WhatsApp
-         *     template (its one parameter {{1}} is the business name) and how a
-         *     caller reads it.
+         *     template (its one parameter {{1}} is the business name).
+         *
+         *     `example` (how a caller reads it) is deprecated: the cabinet no longer
+         *     shows it; it is still filled for clients of `/v1`.
          */
         TextBackTemplatePreview: {
-            /** Example */
+            /**
+             * Example
+             * @deprecated
+             */
             example: string;
             /** Language */
             language: string;
@@ -57710,6 +57778,96 @@ export interface operations {
             };
         };
     };
+    public_api_cancel_booking_record: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
+                /** @description `Bearer awk_…`: an API key from Settings → Integrations → API keys. */
+                authorization?: string | null;
+            };
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBooking"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     public_api_list_contacts_page: {
         parameters: {
             query?: {
@@ -59194,6 +59352,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ManagedBookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    bookings_open_managed_booking_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingSession"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

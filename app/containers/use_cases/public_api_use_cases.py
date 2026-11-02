@@ -21,7 +21,10 @@ from app.schemas.dto.integrations.api_key_views import (
     CreatedApiKey,
 )
 from app.schemas.dto.integrations.webhook_views import CreatedWebhookEndpoint
-from app.schemas.dto.operations.bookings import ManualBookingCommand
+from app.schemas.dto.operations.bookings import (
+    ManualBookingCommand,
+    UpdateBookingCommand,
+)
 from app.schemas.dto.public_api.access import (
     ApiKeyCredentials,
     ApiKeyPrincipal,
@@ -35,6 +38,7 @@ from app.schemas.dto.public_api.access import (
 )
 from app.schemas.dto.public_api.activity import PublicConversationDetail
 from app.schemas.dto.public_api.commands import (
+    PublicBookingCancellation,
     PublicBookingCommand,
     PublicLeadCommand,
     PublicWebhookCommand,
@@ -74,6 +78,9 @@ from app.use_cases.integrations.public_api.public_leads_use_cases import (
 from app.use_cases.integrations.public_api.public_webhook_subscriptions import (
     SubscribePublicWebhookUseCase,
     UnsubscribePublicWebhookUseCase,
+)
+from app.use_cases.integrations.public_api.start_public_cancellation_use_case import (
+    StartPublicCancellationUseCase,
 )
 from app.use_cases.integrations.public_api.start_public_booking_use_case import (
     StartPublicBookingUseCase,
@@ -230,6 +237,9 @@ class PublicApiUseCasesContainer(containers.DeclarativeContainer):
     start_public_booking_use_case: Reads[PublicBookingCommand, ManualBookingCommand] = (
         Factory(StartPublicBookingUseCase)
     )
+    start_public_booking_cancellation_use_case: Reads[
+        PublicBookingCancellation, UpdateBookingCommand
+    ] = Factory(StartPublicCancellationUseCase)
     start_public_lead_use_case: Reads[PublicLeadCommand, CreateLeadCommand] = Factory(
         StartPublicLeadUseCase,
         business_repo=businesses,

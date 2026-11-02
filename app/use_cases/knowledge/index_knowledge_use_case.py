@@ -138,8 +138,9 @@ class IndexKnowledgeUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             business,
             self._language_detector,
         )
-        brake = self._platform_brakes.current_brake(self._wall_clock.now_unix())
-        if planned and brake is not None:
+        if planned and (
+            brake := self._platform_brakes.current_brake(self._wall_clock.now_unix())
+        ):
             raise ExternalServiceError(f"Aliases wait: platform brake {brake}.")
 
         named: int = 0

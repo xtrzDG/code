@@ -60,6 +60,9 @@ class PublicApiPipelinesContainer(containers.DeclarativeContainer):
     create_public_booking_pipeline = orchestrator_pipeline(
         public_api.create_public_booking_orchestrator
     )
+    cancel_public_booking_pipeline = orchestrator_pipeline(
+        public_api.cancel_public_booking_orchestrator
+    )
     create_public_lead_pipeline = orchestrator_pipeline(
         public_api.create_public_lead_orchestrator
     )

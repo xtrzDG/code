@@ -67,6 +67,9 @@ class PublicApiOperatorsContainer(containers.DeclarativeContainer):
     create_public_booking_operator = pipeline_operator(
         pipelines.create_public_booking_pipeline, storage_scope
     )
+    cancel_public_booking_operator = pipeline_operator(
+        pipelines.cancel_public_booking_pipeline, storage_scope
+    )
     create_public_lead_operator = pipeline_operator(
         pipelines.create_public_lead_pipeline, storage_scope
     )

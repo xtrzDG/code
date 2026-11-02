@@ -12,7 +12,7 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
-from app.schemas.typings.bookings.prefixed_id import ResourceId
+from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import (
     BookingNote,
     LeadBudgetText,
@@ -73,6 +73,12 @@ class PublicWebhookRequest(ImmutableDTO):
 
 class PublicBookingCommand(PublicApiCall):
     request: PublicBookingRequest
+
+
+class PublicBookingCancellation(PublicApiCall):
+    """`POST /v1/public-api/bookings/{booking_id}/cancel`: the booking to cancel."""
+
+    booking_id: BookingId
 
 
 class PublicLeadCommand(PublicApiCall):

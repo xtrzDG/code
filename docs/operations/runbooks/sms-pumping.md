@@ -4,6 +4,12 @@
 in the last 15-30 minutes. The platform admins also get one e-mail per cap
 an hour (`PLATFORM_ADMIN_EMAILS`) and Sentry an event.
 
+**Also:** the e-mail and Sentry warning "Sign-in codes sprayed: the
+network … asked codes for …": one client network asked codes for 10 or
+more different phones or e-mails within an hour (pumping, account
+enumeration or a takeover attempt across accounts). It refuses nothing on
+its own (`app/use_cases/users/otp_login/login_code_spray.py`).
+
 ## How it shows
 
 - Login codes to many new numbers of one country or prefix, from few
@@ -22,6 +28,9 @@ an hour (`PLATFORM_ADMIN_EMAILS`) and Sentry an event.
 3. Logs and Sentry: the cap alert's warning names the cap, its hourly
    limit and the country; the API's access log shows whether the requests
    come from one network or many.
+4. For a spray from one network: Admin → Audit (failed sign-in checks of
+   that network) and the SMS provider's logs for the destinations it
+   asked; whether any of them signed in afterwards.
 
 ## Mitigate
 
@@ -33,6 +42,9 @@ an hour (`PLATFORM_ADMIN_EMAILS`) and Sentry an event.
   does not serve.
 - Lower the country cap for the duration; real owners can still sign in by
   e-mail or Telegram.
+- A spraying network: block it at the edge (the CDN or Render's network
+  rules) for the duration; tell the owners of accounts it reached to
+  check their devices (Account → Security, "Sign out everywhere").
 
 ## Afterwards
 

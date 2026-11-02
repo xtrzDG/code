@@ -24,6 +24,7 @@ from app.gateways.http.strict_request_parsing import (
 from app.schemas.dto.integrations.webhook_views import CreatedWebhookEndpoint
 from app.schemas.dto.public_api.access import ApiKeyPrincipal
 from app.schemas.dto.public_api.commands import (
+    PublicBookingCancellation,
     PublicBookingCommand,
     PublicBookingRequest,
     PublicLeadCommand,
@@ -33,6 +34,7 @@ from app.schemas.dto.public_api.commands import (
     PublicWebhookRequest,
 )
 from app.schemas.dto.public_api.records import PublicBooking, PublicLead
+from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.integrations.prefixed_id import WebhookEndpointId
 
 read_booking_body = build_json_body_dependency(PublicBookingRequest)
@@ -44,6 +46,7 @@ def build_public_api_write_router(
     *,
     api_key: ApiKeyAuthentication,
     create_booking: OperatorContract[PublicBookingCommand, PublicBooking],
+    cancel_booking: OperatorContract[PublicBookingCancellation, PublicBooking],
     create_lead: OperatorContract[PublicLeadCommand, PublicLead],
     subscribe_webhook: OperatorContract[PublicWebhookCommand, CreatedWebhookEndpoint],
     unsubscribe_webhook: OperatorContract[PublicWebhookRemoval, None],
@@ -52,6 +55,10 @@ def build_public_api_write_router(
     """
     Writes of the key's business:
         POST   /v1/public-api/bookings        `bookings:write` (201)
+        POST   /v1/public-api/bookings/{id}/cancel
+                                              `bookings:write`: the
+                                              cancelled booking (200, again
+                                              for a cancelled one)
         POST   /v1/public-api/leads           `leads:write` (201)
         POST   /v1/public-api/webhooks        `webhooks:manage`: subscribe a
                                               URL to events, the signing
@@ -73,6 +80,20 @@ def build_public_api_write_router(
     ) -> PublicBooking:
         return create_booking.operate(
             PublicBookingCommand(principal=principal, request=body)
+        )
+
+    @router.post(
+        f"{PUBLIC_API_PATH}/bookings/{{booking_id}}/cancel",
+        dependencies=[Depends(idempotent)],
+    )
+    def cancel_booking_record(
+        booking_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
+    ) -> PublicBooking:
+        return cancel_booking.operate(
+            PublicBookingCancellation(
+                principal=principal,
+                booking_id=parse_path_identifier(booking_id, BookingId, "Booking"),
+            )
         )
 
     @router.post(

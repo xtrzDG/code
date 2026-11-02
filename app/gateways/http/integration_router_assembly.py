@@ -65,6 +65,7 @@ def build_integration_routers(
         build_public_api_write_router(
             api_key=api_key,
             create_booking=public_api.create_public_booking_operator(),
+            cancel_booking=public_api.cancel_public_booking_operator(),
             create_lead=public_api.create_public_lead_operator(),
             subscribe_webhook=public_api.subscribe_public_webhook_operator(),
             unsubscribe_webhook=public_api.unsubscribe_public_webhook_operator(),

@@ -8165,7 +8165,7 @@
         "type": "object"
       },
       "CampaignSkipReason": {
-        "description": "Why a customer the rule found got no message: they said STOP (or are on\nthe suppression list, or blocked), are unknown or erased, can be reached\nin no connected messenger, or only where the 24-hour window is closed\nwithout an approved template.",
+        "description": "Why a customer the rule found got no message: they said STOP (or are on\nthe suppression list, or blocked), are unknown or erased, cannot be\nreached in the chat the booking was made in (a messenger the business\nhas not connected, or a phone or website chat booking, which cannot\ncarry it), or only while its 24-hour window is closed without an\napproved template.",
         "enum": [
           "opted_out",
           "no_contact",
@@ -16713,7 +16713,7 @@
       },
       "InboundCustomerMessage": {
         "additionalProperties": false,
-        "description": "A customer's message as the channel adapter read it from the webhook:\nthe typed text and the attachments (voice notes, photos, places, ...),\nwhose files the worker fetches. `acquisition_source` is where the\ncustomer came from when the message carried it (a tagged link, an ad):\na conversation this message starts keeps it. `context_note` is what\nthe message refers to that the assistant cannot see (a reply to the\nbusiness's Instagram story, a story mention).",
+        "description": "A customer's message as the channel adapter read it from the webhook:\nthe typed text and the attachments (voice notes, photos, places, ...),\nwhose files the worker fetches. `acquisition_source` is where the\ncustomer came from when the message carried it (a tagged link, an ad):\na conversation this message starts keeps it. `context_note` is what\nthe message refers to that the assistant cannot see (a reply to the\nbusiness's Instagram story, a story mention). `client_ip_address` is a\nwebsite chat visitor's address (the widget and the hosted chat), kept\nonly while the event is: the anonymous bookings of one client network\nare capped.",
         "properties": {
           "acquisition_source": {
             "anyOf": [
@@ -16739,6 +16739,17 @@
           "channel_user_id": {
             "title": "Channel User Id",
             "type": "string"
+          },
+          "client_ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Ip Address"
           },
           "contact_name": {
             "anyOf": [
@@ -16789,7 +16800,7 @@
       },
       "InboundEventDocument": {
         "additionalProperties": false,
-        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.\n\nVersion 7: the customer message's `context_note` (optional) and\n`queue_to_claim_ms`, how long the message waited from being queued to a\nworker taking it to answer (optional, kept from the first take).\n\nVersion 8: the kind `comment_trigger`, an Instagram comment that named\none of the owner's keywords (its customer message is the comment and\nits author, its platform id the comment's). Written only once the\ncomment-replies release gate opens; rows of the earlier kinds read\nunchanged.",
+        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.\n\nVersion 7: the customer message's `context_note` (optional) and\n`queue_to_claim_ms`, how long the message waited from being queued to a\nworker taking it to answer (optional, kept from the first take).\n\nVersion 8: the kind `comment_trigger`, an Instagram comment that named\none of the owner's keywords (its customer message is the comment and\nits author, its platform id the comment's). Written only once the\ncomment-replies release gate opens; rows of the earlier kinds read\nunchanged.\n\nVersion 9: the customer message's `client_ip_address` (optional, a\nwebsite chat visitor's address for the anonymous booking cap).",
         "properties": {
           "attempts": {
             "default": 0,
@@ -16969,7 +16980,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "8",
+            "default": "9",
             "title": "Schema Version",
             "type": "string"
           },
@@ -19992,6 +20003,29 @@
         "title": "MaintenanceRunView",
         "type": "object"
       },
+      "ManagedBookingSession": {
+        "additionalProperties": false,
+        "description": "The booking page's short-lived credential for its link: `token` opens\nthe same booking on every route of the page (in place of the link's\ntoken) until `expires_at`, so the page can take the link's token out of\nthe address bar.",
+        "properties": {
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "token": {
+            "maxLength": 120,
+            "minLength": 40,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at"
+        ],
+        "title": "ManagedBookingSession",
+        "type": "object"
+      },
       "ManagedBookingSlots": {
         "additionalProperties": false,
         "description": "When the booking could move to on one local date: the free start times\nof a time-slot booking (its length, party and service as booked), or\nfor a stay whether its nights are free from that date (`times` empty).",
@@ -20044,7 +20078,7 @@
       },
       "ManagedBookingView": {
         "additionalProperties": false,
-        "description": "The guest's booking as the manage page shows it, in the business's\ntime zone: no contact details of the guest (anyone holding the link\nsees the page). `token` is the link's current token (a move issues a\nnew one); `language` is the guest's. `chat_links` are the ways to write\nto the business, the chat the booking was made in first.\n`marketing_consent` is whether the guest agreed to marketing messages\nand has not taken it back (the page's box, unticked until then).",
+        "description": "The guest's booking as the manage page shows it, in the business's\ntime zone: no contact details of the guest (anyone holding the link\nsees the page). `token` is the link's current token (a move issues a\nnew one); `language` is the guest's. `chat_links` are the ways to write\nto the business, the chat the booking was made in first.\n`marketing_consent` is whether the guest agreed to marketing messages\nand has not taken it back (the page's box, unticked until then).\n`privacy_url` is the business's privacy notice: its own, else the\nplatform's default notice for its chat page (None while the cabinet's\naddress is not configured).",
         "properties": {
           "address": {
             "anyOf": [
@@ -20170,6 +20204,20 @@
               }
             ],
             "title": "Phone Number"
+          },
+          "privacy_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Url"
           },
           "service_title": {
             "anyOf": [
@@ -25695,7 +25743,7 @@
       },
       "PhoneTestLinkView": {
         "additionalProperties": false,
-        "description": "A link the owner opens on their phone (or as a QR code) to write to\ntheir own assistant: the hosted website chat page or the Telegram bot.\n`is_answering` is False until the assistant is live there.",
+        "description": "A link the owner opens on their phone (or as a QR code) to write to\ntheir own assistant: the Telegram bot (the website chat is tried on the\nshare links' `hosted_chat_url`). `is_answering` is False until the\nassistant is live there.",
         "properties": {
           "channel": {
             "$ref": "#/components/schemas/ChannelKind"
@@ -32115,9 +32163,10 @@
       },
       "TextBackTemplatePreview": {
         "additionalProperties": false,
-        "description": "The text-back in one language: the body to register as the WhatsApp\ntemplate (its one parameter {{1}} is the business name) and how a\ncaller reads it.",
+        "description": "The text-back in one language: the body to register as the WhatsApp\ntemplate (its one parameter {{1}} is the business name).\n\n`example` (how a caller reads it) is deprecated: the cabinet no longer\nshows it; it is still filled for clients of `/v1`.",
         "properties": {
           "example": {
+            "deprecated": true,
             "title": "Example",
             "type": "string"
           },
@@ -96214,6 +96263,144 @@
         ]
       }
     },
+    "/v1/public-api/bookings/{booking_id}/cancel": {
+      "post": {
+        "operationId": "public_api_cancel_booking_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBooking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Cancel Booking Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
     "/v1/public-api/contacts": {
       "get": {
         "operationId": "public_api_list_contacts_page",
@@ -98466,6 +98653,108 @@
           }
         },
         "summary": "Reschedule Managed Booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/session": {
+      "post": {
+        "operationId": "bookings_open_managed_booking_session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingSession"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Open Managed Booking Session",
         "tags": [
           "bookings"
         ]

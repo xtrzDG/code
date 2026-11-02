@@ -101,11 +101,63 @@ def test_phones_of_any_country_are_stored_in_e164(
         harness,
         business.id,
         ContactsAndHoursStepInput(
+            contacts=ContactsInput(public_phone_number=RawPhoneNumberInput(raw_phone))
+        ),
+    )
+
+    assert result.profile.contacts.public_phone_number == expected_e164
+
+
+@pytest.mark.parametrize(
+    ("country_code", "raw_phone", "expected_e164"),
+    [
+        ("DE", "030 1234567", "+49301234567"),
+        ("JP", "090-1234-5678", "+819012345678"),
+        # Another EU state's mobile.
+        ("DE", "+39 333 123 4567", "+393331234567"),
+    ],
+)
+def test_the_staff_number_is_one_calls_may_go_to(
+    country_code: str, raw_phone: str, expected_e164: str
+) -> None:
+    harness = KnowledgeHarness()
+    business = harness.add_business(country_code=country_code)
+
+    result = save_step(
+        harness,
+        business.id,
+        ContactsAndHoursStepInput(
             contacts=ContactsInput(handoff_phone_number=RawPhoneNumberInput(raw_phone))
         ),
     )
 
     assert result.profile.contacts.handoff_phone_number == expected_e164
+
+
+@pytest.mark.parametrize(
+    "raw_phone",
+    [
+        "+1 212 555 0100",  # Outside the business's country and the EU.
+        "+39 899 123 456",  # An Italian premium number.
+        "+881 6 1234 5678",  # A satellite number.
+    ],
+)
+def test_a_staff_number_calls_may_not_go_to_is_refused(raw_phone: str) -> None:
+    harness = KnowledgeHarness()
+    business = harness.add_business()
+
+    with pytest.raises(ValidationFailedError, match="handoff_phone_number"):
+        save_step(
+            harness,
+            business.id,
+            ContactsAndHoursStepInput(
+                contacts=ContactsInput(
+                    handoff_phone_number=RawPhoneNumberInput(raw_phone)
+                )
+            ),
+        )
+
+    assert harness.business_profile_repo.get_by_business(business.id) is None
 
 
 def test_invalid_phone_rejects_the_whole_step() -> None:
