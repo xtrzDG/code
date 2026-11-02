@@ -35,6 +35,7 @@ IDEMPOTENT_OPERATIONS: set[str] = {
     "POST /v1/businesses/{business_id}/phone-line/number",
     "POST /v1/businesses/{business_id}/phone-line/request",
     "POST /v1/public-api/bookings",
+    "POST /v1/public-api/bookings/{booking_id}/cancel",
     "POST /v1/public-api/leads",
     "POST /v1/public-api/webhooks",
 }

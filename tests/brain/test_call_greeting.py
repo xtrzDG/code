@@ -28,8 +28,8 @@ from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_RECORDING_NOTICE,
 )
 from tests.brain.brain_world import build_world
-from tests.brain.call_recording_settings import record_calls
 from tests.brain.business_setups import BusinessSetup
+from tests.brain.call_recording_settings import record_calls
 from tests.brain.scripted_turns import scripted
 
 
