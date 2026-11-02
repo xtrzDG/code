@@ -92,6 +92,16 @@ class RunQueuedAutotestsOrchestrator(OrchestratorContract[QueuedJobInput, JobRep
     def _play(self, input_data: QueuedJobInput) -> JobReport:
         plan: AutotestRunPlan = self._resume_autotest_run.run(input_data)
         if not plan.scenarios:
+            # Nothing to play: the run finished already (a repeated job) or
+            # was skipped as it started (a platform brake). An apply waiting
+            # for these checks learns how they ended; publishing the applied
+            # version acts only on an apply still waiting for this version.
+            self._publish_applied_version.run(
+                AppliedVersion(
+                    business_id=plan.business.id,
+                    assistant_version_id=plan.version.id,
+                )
+            )
             return JobReport(processed_count=ProcessedItemCount(0))
 
         chats, calls = split_voice_checks(plan.scenarios)

@@ -146,7 +146,9 @@ service refuses and limits at each boundary, with its code and tests:
   team after the resume. A call that ends while a brake holds keeps no
   summary and no memory (skipped, not queued again), and an autotest run
   the brake skipped reads as ERRORED; an "Apply changes" whose checks it
-  skipped stays at the checking stage (the owner can apply again).
+  skipped waits for the owner as "checks stopped" and nothing goes live
+  (tests/setup/test_apply_under_brake.py); the owner applies again once
+  the brake lifts.
 - No account deletion in the cabinet: a person cannot delete their account,
   nor an owner the business with all its data; it is done by the platform
   team on request (DPA section 13). Closed by R15-ACCOUNT-DELETION.
