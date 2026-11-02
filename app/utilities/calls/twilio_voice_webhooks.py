@@ -100,17 +100,25 @@ def is_valid_twilio_signature(
     )
 
 
-def build_dial_twiml(number: str, action_url: str) -> str:
+def build_dial_twiml(number: str, action_url: str, caller_id: str) -> str:
     """
     Put the caller through to `number`: it rings DIAL_TIMEOUT_SECONDS, the
-    caller hears ringing until someone answers (answerOnBridge) and sees
-    their own number, and Twilio reports how it ended to `action_url`.
+    caller hears ringing until someone answers (answerOnBridge), and
+    Twilio reports how it ended to `action_url`.
+
+    The staff phone sees `caller_id`, the platform's own number that was
+    called (the rented line), never the caller's number: a call the
+    platform originates presents only a number assigned to it, so it can
+    impersonate nobody and is not dropped by the carriers' anti-spoofing
+    filters (AGCOM 106/25/CONS for Italian numbers). Twilio refuses any
+    caller id the account does not own.
     """
 
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         "<Response>"
         f'<Dial timeout="{DIAL_TIMEOUT_SECONDS}" answerOnBridge="true" '
+        f'callerId="{escape(caller_id, quote=True)}" '
         f'action="{escape(action_url, quote=True)}" method="POST">'
         f"<Number>{escape(number, quote=True)}</Number>"
         "</Dial>"

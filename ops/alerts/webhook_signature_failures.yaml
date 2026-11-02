@@ -1,0 +1,16 @@
+# Webhook deliveries refused as unsigned, badly signed or stale (every
+# app.security line with security_event=webhook_delivery_refused, also
+# the floods the admission middleware refuses), counted by the API
+# processes (platform signal webhook_refused, at most one a second per
+# process). A burst means a webhook secret out of step after a rotation
+# or someone probing the webhooks.
+code: webhook_signature_failures
+severity: sev2
+summary: More than 30 webhook deliveries were refused as unsigned, badly signed or stale in 15 to 30 minutes.
+measure: webhook deliveries refused in the last 15 to 30 minutes
+threshold: 30
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (platform-signal:webhook_refused)
+runbook: docs/operations/runbooks/webhook-signature-failures.md

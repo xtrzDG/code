@@ -26,6 +26,8 @@ KEY_LABEL: bytes = b"assistant-workshop/suppression-list/v1"
 DEVELOPMENT_KEY_TEXT: str = "assistant-workshop development suppression key"
 # Fixed namespace of the entries' derived ids (never change it).
 SUPPRESSION_ENTRY_NAMESPACE: UUID = UUID("3d1f6c2a-9b7e-4c51-8a0d-62e4f1b9c735")
+# Fixed namespace of the erasure entries' ids (never change it either).
+ERASURE_ENTRY_NAMESPACE: UUID = UUID("8a4c2e71-5d3b-4f09-b6e2-1c7d9a0f3e58")
 
 
 def derive_suppression_key(
@@ -84,3 +86,15 @@ def suppression_entry_id(
     return SuppressionEntryId(
         uuid5(SUPPRESSION_ENTRY_NAMESPACE, f"{business_id}|{digest}")
     )
+
+
+def erasure_entry_id(
+    business_id: BusinessId, digest: SuppressionDigest
+) -> SuppressionEntryId:
+    """
+    One erasure entry per identity and business: an id apart from the
+    STOP entry's, so the STOP checks (by `suppression_entry_id`) never
+    read it and a START never lifts it.
+    """
+
+    return SuppressionEntryId(uuid5(ERASURE_ENTRY_NAMESPACE, f"{business_id}|{digest}"))

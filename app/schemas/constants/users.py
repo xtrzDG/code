@@ -24,10 +24,14 @@ class BusinessMemberRole(StrEnum):
 class LoginRiskSignal(StrEnum):
     """
     Why a login code request needs a bot check (Cloudflare Turnstile)
-    before the paid send.
+    before the paid send. None depends on whether the phone or e-mail
+    belongs to someone, so the answer never tells (no enumeration): every
+    phone is checked (SMS_DESTINATION, a paid text message that SMS
+    pumping abuses), and the rest look at the client and the platform.
+    Answers only (never stored).
     """
 
-    NEW_DESTINATION = "new_destination"
+    SMS_DESTINATION = "sms_destination"
     BUSY_CLIENT_ADDRESS = "busy_client_address"
     HIGH_PLATFORM_USAGE = "high_platform_usage"
     HIGH_RISK_COUNTRY = "high_risk_country"

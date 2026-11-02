@@ -8,6 +8,7 @@ from starlette.types import Lifespan
 
 from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.contracts.service_metrics import ServiceMetricsContract
+from app.gateways.failure_signals import FailureSignals
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.idempotency.idempotent_requests import (
@@ -73,6 +74,7 @@ def build_http_application(
     service_metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     span_tracer: SpanTracer = NO_SPAN_TRACER,
     api_availability: ApiAvailabilityTally | None = None,
+    failure_signals: FailureSignals | None = None,
 ) -> FastAPI:
     """
     Build the HTTP application.
@@ -98,6 +100,8 @@ def build_http_application(
     (`span_tracer`), its trace id in its log lines, and counted for the API
     availability SLI (`api_availability`). Creating routes with an
     Idempotency-Key keep their answer for retries (`install_idempotency`).
+    With `failure_signals` the application counts refused webhooks, slow
+    requests and storage failures for the platform alerts (LOG-04).
     """
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
@@ -113,6 +117,8 @@ def build_http_application(
         # its address once its route is known (the middleware below).
         dependencies=[Depends(admit_anonymous_request)],
     )
+    if failure_signals is not None:
+        http_application.state.failure_signals = failure_signals
     install_error_handlers(http_application)
     # Innermost: keeps the answers of requests with an Idempotency-Key.
     install_idempotency(http_application)
@@ -123,6 +129,8 @@ def build_http_application(
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
         error_reporter.capture_exception(error)
+        if failure_signals is not None:
+            failure_signals.count_store_failure(error)
         headers: dict[str, str] = (
             dict(WIDGET_CORS_HEADERS) if is_widget_path(request.url.path) else {}
         )
@@ -174,6 +182,7 @@ def build_http_application(
         metrics=service_metrics,
         tracer=span_tracer,
         api_availability=api_availability,
+        failure_signals=failure_signals,
     )
     # Outside every layer but the security headers, so the request id is
     # bound before anything else runs.

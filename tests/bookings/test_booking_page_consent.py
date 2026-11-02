@@ -11,6 +11,7 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -188,6 +189,7 @@ def test_a_change_without_the_wording_is_refused_before_anything_is_read() -> No
         card_repo=cast(CustomerCardRepoContract, object()),
         audit_log_repo=cast(AuditLogRepoContract, object()),
         wall_clock=AdjustableClock().build_wall_clock(),
+        consent_record_repo=cast(ConsentRecordRepoContract, object()),
     )
 
     with pytest.raises(ValidationFailedError):

@@ -11,7 +11,6 @@ from app.schemas.dto.integrations.api_key_views import ApiKeyView
 from app.schemas.dto.public_api.access import ApiKeyPrincipal
 from app.schemas.exceptions.application_errors import AccessDeniedError, ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.integrations.constrained_integers import ApiKeyCount
 from app.schemas.typings.platform.constrained_strings import (
     ErrorReasonCode,
@@ -20,7 +19,6 @@ from app.schemas.typings.platform.constrained_strings import (
 from app.schemas.typings.platform.strings import ErrorReasonMessage
 
 MAX_API_KEYS: ApiKeyCount = ApiKeyCount(10)
-API_KEY_ENTITY: AuditEntityName = AuditEntityName("api_key")
 TOO_MANY_MESSAGE: str = "A business has at most 10 active API keys; revoke one first."
 MISSING_SCOPE_MESSAGE: str = "This API key may not do that; give it the scope."
 

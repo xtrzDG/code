@@ -49,6 +49,7 @@ def payment_root_provider(
             brand_repo=repositories.brand_repo,
             user_repo=repositories.user_repo,
             payment_gateway=adapters.payment_gateway,
+            payment_notification_lock=registries.payment_notification_lock_registry,
             plan_registry=registries.plan_registry,
             invoice_issuing=facilitators.invoice_issuing_facilitator,
             manager_notifier=facilitators.manager_notification_facilitator,

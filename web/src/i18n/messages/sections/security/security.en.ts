@@ -14,7 +14,17 @@ export const securityEn = {
       "This business asks everyone in its team to sign in with an authenticator app. Set one up below, then continue.",
     admin:
       "The admin pages need a sign-in with an authenticator app. Set one up below, or confirm with it, then continue.",
+    adminPasskey: "The admin pages need a passkey. Add one below, then continue.",
     continue: "Continue",
+  },
+  suggestion: {
+    title: "Protect your business with a second step",
+    body: "Your cabinet holds your customers' names, phone numbers and conversations. With a second step, a stolen login code alone cannot open it.",
+    passkey: "A passkey: your phone's or computer's fingerprint, face or screen lock.",
+    app: "Or an authenticator app: a six-digit code after the login code.",
+    setUp: "Set it up now",
+    later: "Not now",
+    reminder: "We ask again at your next sign-in until you set one up.",
   },
   app: {
     title: "Authenticator app",

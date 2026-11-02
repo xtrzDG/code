@@ -2,15 +2,18 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.customer_repositories import (
     CustomerCardRepoContract,
     CustomerSettingsRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.contacts import ContactDocument
+from app.schemas.constants.consent_records import ConsentEventSource
+from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.domain.customer_settings import CustomerSettingsDocument
 from app.schemas.dto.access import BusinessAccessRequest
+from app.schemas.dto.customers.consent_records import ConsentOrigin
 from app.schemas.dto.customers.customer_card import (
     ChangeCustomerCardCommand,
     CustomerCardView,
@@ -22,6 +25,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.contacts.constrained_strings import CustomerTag
 from app.use_cases.contacts.customer_card_views import card_change_entry, card_view
 from app.use_cases.contacts.marketing_consent_views import record_in_person
+from app.use_cases.shared.consent_ledger import record_consent_change
 from app.utilities.customers.customer_card import (
     add_tags,
     remember_tags,
@@ -40,7 +44,9 @@ class ChangeCustomerCardUseCase(
     tagging at once both land, and a turn saving the contact meanwhile
     keeps it. Tags compare without case; a customer carries at most 20;
     the business's list of tags remembers the new ones first. An erased
-    customer has no card. Audited (UPDATE of the contact).
+    customer has no card. Audited (UPDATE of the contact); a consent given
+    or taken back is also an entry of the consent ledger (who recorded it,
+    the wording's version, the team member's network).
     """
 
     def __init__(
@@ -53,8 +59,10 @@ class ChangeCustomerCardUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         suppression_list: SuppressionListContract,
+        consent_record_repo: ConsentRecordRepoContract,
     ) -> None:
         self._suppression_list: SuppressionListContract = suppression_list
+        self._consent_record_repo: ConsentRecordRepoContract = consent_record_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -80,6 +88,8 @@ class ChangeCustomerCardUseCase(
         now: Microseconds = self._wall_clock.now_unix()
         request = input_data.request
         added: list[CustomerTag] = []
+        # The consent as stored before the change that went through.
+        consent_before: list[MarketingConsent | None] = []
 
         def change(contact: ContactDocument) -> None:
             if contact.erased_at is not None:
@@ -92,6 +102,7 @@ class ChangeCustomerCardUseCase(
             if request.is_vip is not None:
                 contact.is_vip = request.is_vip
             if request.marketing_consent is not None:
+                consent_before.append(contact.marketing_consent)
                 record_in_person(
                     contact, request.marketing_consent, input_data.user_id, now
                 )
@@ -101,6 +112,20 @@ class ChangeCustomerCardUseCase(
         )
         if changed is None:
             raise NotFoundError(f"Contact {input_data.contact_id} was not found.")
+
+        if consent_before:
+            record_consent_change(
+                self._consent_record_repo,
+                changed,
+                consent_before[-1],
+                changed.marketing_consent,
+                ConsentOrigin(
+                    source=ConsentEventSource.IN_PERSON,
+                    recorded_by=input_data.user_id,
+                    client_ip_address=input_data.client_ip_address,
+                ),
+                now,
+            )
 
         settings: CustomerSettingsDocument | None = (
             self._remember(business, added, now)

@@ -26,7 +26,10 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.conversations.staff_reply_deliveries import with_staff_deliveries
+from app.utilities.conversations.platform_details import message_page_for
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
@@ -53,7 +56,11 @@ class ListConversationMessagesUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         outbound_message_repo: OutboundMessageRepoContract,
+        see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = None,
     ) -> None:
+        self._see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = (
+            see_platform_details
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -104,7 +111,7 @@ class ListConversationMessagesUseCase(
                 updated_at=now,
             )
         )
-        return MessagePage(
+        page = MessagePage(
             items=with_staff_deliveries(
                 business.id,
                 newest_first,
@@ -115,4 +122,9 @@ class ListConversationMessagesUseCase(
                 self._outbound_message_repo,
             ),
             next_cursor=next_cursor,
+        )
+        return message_page_for(
+            page,
+            self._see_platform_details is not None
+            and self._see_platform_details.run(input_data.user_id),
         )

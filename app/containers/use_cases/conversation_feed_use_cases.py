@@ -39,6 +39,8 @@ from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersi
 from app.schemas.dto.media import MessageMediaQuery, StoredMediaFile
 from app.schemas.dto.quality import ConversationQualityQuery, ConversationQualityView
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.conversations.answer_fixes.correct_answer_use_case import (
     CorrectAnswerUseCase,
 )
@@ -66,6 +68,9 @@ from app.use_cases.conversations.rate_conversation_use_case import (
 )
 from app.use_cases.conversations.resolve_test_chat_version_use_case import (
     ResolveTestChatVersionUseCase,
+)
+from app.use_cases.conversations.see_platform_details_use_case import (
+    SeePlatformDetailsUseCase,
 )
 from app.use_cases.conversations.send_staff_message_use_case import (
     SendStaffMessageUseCase,
@@ -104,6 +109,14 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         read_session=adapters.storage_read_session,
     )
+    # Whether a person sees a conversation's platform details (admins only).
+    see_platform_details_use_case: Factory[UseCaseContract[UserId, IsPlatformAdmin]] = (
+        Factory(
+            SeePlatformDetailsUseCase,
+            user_repo=repositories.user_repo,
+            platform_admins=registries.platform_admin_registry,
+        )
+    )
     get_conversation_use_case: Factory[
         UseCaseContract[ConversationQuery, ConversationDetailView]
     ] = Factory(
@@ -125,6 +138,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         outbound_message_repo=repositories.outbound_message_repo,
         read_session=adapters.storage_read_session,
+        see_platform_details=see_platform_details_use_case,
     )
     # The judge's score of the conversation (production quality), if sampled.
     get_conversation_quality_use_case: Factory[
@@ -145,6 +159,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         outbound_message_repo=repositories.outbound_message_repo,
+        see_platform_details=see_platform_details_use_case,
     )
     get_message_media_use_case: Factory[
         UseCaseContract[MessageMediaQuery, StoredMediaFile]

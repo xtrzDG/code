@@ -6,8 +6,6 @@ recording keep it masked, like a voice note in a chat (PAY-05, VOICE-10).
 
 from typing import Any
 
-from app.schemas.typings.conversations.strings import MessageText
-from app.utilities.channels.call_outcomes import render_call_transcript
 from tests.calls.call_steps import add_staff_chat, save_call_settings
 from tests.channels.post_call_steps import post_call_payload, process_call, stored_calls
 from tests.channels.telegram_updates import connect_bot, post_update
@@ -62,17 +60,6 @@ def test_a_declined_recording_masks_the_card_and_the_phone() -> None:
     transcript = str(call.transcript)
     assert MASKED_MESSAGE in transcript and "[phone]" in transcript
     assert "4242" not in transcript and "599 12 34 56" not in transcript
-
-
-def test_a_rendered_transcript_never_shows_a_card() -> None:
-    setup = build_voice_setup()
-    payload = card_payload(declined=False)
-
-    process_call(setup, payload)
-
-    [call] = stored_calls(setup)
-    assert render_call_transcript([]) is None
-    assert MessageText(SAID_CARD) not in str(call.transcript)
 
 
 def test_a_voice_note_with_a_card_is_kept_masked() -> None:

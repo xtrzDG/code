@@ -2,6 +2,10 @@ import re
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.login_protection import TurnstileVerificationClientContract
 from app.schemas.dto.login_protection import TurnstileVerification
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -48,10 +52,11 @@ class TurnstileVerificationClient(TurnstileVerificationClientContract):
         base_url: str = TURNSTILE_API_BASE_URL,
     ) -> None:
         self._secret_key: PlatformSecret = secret_key
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def verify(

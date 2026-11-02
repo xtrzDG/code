@@ -1,5 +1,9 @@
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.meta.graph_api_client import (
     DEFAULT_GRAPH_API_VERSION,
     META_GRAPH_BASE_URL,
@@ -32,10 +36,11 @@ class MetaTypingClient(MetaTypingClientContract):
         api_version: str = DEFAULT_GRAPH_API_VERSION,
         base_url: str = META_GRAPH_BASE_URL,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=f"{base_url.rstrip('/')}/{api_version}",
             timeout=TYPING_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def show_whatsapp_typing(

@@ -20,6 +20,7 @@ from app.contracts.storage import StorageScopeContract
 from app.facilitators.observability.null_job_monitor_facilitator import (
     NullJobMonitorFacilitator,
 )
+from app.gateways.failure_signals import FailureSignals
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.held_leases import HeldLeases
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
@@ -111,6 +112,7 @@ class BackgroundWorker:
         lanes: Sequence[JobLane] = tuple(JobLane),
         stop_grace_seconds: float = STOP_GRACE_SECONDS,
         job_telemetry: JobTelemetry = NO_JOB_TELEMETRY,
+        failure_signals: FailureSignals | None = None,
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
         self._stop_grace_seconds: float = stop_grace_seconds
@@ -120,7 +122,7 @@ class BackgroundWorker:
         self._lane_concurrency: dict[JobLane, WorkerLaneConcurrency] = dict(
             lane_concurrency
         )
-        self._failure_reporter = JobFailureReporter(error_reporter)
+        self._failure_reporter = JobFailureReporter(error_reporter, failure_signals)
         held_leases = HeldLeases()
         self._queued_runner = QueuedJobRunner(
             queued_job_operators=queued_job_operators,

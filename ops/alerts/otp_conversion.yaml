@@ -1,0 +1,14 @@
+# Login codes of the last hour that settled (used, or expired unused):
+# when most were never used, codes go to numbers nobody signs in
+# with (SMS pumping through sign-in). The message names the countries
+# with the most unused codes.
+code: otp_conversion
+severity: sev2
+summary: More than 70 % of the login codes sent in the last hour were never used.
+measure: share of settled login codes of the last hour that were never used
+threshold: 70
+unit: percent
+window_minutes: 60
+volume_floor: 20
+source: otp_challenges by created_at (otp_challenges_doc_created_at_idx)
+runbook: docs/operations/runbooks/tenant-sms-volume.md

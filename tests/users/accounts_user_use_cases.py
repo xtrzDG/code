@@ -31,7 +31,6 @@ from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
 from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
 from app.use_cases.businesses.owner_promotion_sweep import OwnerPromotionSweep
-from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
 from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
 )
@@ -57,6 +56,7 @@ from app.utilities.security.require_recent_authentication import (
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.analytics.recording_product_events import RecordingProductEvents
+from tests.businesses.member_removal import build_remove_member
 from tests.foundation.access_support import AllowStepUp
 from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import (
@@ -175,6 +175,7 @@ class AccountsUserUseCases(AccountsRepositories):
             passkey_repo=self.passkey_repo,
             recovery_code_repo=self.recovery_code_repo,
             passkey_ceremony=WebAuthnPasskeyCeremonyAdapter(self.settings),
+            business_repo=self.business_repo,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,
@@ -291,7 +292,9 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
             step_up=self.step_up,
         )
-        self.remove_member = RemoveMemberUseCase(member_mutations=member_mutations)
+        self.remove_member = build_remove_member(
+            member_mutations, self.audit_log_repo, wall_clock
+        )
         self.change_member_role = ChangeMemberRoleUseCase(
             member_mutations=member_mutations, owner_promotions=self.owner_promotions
         )

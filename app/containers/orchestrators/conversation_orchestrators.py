@@ -47,6 +47,7 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
+from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import InboundMessage, VoiceToolCallResult
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
@@ -55,6 +56,8 @@ from app.schemas.dto.voice_webhooks import (
     PostCallWebhookRequest,
     VoiceToolWebhookRequest,
 )
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
@@ -125,6 +128,12 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         resolve_test_chat_version=conversation_feed_use_cases.resolve_test_chat_version_use_case,
         admit_owner_action=spend_guard_use_cases.admit_owner_action_use_case,
+    )
+    see_platform_details_orchestrator: Factory[
+        OrchestratorContract[UserId, IsPlatformAdmin]
+    ] = Factory(
+        UseCaseOrchestrator[UserId, IsPlatformAdmin],
+        use_case=conversation_feed_use_cases.see_platform_details_use_case,
     )
 
     # --- Voice webhooks.

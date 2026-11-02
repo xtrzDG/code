@@ -37,6 +37,7 @@ from app.utilities.campaigns.campaign_keys import (
 from app.utilities.campaigns.campaign_texts import CAMPAIGN_TEXTS, TEMPLATED_RULES
 from app.utilities.deliveries.delivery_keys import derive_outbound_message_id
 from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
+from app.utilities.privacy.suppressed_identities import contact_identities
 from app.utilities.scheduling.localized_formatting import format_full_date
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -62,7 +63,10 @@ class CampaignWriter:
     130(1)-(2); `ContactDocument.marketing_consent`). There is no e-mail
     channel, so the soft opt-in of art. 130(4), which covers e-mail only,
     never applies. A customer without consent gets nothing and nothing is
-    stored, so a consent given while the booking is still due counts.
+    stored, so a consent given while the booking is still due counts. A
+    consent from before an erasure of the customer's number or account
+    (a contact a restored backup brought back) counts as taken back
+    (OPTED_OUT).
     Service messages (confirmations, reminders, the booking's link) are
     other flows and need no marketing consent.
 
@@ -121,6 +125,9 @@ class CampaignWriter:
         if not contact.has_marketing_consent:
             return False
 
+        if self._consent_predates_erasure(business, contact):
+            return self._skip(message, CampaignSkipReason.OPTED_OUT)
+
         choice: RouteChoice = self.routing.choose(
             business,
             in_booking_chat(contact, booking),
@@ -160,6 +167,25 @@ class CampaignWriter:
             )
 
         return True
+
+    def _consent_predates_erasure(
+        self, business: BusinessDocument, contact: ContactDocument
+    ) -> bool:
+        """
+        The consent was given before one of the customer's numbers or
+        accounts was erased (a contact a restored backup brought back):
+        the erasure took it back.
+        """
+
+        consent = contact.marketing_consent
+        erased: Microseconds | None = self.suppression_list.erased_at(
+            business.id, contact_identities(contact)
+        )
+        return (
+            consent is not None
+            and erased is not None
+            and int(consent.given_at) <= int(erased)
+        )
 
     def _skip(
         self, message: CampaignMessageDocument, reason: CampaignSkipReason

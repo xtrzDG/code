@@ -1,7 +1,7 @@
 """
 How an ElevenLabs agent sounds and listens (R16-VOICE-TUNING): the voice
-of each language, the speech recognition's keywords, the turn timeout and
-the language presets that switch the greeting and the voice with the
+of each language, the speech recognition's keywords, the turn timeout, the
+filler said while an answer is late and the language presets that switch the greeting and the voice with the
 caller's language.
 """
 
@@ -13,6 +13,13 @@ from app.utilities.channels.language_codes import to_voice_platform_language
 
 # The platform's one setting of recognition quality ("high").
 ASR_QUALITY: str = "high"
+# No dead air while the model or a tool is slow: when no answer is ready
+# this long after the caller stopped speaking, the agent says a short
+# filler once per turn and goes on waiting (ElevenLabs' soft timeout; its
+# recommended value). The filler is a sound, not a word, so it fits every
+# language of the agent and promises no time ("one second").
+SOFT_TIMEOUT_SECONDS: float = 3.0
+SOFT_TIMEOUT_FILLER: str = "Mmm…"
 
 
 def tts_config(profile: VoiceProfile) -> JsonObject:
@@ -44,11 +51,19 @@ def asr_config(spec: VoiceAgentSpec) -> JsonObject:
 
 
 def turn_config(spec: VoiceAgentSpec, limits: VoiceCallLimits) -> JsonObject:
-    """When the agent speaks to a silent caller again, and when it hangs up."""
+    """
+    When the agent speaks to a silent caller again, when it hangs up, and
+    the filler it says while its own answer is late (SOFT_TIMEOUT_SECONDS).
+    """
 
     return {
         "turn_timeout": int(spec.turn_timeout_seconds),
         "silence_end_call_timeout": int(limits.silence_end_seconds),
+        "soft_timeout_config": {
+            "timeout_seconds": SOFT_TIMEOUT_SECONDS,
+            "message": SOFT_TIMEOUT_FILLER,
+            "use_llm_generated_message": False,
+        },
     }
 
 

@@ -1,5 +1,9 @@
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.http.provider_timeouts import provider_timeout
 from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.schemas.exceptions.application_errors import (
@@ -57,11 +61,12 @@ class TwilioMessagingClient(SmsMessagingClientContract):
         self._messaging_service_sid: TwilioMessagingServiceSid | None = (
             messaging_service_sid
         )
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=provider_timeout(),
             transport=transport,
             auth=httpx.BasicAuth(str(account_sid), str(auth_token)),
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def send_sms(self, recipient: E164PhoneNumber, text: SmsMessageText) -> None:

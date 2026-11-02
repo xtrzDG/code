@@ -11,6 +11,12 @@ class ContactId(BasePrefixedTypedId):
     prefix = "contact"
 
 
+class ConsentRecordId(BasePrefixedTypedId):
+    """Random identifier of one entry of a business's consent ledger."""
+
+    prefix = "consent_record"
+
+
 class CustomerSegmentId(BasePrefixedTypedId):
     """Random identifier of a saved group of customers of a business."""
 

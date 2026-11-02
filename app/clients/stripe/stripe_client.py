@@ -3,6 +3,10 @@ from typing import cast
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.stripe.stripe_protocol import (
     FormValue,
@@ -71,7 +75,7 @@ class StripeClient(ClientContract):
         self._webhook_secret: str | None = (
             None if webhook_secret is None else str(webhook_secret)
         )
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=api_base_url.rstrip("/"),
             timeout=provider_timeout(READ_TIMEOUT_SECONDS),
             transport=transport,
@@ -79,6 +83,7 @@ class StripeClient(ClientContract):
                 "Authorization": f"Bearer {secret_key}",
                 "Stripe-Version": STRIPE_API_VERSION,
             },
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def create_checkout_session(

@@ -252,8 +252,8 @@ export function loginPath(options: { next?: string | null; reason?: LoginReason 
   return query ? `${LOGIN_PATH}?${query}` : LOGIN_PATH;
 }
 
-/** Why Account → Security was opened for the person (a place that needs an authenticator app). */
-export type SecurityReason = "business" | "admin";
+/** Why Account → Security was opened for the person (a place that needs a second factor, or a passkey). */
+export type SecurityReason = "business" | "admin" | "admin_passkey";
 
 /** Account → Security, telling why it opened and where to go back once done. */
 export function securityPath(options: { reason?: SecurityReason; next?: string | null } = {}): string {
@@ -270,5 +270,5 @@ export function securityPath(options: { reason?: SecurityReason; next?: string |
 }
 
 export function isSecurityReason(value: string | null | undefined): value is SecurityReason {
-  return value === "business" || value === "admin";
+  return value === "business" || value === "admin" || value === "admin_passkey";
 }

@@ -6,6 +6,7 @@ after a restore from backup (`ReapplyContactErasuresUseCase`).
 
 from typed_time_provider import Microseconds
 
+from app.contracts.calendar_erasure import CalendarGuestErasureFacilitatorContract
 from app.contracts.media_storage import MediaStorageAdapterContract
 from app.contracts.privacy import SuppressionListContract
 from app.contracts.processor_erasure import ProcessorErasureFacilitatorContract
@@ -18,6 +19,7 @@ from app.contracts.repositories.booking_repositories import (
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
@@ -43,10 +45,13 @@ from app.contracts.repositories.media_repositories import (
     WidgetUploadRepoContract,
 )
 from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
+from app.schemas.constants.consent_records import ConsentEventSource
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.privacy import ProcessorErasureReason
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.compliance import ContactErasureResult, ContactRecords
+from app.schemas.dto.customers.consent_records import ConsentOrigin
+from app.schemas.dto.privacy.suppression import SuppressedIdentity
 from app.schemas.dto.processor_erasure import ProcessorErasureScope
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import (
@@ -64,6 +69,7 @@ from app.use_cases.compliance.record_anonymization import (
     BusinessRecordAnonymizer,
     erased_call,
 )
+from app.use_cases.shared.consent_ledger import record_consent_change
 from app.utilities.privacy.erased_conversations import ERASED_CHANNEL_USER_ID_PREFIX
 from app.utilities.privacy.suppressed_identities import contact_identities
 
@@ -86,12 +92,19 @@ class ContactDataEraser:
     and requests for feedback lose what identifies the person, the
     outbound webhooks' deliveries about them go (`contact_trace_erasure`).
     A customer who said STOP stays on the suppression list (only digests,
-    kept on purpose), so the erasure never makes them reachable again. The
+    kept on purpose), so the erasure never makes them reachable again, and
+    every erased customer leaves the digests of their numbers and accounts
+    as erasure entries (`remember_erasure`), so no marketing on a consent
+    given before the erasure reaches them (a restored backup's); a consent
+    still given is taken back in the consent ledger, which keeps the
+    customer's history by contact id only as proof. The
     copies the sub-processors keep (the traces of the conversations' model
     calls at Langfuse, the calls at ElevenLabs) are deleted by queued jobs
     with retries (`processor_erasure`), so a processor's outage never fails
-    the erasure. Erasing what is gone already is no error, so it runs again
-    after a restore.
+    the erasure. The events the bookings have in the business's Google
+    Calendar go last (`calendar_erasure`): rewritten without the guest
+    while the booking still takes its time, deleted otherwise. Erasing
+    what is gone already is no error, so it runs again after a restore.
     """
 
     def __init__(
@@ -117,7 +130,15 @@ class ContactDataEraser:
         widget_upload_repo: WidgetUploadRepoContract,
         waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
         webhook_delivery_repo: WebhookDeliveryRepoContract | None = None,
+        calendar_erasure: CalendarGuestErasureFacilitatorContract | None = None,
+        consent_record_repo: ConsentRecordRepoContract | None = None,
     ) -> None:
+        self._consent_record_repo: ConsentRecordRepoContract | None = (
+            consent_record_repo
+        )
+        self._calendar_erasure: CalendarGuestErasureFacilitatorContract | None = (
+            calendar_erasure
+        )
         self._processor_erasure: ProcessorErasureFacilitatorContract = processor_erasure
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
@@ -142,11 +163,22 @@ class ContactDataEraser:
 
         contact: ContactDocument = records.contact
         business_id: BusinessId = contact.business_id
+        identities: list[SuppressedIdentity] = contact_identities(contact)
         if contact.opted_out_channels:
             # A STOP from before the suppression list: it outlives the erasure.
-            self._suppression_list.suppress(
-                business_id, contact_identities(contact), now
-            )
+            self._suppression_list.suppress(business_id, identities, now)
+        # Every erased customer leaves digests only: no marketing on a
+        # consent from before the erasure ever reaches them again.
+        self._suppression_list.remember_erasure(business_id, identities, now)
+        # The ledger keeps the proof; the erasure takes the consent back.
+        record_consent_change(
+            self._consent_record_repo,
+            contact,
+            contact.marketing_consent,
+            None,
+            ConsentOrigin(source=ConsentEventSource.ERASURE),
+            now,
+        )
 
         deleted_recordings: DeletedRecordingCount = self._files.erase(records)
         traces: TraceErasure = self._traces.erase(records, now)
@@ -172,6 +204,9 @@ class ContactDataEraser:
                 updated_at=now,
             )
         )
+        if self._calendar_erasure is not None:
+            # Last: the events are rewritten from what the erasure left.
+            self._calendar_erasure.forget_guest(records.bookings)
         return ContactErasureResult(
             business_id=business_id,
             contact_id=contact.id,

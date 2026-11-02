@@ -10,6 +10,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.repositories.business_repositories import ChannelRepository
 from app.repositories.call_follow_up_repositories import MissedCallRepository
+from app.repositories.consent_record_repository import ConsentRecordRepository
 from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
@@ -18,6 +19,7 @@ from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.message_media_repository import MessageMediaRepository
 from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.consent_records import ConsentRecordDocument
 from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.message_media import MessageMediaDocument
@@ -46,6 +48,7 @@ from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.media.media_fakes import InMemoryMediaStorage
+from tests.privacy.calendar_erasure_doubles import RecordingCalendarErasure
 from tests.privacy.processor_erasure_doubles import (
     ProcessorErasureBed,
     RecordingJobQueue,
@@ -81,6 +84,10 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
         )
         self.suppression_list = build_suppression_list()
+        # The consent ledger, which outlives an erasure (1246).
+        self.consent_record_repo = ConsentRecordRepository(
+            InMemoryDocumentCollectionAdapter(ConsentRecordDocument)
+        )
 
         collect_contact_records = CollectContactRecordsUseCase(
             contact_repo=self.contact_repo,
@@ -96,6 +103,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             outbound_message_repo=self.outbound_message_repo,
             inbound_event_repo=self.inbound_event_repo,
             feedback_request_repo=self.feedback_request_repo,
+            consent_record_repo=self.consent_record_repo,
         )
         self.collect_contact_records = collect_contact_records
         self.legal_document_registry = LegalDocumentRegistry()
@@ -165,6 +173,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         )
         # Langfuse and ElevenLabs, whose copies the erasure deletes by jobs.
         self.processor_erasure = ProcessorErasureBed()
+        # The business's Google Calendar, whose events the erasure rewrites.
+        self.calendar_erasure = RecordingCalendarErasure()
         # The erasure itself, shared with its re-application after a restore.
         self.contact_data_eraser = ContactDataEraser(
             contact_repo=self.contact_repo,
@@ -186,6 +196,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             feedback_request_repo=self.feedback_request_repo,
             processor_erasure=self.processor_erasure.facilitator(),
             widget_upload_repo=self.widget_upload_repo,
+            calendar_erasure=self.calendar_erasure,
+            consent_record_repo=self.consent_record_repo,
         )
         # The queued jobs that copy each erasure into the ledger.
         self.erasure_ledger_queue = RecordingJobQueue()

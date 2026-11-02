@@ -28,7 +28,7 @@ from app.use_cases.businesses.change_member_role_use_case import (
     ChangeMemberRoleUseCase,
 )
 from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
-from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
+from tests.businesses.member_removal import build_remove_member
 from tests.businesses.team_steps import invite
 from tests.users.accounts_phones import GEORGIA_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
@@ -133,7 +133,9 @@ def test_two_owners_demoting_each_other_at_once_leave_one_owner() -> None:
 
 def test_two_owners_removing_each_other_at_once_leave_one_owner() -> None:
     testbed, business, owner_id, co_owner_id = two_owners()
-    remove_member = RemoveMemberUseCase(member_mutations=racing_guard(testbed))
+    remove_member = build_remove_member(
+        racing_guard(testbed), testbed.audit_log_repo, testbed.clock.build_wall_clock()
+    )
 
     def remove(actor_id: UserId, member_id: UserId) -> TeamChange:
         return lambda: remove_member.run(

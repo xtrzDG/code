@@ -6,6 +6,9 @@ from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.setup.setup_progress import ActivationEventRecord
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.conversations.platform_details import reply_for
 
 
 class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantReply]):
@@ -20,6 +23,7 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
     places of its own (TEST_CHAT_MAX_CONCURRENCY per API process): a few
     owners trying their assistants never take the threads the cabinet
     needs; beyond them the owner is asked to try again in a moment (429).
+    The tool calls' inputs and results reach platform admins only.
     """
 
     def __init__(
@@ -31,7 +35,12 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
         turn_orchestrator: ConversationTurnOrchestratorContract,
         record_activation_event: OrchestratorContract[ActivationEventRecord, None],
         test_chat_slots: TurnSlotRegistryContract,
+        see_platform_details: OrchestratorContract[UserId, IsPlatformAdmin]
+        | None = None,
     ) -> None:
+        self._see_platform_details: (
+            OrchestratorContract[UserId, IsPlatformAdmin] | None
+        ) = see_platform_details
         self._prepare_test_chat_version: OrchestratorContract[
             OwnerTestChatCommand, None
         ] = prepare_test_chat_version
@@ -58,4 +67,8 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
                 kind=ActivationEventKind.TEST_CHAT_TRIED,
             )
         )
-        return reply
+        return reply_for(
+            reply,
+            self._see_platform_details is not None
+            and self._see_platform_details.execute(input_data.user_id),
+        )

@@ -76,9 +76,12 @@ def test_form_fields_keep_repeats_and_unreadable_bodies_have_none() -> None:
 
 
 def test_the_dial_escapes_what_it_is_given() -> None:
-    twiml = build_dial_twiml("+1<2>", 'https://api.example.com/x?a=1&b="2"')
+    twiml = build_dial_twiml(
+        "+1<2>", 'https://api.example.com/x?a=1&b="2"', '+3<9>"'
+    )
 
     assert "<Number>+1&lt;2&gt;</Number>" in twiml
+    assert 'callerId="+3&lt;9&gt;&quot;"' in twiml
     assert 'action="https://api.example.com/x?a=1&amp;b=&quot;2&quot;"' in twiml
 
 
@@ -107,4 +110,5 @@ def test_without_the_address_no_call_is_put_through() -> None:
         adapter.transfer(
             BusinessId("business_fd43b272-3035-4a74-a29f-96b1631dd8b5"),
             E164PhoneNumber("+995555123456"),
+            E164PhoneNumber("+995322000000"),
         )

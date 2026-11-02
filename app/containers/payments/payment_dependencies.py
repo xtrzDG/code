@@ -11,6 +11,7 @@ from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.notification_utilities import StaffLinkSignerContract
+from app.contracts.payment_locks import PaymentNotificationLockRegistryContract
 from app.contracts.payment_methods import PaymentRetryRepoContract
 from app.contracts.referrals import ReferralEarningsFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
@@ -59,6 +60,7 @@ class PaymentDependencies:
     brand_repo: BrandRepoContract
     user_repo: UserRepoContract
     payment_gateway: PaymentGatewayAdapterContract
+    payment_notification_lock: PaymentNotificationLockRegistryContract
     plan_registry: PlanRegistryContract
     invoice_issuing: InvoiceIssuingFacilitatorContract
     manager_notifier: ManagerNotificationFacilitatorContract

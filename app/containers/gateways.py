@@ -19,6 +19,7 @@ from app.containers.queued_jobs import queued_job_operator_map
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.gateways.failure_signals import FailureSignals
 from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
@@ -91,6 +92,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
         inbound_poll_seconds=config.app_settings.provided.worker_inbound_poll_seconds,
         lanes=config.app_settings.provided.worker_lanes,
         job_telemetry=job_telemetry,
+        # Jobs failed by the database or the object storage (storage_errors).
+        failure_signals=Singleton(
+            FailureSignals, signal_counter=adapters.signal_counter
+        ),
     )
     # The API availability SLI of this API process, flushed every 15 s
     # (started by `start_telemetry` of the API, closed on shutdown).

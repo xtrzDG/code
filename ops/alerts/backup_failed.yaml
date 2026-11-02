@@ -1,0 +1,15 @@
+# The off-site backup (`workshop backup`, the daily cron job) records
+# every run in maintenance_runs. The latest one failed, or the latest
+# success is older than 26 hours (the job stopped). No recorded backup
+# at all (development, the preview stand) is quiet. Sentry Crons
+# watches the same job from outside.
+code: backup_failed
+severity: sev2
+summary: The last off-site database backup failed, or none succeeded for 26 hours.
+measure: 1 when the latest backup failed or the latest success is older than 26 hours
+threshold: 0
+unit: count
+window_minutes: 1560
+volume_floor: 0
+source: maintenance_runs (latest backup)
+runbook: docs/operations/runbooks/backup-failed.md

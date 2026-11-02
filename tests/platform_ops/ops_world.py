@@ -41,6 +41,7 @@ from app.repositories.quality_repositories import QualityTotalsRepository
 from app.repositories.service_level_repositories import ServiceLevelSlotRepository
 from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.system_health_repository import SystemHealthRepository
+from app.repositories.user_repositories import OtpChallengeRepository
 from app.repositories.voice_activity_repository import VoiceActivityRepository
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
@@ -59,7 +60,7 @@ from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocum
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.service_levels import ServiceLevelSlotDocument
-from app.schemas.domain.users import UserDocument
+from app.schemas.domain.users import OtpChallengeDocument, UserDocument
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
@@ -76,6 +77,9 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 )
 from app.use_cases.admin.alerts.data_task_alert_checks import DataTaskAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
+from app.use_cases.admin.alerts.platform_health_alert_checks import (
+    PlatformHealthAlertChecks,
+)
 from app.use_cases.admin.alerts.safety_alert_checks import PlatformSafetyAlertChecks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.alerts.voice_alert_checks import VoiceHealthAlertCheck
@@ -196,6 +200,10 @@ class OpsWorld:
         self.reconciliations = PaymentReconciliationRepository(
             InMemoryDocumentCollectionAdapter(PaymentReconciliationDocument)
         )
+        # Login codes for their conversion (LOG-05).
+        self.otp_challenges = OtpChallengeRepository(
+            InMemoryDocumentCollectionAdapter(OtpChallengeDocument)
+        )
 
     def checks(self) -> PlatformAlertChecks:
         spend_checks = SpendAlertChecks(
@@ -221,6 +229,9 @@ class OpsWorld:
                 spend_checks,
                 PlatformSafetyAlertChecks(
                     self.job_heartbeats, self.reconciliations, release=None
+                ),
+                PlatformHealthAlertChecks(
+                    self.signals, self.slot_repo, self.run_repo, self.otp_challenges
                 ),
             ),
         )

@@ -1,5 +1,9 @@
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -30,12 +34,13 @@ class LangfuseIngestionClient(ClientContract):
         secret_key: PlatformSecret,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=str(host).rstrip("/"),
             auth=(str(public_key), str(secret_key)),
             headers=INGESTION_VERSION_HEADERS,
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def ingest(self, spans: list[dict[str, object]]) -> None:

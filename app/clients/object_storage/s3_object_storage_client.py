@@ -6,6 +6,10 @@ from typing import NoReturn
 import httpx
 from typed_time_provider import Microseconds, WallClock
 
+from app.clients.http.provider_http_client import (
+    STORED_OBJECT_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.object_storage.s3_xml_replies import (
     build_completion,
     element_text,
@@ -52,8 +56,10 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
     ) -> None:
         self._connection: ObjectStorageConnection = connection
         self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._http_client: httpx.Client = httpx.Client(
-            timeout=REQUEST_TIMEOUT_SECONDS, transport=transport
+        self._http_client: httpx.Client = build_provider_http_client(
+            timeout=REQUEST_TIMEOUT_SECONDS,
+            transport=transport,
+            max_response_bytes=STORED_OBJECT_MAX_BYTES,
         )
 
     def put_object(self, key: RecordingStoragePath, body: bytes) -> None:

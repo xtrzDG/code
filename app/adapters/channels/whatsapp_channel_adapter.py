@@ -1,5 +1,6 @@
 import logging
 
+from app.adapters.channels.whatsapp_quality_signals import report_quality_warnings
 from app.contracts.channel_clients import (
     MetaGraphApiClientContract,
     MetaTypingClientContract,
@@ -13,6 +14,7 @@ from app.contracts.localization_utilities import (
     LocalizedTextResolverContract,
     PhoneNumberParserContract,
 )
+from app.contracts.monitoring import SignalCounterAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.channels.channel_webhooks import (
@@ -81,13 +83,11 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
     WhatsApp Cloud API, one platform app for every business.
 
     Webhooks are signed with the app secret (X-Hub-Signature-256); the
-    business is found by the phone number id in `metadata`. Messages are
-    sent with the platform system user token.
-
-    The 24-hour customer service window: free-form replies are allowed only
-    within 24 hours of the customer's last message, which covers every chat
-    answer. Booking confirmations and reminders sent later, and staff
-    notifications, must use templates approved by Meta (`send_template`).
+    business is found by the phone number id in `metadata`; Meta's quality
+    warnings feed the WHATSAPP_QUALITY alert (`report_quality_warnings`).
+    Free-form replies only within 24 hours of the customer's last message
+    (every chat answer); later confirmations, reminders and staff
+    notifications go as Meta-approved templates (`send_template`).
     """
 
     def __init__(
@@ -97,7 +97,9 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         app_settings: AppSettings,
         typing_client: MetaTypingClientContract | None = None,
         text_resolver: LocalizedTextResolverContract | None = None,
+        signal_counter: SignalCounterAdapterContract | None = None,
     ) -> None:
+        self._signal_counter: SignalCounterAdapterContract | None = signal_counter
         self._text_resolver: LocalizedTextResolverContract | None = text_resolver
         self._meta_client: MetaGraphApiClientContract = meta_client
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -140,6 +142,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
                 value: JsonObject | None = read_object(change, "value")
                 if read_text(change, "field") != MESSAGES_FIELD or value is None:
                     skipped.append(other_field_kind(change))
+                    report_quality_warnings(change, self._signal_counter)
                     continue
 
                 skipped.extend(status_kinds(value))

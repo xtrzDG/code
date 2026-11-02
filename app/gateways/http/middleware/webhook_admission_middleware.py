@@ -15,6 +15,7 @@ from collections.abc import Mapping
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.gateways.failure_signals import FailureSignals, failure_signals_of
 from app.gateways.http.middleware.error_answers import (
     client_address_of,
     header_map,
@@ -32,6 +33,7 @@ from app.gateways.http.middleware.webhook_deliveries import (
     find_webhook_route,
 )
 from app.schemas.constants.errors import ApiErrorCode
+from app.schemas.constants.monitoring import PlatformSignal
 from app.utilities.observability.security_events import (
     RATE_LIMIT_TRIGGERED,
     WEBHOOK_DELIVERY_REFUSED,
@@ -109,6 +111,9 @@ class WebhookAdmissionMiddleware:
             await self.app(scope, receive, send)
             return
 
+        signals: FailureSignals | None = failure_signals_of(scope.get("app"))
+        if signals is not None:
+            signals.count(PlatformSignal.WEBHOOK_REFUSED)
         log_security_event(
             WEBHOOK_DELIVERY_REFUSED,
             path=route.path,

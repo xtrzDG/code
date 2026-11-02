@@ -13,7 +13,17 @@ export const securityIt: Translation<typeof securityEn> = {
       "Questa attività chiede a tutto il team di accedere con un'app di autenticazione. Configurala qui sotto, poi continua.",
     admin:
       "Le pagine di amministrazione richiedono un accesso con un'app di autenticazione. Configurala qui sotto o conferma con essa, poi continua.",
+    adminPasskey: "Le pagine di amministrazione richiedono una passkey. Aggiungine una qui sotto, poi continua.",
     continue: "Continua",
+  },
+  suggestion: {
+    title: "Proteggi la tua attività con un secondo passaggio",
+    body: "Il tuo pannello contiene nomi, numeri di telefono e conversazioni dei tuoi clienti. Con un secondo passaggio, un codice di accesso rubato da solo non basta per aprirlo.",
+    passkey: "Una passkey: l'impronta, il volto o il blocco schermo del tuo telefono o computer.",
+    app: "Oppure un'app di autenticazione: un codice di sei cifre dopo il codice di accesso.",
+    setUp: "Configura ora",
+    later: "Non ora",
+    reminder: "Te lo chiederemo di nuovo al prossimo accesso finché non lo configuri.",
   },
   app: {
     title: "App di autenticazione",

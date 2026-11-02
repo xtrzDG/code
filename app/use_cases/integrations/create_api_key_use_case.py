@@ -14,11 +14,11 @@ from app.schemas.dto.integrations.api_key_views import (
     CreatedApiKey,
 )
 from app.use_cases.integrations.api_key_records import (
-    API_KEY_ENTITY,
     api_key_view,
     granted_scopes,
     refuse_when_full,
 )
+from app.use_cases.shared.api_key_revocation import API_KEY_ENTITY
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.integrations.integration_secrets import hash_api_key, new_api_key
 

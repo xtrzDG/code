@@ -4,6 +4,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -40,6 +41,9 @@ class PaymentGatewayRouterAdapter(PaymentGatewayAdapterContract):
         delivery: PaymentWebhookDelivery,
     ) -> VerifiedPaymentEvent:
         return self._gateways[delivery.provider].read_notification(delivery)
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        self._gateways[payment.provider].confirm_notification(payment)
 
     def stop_recurring(
         self,

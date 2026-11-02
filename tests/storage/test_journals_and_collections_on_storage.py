@@ -13,7 +13,7 @@ from app.repositories.conversation_repositories import LlmTurnRepository
 from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.compliance import AuditAction, AuditOutcome
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -138,9 +138,14 @@ def test_append_only_journals(collections: CollectionFactory) -> None:
     assert llm_turn_repo.list_by_conversation(conversation_id) == []
     assert len(llm_turn_repo.list_by_conversation(other_conversation_id)) == 1
     assert entry.business_id is not None
-    # The entry is stored as the first link of its business's chain.
+    # The entry is stored as the first link of its business's chain, with
+    # its outcome (no request: no origin, version 7).
     assert audit_log_repo.list_by_business(entry.business_id) == [
-        link_entry_and_hash(entry, FIRST_POSITION, GENESIS_HASH)[0]
+        link_entry_and_hash(
+            entry.model_copy(update={"outcome": AuditOutcome.SUCCESS}),
+            FIRST_POSITION,
+            GENESIS_HASH,
+        )[0]
     ]
 
 

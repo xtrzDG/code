@@ -8,6 +8,9 @@ from app.adapters.payments.flitt_order_parameters import (
     build_checkout_order,
     build_retry_order,
 )
+from app.adapters.payments.flitt_status_confirmation import (
+    confirm_flitt_notification,
+)
 from app.adapters.payments.payment_fields import (
     read_failure_reason,
     read_reference,
@@ -19,6 +22,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -93,6 +97,11 @@ class FlittPaymentGatewayAdapter(PaymentGatewayAdapterContract):
             None if delivery.content_type is None else str(delivery.content_type),
         )
         return read_flitt_event(parameters, self._wall_clock.now_unix())
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        """An approval or a refund only once Flitt's status API says the same."""
+
+        confirm_flitt_notification(self._require_client(), payment)
 
     def stop_recurring(
         self,

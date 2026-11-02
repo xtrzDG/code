@@ -163,6 +163,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         passkey_repo=repositories.passkey_repo,
         recovery_code_repo=repositories.recovery_code_repo,
         passkey_ceremony=adapters.passkey_ceremony,
+        business_repo=repositories.business_repo,
     )
     authenticate_user_use_case: Factory[
         UseCaseContract[SessionCheck, SessionAssurance]
@@ -280,4 +281,11 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     )
     remove_member_use_case: Factory[
         UseCaseContract[RemoveMemberCommand, BusinessView]
-    ] = Factory(RemoveMemberUseCase, member_mutations=member_mutation_guard)
+    ] = Factory(
+        RemoveMemberUseCase,
+        member_mutations=member_mutation_guard,
+        api_key_repo=repositories.api_key_repo,
+        endpoint_repo=repositories.webhook_endpoint_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )

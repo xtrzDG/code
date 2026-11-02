@@ -72,6 +72,12 @@ export const adminSystemIt: Translation<typeof adminSystemEn> = {
       spend_budget_stop: "Budget giornaliero esaurito: assistenti fermi",
       missed_job_runs: "Attività pianificate saltate",
       payment_mismatch: "Pagamenti diversi dal provider",
+      webhook_signature_failures: "Webhook rifiutati",
+      storage_errors: "Errori del database o dell'archivio",
+      api_latency: "API lenta",
+      backup_failed: "Backup non riuscito",
+      tenant_sms_volume: "Un cliente invia troppi SMS",
+      otp_conversion: "Codici di accesso non usati",
     },
   },
   errorBudget: {

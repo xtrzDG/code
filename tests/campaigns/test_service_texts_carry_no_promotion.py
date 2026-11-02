@@ -14,8 +14,8 @@ from app.transformers.notifications import booking_reminder_transformer
 from app.utilities.bookings import booking_confirmation_texts
 from app.utilities.deposits import deposit_line_texts, deposit_reminder_texts
 from tests.campaigns.promotion_lint import (
-    localized_texts,
     lint_module,
+    localized_texts,
     promotional_findings,
 )
 

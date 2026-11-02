@@ -44,16 +44,19 @@ def find_login_risk_signals(
     app_settings: AppSettings,
 ) -> list[LoginRiskSignal]:
     """
-    Why this request is risky, given the challenges of the last hour: the
-    phone or e-mail belongs to no verified user, the client address asked
-    for 3 codes already, half of the platform budget is used, or the phone
-    is in a country of OTP_HIGH_RISK_COUNTRIES. Empty for a returning
-    owner on a quiet day.
+    Why this request is risky, given the challenges of the last hour: a
+    code to a phone (every phone, known or not: a paid text message), the
+    client address asked for 3 codes already, half of either platform
+    budget is used, or the phone is in a country of
+    OTP_HIGH_RISK_COUNTRIES. Nothing here reads whether the phone or
+    e-mail belongs to a user, so a known and an unknown destination get
+    the same answer (no account enumeration). Empty for an e-mail on a
+    quiet day.
     """
 
     signals: list[LoginRiskSignal] = []
-    if not destination.is_verified_destination:
-        signals.append(LoginRiskSignal.NEW_DESTINATION)
+    if destination.login_method is LoginMethod.PHONE:
+        signals.append(LoginRiskSignal.SMS_DESTINATION)
 
     if destination.client_ip_address is not None and (
         len(
@@ -67,9 +70,7 @@ def find_login_risk_signals(
     ):
         signals.append(LoginRiskSignal.BUSY_CLIENT_ADDRESS)
 
-    if 2 * len(list_same_budget(recent, destination)) >= int(
-        find_budget_limit(destination, app_settings)
-    ):
+    if is_either_budget_half_used(recent, destination, app_settings):
         signals.append(LoginRiskSignal.HIGH_PLATFORM_USAGE)
 
     if (
@@ -79,6 +80,27 @@ def find_login_risk_signals(
         signals.append(LoginRiskSignal.HIGH_RISK_COUNTRY)
 
     return signals
+
+
+def is_either_budget_half_used(
+    recent: list[OtpChallengeDocument],
+    destination: LoginCodeDestination,
+    app_settings: AppSettings,
+) -> bool:
+    """
+    Half of the budget of verified users' destinations, or of the others,
+    is used this hour: then every request is checked, whichever budget its
+    destination counts against (its own would tell whether it is known).
+    """
+
+    return any(
+        2 * len(list_same_budget(recent, budget))
+        >= int(find_budget_limit(budget, app_settings))
+        for budget in (
+            destination.model_copy(update={"is_verified_destination": True}),
+            destination.model_copy(update={"is_verified_destination": False}),
+        )
+    )
 
 
 def require_bot_check_when_risky(
@@ -96,7 +118,7 @@ def require_bot_check_when_risky(
     Raises:
         BotCheckRequiredError: the check is needed and was not passed; its
             reason `challenge_required` names the widget's site key. The
-            signals are not named, so the answer does not tell whether a
+            signals are not named, and none of them depends on whether a
             phone or e-mail belongs to a user.
     """
 

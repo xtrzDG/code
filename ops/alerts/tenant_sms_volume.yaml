@@ -1,0 +1,16 @@
+# Every SMS of a business (staff notifications, missed-call
+# text-backs) counts in the business's hourly bucket
+# (TenantSmsVolumeGuardAdapter): the 61st of an hour counts the
+# platform signal tenant_sms_surge once, and from the 200th the SMS is
+# refused (the throttle) and counted again. A warning line names the
+# business.
+code: tenant_sms_volume
+severity: sev2
+summary: A business sent more than 60 SMS in an hour, or its SMS were refused past 200 an hour.
+measure: businesses past 60 SMS an hour and SMS refused at 200 an hour, in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (tenant-sms:<business>, platform-signal:tenant_sms_surge)
+runbook: docs/operations/runbooks/tenant-sms-volume.md

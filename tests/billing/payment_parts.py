@@ -4,11 +4,17 @@ from dataclasses import dataclass
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.facilitators.billing.dunning_notice_facilitator import (
     DunningNoticeFacilitator,
 )
 from app.registries.billing.payment_provider_registry import PaymentProviderRegistry
+from app.registries.locks.payment_notification_lock_registry import (
+    PaymentNotificationLockRegistry,
+)
 from app.schemas.configurations.payment_settings import PaymentSettings
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -105,6 +111,9 @@ def build_payment_parts(
         apply_payment_status=apply_payment_status,
         process_webhook=ProcessPaymentWebhookUseCase(
             payment_gateway=world.payment_gateway,
+            notification_lock=PaymentNotificationLockRegistry(
+                InMemoryAdvisoryLockAdapter()
+            ),
             payment_order_repo=world.payment_order_repo,
             subscription_repo=world.subscription_repo,
             business_repo=world.business_repo,

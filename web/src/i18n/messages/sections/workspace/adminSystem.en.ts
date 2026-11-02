@@ -74,6 +74,12 @@ export const adminSystemEn = {
       spend_budget_stop: "Daily budget used up: assistants stopped",
       missed_job_runs: "Scheduled jobs missed",
       payment_mismatch: "Payments differ from the provider",
+      webhook_signature_failures: "Webhook deliveries refused",
+      storage_errors: "Database or storage errors",
+      api_latency: "API is slow",
+      backup_failed: "Backup failed",
+      tenant_sms_volume: "A client sends too many SMS",
+      otp_conversion: "Login codes go unused",
     },
   },
   errorBudget: {

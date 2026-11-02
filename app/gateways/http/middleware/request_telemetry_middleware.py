@@ -12,6 +12,7 @@ from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.contracts.service_metrics import ServiceMetricsContract
+from app.gateways.failure_signals import FailureSignals
 from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.schemas.constants.telemetry import SpanKind
 from app.schemas.dto.telemetry import HttpRequestObservation
@@ -50,11 +51,13 @@ class RequestTelemetryMiddleware:
         metrics: ServiceMetricsContract,
         tracer: SpanTracer,
         api_availability: ApiAvailabilityTally | None = None,
+        failure_signals: FailureSignals | None = None,
     ) -> None:
         self._app: ASGIApp = app
         self._metrics: ServiceMetricsContract = metrics
         self._tracer: SpanTracer = tracer
         self._api_availability: ApiAvailabilityTally | None = api_availability
+        self._failure_signals: FailureSignals | None = failure_signals
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -90,14 +93,17 @@ class RequestTelemetryMiddleware:
                 finally:
                     name_span(span, method, route_template(scope), status[0])
         finally:
+            elapsed: float = max(0.0, time.perf_counter() - started)
             if self._api_availability is not None and not is_probe:
                 self._api_availability.count(status[0])
+            if self._failure_signals is not None and not is_probe:
+                self._failure_signals.count_if_slow(elapsed)
             self._metrics.observe_http_request(
                 HttpRequestObservation(
                     method=MetricsLabel(method),
                     route=route_template(scope),
                     status_code=HttpStatusCode(status[0]),
-                    duration=ObservedSeconds(max(0.0, time.perf_counter() - started)),
+                    duration=ObservedSeconds(elapsed),
                 )
             )
 

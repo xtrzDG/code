@@ -6,6 +6,11 @@ from urllib.parse import quote
 import httpx
 
 from app.clients.cal_com.cal_com_responses import read_data, read_list, read_object
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
+from app.clients.http.provider_timeouts import provider_timeout
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.dto.calendar_sync.busy_reads import BusyWindow
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
@@ -43,7 +48,12 @@ class CalComClient:
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._base_url: str = str(base_url)
-        self._http_client: httpx.Client = httpx.Client(transport=transport)
+        # Each call passes its own budget; this is the default.
+        self._http_client: httpx.Client = build_provider_http_client(
+            timeout=provider_timeout(),
+            transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
+        )
 
     def get_event_type(
         self,

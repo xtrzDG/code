@@ -21,6 +21,8 @@ export interface SignedInSession {
   auth_level: AuthLevel;
   /** Only right after an authenticator was set up at sign-in: shown once. */
   recovery_codes: string[];
+  /** An owner without a second factor: suggest setting one up (skippable). */
+  second_factor_suggested?: boolean;
 }
 
 /** The login code was right; the account asks for its second step. */

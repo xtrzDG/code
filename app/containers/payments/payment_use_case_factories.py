@@ -113,6 +113,7 @@ class PaymentUseCaseFactories:
         given = self._dependencies
         return ProcessPaymentWebhookUseCase(
             payment_gateway=given.payment_gateway,
+            notification_lock=given.payment_notification_lock,
             payment_order_repo=given.payment_order_repo,
             subscription_repo=given.subscription_repo,
             business_repo=given.business_repo,

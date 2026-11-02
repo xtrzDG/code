@@ -77,11 +77,15 @@ class CallFallbackAdapterContract(AdapterContract, Protocol):
         raise NotImplementedError
 
     def transfer(
-        self, business_id: BusinessId, phone_number: E164PhoneNumber
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+        caller_id: E164PhoneNumber,
     ) -> CallFallbackReply:
         """
-        Put the caller through to this number, reporting how it ended to
-        the business's address.
+        Put the caller through to this number, presenting `caller_id` (the
+        platform's line that was called, never the caller's number) and
+        reporting how it ended to the business's address.
         """
         raise NotImplementedError
 

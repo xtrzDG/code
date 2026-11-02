@@ -1,6 +1,9 @@
 """
 The bot check (Cloudflare Turnstile, faked) of risky login code requests:
-needed only on a risk signal, and only when the check is on.
+needed only on a risk signal, and only when the check is on. No signal
+depends on whether the phone or e-mail belongs to someone: every phone is
+checked (a paid text message), an e-mail only on a busy address or a busy
+platform (test_login_enumeration.py compares the answers).
 """
 
 import pytest
@@ -37,13 +40,35 @@ def request_code(
     )
 
 
+OWNER_EMAIL: str = "owner@salobie.example"
+
+
+def request_email_code(
+    testbed: AccountsTestbed,
+    email: str = OWNER_EMAIL,
+    token: TurnstileResponseToken | None = None,
+    ip_address: str = "198.51.100.1",
+) -> None:
+    testbed.start_otp_login.run(
+        StartOtpLoginCommand(
+            email=RawEmailAddressInput(email),
+            turnstile_token=token,
+            client_ip_address=ClientIpAddress(ip_address),
+        )
+    )
+
+
 def build_with_returning_owner(
     environment_variables: dict[str, str] | None = None,
 ) -> AccountsTestbed:
-    """A testbed whose Georgian owner signed in once; the check is on."""
+    """
+    A testbed whose Georgian owner signed in once by phone and once by
+    e-mail; the check is on.
+    """
 
     testbed = build_accounts_testbed(environment_variables)
     testbed.sign_in_with_phone(GEORGIA_MOBILE)
+    testbed.sign_in_with_email(OWNER_EMAIL)
     testbed.clock.advance(RESEND_WAIT_SECONDS)
     testbed.bot_check.turn_on()
     return testbed
@@ -79,34 +104,38 @@ def test_a_new_phone_needs_a_passed_check() -> None:
     assert testbed.bot_check.checked_addresses[-1] == ClientIpAddress("198.51.100.1")
 
 
-def test_a_new_email_needs_a_passed_check_too() -> None:
-    testbed = build_accounts_testbed()
-    testbed.bot_check.turn_on()
-
-    with pytest.raises(BotCheckRequiredError):
-        testbed.start_otp_login.run(
-            StartOtpLoginCommand(email=RawEmailAddressInput("new@example.com"))
-        )
-
-
-def test_a_returning_owner_on_a_quiet_day_is_not_checked() -> None:
+def test_an_email_on_a_quiet_day_is_not_checked_known_or_not() -> None:
     testbed = build_with_returning_owner()
 
-    request_code(testbed)
+    request_email_code(testbed)
+    request_email_code(testbed, "new@example.com")
 
-    assert len(testbed.otp_delivery.deliveries) == 2
+    assert len(testbed.otp_delivery.deliveries) == 4
     assert testbed.bot_check.checked_tokens == []
+
+
+def test_every_phone_is_checked_a_returning_owners_too() -> None:
+    testbed = build_with_returning_owner()
+
+    with pytest.raises(BotCheckRequiredError):
+        request_code(testbed)
+    request_code(testbed, token=PASSING_TOKEN)
+
+    assert len(testbed.otp_delivery.deliveries) == 3
+    assert testbed.bot_check.checked_tokens == [PASSING_TOKEN]
 
 
 def test_a_busy_client_address_is_checked_even_for_a_returning_owner() -> None:
     testbed = build_with_returning_owner()
     for index in range(3):
-        request_code(testbed, f"+49 1512 345678{index}", PASSING_TOKEN, "198.51.100.9")
+        request_email_code(
+            testbed, f"guest{index}@example.com", ip_address="198.51.100.9"
+        )
 
     with pytest.raises(BotCheckRequiredError):
-        request_code(testbed, ip_address="198.51.100.9")
+        request_email_code(testbed, ip_address="198.51.100.9")
 
-    request_code(testbed, ip_address="198.51.100.1")
+    request_email_code(testbed, ip_address="198.51.100.1")
 
 
 def test_a_high_risk_country_is_checked_even_for_a_returning_owner() -> None:
@@ -119,13 +148,16 @@ def test_a_high_risk_country_is_checked_even_for_a_returning_owner() -> None:
 
 
 def test_half_the_platform_budget_used_checks_every_request() -> None:
-    testbed = build_with_returning_owner({"OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR": "2"})
-    # One of the two sends of verified users is half the budget.
-    request_code(testbed)
-    testbed.clock.advance(RESEND_WAIT_SECONDS)
+    testbed = build_with_returning_owner({"OTP_SENDS_PER_HOUR": "4"})
+    # The owner's two first sign-ins (new destinations then) are half the
+    # budget of unknown destinations; the owner's own budget is untouched.
 
     with pytest.raises(BotCheckRequiredError):
-        request_code(testbed)
+        request_email_code(testbed, "new@example.com")
+    # The owner's address is checked too: which budget a destination
+    # counts against must not tell whether it belongs to someone.
+    with pytest.raises(BotCheckRequiredError):
+        request_email_code(testbed)
 
 
 def test_a_refused_request_answers_403_with_the_site_key() -> None:

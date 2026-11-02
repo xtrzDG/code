@@ -106,8 +106,9 @@ class AssistantReply(ImmutableDTO):
     reply (part of `text`), so checks of what the model wrote can leave it
     out. `assistant_version_id` and `assistant_version_number` name the
     version that answered (the one the conversation is pinned to);
-    `tool_calls` are the tools the model called in this turn, with their
-    input and result (the owner's test chat shows them). `choices` are the
+    `tool_calls` are the tools the model called in this turn; their input
+    and result reach platform admins only (`platform_details.py`; the
+    owner's test chat shows them to admins). `choices` are the
     options the reply offers to tap (the text already ends with their
     prompt); every channel shows them its own way.
     """

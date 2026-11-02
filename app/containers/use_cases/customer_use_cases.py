@@ -117,6 +117,7 @@ class CustomerUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
         suppression_list=suppression_list,
+        consent_record_repo=repositories.consent_record_repo,
     )
     change_customer_blocking_use_case: Factory[
         UseCaseContract[ChangeCustomerBlockingCommand, CustomerCardView]

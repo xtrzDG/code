@@ -277,6 +277,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         transformers=transformers, utilities=utilities,
     )  # fmt: skip
     calendar_sync_facilitator = calendars.calendar_sync_facilitator
+    calendar_guest_eraser = calendars.google_calendar_guest_eraser
     busy_time_sync = calendars.busy_time_sync
     booking_system_connectors = calendars.booking_system_connectors
     # Invoice numbers, VAT and the invoice and receipt PDFs (1114).

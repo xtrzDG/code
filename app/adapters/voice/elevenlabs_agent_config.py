@@ -41,6 +41,14 @@ from app.utilities.channels.voice_service import (
 )
 
 AGENT_TAG: str = "assistant-workshop"
+# How long ElevenLabs keeps a conversation (transcript and audio) at the
+# most: only a backstop, since the platform deletes it itself right after
+# the call (or, for a recorded call, once the audio moved into the EU
+# object storage). A recorded call keeps it long enough for the move to be
+# retried; any other call a day. 0 (deletion as the call ends) could race
+# the post-call webhook the platform reads the call from.
+PROVIDER_RETENTION_DAYS: int = 1
+RECORDED_PROVIDER_RETENTION_DAYS: int = 7
 MAX_AGENT_NAME_LENGTH: int = 120
 # Concept sections 1 and 6: during opening hours a caller who asks for a
 # person is put through to staff; outside them the agent hands off and a
@@ -119,8 +127,10 @@ def build_agent_config(
     and 30 seconds), and the agent takes at most MAX_CONCURRENT_CALLS calls
     at once and MAX_DAILY_CALLS a day (no paid bursting). The agent's
     authentication (`AGENT_AUTH`) lets no web or WebSocket conversation
-    start without a signed URL, and the platform records the voice only
-    while the business records calls (`privacy.record_voice`).
+    start without a signed URL, the platform records the voice only while
+    the business records calls (`privacy.record_voice`) and keeps a
+    conversation a day at most (a week when recorded:
+    `privacy.retention_days`).
     """
 
     limits: VoiceCallLimits = call_limits or VoiceCallLimits()
@@ -165,8 +175,16 @@ def build_agent_config(
             **build_analysis_settings(),
             "auth": dict(AGENT_AUTH),
             # The provider records the caller's voice only while the
-            # business records calls (off by default).
-            "privacy": {"record_voice": bool(spec.is_recording_enabled)},
+            # business records calls (off by default), and keeps nothing
+            # longer than its backstop retention.
+            "privacy": {
+                "record_voice": bool(spec.is_recording_enabled),
+                "retention_days": (
+                    RECORDED_PROVIDER_RETENTION_DAYS
+                    if spec.is_recording_enabled
+                    else PROVIDER_RETENTION_DAYS
+                ),
+            },
             "call_limits": {
                 "agent_concurrency_limit": MAX_CONCURRENT_CALLS,
                 "daily_limit": MAX_DAILY_CALLS,

@@ -183,9 +183,11 @@ class TestAgentCreation:
             "enable_conversation_initiation_client_data_from_webhook"
         ]
 
-    @pytest.mark.parametrize("is_recording_enabled", [False, True])
+    @pytest.mark.parametrize(
+        ("is_recording_enabled", "retention_days"), [(False, 1), (True, 7)]
+    )
     def test_the_platform_records_the_voice_only_while_the_business_records(
-        self, is_recording_enabled: bool
+        self, is_recording_enabled: bool, retention_days: int
     ) -> None:
         testbed = ChannelsTestbed()
         testbed.elevenlabs_transport.respond(
@@ -198,8 +200,11 @@ class TestAgentCreation:
         provisioner(testbed).upsert_agent(spec)
 
         agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
+        # The provider's own retention is a short backstop: the platform
+        # deletes the conversation itself after the call.
         assert agent["platform_settings"]["privacy"] == {
-            "record_voice": is_recording_enabled
+            "record_voice": is_recording_enabled,
+            "retention_days": retention_days,
         }
 
     def test_brazilian_portuguese_uses_the_regional_code(self) -> None:

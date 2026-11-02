@@ -15,6 +15,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -97,6 +98,23 @@ class PaymentGatewayAdapterContract(AdapterContract, Protocol):
                 notifications cannot be verified because the provider is not
                 configured.
             ValidationFailedError: the body is malformed.
+        """
+        raise NotImplementedError
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        """
+        Make sure the provider itself still reports what a verified
+        notification of a known order says before it takes effect: a
+        payment or a refund (approved, reversed) is read back from the
+        provider's status API (Flitt); a provider whose notifications
+        carry nothing to read back (Stripe's signed, timestamped events)
+        confirms them as they are.
+
+        Raises:
+            ConflictError: the provider reports another status or amount,
+                or does not know the order (the notification is not applied
+                now; the provider sends it again).
+            ExternalServiceError: the provider could not be asked.
         """
         raise NotImplementedError
 

@@ -21,6 +21,7 @@ from app.utilities.storage.audit_chain_collections import AUDIT_LOG_LOOKUP_FIELD
 from app.utilities.storage.brand_collections import BRAND_LOOKUP_FIELDS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
+from app.utilities.storage.consent_collections import CONSENT_LOOKUP_FIELDS
 from app.utilities.storage.deposit_collections import DEPOSIT_LOOKUP_FIELDS
 from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
 from app.utilities.storage.integration_collections import INTEGRATION_LOOKUP_FIELDS
@@ -289,6 +290,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **REFERRAL_LOOKUP_FIELDS,  # Partners, codes, referrals, commissions (1150).
     # The waitlist and the rebooking campaigns (1151).
     **GROWTH_LOOKUP_FIELDS,
+    **CONSENT_LOOKUP_FIELDS,
     **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
     **INTEGRATION_LOOKUP_FIELDS,  # Webhooks and API keys (1181).
     **PHONE_NUMBER_LOOKUP_FIELDS,  # Rented phone numbers and requests (1213).

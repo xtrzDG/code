@@ -24,7 +24,7 @@ from app.use_cases.businesses.change_member_role_use_case import (
     ChangeMemberRoleUseCase,
 )
 from app.use_cases.businesses.member_mutation_guard import MemberMutationGuard
-from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
+from tests.businesses.member_removal import build_remove_member
 from tests.businesses.team_steps import invite
 from tests.users.accounts_phones import GEORGIA_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
@@ -124,8 +124,10 @@ def test_an_owner_removed_meanwhile_cannot_remove_another_owner() -> None:
     def remove(
         actor: UserId, member: UserId, step_up: StepUpGuardContract
     ) -> Callable[[], BusinessView]:
-        return lambda: RemoveMemberUseCase(
-            member_mutations=guard(testbed, step_up)
+        return lambda: build_remove_member(
+            guard(testbed, step_up),
+            testbed.audit_log_repo,
+            testbed.clock.build_wall_clock(),
         ).run(
             RemoveMemberCommand(
                 user_id=actor, business_id=business.id, member_user_id=member

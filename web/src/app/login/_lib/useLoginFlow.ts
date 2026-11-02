@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
+import { afterSignInPath } from "@/lib/security/secondFactorSuggestion";
 
 import { findBotCheckSiteKey } from "./botCheck";
 import { acceptedTermsBody, preferConsentVersions, type ConsentVersions } from "./legalConsent";
@@ -163,8 +164,9 @@ export function useLoginFlow(next: string) {
         setVerifying(false);
         return;
       }
-      // A full load picks up the account language and the new session.
-      window.location.assign(next);
+      // A full load picks up the account language and the new session; an
+      // owner without a second factor is asked to set one up first.
+      window.location.assign(afterSignInPath(next, answer.second_factor_suggested === true));
     } catch (caught) {
       const error = toApiError(caught);
       const problem = classifyOtpVerifyError(error);

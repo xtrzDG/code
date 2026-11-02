@@ -4,6 +4,10 @@ import httpx
 
 from app.clients.google.google_api_responses import ensure_success, read_json_object
 from app.clients.google.google_calendar_requests import bearer
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
@@ -22,8 +26,10 @@ class GoogleHttp:
     """
 
     def __init__(self, transport: httpx.BaseTransport | None = None) -> None:
-        self._client: httpx.Client = httpx.Client(
-            timeout=REQUEST_TIMEOUT_SECONDS, transport=transport
+        self._client: httpx.Client = build_provider_http_client(
+            timeout=REQUEST_TIMEOUT_SECONDS,
+            transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def send(

@@ -5,8 +5,9 @@ import "server-only";
  * its second step): the bearer token goes into the httpOnly session cookie,
  * never into the answer; the interface language becomes the account's;
  * the first-visit attribution cookie is dropped. The browser gets the
- * user, how the session is signed in and, right after an authenticator
- * was set up, its recovery codes (shown once).
+ * user, how the session is signed in, right after an authenticator was
+ * set up its recovery codes (shown once), and whether to suggest a second
+ * factor to an owner who has none.
  */
 
 import { NextResponse } from "next/server";
@@ -33,6 +34,7 @@ export function openSession(
       expires_at: session.expires_at,
       auth_level: session.auth_level ?? "one_factor",
       recovery_codes: session.recovery_codes ?? [],
+      second_factor_suggested: session.second_factor_suggested ?? false,
     },
     { headers: pickResponseHeaders(upstreamHeaders, requestId) },
   );

@@ -1,6 +1,11 @@
 import httpx
 
 from app.clients.http.media_download import download_capped
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    MEDIA_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.meta.graph_api_client import (
     DEFAULT_GRAPH_API_VERSION,
     META_GRAPH_BASE_URL,
@@ -47,15 +52,16 @@ class MetaMediaClient(MetaMediaClientContract):
         api_version: str = DEFAULT_GRAPH_API_VERSION,
         base_url: str = META_GRAPH_BASE_URL,
     ) -> None:
-        self._graph_client: httpx.Client = httpx.Client(
+        self._graph_client: httpx.Client = build_provider_http_client(
             base_url=f"{base_url.rstrip('/')}/{api_version}",
             timeout=LOOKUP_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
-        self._download_client: httpx.Client = httpx.Client(
+        self._download_client: httpx.Client = build_provider_http_client(
             timeout=DOWNLOAD_TIMEOUT_SECONDS,
             transport=transport,
-            follow_redirects=False,
+            max_response_bytes=MEDIA_RESPONSE_MAX_BYTES,
         )
 
     def read_whatsapp_media(

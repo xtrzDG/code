@@ -5,6 +5,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -21,7 +22,8 @@ class CircuitBreakingPaymentGatewayAdapter(PaymentGatewayAdapterContract):
     (an ExternalServiceError, as when the provider is unreachable) and makes
     no network call; timeouts and 5xx count against it, a refusal or a
     declined card does not. Notifications are verified locally and need no
-    circuit.
+    circuit; reading one back from the provider (`confirm_notification`)
+    goes through it.
     """
 
     def __init__(
@@ -49,6 +51,13 @@ class CircuitBreakingPaymentGatewayAdapter(PaymentGatewayAdapterContract):
         delivery: PaymentWebhookDelivery,
     ) -> VerifiedPaymentEvent:
         return self._inner_adapter.read_notification(delivery)
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        call_through_circuit(
+            self._circuit_breaker,
+            self._circuit,
+            lambda: self._inner_adapter.confirm_notification(payment),
+        )
 
     def stop_recurring(
         self,

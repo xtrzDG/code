@@ -18,6 +18,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -104,6 +105,15 @@ class StripeBillingAdapter(PaymentGatewayAdapterContract):
             self._now_seconds(),
         )
         return read_stripe_event(event, self._stripe_client)
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        """
+        Stripe's events are confirmed as they are: each is signed with the
+        endpoint's own secret over its timestamp (300 s tolerance), and the
+        objects it names are read from Stripe when the event is decoded.
+        """
+
+        del payment
 
     def stop_recurring(
         self,

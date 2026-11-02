@@ -48,7 +48,8 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
 
     The fallback names the call (`CallSid`), the line (`To`), the caller
     (`From`) and, for a call forwarded to the line, `ForwardedFrom`; the
-    dial's action adds `DialCallStatus`. A missed call of the fallback is
+    dial's action adds `DialCallStatus`. A call put through to staff
+    presents the line as its caller id (`build_dial_twiml`). A missed call of the fallback is
     the line's (source PBX) of the business, keyed by Twilio's call SID.
 
     Twilio's signature carries no time, so once a request's signature
@@ -112,14 +113,19 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
         )
 
     def transfer(
-        self, business_id: BusinessId, phone_number: E164PhoneNumber
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+        caller_id: E164PhoneNumber,
     ) -> CallFallbackReply:
         action_url: str | None = self._address(build_fallback_dial_path(business_id))
         if action_url is None:
             raise PreconditionFailedError("APP_BASE_URL is not set.")
 
         return CallFallbackReply(
-            twiml=TwimlDocument(build_dial_twiml(str(phone_number), action_url))
+            twiml=TwimlDocument(
+                build_dial_twiml(str(phone_number), action_url, str(caller_id))
+            )
         )
 
     def end_call(self) -> CallFallbackReply:

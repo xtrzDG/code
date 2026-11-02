@@ -13,6 +13,10 @@ from app.clients.flitt.flitt_protocol import (
     require_mapping,
     verified_callback_parameters,
 )
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.http.provider_timeouts import provider_timeout
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import (
@@ -70,10 +74,11 @@ class FlittClient(ClientContract):
         base_url: str = (
             DEFAULT_FLITT_API_BASE_URL if api_base_url is None else str(api_base_url)
         )
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=provider_timeout(READ_TIMEOUT_SECONDS),
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def create_checkout_url(

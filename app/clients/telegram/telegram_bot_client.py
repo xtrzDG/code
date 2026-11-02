@@ -2,6 +2,10 @@ from typing import cast
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.telegram.telegram_bot_calls import call_bot_api
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
@@ -59,10 +63,11 @@ class TelegramBotClient(TelegramBotApiClientContract):
         transport: httpx.BaseTransport | None = None,
         base_url: str = TELEGRAM_API_BASE_URL,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=provider_timeout(),
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def get_me(self, bot_token: ProviderToken) -> TelegramBotProfile:

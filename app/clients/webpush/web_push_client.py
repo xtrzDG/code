@@ -5,6 +5,10 @@ from collections.abc import Callable
 import httpx
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.http.provider_timeouts import provider_timeout
 from app.clients.webpush.push_encryption import (
     decode_base64url,
@@ -72,8 +76,10 @@ class WebPushClient(WebPushClientContract):
             sender_key_factory
         )
         self._salt_factory: Callable[[], bytes] = salt_factory
-        self._http_client: httpx.Client = httpx.Client(
-            timeout=provider_timeout(), transport=transport
+        self._http_client: httpx.Client = build_provider_http_client(
+            timeout=provider_timeout(),
+            transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     @property

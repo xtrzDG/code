@@ -35,6 +35,11 @@ which runbook is `../dependency-map.md`.
 | [platform-brakes](platform-brakes.md) | `spend_budget_stop`; pausing every assistant (Admin → System) | SEV1 |
 | [missed-job-runs](missed-job-runs.md) | `missed_job_runs` (periodic job heartbeats, no Sentry needed) | SEV2 |
 | [payment-mismatch](payment-mismatch.md) | `payment_mismatch` (the daily reconciliation with Flitt and Stripe) | SEV2 |
+| [webhook-signature-failures](webhook-signature-failures.md) | `webhook_signature_failures` | SEV2 |
+| [storage-errors](storage-errors.md) | `storage_errors` (database or object storage) | SEV1 |
+| [api-latency](api-latency.md) | `api_latency` | SEV2 |
+| [backup-failed](backup-failed.md) | `backup_failed`, the last backup on Admin → System, Sentry Crons | SEV2 |
+| [tenant-sms-volume](tenant-sms-volume.md) | `tenant_sms_volume`, `otp_conversion` | SEV2 |
 | [secret-rotation](secret-rotation.md) | none: the yearly rotation, an offboarding or a leak of a webhook secret | none; SEV1 for a leak |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,

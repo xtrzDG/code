@@ -39,6 +39,9 @@ from app.registries.locks.data_task_lock_registry import DataTaskLockRegistry
 from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
+from app.registries.locks.payment_notification_lock_registry import (
+    PaymentNotificationLockRegistry,
+)
 from app.registries.locks.phone_line_lock_registry import PhoneLineLockRegistry
 from app.registries.locks.platform_alert_lock_registry import (
     PlatformAlertLockRegistry,
@@ -178,6 +181,12 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # One per business around the use of its credit (R13).
     billing_credit_lock_registry: Singleton[BillingCreditLockRegistry] = Singleton(
         BillingCreditLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # One per payment order around applying a provider notification.
+    payment_notification_lock_registry: Singleton[PaymentNotificationLockRegistry] = (
+        Singleton(
+            PaymentNotificationLockRegistry, advisory_locks=adapters.advisory_locks
+        )
     )
     customer_message_lock_registry: Singleton[CustomerMessageLockRegistry] = Singleton(
         CustomerMessageLockRegistry, advisory_locks=adapters.advisory_locks

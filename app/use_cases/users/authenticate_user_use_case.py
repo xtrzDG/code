@@ -37,7 +37,7 @@ class AuthenticateUserUseCase(UseCaseContract[SessionCheck, SessionAssurance]):
     tokens and deleted users are all reported as AuthenticationRequiredError.
     A use is recorded at most every five minutes (`session_expiry.py`):
     the last-seen time and address, the browser, and the idle expiry slid
-    forward (a week, or twelve hours for platform admins, whose sessions
+    forward (a week, or fifteen minutes for platform admins, whose sessions
     also end a day after sign-in). A session from before two-factor
     sign-in (no `auth_level`) counts as one factor, not recently confirmed.
     The session and its person are read in one read session (every cabinet

@@ -7,6 +7,10 @@ from typing import BinaryIO
 import httpx
 from typed_time_provider import Microseconds, WallClock
 
+from app.clients.http.provider_http_client import (
+    BACKUP_OBJECT_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.object_storage.s3_xml_replies import (
     ListingPage,
     build_completion,
@@ -60,8 +64,10 @@ class S3BackupBucketClient(BackupBucketClientContract):
         self._connection: ObjectStorageConnection = connection
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._part_size: int = part_size
-        self._http_client: httpx.Client = httpx.Client(
-            timeout=REQUEST_TIMEOUT, transport=transport
+        self._http_client: httpx.Client = build_provider_http_client(
+            timeout=REQUEST_TIMEOUT,
+            transport=transport,
+            max_response_bytes=BACKUP_OBJECT_MAX_BYTES,
         )
 
     def upload_file(self, key: BackupObjectKey, source: LocalFilePath) -> None:

@@ -86,6 +86,7 @@ class CustomerBed:
             audit_log_repo=testbed.audit_log_repo,
             wall_clock=wall_clock,
             suppression_list=testbed.suppression_list,
+            consent_record_repo=testbed.consent_record_repo,
         )
         self.change_blocking = ChangeCustomerBlockingUseCase(
             authorize_business_access=authorize,

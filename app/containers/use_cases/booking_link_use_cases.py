@@ -124,4 +124,5 @@ class BookingLinkUseCasesContainer(containers.DeclarativeContainer):
         card_repo=repositories.contact_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        consent_record_repo=repositories.consent_record_repo,
     )

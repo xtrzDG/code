@@ -5,7 +5,8 @@
  * bearer token goes into the httpOnly session cookie (`__Host-aw_session`
  * over HTTPS; never into the response body), the
  * interface language becomes the account's language, and the answer is
- * {"user", "is_new_user", "expires_at", "auth_level", "recovery_codes"}
+ * {"user", "is_new_user", "expires_at", "auth_level", "recovery_codes",
+ * "second_factor_suggested"}
  * (src/server/sessionOpening.ts). People with an authenticator app (and
  * every platform admin) get no session yet: the answer is the second step,
  * {"mfa_required": true, "mfa_challenge", "is_new_user"}, finished by

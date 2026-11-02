@@ -23,6 +23,7 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
+from app.schemas.typings.mfa.booleans import IsSecondFactorSuggested
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.referrals.booleans import IsPartner
 from app.schemas.typings.users.booleans import (
@@ -140,7 +141,10 @@ class LoginSessionView(ImmutableDTO):
     A new session. The bearer token is shown only here; the server keeps
     nothing but its hash. `auth_level` says how it was signed in; a session
     opened while setting up an authenticator carries the new
-    `recovery_codes` (shown once).
+    `recovery_codes` (shown once). `second_factor_suggested`: the person
+    owns a business and has no second factor yet; the cabinet asks them to
+    set one up (a passkey or the authenticator app) before going on, which
+    they may put off until their next sign-in.
     """
 
     access_token: AccessToken
@@ -149,6 +153,7 @@ class LoginSessionView(ImmutableDTO):
     is_new_user: IsNewUser
     auth_level: AuthLevel = AuthLevel.ONE_FACTOR
     recovery_codes: list[RecoveryCode] = Field(default_factory=list[RecoveryCode])
+    second_factor_suggested: IsSecondFactorSuggested = False
 
 
 class LogoutCommand(ImmutableDTO):

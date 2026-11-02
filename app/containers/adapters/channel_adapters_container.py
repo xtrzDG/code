@@ -16,6 +16,9 @@ from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdap
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
+from app.adapters.monitoring.bucket_signal_counter_adapter import (
+    BucketSignalCounterAdapter,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.utilities import UtilitiesContainer
@@ -41,6 +44,10 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The RateLimitBucketAdapterContract of the platform's signal counters
+    # and the microsecond wall clock of their windows.
+    rate_limit_buckets: Dependency[object] = Dependency()
+    wall_clock: Dependency[object] = Dependency()
     # The process's one circuit breaker (AdaptersContainer.resilience).
     circuit_breaker: Dependency[CircuitBreakerFacilitator] = Dependency(
         instance_of=CircuitBreakerFacilitator
@@ -59,6 +66,12 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         typing_client=clients.meta_typing_client,
         text_resolver=utilities.localized_text_resolver,
+        # Meta's quality warnings, counted for the WHATSAPP_QUALITY alert.
+        signal_counter=Singleton(
+            BucketSignalCounterAdapter,
+            buckets=rate_limit_buckets,
+            wall_clock=wall_clock,
+        ),
     )
     messenger_pages: Singleton[MessengerChannelAdapter] = Singleton(
         MessengerChannelAdapter,

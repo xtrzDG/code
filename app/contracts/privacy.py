@@ -1,6 +1,7 @@
 """
-The suppression list of customers who said STOP (kept through erasure) and
-the notice every owner gets when a full business export is downloaded.
+The suppression list of customers who said STOP (kept through erasure),
+with a digest of every erased customer, and the notice every owner gets
+when a full business export is downloaded.
 """
 
 from collections.abc import Sequence
@@ -47,6 +48,29 @@ class SuppressionListContract(FacilitatorContract, Protocol):
         identities: Sequence[SuppressedIdentity],
     ) -> IsMessagingSuppressed:
         """True when any of the identities is on the business's list."""
+        raise NotImplementedError
+
+    def remember_erasure(
+        self,
+        business_id: BusinessId,
+        identities: Sequence[SuppressedIdentity],
+        now: Microseconds,
+    ) -> SuppressedIdentityCount:
+        """
+        Keep the digests of an erased customer's identities as erasure
+        entries (dated `now`, a later erasure moves the date); how many
+        were new. They hold back no message the customer asks for (a new
+        booking's reminder): only marketing on a consent from before the
+        erasure (`erased_at`).
+        """
+        raise NotImplementedError
+
+    def erased_at(
+        self,
+        business_id: BusinessId,
+        identities: Sequence[SuppressedIdentity],
+    ) -> Microseconds | None:
+        """The latest erasure of any of the identities; None: never erased."""
         raise NotImplementedError
 
 

@@ -2,6 +2,10 @@ import re
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.messaging_clients import TelegramGatewayClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -37,11 +41,12 @@ class TelegramGatewayClient(TelegramGatewayClientContract):
         transport: httpx.BaseTransport | None = None,
         base_url: str = TELEGRAM_GATEWAY_BASE_URL,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
             headers={"Authorization": f"Bearer {api_token}"},
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def send_verification_message(

@@ -174,10 +174,18 @@ class BillingTestbed(BillingUseCases):
         is_signed: bool = True,
         content_type: str = "application/json",
         encoder: Callable[[dict[str, object]], str] = json.dumps,
+        is_known_to_flitt: bool = True,
     ) -> PaymentWebhookReceipt:
+        """
+        Deliver a callback; Flitt's status API then reports what it says,
+        unless `is_known_to_flitt` is False (the test sets Flitt's record).
+        """
+
         payload: dict[str, object] = (
             sign_flitt_callback(parameters) if is_signed else parameters
         )
+        if is_signed and is_known_to_flitt:
+            self.flitt.know_callback(parameters)
         return self.process_webhook.run(
             PaymentWebhookDelivery(
                 body=PaymentWebhookBody(encoder(payload)),
@@ -193,7 +201,9 @@ class BillingTestbed(BillingUseCases):
         amount: int | None = None,
         **extra: object,
     ) -> dict[str, object]:
-        return {
+        """A callback of the order; Flitt's status API reports the same."""
+
+        parameters: dict[str, object] = {
             "order_id": str(payment_order.id),
             "merchant_id": int(FLITT_MERCHANT_ID),
             "order_status": order_status,
@@ -205,6 +215,8 @@ class BillingTestbed(BillingUseCases):
             "response_description": "",
             **extra,
         }
+        self.flitt.know_callback(parameters)
+        return parameters
 
     def build_http_client(self) -> TestClient:
         return build_billing_http_client(self)

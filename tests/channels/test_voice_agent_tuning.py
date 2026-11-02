@@ -115,3 +115,14 @@ def test_the_tuning_variables_are_read_and_checked() -> None:
 def test_a_wrong_tuning_value_names_its_variable(name: str, value: str) -> None:
     with pytest.raises(ValidationFailedError, match=name):
         read_voice_agent_settings({name: value})
+
+
+def test_a_late_answer_gets_a_filler_instead_of_dead_air() -> None:
+    turn = created_agent()["conversation_config"]["turn"]
+
+    # Three seconds without an answer: one short sound, then the answer.
+    assert turn["soft_timeout_config"] == {
+        "timeout_seconds": 3.0,
+        "message": "Mmm…",
+        "use_llm_generated_message": False,
+    }

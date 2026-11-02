@@ -18,6 +18,7 @@ from app.schemas.constants.calls import (
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from tests.calls.call_fallback_steps import (
+    ASSISTANT_LINE,
     CALL_SID,
     STAFF_MOBILE,
     dial_form,
@@ -48,7 +49,8 @@ NOTICE_TITLE: str = "The phone assistant could not take a call · Funicular VR"
 def dial_twiml(business_id: BusinessId, number: str) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?><Response>'
-        '<Dial timeout="20" answerOnBridge="true" action="https://api.workshop.test'
+        '<Dial timeout="20" answerOnBridge="true" '
+        f'callerId="{ASSISTANT_LINE}" action="https://api.workshop.test'
         f'{dial_path(business_id)}" method="POST">'
         f"<Number>{number}</Number></Dial></Response>"
     )

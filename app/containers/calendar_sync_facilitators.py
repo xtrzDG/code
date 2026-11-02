@@ -11,6 +11,9 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
+from app.facilitators.calendar.google_calendar_guest_eraser import (
+    GoogleCalendarGuestEraser,
+)
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
@@ -61,6 +64,16 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         secret_cipher=adapters.secret_cipher,
         phone_number_parser=utilities.phone_number_parser,
         event_text_transformer=transformers.calendar_event_text_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # An erased customer's events in the business's Google Calendar.
+    google_calendar_guest_eraser: Singleton[GoogleCalendarGuestEraser] = Singleton(
+        GoogleCalendarGuestEraser,
+        connection_repo=repositories.calendar_connection_repo,
+        event_link_repo=repositories.calendar_event_link_repo,
+        calendar_client=clients.google_calendar_client,
+        secret_cipher=adapters.secret_cipher,
+        mirror=google_calendar_mirror,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # The bookings' writes to their resources' booking systems, queued.

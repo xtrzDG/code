@@ -6,6 +6,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.campaigns import CampaignMessageDocument
+from app.schemas.domain.consent_records import ConsentRecordDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
@@ -191,7 +192,8 @@ class ContactRecords(ImmutableDTO):
     their account in each of the business's channels, the webhook events
     they sent (`inbound_events`) by their accounts and conversations, and
     the requests for feedback after their visits, their places on the
-    waitlist and the rebooking campaign's messages by the contact.
+    waitlist, the rebooking campaign's messages and the consent ledger's
+    entries by the contact.
     """
 
     contact: ContactDocument
@@ -223,6 +225,10 @@ class ContactRecords(ImmutableDTO):
     )
     campaign_messages: list[CampaignMessageDocument] = Field(
         default_factory=list[CampaignMessageDocument]
+    )
+    # Their consent ledger (1246), oldest first: kept after an erasure.
+    consent_records: list[ConsentRecordDocument] = Field(
+        default_factory=list[ConsentRecordDocument]
     )
 
 

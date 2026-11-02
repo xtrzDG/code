@@ -1,6 +1,7 @@
 import logging
 
 from app.contracts.observability import ErrorReportingFacilitatorContract
+from app.gateways.failure_signals import FailureSignals
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobErrorText
@@ -13,13 +14,21 @@ class JobFailureReporter:
     """
     Where job failures go: expected application errors (a provider is down,
     a record is gone) are logged as warnings; unexpected ones go to the
-    error reporter (Sentry) as well.
+    error reporter (Sentry) as well. A failure of the database or the
+    object storage counts for the `storage_errors` alert either way.
     """
 
-    def __init__(self, error_reporter: ErrorReportingFacilitatorContract) -> None:
+    def __init__(
+        self,
+        error_reporter: ErrorReportingFacilitatorContract,
+        failure_signals: FailureSignals | None = None,
+    ) -> None:
         self._error_reporter: ErrorReportingFacilitatorContract = error_reporter
+        self._failure_signals: FailureSignals | None = failure_signals
 
     def report(self, job_name: JobName, error: Exception) -> None:
+        if self._failure_signals is not None:
+            self._failure_signals.count_store_failure(error)
         if isinstance(error, ApplicationError):
             LOGGER.warning("Job %s failed: %s", job_name, error)
             return

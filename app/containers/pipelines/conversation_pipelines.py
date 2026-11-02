@@ -53,6 +53,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
         record_activation_event=setup_orchestrators.record_activation_event_orchestrator,
         test_chat_slots=registries.test_chat_slots,
+        see_platform_details=conversation_orchestrators.see_platform_details_orchestrator,
     )
 
     # --- Voice webhooks.

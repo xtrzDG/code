@@ -31,6 +31,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.gateways.failure_signals import FailureSignals, failure_signals_of
 from app.gateways.http.openapi_error_contract import install_error_contract_openapi
 from app.gateways.http.refusal_logging import log_refusal
 from app.schemas.constants.errors import ApiErrorCode
@@ -78,6 +79,7 @@ HTTP_STATUS_ERROR_CODES: dict[int, ApiErrorCode] = {
     504: ApiErrorCode.EXTERNAL_SERVICE_ERROR,
 }
 MAX_REPORTED_VALIDATION_ERRORS: int = 5
+SERVER_ERROR_STATUS: int = 500
 STEP_UP_CHALLENGE: str = 'Bearer error="insufficient_user_authentication"'
 MISSING_FIELD_ERROR_TYPE: str = "missing"
 MISSING_REASON_CODE: ErrorReasonCode = ErrorReasonCode("missing")
@@ -119,6 +121,9 @@ async def handle_application_error(request: Request, error: Exception) -> JSONRe
         headers["WWW-Authenticate"] = STEP_UP_CHALLENGE
 
     log_refusal(request, status_code, error_code.value)
+    signals: FailureSignals | None = failure_signals_of(request.app)
+    if signals is not None and status_code >= SERVER_ERROR_STATUS:
+        signals.count_store_failure(error)
     return error_response(
         status_code,
         ErrorBody(

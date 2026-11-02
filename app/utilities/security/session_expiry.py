@@ -1,6 +1,6 @@
 """
 When a session ends and when a use of it is worth recording: the idle
-expiry slides with use (a week for owners and staff, twelve hours for
+expiry slides with use (a week for owners and staff, fifteen minutes for
 platform admins), the absolute end never moves later (30 days, a day for
 platform admins), and the last use is written at most every five minutes.
 """

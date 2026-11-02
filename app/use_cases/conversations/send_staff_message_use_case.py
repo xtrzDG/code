@@ -53,6 +53,7 @@ from app.use_cases.conversations.staff_reply_support import (
 from app.use_cases.shared.outbox_queue import queue_outbound_message
 from app.use_cases.shared.storage_transaction import in_unit_of_work
 from app.utilities.channels.widget_live_signals import announce_widget_reply
+from app.utilities.conversations.platform_details import staff_message_result
 from app.utilities.conversations.staff_replies import describe_block
 
 MESSAGE_ENTITY: AuditEntityName = AuditEntityName("message")
@@ -194,7 +195,7 @@ class SendStaffMessageUseCase(
             [self._message_transformer.transform(message)],
             self._outbound_message_repo,
         )
-        return StaffMessageResult(message=view, delivery=delivery)
+        return staff_message_result(StaffMessageResult(message=view, delivery=delivery))
 
     def _store(
         self,

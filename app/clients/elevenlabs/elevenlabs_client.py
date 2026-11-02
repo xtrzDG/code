@@ -3,6 +3,10 @@ from urllib.parse import quote
 import httpx
 
 from app.clients.elevenlabs.elevenlabs_errors import raise_for_error
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.channel_clients import JsonObject
 from app.contracts.voice_check_clients import ElevenLabsPlatformClientContract
 from app.schemas.constants.assistants import AssistantToolName
@@ -57,11 +61,12 @@ class ElevenLabsClient(ElevenLabsPlatformClientContract):
         base_url: PublicBaseUrl,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=str(base_url).rstrip("/"),
             headers={API_KEY_HEADER: str(api_key)},
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def create_agent(self, agent_config: JsonObject) -> VoiceAgentId:

@@ -10,6 +10,7 @@ from app.containers.adapters.inbox_collections_container import (
 from app.repositories.assistant_settings_repository import (
     AssistantSettingsRepository,
 )
+from app.repositories.consent_record_repository import ConsentRecordRepository
 from app.repositories.customer_history_repository import CustomerHistoryRepository
 from app.repositories.customer_repositories import (
     CustomerSegmentRepository,
@@ -62,6 +63,11 @@ class InboxRepositoriesContainer(containers.DeclarativeContainer):
     customer_settings_repo: Singleton[CustomerSettingsRepository] = Singleton(
         CustomerSettingsRepository,
         collection=inbox_collections.customer_settings_collection,
+    )
+    # Every consent and withdrawal, append-only (1246).
+    consent_record_repo: Singleton[ConsentRecordRepository] = Singleton(
+        ConsentRecordRepository,
+        collection=inbox_collections.consent_record_collection,
     )
     customer_history_repo: Singleton[CustomerHistoryRepository] = Singleton(
         CustomerHistoryRepository,

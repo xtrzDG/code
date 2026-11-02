@@ -8,6 +8,9 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
+from app.use_cases.admin.alerts.platform_health_alert_checks import (
+    PlatformHealthAlertChecks,
+)
 from app.use_cases.admin.alerts.safety_alert_checks import PlatformSafetyAlertChecks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.alerts.voice_alert_checks import VoiceHealthAlertCheck
@@ -61,6 +64,13 @@ def platform_alert_checks_factory(
                 job_heartbeat_repo=repositories.periodic_job_heartbeat_repo,
                 reconciliation_repo=repositories.payment_reconciliation_repo,
                 release=config.app_settings.provided.release_version,
+            ),
+            health_checks=Factory(
+                PlatformHealthAlertChecks,
+                signal_counter=adapters.signal_counter,
+                slot_repo=repositories.service_level_slot_repo,
+                maintenance_run_repo=repositories.maintenance_run_repo,
+                otp_challenge_repo=repositories.otp_challenge_repo,
             ),
         ),
     )

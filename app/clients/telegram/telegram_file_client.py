@@ -3,6 +3,11 @@ from typing import NoReturn
 import httpx
 
 from app.clients.http.media_download import download_capped
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    MEDIA_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.telegram.telegram_bot_client import TELEGRAM_API_BASE_URL
 from app.contracts.channel_clients import ProviderToken
 from app.contracts.media_clients import TelegramFileClientContract
@@ -46,16 +51,17 @@ class TelegramFileClient(TelegramFileClientContract):
         base_url: str = TELEGRAM_API_BASE_URL,
     ) -> None:
         self._base_url: str = base_url.rstrip("/")
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=self._base_url,
             timeout=LOOKUP_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
-        self._download_client: httpx.Client = httpx.Client(
+        self._download_client: httpx.Client = build_provider_http_client(
             base_url=self._base_url,
             timeout=DOWNLOAD_TIMEOUT_SECONDS,
             transport=transport,
-            follow_redirects=False,
+            max_response_bytes=MEDIA_RESPONSE_MAX_BYTES,
         )
 
     def get_file(

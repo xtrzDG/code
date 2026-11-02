@@ -1,9 +1,11 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.customer_repositories import CustomerCardRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.consent_records import ConsentEventSource
 from app.schemas.constants.marketing_consent import (
     MarketingConsentSource,
     MarketingConsentText,
@@ -13,6 +15,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument, MarketingConsent
 from app.schemas.dto.booking_manage import ManagedBookingAction, ManagedBookingView
+from app.schemas.dto.customers.consent_records import ConsentOrigin
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
@@ -25,6 +28,7 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.contacts.booleans import IsMarketingConsentGiven
 from app.use_cases.bookings.guest_booking import GuestBooking
 from app.use_cases.bookings.public.managed_booking_pages import ManagedBookingPages
+from app.use_cases.shared.consent_ledger import record_consent_change
 from app.utilities.bookings.manage_rate_limits import ManageRateLimits
 
 CONTACT_ENTITY: AuditEntityName = AuditEntityName("contact")
@@ -54,7 +58,9 @@ class ChangeManagedBookingConsentUseCase(
     is one atomic step on the contact as stored, counted against the box's
     own limits (`MANAGE_CONSENT_LIMITS`, never the cancellation's and the
     move's) and audited (UPDATE of the contact, no actor: the customer
-    made it). A STOP still wins over a ticked box until START.
+    made it); a consent given or taken back is an entry of the consent
+    ledger (the page, its booking and chat, the wording and its language,
+    the guest's network). A STOP still wins over a ticked box until START.
     """
 
     def __init__(
@@ -63,7 +69,9 @@ class ChangeManagedBookingConsentUseCase(
         card_repo: CustomerCardRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        consent_record_repo: ConsentRecordRepoContract,
     ) -> None:
+        self._consent_record_repo: ConsentRecordRepoContract = consent_record_repo
         self._pages: ManagedBookingPages = pages
         self._card_repo: CustomerCardRepoContract = card_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
@@ -87,11 +95,14 @@ class ChangeManagedBookingConsentUseCase(
         booking: BookingDocument = guest_booking.booking
         now: Microseconds = self._wall_clock.now_unix()
 
+        consent_before: list[MarketingConsent | None] = []
+
         def change(contact: ContactDocument) -> None:
             if contact.erased_at is not None:
                 raise ConflictError("The guest's data was erased.")
 
             consent: MarketingConsent | None = contact.marketing_consent
+            consent_before.append(consent)
             if is_given and not contact.has_marketing_consent:
                 contact.marketing_consent = MarketingConsent(
                     given_at=now,
@@ -109,6 +120,22 @@ class ChangeManagedBookingConsentUseCase(
         )
         if changed is None:
             raise NotFoundError(GONE_MESSAGE)
+
+        record_consent_change(
+            self._consent_record_repo,
+            changed,
+            consent_before[-1],
+            changed.marketing_consent,
+            ConsentOrigin(
+                source=ConsentEventSource.BOOKING_PAGE,
+                channel=booking.source_channel,
+                # The page shows the box in the guest's language.
+                language=booking.language or guest_booking.business.default_language,
+                booking_id=booking.id,
+                client_ip_address=input_data.client_ip_address,
+            ),
+            now,
+        )
 
         self._audit_log_repo.append(
             AuditLogEntryDocument(

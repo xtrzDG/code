@@ -5,6 +5,7 @@ from app.contracts.billing import (
     PaymentGatewayAdapterContract,
     PaymentOrderRepoContract,
 )
+from app.contracts.payment_locks import PaymentNotificationLockRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -53,7 +54,14 @@ class ProcessPaymentWebhookUseCase(
     a payment's status, a saved card, both, or neither (IGNORED). The
     payment order is found by the order id we sent (or the parent order of
     an automatic charge, or the echoed merchant data). Each (payment,
-    status) pair and each saved card is applied once.
+    status) pair and each saved card is applied once: the order's applied
+    notification keys are read, checked and stored under the order's
+    notification lock, so two copies of one delivery that arrive at the
+    same moment (two API instances) apply once and the second is a
+    DUPLICATE. A new payment status is read back from the provider before
+    it takes effect (`confirm_notification`: Flitt's status API for an
+    approval or a refund; a ConflictError leaves the order unchanged and
+    the provider sends the notification again).
 
     - a saved card: the provider's references of the order's charges and
       the card's token (sealed) are kept on the order; a card setup's
@@ -67,6 +75,7 @@ class ProcessPaymentWebhookUseCase(
     def __init__(
         self,
         payment_gateway: PaymentGatewayAdapterContract,
+        notification_lock: PaymentNotificationLockRegistryContract,
         payment_order_repo: PaymentOrderRepoContract,
         subscription_repo: SubscriptionRepoContract,
         business_repo: BusinessRepoContract,
@@ -78,6 +87,9 @@ class ProcessPaymentWebhookUseCase(
         product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
+        self._notification_lock: PaymentNotificationLockRegistryContract = (
+            notification_lock
+        )
         self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._business_repo: BusinessRepoContract = business_repo
@@ -105,6 +117,21 @@ class ProcessPaymentWebhookUseCase(
         else:
             return PaymentWebhookReceipt(outcome=PaymentWebhookOutcome.IGNORED)
 
+        with self._notification_lock.lock_for_order(
+            payment_order.business_id, payment_order.id
+        ):
+            # Read again under the lock: a copy applied meanwhile is seen.
+            current: PaymentOrderDocument = (
+                self._payment_order_repo.get(payment_order.id) or payment_order
+            )
+            return self._apply(payment, card, current)
+
+    def _apply(
+        self,
+        payment: PaymentNotification | None,
+        card: PaymentMethodNotice | None,
+        payment_order: PaymentOrderDocument,
+    ) -> PaymentWebhookReceipt:
         processed: list[PaymentNotificationKey] = (
             payment_order.processed_notification_keys
         )
@@ -133,6 +160,9 @@ class ProcessPaymentWebhookUseCase(
         )
         if business is None or subscription is None:
             raise NotFoundError("The subscription of this payment was not found.")
+
+        if new_payment is not None:
+            self._payment_gateway.confirm_notification(new_payment)
 
         outcome: PaymentWebhookOutcome = PaymentWebhookOutcome.IGNORED
         if new_card is not None:

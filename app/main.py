@@ -16,6 +16,7 @@ from starlette.types import Lifespan
 from app.containers.app import AppContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.gateways.failure_signals import FailureSignals
 from app.gateways.http import pipeline_watchdog_thread as watchdog
 from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
@@ -105,6 +106,7 @@ def build_application(app_container: AppContainer) -> FastAPI:
         service_metrics=app_container.utilities.service_metrics(),
         span_tracer=app_container.utilities.span_tracer(),
         api_availability=app_container.gateways.api_availability_tally(),
+        failure_signals=FailureSignals(app_container.adapters.signal_counter()),
     )
 
 

@@ -3,6 +3,10 @@ from urllib.parse import quote
 import httpx
 
 from app.clients.elevenlabs.elevenlabs_errors import raise_for_error
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.telephony_clients import ElevenLabsPhoneNumbersClientContract
 from app.schemas.dto.phone_numbers.provisioning import VoicePlatformImport
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -39,11 +43,12 @@ class ElevenLabsPhoneNumbersClient(ElevenLabsPhoneNumbersClientContract):
         base_url: PublicBaseUrl,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=str(base_url).rstrip("/"),
             headers={API_KEY_HEADER: str(api_key)},
             timeout=REQUEST_TIMEOUT,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def import_twilio_number(

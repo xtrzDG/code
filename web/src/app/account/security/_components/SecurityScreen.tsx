@@ -22,6 +22,7 @@ import type {
 import { IconArrowLeft } from "@/components/icons";
 import { Alert, ButtonLink, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/translate";
 import { HOME_PATH, type SecurityReason } from "@/lib/navigation";
 
 import { AuthenticatorCard } from "./AuthenticatorCard";
@@ -31,6 +32,12 @@ import { DevicesCard } from "./DevicesCard";
 import { PasskeysCard } from "./PasskeysCard";
 import { RecoveryCodesCard } from "./RecoveryCodesCard";
 import { SessionCard } from "./SessionCard";
+
+const REQUIRED_TEXTS: Record<SecurityReason, MessageKey> = {
+  business: "security.required.business",
+  admin: "security.required.admin",
+  admin_passkey: "security.required.adminPasskey",
+};
 
 export function SecurityScreen({
   me,
@@ -54,6 +61,8 @@ export function SecurityScreen({
   };
 
   const isTwoFactor = security.auth_level === "two_factor";
+  // The admin pages ask a platform admin for a passkey too (production).
+  const isSatisfied = isTwoFactor && (reason !== "admin_passkey" || security.passkey_count > 0);
   // Recovery codes stand in for any second factor: the app or a passkey.
   const hasSecondFactor =
     security.totp_status === "active" || security.passkey_count > 0;
@@ -72,15 +81,9 @@ export function SecurityScreen({
         description={t("security.description")}
       />
       {reason ? (
-        <Alert tone={isTwoFactor ? "success" : "warning"}>
-          <p>
-            {t(
-              reason === "admin"
-                ? "security.required.admin"
-                : "security.required.business",
-            )}
-          </p>
-          {isTwoFactor && next ? (
+        <Alert tone={isSatisfied ? "success" : "warning"}>
+          <p>{t(REQUIRED_TEXTS[reason])}</p>
+          {isSatisfied && next ? (
             <ButtonLink href={next} size="sm" className="mt-3">
               {t("security.required.continue")}
             </ButtonLink>

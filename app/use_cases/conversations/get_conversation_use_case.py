@@ -46,6 +46,8 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.conversations.card.conversation_links import (
     ConversationLinks,
     collect_conversation_links,
@@ -57,6 +59,7 @@ from app.use_cases.conversations.staff_reply_support import (
 )
 from app.use_cases.shared.assignment_views import build_assignment_view
 from app.use_cases.shared.storage_transaction import in_read_session
+from app.utilities.conversations.platform_details import conversation_for
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
@@ -105,7 +108,11 @@ class GetConversationUseCase(
         channel_repo: ChannelRepoContract,
         outbound_message_repo: OutboundMessageRepoContract,
         read_session: StorageReadSessionContract | None = None,
+        see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = None,
     ) -> None:
+        self._see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = (
+            see_platform_details
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -195,7 +202,7 @@ class GetConversationUseCase(
             self._resource_repo,
             self._contact_repo,
         )
-        return ConversationDetailView(
+        view = ConversationDetailView(
             conversation=self._summary_transformer.transform(
                 build_view_sources(
                     business.id,
@@ -229,4 +236,9 @@ class GetConversationUseCase(
                 now,
             ),
             assignment=build_assignment_view(conversation),
+        )
+        return conversation_for(
+            view,
+            self._see_platform_details is not None
+            and self._see_platform_details.run(input_data.user_id),
         )

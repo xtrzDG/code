@@ -51,7 +51,8 @@ async function expiredSessionUrl(): Promise<string> {
  *  - 401: the session is over -> sign-in page (the cookie is dropped);
  *  - 404 (also another tenant's id) -> the not-found page;
  *  - 403 `mfa_required` (a business that requires two-factor sign-in, the
- *    admin pages) -> Account → Security, then back;
+ *    admin pages) or `passkey_required` (an admin without a passkey) ->
+ *    Account → Security, then back;
  *  - anything else throws ApiError to the nearest error.tsx.
  *
  *     const api = await getServerApi();
@@ -73,6 +74,10 @@ export async function serverFetch<T>(request: Promise<ApiResult<T>>): Promise<T>
       if (businessId) {
         redirect(adminClientPath(businessId));
       }
+    }
+    if (isApiError(error) && error.status === 403 && error.reasons.some((reason) => reason.code === "passkey_required")) {
+      // Platform admins open the admin pages with a passkey (production).
+      redirect(securityPath({ reason: "admin_passkey", next: (await headers()).get(PATHNAME_HEADER) }));
     }
     if (isApiError(error) && needsTwoFactors(error)) {
       const pathname = (await headers()).get(PATHNAME_HEADER);

@@ -7,6 +7,7 @@ from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.assistant_settings import AssistantSettingsDocument
+from app.schemas.domain.consent_records import ConsentRecordDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.customer_segments import CustomerSegmentDocument
 from app.schemas.domain.customer_settings import CustomerSettingsDocument
@@ -75,6 +76,15 @@ class InboxCollectionsContainer(containers.DeclarativeContainer):
     customer_settings_collection = document_collection(
         CustomerSettingsDocument,
         "customer_settings",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The append-only consent ledger (1246).
+    consent_record_collection = document_collection(
+        ConsentRecordDocument,
+        "consent_records",
         config,
         clients,
         utilities,

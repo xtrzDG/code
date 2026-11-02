@@ -164,9 +164,7 @@ def test_a_shorter_period_asks_for_a_recent_sign_in_first(
 
     with pytest.raises(StepUpRequiredError):
         bed.change(conversations, model_records)
-    assert (
-        bed.settings.get_or_default(bed.business).conversation_retention_days == 730
-    )
+    assert bed.settings.get_or_default(bed.business).conversation_retention_days == 730
 
     bed.step_up.is_required = False
     bed.change(conversations, model_records)

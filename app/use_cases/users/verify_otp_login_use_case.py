@@ -5,6 +5,7 @@ from app.contracts.legal_text_registries import LegalTextRegistryContract
 from app.contracts.passkeys import PasskeyCeremonyAdapterContract
 from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import (
     MfaChallengeRepoContract,
@@ -22,7 +23,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.mfa import AuthLevel
-from app.schemas.constants.users import LoginMethod
+from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
@@ -57,7 +58,9 @@ class VerifyOtpLoginUseCase(
     VerifyMfaLoginUseCase or VerifyPasskeySignInUseCase opens a two-factor
     session. Everyone else gets a
     one-factor session at once (SignInCompletion: the token is returned
-    once, only its hash is stored, the login is audited and counted); a
+    once, only its hash is stored, the login is audited and counted); an
+    owner of a business among them is asked to set up a second factor
+    (`second_factor_suggested`, at every such sign-in until they do); a
     wrong code is audited as LOGIN_FAILED, the one that locks the code as
     OTP_LOCKED (`SignInSecurityAudit`). A new
     account keeps where its owner came from (the cabinet's attribution,
@@ -85,7 +88,9 @@ class VerifyOtpLoginUseCase(
         passkey_repo: PasskeyRepoContract,
         recovery_code_repo: RecoveryCodeRepoContract,
         passkey_ceremony: PasskeyCeremonyAdapterContract,
+        business_repo: BusinessRepoContract,
     ) -> None:
+        self._business_repo: BusinessRepoContract = business_repo
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
         self._app_settings: AppSettings = app_settings
@@ -151,6 +156,16 @@ class VerifyOtpLoginUseCase(
             is_new_user,
             input_data.client_ip_address,
             input_data.user_agent,
+            second_factor_suggested=self._owns_a_business(user),
+        )
+
+    def _owns_a_business(self, user: UserDocument) -> bool:
+        """An owner without a second factor is asked to set one up."""
+
+        return any(
+            member.user_id == user.id and member.role is BusinessMemberRole.OWNER
+            for business in self._business_repo.list_by_member(user.id)
+            for member in business.members
         )
 
     def _find_or_create_user(

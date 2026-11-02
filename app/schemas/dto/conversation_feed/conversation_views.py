@@ -171,11 +171,11 @@ class ConversationPage(ImmutableDTO):
 
 
 class ToolCallView(ImmutableDTO):
-    """One tool call made while producing a message."""
+    """One tool call of a message; input and result for platform admins only."""
 
     tool_name: AssistantToolName
-    input_json: LlmToolInputJson
-    result_json: LlmToolResultJson
+    input_json: LlmToolInputJson | None = None
+    result_json: LlmToolResultJson | None = None
     is_error: IsLlmToolError
 
 
@@ -186,7 +186,8 @@ class MessageView(ImmutableDTO):
     for the website chat); `attachments`: a customer's voice notes, photos
     and places; `context_note`: what a customer message refers to (a story);
     `choices`: the options a reply offered to tap; `guard`: what the reply
-    guard did (None: nothing to show).
+    guard did (None: nothing to show). Model, tokens and cost: platform
+    admins only (None for the team, `platform_details.py`).
     """
 
     id: MessageId
@@ -197,9 +198,9 @@ class MessageView(ImmutableDTO):
     sent_by: UserId | None = None
     tool_calls: list[ToolCallView] = Field(default_factory=list[ToolCallView])
     model_id: LlmModelId | None = None
-    input_tokens: LlmTokenCount
-    output_tokens: LlmTokenCount
-    cost_micro_usd: CostMicroUsd
+    input_tokens: LlmTokenCount | None = None
+    output_tokens: LlmTokenCount | None = None
+    cost_micro_usd: CostMicroUsd | None = None
     created_at: Microseconds
     attachments: list[MessageAttachmentView] = Field(
         default_factory=list[MessageAttachmentView]
@@ -260,12 +261,13 @@ class ConversationDetailView(ImmutableDTO):
     and recordings, the bookings, leads and handoffs made in it, whether
     staff can reply, and who of the team is assigned to it (its
     `assignment_revision` is what an assignment from the card must name).
+    `usage` goes to platform admins only (None for the team).
     """
 
     conversation: ConversationSummaryView
     messages: list[MessageView] = Field(default_factory=list[MessageView])
     earlier_messages_cursor: PageCursor | None = None
-    usage: ConversationUsageView = Field(default_factory=ConversationUsageView)
+    usage: ConversationUsageView | None = None
     calls: list[CallView] = Field(default_factory=list[CallView])
     bookings: list[BookingView] = Field(default_factory=list[BookingView])
     leads: list[LeadListItem] = Field(default_factory=list[LeadListItem])

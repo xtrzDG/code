@@ -1,8 +1,9 @@
 """
 Reading a WhatsApp Cloud API webhook beyond its customer messages: the
-text of a message, and what the delivery carried that is not one
-(statuses of the business's own messages, other subscribed fields,
-reactions and system messages) for the log (`skipped_webhook_parts`).
+text of a message, what the delivery carried that is not one (statuses of
+the business's own messages, other subscribed fields, reactions and
+system messages) for the log (`skipped_webhook_parts`), and Meta's
+warnings about a number's or a template's standing (`quality_warnings`).
 """
 
 import logging
@@ -88,6 +89,57 @@ FAILURE_LABELS: dict[int, str] = {
     132000: "132000 template parameter count mismatch",
     132001: "132001 template does not exist",
 }
+
+
+# Meta's warnings that precede a restriction of the number or a template:
+# the number flagged or its messaging limit lowered, a template's quality
+# yellow or red, a template paused, disabled or flagged, and a template
+# moved into the marketing category (service messages must stay utility).
+NUMBER_WARNING_EVENTS: frozenset[str] = frozenset({"FLAGGED", "DOWNGRADE"})
+TEMPLATE_WARNING_SCORES: frozenset[str] = frozenset({"YELLOW", "RED"})
+TEMPLATE_WARNING_EVENTS: frozenset[str] = frozenset({"PAUSED", "DISABLED", "FLAGGED"})
+MARKETING_CATEGORY: str = "MARKETING"
+MAX_WARNING_LABEL_LENGTH: int = 120
+
+
+def quality_warnings(change: JsonObject) -> list[str]:
+    """
+    What a change of the quality and template fields warns about, one
+    label each (the template's name and language, the number's event):
+    none for good news, other fields and unknown values.
+    """
+
+    field: str | None = read_text(change, "field")
+    value: JsonObject = read_object(change, "value") or {}
+    if field == "phone_number_quality_update":
+        event: str = (read_text(value, "event") or "").upper()
+        return [f"number {event}"] if event in NUMBER_WARNING_EVENTS else []
+
+    template: str = template_label(value)
+    if field == "message_template_quality_update":
+        score: str = (read_text(value, "new_quality_score") or "").upper()
+        if score in TEMPLATE_WARNING_SCORES:
+            return [f"template {template} quality {score}"]
+
+    if field == "message_template_status_update":
+        status: str = (read_text(value, "event") or "").upper()
+        if status in TEMPLATE_WARNING_EVENTS:
+            return [f"template {template} {status}"]
+
+    if field == "template_category_update":
+        category: str = (read_text(value, "new_category") or "").upper()
+        if category == MARKETING_CATEGORY:
+            return [f"template {template} moved to {MARKETING_CATEGORY}"]
+
+    return []
+
+
+def template_label(value: JsonObject) -> str:
+    """A template's name and language as Meta named them, shortened."""
+
+    name: str = read_text(value, "message_template_name") or "unnamed"
+    language: str = read_text(value, "message_template_language") or "?"
+    return f"{name} ({language})"[:MAX_WARNING_LABEL_LENGTH]
 
 
 def read_message_text(message: JsonObject) -> str | None:

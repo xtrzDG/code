@@ -36,11 +36,14 @@ class RouteCallFallbackUseCase(
     answer in time): check the carrier's signature on the business's
     address, then put the caller through to the staff mobile on duty, the
     number the agent transfers to (the profile's handoff phone, else the
-    first manager reachable by phone).
+    first manager reachable by phone). The staff phone sees the line that
+    was called (the platform's rented number) as the caller id, never the
+    caller's own number.
 
     With nobody to put the call through to (no such phone, or the call
     comes from that very phone, was forwarded from it or that phone is the
-    line itself, which would ring in a loop) the call ends and is a missed
+    line itself, which would ring in a loop), or no line to present, the
+    call ends and is a missed
     call of the line (NOT_STARTED) with its text-back. A business that is
     gone: the call ends. So does a call from a number staff blocked
     (`is_blocked_caller`), which the voice agent refused: it reaches
@@ -119,9 +122,13 @@ class RouteCallFallbackUseCase(
         is_loop: bool = transfer is not None and self._loops_back(
             business, report, transfer
         )
-        if transfer is not None and not is_loop:
+        # The staff phone sees the platform's line, never the caller's number.
+        line: E164PhoneNumber | None = self._parse(business, report.assistant_number)
+        if transfer is not None and not is_loop and line is not None:
             return CallFallbackPlan(
-                reply=self._call_fallback_adapter.transfer(business.id, transfer),
+                reply=self._call_fallback_adapter.transfer(
+                    business.id, transfer, line
+                ),
                 called_at=now,
                 business_id=business.id,
                 transfer_phone_number=transfer,

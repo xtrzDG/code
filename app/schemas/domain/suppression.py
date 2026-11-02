@@ -20,6 +20,13 @@ class SuppressionEntryDocument(BaseDocument):
     customer's data is erased: a customer who said STOP is never messaged
     again, even as a new contact after an erasure. The id derives from the
     business and the digest (one entry per identity).
+
+    An erasure leaves an entry of the same shape for every identity of the
+    erased customer, under an id of its own (`erasure_entry_id`): its
+    `created_at` is the erasure's time. Such an entry holds back no message
+    the customer asks for, only marketing on a consent given before it
+    (the campaigns), so an erased customer is never contacted again on
+    what they had agreed to before.
     """
 
     id: SuppressionEntryId

@@ -2,6 +2,10 @@ from urllib.parse import quote
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.clients.twilio.twilio_number_readers import (
     AVAILABLE_NUMBERS_RESOURCE,
     UNAVAILABLE_NUMBER_CODES,
@@ -67,11 +71,12 @@ class TwilioPhoneNumbersClient(TwilioPhoneNumbersClientContract):
     ) -> None:
         self._account_path: str = f"/2010-04-01/Accounts/{account_sid}"
         self._pricing_base_url: str = pricing_base_url.rstrip("/")
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=base_url.rstrip("/"),
             timeout=REQUEST_TIMEOUT,
             transport=transport,
             auth=httpx.BasicAuth(str(account_sid), str(auth_token)),
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def list_available_numbers(

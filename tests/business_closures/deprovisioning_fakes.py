@@ -23,6 +23,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -173,6 +174,9 @@ class Gateway(PaymentGatewayAdapterContract):
         if self.failure is not None:
             raise self.failure
         self.stopped.append(f"{provider.value}:{provider_reference}")
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        raise NotImplementedError
 
     def create_checkout(
         self, request: PaymentCheckoutRequest

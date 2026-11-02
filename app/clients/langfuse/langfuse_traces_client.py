@@ -2,6 +2,10 @@ from collections.abc import Sequence
 
 import httpx
 
+from app.clients.http.provider_http_client import (
+    API_RESPONSE_MAX_BYTES,
+    build_provider_http_client,
+)
 from app.contracts.channel_clients import JsonObject
 from app.contracts.processor_erasure import LangfuseTraceClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -45,11 +49,12 @@ class LangfuseTracesClient(LangfuseTraceClientContract):
         secret_key: PlatformSecret,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
-        self._http_client: httpx.Client = httpx.Client(
+        self._http_client: httpx.Client = build_provider_http_client(
             base_url=str(host).rstrip("/"),
             auth=(str(public_key), str(secret_key)),
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
+            max_response_bytes=API_RESPONSE_MAX_BYTES,
         )
 
     def list_session_trace_ids(self, session_id: TraceSessionId) -> list[CorrelationId]:

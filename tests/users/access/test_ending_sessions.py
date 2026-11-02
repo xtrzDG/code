@@ -1,7 +1,8 @@
 """
 Ending sessions: one (a lost phone), every other one ("sign out
 everywhere else"), the tokens stop working at once, and it is audited.
-Platform admins' sessions are shorter: twelve hours unused, a day at most.
+Platform admins' sessions are shorter: fifteen minutes unused (the admin
+console), a day at most.
 """
 
 import pytest
@@ -105,7 +106,7 @@ def test_one_session_is_ended_and_only_its_owner_may_end_it() -> None:
     )
 
 
-def test_an_admin_session_ends_after_twelve_idle_hours_or_a_day() -> None:
+def test_an_admin_session_ends_after_fifteen_idle_minutes_or_a_day() -> None:
     testbed = build_accounts_testbed(ADMIN_SETTINGS)
     admin = platform_admin()
     testbed.user_repo.save(admin)
@@ -113,18 +114,18 @@ def test_an_admin_session_ends_after_twelve_idle_hours_or_a_day() -> None:
     used = admin_session(testbed, admin.id, now)
     idle = admin_session(testbed, admin.id, now)
 
-    # Used every hour: the absolute end (a day after sign-in) comes anyway.
-    for _ in range(11):
-        testbed.clock.advance(HOUR)
-        testbed.authenticate_user.run(SessionCheck(access_token=used))
-    testbed.clock.advance(HOUR)
+    testbed.clock.advance(10 * MINUTE)
+    testbed.authenticate_user.run(SessionCheck(access_token=used))
+    testbed.clock.advance(6 * MINUTE)
+    # Sixteen minutes without a use: the console's idle limit ended it.
     with pytest.raises(AuthenticationRequiredError):
         testbed.authenticate_user.run(SessionCheck(access_token=idle))
-    for _ in range(11):
+    # Used every ten minutes: the absolute end (a day after sign-in) comes anyway.
+    for _ in range(142):
         testbed.authenticate_user.run(SessionCheck(access_token=used))
-        testbed.clock.advance(HOUR)
+        testbed.clock.advance(10 * MINUTE)
     assert testbed.authenticate_user.run(SessionCheck(access_token=used))
-    testbed.clock.advance(HOUR)
+    testbed.clock.advance(10 * MINUTE)
     with pytest.raises(AuthenticationRequiredError):
         testbed.authenticate_user.run(SessionCheck(access_token=used))
 

@@ -10,6 +10,7 @@ from app.contracts.repositories.call_follow_up_repositories import (
 from app.contracts.repositories.campaign_repositories import (
     CampaignMessageRepoContract,
 )
+from app.contracts.repositories.consent_repositories import ConsentRecordRepoContract
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
@@ -72,7 +73,11 @@ class CollectContactRecordsUseCase(
         feedback_request_repo: FeedbackRequestRepoContract,
         waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
         campaign_message_repo: CampaignMessageRepoContract | None = None,
+        consent_record_repo: ConsentRecordRepoContract | None = None,
     ) -> None:
+        self._consent_record_repo: ConsentRecordRepoContract | None = (
+            consent_record_repo
+        )
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._message_repo: MessageRepoContract = message_repo
@@ -166,4 +171,11 @@ class CollectContactRecordsUseCase(
             feedback_requests=traces.feedback_requests,
             waitlist_entries=traces.waitlist_entries,
             campaign_messages=traces.campaign_messages,
+            consent_records=(
+                []
+                if self._consent_record_repo is None
+                else self._consent_record_repo.list_by_contact(
+                    contact.business_id, contact.id
+                )
+            ),
         )

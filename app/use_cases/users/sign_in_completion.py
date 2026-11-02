@@ -19,6 +19,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
     ClientIpAddress,
 )
+from app.schemas.typings.mfa.booleans import IsSecondFactorSuggested
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.users.booleans import IsNewUser
 from app.schemas.typings.users.constrained_strings import SessionUserAgent
@@ -36,7 +37,7 @@ class SignInCompletion:
     The last step of every sign-in: a new session with a random bearer token
     (returned once; only its SHA-256 hash is stored), how it was signed in
     and when, the device (browser and address) and its expiries (30 days at
-    most and a week unused; a day and twelve hours for platform admins), an
+    most and a week unused; a day and fifteen minutes for platform admins), an
     audited LOGIN with the client's address, the sign-in (or sign-up)
     product events, and a notice to the person when the device is new to
     their live sessions.
@@ -72,6 +73,7 @@ class SignInCompletion:
         client_ip_address: ClientIpAddress | None,
         user_agent: SessionUserAgent | None = None,
         recovery_codes: list[RecoveryCode] | None = None,
+        second_factor_suggested: IsSecondFactorSuggested = False,
     ) -> LoginSessionView:
         now: Microseconds = self._wall_clock.now_unix()
         access_token: AccessToken = generate_access_token()
@@ -120,4 +122,5 @@ class SignInCompletion:
             is_new_user=is_new_user,
             auth_level=auth_level,
             recovery_codes=list(recovery_codes or []),
+            second_factor_suggested=second_factor_suggested,
         )

@@ -11,8 +11,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from app.schemas.constants.mfa import TotpFactorStatus
 from app.schemas.domain.mfa import TotpFactorDocument
+from app.schemas.typings.mfa.constrained_integers import TotpTimeStep
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
@@ -45,16 +45,18 @@ def give_app(workshop: Workshop, user_id: str) -> None:
     secret = generate_totp_secret()
     workshop.authenticators.secrets[ADMIN_EMAIL] = secret
     now = workshop.clock.wall_clock.now_unix()
-    workshop.container.repositories.totp_factor_repo().save(
+    factors = workshop.container.repositories.totp_factor_repo()
+    assert factors.start_enrollment(
         TotpFactorDocument(
             user_id=UserId(user_id),
-            sealed_secret=workshop.container.adapters.totp_secret_cipher().seal(secret),
-            status=TotpFactorStatus.ACTIVE,
-            confirmed_at=now,
+            sealed_secret=workshop.container.adapters.totp_secret_cipher().seal(
+                secret
+            ),
             created_at=now,
             updated_at=now,
         )
     )
+    assert factors.activate(UserId(user_id), TotpTimeStep(1), now) is not None
 
 
 def admin_id(workshop: Workshop) -> str:
@@ -112,7 +114,7 @@ def test_an_admin_with_a_passkey_cannot_answer_with_the_app(
         step,
         code=workshop.authenticators.code_for(ADMIN_EMAIL, workshop.clock),
     ).json()["access_token"]
-    recovery_codes = add_passkey(workshop, token, new_authenticator()).json()
+    added = add_passkey(workshop, token, new_authenticator()).json()
     codes = workshop.client.post("/v1/me/mfa/recovery-codes", headers=bearer(token))
 
     next_step = login_code_step(workshop, ADMIN_EMAIL)
@@ -126,7 +128,7 @@ def test_an_admin_with_a_passkey_cannot_answer_with_the_app(
         workshop, next_step, recovery_code=codes.json()["recovery_codes"][0]
     )
 
-    assert recovery_codes["passkey"]["name"]
+    assert added["passkey"]["name"]
     assert next_step["mfa_challenge"]["methods"] == ["passkey", "recovery_code"]
     assert app_code.status_code == 403
     assert reason_codes(app_code) == ["passkey_required"]

@@ -31,13 +31,24 @@ class ProviderResponseEncodingError(httpx.DecodingError):
 def cap_response(response: httpx.Response, max_bytes: int) -> None:
     """Make `response` read at most `max_bytes` (unpacked) or raise."""
 
+    if response.is_stream_consumed:
+        # Built from bytes already in memory (a test transport): check them.
+        if len(response.content) > max_bytes:
+            raise too_large(response.request, max_bytes)
+
+        return
+
     declared: str = response.headers.get("content-length", "").strip()
     if declared.isdigit() and int(declared) > max_bytes and not is_encoded(response):
         raise too_large(response.request, max_bytes)
 
+    raw: httpx.SyncByteStream | httpx.AsyncByteStream = response.stream
+    if not isinstance(raw, httpx.SyncByteStream):
+        raise TypeError("Provider clients are synchronous.")
+
     encoding: str = response.headers.get("content-encoding", "").strip().lower()
     if encoding in PLAIN_ENCODINGS:
-        response.stream = CappedStream(response.stream, max_bytes, response.request)
+        response.stream = CappedStream(raw, max_bytes, response.request)
         return
 
     if encoding not in UNPACKED_ENCODINGS:
@@ -50,9 +61,7 @@ def cap_response(response: httpx.Response, max_bytes: int) -> None:
     del response.headers["content-encoding"]
     if "content-length" in response.headers:
         del response.headers["content-length"]
-    response.stream = UnpackingCappedStream(
-        response.stream, max_bytes, response.request, encoding
-    )
+    response.stream = UnpackingCappedStream(raw, max_bytes, response.request, encoding)
 
 
 def is_encoded(response: httpx.Response) -> bool:

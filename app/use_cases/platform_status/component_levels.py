@@ -65,6 +65,15 @@ ALERT_IMPACTS: Mapping[PlatformAlertCode, AlertImpact] = {
     PlatformAlertCode.SPEND_BUDGET_STOP: AlertImpact(
         (*CHAT_CHANNELS, StatusComponent.VOICE)
     ),
+    # The database or the object storage fails requests and jobs: answers,
+    # calls and the cabinet are slow or partly failing.
+    PlatformAlertCode.STORAGE_ERRORS: AlertImpact(
+        (*CHAT_CHANNELS, StatusComponent.VOICE, StatusComponent.CABINET)
+    ),
+    # The API is slow: the website chat and the cabinet wait for it.
+    PlatformAlertCode.API_LATENCY: AlertImpact(
+        (StatusComponent.CHAT, StatusComponent.CABINET)
+    ),
 }
 
 ANNOUNCEMENT_LEVELS: Mapping[AnnouncementLevel, StatusLevel | None] = {
