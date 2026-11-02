@@ -3,8 +3,8 @@
 /**
  * One customer's page: who they are and their standing, their history
  * across channels (conversations, bookings, requests, calls), the team's
- * card (tags, VIP), and for owners blocking and data requests (export,
- * erase). Each opening is audited by the API as a view of personal data;
+ * card (tags, VIP), the customer's consent to marketing messages, and for
+ * owners blocking and data requests (export, erase). Each opening is audited by the API as a view of personal data;
  * staff see the phone masked unless an owner allows it.
  */
 
@@ -26,6 +26,7 @@ import { CustomerCardEditor } from "./_components/CustomerCardEditor";
 import { CustomerDataCard } from "./_components/CustomerDataCard";
 import { CustomerSummaryCard } from "./_components/CustomerSummaryCard";
 import { CustomerTimeline } from "./_components/CustomerTimeline";
+import { MarketingConsentCard } from "./_components/MarketingConsentCard";
 
 export function CustomerScreen({ contactId }: { contactId: string }) {
   const { t } = useI18n();
@@ -82,6 +83,7 @@ export function CustomerScreen({ contactId }: { contactId: string }) {
           </div>
           <div className="min-w-0 space-y-6">
             <CustomerCardEditor detail={detail} knownTags={settings.data?.known_tags ?? []} />
+            <MarketingConsentCard detail={detail} naming={naming} />
             {isOwner ? <BlockCard detail={detail} naming={naming} /> : null}
             {isOwner ? <CustomerDataCard detail={detail} naming={naming} /> : null}
           </div>

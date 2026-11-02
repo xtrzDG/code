@@ -164,6 +164,7 @@ export function withCard(detail: CustomerDetail, card: CustomerCard): CustomerDe
   return {
     ...detail,
     blocked_at: card.blocked_at ?? null,
+    marketing_consent: card.marketing_consent ?? detail.marketing_consent,
     contact: { ...detail.contact, tags: card.tags ?? [], is_vip: card.is_vip ?? false, is_blocked: card.is_blocked ?? false },
   };
 }

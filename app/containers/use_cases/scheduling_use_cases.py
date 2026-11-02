@@ -1,13 +1,11 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
-from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
-from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.booking_grid import BookingGrid, BookingGridQuery
 from app.schemas.dto.calendar import (
@@ -34,6 +32,9 @@ from app.schemas.dto.resources import (
     ScheduleExceptionListQuery,
     ScheduleExceptionView,
     UpdateResourceCommand,
+)
+from app.use_cases.authorize_business_access_use_case import (
+    AuthorizeBusinessAccessUseCase,
 )
 from app.use_cases.bookings.calendar.get_booking_grid_use_case import (
     GetBookingGridUseCase,
@@ -62,6 +63,7 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
     ListScheduleExceptionsUseCase,
 )
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 
 
 class SchedulingUseCasesContainer(containers.DeclarativeContainer):
@@ -75,8 +77,13 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
-    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The request's session and the access check, for the calendar consent.
+    session_assurance: Dependency[SessionAssuranceContext] = Dependency(
+        instance_of=SessionAssuranceContext
+    )
+    authorize_business_access: Dependency[AuthorizeBusinessAccessUseCase] = Dependency(
+        instance_of=AuthorizeBusinessAccessUseCase
+    )
 
     # --- Resources, schedules and exceptions.
     create_resource_use_case: Factory[
@@ -151,7 +158,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         authorization_state_repo=repositories.calendar_authorization_state_repo,
         calendar_client=clients.google_calendar_client,
         wall_clock=time_provider.microsecond_wall_clock,
-        session_assurance=utilities.session_assurance,
+        session_assurance=session_assurance,
         secret_cipher=adapters.secret_cipher,
     )
     complete_google_calendar_connection_use_case: Factory[
@@ -163,10 +170,8 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         calendar_client=clients.google_calendar_client,
         secret_cipher=adapters.secret_cipher,
         wall_clock=time_provider.microsecond_wall_clock,
-        session_assurance=utilities.session_assurance,
-        authorize_business_access=(
-            account_use_cases.authorize_business_access_use_case
-        ),
+        session_assurance=session_assurance,
+        authorize_business_access=authorize_business_access,
     )
     disconnect_google_calendar_use_case: Factory[
         UseCaseContract[DisconnectCalendarCommand, CalendarDisconnectResult]

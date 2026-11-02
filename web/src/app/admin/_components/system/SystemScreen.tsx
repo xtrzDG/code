@@ -22,6 +22,8 @@ import { ErrorBudgetCard } from "./ErrorBudgetCard";
 import { IncidentDialog } from "./IncidentDialog";
 import { IncidentsCard } from "./IncidentsCard";
 import { BackupsCard, DatabaseCard } from "./StorageCards";
+import { PaymentReconciliationCard } from "./PaymentReconciliationCard";
+import { PlatformBrakesCard } from "./PlatformBrakesCard";
 import { LanesCard, WorkersCard } from "./WorkersAndQueues";
 
 /**
@@ -31,9 +33,11 @@ import { LanesCard, WorkersCard } from "./WorkersAndQueues";
  * incident log with "Record incident". Every figure is an indexed count or
  * the database catalog; the page looks again every 30 seconds. The SLOs'
  * error budgets and the announcements of the public status page sit under
- * the alerts.
+ * the alerts. The platform's brakes (the global pause, which `canPause`
+ * SUPER admins set, and the daily budget stop) come first, the daily
+ * payment reconciliation after the dead letters.
  */
-export function SystemScreen() {
+export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
   const { t, tp } = useI18n();
   const toast = useToast();
   const system = useAdminSystem();
@@ -82,6 +86,7 @@ export function SystemScreen() {
         <SystemSkeleton />
       ) : (
         <div className="space-y-6">
+          <PlatformBrakesCard canPause={canPause} />
           <AlertsCard alerts={data.alerts} />
           <ErrorBudgetCard />
           <AnnouncementsCard />
@@ -90,6 +95,7 @@ export function SystemScreen() {
           <CircuitsCard circuits={data.circuits} />
           <LanesCard lanes={data.lanes} />
           <DeadLettersCard tallies={data.dead_jobs} />
+          <PaymentReconciliationCard />
           <DataTasksCard />
           <div className="grid gap-6 xl:grid-cols-2">
             <ChannelsCard

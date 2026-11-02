@@ -161,14 +161,11 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     )
     scheduling: SchedulingUseCasesContainer = Container(  # type: ignore[assignment]
         SchedulingUseCasesContainer,
-        adapters=adapters,
-        clients=clients,
-        registries=registries,
-        repositories=repositories,
-        time_provider=time_provider,
-        utilities=utilities,
-        account_use_cases=accounts,
-    )
+        adapters=adapters, clients=clients, registries=registries,
+        repositories=repositories, time_provider=time_provider,
+        session_assurance=utilities.session_assurance,
+        authorize_business_access=accounts.authorize_business_access_use_case,
+    )  # fmt: skip
     # The spend guard: spend limits, owner action and API limits, chat
     # websites, the platform's spend (1142).
     spend_guard: SpendGuardUseCasesContainer = Container(  # type: ignore[assignment]
