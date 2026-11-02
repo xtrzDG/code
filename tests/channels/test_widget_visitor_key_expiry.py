@@ -6,11 +6,11 @@ and a key used again after the gap reads only its new conversation.
 
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.use_cases.channels.widget_visitor_keys import (
     MICROSECONDS_PER_DAY,

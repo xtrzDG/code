@@ -11,6 +11,9 @@ from app.contracts.facilitators import OtpDeliveryFacilitatorContract
 from app.facilitators.users.login_code_cap_alert_facilitator import (
     LoginCodeCapAlertFacilitator,
 )
+from app.facilitators.users.sign_in_code_spray_alert_facilitator import (
+    SignInCodeSprayAlertFacilitator,
+)
 from app.facilitators.users.turnstile_bot_check_facilitator import (
     TurnstileBotCheckFacilitator,
 )
@@ -54,4 +57,11 @@ class SignInFacilitatorsContainer(containers.DeclarativeContainer):
         platform_admin_emails=config.app_settings.provided.platform_admin_emails,
         wall_clock=time_provider.microsecond_wall_clock,
         signal_counter=adapters.signal_counter,
+    )
+    # One client network asking codes for many different phones and e-mails.
+    sign_in_code_spray_alerts: Singleton[SignInCodeSprayAlertFacilitator] = Singleton(
+        SignInCodeSprayAlertFacilitator,
+        email_client=clients.smtp_email_client,
+        platform_admin_emails=config.app_settings.provided.platform_admin_emails,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

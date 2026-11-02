@@ -119,9 +119,7 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
 
         payload, signature = raw[:PAYLOAD_LENGTH], raw[PAYLOAD_LENGTH:]
         if not any(
-            hmac.compare_digest(
-                signature, sign_payload(key, payload, signature_length)
-            )
+            hmac.compare_digest(signature, sign_payload(key, payload, signature_length))
             for key in self._verification_keys
         ):
             return None

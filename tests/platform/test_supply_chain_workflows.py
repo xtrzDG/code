@@ -174,12 +174,23 @@ def test_the_settings_check_runs_daily_with_a_read_only_token() -> None:
     for endpoint in [
         "branches/$branch/protection",
         "rules/branches/$branch",
+        "environments/$environment",
+        "environments/$environment/deployment-branch-policies",
         "private-vulnerability-reporting",
         "automated-security-fixes",
     ]:
         assert endpoint in run, endpoint
-    for name in ["protection-$branch", "rules-$branch", "reporting", "security-fixes"]:
+    for name in [
+        "protection-$branch",
+        "rules-$branch",
+        "environment-$environment",
+        "branch-policies-$environment",
+        "reporting",
+        "security-fixes",
+    ]:
         assert f'fetch "{name}"' in run or f"fetch {name} " in run, name
+    # A change of either checker module runs the check at once.
+    assert "scripts/repository_environments.py" in on["push"]["paths"]
     assert "scripts.check_repository_settings" in scripts(job)
     assert all(
         PINNED_USES.match(str(step["uses"])) for step in steps(job) if "uses" in step

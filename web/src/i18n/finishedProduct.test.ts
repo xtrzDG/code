@@ -40,7 +40,7 @@ const LEFTOVERS: readonly [string, RegExp][] = [
   ["set up on the platform", /not (set up|configured) on this platform|non (è|sono) (ancora )?configurat[aei] su questa piattaforma/i],
   ["release jargon", /\b(release|rilascio)\b/i],
   ["sandbox", /\bsandbox\b|ambiente di prova/i],
-  ["not available yet", /not available yet|non ancora disponibil/i],
+  ["not available yet", /not available yet|non ancora disponibil|can't be created yet|non è ancora possibile creare/i],
   ["Georgian or German samples", /\bNino\b|Morgenrot|\+995|Bank of Georgia|\bTBC\b|cafe_batumi|in Georgia\b|outside Georgia|dalla Georgia|in Georgia,/],
 ];
 
@@ -60,6 +60,8 @@ describe("owner-visible texts of a finished product", () => {
     expect(italian.share.notConfigured).toBe("La pagina della chat non è disponibile al momento. Contatta l'assistenza.");
     expect(en.auth.countryUnavailable).toBe("not available");
     expect(italian.auth.countryUnavailable).toBe("non disponibile");
+    expect(en.tunnelBusiness.place.errors.restricted).toBe("Businesses from this country can't be created.");
+    expect(italian.tunnelBusiness.place.errors.restricted).toBe("Non è possibile creare attività di questo paese.");
   });
 
   it("name the landing demo a demo, with a privacy reminder", () => {

@@ -19,12 +19,12 @@ from app.schemas.domain.calendar import (
 )
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.calendar import CalendarConnectionOutcome
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectionView,
     CalendarTokenGrant,
     CompleteCalendarConnectionCommand,
 )
-from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ExternalServiceError,

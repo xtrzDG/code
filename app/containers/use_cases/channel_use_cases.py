@@ -69,13 +69,13 @@ from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
-from app.use_cases.channels.meta_connection.meta_access_release import (
-    MetaAccessRelease,
-)
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
 )
 from app.use_cases.channels.list_channels_use_case import ListChannelsUseCase
+from app.use_cases.channels.meta_connection.meta_access_release import (
+    MetaAccessRelease,
+)
 from app.use_cases.channels.receive_meta_webhook_use_case import (
     ReceiveMetaWebhookUseCase,
 )

@@ -25,6 +25,7 @@ from app.schemas.dto.deposits.deposit_settings import (
     SetDepositPolicyCommand,
     UpdateDepositSettingsCommand,
 )
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.deposits.constrained_integers import (
     DepositAmountMinor,
@@ -34,7 +35,6 @@ from app.schemas.typings.deposits.constrained_strings import (
     PaymentLinkAddressInput,
     PaymentLinkLabel,
 )
-from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.typings.users.prefixed_id import UserId, UserSessionId
 from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.strict_model import StrictModel

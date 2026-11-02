@@ -9,13 +9,13 @@ from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.calendar import CalendarAuthorizationStateDocument
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectUrlView,
     StartCalendarConnectionCommand,
 )
-from app.schemas.typings.bookings.constrained_strings import CalendarAuthorizationUrl
-from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
+from app.schemas.typings.bookings.constrained_strings import CalendarAuthorizationUrl
 from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationState,
     CalendarCodeVerifier,

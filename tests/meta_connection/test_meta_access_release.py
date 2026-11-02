@@ -10,10 +10,10 @@ from app.contracts.channel_deprovisioning import MetaSubscriptionClientContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.dto.channels.channel_settings import DisableChannelCommand
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.meta_connection.constrained_strings import (
     WhatsAppBusinessAccountId,
 )
-from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.meta_connection.meta_access_release import (
@@ -75,7 +75,9 @@ def test_switching_messenger_off_unsubscribes_the_page_and_erases_the_token() ->
     testbed = ChannelsTestbed()
     owner_id = UserId()
     business = testbed.add_business(owner_id)
-    channel = testbed.add_channel(business.id, ChannelKind.MESSENGER, "1029", PAGE_TOKEN)
+    channel = testbed.add_channel(
+        business.id, ChannelKind.MESSENGER, "1029", PAGE_TOKEN
+    )
     subscriptions = RecordingSubscriptions()
 
     disable(testbed, owner_id, business.id, ChannelKind.MESSENGER, subscriptions)
@@ -130,10 +132,16 @@ def test_an_unreachable_meta_never_stops_the_switch_off() -> None:
     testbed = ChannelsTestbed()
     owner_id = UserId()
     business = testbed.add_business(owner_id)
-    channel = testbed.add_channel(business.id, ChannelKind.MESSENGER, "1029", PAGE_TOKEN)
+    channel = testbed.add_channel(
+        business.id, ChannelKind.MESSENGER, "1029", PAGE_TOKEN
+    )
 
     disable(
-        testbed, owner_id, business.id, ChannelKind.MESSENGER, RecordingSubscriptions(True)
+        testbed,
+        owner_id,
+        business.id,
+        ChannelKind.MESSENGER,
+        RecordingSubscriptions(True),
     )
 
     stored = testbed.channel_repo.get(channel.id)

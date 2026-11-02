@@ -14,8 +14,8 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.users import OtpChallengeDocument
-from app.schemas.dto.sign_in_alerts import SignInCodeSprayAlert
 from app.schemas.dto.login_protection import LoginCodeDestination, SendLoginCodeCommand
+from app.schemas.dto.sign_in_alerts import SignInCodeSprayAlert
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.login_errors import LoginCodeCapReachedError
 from app.schemas.typings.users.constrained_strings import OtpCode
@@ -25,6 +25,7 @@ from app.use_cases.users.otp_login.login_code_limits import (
     LIMIT_WINDOW_SECONDS,
     refuse_over_login_code_limits,
 )
+from app.use_cases.users.otp_login.login_code_spray import find_code_spray
 from app.use_cases.users.otp_login.login_risk_signals import (
     require_bot_check_when_risky,
 )
@@ -50,7 +51,9 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
       allowed, for a number that is not on WhatsApp), and so is a send over
       the hourly caps per destination, per client address, per country (new
       phones) and in total, where verified users have a budget of their own;
-      the platform team is alerted when a platform cap refuses sends.
+      the platform team is alerted when a platform cap refuses sends, and
+      when one client network asks codes for many different phones and
+      e-mails within the hour (`login_code_spray`).
     The check of the caps and the reservation of the send happen under one
     lock, before any provider is called, so parallel requests cannot all
     pass; a failed delivery drops its reservation. When a provider fails,

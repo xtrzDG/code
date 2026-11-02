@@ -53,9 +53,12 @@ def test_the_verifier_is_sealed_and_proves_the_flow_at_the_exchange() -> None:
     verifier: str = str(calendar.cipher.decrypt(stored.sealed_code_verifier))
     assert verifier not in str(stored.sealed_code_verifier)
     assert query["code_challenge_method"] == "S256"
-    assert query["code_challenge"] == base64.urlsafe_b64encode(
-        hashlib.sha256(verifier.encode()).digest()
-    ).rstrip(b"=").decode()
+    assert (
+        query["code_challenge"]
+        == base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
+        .rstrip(b"=")
+        .decode()
+    )
 
     outcome = calendar.complete(state)
 
@@ -104,7 +107,9 @@ def test_an_owner_removed_meanwhile_cannot_finish_connecting() -> None:
     business = calendar.world.business_repo.get(calendar.business.id)
     assert business is not None
     successor = UserId()
-    business.members = [BusinessMember(user_id=successor, role=BusinessMemberRole.OWNER)]
+    business.members = [
+        BusinessMember(user_id=successor, role=BusinessMemberRole.OWNER)
+    ]
     calendar.world.business_repo.save(business)
 
     outcome = calendar.complete(state)

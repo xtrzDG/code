@@ -20,7 +20,9 @@ LEGACY_VERSION: int = 1
 LEGACY_SIGNATURE_LENGTH: int = 12
 
 
-def legacy_token(key: PlatformSecret, claims: BookingManageClaims) -> BookingManageToken:
+def legacy_token(
+    key: PlatformSecret, claims: BookingManageClaims
+) -> BookingManageToken:
     payload: bytes = struct.pack(
         PAYLOAD_FORMAT,
         LEGACY_VERSION,

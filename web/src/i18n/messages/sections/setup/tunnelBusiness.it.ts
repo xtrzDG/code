@@ -41,7 +41,7 @@ export const tunnelBusinessIt: Translation<typeof tunnelBusinessEn> = {
       city: "Scrivi la tua città: dice ai clienti e all'assistente dove sei.",
       languages: "Scegli almeno una lingua.",
       address: "Scrivi il tuo indirizzo: i clienti ne hanno bisogno per trovarti.",
-      restricted: "Non è ancora possibile creare attività di questo paese.",
+      restricted: "Non è possibile creare attività di questo paese.",
     },
   },
 };

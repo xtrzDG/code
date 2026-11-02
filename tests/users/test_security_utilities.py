@@ -15,7 +15,7 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
-from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
+from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.strings import AccessToken, RawEmailAddressInput
 from app.utilities.security.access_tokens import (
     generate_access_token,

@@ -43,7 +43,7 @@ export const tunnelBusinessEn = {
       city: "Write your city: it tells customers and the assistant where you are.",
       languages: "Choose at least one language.",
       address: "Write your address: customers need it to find you.",
-      restricted: "Businesses from this country can't be created yet.",
+      restricted: "Businesses from this country can't be created.",
     },
   },
 } as const;

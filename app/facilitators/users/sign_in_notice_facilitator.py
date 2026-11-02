@@ -99,9 +99,7 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
                 return
 
             device: SessionDevice = describe_device(session.user_agent)
-            new_country: CountryCode | None = self._new_country(
-                session, other_sessions
-            )
+            new_country: CountryCode | None = self._new_country(session, other_sessions)
             if new_country is None and any(
                 is_same_device(device, describe_device(other.user_agent))
                 for other in other_sessions

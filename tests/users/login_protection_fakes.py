@@ -4,7 +4,9 @@ from app.contracts.login_protection import (
     BotCheckFacilitatorContract,
     LoginCodeCapAlertFacilitatorContract,
 )
+from app.contracts.sign_in_alerts import SignInCodeSprayAlertFacilitatorContract
 from app.schemas.dto.login_protection import LoginCodeCapAlert
+from app.schemas.dto.sign_in_alerts import SignInCodeSprayAlert
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.booleans import IsBotCheckPassed
 from app.schemas.typings.users.constrained_strings import (
@@ -51,4 +53,14 @@ class RecordingCapAlerts(LoginCodeCapAlertFacilitatorContract):
         self.alerts: list[LoginCodeCapAlert] = []
 
     def report_cap_reached(self, alert: LoginCodeCapAlert) -> None:
+        self.alerts.append(alert)
+
+
+class RecordingSprayAlerts(SignInCodeSprayAlertFacilitatorContract):
+    """Keeps every spray alert instead of telling the platform team."""
+
+    def __init__(self) -> None:
+        self.alerts: list[SignInCodeSprayAlert] = []
+
+    def report_code_spray(self, alert: SignInCodeSprayAlert) -> None:
         self.alerts.append(alert)

@@ -64,7 +64,9 @@ def otp_hash_keys(settings: AppSettings) -> list[bytes]:
     return [derive_otp_hash_key(key) for key in ring]
 
 
-def hash_otp_code(key: bytes, challenge_id: OtpChallengeId, code: OtpCode) -> OtpCodeHash:
+def hash_otp_code(
+    key: bytes, challenge_id: OtpChallengeId, code: OtpCode
+) -> OtpCodeHash:
     """The hex HMAC-SHA256 of a code and its challenge under a server key."""
 
     message: str = f"{HASH_VERSION}|{challenge_id}|{code}"

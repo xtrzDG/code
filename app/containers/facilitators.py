@@ -92,6 +92,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     otp_delivery_facilitator = sign_in.otp_delivery_facilitator
     bot_check_facilitator = sign_in.bot_check_facilitator
     login_code_cap_alerts = sign_in.login_code_cap_alerts
+    sign_in_code_spray_alerts = sign_in.sign_in_code_spray_alerts
     # Public records and the webhooks' observer of announced changes (1181).
     integrations: IntegrationFacilitatorsContainer = Container(  # type: ignore[assignment]
         IntegrationFacilitatorsContainer, adapters=adapters, repositories=repositories,

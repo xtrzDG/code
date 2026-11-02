@@ -70,9 +70,10 @@ def test_the_hash_depends_on_the_server_key_and_the_challenge() -> None:
     assert stored != hash_otp_code(other_key, first, CODE)
     # Knowing the challenge id is not enough to test a code any more.
     assert str(stored) != hash_otp_code_by_challenge(first, CODE)
-    assert str(stored) != hmac.new(
-        str(first).encode(), str(CODE).encode(), hashlib.sha256
-    ).hexdigest()
+    assert (
+        str(stored)
+        != hmac.new(str(first).encode(), str(CODE).encode(), hashlib.sha256).hexdigest()
+    )
     assert "042317" not in str(stored)
     assert len(str(stored)) == 64
 
@@ -101,7 +102,10 @@ def test_a_code_hashed_before_a_key_rotation_still_matches() -> None:
     assert after[0] != before[0]
     assert is_otp_code_matching(challenge, CODE, after) is True
     # Without the old key in the ring it is gone.
-    assert is_otp_code_matching(challenge, CODE, otp_hash_keys(settings_with(NEW_KEY))) is False
+    assert (
+        is_otp_code_matching(challenge, CODE, otp_hash_keys(settings_with(NEW_KEY)))
+        is False
+    )
 
 
 def test_development_without_a_key_still_hashes_with_a_fixed_key() -> None:
@@ -115,7 +119,9 @@ def test_development_without_a_key_still_hashes_with_a_fixed_key() -> None:
 def test_a_challenge_from_before_the_keyed_hash_is_read_the_old_way() -> None:
     challenge_id = OtpChallengeId()
     keys = otp_hash_keys(settings_with(NEW_KEY))
-    legacy = challenge_of(challenge_id, hash_otp_code_by_challenge(challenge_id, CODE), False)
+    legacy = challenge_of(
+        challenge_id, hash_otp_code_by_challenge(challenge_id, CODE), False
+    )
 
     assert is_otp_code_matching(legacy, CODE, keys) is True
     assert is_otp_code_matching(legacy, OtpCode("000000"), keys) is False

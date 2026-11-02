@@ -69,7 +69,11 @@ from tests.users.accounts_recorders import (
 )
 from tests.users.accounts_repositories import AccountsRepositories
 from tests.users.fake_ip_countries import TEST_IP_COUNTRIES, FixedIpCountries
-from tests.users.login_protection_fakes import FakeBotCheck, RecordingCapAlerts
+from tests.users.login_protection_fakes import (
+    FakeBotCheck,
+    RecordingCapAlerts,
+    RecordingSprayAlerts,
+)
 
 
 class AccountsUserUseCases(AccountsRepositories):
@@ -120,6 +124,7 @@ class AccountsUserUseCases(AccountsRepositories):
         )
         self.bot_check = FakeBotCheck()
         self.cap_alerts = RecordingCapAlerts()
+        self.spray_alerts = RecordingSprayAlerts()
         self.send_login_code = SendLoginCodeUseCase(
             otp_challenge_repo=self.otp_challenge_repo,
             otp_delivery_facilitator=self.otp_delivery,
@@ -128,6 +133,7 @@ class AccountsUserUseCases(AccountsRepositories):
             send_lock_registry=LoginCodeSendLockRegistry(InMemoryAdvisoryLockAdapter()),
             bot_check=self.bot_check,
             cap_alerts=self.cap_alerts,
+            spray_alerts=self.spray_alerts,
         )
         self.start_otp_login = StartOtpLoginUseCase(
             phone_number_parser=self.phone_parser,

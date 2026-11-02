@@ -175,6 +175,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/clients/{business_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Client Member Sessions */
+        get: operations["admin_list_client_member_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/clients/{business_id}/members/{member_user_id}/sessions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Member Sessions */
+        post: operations["admin_end_member_sessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/clients/{business_id}/notes": {
         parameters: {
             query?: never;
@@ -616,6 +650,41 @@ export interface paths {
         put?: never;
         /** Post Payout */
         post: operations["admin_post_payout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/payments/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin Payment Reconciliation */
+        get: operations["admin_get_admin_payment_reconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/platform/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin Platform Pause */
+        get: operations["admin_get_admin_platform_pause"];
+        /** Set Admin Platform Pause */
+        put: operations["admin_set_admin_platform_pause"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5311,6 +5380,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/sessions/revoke-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke All Sessions */
+        post: operations["auth_revoke_all_sessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/sessions/revoke-others": {
         parameters: {
             query?: never;
@@ -5732,6 +5818,23 @@ export interface paths {
         put?: never;
         /** Cancel Managed Booking */
         post: operations["bookings_cancel_managed_booking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/marketing-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change Managed Booking Consent */
+        post: operations["bookings_change_managed_booking_consent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9652,6 +9755,30 @@ export interface components {
             /** Timezone */
             timezone: string;
         };
+        /** ClientMemberSessionList */
+        ClientMemberSessionList: {
+            /** Items */
+            items: components["schemas"]["ClientMemberSessionsView"][];
+        };
+        /**
+         * ClientMemberSessionsView
+         * @description One member of a client's team: the role, the name and the masked phone
+         *     or e-mail they sign in with, how many live sessions they have and when
+         *     one was last used.
+         */
+        ClientMemberSessionsView: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Last Seen At */
+            last_seen_at?: number | null;
+            /** Live Session Count */
+            live_session_count: number;
+            /** Masked Login */
+            masked_login?: string | null;
+            role: components["schemas"]["BusinessMemberRole"];
+            /** User Id */
+            user_id: string;
+        };
         /**
          * ClientNoteList
          * @description The client's notes: pinned first, then the newest first.
@@ -9950,7 +10077,7 @@ export interface components {
          *     too), the latest moment first: a booking by its start, so upcoming
          *     visits lead. `standing`, `visit_count` and `last_visit_at` say how well
          *     the business knows them; `blocked_at` since when the assistant does
-         *     not answer them.
+         *     not answer them; `marketing_consent` whether marketing may reach them.
          */
         ContactDetailView: {
             /** Blocked At */
@@ -9964,6 +10091,7 @@ export interface components {
             last_visit_at?: number | null;
             /** Leads */
             leads?: components["schemas"]["ContactLeadView"][];
+            marketing_consent?: components["schemas"]["MarketingConsentView"];
             /** @default new */
             standing: components["schemas"]["CustomerStanding"];
             /** Timeline */
@@ -10008,6 +10136,12 @@ export interface components {
          *     list's filter). Only the card writes of the repository change them; a
          *     plain save keeps them as stored, so a turn that read the contact
          *     earlier never undoes a tag or a block. An erased customer has none.
+         *
+         *     Version 5 adds `marketing_consent` (optional, a card field like the
+         *     tags): marketing messages go only to a customer with an active one.
+         *     Every customer from before it has none, which reads as no consent. A
+         *     plain save that brings a new STOP (a channel joins `opted_out_channels`)
+         *     takes it back (`keep_card_fields`); an erasure drops it.
          */
         ContactDocument: {
             block?: components["schemas"]["ContactBlock"] | null;
@@ -10040,6 +10174,7 @@ export interface components {
             language?: string | null;
             /** Last Seen At */
             last_seen_at?: number | null;
+            marketing_consent?: components["schemas"]["MarketingConsent"] | null;
             /** Name */
             name?: string | null;
             /** Opted Out Channels */
@@ -10048,7 +10183,7 @@ export interface components {
             phone_number?: string | null;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** Tags */
@@ -10864,8 +10999,9 @@ export interface components {
         };
         /**
          * CustomerCardView
-         * @description The card after a change: the customer's tags, VIP flag and block, and
-         *     the business's tags (the latest used first) to offer next.
+         * @description The card after a change: the customer's tags, VIP flag, block and
+         *     marketing consent, and the business's tags (the latest used first) to
+         *     offer next.
          */
         CustomerCardView: {
             /** Blocked At */
@@ -10884,6 +11020,7 @@ export interface components {
             is_vip: boolean;
             /** Known Tags */
             known_tags?: string[];
+            marketing_consent?: components["schemas"]["MarketingConsentView"];
             /** Tags */
             tags?: string[];
         };
@@ -13903,6 +14040,8 @@ export interface components {
          *     sees the page). `token` is the link's current token (a move issues a
          *     new one); `language` is the guest's. `chat_links` are the ways to write
          *     to the business, the chat the booking was made in first.
+         *     `marketing_consent` is whether the guest agreed to marketing messages
+         *     and has not taken it back (the page's box, unticked until then).
          */
         ManagedBookingView: {
             /** Address */
@@ -13939,6 +14078,11 @@ export interface components {
             language: string;
             /** Maps Url */
             maps_url?: string | null;
+            /**
+             * Marketing Consent
+             * @default false
+             */
+            marketing_consent: boolean;
             /** Party Size */
             party_size: number;
             /** Phone Number */
@@ -14029,6 +14173,97 @@ export interface components {
             provider_cost: components["schemas"]["Money"];
             revenue: components["schemas"]["Money"];
         };
+        /**
+         * MarketingConsent
+         * @description The customer's consent to marketing messages (Codice privacy art. 130,
+         *     GDPR art. 7(1): the business must be able to show it): when, where
+         *     (`source`), recorded by whom (`recorded_by`, the team member for a
+         *     consent given in person; None: the customer themselves, on the page of
+         *     `booking_id`) and the wording agreed to (`text_version`). Taken back
+         *     when `withdrawn_at` is set: how (`withdrawal`) and by whom
+         *     (`withdrawn_by`, None: the customer). A new consent replaces a taken
+         *     back one; every change is audited (UPDATE of the contact).
+         */
+        MarketingConsent: {
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Given At */
+            given_at: number;
+            /** Recorded By */
+            recorded_by?: string | null;
+            source: components["schemas"]["MarketingConsentSource"];
+            text_version: components["schemas"]["MarketingConsentText"];
+            withdrawal?: components["schemas"]["MarketingConsentWithdrawal"] | null;
+            /** Withdrawn At */
+            withdrawn_at?: number | null;
+            /** Withdrawn By */
+            withdrawn_by?: string | null;
+        };
+        /**
+         * MarketingConsentSource
+         * @description Where the customer agreed to marketing messages (the rebooking
+         *     campaign's invitations back, recalls and pre-arrival notes):
+         *
+         *     - BOOKING_PAGE: they ticked the unticked box on their booking's page
+         *       (/r/{token}, the link of their written confirmation);
+         *     - IN_PERSON: they told the team, who recorded it on their card
+         *       (Customers → a customer), naming who recorded it.
+         * @enum {string}
+         */
+        MarketingConsentSource: "booking_page" | "in_person";
+        /**
+         * MarketingConsentStatus
+         * @description What the customer's card and booking page say (never stored): AGREED
+         *     (recorded and not taken back), NOT_GIVEN (never recorded: every
+         *     customer from before consent was kept), WITHDRAWN (taken back), or
+         *     STOPPED (they said STOP, are on the suppression list or blocked: no
+         *     marketing whatever was recorded, so the card never says "agreed").
+         * @enum {string}
+         */
+        MarketingConsentStatus: "agreed" | "not_given" | "withdrawn" | "stopped";
+        /**
+         * MarketingConsentText
+         * @description The versions of the consent wording, by the day each took effect; the
+         *     version a customer agreed to is stored with their consent, so the exact
+         *     text stays provable. 2026-11-02, the booking page
+         *     (`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,
+         *     15 languages) and the card's record of a consent given in person
+         *     (`customers.consent.*` of the cabinet's dictionaries): "Send me news,
+         *     offers and invitations to come back from {business}, in the chat this
+         *     booking was made in. I can take this back at any time here or by
+         *     replying STOP." A changed wording is a new value (behind a release
+         *     gate, like every new stored value).
+         * @enum {string}
+         */
+        MarketingConsentText: "2026-11-02";
+        /**
+         * MarketingConsentView
+         * @description The customer's marketing consent as the card shows it: the status
+         *     (STOPPED whatever was recorded while they said STOP, are on the
+         *     suppression list or blocked), and what was recorded: when, where, by
+         *     whom (None: the customer), the wording's version, and when and how it
+         *     was taken back.
+         */
+        MarketingConsentView: {
+            /** Given At */
+            given_at?: number | null;
+            /** Recorded By */
+            recorded_by?: string | null;
+            source?: components["schemas"]["MarketingConsentSource"] | null;
+            /** @default not_given */
+            status: components["schemas"]["MarketingConsentStatus"];
+            text_version?: components["schemas"]["MarketingConsentText"] | null;
+            withdrawal?: components["schemas"]["MarketingConsentWithdrawal"] | null;
+            /** Withdrawn At */
+            withdrawn_at?: number | null;
+        };
+        /**
+         * MarketingConsentWithdrawal
+         * @description How the consent was taken back: unticked on the booking page, recorded
+         *     by the team on the card, or the customer's STOP in a chat.
+         * @enum {string}
+         */
+        MarketingConsentWithdrawal: "booking_page" | "in_person" | "stop";
         /**
          * MenuImportResult
          * @description Drafts created by one import, in menu order. `batch_id` names the
@@ -15590,6 +15825,36 @@ export interface components {
             trial_ends_at?: number | null;
         };
         /**
+         * PaymentMismatchKind
+         * @description How a payment's status at its provider (Flitt, Stripe) differs from the
+         *     platform's record of it, found by the daily reconciliation:
+         *
+         *     - PAID_AT_PROVIDER: the provider took the money, the platform has the
+         *       payment unpaid (a lost notification: the owner paid and is dunned);
+         *     - FAILED_AT_PROVIDER: the provider declined or let the payment expire,
+         *       the platform has it paid (the owner uses the service unpaid);
+         *     - REVERSED_AT_PROVIDER: the provider refunded or charged the payment
+         *       back, the platform has it paid.
+         * @enum {string}
+         */
+        PaymentMismatchKind: "paid_at_provider" | "failed_at_provider" | "reversed_at_provider";
+        /**
+         * PaymentMismatchView
+         * @description One mismatch as the admin sees it (the client's name, no card data).
+         */
+        PaymentMismatchView: {
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name?: string | null;
+            kind: components["schemas"]["PaymentMismatchKind"];
+            /** Payment Order Id */
+            payment_order_id: string;
+            provider: components["schemas"]["PaymentProvider"];
+            provider_status: components["schemas"]["PaymentStatus"];
+            recorded_status: components["schemas"]["PaymentStatus"];
+        };
+        /**
          * PaymentProvider
          * @description Payment service that charges owners: Flitt (concept: auto-debit) in
          *     Georgia and Armenia, Stripe in the EU, the US and Israel
@@ -15598,6 +15863,30 @@ export interface components {
          * @enum {string}
          */
         PaymentProvider: "flitt" | "stripe";
+        /**
+         * PaymentReconciliationView
+         * @description The latest reconciliation (today's, else yesterday's; None fields when
+         *     none ran yet): when it ran, how many orders it compared and could not
+         *     compare, and the mismatches.
+         */
+        PaymentReconciliationView: {
+            /**
+             * Checked Count
+             * @default 0
+             */
+            checked_count: number;
+            /** Day */
+            day?: string | null;
+            /** Mismatches */
+            mismatches?: components["schemas"]["PaymentMismatchView"][];
+            /** Ran At */
+            ran_at?: number | null;
+            /**
+             * Unreadable Count
+             * @default 0
+             */
+            unreadable_count: number;
+        };
         /**
          * PaymentRetryOutcome
          * @description How one retry of a declined automatic charge went. CLAIMED: a worker
@@ -16134,10 +16423,16 @@ export interface components {
          *     daily check found an audit hash chain broken (an entry changed,
          *     removed or put in). VOICE_HEALTH: calls of the voice platform's API
          *     fail, or its finished-call reports stopped while the 7 days before
-         *     expect calls at this time of day.
+         *     expect calls at this time of day. SPEND_BUDGET_STOP: today's provider
+         *     spend reached the share of the daily budget where every assistant
+         *     stops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).
+         *     MISSED_JOB_RUNS: a periodic job has not succeeded within its interval
+         *     and grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).
+         *     PAYMENT_MISMATCH: the daily reconciliation found payments whose status
+         *     at Flitt or Stripe differs from the platform's record.
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -16191,6 +16486,38 @@ export interface components {
          */
         PlatformBotWebhookOutcome: {
             result: components["schemas"]["PlatformBotCommandResult"];
+        };
+        /**
+         * PlatformBrake
+         * @description Why every business's assistant holds the language model back at once,
+         *     whatever its own spend: a platform admin paused them all (PAUSED), or
+         *     the platform's provider spend of the UTC day reached the share of its
+         *     daily budget where it stops (BUDGET_STOP). Customers are handed to
+         *     the team in their language and calls go to the forwarding number.
+         * @enum {string}
+         */
+        PlatformBrake: "paused" | "budget_stop";
+        /**
+         * PlatformPauseView
+         * @description The global pause as it stands (`changed_*`: the last pause or resume;
+         *     None before the first), and the daily budget stop: the share of the
+         *     budget where it holds, today's share (None without a budget) and
+         *     whether it holds now.
+         */
+        PlatformPauseView: {
+            brake?: components["schemas"]["PlatformBrake"] | null;
+            /** Budget Used Percent */
+            budget_used_percent?: number | null;
+            /** Changed At */
+            changed_at?: number | null;
+            /** Changed By */
+            changed_by?: string | null;
+            /** Is Paused */
+            is_paused: boolean;
+            /** Reason */
+            reason?: string | null;
+            /** Stop Percent */
+            stop_percent: number;
         };
         /**
          * PlatformSpendView
@@ -21012,6 +21339,181 @@ export interface operations {
             };
         };
     };
+    admin_list_client_member_sessions: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMemberSessionList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_end_member_sessions: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                member_user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokedSessionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     admin_list_notes: {
         parameters: {
             query?: never;
@@ -23869,6 +24371,270 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PayoutReceipt"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_get_admin_payment_reconciliation: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentReconciliationView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_get_admin_platform_pause: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformPauseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_set_admin_platform_pause: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is Paused */
+                    is_paused: boolean;
+                    /** Reason */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformPauseView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -36414,6 +37180,8 @@ export interface operations {
                     add_tags?: string[];
                     /** Is Vip */
                     is_vip?: boolean | null;
+                    /** Marketing Consent */
+                    marketing_consent?: boolean | null;
                     /** Remove Tags */
                     remove_tags?: string[];
                 };
@@ -55784,6 +56552,91 @@ export interface operations {
             };
         };
     };
+    auth_revoke_all_sessions: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokedSessionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     auth_revoke_other_sessions: {
         parameters: {
             query?: never;
@@ -58123,6 +58976,113 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    bookings_change_managed_booking_consent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is Given */
+                    is_given: boolean;
+                    /**
+                     * MarketingConsentText
+                     * @description The versions of the consent wording, by the day each took effect; the
+                     *     version a customer agreed to is stored with their consent, so the exact
+                     *     text stays provable. 2026-11-02, the booking page
+                     *     (`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,
+                     *     15 languages) and the card's record of a consent given in person
+                     *     (`customers.consent.*` of the cabinet's dictionaries): "Send me news,
+                     *     offers and invitations to come back from {business}, in the chat this
+                     *     booking was made in. I can take this back at any time here or by
+                     *     replying STOP." A changed wording is a new value (behind a release
+                     *     gate, like every new stored value).
+                     * @enum {string}
+                     */
+                    text_version: "2026-11-02";
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

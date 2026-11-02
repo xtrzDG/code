@@ -9401,6 +9401,81 @@
         "title": "ClientHealthView",
         "type": "object"
       },
+      "ClientMemberSessionList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClientMemberSessionsView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ClientMemberSessionList",
+        "type": "object"
+      },
+      "ClientMemberSessionsView": {
+        "additionalProperties": false,
+        "description": "One member of a client's team: the role, the name and the masked phone\nor e-mail they sign in with, how many live sessions they have and when\none was last used.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "live_session_count": {
+            "minimum": 0.0,
+            "title": "Live Session Count",
+            "type": "integer"
+          },
+          "masked_login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Login"
+          },
+          "role": {
+            "$ref": "#/components/schemas/BusinessMemberRole"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "role",
+          "live_session_count"
+        ],
+        "title": "ClientMemberSessionsView",
+        "type": "object"
+      },
       "ClientNoteList": {
         "additionalProperties": false,
         "description": "The client's notes: pinned first, then the newest first.",
@@ -10230,7 +10305,7 @@
       },
       "ContactDetailView": {
         "additionalProperties": false,
-        "description": "One customer with their conversations, bookings and leads, newest\nfirst, and their history across channels as one `timeline` (calls\ntoo), the latest moment first: a booking by its start, so upcoming\nvisits lead. `standing`, `visit_count` and `last_visit_at` say how well\nthe business knows them; `blocked_at` since when the assistant does\nnot answer them.",
+        "description": "One customer with their conversations, bookings and leads, newest\nfirst, and their history across channels as one `timeline` (calls\ntoo), the latest moment first: a booking by its start, so upcoming\nvisits lead. `standing`, `visit_count` and `last_visit_at` say how well\nthe business knows them; `blocked_at` since when the assistant does\nnot answer them; `marketing_consent` whether marketing may reach them.",
         "properties": {
           "blocked_at": {
             "anyOf": [
@@ -10278,6 +10353,9 @@
             "title": "Leads",
             "type": "array"
           },
+          "marketing_consent": {
+            "$ref": "#/components/schemas/MarketingConsentView"
+          },
           "standing": {
             "$ref": "#/components/schemas/CustomerStanding",
             "default": "new"
@@ -10304,7 +10382,7 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.\n\nVersion 4 adds the team's customer card (1140), all optional: `tags`\n(indexed by `tags[].key`), the `is_vip` flag and `block`, set while the\nassistant must not answer the customer (`is_blocked` mirrors it for the\nlist's filter). Only the card writes of the repository change them; a\nplain save keeps them as stored, so a turn that read the contact\nearlier never undoes a tag or a block. An erased customer has none.",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.\n\nVersion 4 adds the team's customer card (1140), all optional: `tags`\n(indexed by `tags[].key`), the `is_vip` flag and `block`, set while the\nassistant must not answer the customer (`is_blocked` mirrors it for the\nlist's filter). Only the card writes of the repository change them; a\nplain save keeps them as stored, so a turn that read the contact\nearlier never undoes a tag or a block. An erased customer has none.\n\nVersion 5 adds `marketing_consent` (optional, a card field like the\ntags): marketing messages go only to a customer with an active one.\nEvery customer from before it has none, which reads as no consent. A\nplain save that brings a new STOP (a channel joins `opted_out_channels`)\ntakes it back (`keep_card_fields`); an erasure drops it.",
         "properties": {
           "block": {
             "anyOf": [
@@ -10393,6 +10471,16 @@
             ],
             "title": "Last Seen At"
           },
+          "marketing_consent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "anyOf": [
               {
@@ -10426,7 +10514,7 @@
             "title": "Phone Number"
           },
           "schema_version": {
-            "default": "4",
+            "default": "5",
             "title": "Schema Version",
             "type": "string"
           },
@@ -12367,7 +12455,7 @@
       },
       "CustomerCardView": {
         "additionalProperties": false,
-        "description": "The card after a change: the customer's tags, VIP flag and block, and\nthe business's tags (the latest used first) to offer next.",
+        "description": "The card after a change: the customer's tags, VIP flag, block and\nmarketing consent, and the business's tags (the latest used first) to\noffer next.",
         "properties": {
           "blocked_at": {
             "anyOf": [
@@ -12403,6 +12491,9 @@
             },
             "title": "Known Tags",
             "type": "array"
+          },
+          "marketing_consent": {
+            "$ref": "#/components/schemas/MarketingConsentView"
           },
           "tags": {
             "items": {
@@ -19953,7 +20044,7 @@
       },
       "ManagedBookingView": {
         "additionalProperties": false,
-        "description": "The guest's booking as the manage page shows it, in the business's\ntime zone: no contact details of the guest (anyone holding the link\nsees the page). `token` is the link's current token (a move issues a\nnew one); `language` is the guest's. `chat_links` are the ways to write\nto the business, the chat the booking was made in first.",
+        "description": "The guest's booking as the manage page shows it, in the business's\ntime zone: no contact details of the guest (anyone holding the link\nsees the page). `token` is the link's current token (a move issues a\nnew one); `language` is the guest's. `chat_links` are the ways to write\nto the business, the chat the booking was made in first.\n`marketing_consent` is whether the guest agreed to marketing messages\nand has not taken it back (the page's box, unticked until then).",
         "properties": {
           "address": {
             "anyOf": [
@@ -20054,6 +20145,11 @@
               }
             ],
             "title": "Maps Url"
+          },
+          "marketing_consent": {
+            "default": false,
+            "title": "Marketing Consent",
+            "type": "boolean"
           },
           "party_size": {
             "maximum": 10000.0,
@@ -20328,6 +20424,196 @@
         ],
         "title": "MarginView",
         "type": "object"
+      },
+      "MarketingConsent": {
+        "additionalProperties": false,
+        "description": "The customer's consent to marketing messages (Codice privacy art. 130,\nGDPR art. 7(1): the business must be able to show it): when, where\n(`source`), recorded by whom (`recorded_by`, the team member for a\nconsent given in person; None: the customer themselves, on the page of\n`booking_id`) and the wording agreed to (`text_version`). Taken back\nwhen `withdrawn_at` is set: how (`withdrawal`) and by whom\n(`withdrawn_by`, None: the customer). A new consent replaces a taken\nback one; every change is audited (UPDATE of the contact).",
+        "properties": {
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "given_at": {
+            "title": "Given At",
+            "type": "integer"
+          },
+          "recorded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded By"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MarketingConsentSource"
+          },
+          "text_version": {
+            "$ref": "#/components/schemas/MarketingConsentText"
+          },
+          "withdrawal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsentWithdrawal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "withdrawn_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn At"
+          },
+          "withdrawn_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn By"
+          }
+        },
+        "required": [
+          "given_at",
+          "source",
+          "text_version"
+        ],
+        "title": "MarketingConsent",
+        "type": "object"
+      },
+      "MarketingConsentSource": {
+        "description": "Where the customer agreed to marketing messages (the rebooking\ncampaign's invitations back, recalls and pre-arrival notes):\n\n- BOOKING_PAGE: they ticked the unticked box on their booking's page\n  (/r/{token}, the link of their written confirmation);\n- IN_PERSON: they told the team, who recorded it on their card\n  (Customers → a customer), naming who recorded it.",
+        "enum": [
+          "booking_page",
+          "in_person"
+        ],
+        "title": "MarketingConsentSource",
+        "type": "string"
+      },
+      "MarketingConsentStatus": {
+        "description": "What the customer's card and booking page say (never stored): AGREED\n(recorded and not taken back), NOT_GIVEN (never recorded: every\ncustomer from before consent was kept), WITHDRAWN (taken back), or\nSTOPPED (they said STOP, are on the suppression list or blocked: no\nmarketing whatever was recorded, so the card never says \"agreed\").",
+        "enum": [
+          "agreed",
+          "not_given",
+          "withdrawn",
+          "stopped"
+        ],
+        "title": "MarketingConsentStatus",
+        "type": "string"
+      },
+      "MarketingConsentText": {
+        "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages) and the card's record of a consent given in person\n(`customers.consent.*` of the cabinet's dictionaries): \"Send me news,\noffers and invitations to come back from {business}, in the chat this\nbooking was made in. I can take this back at any time here or by\nreplying STOP.\" A changed wording is a new value (behind a release\ngate, like every new stored value).",
+        "enum": [
+          "2026-11-02"
+        ],
+        "title": "MarketingConsentText",
+        "type": "string"
+      },
+      "MarketingConsentView": {
+        "additionalProperties": false,
+        "description": "The customer's marketing consent as the card shows it: the status\n(STOPPED whatever was recorded while they said STOP, are on the\nsuppression list or blocked), and what was recorded: when, where, by\nwhom (None: the customer), the wording's version, and when and how it\nwas taken back.",
+        "properties": {
+          "given_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Given At"
+          },
+          "recorded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded By"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsentSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/MarketingConsentStatus",
+            "default": "not_given"
+          },
+          "text_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsentText"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "withdrawal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingConsentWithdrawal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "withdrawn_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn At"
+          }
+        },
+        "title": "MarketingConsentView",
+        "type": "object"
+      },
+      "MarketingConsentWithdrawal": {
+        "description": "How the consent was taken back: unticked on the booking page, recorded\nby the team on the card, or the customer's STOP in a chat.",
+        "enum": [
+          "booking_page",
+          "in_person",
+          "stop"
+        ],
+        "title": "MarketingConsentWithdrawal",
+        "type": "string"
       },
       "MenuImportResult": {
         "additionalProperties": false,
@@ -24354,6 +24640,63 @@
         "title": "PaymentMethodView",
         "type": "object"
       },
+      "PaymentMismatchKind": {
+        "description": "How a payment's status at its provider (Flitt, Stripe) differs from the\nplatform's record of it, found by the daily reconciliation:\n\n- PAID_AT_PROVIDER: the provider took the money, the platform has the\n  payment unpaid (a lost notification: the owner paid and is dunned);\n- FAILED_AT_PROVIDER: the provider declined or let the payment expire,\n  the platform has it paid (the owner uses the service unpaid);\n- REVERSED_AT_PROVIDER: the provider refunded or charged the payment\n  back, the platform has it paid.",
+        "enum": [
+          "paid_at_provider",
+          "failed_at_provider",
+          "reversed_at_provider"
+        ],
+        "title": "PaymentMismatchKind",
+        "type": "string"
+      },
+      "PaymentMismatchView": {
+        "additionalProperties": false,
+        "description": "One mismatch as the admin sees it (the client's name, no card data).",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PaymentMismatchKind"
+          },
+          "payment_order_id": {
+            "title": "Payment Order Id",
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/PaymentProvider"
+          },
+          "provider_status": {
+            "$ref": "#/components/schemas/PaymentStatus"
+          },
+          "recorded_status": {
+            "$ref": "#/components/schemas/PaymentStatus"
+          }
+        },
+        "required": [
+          "payment_order_id",
+          "business_id",
+          "provider",
+          "recorded_status",
+          "provider_status",
+          "kind"
+        ],
+        "title": "PaymentMismatchView",
+        "type": "object"
+      },
       "PaymentProvider": {
         "description": "Payment service that charges owners: Flitt (concept: auto-debit) in\nGeorgia and Armenia, Stripe in the EU, the US and Israel\n(`PaymentProviderRegistry`). STRIPE is stored only once the\n`stripe_payments` release gate opens.",
         "enum": [
@@ -24362,6 +24705,58 @@
         ],
         "title": "PaymentProvider",
         "type": "string"
+      },
+      "PaymentReconciliationView": {
+        "additionalProperties": false,
+        "description": "The latest reconciliation (today's, else yesterday's; None fields when\nnone ran yet): when it ran, how many orders it compared and could not\ncompare, and the mismatches.",
+        "properties": {
+          "checked_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Checked Count",
+            "type": "integer"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMismatchView"
+            },
+            "title": "Mismatches",
+            "type": "array"
+          },
+          "ran_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ran At"
+          },
+          "unreadable_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unreadable Count",
+            "type": "integer"
+          }
+        },
+        "title": "PaymentReconciliationView",
+        "type": "object"
       },
       "PaymentRetryOutcome": {
         "description": "How one retry of a declined automatic charge went. CLAIMED: a worker\ntook it and is charging; APPROVED and DECLINED: the provider's answer\n(its notification settles the invoice); PROCESSING: the answer comes\nby notification; FAILED: the provider could not be reached or refused\nthe request; NOT_POSSIBLE: nothing to charge again with (no saved card\nor provider charge); SKIPPED: a later retry was due by the time the job\nran, so this one was never charged.",
@@ -25671,7 +26066,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day.",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day. SPEND_BUDGET_STOP: today's provider\nspend reached the share of the daily budget where every assistant\nstops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).\nMISSED_JOB_RUNS: a periodic job has not succeeded within its interval\nand grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).\nPAYMENT_MISMATCH: the daily reconciliation found payments whose status\nat Flitt or Stripe differs from the platform's record.",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -25694,7 +26089,10 @@
           "tenant_hopping",
           "failed_sign_in_checks",
           "audit_chain_broken",
-          "voice_health"
+          "voice_health",
+          "spend_budget_stop",
+          "missed_job_runs",
+          "payment_mismatch"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -25861,6 +26259,95 @@
           "result"
         ],
         "title": "PlatformBotWebhookOutcome",
+        "type": "object"
+      },
+      "PlatformBrake": {
+        "description": "Why every business's assistant holds the language model back at once,\nwhatever its own spend: a platform admin paused them all (PAUSED), or\nthe platform's provider spend of the UTC day reached the share of its\ndaily budget where it stops (BUDGET_STOP). Customers are handed to\nthe team in their language and calls go to the forwarding number.",
+        "enum": [
+          "paused",
+          "budget_stop"
+        ],
+        "title": "PlatformBrake",
+        "type": "string"
+      },
+      "PlatformPauseView": {
+        "additionalProperties": false,
+        "description": "The global pause as it stands (`changed_*`: the last pause or resume;\nNone before the first), and the daily budget stop: the share of the\nbudget where it holds, today's share (None without a budget) and\nwhether it holds now.",
+        "properties": {
+          "brake": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformBrake"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "budget_used_percent": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Used Percent"
+          },
+          "changed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed At"
+          },
+          "changed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By"
+          },
+          "is_paused": {
+            "title": "Is Paused",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 8,
+                "pattern": "^\\S(.*\\S)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "stop_percent": {
+            "maximum": 1000.0,
+            "minimum": 80.0,
+            "title": "Stop Percent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "is_paused",
+          "stop_percent"
+        ],
+        "title": "PlatformPauseView",
         "type": "object"
       },
       "PlatformSpendView": {
@@ -37238,6 +37725,251 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/members": {
+      "get": {
+        "operationId": "admin_list_client_member_sessions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientMemberSessionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Client Member Sessions",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/members/{member_user_id}/sessions/revoke": {
+      "post": {
+        "operationId": "admin_end_member_sessions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_user_id",
+            "required": true,
+            "schema": {
+              "title": "Member User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedSessionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "End Member Sessions",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/clients/{business_id}/notes": {
       "get": {
         "operationId": "admin_list_notes",
@@ -41925,6 +42657,361 @@
           }
         },
         "summary": "Post Payout",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/payments/reconciliation": {
+      "get": {
+        "operationId": "admin_get_admin_payment_reconciliation",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReconciliationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Admin Payment Reconciliation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/platform/pause": {
+      "get": {
+        "operationId": "admin_get_admin_platform_pause",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformPauseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Admin Platform Pause",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "admin_set_admin_platform_pause",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of PUT /v1/admin/platform/pause: pause (true) or resume (false)\nevery assistant, with the reason the audit log keeps.",
+                "properties": {
+                  "is_paused": {
+                    "title": "Is Paused",
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S(.*\\S)?$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "is_paused",
+                  "reason"
+                ],
+                "title": "PlatformPauseRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformPauseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Admin Platform Pause",
         "tags": [
           "admin"
         ]
@@ -62144,7 +63231,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "A change of the card: tags to add and to take off (any case), and the\nVIP flag (unchanged when left out). At most 20 tags at a time.",
+                "description": "A change of the card: tags to add and to take off (any case), the VIP\nflag, and the customer's marketing consent as they gave or took it back\nin person (true records the current wording with the team member who\nrecorded it; false records that it was taken back); each unchanged\nwhen left out. At most 20 tags at a time.",
                 "properties": {
                   "add_tags": {
                     "items": {
@@ -62167,6 +63254,17 @@
                       }
                     ],
                     "title": "Is Vip"
+                  },
+                  "marketing_consent": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Marketing Consent"
                   },
                   "remove_tags": {
                     "items": {
@@ -93409,6 +94507,115 @@
         ]
       }
     },
+    "/v1/me/sessions/revoke-all": {
+      "post": {
+        "operationId": "auth_revoke_all_sessions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedSessionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Revoke All Sessions",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v1/me/sessions/revoke-others": {
       "post": {
         "operationId": "auth_revoke_other_sessions",
@@ -96955,6 +98162,139 @@
           }
         },
         "summary": "Cancel Managed Booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/marketing-consent": {
+      "post": {
+        "operationId": "bookings_change_managed_booking_consent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The marketing box of the page: ticked (`is_given`) or not, and the\nversion of the wording the page showed next to it.",
+                "properties": {
+                  "is_given": {
+                    "title": "Is Given",
+                    "type": "boolean"
+                  },
+                  "text_version": {
+                    "description": "The versions of the consent wording, by the day each took effect; the\nversion a customer agreed to is stored with their consent, so the exact\ntext stays provable. 2026-11-02, the booking page\n(`web/src/app/r/[token]/_components/marketingConsent/consentTexts.ts`,\n15 languages) and the card's record of a consent given in person\n(`customers.consent.*` of the cabinet's dictionaries): \"Send me news,\noffers and invitations to come back from {business}, in the chat this\nbooking was made in. I can take this back at any time here or by\nreplying STOP.\" A changed wording is a new value (behind a release\ngate, like every new stored value).",
+                    "enum": [
+                      "2026-11-02"
+                    ],
+                    "title": "MarketingConsentText",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "is_given",
+                  "text_version"
+                ],
+                "title": "ManagedBookingConsentBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Change Managed Booking Consent",
         "tags": [
           "bookings"
         ]

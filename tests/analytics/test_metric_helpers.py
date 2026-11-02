@@ -58,13 +58,16 @@ from tests.analytics.metric_events import DAY, at_day
             ),
             "referral",
         ),
+        # A chat page names no source of its own (it never starts the
+        # attribution: it shows no cookie banner); the referring site counts.
         (
             SignupAttribution(
                 landing_path=LandingPath("/c/salobie-bia"),
                 referrer_host=ReferrerHost("www.instagram.com"),
             ),
-            "hosted_chat",
+            "instagram.com",
         ),
+        (SignupAttribution(landing_path=LandingPath("/c/salobie-bia")), "direct"),
         (
             SignupAttribution(referrer_host=ReferrerHost("www.instagram.com")),
             "instagram.com",

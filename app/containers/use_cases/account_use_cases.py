@@ -116,6 +116,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         send_lock_registry=registries.login_code_send_lock_registry,
         bot_check=facilitators.bot_check_facilitator,
         cap_alerts=facilitators.login_code_cap_alerts,
+        spray_alerts=facilitators.sign_in_code_spray_alerts,
     )
     start_otp_login_use_case: Factory[
         UseCaseContract[StartOtpLoginCommand, OtpChallengeView]

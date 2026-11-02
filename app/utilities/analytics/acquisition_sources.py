@@ -8,8 +8,6 @@ from app.schemas.typings.analytics.constrained_strings import AcquisitionSourceK
 UNKNOWN_SOURCE: AcquisitionSourceKey = AcquisitionSourceKey("unknown")
 DIRECT_SOURCE: AcquisitionSourceKey = AcquisitionSourceKey("direct")
 REFERRAL_SOURCE: AcquisitionSourceKey = AcquisitionSourceKey("referral")
-HOSTED_CHAT_SOURCE: AcquisitionSourceKey = AcquisitionSourceKey("hosted_chat")
-HOSTED_CHAT_PATH_PREFIX: str = "/c/"
 MAX_SOURCE_LENGTH: int = 120
 # Anything but the key's own characters becomes a dash.
 NOT_KEY_CHARACTERS: re.Pattern[str] = re.compile(r"[^a-z0-9._:-]+")
@@ -20,10 +18,16 @@ def acquisition_source_of(
 ) -> AcquisitionSourceKey:
     """
     The source of a sign-up, most specific first: the campaign source
-    (utm_source), the link's `src` tag, `referral` for a `ref` code,
-    `hosted_chat` for a visitor who first opened a business's chat page,
-    the referring site, else `direct`; `unknown` for an account without
+    (utm_source), the link's `src` tag, `referral` for a `ref` code, the
+    referring site, else `direct`; `unknown` for an account without
     attribution (created before it was kept, or the cookie was refused).
+
+    The landing page names no source of its own. A business's chat page
+    (/c/) never starts the attribution: the first-party cookie is kept
+    only with the consent of the public site's cookie banner, which the
+    chat page (the business's own page for its customers) does not show,
+    so a visitor's first touch is the public site, and the chat page's
+    "Powered by" link names itself with its `src` tag (`powered_by`).
     """
 
     if attribution is None:
@@ -38,12 +42,6 @@ def acquisition_source_of(
 
     if attribution.referral_code is not None:
         return REFERRAL_SOURCE
-
-    landing: str = (
-        "" if attribution.landing_path is None else str(attribution.landing_path)
-    )
-    if landing.startswith(HOSTED_CHAT_PATH_PREFIX):
-        return HOSTED_CHAT_SOURCE
 
     if attribution.referrer_host is not None:
         host: str = str(attribution.referrer_host).removeprefix("www.")

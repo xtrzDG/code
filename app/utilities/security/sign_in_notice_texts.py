@@ -25,9 +25,7 @@ from app.utilities.localization.owner_texts import owner_text
 NEW_DEVICE_TITLE: LocalizedText = owner_text("notifications.sign_in.title")
 NEW_DEVICE_DETAIL: LocalizedText = owner_text("notifications.sign_in.detail")
 UNKNOWN_DEVICE: LocalizedText = owner_text("notifications.sign_in.unknown_device")
-NEW_COUNTRY_TITLE: LocalizedText = owner_text(
-    "notifications.sign_in.new_country_title"
-)
+NEW_COUNTRY_TITLE: LocalizedText = owner_text("notifications.sign_in.new_country_title")
 NEW_COUNTRY_DETAIL: LocalizedText = owner_text(
     "notifications.sign_in.new_country_detail"
 )

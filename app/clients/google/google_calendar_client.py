@@ -130,7 +130,9 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         client_id, client_secret, _ = self._require_credentials()
         form = refresh_form(refresh_token, client_id, client_secret)
         return parse_token_grant(
-            self._http.post_form(GOOGLE_TOKEN_ENDPOINT, form, "Google access token refresh")
+            self._http.post_form(
+                GOOGLE_TOKEN_ENDPOINT, form, "Google access token refresh"
+            )
         )
 
     def revoke_token(self, refresh_token: CalendarRefreshToken) -> None:

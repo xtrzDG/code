@@ -783,7 +783,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      # Push the images to ghcr.io.
       packages: write # pushes both images to ghcr.io
       # The OIDC token Sigstore issues the signing certificates for.
       id-token: write # Sigstore's signing certificate

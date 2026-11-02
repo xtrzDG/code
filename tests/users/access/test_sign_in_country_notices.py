@@ -51,7 +51,9 @@ def test_the_same_country_or_an_unknown_one_adds_nothing() -> None:
 
     # Rome then Milan: Italy both times, the same device.
     notices.notice_new_device(
-        owner, session(world, MAC_CHROME, MILAN_IP), [session(world, MAC_CHROME, ROME_IP)]
+        owner,
+        session(world, MAC_CHROME, MILAN_IP),
+        [session(world, MAC_CHROME, ROME_IP)],
     )
     # An address the database does not place.
     notices.notice_new_device(
@@ -82,7 +84,9 @@ def test_without_a_country_database_a_known_device_tells_nobody() -> None:
     world.add_device(world.owner, "en")
 
     build_notices(world).notice_new_device(
-        owner_of(world), session(world, MAC_CHROME, LAGOS_IP), [session(world, MAC_CHROME, ROME_IP)]
+        owner_of(world),
+        session(world, MAC_CHROME, LAGOS_IP),
+        [session(world, MAC_CHROME, ROME_IP)],
     )
 
     assert world.push_queue.queued == []

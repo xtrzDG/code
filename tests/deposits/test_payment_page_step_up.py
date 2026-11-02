@@ -36,16 +36,20 @@ from app.schemas.typings.deposits.constrained_strings import (
     PaymentLinkAddressInput,
     PaymentLinkLabel,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.deposits.add_payment_link_use_case import AddPaymentLinkUseCase
 from app.use_cases.deposits.set_deposit_policy_use_case import SetDepositPolicyUseCase
 from app.use_cases.deposits.update_deposit_settings_use_case import (
     UpdateDepositSettingsUseCase,
 )
-from tests.deposits.deposit_owner_actions import owner_changes, remove_page, stored_settings
+from tests.deposits.deposit_owner_actions import (
+    owner_changes,
+    remove_page,
+    stored_settings,
+)
 from tests.deposits.deposit_world import DepositWorld
 
 TEMPLATE: str = "https://pay.example.org/deposit?sum={amount}&ref={reference}"
@@ -81,9 +85,7 @@ class RecordingAlerts(StaffAlertFacilitatorContract):
 def add_page(
     world: DepositWorld, step_up: StepUpGuardContract, alerts: RecordingAlerts
 ) -> None:
-    AddPaymentLinkUseCase(
-        owner_changes(world, step_up, alerts), world.cipher
-    ).run(
+    AddPaymentLinkUseCase(owner_changes(world, step_up, alerts), world.cipher).run(
         AddPaymentLinkCommand(
             user_id=world.owner_id,
             business_id=world.business.id,

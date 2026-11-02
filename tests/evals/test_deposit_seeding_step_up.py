@@ -20,8 +20,8 @@ def test_seeded_deposits_pass_the_step_up_and_leave_no_session_behind() -> None:
         container = workshop.container
         scope = container.utilities.storage_scope()
         with scope.platform_wide():
-            business: BusinessDocument | None = container.repositories.business_repo().get(
-                BusinessId(business_id)
+            business: BusinessDocument | None = (
+                container.repositories.business_repo().get(BusinessId(business_id))
             )
         assert business is not None
 
@@ -42,5 +42,7 @@ def test_seeded_deposits_pass_the_step_up_and_leave_no_session_behind() -> None:
 
         assert settings is not None
         assert settings.is_enabled is True
-        assert [str(link.host) for link in settings.payment_links] == ["pay.example.com"]
+        assert [str(link.host) for link in settings.payment_links] == [
+            "pay.example.com"
+        ]
         assert container.utilities.session_assurance().current() is None

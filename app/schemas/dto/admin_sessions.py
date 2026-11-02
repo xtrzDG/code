@@ -7,8 +7,8 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.storage.constrained_integers import DocumentCount
-from app.schemas.typings.users.strings import MaskedLoginDestination, UserDisplayName
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.users.strings import MaskedLoginDestination, UserDisplayName
 
 
 class ClientMembersQuery(ImmutableDTO):
