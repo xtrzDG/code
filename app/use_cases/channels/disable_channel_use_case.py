@@ -24,12 +24,18 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.use_cases.channels.channel_views import build_channel_view
+from app.use_cases.channels.meta_connection.meta_access_release import (
+    MetaAccessRelease,
+)
 from app.utilities.channels.delivery_targets import (
     decrypt_channel_secret,
     find_business_channel,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
+META_CHANNELS: frozenset[ChannelKind] = frozenset(
+    {ChannelKind.MESSENGER, ChannelKind.INSTAGRAM, ChannelKind.WHATSAPP}
+)
 
 
 class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView]):
@@ -38,7 +44,9 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
 
     The credential is erased and the account released (another business may
     connect it later); messages that still arrive for it are dropped. A
-    Telegram bot's webhook is removed when Telegram can be reached. Turning
+    Telegram bot's webhook is removed when Telegram can be reached; a Meta
+    channel gives the app's access back first (`MetaAccessRelease`: the
+    page or WhatsApp account is unsubscribed). Turning
     the phone number off removes the voice agent (publishing again sets it
     up anew) and gives back a number the platform rents for the business.
     """
@@ -56,7 +64,9 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
         wall_clock: WallClock[Microseconds],
         remove_voice_agent: UseCaseContract[BusinessId, None],
         give_back_phone_number: UseCaseContract[BusinessId, None] | None = None,
+        meta_access: MetaAccessRelease | None = None,
     ) -> None:
+        self._meta_access: MetaAccessRelease | None = meta_access
         self._give_back_phone_number: UseCaseContract[BusinessId, None] | None = (
             give_back_phone_number
         )
@@ -91,6 +101,11 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
 
         if channel.kind is ChannelKind.TELEGRAM:
             self._remove_telegram_webhook(channel)
+
+        if channel.kind in META_CHANNELS and self._meta_access is not None:
+            self._meta_access.release(
+                channel, self._channel_repo.list_by_business(business.id)
+            )
 
         if channel.kind is ChannelKind.PHONE:
             if self._give_back_phone_number is not None:

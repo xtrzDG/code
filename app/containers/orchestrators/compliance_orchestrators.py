@@ -48,6 +48,13 @@ class ComplianceOrchestratorsContainer(containers.DeclarativeContainer):
     delete_contact_data_orchestrator = use_case_orchestrator(
         compliance_use_cases.delete_contact_data_use_case
     )
+    # The erasures' ledger: recorded by a queued job, applied again daily.
+    record_contact_erasure_orchestrator = use_case_orchestrator(
+        compliance_use_cases.record_contact_erasure_use_case
+    )
+    reapply_contact_erasures_orchestrator = use_case_orchestrator(
+        compliance_use_cases.reapply_contact_erasures_use_case
+    )
     get_dpa_document_orchestrator = use_case_orchestrator(
         compliance_use_cases.get_dpa_document_use_case
     )

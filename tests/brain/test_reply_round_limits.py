@@ -1,17 +1,23 @@
 """
 One model response runs at most five tool calls (the others are answered
 with an error the model can act on), and a turn stops before a further
-model round once the business is past its hard spend limit.
+model round once the business is past its hard spend limit: the
+application wires the spend check into the customer's turn (autotests play
+without it).
 """
 
 import json
 
+from app.containers.app import AppContainer
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.spend import SpendLevel
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn, ScriptedToolCall
 from app.schemas.typings.conversations.strings import LlmToolInputJson
 from app.use_cases.conversations.replies.round_limits import (
     MAX_TOOL_CALLS_PER_RESPONSE,
+)
+from app.use_cases.spend_guard.check_business_spend_use_case import (
+    CheckBusinessSpendUseCase,
 )
 from tests.brain.brain_orchestrators import GuardOptions
 from tests.brain.brain_world import build_world
@@ -85,3 +91,14 @@ def test_under_the_limit_every_later_round_is_checked() -> None:
         "scripted",
         "scripted",
     ]
+
+
+def test_the_application_checks_the_spend_of_customer_turns_only() -> None:
+    orchestrators = AppContainer().orchestrators.conversations
+    customer = vars(
+        vars(orchestrators.conversation_turn_orchestrator())["_generate_reply"]
+    )
+    autotest = vars(vars(orchestrators.autotest_turn_orchestrator())["_generate_reply"])
+
+    assert isinstance(customer["_check_spend"], CheckBusinessSpendUseCase)
+    assert autotest["_check_spend"] is None

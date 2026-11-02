@@ -18,6 +18,9 @@ from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.compliance.record_contact_erasure_use_case import (
+    RECORD_CONTACT_ERASURE_JOB,
+)
 from app.use_cases.knowledge.website_import.start_website_import_use_case import (
     IMPORT_WEBSITE_JOB,
 )
@@ -95,6 +98,10 @@ def queued_job_operator_map(
             # A quiet conversation summarized for the customer memory.
             SUMMARIZE_CONVERSATION_JOB: operators.memory.summarize_conversation_operator,  # noqa: E501
             ERASE_PROCESSOR_COPIES_JOB: operators.privacy.erase_copies_operator,
+            # An erasure copied into the ledger outside the database.
+            RECORD_CONTACT_ERASURE_JOB: (
+                operators.compliance.record_contact_erasure_operator
+            ),
             # A freed place offered to the next waiting customer (1151).
             OFFER_FREED_PLACE_JOB: operators.growth.offer_freed_place_operator,
             # The next batch of businesses an all-businesses incident reaches.

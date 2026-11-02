@@ -36,6 +36,12 @@ class CompliancePipelinesContainer(containers.DeclarativeContainer):
     delete_contact_data_pipeline = orchestrator_pipeline(
         compliance_orchestrators.delete_contact_data_orchestrator
     )
+    record_contact_erasure_pipeline = orchestrator_pipeline(
+        compliance_orchestrators.record_contact_erasure_orchestrator
+    )
+    reapply_contact_erasures_pipeline = orchestrator_pipeline(
+        compliance_orchestrators.reapply_contact_erasures_orchestrator
+    )
     get_dpa_document_pipeline = orchestrator_pipeline(
         compliance_orchestrators.get_dpa_document_orchestrator
     )

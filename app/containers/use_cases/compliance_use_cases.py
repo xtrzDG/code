@@ -1,8 +1,9 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Factory, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.contact_erasure_factories import build_contact_erasure_ledger
 from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
@@ -10,6 +11,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.contact_erasure_ledger import ContactErasureLedgerAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.businesses import (
     BusinessQuery,
@@ -35,11 +37,13 @@ from app.schemas.dto.contacts import (
     ContactPage,
     ContactQuery,
 )
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.media import MessageMediaPurgeResult
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
 )
+from app.use_cases.compliance.contact_data_eraser import ContactDataEraser
 from app.use_cases.compliance.delete_contact_data_use_case import (
     DeleteContactDataUseCase,
 )
@@ -59,6 +63,12 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 )
 from app.use_cases.compliance.purge_stale_widget_uploads_use_case import (
     PurgeStaleWidgetUploadsUseCase,
+)
+from app.use_cases.compliance.reapply_contact_erasures_use_case import (
+    ReapplyContactErasuresUseCase,
+)
+from app.use_cases.compliance.record_contact_erasure_use_case import (
+    RecordContactErasureUseCase,
 )
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
@@ -175,12 +185,9 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         step_up=utilities.step_up_guard,
         suppression_list=facilitators.suppression_list,
     )
-    delete_contact_data_use_case: Factory[
-        UseCaseContract[ContactDataCommand, ContactErasureResult]
-    ] = Factory(
-        DeleteContactDataUseCase,
-        authorize_business_access=account_use_cases.authorize_business_access_use_case,
-        collect_contact_records=collect_contact_records_use_case,
+    # The erasure of one customer: the owner's, and again after a restore.
+    contact_data_eraser: Factory[ContactDataEraser] = Factory(
+        ContactDataEraser,
         contact_repo=repositories.contact_repo,
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
@@ -190,9 +197,6 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         lead_repo=repositories.lead_repo,
         handoff_repo=repositories.handoff_repo,
         recording_storage=adapters.recording_storage,
-        audit_log_repo=repositories.audit_log_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
-        step_up=utilities.step_up_guard,
         note_repo=repositories.conversation_note_repo,
         media_storage=adapters.media.media_storage,
         message_media_repo=repositories.message_media_repo,
@@ -205,6 +209,36 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         widget_upload_repo=repositories.widget_upload_repo,
         waitlist_entry_repo=repositories.waitlist_entry_repo,
         webhook_delivery_repo=repositories.webhook_delivery_repo,
+    )
+    delete_contact_data_use_case: Factory[
+        UseCaseContract[ContactDataCommand, ContactErasureResult]
+    ] = Factory(
+        DeleteContactDataUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        collect_contact_records=collect_contact_records_use_case,
+        eraser=contact_data_eraser,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
+        job_queue=facilitators.job_queue_facilitator,
+    )
+    # The erasures' ledger outside the database (the backup bucket).
+    contact_erasure_ledger: Singleton[ContactErasureLedgerAdapterContract] = (
+        Singleton(build_contact_erasure_ledger, settings=config.app_settings)
+    )
+    record_contact_erasure_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(RecordContactErasureUseCase, ledger=contact_erasure_ledger)
+    reapply_contact_erasures_use_case: Factory[
+        UseCaseContract[JobTick, JobReport]
+    ] = Factory(
+        ReapplyContactErasuresUseCase,
+        ledger=contact_erasure_ledger,
+        contact_repo=repositories.contact_repo,
+        collect_contact_records=collect_contact_records_use_case,
+        eraser=contact_data_eraser,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     purge_expired_message_media_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]

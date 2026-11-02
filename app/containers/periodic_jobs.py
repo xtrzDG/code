@@ -17,6 +17,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
     notice_milestones_job,
     send_activation_nudges_job,
 )
+from app.gateways.worker.periodic.business_closure_jobs import (
+    reapply_contact_erasures_job,
+)
 from app.gateways.worker.periodic.calendar_sync import sync_calendars_job
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
@@ -276,4 +279,9 @@ def periodic_job_specs(
         ),
         *voice_periodic_job_specs(operators),
         *closure_periodic_job_specs(account_deletions),
+        # Erased customers erased again after a restore (the batch worker).
+        Factory(
+            reapply_contact_erasures_job,
+            operator=operators.compliance.reapply_contact_erasures_operator,
+        ),
     )

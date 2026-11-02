@@ -5,7 +5,8 @@ days are over get their deletion job (`QueueDueDeletionsUseCase`); daily,
 businesses whose subscription ended unpaid OFFBOARD_AFTER_DAYS ago are
 closed, and those paid again are reopened (`OffboardUnpaidBusinessesUseCase`);
 daily, the deletion ledger is applied again, so a database restored from a
-backup holds no deleted business (`ReapplyDeletionLedgerUseCase`).
+backup holds no deleted business (`ReapplyDeletionLedgerUseCase`), and so
+are the erasures of customers (`ReapplyContactErasuresUseCase`).
 """
 
 from app.contracts.jobs import PeriodicJobOperator
@@ -50,6 +51,19 @@ def reapply_deletion_ledger_job(operator: PeriodicJobOperator) -> PeriodicJobSpe
 
     return PeriodicJobSpec(
         name=REAPPLY_DELETION_LEDGER_JOB,
+        interval_seconds=REAPPLY_DELETION_LEDGER_INTERVAL,
+        operator=operator,
+    )
+
+
+REAPPLY_CONTACT_ERASURES_JOB: JobName = JobName("reapply_contact_erasures")
+
+
+def reapply_contact_erasures_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:
+    """The daily ledger of erased customers, applied again (a restore since)."""
+
+    return PeriodicJobSpec(
+        name=REAPPLY_CONTACT_ERASURES_JOB,
         interval_seconds=REAPPLY_DELETION_LEDGER_INTERVAL,
         operator=operator,
     )
