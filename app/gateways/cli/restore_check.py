@@ -13,7 +13,8 @@ matches its manifest; every table has the dumped number of rows; the
 migrations are this checkout's; row-level security isolates businesses;
 the newest backup is at most BACKUP_MAX_AGE_HOURS old; after the deletion
 ledger (its copy in the bucket and the restored database's own) is applied,
-no row of a deleted business is left. With DATABASE_URL
+no row of a deleted business is left; the erased customers the backup holds
+with their data again are counted. With DATABASE_URL
 (the weekly Render cron) the drill is recorded for the admin system page.
 Exit codes: 0 the backup restores, 1 a check failed or the restore failed,
 2 not configured.
@@ -31,6 +32,9 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.backup.age_backup_cipher_adapter import AgeBackupCipherAdapter
 from app.adapters.backup.pg_restore_scratch_database_adapter import (
     PgRestoreScratchDatabaseAdapter,
+)
+from app.adapters.business_closures.bucket_contact_erasure_ledger_adapter import (
+    BucketContactErasureLedgerAdapter,
 )
 from app.adapters.business_closures.bucket_deletion_ledger_mirror_adapter import (
     BucketDeletionLedgerMirrorAdapter,
@@ -131,6 +135,9 @@ def main(
                     prefix=backup.prefix,
                     max_age=backup.max_age_hours,
                     ledger_mirror=BucketDeletionLedgerMirrorAdapter(
+                        bucket, backup.prefix
+                    ),
+                    contact_erasure_ledger=BucketContactErasureLedgerAdapter(
                         bucket, backup.prefix
                     ),
                 )
@@ -266,6 +273,11 @@ def describe_drill(report: RestoreCheckReport, is_kept: bool) -> str:
             f"Deletion ledger: {int(ledger.deleted_businesses)} deleted businesses, "
             f"{int(ledger.erased_rows)} of their rows deleted again, "
             f"{int(ledger.remaining_rows)} left."
+        )
+        lines.append(
+            f"Erasure ledger: {int(ledger.erased_contacts)} erased customers, "
+            f"{int(ledger.restored_contacts)} of them with their data in this "
+            "backup (reapply_contact_erasures erases them again after a restore)."
         )
     if report.pending_migrations:
         lines.append(

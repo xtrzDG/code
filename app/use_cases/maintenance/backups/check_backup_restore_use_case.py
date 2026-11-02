@@ -6,6 +6,7 @@ from app.contracts.backups import (
     ScratchDatabaseAdapterContract,
 )
 from app.contracts.business_erasure import DeletionLedgerMirrorAdapterContract
+from app.contracts.contact_erasure_ledger import ContactErasureLedgerAdapterContract
 from app.contracts.storage import SchemaMigrationSourceAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.backups import (
@@ -50,7 +51,10 @@ class CheckBackupRestoreUseCase(
     row-level security as a bound role; the newest backup must also be
     recent. Last, the deletion ledger is applied (its copy in the bucket and
     the restored database's own entries): no row of a deleted business may
-    be left, so a restored backup never brings one back. Every failed check
+    be left, so a restored backup never brings one back; the erased
+    customers of the ledger beside it that the backup holds with their data
+    again are counted (`reapply_contact_erasures` erases them again after a
+    real restore). Every failed check
     is reported (the CLI then exits non-zero and Sentry Crons records the
     failure); a damaged archive raises
     BackupArchiveCorruptError at once.
@@ -66,6 +70,7 @@ class CheckBackupRestoreUseCase(
         prefix: BackupObjectPrefix,
         max_age: BackupFreshnessHours,
         ledger_mirror: DeletionLedgerMirrorAdapterContract | None = None,
+        contact_erasure_ledger: ContactErasureLedgerAdapterContract | None = None,
     ) -> None:
         self._backup_bucket: BackupBucketClientContract = backup_bucket
         self._backup_cipher: BackupCipherAdapterContract = backup_cipher
@@ -75,6 +80,9 @@ class CheckBackupRestoreUseCase(
         self._prefix: BackupObjectPrefix = prefix
         self._max_age: BackupFreshnessHours = max_age
         self._ledger_mirror: DeletionLedgerMirrorAdapterContract | None = ledger_mirror
+        self._contact_erasure_ledger: ContactErasureLedgerAdapterContract | None = (
+            contact_erasure_ledger
+        )
 
     def run(self, input_data: CheckBackupRestoreCommand) -> RestoreCheckReport:
         archives: list[BackupArchive] = recognize_archives(
@@ -95,6 +103,9 @@ class CheckBackupRestoreUseCase(
                         else self._ledger_mirror.read_all()
                     )
                 ],
+                []
+                if self._contact_erasure_ledger is None
+                else self._contact_erasure_ledger.read_all(),
             )
         finally:
             remove_file(dump_file)

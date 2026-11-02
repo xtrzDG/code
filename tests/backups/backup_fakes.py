@@ -18,6 +18,9 @@ from app.schemas.dto.backups import (
     RecordedMigration,
     RestoredDatabase,
 )
+from app.schemas.dto.business_closures.contact_erasure_ledger import (
+    ContactErasureRecord,
+)
 from app.schemas.exceptions.backup_errors import BackupToolError
 from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
 from app.schemas.typings.backups.constrained_integers import (
@@ -148,16 +151,19 @@ class FakeScratchDatabase(ScratchDatabaseAdapterContract):
         self.restored_dumps: list[bytes] = []
         self.kept: list[bool] = []
         self.ledgers: list[list[BusinessId]] = []
+        self.erasure_ledgers: list[list[ContactErasureRecord]] = []
 
     def restore_and_inspect(
         self,
         archive: LocalFilePath,
         is_kept: IsScratchDatabaseKept,
         deleted_business_ids: Sequence[BusinessId] = (),
+        erased_contacts: Sequence[ContactErasureRecord] = (),
     ) -> RestoredDatabase:
         self.restored_dumps.append(Path(str(archive)).read_bytes())
         self.kept.append(is_kept)
         self.ledgers.append(list(deleted_business_ids))
+        self.erasure_ledgers.append(list(erased_contacts))
         return RestoredDatabase(
             scratch_database=ScratchDatabaseName("restore_drill_test"),
             facts=self.facts,
