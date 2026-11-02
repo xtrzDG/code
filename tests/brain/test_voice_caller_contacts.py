@@ -62,6 +62,18 @@ def call_contact(world: BrainWorld, call_id: str) -> ContactDocument:
     return contact
 
 
+def open_call(world: BrainWorld) -> OpenVoiceConversationUseCase:
+    return OpenVoiceConversationUseCase(
+        business_repo=world.business_repo,
+        assistant_version_repo=world.version_repo,
+        contact_repo=world.contact_repo,
+        conversation_repo=world.conversation_repo,
+        channel_repo=world.channel_repo,
+        plan_registry=PlanRegistry(),
+        wall_clock=world.clock.wall_clock(),
+    )
+
+
 def test_a_call_from_a_proved_number_gets_a_contact_of_its_own() -> None:
     world = build_world(scripted())
     nino = proved_whatsapp_customer(world)
@@ -101,17 +113,7 @@ def test_the_tools_of_a_call_get_no_verified_phone() -> None:
     world = build_world(scripted())
     proved_whatsapp_customer(world)
 
-    open_call = OpenVoiceConversationUseCase(
-        business_repo=world.business_repo,
-        assistant_version_repo=world.version_repo,
-        contact_repo=world.contact_repo,
-        conversation_repo=world.conversation_repo,
-        channel_repo=world.channel_repo,
-        plan_registry=PlanRegistry(),
-        wall_clock=world.clock.wall_clock(),
-    )
-
-    context = open_call.run(
+    context = open_call(world).run(
         VoiceToolCallRequest(
             business_id=world.business.id,
             provider_call_id=ProviderCallId("el_call_9"),
@@ -124,4 +126,28 @@ def test_the_tools_of_a_call_get_no_verified_phone() -> None:
 
     assert context.verified_phone_number is None
     assert context.contact_phone_number == CALLER
+    assert context.contact_name is None
+
+
+def test_an_earlier_callers_name_stays_out_of_the_tools() -> None:
+    # Calls from one number share their call-only contact, but the number
+    # proves nobody: the name an earlier caller gave is not handed on.
+    world = build_world(scripted())
+    voice_call(world, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT)
+    earlier = call_contact(world, "el_call_1")
+    earlier.name = ContactName("Nino")
+    world.contact_repo.save(earlier)
+
+    context = open_call(world).run(
+        VoiceToolCallRequest(
+            business_id=world.business.id,
+            provider_call_id=ProviderCallId("el_call_2"),
+            caller_phone_number=E164PhoneNumber(CALLER),
+            tool_name=AssistantToolName.CREATE_LEAD,
+            input_json=LlmToolInputJson("{}"),
+            language=LanguageTag("ka"),
+        )
+    )
+
+    assert context.contact_id == earlier.id
     assert context.contact_name is None

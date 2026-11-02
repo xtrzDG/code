@@ -43,11 +43,12 @@ class OpenVoiceConversationUseCase(
     when the call started. The caller is the call-only contact of the
     caller's number (or, for a withheld number, the one known by this call):
     a caller id is no proof, so it never joins a contact a channel proved,
-    and the tools get no verified phone. The business comes from the
-    verified webhook, never from the agent's arguments. A
-    call in progress keeps its tools; a new call is refused (ConflictError)
-    while the phone assistant is off (business not live, no voice in the
-    live version or the plan, phone number disconnected). The tools learn
+    and the tools get neither a verified phone nor the contact's name. The
+    business comes from the verified webhook, never from the agent's
+    arguments. A call in progress keeps its tools; a new call is refused
+    (ConflictError) while the phone assistant is off (business not live, no
+    voice in the live version or the plan, phone number disconnected). The
+    tools learn
     whether a connected messenger reaches the caller: only then are the
     links the agent promises texted after the call.
     """
@@ -133,9 +134,10 @@ class OpenVoiceConversationUseCase(
             business_id=business.id,
             business_country_code=business.country_code,
             contact_id=contact.id,
-            contact_name=contact.name,
+            # A caller id proves nothing: an earlier caller's name stays out
+            # of the tools (they ask), and no booking is found by the number.
+            contact_name=None,
             contact_phone_number=contact.phone_number,
-            # A caller id proves nothing: no booking is found by it.
             verified_phone_number=None,
             conversation_id=conversation.id,
             channel=ChannelKind.PHONE,

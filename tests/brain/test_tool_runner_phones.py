@@ -2,6 +2,7 @@
 Phones in tool calls: parsed with the business country, proven only by the channel.
 """
 
+import json
 from typing import Any
 
 import pytest
@@ -13,11 +14,13 @@ from app.schemas.dto.bookings import (
     CreateBookingCommand,
     RescheduleBookingCommand,
 )
+from app.schemas.dto.conversations import InboundMessage
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from tests.brain.brain_world import build_world
 from tests.brain.business_setups import ISRAEL
-from tests.brain.scripted_turns import scripted
+from tests.brain.scripted_turns import call_tool, say, scripted
 from tests.brain.tool_runner_helpers import BOOKING_ARGUMENTS, build_context, run_tool
 
 
@@ -147,3 +150,29 @@ def test_a_booking_carries_the_website_visitors_network() -> None:
     # Anonymous bookings are capped per client network (booking_limits).
     assert from_web.client_ip_address == "203.0.113.7"
     assert from_telegram.client_ip_address is None
+
+
+def test_a_web_chat_turn_hands_the_visitors_network_to_the_booking() -> None:
+    # The inbox's message carries the address (widget, hosted chat); the
+    # turn's tool context passes it on, so the per-network cap applies.
+    world = build_world(
+        scripted(
+            call_tool(AssistantToolName.CREATE_BOOKING, json.dumps(BOOKING_ARGUMENTS)),
+            say("Booked."),
+        )
+    )
+
+    world.pipeline.start(
+        InboundMessage(
+            business_id=world.business.id,
+            channel=ChannelKind.WEB_CHAT,
+            channel_user_id=ChannelUserId("widget-session-1"),
+            text=MessageText("A table for four tomorrow at 19:30, please"),
+            client_ip_address=ClientIpAddress("198.51.100.4"),
+        )
+    )
+
+    [command] = world.bookings.commands
+    assert isinstance(command, CreateBookingCommand)
+    assert command.source_channel is ChannelKind.WEB_CHAT
+    assert command.client_ip_address == "198.51.100.4"
