@@ -41,10 +41,9 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
     }
   };
 
+  // On success the sign-in page loads; a refusal stays in the dialog.
   const endAll = async () => {
-    if (!(await devices.endEverywhere())) {
-      toast.error(t("devices.endAllFailed"));
-    }
+    await devices.endEverywhere();
   };
 
   if (devices.sessions.error && !devices.sessions.data) {

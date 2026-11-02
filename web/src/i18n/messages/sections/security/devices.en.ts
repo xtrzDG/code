@@ -42,7 +42,6 @@ export const devicesEn = {
   endAllTitle: "Sign out on every device, this one too?",
   endAllDescription:
     "Every browser and phone, this one included, will have to sign in again. Use it when you think someone else is in your account.",
-  endAllFailed: "Signing out everywhere did not work. Try again.",
   onlyThis: "Only this device is signed in.",
   notYou:
     "Do not recognise a device? Sign it out, then turn on the authenticator app above.",
