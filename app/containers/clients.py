@@ -22,6 +22,7 @@ from app.clients.meta.meta_media_client import MetaMediaClient
 from app.clients.meta.meta_oauth_client import MetaOAuthClient
 from app.clients.meta.meta_pages_client import MetaPagesClient
 from app.clients.meta.meta_private_reply_client import MetaPrivateReplyClient
+from app.clients.meta.meta_subscription_client import MetaSubscriptionClient
 from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
 from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.whatsapp_authentication_client import (
@@ -129,6 +130,10 @@ class ClientsContainer(containers.DeclarativeContainer):
     )
     meta_private_reply_client: Singleton[MetaPrivateReplyClient] = Singleton(
         MetaPrivateReplyClient
+    )
+    # The app's webhook subscriptions given back when a channel is switched off.
+    meta_subscription_client: Singleton[MetaSubscriptionClient] = Singleton(
+        MetaSubscriptionClient
     )
     # Files customers send: platform downloads, speech-to-text (EU project).
     meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)

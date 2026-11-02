@@ -119,6 +119,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "SeasonDay": "06-15",
     "StatusDay": "2026-09-21",
     "SpendDay": "2026-09-21",
+    "PlatformPauseReason": "Model provider answers in the wrong language",
+    "ReconciliationDay": "2026-09-21",
     "PublicBaseUrl": "https://cafe-batumi.example.com",
     "SessionUserAgent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "

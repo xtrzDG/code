@@ -80,7 +80,7 @@ an erased customer back.
 
 ## Is the retention job running?
 
-Every purge above is a periodic job; a job that stops is noticed four ways:
+Every purge above is a periodic job; a job that stops is noticed five ways:
 
 1. **Sentry Crons**: each periodic run checks in (monitor slug = job name
    with hyphens, e.g. `purge-expired-personal-data`); a missed or failed
@@ -92,5 +92,9 @@ Every purge above is a periodic job; a job that stops is noticed four ways:
    the last `succeeded` run of each purge job.
 4. **The audit log**: each purge that removed rows writes
    `retention_purge` with its counts, without an actor.
+5. **The platform alert** `missed_job_runs` (SEV2): a shared periodic job
+   that has not succeeded within its interval plus a grace pages without
+   Sentry (`periodic_job_heartbeats`,
+   `docs/operations/runbooks/missed-job-runs.md`).
 
 No worker at all is `worker_down` (SEV1, `docs/operations/slo.md`).

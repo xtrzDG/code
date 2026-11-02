@@ -1,0 +1,106 @@
+{
+  "collection": "payment_reconciliations",
+  "document_type": "PaymentReconciliationDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "checked_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "day": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+        "type": "string"
+      },
+      "mismatches": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "business_id": {
+              "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "paid_at_provider",
+                "failed_at_provider",
+                "reversed_at_provider"
+              ],
+              "type": "string"
+            },
+            "payment_order_id": {
+              "pattern": "^payment_order_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "provider": {
+              "enum": [
+                "flitt",
+                "stripe"
+              ],
+              "type": "string"
+            },
+            "provider_status": {
+              "enum": [
+                "created",
+                "processing",
+                "approved",
+                "declined",
+                "expired",
+                "reversed"
+              ],
+              "type": "string"
+            },
+            "recorded_status": {
+              "enum": [
+                "created",
+                "processing",
+                "approved",
+                "declined",
+                "expired",
+                "reversed"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "payment_order_id",
+            "business_id",
+            "provider",
+            "recorded_status",
+            "provider_status",
+            "kind"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "ran_at": {
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "unreadable_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "day",
+      "ran_at",
+      "checked_count",
+      "unreadable_count"
+    ],
+    "type": "object"
+  }
+}

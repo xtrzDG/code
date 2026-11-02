@@ -69,6 +69,9 @@ from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
+from app.use_cases.channels.meta_connection.meta_access_release import (
+    MetaAccessRelease,
+)
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
 )
@@ -199,6 +202,11 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
         give_back_phone_number=give_back_phone_number_use_case,
+        meta_access=Factory(
+            MetaAccessRelease,
+            secret_cipher=adapters.secret_cipher,
+            meta_subscriptions=clients.meta_subscription_client,
+        ),
     )
     list_channels_use_case: Factory[
         UseCaseContract[ChannelListQuery, list[ChannelView]]

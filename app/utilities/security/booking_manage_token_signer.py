@@ -3,9 +3,12 @@ Signed, expiring booking manage links (`{CABINET_BASE_URL}/r/{token}`).
 
 A token names one booking of one business, the version it was issued for
 (the booking's start time: a moved booking gets a new link and the old one
-stops managing it) and its expiry (whole seconds), followed by a truncated
-HMAC-SHA256 over all of them, base64url without padding (71 characters).
-Nothing is stored: the signature proves the platform made the link. The key
+stops managing it) and its expiry (whole seconds), followed by an
+HMAC-SHA256 over all of them truncated to 128 bits, base64url without
+padding (76 characters, token version 2). Links of version 1 (a 96-bit MAC,
+71 characters) are still read until they expire, so nothing sent before
+the change stops opening early. Nothing is stored: the signature proves
+the platform made the link. The key
 derives from ENCRYPTION_KEY with its own label, so it is never the key that
 encrypts channel secrets nor the one of staff notification links; after a
 key rotation a link signed with a previous key of the ring still opens
@@ -36,9 +39,12 @@ from app.schemas.typings.platform.strings import PlatformSecret
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-TOKEN_VERSION: int = 1
+TOKEN_VERSION: int = 2
 KEY_LABEL: bytes = b"assistant-workshop/booking-manage-links/v1"
-SIGNATURE_LENGTH: int = 12
+# Bytes of the MAC by token version: 128 bits now, 96 for the links of
+# version 1, which are read until they expire (at most a day after their
+# booking ends) and never signed again.
+SIGNATURE_LENGTHS: dict[int, int] = {TOKEN_VERSION: 16, 1: 12}
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # version, business uuid, booking uuid, booking start (seconds), expiry.
 PAYLOAD_FORMAT: str = "!B16s16sII"
@@ -87,7 +93,9 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
             min(int(claims.booking_version), LARGEST_SECONDS),
             min(int(claims.expires_at) // MICROSECONDS_PER_SECOND, LARGEST_SECONDS),
         )
-        token: bytes = payload + sign_payload(self._key, payload)
+        token: bytes = payload + sign_payload(
+            self._key, payload, SIGNATURE_LENGTHS[TOKEN_VERSION]
+        )
         return BookingManageToken(base64.urlsafe_b64encode(token).rstrip(b"=").decode())
 
     def read(self, token: BookingManageToken) -> BookingManageClaims | None:
@@ -97,7 +105,10 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
         except binascii.Error, ValueError:
             return None
 
-        if len(raw) != PAYLOAD_LENGTH + SIGNATURE_LENGTH:
+        signature_length: int | None = (
+            SIGNATURE_LENGTHS.get(raw[0]) if len(raw) > PAYLOAD_LENGTH else None
+        )
+        if signature_length is None or len(raw) != PAYLOAD_LENGTH + signature_length:
             return None
 
         # Only the one spelling this signer writes: another (the spare low
@@ -108,16 +119,16 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
 
         payload, signature = raw[:PAYLOAD_LENGTH], raw[PAYLOAD_LENGTH:]
         if not any(
-            hmac.compare_digest(signature, sign_payload(key, payload))
+            hmac.compare_digest(
+                signature, sign_payload(key, payload, signature_length)
+            )
             for key in self._verification_keys
         ):
             return None
 
-        version, business, booking, starts_at, expires = struct.unpack(
+        _version, business, booking, starts_at, expires = struct.unpack(
             PAYLOAD_FORMAT, payload
         )
-        if version != TOKEN_VERSION:
-            return None
 
         return BookingManageClaims(
             business_id=BusinessId(UUID(bytes=business)),
@@ -127,8 +138,10 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
         )
 
 
-def sign_payload(key: bytes, payload: bytes) -> bytes:
-    return hmac.new(key, payload, hashlib.sha256).digest()[:SIGNATURE_LENGTH]
+def sign_payload(key: bytes, payload: bytes, length: int) -> bytes:
+    """The payload's HMAC-SHA256 truncated to `length` bytes (its version's)."""
+
+    return hmac.new(key, payload, hashlib.sha256).digest()[:length]
 
 
 def prefixed_uuid_bytes(prefixed_id: str, prefix: str) -> bytes:

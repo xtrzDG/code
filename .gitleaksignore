@@ -1848,3 +1848,9 @@ e5f518dabade7ed1229794d3d09ccc0e0ab739a1:tests/integrations/test_public_api_writ
 # UUID) of the test that a closing business rents no number; replaced by a
 # low-entropy value since. Not a secret.
 43ef1972bb65baacb387134132be9c36ae06cf2b:tests/business_closures/test_closing_connects_nothing.py:generic-api-key:104
+# Reviewed 2026-11-02 (readiness rebuild): environment variable names
+# (RECORDINGS_S3_BUCKET) of the staging API and worker in render.staging.yaml;
+# not secrets.
+c53c0e744716598b7890adc3c214fa89fb91ee6a:render.staging.yaml:generic-api-key:134
+c53c0e744716598b7890adc3c214fa89fb91ee6a:render.staging.yaml:generic-api-key:267
+c53c0e744716598b7890adc3c214fa89fb91ee6a:render.staging.yaml:generic-api-key:271

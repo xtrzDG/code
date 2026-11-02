@@ -31,6 +31,7 @@ from app.utilities.bookings.booking_manage_links import (
 from app.utilities.security.booking_manage_token_signer import (
     BookingManageTokenSigner,
 )
+from tests.bookings.legacy_manage_tokens import legacy_token
 from tests.operations.fakes import MovableClock
 
 KEY: PlatformSecret = PlatformSecret("test-encryption-key-0000")  # gitleaks:allow
@@ -64,13 +65,15 @@ def test_a_signed_link_reads_back_as_its_claims() -> None:
 
     token = signer.sign(issued)
 
-    assert len(str(token)) == 71
+    # 41 bytes of claims and a 128-bit MAC (token version 2).
+    assert len(str(token)) == 76
+    assert base64.urlsafe_b64decode(str(token))[0] == 2
     assert signer.read(token) == issued
     # Another process with the same ENCRYPTION_KEY reads it too.
     assert BookingManageTokenSigner(KEY).read(token) == issued
 
 
-@pytest.mark.parametrize("position", [0, 5, 20, 40, 52, 60, 70])
+@pytest.mark.parametrize("position", [0, 5, 20, 40, 52, 60, 70, 75])
 def test_an_altered_link_proves_nothing(position: int) -> None:
     signer = BookingManageTokenSigner(KEY)
     token = signer.sign(claims())
@@ -80,7 +83,8 @@ def test_an_altered_link_proves_nothing(position: int) -> None:
 
 def test_a_link_spelled_differently_for_the_same_bytes_proves_nothing() -> None:
     signer = BookingManageTokenSigner(KEY)
-    text: str = str(signer.sign(claims()))
+    text: str = str(legacy_token(KEY, claims()))
+    assert signer.read(BookingManageToken(text)) is not None
     alphabet: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
     # 71 characters carry 53 bytes: the last character's two low bits are
     # spare, so these spellings decode to the very same bytes.
@@ -119,6 +123,7 @@ def test_a_link_of_another_key_or_of_garbage_is_refused() -> None:
     assert BookingManageTokenSigner(KEY).read(token) is None
     garbage = BookingManageToken("A" * 71)
     assert BookingManageTokenSigner(KEY).read(garbage) is None
+    assert BookingManageTokenSigner(KEY).read(BookingManageToken("A" * 76)) is None
     short = BookingManageToken("A" * 40)
     assert BookingManageTokenSigner(KEY).read(short) is None
 
@@ -193,3 +198,31 @@ def test_the_map_link_is_the_owners_or_a_search_of_the_address() -> None:
         "%D0%A0%D1%83%D1%81%D1%82%D0%B0%D0%B2%D0%B5%D0%BB%D0%B8%201"
     )
     assert choose_maps_url(None) is None
+
+
+def test_links_sent_with_the_96_bit_mac_still_open_until_they_expire() -> None:
+    issued = claims()
+    sent_before = legacy_token(KEY, issued)
+    signer = BookingManageTokenSigner(KEY)
+
+    assert len(str(sent_before)) == 71
+    assert signer.read(sent_before) == issued
+    # Under the version of the new links, a short MAC is refused.
+    raw = bytearray(base64.urlsafe_b64decode(str(sent_before) + "="))
+    raw[0] = 2
+    relabelled = base64.urlsafe_b64encode(bytes(raw)).rstrip(b"=").decode()
+    assert signer.read(BookingManageToken(relabelled)) is None
+    # A version-1 link with a forged MAC proves nothing either.
+    assert signer.read(tampered(sent_before, 70)) is None
+
+
+def test_new_links_have_no_spare_bits_to_respell() -> None:
+    text: str = str(BookingManageTokenSigner(KEY).sign(claims()))
+
+    # 76 characters carry exactly 57 bytes: any other last character is
+    # other bytes, so another MAC.
+    assert len(text) * 6 == 57 * 8
+    for replacement in "AQgw":
+        if replacement != text[-1]:
+            respelled = BookingManageToken(text[:-1] + replacement)
+            assert BookingManageTokenSigner(KEY).read(respelled) is None

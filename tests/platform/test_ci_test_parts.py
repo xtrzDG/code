@@ -19,6 +19,7 @@ import yaml
 from tests import conftest
 from tests.part_plan import (
     GROUP_PROPERTY,
+    REST_GROUP,
     Part,
     TestFile,
     files_of_part,
@@ -37,6 +38,12 @@ CI_WORKFLOW: Path = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
 PART_WORKERS: int = 4
 PART_START_SECONDS: float = 30.0
 PART_BUDGET_SECONDS: float = 240.0
+# The API fuzz job (`-m api_fuzz`, one part): the rest group's tests/api_fuzz.
+FUZZ_GROUP: str = "api-fuzz"
+FUZZ_FILES: list[str] = sorted(
+    str(path.relative_to(PROJECT_ROOT))
+    for path in (PROJECT_ROOT / "tests" / "api_fuzz").glob("test_*.py")
+)
 PERF_MODULE: re.Pattern[str] = re.compile(
     r"^pytestmark = pytest\.mark\.perf$", re.MULTILINE
 )
@@ -224,7 +231,12 @@ def test_the_committed_durations_keep_every_ci_part_within_its_budget() -> None:
     durations = load_durations()
 
     for group, total in ci_parts().items():
-        files = weigh_files(((group, path) for path in durations[group]), durations)
+        keys = (
+            ((REST_GROUP, path) for path in FUZZ_FILES)
+            if group == FUZZ_GROUP
+            else ((group, path) for path in durations[group])
+        )
+        files = weigh_files(keys, durations)
         estimates = [
             round(
                 max(

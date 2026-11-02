@@ -28,6 +28,7 @@ from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
 )
+from app.use_cases.compliance.contact_data_eraser import ContactDataEraser
 from app.use_cases.compliance.delete_contact_data_use_case import (
     DeleteContactDataUseCase,
 )
@@ -45,7 +46,10 @@ from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.media.media_fakes import InMemoryMediaStorage
-from tests.privacy.processor_erasure_doubles import ProcessorErasureBed
+from tests.privacy.processor_erasure_doubles import (
+    ProcessorErasureBed,
+    RecordingJobQueue,
+)
 from tests.privacy.suppression_doubles import build_suppression_list
 from tests.users.accounts_user_use_cases import AccountsUserUseCases
 
@@ -93,6 +97,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             inbound_event_repo=self.inbound_event_repo,
             feedback_request_repo=self.feedback_request_repo,
         )
+        self.collect_contact_records = collect_contact_records
         self.legal_document_registry = LegalDocumentRegistry()
         self.accept_dpa = AcceptDpaUseCase(
             authorize_business_access=self.authorize_business_access,
@@ -160,9 +165,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         )
         # Langfuse and ElevenLabs, whose copies the erasure deletes by jobs.
         self.processor_erasure = ProcessorErasureBed()
-        self.delete_contact_data = DeleteContactDataUseCase(
-            authorize_business_access=self.authorize_business_access,
-            collect_contact_records=collect_contact_records,
+        # The erasure itself, shared with its re-application after a restore.
+        self.contact_data_eraser = ContactDataEraser(
             contact_repo=self.contact_repo,
             conversation_repo=self.conversation_repo,
             message_repo=self.message_repo,
@@ -172,9 +176,6 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
             recording_storage=self.recording_storage,
-            audit_log_repo=self.audit_log_repo,
-            wall_clock=wall_clock,
-            step_up=self.step_up,
             note_repo=self.conversation_note_repo,
             media_storage=self.media_storage,
             message_media_repo=self.message_media_repo,
@@ -185,6 +186,17 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             feedback_request_repo=self.feedback_request_repo,
             processor_erasure=self.processor_erasure.facilitator(),
             widget_upload_repo=self.widget_upload_repo,
+        )
+        # The queued jobs that copy each erasure into the ledger.
+        self.erasure_ledger_queue = RecordingJobQueue()
+        self.delete_contact_data = DeleteContactDataUseCase(
+            authorize_business_access=self.authorize_business_access,
+            collect_contact_records=collect_contact_records,
+            eraser=self.contact_data_eraser,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+            step_up=self.step_up,
+            job_queue=self.erasure_ledger_queue,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,

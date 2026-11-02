@@ -12,6 +12,7 @@ from app.clients.google.google_calendar_client import GoogleCalendarClient
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
+from app.clients.meta.meta_subscription_client import MetaSubscriptionClient
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
 from app.clients.openai.openai_transcription_client import (
     OpenAiTranscriptionClient,
@@ -116,6 +117,12 @@ def build_workshop_container(
     replace_provider(
         container.clients.meta_media_client,
         MetaMediaClient(transport=build_transport(meta, answer_with_empty_object)),
+    )
+    replace_provider(
+        container.clients.meta_subscription_client,
+        MetaSubscriptionClient(
+            transport=build_transport(meta, answer_with_empty_object)
+        ),
     )
     replace_provider(
         container.clients.openai_transcription_client,

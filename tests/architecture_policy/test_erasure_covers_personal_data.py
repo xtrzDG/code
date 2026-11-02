@@ -1,8 +1,9 @@
 """
 Every stored collection that can hold a customer's number, e-mail, channel
 account or words is either handled by the erasure of a customer's data
-(`DeleteContactDataUseCase` takes its repository, and so finds and erases
-the customer's rows) or listed below with the reason it holds no customer's
+(`ContactDataEraser`, which the owner's `DeleteContactDataUseCase` and its
+re-application after a restore share, takes its repository, and so finds
+and erases the customer's rows) or listed below with the reason it holds no customer's
 personal data. A new collection with such a field fails here until one of
 the two is true.
 """
@@ -16,9 +17,7 @@ from pydantic import BaseModel
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.constrained_strings import EmailAddress
-from app.use_cases.compliance.delete_contact_data_use_case import (
-    DeleteContactDataUseCase,
-)
+from app.use_cases.compliance.contact_data_eraser import ContactDataEraser
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 
 PERSONAL_TYPES: tuple[type, ...] = (
@@ -107,14 +106,14 @@ def test_every_collection_with_personal_fields_is_erased_or_explained() -> None:
     }
 
     assert unhandled == {}, (
-        "Erase these collections in DeleteContactDataUseCase, or explain in "
+        "Erase these collections in ContactDataEraser, or explain in "
         "NOT_CUSTOMER_DATA why they hold no customer's personal data: "
         f"{unhandled}"
     )
 
 
 def test_the_erasure_takes_the_repository_of_every_erased_collection() -> None:
-    parameters = inspect.signature(DeleteContactDataUseCase.__init__).parameters
+    parameters = inspect.signature(ContactDataEraser.__init__).parameters
 
     assert [
         repository for repository in ERASED_BY.values() if repository not in parameters

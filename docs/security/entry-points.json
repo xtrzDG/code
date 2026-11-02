@@ -68,6 +68,9 @@
     {"method": "PATCH", "path": "/v1/admin/partners/{partner_id}", "access": "platform_admin", "scope": "platform", "changes_state": true, "protected_by": "cabinet session token with two factors and the admin role's permission"},
     {"method": "POST", "path": "/v1/admin/partners/{partner_id}/codes", "access": "platform_admin", "scope": "platform", "changes_state": true, "protected_by": "cabinet session token with two factors and the admin role's permission"},
     {"method": "POST", "path": "/v1/admin/partners/{partner_id}/payouts", "access": "platform_admin", "scope": "platform", "changes_state": true, "protected_by": "cabinet session token with two factors and the admin role's permission"},
+    {"method": "GET", "path": "/v1/admin/payments/reconciliation", "access": "platform_admin", "scope": "platform", "changes_state": false, "protected_by": "cabinet session token with two factors and the admin role's permission"},
+    {"method": "GET", "path": "/v1/admin/platform/pause", "access": "platform_admin", "scope": "platform", "changes_state": false, "protected_by": "cabinet session token with two factors and the admin role's permission"},
+    {"method": "PUT", "path": "/v1/admin/platform/pause", "access": "platform_admin", "scope": "platform", "changes_state": true, "protected_by": "cabinet session token with two factors and the admin role's permission"},
     {"method": "GET", "path": "/v1/admin/security/encryption-keys", "access": "platform_admin", "scope": "platform", "changes_state": false, "protected_by": "cabinet session token with two factors and the admin role's permission"},
     {"method": "POST", "path": "/v1/admin/security/encryption-keys/rotate", "access": "platform_admin", "scope": "platform", "changes_state": true, "protected_by": "cabinet session token with two factors and the admin role's permission"},
     {"method": "GET", "path": "/v1/admin/spend", "access": "platform_admin", "scope": "platform", "changes_state": false, "protected_by": "cabinet session token with two factors and the admin role's permission"},
@@ -433,6 +436,7 @@
     {"method": "GET", "path": "/v1/public/bookings/{token}", "access": "customer", "scope": "customer", "changes_state": false, "protected_by": "a signed manage link (HMAC token)"},
     {"method": "GET", "path": "/v1/public/bookings/{token}/calendar.ics", "access": "customer", "scope": "customer", "changes_state": false, "protected_by": "a signed manage link"},
     {"method": "POST", "path": "/v1/public/bookings/{token}/cancel", "access": "customer", "scope": "customer", "changes_state": true, "protected_by": "a signed manage link"},
+    {"method": "POST", "path": "/v1/public/bookings/{token}/marketing-consent", "access": "customer", "scope": "customer", "changes_state": true, "protected_by": "a signed manage link"},
     {"method": "POST", "path": "/v1/public/bookings/{token}/reschedule", "access": "customer", "scope": "customer", "changes_state": true, "protected_by": "a signed manage link"},
     {"method": "GET", "path": "/v1/public/bookings/{token}/slots", "access": "customer", "scope": "customer", "changes_state": false, "protected_by": "a signed manage link"},
     {"method": "GET", "path": "/v1/public/chat/{address}", "access": "customer", "scope": "customer", "changes_state": false, "protected_by": "a business's published hosted chat"},
@@ -497,6 +501,7 @@
     {"name": "retry_failed_payments", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "enforce_grace_periods", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "check_package_usage", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
+    {"name": "reconcile_payments", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
     {"name": "send_booking_reminders", "access": "worker", "every_seconds": 900, "lane": "outbound", "runs_in": "one worker"},
     {"name": "sync_calendars", "access": "worker", "every_seconds": 300, "lane": "default", "runs_in": "one worker"},
     {"name": "maintain_phone_numbers", "access": "worker", "every_seconds": 300, "lane": "default", "runs_in": "one worker"},
@@ -535,7 +540,8 @@
     {"name": "resync_voice_agents", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "queue_business_deletions", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "offboard_unpaid_businesses", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
-    {"name": "reapply_deletion_ledger", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"}
+    {"name": "reapply_deletion_ledger", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
+    {"name": "reapply_contact_erasures", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"}
   ],
   "queued_jobs": [
     {"name": "archive_call_recording", "access": "worker"},
@@ -553,6 +559,7 @@
     {"name": "process_inbound_message", "access": "worker"},
     {"name": "process_platform_bot_update", "access": "worker"},
     {"name": "process_post_call", "access": "worker"},
+    {"name": "record_contact_erasure", "access": "worker"},
     {"name": "rotate_encrypted_secrets", "access": "worker"},
     {"name": "run_autotests", "access": "worker"},
     {"name": "send_missed_call_text_back", "access": "worker"},
