@@ -47,6 +47,10 @@ export const platformQueryKeys = {
     errorBudget: () => ["admin", "errorBudget"] as const,
     /** The providers' spend of the UTC day (GET /v1/admin/spend). */
     spend: () => ["admin", "spend"] as const,
+    /** The global pause and the daily budget stop (GET /v1/admin/platform/pause). */
+    platformBrakes: () => ["admin", "platformBrakes"] as const,
+    /** The latest daily payment reconciliation (GET /v1/admin/payments/reconciliation). */
+    paymentReconciliation: () => ["admin", "paymentReconciliation"] as const,
     /** The dead letters of the background queue. */
     deadJobs: () => ["admin", "jobs", "dead"] as const,
     dataTasks: () => ["admin", "system", "data-tasks"] as const,

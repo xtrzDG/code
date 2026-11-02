@@ -34,7 +34,8 @@ function renderBox(current = view) {
   const onChanged = vi.fn();
   const onProblem = vi.fn();
   renderInLocale(<MarketingConsentBox view={current} language="it" onChanged={onChanged} onProblem={onProblem} />);
-  return { onChanged, onProblem, box: screen.getByRole("checkbox", { name: /Mtsvane Ezo/ }) };
+  const box = screen.getByRole("checkbox", { name: /Mtsvane Ezo/ }) as HTMLInputElement;
+  return { onChanged, onProblem, box };
 }
 
 describe("MarketingConsentBox", () => {
@@ -45,9 +46,9 @@ describe("MarketingConsentBox", () => {
   it("is unticked until the guest ticks it, in the guest's language", () => {
     const { box } = renderBox();
 
-    expect(box).not.toBeChecked();
-    expect(box).toHaveAccessibleName(/novità, offerte e inviti a tornare/);
-    expect(box).toHaveAccessibleDescription(marketingConsentTexts("it").note);
+    expect(box.checked).toBe(false);
+    expect(screen.getByLabelText(/novità, offerte e inviti a tornare/)).toBe(box);
+    expect(box.getAttribute("aria-describedby")).toBe(screen.getByText(marketingConsentTexts("it").note).id);
   });
 
   it("records a tick with the wording's version and shows what was stored", async () => {
@@ -66,7 +67,7 @@ describe("MarketingConsentBox", () => {
   it("takes the consent back when the guest unticks it", async () => {
     vi.mocked(api.POST).mockReturnValue(ok({ ...view, marketing_consent: false }) as never);
     const { box } = renderBox({ ...view, marketing_consent: true });
-    expect(box).toBeChecked();
+    expect(box.checked).toBe(true);
 
     await userEvent.click(box);
 
@@ -74,20 +75,20 @@ describe("MarketingConsentBox", () => {
   });
 
   it("goes back and says so when the choice was not saved", async () => {
-    vi.mocked(api.POST).mockReturnValue(failure(503, { code: "service_unavailable", message: "Down." }) as never);
+    vi.mocked(api.POST).mockReturnValue(failure(503, { error: "service_unavailable", message: "Down." }) as never);
     const { box, onChanged, onProblem } = renderBox();
 
     await userEvent.click(box);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(marketingConsentTexts("it").failed);
-    expect(box).not.toBeChecked();
+    expect((await screen.findByRole("alert")).textContent).toBe(marketingConsentTexts("it").failed);
+    expect(box.checked).toBe(false);
     expect(onChanged).not.toHaveBeenCalled();
     expect(onProblem).not.toHaveBeenCalled();
   });
 
   it("leaves a link that stopped working to the page", async () => {
     vi.mocked(api.POST).mockReturnValue(
-      failure(404, { code: "not_found", message: "Gone.", reasons: [{ code: "link_expired", message: "Expired." }] }) as never,
+      failure(404, { error: "not_found", message: "Gone.", reasons: [{ code: "link_expired", message: "Expired." }] }) as never,
     );
     const { box, onProblem } = renderBox();
 
