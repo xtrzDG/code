@@ -33,8 +33,8 @@
     "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts && uv run python -m scripts.export_zone_cities web/src/lib/zoneCities.generated.ts"
   },
   "dependencies": {
-    "@react-three/fiber": "9.8.1",
-    "@sentry/nextjs": "11.7.0",
+    "@react-three/fiber": "9.8.2",
+    "@sentry/nextjs": "11.9.0",
     "clsx": "2.1.1",
     "libphonenumber-js": "1.13.15",
     "motion": "13.4.6",
