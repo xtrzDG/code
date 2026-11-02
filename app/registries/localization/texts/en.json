@@ -674,7 +674,7 @@
     "notifications.sign_in.detail": "{device}{address}. Not you? End that session in Account → Security and sign in again.",
     "notifications.sign_in.unknown_device": "An unknown device",
     "notifications.sign_in.new_country_title": "Sign-in to your account from a new country",
-    "notifications.sign_in.new_country_detail": "{device}{address}, in {country}, where your account was not signed in before. Not you? End that session in Account → Security and sign in again.",
+    "notifications.sign_in.new_country_detail": "{device}{address} · {country}. None of your other sessions is in this country. Not you? End that session in Account → Security and sign in again.",
     "billing.dunning.retry_declined": "{business}: we tried to charge {amount} again and the card was declined. The next try is on {next_date}. You can pay or update the card in Billing.",
     "billing.dunning.last_retry_declined": "{business}: the last try to charge {amount} was declined. Please pay in Billing or update the card.",
     "billing.dunning.payment_recovered": "{business}: the payment of {amount} went through on a new try. Thank you, the assistant keeps working in full.",

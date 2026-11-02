@@ -125,3 +125,32 @@ def test_support_reads_the_brakes_with_the_budget_stop() -> None:
     assert view.brake is PlatformBrake.BUDGET_STOP
     with pytest.raises(AccessDeniedError):
         world.get_use_case().run(PlatformPauseQuery(user_id=world.billing))
+
+
+def test_a_paused_platform_still_shows_today_s_share_of_the_budget() -> None:
+    world = PauseWorld(
+        settings=SpendGuardSettings(
+            platform_daily_budget_micro_usd=PlatformDailySpendBudgetMicroUsd(20_000_000)
+        )
+    )
+    world.usage_events.upsert(
+        "spent",
+        UsageEventDocument(
+            business_id=BusinessId(),
+            kind=UsageKind.LLM_OUTPUT_TOKENS,
+            quantity=UsageQuantity(1_000),
+            cost_micro_usd=CostMicroUsd(5_000_000),
+            occurred_at=NOW,
+            created_at=NOW,
+            updated_at=NOW,
+        ),
+    )
+
+    paused = world.set_use_case().run(command(world.super_admin, True))
+    view = world.get_use_case().run(PlatformPauseQuery(user_id=world.support))
+
+    # The card says how much of the budget is spent, never "no budget".
+    for shown in (paused, view):
+        assert shown.is_paused and shown.brake is PlatformBrake.PAUSED
+        assert shown.budget_used_percent is not None
+        assert int(shown.budget_used_percent) == 25

@@ -56,6 +56,10 @@ class PeriodicJobHeartbeatRepoContract(RepoContract, Protocol):
         """Heartbeats whose `due_by` passed by `now`, the longest overdue first."""
         raise NotImplementedError
 
+    def delete(self, job_name: JobName) -> None:
+        """Forget a job's heartbeat (a job a deploy removed)."""
+        raise NotImplementedError
+
 
 class PaymentReconciliationRepoContract(RepoContract, Protocol):
     def get(self, day: ReconciliationDay) -> PaymentReconciliationDocument | None:
@@ -72,11 +76,12 @@ class PaymentStatusReaderAdapterContract(AdapterContract, Protocol):
     ) -> ProviderPaymentState | None:
         """
         What the order's provider says about its payment; None when there
-        is nothing to ask about (no reference yet) or the provider does
-        not know it.
+        is nothing to ask about (no reference yet, the provider is not
+        configured) or nothing to compare (a draft, a card setup).
 
         Raises:
-            ExternalServiceError: the provider could not be reached or
-                answered unreadably (the order counts as unreadable).
+            ExternalServiceError: the provider could not be reached,
+                refused the read or answered unreadably (the order counts
+                as unreadable).
         """
         raise NotImplementedError

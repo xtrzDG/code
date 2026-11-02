@@ -61,6 +61,8 @@ export const platformBrakesEn = {
       paid_at_provider: "Paid at the provider, unpaid here",
       failed_at_provider: "Failed at the provider, paid here",
       reversed_at_provider: "Refunded at the provider, paid here",
+      renewal_paid_at_provider:
+        "Renewal paid at the provider, not recorded here",
     },
   },
 };

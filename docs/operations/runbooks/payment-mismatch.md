@@ -1,10 +1,11 @@
 # Payment mismatch with Flitt or Stripe
 
 **Alert:** `payment_mismatch` (SEV2): the daily `reconcile_payments` job
-compared the checkout orders written to in the last 7 days with what the
-provider says now (Flitt's order status; Stripe's latest invoice, else the
-checkout session) and found payments that differ in a way that moves
-money. Every mismatch is also a structured log line
+compared the checkout orders written to in the last 7 days (a Stripe
+subscription's order one billing interval more, for its renewals) with
+what the provider says now (Flitt's order status; for a Stripe
+subscription its latest invoice, else the order's invoice or checkout
+session) and found payments that differ in a way that moves money. Every mismatch is also a structured log line
 (`payment_event=payment_reconciliation_mismatch`, with the order, the
 business, the provider and both statuses; never card data).
 
@@ -24,6 +25,11 @@ and each mismatch with its client.
   the platform has it paid. The client uses the service unpaid: check the
   provider, then contact the owner; the grace and dunning rules apply once
   the invoice is open again.
+- `renewal_paid_at_provider`: Stripe charged a renewal of the client's
+  subscription that the platform never recorded ("Here" shows the order's
+  earlier payment). A lost notification, handled like `paid_at_provider`:
+  resend the `invoice.paid` event from Stripe's dashboard or record the
+  payment by hand.
 - `reversed_at_provider`: a refund or a chargeback the platform did not
   record. Check the provider, record the refund and decide about the
   subscription with billing.
@@ -31,5 +37,8 @@ and each mismatch with its client.
 ## Afterwards
 
 The alert resolves when the next day's run finds no mismatch. A run whose
-"could not be read" count is high points to provider credentials or an
-outage ([provider-circuits](provider-circuits.md)).
+"could not be read" count is high points to provider credentials (a
+provider refusing the read counts there: every order was opened at that
+provider) or an outage ([provider-circuits](provider-circuits.md)).
+Flitt's later automatic charges are orders of Flitt's own and are not
+compared: only the first payment of a Flitt order is.

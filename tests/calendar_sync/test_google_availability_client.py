@@ -10,10 +10,8 @@ from collections.abc import Callable
 import httpx
 import pytest
 
-from app.clients.google.google_calendar_client import (
-    GOOGLE_CALENDAR_SCOPES,
-    GoogleCalendarClient,
-)
+from app.clients.google.google_calendar_client import GoogleCalendarClient
+from app.clients.google.google_oauth_requests import GOOGLE_CALENDAR_SCOPES
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.dto.calendar_sync.busy_reads import BusyWindow
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError

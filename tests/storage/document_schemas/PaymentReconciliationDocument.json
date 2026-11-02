@@ -30,7 +30,8 @@
               "enum": [
                 "paid_at_provider",
                 "failed_at_provider",
-                "reversed_at_provider"
+                "reversed_at_provider",
+                "renewal_paid_at_provider"
               ],
               "type": "string"
             },

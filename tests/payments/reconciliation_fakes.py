@@ -39,6 +39,7 @@ def payment_order(
     written_days_ago: int = 1,
     purpose: PaymentOrderPurpose = PaymentOrderPurpose.CHECKOUT,
     reference: str | None = None,
+    schedule: str | None = None,
 ) -> PaymentOrderDocument:
     written = Microseconds(int(NOW) - written_days_ago * DAY)
     return PaymentOrderDocument(
@@ -55,6 +56,9 @@ def payment_order(
         purpose=purpose,
         last_payment_reference=(
             None if reference is None else PaymentProviderReference(reference)
+        ),
+        schedule_reference=(
+            None if schedule is None else PaymentProviderReference(schedule)
         ),
         created_at=written,
         updated_at=written,
@@ -133,10 +137,14 @@ def flitt_status_transport(
     return httpx.MockTransport(handle)
 
 
-def stripe_transport(objects: dict[str, dict[str, object]]) -> httpx.MockTransport:
-    """Stripe's invoices and checkout sessions by id; 404 for others."""
+def stripe_transport(
+    objects: dict[str, dict[str, object]], seen: list[str] | None = None
+) -> httpx.MockTransport:
+    """Stripe's invoices, checkout sessions and subscriptions by id; 404 for others."""
 
     def handle(request: httpx.Request) -> httpx.Response:
+        if seen is not None:
+            seen.append(f"{request.url.path}?{request.url.query.decode()}")
         found: dict[str, object] | None = objects.get(
             request.url.path.rsplit("/", 1)[-1]
         )

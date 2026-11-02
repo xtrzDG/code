@@ -26,7 +26,6 @@ from app.clients.google.google_calendar_requests import (
 )
 from app.clients.google.google_http import GoogleHttp
 from app.clients.google.google_oauth_requests import (
-    GOOGLE_CALENDAR_SCOPES,
     GOOGLE_REVOKE_ENDPOINT,
     GOOGLE_TOKEN_ENDPOINT,
     code_exchange_form,
@@ -62,8 +61,6 @@ from app.schemas.typings.bookings.strings import (
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 
-# The scopes stay importable from here (the consent asks for them).
-__all__ = ["GOOGLE_CALENDAR_SCOPES", "GoogleCalendarClient"]
 GONE_STATUS_CODES: frozenset[int] = frozenset({404, 410})
 MAX_CALENDAR_NAME_LENGTH: int = 200
 
@@ -111,7 +108,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
     def exchange_code(
         self,
         code: CalendarAuthorizationCode,
-        code_verifier: CalendarCodeVerifier | None,
+        code_verifier: CalendarCodeVerifier,
     ) -> CalendarTokenGrant:
         client_id, client_secret, redirect_url = self._require_credentials()
         form = code_exchange_form(

@@ -101,6 +101,24 @@ def test_a_state_from_before_the_session_binding_is_never_finished() -> None:
     assert calendar.connection() is None
 
 
+def test_a_state_without_its_verifier_never_skips_pkce() -> None:
+    calendar = CalendarWorld()
+    state = calendar.start()
+    stored = calendar.state_repo.find_by_state_hash(hash_authorization_state(state))
+    assert stored is not None
+    calendar.state_repo.save(stored.model_copy(update={"sealed_code_verifier": None}))
+
+    outcome = calendar.complete(state)
+
+    assert outcome.failure is CalendarConnectionFailure.LINK_EXPIRED
+    assert outcome.business_id is None
+    assert calendar.connection() is None
+    assert not any(
+        request.url.host == "oauth2.googleapis.com"
+        for request in calendar.google.requests
+    )
+
+
 def test_an_owner_removed_meanwhile_cannot_finish_connecting() -> None:
     calendar = CalendarWorld()
     state = calendar.start()

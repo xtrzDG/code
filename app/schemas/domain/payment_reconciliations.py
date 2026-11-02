@@ -32,8 +32,8 @@ class PaymentReconciliationDocument(BaseDocument):
     orders were compared with Flitt or Stripe (`checked_count`), how many
     the provider could not tell about (`unreadable_count`) and the
     mismatches found. The `payment_mismatch` alert and the admin's
-    reconciliation view read the latest one; a run again the same day
-    (the admin's "Reconcile now") replaces it.
+    reconciliation view read the latest one; another run the same day (a
+    retry of the job) replaces it.
     """
 
     day: ReconciliationDay

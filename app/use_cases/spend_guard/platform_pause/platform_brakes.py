@@ -24,11 +24,27 @@ def read_platform_brake(
     settings: SpendGuardSettings,
     now: Microseconds,
 ) -> PlatformBrakeReading:
-    """The brake that holds now (the pause first), with the budget reading."""
+    """
+    The brake that holds now for a model turn or a call: the pause first
+    (then the budget is not read), else the budget stop with its reading.
+    """
 
     pause: PlatformPauseDocument | None = pause_repo.get()
     if pause is not None and pause.is_paused:
         return PlatformBrakeReading(brake=PlatformBrake.PAUSED)
+
+    return read_budget_stop(spend_gauge, settings, now)
+
+
+def read_budget_stop(
+    spend_gauge: PlatformSpendGaugeContract,
+    settings: SpendGuardSettings,
+    now: Microseconds,
+) -> PlatformBrakeReading:
+    """
+    The daily budget stop alone (BUDGET_STOP or no brake) with today's
+    spend and the budget; nothing to read without a budget.
+    """
 
     budget = settings.platform_daily_budget_micro_usd
     if budget is None:

@@ -127,6 +127,20 @@ class StripeClient(ClientContract):
 
         return self._request("GET", f"/v1/invoices/{invoice_id}")
 
+    def retrieve_subscription_latest_invoice(
+        self, subscription_id: str
+    ) -> dict[str, object]:
+        """
+        The subscription with its latest invoice expanded (its `id`,
+        `status`, `billing_reason`, `amount_paid`), for reconciliation.
+        """
+
+        return self._request(
+            "GET",
+            f"/v1/subscriptions/{subscription_id}",
+            {"expand": ["latest_invoice"]},
+        )
+
     def retrieve_checkout_session(self, session_id: str) -> dict[str, object]:
         """A checkout session (its `status`, `payment_status`), for reconciliation."""
 

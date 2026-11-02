@@ -29,4 +29,5 @@ long ago it last succeeded.
 - Fix the failing job and deploy; the next success clears the alert (it
   resolves on the next check).
 - A job removed by a deploy is never reported: its heartbeat keeps the old
-  release's stamp.
+  release's stamp (a worker's success never restamps it; only a starting
+  worker does), and a starting worker forgets it once it is a week overdue.

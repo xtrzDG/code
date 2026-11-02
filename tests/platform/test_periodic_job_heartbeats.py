@@ -180,3 +180,42 @@ def test_the_allowance_is_the_interval_and_a_grace_of_at_least_half_an_hour() ->
     assert job_run_allowance(JobIntervalSeconds(60)) == 31 * MINUTE
     assert job_run_allowance(HOURLY) == 90 * MINUTE
     assert job_run_allowance(DAILY) == 30 * 60 * MINUTE
+
+
+def test_an_old_worker_during_a_deploy_keeps_the_new_release_s_stamp() -> None:
+    clock = ControlledClock()
+    repo = new_repo()
+    old = build(clock, repo, release="r42")
+    clock.advance(60)
+    # The new release's worker starts while the old one still runs.
+    build(clock, repo, release="r43")
+    clock.advance(30)
+
+    old.run_periodic_tick()
+
+    reminders = by_name(repo)[REMINDERS]
+    assert reminders.last_succeeded_at is not None
+    # Still the new release's job: once it fails there, its alert sees it.
+    assert reminders.release == ReleaseVersion("r43")
+
+
+def test_a_starting_worker_forgets_jobs_a_deploy_removed_a_week_ago() -> None:
+    repo = new_repo()
+    start = Microseconds(1_793_620_800_000_000)
+    removed = PeriodicJobSpec(JobName("old_report"), HOURLY, CountingPeriodicOperator())
+    PeriodicJobHeartbeats(
+        [*specs(), removed], repo, StorageScopeContext(), ReleaseVersion("r42")
+    ).register(start)
+    later = PeriodicJobHeartbeats(
+        specs(), repo, StorageScopeContext(), ReleaseVersion("r43")
+    )
+
+    # Overdue for less than a week: kept (it may still be an old worker's).
+    later.register(Microseconds(int(start) + 2 * 24 * 3_600 * SECOND))
+    assert repo.get_many([removed.name]) != []
+
+    later.register(Microseconds(int(start) + 9 * 24 * 3_600 * SECOND))
+
+    assert repo.get_many([removed.name]) == []
+    # The jobs this release knows stay, however overdue.
+    assert set(by_name(repo)) == {REMINDERS, BROKEN, BATCH}

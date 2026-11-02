@@ -8,11 +8,18 @@ switched on or off, hold times and amounts are neither.
 
 from dataclasses import dataclass
 
-from app.schemas.constants.deposits import PaymentPageChangeKind
+from app.schemas.constants.deposits import DepositTarget, PaymentPageChangeKind
 from app.schemas.domain.deposits import DepositSettingsDocument
 from app.schemas.dto.deposits.payment_page_changes import PaymentPageChange
+from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.deposits.prefixed_id import PaymentLinkId
 from app.schemas.typings.deposits.strings import PaymentLinkHost
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+
+# A deposit rule (what it applies to) and the page it names.
+type RulePage = tuple[
+    DepositTarget, ResourceId | None, KnowledgeItemId | None, PaymentLinkId
+]
 
 
 @dataclass(frozen=True)
@@ -21,7 +28,7 @@ class PaymentPageState:
 
     pages: dict[PaymentLinkId, PaymentLinkHost]
     default_page: PaymentLinkId | None
-    rule_pages: frozenset[PaymentLinkId]
+    rule_pages: frozenset[RulePage]
 
 
 def payment_page_state(settings: DepositSettingsDocument) -> PaymentPageState:
@@ -31,7 +38,12 @@ def payment_page_state(settings: DepositSettingsDocument) -> PaymentPageState:
         pages={link.id: link.host for link in settings.payment_links},
         default_page=settings.default_payment_link_id,
         rule_pages=frozenset(
-            entry.policy.payment_link_id
+            (
+                entry.target,
+                entry.resource_id,
+                entry.service_item_id,
+                entry.policy.payment_link_id,
+            )
             for entry in settings.policies
             if entry.policy.payment_link_id is not None
         ),
@@ -56,9 +68,13 @@ def payment_page_changes(
     named: list[tuple[PaymentPageChangeKind, PaymentLinkId]] = []
     if after.default_page is not None and after.default_page != before.default_page:
         named.append((PaymentPageChangeKind.DEFAULT_CHANGED, after.default_page))
+    # A rule naming a page it did not name before (once per page), even one
+    # another rule already uses.
     named.extend(
         (PaymentPageChangeKind.RULE_PAGE_CHANGED, page_id)
-        for page_id in sorted(after.rule_pages - before.rule_pages, key=str)
+        for page_id in sorted(
+            {page for *_, page in after.rule_pages - before.rule_pages}, key=str
+        )
     )
     # A default or a rule names only a page of the settings.
     changes.extend(

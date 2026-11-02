@@ -71,6 +71,9 @@ class PeriodicJobHeartbeatRepository(PeriodicJobHeartbeatRepoContract):
             time_range(DUE_BY_FIELD, ending_before=now), limit=limit
         )
 
+    def delete(self, job_name: JobName) -> None:
+        self._collection.delete(str(job_name))
+
 
 class PaymentReconciliationRepository(PaymentReconciliationRepoContract):
     """One row per UTC day, stored under the day."""

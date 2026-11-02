@@ -4,7 +4,6 @@ from app.contracts.platform_safety import PaymentReconciliationRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payment_reconciliations import (
     PaymentMismatch,
     PaymentReconciliationDocument,
@@ -16,6 +15,8 @@ from app.schemas.dto.payment_reconciliation import (
     PaymentReconciliationView,
 )
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.businesses.strings import BusinessName
 from app.use_cases.shared.payment_reconciliation_days import (
     latest_reconciliation,
 )
@@ -63,24 +64,34 @@ class GetPaymentReconciliationUseCase(
         if latest is None:
             return PaymentReconciliationView()
 
+        # The clients' names in one read, never one per mismatch.
+        names: dict[BusinessId, BusinessName] = {
+            business.id: business.name
+            for business in self._business_repo.get_many(
+                list(dict.fromkeys(m.business_id for m in latest.mismatches))
+            )
+        }
         return PaymentReconciliationView(
             day=latest.day,
             ran_at=latest.ran_at,
             checked_count=latest.checked_count,
             unreadable_count=latest.unreadable_count,
-            mismatches=[self._view(mismatch) for mismatch in latest.mismatches],
+            mismatches=[
+                mismatch_view(mismatch, names.get(mismatch.business_id))
+                for mismatch in latest.mismatches
+            ],
         )
 
-    def _view(self, mismatch: PaymentMismatch) -> PaymentMismatchView:
-        business: BusinessDocument | None = self._business_repo.get(
-            mismatch.business_id
-        )
-        return PaymentMismatchView(
-            payment_order_id=mismatch.payment_order_id,
-            business_id=mismatch.business_id,
-            business_name=None if business is None else business.name,
-            provider=mismatch.provider,
-            recorded_status=mismatch.recorded_status,
-            provider_status=mismatch.provider_status,
-            kind=mismatch.kind,
-        )
+
+def mismatch_view(
+    mismatch: PaymentMismatch, business_name: BusinessName | None
+) -> PaymentMismatchView:
+    return PaymentMismatchView(
+        payment_order_id=mismatch.payment_order_id,
+        business_id=mismatch.business_id,
+        business_name=business_name,
+        provider=mismatch.provider,
+        recorded_status=mismatch.recorded_status,
+        provider_status=mismatch.provider_status,
+        kind=mismatch.kind,
+    )

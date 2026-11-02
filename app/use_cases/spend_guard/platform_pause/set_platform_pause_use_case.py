@@ -24,7 +24,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.use_cases.spend_guard.platform_pause.platform_brakes import (
-    read_platform_brake,
+    read_budget_stop,
 )
 from app.use_cases.spend_guard.platform_pause.platform_pause_views import (
     build_platform_pause_view,
@@ -125,9 +125,5 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
             entry.id,
         )
         return build_platform_pause_view(
-            pause,
-            read_platform_brake(
-                self._pause_repo, self._spend_gauge, self._settings, now
-            ),
-            self._settings,
+            pause, read_budget_stop(self._spend_gauge, self._settings, now), self._settings
         )

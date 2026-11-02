@@ -1,9 +1,11 @@
 # The daily payment reconciliation (reconcile_payments, 1230) compares the
-# checkout orders of the last 7 days with Flitt's order status and Stripe's
-# latest invoice or checkout session. The figure is how many payments of
-# the latest run (today's, else yesterday's) differ in a way that moves
-# money: paid at the provider but unpaid here, failed there but paid here,
-# or reversed there. Nothing is changed automatically.
+# checkout orders of the last 7 days (a Stripe subscription's order one
+# billing interval more) with Flitt's order status and Stripe's latest
+# invoice or checkout session. The figure is how many payments of the
+# latest run (today's, else yesterday's) differ in a way that moves money:
+# paid at the provider but unpaid here, a Stripe renewal never recorded,
+# failed there but paid here, or reversed there. Nothing is changed
+# automatically.
 code: payment_mismatch
 severity: sev2
 summary: The daily reconciliation found payments whose status at Flitt or Stripe differs from the platform's record.

@@ -60,6 +60,8 @@ export const platformBrakesIt: Translation<typeof platformBrakesEn> = {
       paid_at_provider: "Pagato presso il provider, non pagato qui",
       failed_at_provider: "Non riuscito presso il provider, pagato qui",
       reversed_at_provider: "Rimborsato presso il provider, pagato qui",
+      renewal_paid_at_provider:
+        "Rinnovo pagato presso il provider, non registrato qui",
     },
   },
 };

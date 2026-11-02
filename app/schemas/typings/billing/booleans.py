@@ -15,6 +15,8 @@ IsFirstPayment = bool
 IsInitialPaymentSettled = bool
 IsPaymentRetry = bool
 IsPriceEstimated = bool
+# A provider's answer is about the payment the order records (not a newer one).
+IsRecordedPayment = bool
 IsRefundDue = bool
 IsSetupFeeIncluded = bool
 IsSetupFeeOnly = bool

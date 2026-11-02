@@ -23,6 +23,7 @@ from app.schemas.typings.bookings.constrained_strings import CalendarRedirectUrl
 from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarAuthorizationCode,
+    CalendarCodeVerifier,
     CalendarEventDescription,
     CalendarEventId,
     CalendarEventTitle,
@@ -147,7 +148,10 @@ def test_token_grant_is_read() -> None:
     transport = RecordingTransport()
     transport.respond("POST", r"/token$", fixture("token_grant.json"))
 
-    grant = client(transport).exchange_code(CalendarAuthorizationCode("4/0code-0000"))
+    grant = client(transport).exchange_code(
+        CalendarAuthorizationCode("4/0code-0000"),
+        CalendarCodeVerifier("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"),
+    )
 
     assert str(grant.access_token) == "test-access-token-0000"
     assert grant.refresh_token == "test-refresh-token-0000"

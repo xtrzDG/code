@@ -11,9 +11,13 @@ class PaymentMismatchKind(StrEnum):
     - FAILED_AT_PROVIDER: the provider declined or let the payment expire,
       the platform has it paid (the owner uses the service unpaid);
     - REVERSED_AT_PROVIDER: the provider refunded or charged the payment
-      back, the platform has it paid.
+      back, the platform has it paid;
+    - RENEWAL_PAID_AT_PROVIDER: Stripe charged a renewal of the order's
+      subscription that the platform never recorded (a lost notification:
+      the owner paid and may be dunned).
     """
 
     PAID_AT_PROVIDER = "paid_at_provider"
     FAILED_AT_PROVIDER = "failed_at_provider"
     REVERSED_AT_PROVIDER = "reversed_at_provider"
+    RENEWAL_PAID_AT_PROVIDER = "renewal_paid_at_provider"

@@ -6,7 +6,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.payment_reconciliation import PaymentMismatchKind
 from app.schemas.constants.payments import PaymentProvider, PaymentStatus
-from app.schemas.typings.billing.booleans import IsFirstPayment
+from app.schemas.typings.billing.booleans import IsFirstPayment, IsRecordedPayment
 from app.schemas.typings.billing.constrained_integers import ReconciledOrderCount
 from app.schemas.typings.billing.constrained_strings import ReconciliationDay
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
@@ -21,12 +21,15 @@ class ProviderPaymentState(ImmutableDTO):
     What the payment provider says about a payment order: the status of
     the payment it was asked about (`reference`), and whether that is the
     order's first payment (Flitt's order, Stripe's checkout session) or
-    its latest one (Stripe's latest invoice).
+    its latest one (Stripe's latest invoice). `is_recorded_payment` is
+    False for a newer charge of the order's schedule than the order
+    records (a Stripe renewal whose notification never arrived).
     """
 
     reference: PaymentProviderReference
     status: PaymentStatus
     is_first_payment: IsFirstPayment
+    is_recorded_payment: IsRecordedPayment = True
 
 
 class PaymentReconciliationQuery(ImmutableDTO):

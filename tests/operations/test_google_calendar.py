@@ -176,7 +176,7 @@ class TestGoogleCalendarClient:
 
         with pytest.raises(ExternalServiceError, match="unexpected payload"):
             client_with(not_json).exchange_code(
-                CalendarAuthorizationCode("good-code"), None
+                CalendarAuthorizationCode("good-code"), CalendarCodeVerifier(VERIFIER)
             )
 
         with pytest.raises(ExternalServiceError, match="HTTP 500 \\(UNAVAILABLE\\)"):

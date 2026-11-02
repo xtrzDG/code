@@ -36,7 +36,10 @@ from app.schemas.typings.bookings.strings import (
     CalendarDisplayName,
     ExternalCalendarId,
 )
-from app.schemas.typings.channels.strings import ChannelSecret
+from app.schemas.typings.channels.strings import (
+    ChannelSecret,
+    EncryptedChannelSecret,
+)
 from app.use_cases.calendar.calendar_state import hash_authorization_state
 from app.utilities.scheduling.zoned_time import MICROSECONDS_PER_SECOND
 
@@ -107,7 +110,15 @@ class CompleteGoogleCalendarConnectionUseCase(
                 hash_authorization_state(input_data.state)
             )
         )
-        if state is None or not self._is_own_session(state, input_data):
+        # Without its PKCE verifier (a state of version 1) a flow never ends.
+        sealed_verifier: EncryptedChannelSecret | None = (
+            None if state is None else state.sealed_code_verifier
+        )
+        if (
+            state is None
+            or sealed_verifier is None
+            or not self._is_own_session(state, input_data)
+        ):
             return CalendarConnectionOutcome(
                 failure=CalendarConnectionFailure.LINK_EXPIRED
             )
@@ -137,14 +148,14 @@ class CompleteGoogleCalendarConnectionUseCase(
                 failure=CalendarConnectionFailure.LINK_EXPIRED
             )
 
-        return self._connect(state, input_data.code, now)
+        return self._connect(state, input_data.code, sealed_verifier, now)
 
     def _is_own_session(
         self,
         state: CalendarAuthorizationStateDocument,
         input_data: CompleteCalendarConnectionCommand,
     ) -> bool:
-        """The person and the session that started the flow (none: from before)."""
+        """The person and the session that started the flow."""
 
         session: SessionAssurance | None = self._session_assurance.current()
         return (
@@ -168,25 +179,19 @@ class CompleteGoogleCalendarConnectionUseCase(
             return False
         return True
 
-    def _verifier_of(
-        self, state: CalendarAuthorizationStateDocument
-    ) -> CalendarCodeVerifier | None:
-        if state.sealed_code_verifier is None:
-            return None
-
-        return CalendarCodeVerifier(
-            str(self._secret_cipher.decrypt(state.sealed_code_verifier))
-        )
-
     def _connect(
         self,
         state: CalendarAuthorizationStateDocument,
         code: CalendarAuthorizationCode,
+        sealed_verifier: EncryptedChannelSecret,
         now: Microseconds,
     ) -> CalendarConnectionOutcome:
+        verifier = CalendarCodeVerifier(
+            str(self._secret_cipher.decrypt(sealed_verifier))
+        )
         try:
             grant: CalendarTokenGrant = self._calendar_client.exchange_code(
-                code, self._verifier_of(state)
+                code, verifier
             )
         except ExternalServiceError as error:
             LOGGER.warning("Google Calendar code exchange failed: %s", error)

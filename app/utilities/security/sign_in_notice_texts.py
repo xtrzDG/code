@@ -20,6 +20,9 @@ from app.schemas.typings.notifications.strings import (
     StaffAlertDetail,
     StaffAlertTitle,
 )
+from app.utilities.localization.babel_locales import find_babel_locale
+from app.utilities.localization.cldr_language_names import get_english_locale
+from app.utilities.localization.display_names import build_country_display_name
 from app.utilities.localization.owner_texts import owner_text
 
 NEW_DEVICE_TITLE: LocalizedText = owner_text("notifications.sign_in.title")
@@ -72,10 +75,23 @@ class SignInNoticeTexts(StaffAlertTextsContract):
                 str(self._resolver.resolve(detail, language))
                 .replace("{device}", device)
                 .replace("{address}", address)
-                .replace("{country}", str(self._new_country or ""))
+                .replace("{country}", country_name(self._new_country, language))
             ),
         )
 
     def detailed(self, language: LanguageTag) -> MessageText:
         lines: StaffAlertBrief = self.brief(language)
         return MessageText(f"{lines.title}\n{lines.detail}")
+
+
+def country_name(country: CountryCode | None, language: LanguageTag) -> str:
+    """The country in the reader's language (else English, else its code)."""
+
+    if country is None:
+        return ""
+
+    return str(
+        build_country_display_name(
+            country, find_babel_locale(language) or get_english_locale()
+        )
+    )

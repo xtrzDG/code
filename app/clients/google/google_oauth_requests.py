@@ -60,20 +60,18 @@ def code_exchange_form(
     client_id: PlatformIdentifier,
     client_secret: PlatformSecret,
     redirect_url: CalendarRedirectUrl,
-    code_verifier: CalendarCodeVerifier | None,
+    code_verifier: CalendarCodeVerifier,
 ) -> dict[str, str]:
     """The code exchange; the verifier proves the same flow asked for the code."""
 
-    form: dict[str, str] = {
+    return {
         "code": str(code),
         "client_id": str(client_id),
         "client_secret": str(client_secret),
         "redirect_uri": str(redirect_url),
         "grant_type": "authorization_code",
+        "code_verifier": str(code_verifier),
     }
-    if code_verifier is not None:
-        form["code_verifier"] = str(code_verifier)
-    return form
 
 
 def refresh_form(

@@ -9,6 +9,9 @@ import logging
 
 import pytest
 
+from app.adapters.payments.payment_status_reader_adapter import (
+    PaymentStatusReaderAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -20,28 +23,32 @@ from app.repositories.platform_safety_repositories import (
 from app.schemas.constants.payment_reconciliation import PaymentMismatchKind
 from app.schemas.constants.payments import (
     PaymentOrderPurpose,
+    PaymentProvider,
     PaymentStatus,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payment_reconciliations import PaymentReconciliationDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.jobs import JobTick
-from app.schemas.dto.payment_reconciliation import ProviderPaymentState
 from app.schemas.typings.billing.constrained_strings import ReconciliationDay
-from app.schemas.typings.billing.strings import PaymentProviderReference
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.billing.payment_state_events import (
     PAYMENT_RECONCILIATION_MISMATCH,
 )
 from app.use_cases.billing.reconciliation import reconcile_payments_use_case
-from app.use_cases.billing.reconciliation.payment_mismatch_rules import find_mismatch
 from app.use_cases.billing.reconciliation.reconcile_payments_use_case import (
     ReconcilePaymentsUseCase,
 )
 from app.utilities.observability.log_formatting import read_line_fields
 from app.utilities.storage.storage_scope_context import StorageScopeContext
-from tests.payments.reconciliation_fakes import NOW, FakeStatusReader, payment_order
+from tests.billing.flitt_test_clients import build_client_with
+from tests.payments.reconciliation_fakes import (
+    NOW,
+    FakeStatusReader,
+    flitt_status_transport,
+    payment_order,
+)
 from tests.spend_guard.platform_pause_world import PauseWorld
 from tests.storage.builders import COUNTRY_SAMPLES
 from tests.storage.builders import build_business as build_country_business
@@ -52,47 +59,6 @@ def build_business() -> BusinessDocument:
 
 
 APPROVED, DECLINED = PaymentStatus.APPROVED, PaymentStatus.DECLINED
-
-
-def state(status: PaymentStatus, *, is_first: bool = True) -> ProviderPaymentState:
-    return ProviderPaymentState(
-        reference=PaymentProviderReference("ord_1"),
-        status=status,
-        is_first_payment=is_first,
-    )
-
-
-@pytest.mark.parametrize(
-    ("recorded", "is_settled", "provider", "is_first", "expected"),
-    [
-        (PaymentStatus.CREATED, False, APPROVED, True, "paid_at_provider"),
-        (PaymentStatus.PROCESSING, False, APPROVED, True, "paid_at_provider"),
-        (APPROVED, True, APPROVED, True, None),
-        # A later charge declined; the first payment was paid at both.
-        (DECLINED, True, APPROVED, True, None),
-        (APPROVED, True, DECLINED, True, "failed_at_provider"),
-        (APPROVED, True, PaymentStatus.EXPIRED, True, "failed_at_provider"),
-        (APPROVED, True, PaymentStatus.REVERSED, True, "reversed_at_provider"),
-        (PaymentStatus.REVERSED, True, PaymentStatus.REVERSED, True, None),
-        (PaymentStatus.CREATED, False, PaymentStatus.PROCESSING, True, None),
-        (PaymentStatus.CREATED, False, PaymentStatus.EXPIRED, True, None),
-        # Stripe's latest invoice: paid there, declined here.
-        (DECLINED, True, APPROVED, False, "paid_at_provider"),
-        (APPROVED, True, DECLINED, False, "failed_at_provider"),
-    ],
-)
-def test_only_differences_that_move_money_are_mismatches(
-    recorded: PaymentStatus,
-    is_settled: bool,
-    provider: PaymentStatus,
-    is_first: bool,
-    expected: str | None,
-) -> None:
-    order = payment_order(build_business().id, recorded, is_settled=is_settled)
-
-    kind = find_mismatch(order, state(provider, is_first=is_first))
-
-    assert (None if kind is None else kind.value) == expected
 
 
 class ReconciliationWorld:
@@ -208,3 +174,72 @@ def test_a_run_asks_the_providers_at_most_its_budget(
     result = world.run(reader)
 
     assert len(reader.asked) == 2 and int(result.checked_count) == 2
+
+
+def test_every_question_counts_against_the_budget_whatever_its_answer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(reconcile_payments_use_case, "MAX_PROVIDER_READS", 2)
+    world = ReconciliationWorld()
+    for _ in range(4):
+        world.add(payment_order(world.business.id, PaymentStatus.CREATED))
+    # The provider has nothing to compare for any of them.
+    reader = FakeStatusReader({})
+
+    world.run(reader)
+
+    assert len(reader.asked) == 2
+
+
+@pytest.mark.usefixtures("stripe_gate_open")
+def test_a_stripe_subscription_s_order_is_asked_for_one_interval_more() -> None:
+    world = ReconciliationWorld()
+
+    def stripe_order(days_ago: int, schedule: str | None) -> PaymentOrderDocument:
+        return world.add(
+            payment_order(
+                world.business.id,
+                APPROVED,
+                is_settled=True,
+                provider=PaymentProvider.STRIPE,
+                reference="in_first",
+                schedule=schedule,
+                written_days_ago=days_ago,
+            )
+        )
+
+    # A monthly renewal whose notification was lost left its order as it
+    # was a month ago.
+    renewed = stripe_order(33, "sub_1")
+    lapsed = stripe_order(40, "sub_2")
+    without_schedule = stripe_order(33, None)
+    flitt = world.add(payment_order(world.business.id, APPROVED, written_days_ago=33))
+    reader = FakeStatusReader(
+        {o.id: APPROVED for o in (renewed, lapsed, without_schedule, flitt)}
+    )
+
+    world.run(reader)
+
+    assert reader.asked == [renewed.id]
+
+
+def test_a_provider_refusing_the_read_counts_as_unreadable() -> None:
+    world = ReconciliationWorld()
+    world.add(payment_order(world.business.id, PaymentStatus.CREATED))
+    reader = PaymentStatusReaderAdapter(
+        build_client_with(flitt_status_transport({}, [])), None
+    )
+
+    result = ReconcilePaymentsUseCase(
+        world.businesses,
+        world.orders,
+        reader,
+        world.results,
+        world.storage_scope,
+        PauseWorld().wall_clock(),
+    ).run(JobTick(job_name=JobName("reconcile_payments"), scheduled_at=NOW))
+
+    assert int(result.processed_count) == 0
+    stored = world.results.get(ReconciliationDay("2026-11-02"))
+    assert stored is not None
+    assert int(stored.unreadable_count) == 1 and int(stored.checked_count) == 0

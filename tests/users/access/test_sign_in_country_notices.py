@@ -1,7 +1,8 @@
 """
 A sign-in from a country none of the person's live sessions was opened or
 used from is told to them even from a known device, and the notice names
-the country; without a country database only the device counts.
+the country in the reader's language; without a country database only
+the device counts.
 """
 
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -12,12 +13,12 @@ from tests.users.fake_ip_countries import FixedIpCountries
 
 ROME_IP: str = "198.51.100.80"
 MILAN_IP: str = "198.51.100.81"
-LAGOS_IP: str = "192.0.2.90"
+BERLIN_IP: str = "192.0.2.90"
 COUNTRIES: dict[str, str] = {
     HOME_IP: "GE",
     ROME_IP: "IT",
     MILAN_IP: "IT",
-    LAGOS_IP: "NG",
+    BERLIN_IP: "DE",
 }
 
 
@@ -28,18 +29,19 @@ def test_a_known_device_in_a_new_country_is_told_with_the_country() -> None:
 
     notices.notice_new_device(
         owner_of(world, "owner@salobie.example"),
-        session(world, MAC_CHROME, LAGOS_IP),
+        session(world, MAC_CHROME, BERLIN_IP),
         [session(world, MAC_CHROME, ROME_IP)],
     )
 
     [push] = world.push_queue.queued
     assert push.is_urgent is True
     assert "new country" in str(push.brief.title)
-    assert "in NG" in str(push.brief.detail)
-    assert LAGOS_IP in str(push.brief.detail)
+    assert "Germany" in str(push.brief.detail)
+    assert BERLIN_IP in str(push.brief.detail)
     [(_, text)] = world.notifier.sent
     assert "Accesso al tuo account da un nuovo paese" in str(text)
-    assert "in NG" in str(text)
+    assert "Germania" in str(text)
+    assert "Nessuna delle tue altre sessioni" in str(text)
 
 
 def test_the_same_country_or_an_unknown_one_adds_nothing() -> None:
@@ -70,10 +72,10 @@ def test_where_the_other_sessions_were_last_used_counts_too() -> None:
     world.add_device(world.owner, "en")
     notices = build_notices(world, FixedIpCountries(COUNTRIES))
     travelled = session(world, MAC_CHROME, ROME_IP)
-    travelled.last_seen_ip = ClientIpAddress(LAGOS_IP)
+    travelled.last_seen_ip = ClientIpAddress(BERLIN_IP)
 
     notices.notice_new_device(
-        owner_of(world), session(world, MAC_CHROME, LAGOS_IP), [travelled]
+        owner_of(world), session(world, MAC_CHROME, BERLIN_IP), [travelled]
     )
 
     assert world.push_queue.queued == []
@@ -85,7 +87,7 @@ def test_without_a_country_database_a_known_device_tells_nobody() -> None:
 
     build_notices(world).notice_new_device(
         owner_of(world),
-        session(world, MAC_CHROME, LAGOS_IP),
+        session(world, MAC_CHROME, BERLIN_IP),
         [session(world, MAC_CHROME, ROME_IP)],
     )
 

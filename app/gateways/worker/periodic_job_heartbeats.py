@@ -12,6 +12,7 @@ from app.schemas.domain.periodic_job_heartbeats import PeriodicJobHeartbeatDocum
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName, ReleaseVersion
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -19,6 +20,11 @@ MICROSECONDS_PER_SECOND: int = 1_000_000
 # grace (at least; a quarter of a longer interval): a slow tick, a retry
 # after a failure or a deploy is no missed run.
 MIN_GRACE_SECONDS: int = 30 * 60
+# The heartbeat of a job this release does not know, overdue this long,
+# is a job a deploy removed: a starting worker forgets it, so removed
+# jobs never crowd the alert's read of the overdue ones.
+REMOVED_JOB_AFTER_SECONDS: int = 7 * 24 * 60 * 60
+MAX_REMOVED_READ: DocumentQueryLimit = DocumentQueryLimit(100)
 
 
 def job_run_allowance(interval_seconds: JobIntervalSeconds) -> int:
@@ -34,10 +40,13 @@ class PeriodicJobHeartbeats:
     the missed-run alert's source that needs no Sentry. When the worker
     starts it registers every shared job it knows (also those of lanes it
     does not serve: a lane no worker serves is a missed run too), stamping
-    its release and keeping what earlier workers recorded; after every
+    its release and keeping what earlier workers recorded, and forgets the
+    heartbeats of jobs it does not know that are overdue for a week (jobs
+    a deploy removed); after every
     tick it records the jobs that succeeded since (`record`, from the
-    periodic runner's last results). A heartbeat that cannot be written is
-    logged and skipped: the next tick tries again.
+    periodic runner's last results), keeping the release a registration
+    stamped. A heartbeat that cannot be written is logged and skipped: the
+    next tick tries again.
     """
 
     def __init__(
@@ -64,8 +73,23 @@ class PeriodicJobHeartbeats:
                 }
                 for name, job in self._jobs.items():
                     self._repo.save(self._registered(job, stored.get(name), now))
+                self._forget_removed_jobs(now)
         except ApplicationError as error:
             LOGGER.warning("Periodic job heartbeats were not registered: %s", error)
+
+    def _forget_removed_jobs(self, now: Microseconds) -> None:
+        long_ago = Microseconds(
+            int(now) - REMOVED_JOB_AFTER_SECONDS * MICROSECONDS_PER_SECOND
+        )
+        for heartbeat in self._repo.list_overdue(long_ago, MAX_REMOVED_READ):
+            if heartbeat.job_name not in self._jobs and heartbeat.release != (
+                self._release
+            ):
+                self._repo.delete(heartbeat.job_name)
+                LOGGER.info(
+                    "Forgot the heartbeat of removed periodic job %s",
+                    heartbeat.job_name,
+                )
 
     def record(self, results: Sequence[PeriodicJobResult]) -> None:
         succeeded: list[PeriodicJobResult] = [
@@ -143,11 +167,14 @@ class PeriodicJobHeartbeats:
         stored: PeriodicJobHeartbeatDocument | None,
         finished_at: Microseconds,
     ) -> PeriodicJobHeartbeatDocument:
+        # Only a registration stamps the release: an old worker still
+        # running during a deploy must not take a job back from the new
+        # release (its alert would then never see the job missed).
         return PeriodicJobHeartbeatDocument(
             job_name=job.name,
             interval_seconds=job.interval_seconds,
             lane=job.lane,
-            release=self._release,
+            release=self._release if stored is None else stored.release,
             registered_at=finished_at if stored is None else stored.registered_at,
             last_succeeded_at=finished_at,
             due_by=Microseconds(

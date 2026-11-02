@@ -10,13 +10,9 @@ from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.domain.platform_pauses import PlatformPauseDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
-from app.schemas.dto.platform_pause import (
-    PlatformBrakeReading,
-    PlatformPauseQuery,
-    PlatformPauseView,
-)
+from app.schemas.dto.platform_pause import PlatformPauseQuery, PlatformPauseView
 from app.use_cases.spend_guard.platform_pause.platform_brakes import (
-    read_platform_brake,
+    read_budget_stop,
 )
 from app.use_cases.spend_guard.platform_pause.platform_pause_views import (
     build_platform_pause_view,
@@ -57,9 +53,11 @@ class GetPlatformPauseUseCase(UseCaseContract[PlatformPauseQuery, PlatformPauseV
                 permission=PlatformAdminPermission.VIEW_OPERATIONS,
             )
         )
-        now: Microseconds = self._wall_clock.now_unix()
         pause: PlatformPauseDocument | None = self._pause_repo.get()
-        brake: PlatformBrakeReading = read_platform_brake(
-            self._pause_repo, self._spend_gauge, self._settings, now
+        return build_platform_pause_view(
+            pause,
+            read_budget_stop(
+                self._spend_gauge, self._settings, self._wall_clock.now_unix()
+            ),
+            self._settings,
         )
-        return build_platform_pause_view(pause, brake, self._settings)

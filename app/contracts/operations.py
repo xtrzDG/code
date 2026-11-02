@@ -145,12 +145,9 @@ class GoogleCalendarClientContract(ClientContract, Protocol):
     def exchange_code(
         self,
         code: CalendarAuthorizationCode,
-        code_verifier: CalendarCodeVerifier | None,
+        code_verifier: CalendarCodeVerifier,
     ) -> CalendarTokenGrant:
-        """
-        The tokens of a consent's code; `code_verifier` is the flow's PKCE
-        verifier (None only for a consent started before PKCE).
-        """
+        """The tokens of a consent's code, with the flow's PKCE verifier."""
         raise NotImplementedError
 
     def refresh_access_token(

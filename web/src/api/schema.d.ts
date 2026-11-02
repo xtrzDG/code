@@ -15837,10 +15837,13 @@ export interface components {
          *     - FAILED_AT_PROVIDER: the provider declined or let the payment expire,
          *       the platform has it paid (the owner uses the service unpaid);
          *     - REVERSED_AT_PROVIDER: the provider refunded or charged the payment
-         *       back, the platform has it paid.
+         *       back, the platform has it paid;
+         *     - RENEWAL_PAID_AT_PROVIDER: Stripe charged a renewal of the order's
+         *       subscription that the platform never recorded (a lost notification:
+         *       the owner paid and may be dunned).
          * @enum {string}
          */
-        PaymentMismatchKind: "paid_at_provider" | "failed_at_provider" | "reversed_at_provider";
+        PaymentMismatchKind: "paid_at_provider" | "failed_at_provider" | "reversed_at_provider" | "renewal_paid_at_provider";
         /**
          * PaymentMismatchView
          * @description One mismatch as the admin sees it (the client's name, no card data).

@@ -57,6 +57,15 @@ const reconciliation: PaymentReconciliation = {
       provider_status: "approved",
       kind: "paid_at_provider",
     },
+    {
+      payment_order_id: "payment_order_2",
+      business_id: "business_8",
+      business_name: "Salone Aurora",
+      provider: "stripe",
+      recorded_status: "approved",
+      provider_status: "approved",
+      kind: "renewal_paid_at_provider",
+    },
   ],
 };
 
@@ -80,6 +89,10 @@ describe("PlatformBrakesCard: the global pause and the budget stop", () => {
         await within(card).findByText(t("platformBrakes.brakes.states.paused")),
       ).toBeTruthy();
       expect(within(card).getByText(paused.reason ?? "")).toBeTruthy();
+      // While paused the card still tells today's share of the budget.
+      expect(
+        within(card).queryByText(t("platformBrakes.brakes.noBudget")),
+      ).toBeNull();
       // Only a SUPER admin gets the button.
       expect(
         within(card).queryByRole("button", {
@@ -154,8 +167,15 @@ describe("PaymentReconciliationCard: payments that differ from Flitt and Stripe"
         ),
       ).toBeTruthy();
       expect(
-        within(table).getByText(
+        within(table).getAllByText(
           t("platformBrakes.reconciliation.statuses.approved"),
+        ).length,
+      ).toBeGreaterThan(0);
+      // A Stripe renewal the platform never recorded has its own words.
+      expect(within(table).getByText("Salone Aurora")).toBeTruthy();
+      expect(
+        within(table).getByText(
+          t("platformBrakes.reconciliation.kinds.renewal_paid_at_provider"),
         ),
       ).toBeTruthy();
     },

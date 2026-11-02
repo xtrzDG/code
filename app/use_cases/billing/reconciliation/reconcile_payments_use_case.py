@@ -33,10 +33,6 @@ from app.use_cases.shared.payment_reconciliation_days import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
-MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
-# Orders written to in the last week are compared: a payment whose
-# notification was lost left its order as it was when the checkout opened.
-RECONCILIATION_WINDOW_DAYS: int = 7
 # The most provider calls one run makes (a busy week stays within an hour).
 MAX_PROVIDER_READS: int = 2_000
 
@@ -44,11 +40,12 @@ MAX_PROVIDER_READS: int = 2_000
 class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     The `reconcile_payments` periodic job (daily, once across workers):
-    every checkout order written to in the last RECONCILIATION_WINDOW_DAYS
-    (the businesses walked in keyset batches, their orders read in each
-    business's own storage scope: the job itself names no business) is
-    compared with what Flitt or Stripe says about it now
-    (`PaymentStatusReaderAdapterContract`, read-only calls). A mismatch
+    every checkout order written to within its window (`is_reconcilable`:
+    the last week, a Stripe subscription's order one billing interval
+    more for its renewals; the businesses walked in keyset batches, their
+    orders read in each business's own storage scope: the job itself
+    names no business) is compared with what Flitt or Stripe says about
+    it now (`PaymentStatusReaderAdapterContract`, read-only calls). A mismatch
     that moves money (`find_mismatch`) is logged as a structured
     `payment_reconciliation_mismatch` line (ids and statuses, no card
     data) and kept in the day's result (`payment_reconciliations`), which
@@ -56,9 +53,10 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
     view read. Nothing is changed: the platform admin settles a mismatch
     (docs/operations/runbooks/payment-mismatch.md).
 
-    An order the provider cannot tell about now (it is down, it answers
-    unreadably) counts as unreadable and the run goes on; at most
-    MAX_PROVIDER_READS orders are asked about per run.
+    An order the provider cannot tell about now (it is down, it refuses
+    the read, it answers unreadably) counts as unreadable and the run goes
+    on; at most MAX_PROVIDER_READS orders are asked about per run, every
+    question counted whatever its answer.
     """
 
     def __init__(
@@ -81,20 +79,19 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         now: Microseconds = self._wall_clock.now_unix()
-        since = Microseconds(
-            int(now) - RECONCILIATION_WINDOW_DAYS * MICROSECONDS_PER_DAY
-        )
+        asked: int = 0
         checked: int = 0
         unreadable: int = 0
         mismatches: list[PaymentMismatch] = []
-        for order in self._recent_orders(since):
-            if checked + unreadable >= MAX_PROVIDER_READS:
+        for order in self._recent_orders(now):
+            if asked >= MAX_PROVIDER_READS:
                 logger.warning(
                     "Payment reconciliation stopped after %d provider reads",
                     MAX_PROVIDER_READS,
                 )
                 break
 
+            asked += 1
             try:
                 state: ProviderPaymentState | None = self._reader.read_status(order)
             except ApplicationError as error:
@@ -132,13 +129,13 @@ class ReconcilePaymentsUseCase(UseCaseContract[JobTick, JobReport]):
         )
         return JobReport(processed_count=ProcessedItemCount(checked))
 
-    def _recent_orders(self, since: Microseconds) -> Iterator[PaymentOrderDocument]:
+    def _recent_orders(self, now: Microseconds) -> Iterator[PaymentOrderDocument]:
         """One business's orders at a time, in the walk's order."""
 
         for business in walk_businesses(self._business_repo):
             with self._storage_scope.scoped_to_business(business.id):
                 orders = self._payment_order_repo.list_by_business(business.id)
-            yield from (order for order in orders if is_reconcilable(order, since))
+            yield from (order for order in orders if is_reconcilable(order, now))
 
 
 def build_mismatch(
