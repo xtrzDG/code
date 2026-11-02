@@ -93,12 +93,18 @@ def test_under_the_limit_every_later_round_is_checked() -> None:
     ]
 
 
+def spend_check_of(orchestrator: object) -> object:
+    """The spend check the orchestrator's reply generation was wired with."""
+
+    generate_reply: object = vars(orchestrator)["_generate_reply"]
+    return vars(generate_reply)["_check_spend"]
+
+
 def test_the_application_checks_the_spend_of_customer_turns_only() -> None:
     orchestrators = AppContainer().orchestrators.conversations
-    customer = vars(
-        vars(orchestrators.conversation_turn_orchestrator())["_generate_reply"]
-    )
-    autotest = vars(vars(orchestrators.autotest_turn_orchestrator())["_generate_reply"])
 
-    assert isinstance(customer["_check_spend"], CheckBusinessSpendUseCase)
-    assert autotest["_check_spend"] is None
+    customer = spend_check_of(orchestrators.conversation_turn_orchestrator())
+    autotest = spend_check_of(orchestrators.autotest_turn_orchestrator())
+
+    assert isinstance(customer, CheckBusinessSpendUseCase)
+    assert autotest is None
