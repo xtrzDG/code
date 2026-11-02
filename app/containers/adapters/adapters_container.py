@@ -23,7 +23,7 @@ from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
 )
 from app.adapters.llm.offline_llm_adapter import OfflineLlmAdapter
 from app.adapters.llm.openai_llm_adapter import OpenAiLlmAdapter
-from app.adapters.llm.routing_llm_adapter import RoutingLlmAdapter
+from app.adapters.llm.routing_llm_adapter_factory import build_routing_llm_adapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
 from app.adapters.locks.advisory_lock_adapter_factory import (
     build_advisory_lock_adapter,
@@ -223,20 +223,19 @@ class AdaptersContainer(containers.DeclarativeContainer):
         AnthropicLlmAdapter,
         client=clients.anthropic_messages_client,
     )
-    # LLM_PROVIDER=scripted (staging, offline runs): fixed answers, no network.
+    # LLM_PROVIDER=scripted (development, tests, offline runs): fixed answers.
     offline_llm_adapter: Singleton[OfflineLlmAdapter] = Singleton(
         OfflineLlmAdapter,
         latency_ms=config.app_settings.provided.scripted_llm_latency_ms,
     )
-    # Typed by its contract: tests replace it with the scripted model.
+    # Typed by its contract: tests replace it with the scripted model. No
+    # scripted model in production; a fallback only with its provider's key.
     routing_llm_adapter: Singleton[LlmAdapterContract] = Singleton(
-        RoutingLlmAdapter,
-        openai_adapter=openai_llm_adapter,
-        anthropic_adapter=anthropic_llm_adapter,
-        circuit_breaker=circuit_breaker,
-        scripted_adapter=offline_llm_adapter,
-        fallback_model_id=config.app_settings.provided.reply_speed.llm_fallback_model_id,
-    )
+        build_routing_llm_adapter,
+        openai_adapter=openai_llm_adapter, anthropic_adapter=anthropic_llm_adapter,
+        circuit_breaker=circuit_breaker, scripted_adapter=offline_llm_adapter,
+        settings=config.app_settings,
+    )  # fmt: skip
     # The quality journal (Langfuse, or nothing without keys): here, not in
     # FacilitatorsContainer, as the LLM adapter below decorates every call.
     llm_trace_facilitator: Singleton[LlmTraceFacilitatorContract] = Singleton(

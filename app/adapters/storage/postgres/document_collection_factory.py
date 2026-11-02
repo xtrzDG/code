@@ -33,6 +33,7 @@ from app.clients.postgres.postgres_connection_pools import PostgresConnectionPoo
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
@@ -52,7 +53,8 @@ def build_document_collection[StoredDocument: PersistentDocument](
     in_memory_registry: InMemoryCollectionRegistry | None = None,
 ) -> DocumentCollectionAdapterContract[StoredDocument]:
     """
-    A Postgres collection when `settings.database_url` is set, else in-memory.
+    A Postgres collection when `settings.database_url` is set, else in-memory
+    (never in production: `refuse_memory_in_production`).
 
     The name is validated in both cases, so a wiring mistake shows up in
     tests too. A tenant collection refuses code outside a storage scope in
@@ -75,6 +77,7 @@ def build_document_collection[StoredDocument: PersistentDocument](
         else infer_collection_isolation(document_type)
     )
     if settings.database_url is None:
+        refuse_memory_in_production(settings)
         collection = InMemoryDocumentCollectionAdapter[StoredDocument](
             document_type,
             declared_lookup_fields(validated_collection_name, document_type),
@@ -108,6 +111,23 @@ def build_document_collection[StoredDocument: PersistentDocument](
         ),
         isolation=effective_isolation,
     )
+
+
+def refuse_memory_in_production(settings: AppSettings) -> None:
+    """
+    Production never serves from in-memory collections: each instance would
+    see only its own data and lose it on restart, and GET /readyz would
+    report it ready. The startup check refuses this first; this keeps any
+    path that skips it from serving.
+
+    Raises:
+        ValidationFailedError: production without DATABASE_URL.
+    """
+
+    if settings.environment is DeploymentEnvironment.PRODUCTION:
+        raise ValidationFailedError(
+            "DATABASE_URL is not set: production never keeps its data in memory."
+        )
 
 
 def validate_collection_name(collection_name: str) -> DocumentCollectionName:

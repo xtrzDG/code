@@ -1,4 +1,8 @@
-/** The test chat's conversation, kept in this browser tab's session storage. */
+/**
+ * The test chat's conversation, kept in this browser tab's session storage
+ * only: closing the tab, signing out and the next sign-in in this tab
+ * forget it (components/shell/signOut.ts), so it never outlives the session.
+ */
 
 import { parseStoredTestChat, type StoredTestChat } from "@/lib/assistant/testChat";
 

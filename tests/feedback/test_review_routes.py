@@ -79,6 +79,16 @@ class TestReviewSettings:
         assert "STOP" in previews["en"]["template_body"]
         assert "Café Rustaveli" in previews["ka"]["example"]
 
+    def test_the_customer_example_is_deprecated(self, client: TestClient) -> None:
+        schemas: dict[str, Any] = client.get("/openapi.json").json()["components"][
+            "schemas"
+        ]
+
+        example: dict[str, Any] = schemas["FeedbackTemplatePreview"]["properties"][
+            "example"
+        ]
+        assert example["deprecated"] is True
+
     def test_the_owner_turns_feedback_on_with_the_review_link(
         self, setup: FeedbackSetup, client: TestClient
     ) -> None:

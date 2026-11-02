@@ -35,8 +35,6 @@ export const valueIt: Translation<typeof valueEn> = {
     title: "Il tuo assistente è pronto",
     lead: "Le sue prime risposte compariranno qui",
     body: "Appena i clienti scrivono o chiamano, questa scheda mostra le prenotazioni e i ricavi portati dall'assistente e il tempo che ha fatto risparmiare al personale.",
-    sampleLabel: "Esempio",
-    sampleCaption: "Cosa mostrerà questa scheda (numeri di esempio)",
     shareTitle: "Provalo tu",
     shareText: "Apri la pagina della chat sul telefono inquadrando il codice, oppure invia il link ai clienti.",
     copy: "Copia link",

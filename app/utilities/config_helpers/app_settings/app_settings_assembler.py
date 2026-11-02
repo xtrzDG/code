@@ -32,7 +32,6 @@ from app.utilities.config_helpers.app_settings.encryption_key_settings_section i
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
-    read_text,
 )
 from app.utilities.config_helpers.app_settings.gc_settings_section import (
     read_garbage_collection_settings,
@@ -102,6 +101,7 @@ from app.utilities.config_helpers.app_settings.reply_speed_settings_section impo
     read_reply_speed_settings,
 )
 from app.utilities.config_helpers.app_settings.runtime_settings_section import (
+    read_deployment_environment,
     read_runtime_settings,
 )
 from app.utilities.config_helpers.app_settings.seller_settings_section import (
@@ -139,8 +139,8 @@ def get_app_settings() -> AppSettings:
 def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettings:
     """Assemble validated settings from an explicit variable mapping."""
 
-    environment = DeploymentEnvironment(
-        read_text(environment_variables, "APP_ENV", DeploymentEnvironment.DEVELOPMENT)
+    environment: DeploymentEnvironment = read_deployment_environment(
+        environment_variables
     )
     is_development: bool = environment is not DeploymentEnvironment.PRODUCTION
     llm_provider = read_llm_provider(environment_variables)

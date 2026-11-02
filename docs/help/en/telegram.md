@@ -12,7 +12,7 @@ Your customers write to your own Telegram bot, with your business name and photo
 ## Connect
 
 1. Open **@BotFather** in Telegram and send `/newbot`.
-2. Choose a name (your business name) and a username that ends in `bot`, for example `cafe_batumi_bot`.
+2. Choose a name (your business name) and a username that ends in `bot`, for example `trattoria_marco_bot`.
 3. BotFather sends a token that looks like `123456789:AAH…`. Copy it.
 4. In the cabinet open **Assistant → [Channels](cabinet:assistant/channels)**, press **Connect** on the Telegram card and paste the token.
 

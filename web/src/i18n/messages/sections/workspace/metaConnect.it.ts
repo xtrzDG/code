@@ -38,7 +38,7 @@ export const metaConnectIt: Translation<typeof metaConnectEn> = {
   },
   refusals: {
     meta_link_expired: "Questo accesso a Facebook è terminato. Ricomincia.",
-    meta_not_configured: "L'accesso con Facebook non è configurato su questo server. Inserisci i dati manualmente.",
+    meta_not_configured: "L'accesso con Facebook non è disponibile al momento. Inserisci i dati manualmente.",
     meta_permission_missing:
       "Facebook non ha concesso tutte le autorizzazioni necessarie. Ricomincia e lascia selezionate tutte le caselle.",
     whatsapp_account_missing:
@@ -55,7 +55,6 @@ export const metaConnectIt: Translation<typeof metaConnectEn> = {
     toggle: "Rispondi in Direct ai commenti con una parola chiave",
     description:
       "Quando qualcuno scrive una delle tue parole chiave in un commento sotto un post, l'assistente gli invia un messaggio in Direct. Al massimo uno al giorno per persona e 60 all'ora.",
-    unavailable: "Le risposte ai commenti partiranno con il prossimo aggiornamento del servizio. Fino ad allora le tue impostazioni restano salvate.",
     summaryOn: "Attive, per: {keywords}",
     summaryOff: "Disattivate",
     keywords: "Parole chiave",

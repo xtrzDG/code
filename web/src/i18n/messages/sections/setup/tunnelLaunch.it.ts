@@ -77,7 +77,7 @@ export const tunnelLaunchIt: Translation<typeof tunnelLaunchEn> = {
     phoneTitle: "Provalo dal telefono",
     phoneText: "Inquadra il codice con la fotocamera del telefono e scrivi un messaggio, come un cliente.",
     qrAlt: "Codice QR che apre {link}",
-    noLink: "Il link della tua pagina comparirà qui quando sul server sarà impostato l'indirizzo pubblico del pannello.",
+    noLink: "Il link della tua pagina non è disponibile al momento. Contatta l'assistenza.",
     open: "Apri il mio assistente",
     nextTitle: "Poi, quando vuoi",
     next: {

@@ -49,10 +49,10 @@ function message(overrides: Partial<MessageView>): MessageView {
 
 describe("conversation filters in the URL", () => {
   it("read every filter, the search trimmed to its limit", () => {
-    expect(parseConversationFilters(new URLSearchParams("channel=telegram&period=7d&q=Nino&status=open&test=1"))).toEqual({
+    expect(parseConversationFilters(new URLSearchParams("channel=telegram&period=7d&q=Giulia&status=open&test=1"))).toEqual({
       channel: "telegram",
       period: "7d",
-      search: "Nino",
+      search: "Giulia",
       status: "open",
       includeTest: true,
     });
@@ -63,6 +63,10 @@ describe("conversation filters in the URL", () => {
     expect(parseConversationFilters(new URLSearchParams("channel=fax&status=x&period=1y&test=yes"))).toEqual(
       DEFAULT_CONVERSATION_FILTERS,
     );
+  });
+
+  it("offer no Viber filter: it cannot be connected", () => {
+    expect(parseConversationFilters(new URLSearchParams("channel=viber")).channel).toBeNull();
   });
 });
 

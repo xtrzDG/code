@@ -110,7 +110,6 @@ function EditorForm({
             key={language}
             language={language}
             value={draft.texts[language] ?? ""}
-            businessName={business.name}
             onChange={(text) => setDraft({ ...draft, texts: { ...draft.texts, [language]: text } })}
           />
         ))}

@@ -61,7 +61,6 @@ export const reviewSettingsIt: Translation<typeof reviewSettingsEn> = {
     description:
       "Crea in Meta Business Manager un modello WhatsApp di utilità con questo testo, con una traduzione per ogni lingua; il suo unico parametro è il nome della tua attività. I clienti lo ricevono nella loro lingua, oppure in inglese se manca la traduzione.",
     body: "Testo per il modello",
-    example: "Cosa leggono i clienti",
   },
   requests: {
     title: "Ultime richieste",

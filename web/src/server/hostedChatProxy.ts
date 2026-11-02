@@ -11,7 +11,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { isPreviewRequest } from "@/lib/hostedChat/preview";
 
-import { PATHNAME_HEADER, isCookieSecure } from "./backend";
+import { PATHNAME_HEADER } from "./backend";
+import { isCookieSecure } from "./cookieSecurity";
 import {
   NONCE_HEADER,
   REPORTING_ENDPOINTS,
@@ -47,7 +48,7 @@ export async function routeHostedChat(request: NextRequest, address: string): Pr
     nonce,
     apiOrigin: lookup.kind === "found" ? originOf(chatApiBase(lookup.view)) : null,
     isDevelopment: process.env.NODE_ENV === "development",
-    isHttps: isCookieSecure(),
+    isHttps: isCookieSecure(request.headers),
     isPreview: isPreviewRequest(request.nextUrl.searchParams),
   });
   const requestHeaders = new Headers(request.headers);

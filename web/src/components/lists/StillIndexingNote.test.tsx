@@ -11,6 +11,12 @@ describe("StillIndexingNote: a list while a data task still fills it", () => {
     renderInLocale(<StillIndexingNote isIndexing />, { locale });
 
     expect(screen.getByRole("status").textContent).toContain(t("dataTasks.indexing.title"));
+    expect(screen.getByRole("status").textContent).not.toMatch(/release|rilascio/i);
+  });
+
+  it("speaks of search, not of releases", () => {
+    expect(textsIn("en").t("dataTasks.indexing.title")).toBe("Updating search");
+    expect(textsIn("it").t("dataTasks.indexing.title")).toBe("Aggiornamento della ricerca");
   });
 
   it("says nothing once the list is complete or before it loaded", () => {

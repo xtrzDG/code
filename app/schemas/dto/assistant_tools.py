@@ -24,18 +24,17 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.bookings.constrained_strings import (
+    AssistantBookingNote,
+    AssistantLeadBudget,
+    AssistantLeadDetails,
     LocalDate,
     LocalTimeOfDay,
 )
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
-from app.schemas.typings.bookings.strings import (
-    BookingNote,
-    LeadBudgetText,
-    LeadDetails,
-    ResourceReference,
-)
+from app.schemas.typings.bookings.strings import ResourceReference
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.contacts.constrained_strings import CustomerGivenName
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     CanTextCaller,
@@ -47,10 +46,8 @@ from app.schemas.typings.conversations.constrained_strings import (
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.handoffs.strings import (
-    HandoffSummary,
-    UnansweredQuestionText,
-)
+from app.schemas.typings.handoffs.constrained_strings import AssistantHandoffSummary
+from app.schemas.typings.handoffs.strings import UnansweredQuestionText
 from app.schemas.typings.knowledge.strings import (
     KnowledgeSearchQuery,
     KnowledgeTitle,
@@ -103,10 +100,12 @@ class CreateBookingToolInput(ImmutableDTO):
     """
     create_booking: the confirmed details. A missing phone falls back to the
     phone the customer contacted us from. A service and a resource may be
-    named by id or by name in any script.
+    named by id or by name in any script. The name and the note are what the
+    customer gave, within their limits (`CustomerGivenName`,
+    `AssistantBookingNote`).
     """
 
-    name: ContactName
+    name: CustomerGivenName
     phone: RawPhoneNumberInput | None = None
     service_id: ServiceReference | None = None
     resource_id: ResourceReference | None = None
@@ -116,7 +115,7 @@ class CreateBookingToolInput(ImmutableDTO):
     party_size: PartySize
     duration_minutes: BookingDurationMinutes | None = None
     nights: NightCount | None = None
-    notes: BookingNote | None = None
+    notes: AssistantBookingNote | None = None
 
 
 class CancelBookingToolInput(ImmutableDTO):
@@ -149,19 +148,19 @@ class CreateLeadToolInput(ImmutableDTO):
     """create_lead: a request for a manager (banquet, group, corporate, ...)."""
 
     lead_type: LeadType
-    details: LeadDetails
-    name: ContactName | None = None
+    details: AssistantLeadDetails
+    name: CustomerGivenName | None = None
     phone: RawPhoneNumberInput | None = None
     requested_date: LocalDate | None = None
     party_size: PartySize | None = None
-    budget: LeadBudgetText | None = None
+    budget: AssistantLeadBudget | None = None
 
 
 class HandoffToHumanToolInput(ImmutableDTO):
     """handoff_to_human: why, a short summary for staff, and how urgent."""
 
     reason: HandoffReason
-    summary: HandoffSummary
+    summary: AssistantHandoffSummary
     urgency: HandoffUrgency
 
 
@@ -184,7 +183,7 @@ class JoinWaitlistToolInput(ImmutableDTO):
     (by id or by name in any script) and a note.
     """
 
-    name: ContactName | None = None
+    name: CustomerGivenName | None = None
     service_id: ServiceReference | None = None
     resource_id: ResourceReference | None = None
     resource_type: ResourceKind | None = None
@@ -193,7 +192,7 @@ class JoinWaitlistToolInput(ImmutableDTO):
     time_to: LocalTimeOfDay | None = None
     party_size: PartySize | None = None
     nights: NightCount | None = None
-    notes: BookingNote | None = None
+    notes: AssistantBookingNote | None = None
 
 
 class OfferChoicesToolInput(ImmutableDTO):

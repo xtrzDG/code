@@ -13,7 +13,7 @@ from app.schemas.typings.integrations.constrained_integers import (
     WebhookFailuresBeforeDisable,
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
-    read_integer,
+    read_typed_integer,
 )
 
 
@@ -30,19 +30,17 @@ def read_public_api_settings(
 
     return PublicApiSettingsSection(
         public_api=PublicApiSettings(
-            requests_per_minute=PublicApiRequestsPerMinute(
-                read_integer(
-                    environment_variables,
-                    "PUBLIC_API_REQUESTS_PER_MINUTE",
-                    int(DEFAULT_REQUESTS_PER_MINUTE),
-                )
+            requests_per_minute=read_typed_integer(
+                environment_variables,
+                "PUBLIC_API_REQUESTS_PER_MINUTE",
+                int(DEFAULT_REQUESTS_PER_MINUTE),
+                PublicApiRequestsPerMinute,
             ),
-            webhook_failures_before_disable=WebhookFailuresBeforeDisable(
-                read_integer(
-                    environment_variables,
-                    "WEBHOOK_DISABLE_AFTER_FAILURES",
-                    int(DEFAULT_FAILURES_BEFORE_DISABLE),
-                )
+            webhook_failures_before_disable=read_typed_integer(
+                environment_variables,
+                "WEBHOOK_DISABLE_AFTER_FAILURES",
+                int(DEFAULT_FAILURES_BEFORE_DISABLE),
+                WebhookFailuresBeforeDisable,
             ),
         )
     )

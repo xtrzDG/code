@@ -1,9 +1,14 @@
 """Security headers of the API, and its description hidden in production."""
 
+from pathlib import Path
+
 from fastapi import APIRouter, Response
 from fastapi.testclient import TestClient
 
 from app.gateways.http.application import build_http_application
+from app.gateways.http.middleware.security_headers_middleware import (
+    STRICT_TRANSPORT_SECURITY,
+)
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 
@@ -52,9 +57,10 @@ def test_every_api_answer_carries_the_security_headers() -> None:
 
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert response.headers["Cross-Origin-Opener-Policy"] == "same-origin"
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["Content-Security-Policy"] == (
-        "default-src 'none'; frame-ancestors 'none'"
+        "default-src 'none'; base-uri 'none'; frame-ancestors 'none'"
     )
     assert response.headers["Cache-Control"] == "no-store"
     # Development is served over plain HTTP: no HSTS there.
@@ -87,8 +93,9 @@ def test_errors_and_cors_preflights_get_the_headers_too() -> None:
     for response in (failed, preflight):
         assert response.headers["X-Content-Type-Options"] == "nosniff"
         assert response.headers["Strict-Transport-Security"] == (
-            "max-age=63072000; includeSubDomains"
+            "max-age=63072000; includeSubDomains; preload"
         )
+        assert response.headers["Cross-Origin-Opener-Policy"] == "same-origin"
 
 
 def test_the_api_description_is_hidden_in_production() -> None:
@@ -102,3 +109,11 @@ def test_the_api_description_is_hidden_in_production() -> None:
     assert "Content-Security-Policy" not in docs.headers
     for path in ("/openapi.json", "/docs", "/redoc"):
         assert production.get(path).status_code == 404
+
+
+def test_the_api_sends_the_cabinets_hsts_value() -> None:
+    cabinet_config = (
+        Path(__file__).resolve().parents[2] / "web" / "next.config.ts"
+    ).read_text(encoding="utf-8")
+
+    assert f'value: "{STRICT_TRANSPORT_SECURITY}"' in cabinet_config

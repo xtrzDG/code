@@ -3,7 +3,7 @@
 /**
  * The text of a quick reply in one language: a text box, buttons that
  * insert the variables the API fills in ({name}, {booking_time},
- * {business_name}) where the caret is, and how a customer would read it.
+ * {business_name}) where the caret is.
  */
 
 import { useId, useRef } from "react";
@@ -12,23 +12,15 @@ import { Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
-import {
-  insertAt,
-  placeholderOf,
-  previewQuickReply,
-  QUICK_REPLY_TEXT_MAX_LENGTH,
-  QUICK_REPLY_VARIABLES,
-} from "@/lib/quickReplies";
+import { insertAt, placeholderOf, QUICK_REPLY_TEXT_MAX_LENGTH, QUICK_REPLY_VARIABLES } from "@/lib/quickReplies";
 
 export function VariantField({
   language,
   value,
-  businessName,
   onChange,
 }: {
   language: string;
   value: string;
-  businessName: string;
   onChange: (text: string) => void;
 }) {
   const { t, locale } = useI18n();
@@ -36,11 +28,6 @@ export function VariantField({
   const textRef = useRef<HTMLTextAreaElement>(null);
   const languageLabel = languageName(language, locale);
   const tooLong = value.length > QUICK_REPLY_TEXT_MAX_LENGTH;
-  const preview = previewQuickReply(value, {
-    name: t("quickReplies.editor.sample.name"),
-    booking_time: t("quickReplies.editor.sample.bookingTime"),
-    business_name: businessName,
-  });
 
   const insert = (variable: (typeof QUICK_REPLY_VARIABLES)[number]) => {
     const element = textRef.current;
@@ -90,14 +77,6 @@ export function VariantField({
           </button>
         ))}
       </div>
-      {value.trim() ? (
-        <figure className="rounded-xl bg-surface-muted px-3 py-2">
-          <figcaption className="text-xs text-ink-subtle">{t("quickReplies.editor.preview")}</figcaption>
-          <p dir="auto" lang={language} data-user-content className="mt-0.5 text-sm break-words whitespace-pre-wrap text-ink">
-            {preview}
-          </p>
-        </figure>
-      ) : null}
     </div>
   );
 }

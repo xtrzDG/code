@@ -40,11 +40,6 @@ export const quickRepliesEn = {
     needOneText: "Write the text in at least one language.",
     insert: "Insert",
     insertLabel: "Insert {variable} into the text in {language}",
-    preview: "Preview",
-    sample: {
-      name: "Nino",
-      bookingTime: "Sat, 19:30",
-    },
     save: "Save",
     saving: "Saving…",
     cancel: "Cancel",

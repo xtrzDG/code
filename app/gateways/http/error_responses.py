@@ -17,6 +17,8 @@ The framework's own refusals speak the same language: a missing or
 malformed query parameter or header is a 422 `validation_failed` with one
 reason per field (`missing` or `invalid`, the field's location as detail),
 and an unknown route or method keeps its status with an `ErrorBody`.
+A refused webhook delivery, an authorization denial and a rate limit are
+security log lines too (`refusal_logging`).
 """
 
 from collections.abc import Mapping, Sequence
@@ -30,6 +32,7 @@ from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.gateways.http.openapi_error_contract import install_error_contract_openapi
+from app.gateways.http.refusal_logging import log_refusal
 from app.schemas.constants.errors import ApiErrorCode
 from app.schemas.dto.errors import ErrorBody, ErrorReason
 from app.schemas.exceptions.application_errors import (
@@ -101,7 +104,6 @@ def install_error_handlers(http_application: FastAPI) -> None:
 
 
 async def handle_application_error(request: Request, error: Exception) -> JSONResponse:
-    del request
     status_code: int = 500
     error_code: ApiErrorCode = ApiErrorCode.INTERNAL_ERROR
     for error_type, mapped_status_code, mapped_error_code in ERROR_STATUS_CODES:
@@ -116,6 +118,7 @@ async def handle_application_error(request: Request, error: Exception) -> JSONRe
     if isinstance(error, StepUpRequiredError):
         headers["WWW-Authenticate"] = STEP_UP_CHALLENGE
 
+    log_refusal(request, status_code, error_code.value)
     return error_response(
         status_code,
         ErrorBody(
@@ -140,7 +143,7 @@ async def handle_request_validation_error(
     422 with one reason per field (without echoing the submitted values).
     """
 
-    del request
+    log_refusal(request, 422, ApiErrorCode.VALIDATION_FAILED.value)
     field_errors: Sequence[Mapping[str, object]] = (
         error.errors() if isinstance(error, RequestValidationError) else ()
     )

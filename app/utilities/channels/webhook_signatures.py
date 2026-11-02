@@ -25,8 +25,13 @@ from app.schemas.typings.platform.strings import PlatformSecret
 SHA256_SIGNATURE_PREFIX: str = "sha256="
 ELEVENLABS_TIMESTAMP_PREFIX: str = "t="
 ELEVENLABS_SIGNATURE_PREFIX: str = "v0="
-# ElevenLabs signs "<timestamp>.<body>" and rejects deliveries older than this.
+# ElevenLabs signs "<timestamp>.<body>"; its documented check refuses a
+# delivery whose timestamp is more than 30 minutes old (kept as is: a
+# delivery retried late must still be accepted).
 ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS: int = 30 * 60
+# ElevenLabs stamps the moment it sends, so a timestamp from the future
+# only means clock skew: a few minutes are allowed, not half an hour.
+ELEVENLABS_FUTURE_SKEW_SECONDS: int = 5 * 60
 TELEGRAM_SECRET_CONTEXT: bytes = b"assistant-workshop/telegram-webhook/v1\x00"
 VOICE_TOOL_SECRET_CONTEXT: bytes = b"assistant-workshop/voice-tools/v1\x00"
 
@@ -165,8 +170,8 @@ def is_valid_elevenlabs_signature(
 ) -> bool:
     """
     Check an ElevenLabs-Signature header: HMAC-SHA256 of "<t>.<raw body>"
-    keyed with the webhook secret, and a timestamp at most 30 minutes away
-    from now (older deliveries could be replays).
+    keyed with the webhook secret, and a timestamp at most 30 minutes old
+    (older deliveries could be replays) and at most 5 minutes ahead.
     """
 
     parsed_signature: tuple[int, str] | None = read_elevenlabs_signature(
@@ -176,7 +181,11 @@ def is_valid_elevenlabs_signature(
         return False
 
     timestamp, presented_digest = parsed_signature
-    if abs(now_unix_seconds - timestamp) > ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS:
+    age_seconds: int = now_unix_seconds - timestamp
+    if (
+        age_seconds > ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS
+        or -age_seconds > ELEVENLABS_FUTURE_SKEW_SECONDS
+    ):
         return False
 
     signed_message: bytes = str(timestamp).encode("ascii") + b"." + body

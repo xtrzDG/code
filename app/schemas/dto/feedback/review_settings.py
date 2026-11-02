@@ -47,13 +47,15 @@ class UpdateReviewSettingsCommand(ImmutableDTO):
 class FeedbackTemplatePreview(ImmutableDTO):
     """
     The feedback request in one language: the body to register as the
-    WhatsApp template (its one parameter {{1}} is the business name) and
-    how a customer reads it.
+    WhatsApp template (its one parameter {{1}} is the business name).
+
+    `example` is deprecated: the cabinet no longer shows the request as a
+    customer would read it; it is still filled for clients of `/v1`.
     """
 
     language: LanguageTag
     template_body: MessageText
-    example: MessageText
+    example: MessageText = Field(deprecated=True)
 
 
 class ReviewSettingsView(ImmutableDTO):

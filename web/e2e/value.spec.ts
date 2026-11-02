@@ -248,8 +248,9 @@ test("a business launched minutes ago reads 'ready', counted since its launch, i
     await expect(ready.getByText(messages.value.hero.trialUntil.split("{date}")[0]!)).toBeVisible();
     await expect(page.getByText(/0[.,]0\s*×/)).toHaveCount(0);
     await expect(page.getByText(messages.value.hero.returnHint.split("{price}")[0]!)).toHaveCount(0);
-    // A sample, labelled as one, and the chat page to try the assistant.
-    await expect(ready.getByText(messages.value.ready.sampleLabel, { exact: true })).toBeVisible();
+    // No made-up numbers: what the card will show, and the chat page to try the assistant.
+    await expect(ready.getByText(messages.value.ready.body)).toBeVisible();
+    await expect(page.locator("[data-value-sample]")).toHaveCount(0);
     await expect(ready.getByRole("img", { name: new RegExp(messages.value.ready.qrAlt.split("{link}")[0]!) })).toBeVisible();
     // The statistics wait for the first conversation in one card.
     await expect(page.getByText(messages.dashboard.statsEmptyTitle)).toBeVisible();

@@ -45,6 +45,7 @@ export const en = {
     requestId: "Request ID: {id}",
     typeToConfirm: "Type {text} to confirm",
     undo: "Undo",
+    deliveryProblem: "It did not get through. Contact support if this keeps happening.",
   },
   language: {
     label: "Interface language",
@@ -104,7 +105,7 @@ export const en = {
     sendByChannelInstead: "No code? Send by {channel} instead",
     changeDestination: "Use another number or e-mail",
     sessionExpired: "Your session has ended. Please sign in again.",
-    countryUnavailable: "not available yet",
+    countryUnavailable: "not available",
     botCheck: {
       title: "One more step",
       hint: "Confirm that you are not a robot, and we will send the code right away.",
@@ -125,7 +126,7 @@ export const en = {
       wrongCode: "The code is wrong or has expired. Check it or ask for a new one.",
       tooManyAttempts: "Too many attempts. Wait a little and ask for a new code.",
       resendTooSoon: "A code was just sent. Wait 30 seconds before asking for another one.",
-      countryRestricted: "Sign-up is not available in this country yet. You can sign in with e-mail instead.",
+      countryRestricted: "Sign-up is not available in this country. You can sign in with e-mail instead.",
       cannotReceive: "This number cannot receive codes. Use a mobile number or sign in with e-mail.",
     },
   },
@@ -142,7 +143,7 @@ export const en = {
     },
     status: {
       onboarding: "Filling in the profile",
-      testing: "Testing",
+      testing: "Setting up",
       live: "Live",
       paused: "Paused",
     },

@@ -15,17 +15,16 @@ import type { LoginSessionView } from "@/api/types";
 import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
 
 import { forgetAttribution } from "./attributionCookie";
-import {
-  dateFromMicroseconds,
-  localeCookieOptions,
-  pickResponseHeaders,
-} from "./backend";
+import { dateFromMicroseconds, pickResponseHeaders } from "./backend";
+import { localeCookieOptions, type HeaderReader } from "./cookieSecurity";
 import { setSessionCookie } from "./sessionCookie";
 
+/** `requestHeaders`: the browser's request (whether its cookies are Secure, cookieSecurity.ts). */
 export function openSession(
   session: LoginSessionView,
   upstreamHeaders: Headers,
   requestId: string,
+  requestHeaders: HeaderReader,
 ): NextResponse {
   const response = NextResponse.json(
     {
@@ -41,11 +40,12 @@ export function openSession(
     response,
     session.access_token,
     dateFromMicroseconds(session.expires_at),
+    requestHeaders,
   );
-  forgetAttribution(response);
+  forgetAttribution(response, requestHeaders);
   const accountLocale = matchLocale(session.user.locale);
   if (accountLocale) {
-    response.cookies.set(LOCALE_COOKIE, accountLocale, localeCookieOptions());
+    response.cookies.set(LOCALE_COOKIE, accountLocale, localeCookieOptions(requestHeaders));
   }
   return response;
 }

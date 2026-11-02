@@ -9,7 +9,7 @@ export const shareIt: Translation<typeof shareEn> = {
   pageLabel: "Pagina della chat",
   pageHint: "La tua chat su una pagina tutta sua: non serve un sito web. I clienti scrivono lì come in un'app di messaggistica.",
   webChatOff: "La pagina della chat usa la chat del sito. Attiva la chat del sito qui sopra e la pagina inizierà a funzionare.",
-  notConfigured: "La pagina della chat non è ancora configurata su questo server (manca l'indirizzo pubblico del pannello, CABINET_BASE_URL).",
+  notConfigured: "La pagina della chat non è disponibile al momento. Contatta l'assistenza.",
   open: "Apri",
   changeAddress: "Cambia indirizzo",
   addressLabel: "Indirizzo della pagina della chat",
@@ -43,7 +43,7 @@ export const shareIt: Translation<typeof shareEn> = {
   },
   gaps: {
     reconnect_channel: "Ricollega {channel} per ottenere il suo link: il suo indirizzo pubblico non è ancora noto.",
-    not_configured: "Non ancora disponibile su questo server.",
+    not_configured: "Non disponibile al momento. Contatta l'assistenza.",
   },
   showQr: "Codice QR per {link}",
   qrTitle: "Codice QR",

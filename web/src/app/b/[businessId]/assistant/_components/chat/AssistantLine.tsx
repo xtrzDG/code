@@ -1,5 +1,6 @@
 "use client";
 
+import { useOptionalBusiness } from "@/components/business/BusinessContext";
 import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
@@ -10,7 +11,8 @@ import { ToolCallList } from "./ToolCallList";
 /**
  * One answer of the assistant: the version that gave it, the options it
  * offered (buttons to tap while it is the last answer, as in a messenger),
- * what it did (badges) and the tools it called.
+ * what it did (badges) and, for platform admins only, the tools it
+ * called with their raw input and result.
  */
 export function AssistantLine({
   entry,
@@ -26,7 +28,9 @@ export function AssistantLine({
 }) {
   const { t, tp } = useI18n();
   const reply = entry.reply;
-  const toolCalls = entry.toolCalls ?? [];
+  // Raw tool names and JSON are for platform admins; owners read the badges.
+  const isPlatformAdmin = useOptionalBusiness()?.isPlatformAdmin ?? false;
+  const toolCalls = isPlatformAdmin ? (entry.toolCalls ?? []) : [];
   const badges: { tone: "warning" | "info" | "success"; label: string }[] = [];
   if (reply?.guard_verdict === "rewritten") {
     badges.push({ tone: "warning", label: t("assistant.chat.guardRewritten") });

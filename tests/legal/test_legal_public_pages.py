@@ -18,6 +18,8 @@ SELLER: dict[str, str] = {
     "SELLER_ADDRESS": "1 Rustaveli Ave, Tbilisi",
     "SELLER_EMAIL": "legal@workshop.example",
     "SELLER_TAX_ID": "405123456",
+    # Named outright: the development default seller is Italian.
+    "SELLER_COUNTRY_CODE": "GE",
 }
 
 

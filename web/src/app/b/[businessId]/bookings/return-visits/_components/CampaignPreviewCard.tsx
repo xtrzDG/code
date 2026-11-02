@@ -6,7 +6,7 @@ import { languageName } from "@/lib/format";
 
 import type { CampaignSettingsView } from "../_lib/returnVisitsModel";
 
-/** The message as customers read it, in each language of the business. */
+/** The message customers get, in each language of the business. */
 export function CampaignPreviewCard({ previews, className }: { previews: CampaignSettingsView["previews"]; className?: string }) {
   const { t, locale } = useI18n();
   return (

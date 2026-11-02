@@ -149,7 +149,7 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
         </form>
       )}
       <p className="px-4 pb-3 text-xs text-ink-subtle">
-        {t("publicDemo.sandbox")} · {t("publicDemo.privacy")}
+        {t("publicDemo.footer")}
         {left !== null && !isOut ? ` · ${tp("publicDemo.messagesLeft", left)}` : null}
       </p>
     </>

@@ -8,7 +8,7 @@ export const tunnelBusinessIt: Translation<typeof tunnelBusinessEn> = {
     title: "Come si chiama la tua attività?",
     text: "Creeremo un assistente che risponde ai tuoi clienti al posto tuo, giorno e notte.",
     name: "Nome dell'attività",
-    namePlaceholder: "Ad esempio, Salone Aurora",
+    namePlaceholder: "Ad esempio, Trattoria da Marco",
     kindTitle: "Di cosa ti occupi?",
     kindHint: "Scegli la voce più vicina. Determina cosa chiede, prenota e sa il tuo assistente.",
     kindFixed: "L'hai scelto quando hai creato l'assistente; non si può cambiare.",

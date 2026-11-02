@@ -40,7 +40,7 @@ export const calendarSyncEn = {
   google: {
     title: "Google Calendar",
     description: "Busy times of one Google calendar block this resource.",
-    notAvailable: "Google Calendar is not set up on this server.",
+    notAvailable: "Google Calendar is not available right now. Contact support.",
     connectFirst: "Connect Google Calendar first: the business's Google account is connected on the Channels page.",
     openChannels: "Open Channels",
     calendar: "Calendar",
@@ -124,7 +124,7 @@ export const calendarSyncEn = {
     timeout: "The booking system took too long to answer. Try again.",
     unreachable: "The booking system could not be reached. Try again.",
     provider_error: "The booking system answered with an error. Try again.",
-    public_address_missing: "This server has no public address for the calendar yet.",
+    public_address_missing: "The calendar link is not available right now. Contact support.",
   },
   integrations: {
     description: "Calendars and booking systems your business works with, and how they sync.",

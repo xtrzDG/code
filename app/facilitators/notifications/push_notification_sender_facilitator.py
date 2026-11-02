@@ -1,4 +1,5 @@
 import json
+import logging
 
 from app.contracts.notification_clients import WebPushClientContract
 from app.contracts.notifications import PushNotificationSenderContract
@@ -19,6 +20,14 @@ from app.schemas.typings.notifications.constrained_integers import (
     PushTimeToLiveSeconds,
 )
 from app.schemas.typings.notifications.strings import PushPayloadJson
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+# What the device's `last_error` says without push: the missing settings
+# are logged, not shown to the person.
+PUSH_NOT_AVAILABLE_TEXT: str = (
+    "Notifications on devices are not available right now. Contact support."
+)
 
 # A device that is off for longer gets the notification no more: by then
 # the cabinet shows what happened.
@@ -50,10 +59,12 @@ class PushNotificationSenderFacilitator(PushNotificationSenderContract):
         body: MessageText,
     ) -> None:
         if self._web_push_client is None:
-            raise DeliveryNotConfiguredError(
-                "WEB_PUSH_VAPID_PUBLIC_KEY, WEB_PUSH_VAPID_PRIVATE_KEY and "
-                "WEB_PUSH_VAPID_SUBJECT are not configured."
+            logger.warning(
+                "Device notification not sent: WEB_PUSH_VAPID_PUBLIC_KEY, "
+                "WEB_PUSH_VAPID_PRIVATE_KEY and WEB_PUSH_VAPID_SUBJECT are not "
+                "configured."
             )
+            raise DeliveryNotConfiguredError(PUSH_NOT_AVAILABLE_TEXT)
 
         subscription: PushSubscriptionDocument | None = (
             self._push_subscription_repo.get(business_id, recipient.subscription_id)

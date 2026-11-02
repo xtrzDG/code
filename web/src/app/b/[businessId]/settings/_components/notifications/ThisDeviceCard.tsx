@@ -4,6 +4,7 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { IconCheckCircle, IconSend } from "@/components/icons";
 import { MagneticButton } from "@/components/motion";
 import { Alert, Badge, Button } from "@/components/ui";
+import { DeliveryProblem } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 
 import type { PushDevice } from "../../_lib/notifications";
@@ -18,7 +19,7 @@ function DeviceDelivery({ device }: { device: PushDevice }) {
   const { t } = useI18n();
   const format = useBusinessFormat();
   if (device.last_error) {
-    return <p className="text-sm text-danger">{t("notifications.device.lastError", { error: device.last_error })}</p>;
+    return <DeliveryProblem error={device.last_error} message={t("notifications.device.lastError")} />;
   }
   return (
     <p className="text-sm text-ink-muted">

@@ -153,14 +153,14 @@ def test_voice_needs_its_settings_in_production() -> None:
     business = seed_georgian_restaurant(testbed)
     version = ready_version(testbed, business)
 
-    with pytest.raises(ConflictError, match="APP_BASE_URL, ELEVENLABS_API_KEY") as (
+    with pytest.raises(ConflictError, match="Phone calls are not available") as (
         refused
     ):
         testbed.publish(business.id, version.id)
 
-    assert reason_codes(refused.value) == [
-        ("voice_configuration", ["APP_BASE_URL", "ELEVENLABS_API_KEY"])
-    ]
+    # The refusal names no settings: the owner cannot set them.
+    assert reason_codes(refused.value) == [("voice_configuration", [])]
+    assert "ELEVENLABS_API_KEY" not in str(refused.value)
     assert testbed.voice_provisioner.specs == []
     assert_nothing_went_live(testbed, business, version)
 

@@ -8,4 +8,6 @@ export const changelogEn = {
   title: "What's new",
   description: "What changed in the cabinet lately, newest first.",
   newBadge: "New",
+  emptyTitle: "No updates to show",
+  emptyDescription: "Changes to the cabinet will be listed here, newest first.",
 } as const;

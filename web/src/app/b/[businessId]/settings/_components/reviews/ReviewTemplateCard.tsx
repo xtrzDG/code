@@ -11,7 +11,7 @@ type TemplatePreview = Schema<"FeedbackTemplatePreview">;
 /**
  * The request for feedback to register as a WhatsApp utility template, in
  * each language of the business: the body to paste into Meta Business
- * Manager (its parameter is the business name) and what a customer reads.
+ * Manager (its parameter is the business name).
  */
 export function ReviewTemplateCard({ previews }: { previews: readonly TemplatePreview[] }) {
   const { t, locale } = useI18n();
@@ -35,12 +35,6 @@ export function ReviewTemplateCard({ previews }: { previews: readonly TemplatePr
                   >
                     {preview.template_body}
                   </pre>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-ink-muted">{t("reviewSettings.template.example")}</dt>
-                <dd lang={preview.language} dir="auto" className="mt-1 text-ink">
-                  {preview.example}
                 </dd>
               </div>
             </dl>

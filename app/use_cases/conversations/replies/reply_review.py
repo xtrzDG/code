@@ -1,10 +1,13 @@
 """
-The reply guard's look at one reply text: invented values, unsupported
-policy and availability claims, and other people's contact details.
+The reply guard's look at one reply text: invented values and links,
+unsupported policy and availability claims, other people's contact details
+and quoted team notes.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from app.contracts.registries import CountryRegistryContract
 from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
@@ -39,11 +42,21 @@ from app.utilities.reply_guard.claim_candidates import find_claim_candidates
 from app.utilities.reply_guard.deposit_amount_check import (
     find_deposit_amount_mismatches,
 )
+from app.utilities.reply_guard.reply_links import find_foreign_links
+from app.utilities.reply_guard.team_note_quotes import (
+    find_quoted_notes,
+    find_transcript_notes,
+)
 
 
 @dataclass(frozen=True)
 class ReplyReview:
-    """What the guard found in one reply text (technical record)."""
+    """
+    What the guard found in one reply text (technical record). A link the
+    business did not publish is held back like an invented value, a quoted
+    team note like another person's details (the stored reasons stay the
+    ones the release before knows).
+    """
 
     unverified_values: list[UnverifiedReplyValue] = field(
         default_factory=list[UnverifiedReplyValue]
@@ -51,6 +64,16 @@ class ReplyReview:
     claim_findings: list[ClaimFinding] = field(default_factory=list[ClaimFinding])
     withheld_details: list[str] = field(default_factory=list[str])
     verifier_usage: list[VerifierUsage] = field(default_factory=list[VerifierUsage])
+    foreign_links: list[UnverifiedReplyValue] = field(
+        default_factory=list[UnverifiedReplyValue]
+    )
+    quoted_notes: list[str] = field(default_factory=list[str])
+
+    @property
+    def flagged_values(self) -> list[UnverifiedReplyValue]:
+        """The invented values and the foreign links, as stored and reported."""
+
+        return [*self.unverified_values, *self.foreign_links]
 
     @property
     def unsupported_claims(self) -> list[ClaimFinding]:
@@ -65,10 +88,10 @@ class ReplyReview:
         """Why the reply may not be sent as it is, most serious first."""
 
         reasons: list[ReplyGuardReason] = []
-        if self.withheld_details:
+        if self.withheld_details or self.quoted_notes:
             reasons.append(ReplyGuardReason.PERSONAL_DATA)
 
-        if self.unverified_values:
+        if self.flagged_values:
             reasons.append(ReplyGuardReason.UNVERIFIED_VALUES)
 
         if self.unsupported_claims:
@@ -93,9 +116,12 @@ class ReplyReview:
 class ReplyReviewer:
     """
     Reviews a reply text against the conversation's evidence: the numbers
-    guard (and, in a turn that asked a deposit, the deposit's amount), the
-    personal data check and, when a sentence states a policy or an
-    availability, the claim check's verifier model.
+    guard (and, in a turn that asked a deposit, the deposit's amount; the
+    country's emergency number is the platform's own), the links (the
+    business's, the platform's and well-known map and payment links), the
+    personal data check, the team notes the model was shown and, when a
+    sentence states a policy or an availability, the claim check's
+    verifier model.
     """
 
     def __init__(
@@ -103,10 +129,14 @@ class ReplyReviewer:
         message_repo: MessageRepoContract,
         contact_repo: ContactRepoContract,
         claim_check: ClaimCheckFacilitatorContract,
+        country_registry: CountryRegistryContract | None = None,
+        platform_hosts: Sequence[str] = (),
     ) -> None:
         self._message_repo: MessageRepoContract = message_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._claim_check: ClaimCheckFacilitatorContract = claim_check
+        self._country_registry: CountryRegistryContract | None = country_registry
+        self._platform_hosts: tuple[str, ...] = tuple(platform_hosts)
 
     def review(
         self, turn: PreparedTurn, progress: TurnProgress, reply_text: MessageText
@@ -118,7 +148,7 @@ class ReplyReviewer:
 
         text = MessageText(text_with_options(str(reply_text), progress.choices))
         evidence: ReplyEvidence = gather_reply_evidence(
-            self._message_repo, turn, progress
+            self._message_repo, turn, progress, self._platform_texts(turn)
         )
         candidates: list[ClaimCandidate] = find_claim_candidates(
             str(text), [*turn.version.languages, turn.reply_language]
@@ -150,7 +180,27 @@ class ReplyReviewer:
                 self._contact_repo, turn, str(text), evidence
             ),
             verifier_usage=[] if result.usage is None else [result.usage],
+            foreign_links=[
+                UnverifiedReplyValue(link)
+                for link in find_foreign_links(
+                    str(text), evidence.trusted, self._platform_hosts
+                )
+            ],
+            quoted_notes=find_quoted_notes(
+                str(text), find_transcript_notes(progress.transcript)
+            ),
         )
+
+    def _platform_texts(self, turn: PreparedTurn) -> list[str]:
+        """The platform's own lines a reply may repeat: the emergency number."""
+
+        if self._country_registry is None:
+            return []
+
+        number: str = str(
+            self._country_registry.get(turn.business.country_code).emergency_number
+        )
+        return [f"Emergency number: {number}"]
 
 
 def unique_values(

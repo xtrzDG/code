@@ -31,6 +31,7 @@ from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.notifications.staff_email import StaffEmail, build_staff_email
+from app.utilities.notifications.staff_providers import report_missing_provider
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -152,7 +153,7 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
         )
         if bot_token is None:
             raise DeliveryNotConfiguredError(
-                "TELEGRAM_PLATFORM_BOT_TOKEN is not configured."
+                str(report_missing_provider(ManagerContactChannel.TELEGRAM))
             )
 
         return self._telegram_client.send_message(
@@ -172,8 +173,7 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
         )
         if phone_number_id is None or template is None:
             raise DeliveryNotConfiguredError(
-                "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or "
-                "WHATSAPP_NOTIFICATION_TEMPLATE is not configured."
+                str(report_missing_provider(ManagerContactChannel.WHATSAPP))
             )
 
         recipient = ChannelUserId(str(contact.address).removeprefix("+"))
@@ -209,8 +209,7 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
         masked_address: str = mask_address(str(contact.address))
         if self._app_settings.environment is DeploymentEnvironment.PRODUCTION:
             raise DeliveryNotConfiguredError(
-                f"No {contact.channel.value} provider is configured for staff "
-                "notifications."
+                str(report_missing_provider(contact.channel))
             )
 
         logger.info(

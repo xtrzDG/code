@@ -94,5 +94,6 @@ export async function relayAndOpenSession(
     (await step.upstream.json()) as LoginSessionView,
     step.upstream.headers,
     step.requestId,
+    request.headers,
   );
 }

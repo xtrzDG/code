@@ -23,6 +23,7 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     parse_setting,
     read_integer,
     read_text,
+    read_typed_integer,
 )
 
 # The concept's choice: OpenAI gpt-5-mini in a project with EU data residency.
@@ -41,6 +42,12 @@ DEFAULT_JUDGE_MODEL_IDS: dict[str, tuple[str, str]] = {
     LlmProvider.OPENAI: ("claude-sonnet-5-5", "ANTHROPIC_API_KEY"),
     LlmProvider.ANTHROPIC: ("gpt-5-mini", "OPENAI_API_KEY"),
 }
+# The API key of each model provider: the SDKs read them from the
+# environment themselves; the settings only note which ones are set.
+LLM_PROVIDER_KEY_VARIABLES: dict[LlmProvider, str] = {
+    LlmProvider.OPENAI: "OPENAI_API_KEY",
+    LlmProvider.ANTHROPIC: "ANTHROPIC_API_KEY",
+}
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # One model call of a customer chat (retried once) may take this long, so a
 # slow provider costs a customer at most about a minute, not three.
@@ -54,6 +61,7 @@ class LlmSettingsSection(TypedDict):
     """The `AppSettings` fields of the language model."""
 
     llm_provider: LlmProvider
+    keyed_llm_providers: frozenset[LlmProvider]
     llm_model_id: LlmModelId
     llm_judge_model_id: LlmModelId
     llm_summary_model_id: LlmModelId | None
@@ -70,8 +78,10 @@ class LlmSettingsSection(TypedDict):
 
 
 def read_llm_provider(environment_variables: Mapping[str, str]) -> LlmProvider:
-    return LlmProvider(
-        read_text(environment_variables, "LLM_PROVIDER", DEFAULT_LLM_PROVIDER)
+    return parse_setting(
+        "LLM_PROVIDER",
+        read_text(environment_variables, "LLM_PROVIDER", DEFAULT_LLM_PROVIDER).lower(),
+        LlmProvider,
     )
 
 
@@ -89,6 +99,11 @@ def read_llm_settings(
     default_model_id: str = DEFAULT_MODEL_IDS[llm_provider]
     return LlmSettingsSection(
         llm_provider=llm_provider,
+        keyed_llm_providers=frozenset(
+            provider
+            for provider, key_variable in LLM_PROVIDER_KEY_VARIABLES.items()
+            if environment_variables.get(key_variable, "").strip() != ""
+        ),
         llm_model_id=LlmModelId(
             read_text(environment_variables, "LLM_MODEL_ID", default_model_id)
         ),
@@ -97,17 +112,21 @@ def read_llm_settings(
         llm_summary_model_id=optional_text(
             environment_variables, "LLM_SUMMARY_MODEL_ID", LlmModelId
         ),
-        llm_chat_effort=LlmEffort(
-            read_text(environment_variables, "LLM_CHAT_EFFORT", LlmEffort.LOW)
+        llm_chat_effort=parse_setting(
+            "LLM_CHAT_EFFORT",
+            read_text(environment_variables, "LLM_CHAT_EFFORT", LlmEffort.LOW),
+            LlmEffort,
         ),
-        llm_judge_effort=LlmEffort(
-            read_text(environment_variables, "LLM_JUDGE_EFFORT", LlmEffort.MEDIUM)
+        llm_judge_effort=parse_setting(
+            "LLM_JUDGE_EFFORT",
+            read_text(environment_variables, "LLM_JUDGE_EFFORT", LlmEffort.MEDIUM),
+            LlmEffort,
         ),
-        llm_max_output_tokens=LlmMaxOutputTokens(
-            read_integer(environment_variables, "LLM_MAX_OUTPUT_TOKENS", 16000)
+        llm_max_output_tokens=read_typed_integer(
+            environment_variables, "LLM_MAX_OUTPUT_TOKENS", 16000, LlmMaxOutputTokens
         ),
-        llm_tool_round_limit=LlmToolRoundLimit(
-            read_integer(environment_variables, "LLM_TOOL_ROUND_LIMIT", 8)
+        llm_tool_round_limit=read_typed_integer(
+            environment_variables, "LLM_TOOL_ROUND_LIMIT", 8, LlmToolRoundLimit
         ),
         llm_call_timeout_seconds=parse_setting(
             "LLM_CALL_TIMEOUT_SECONDS",
@@ -127,14 +146,18 @@ def read_llm_settings(
             ),
             LlmConcurrencyLimit,
         ),
-        openai_base_url=PublicBaseUrl(
-            read_text(environment_variables, "OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)
+        openai_base_url=parse_setting(
+            "OPENAI_BASE_URL",
+            read_text(
+                environment_variables, "OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL
+            ),
+            PublicBaseUrl,
         ),
         openai_project_id=optional_text(
             environment_variables, "OPENAI_PROJECT_ID", PlatformIdentifier
         ),
-        autotest_turn_limit=AutotestTurnLimit(
-            read_integer(environment_variables, "AUTOTEST_TURN_LIMIT", 4)
+        autotest_turn_limit=read_typed_integer(
+            environment_variables, "AUTOTEST_TURN_LIMIT", 4, AutotestTurnLimit
         ),
         scripted_llm_latency_ms=parse_setting(
             "SCRIPTED_LLM_LATENCY_MS",

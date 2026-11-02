@@ -113,13 +113,20 @@ def test_a_whatsapp_template_parameter_is_one_line() -> None:
     )
 
 
-def test_without_a_provider_in_production_nothing_is_sent() -> None:
+def test_without_a_provider_in_production_nothing_is_sent(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     production = ChannelsTestbed(build_settings(APP_ENV="production"))
 
-    with pytest.raises(DeliveryNotConfiguredError, match="No sms provider"):
+    with pytest.raises(
+        DeliveryNotConfiguredError,
+        match=r"^SMS notifications are not available right now\. Contact support\.$",
+    ):
         sender(production).send(
-            contact(ManagerContactChannel.SMS, "+995555000222"), BRIEF, None
+            contact(ManagerContactChannel.SMS, "+393330001222"), BRIEF, None
         )
+    # The missing settings are for the operator's log, not for the owner.
+    assert "TWILIO_ACCOUNT_SID" in caplog.text
     assert mask_address("ab") == "***"
 
 

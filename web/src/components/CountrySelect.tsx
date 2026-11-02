@@ -7,7 +7,7 @@ import { countryOptionLabel, isCountryAvailable } from "@/lib/countries";
 import { Select, type SelectProps } from "./ui/controls";
 
 /**
- * Native country picker: "🇬🇪 Georgia (+995)". Countries where sign-up is
+ * Native country picker: "🇮🇹 Italy (+39)". Countries where sign-up is
  * not available are listed but disabled.
  */
 export function CountrySelect({

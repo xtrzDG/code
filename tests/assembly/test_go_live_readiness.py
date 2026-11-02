@@ -1,4 +1,7 @@
+import logging
 from typing import Any
+
+import pytest
 
 from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheckCode
 from app.schemas.constants.billing import PlanKey
@@ -95,7 +98,9 @@ def test_every_missing_condition_is_listed_with_its_details() -> None:
     )
 
 
-def test_voice_versions_check_the_voice_settings() -> None:
+def test_voice_versions_check_the_voice_settings(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     testbed = AssemblyTestbed()
     business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
     version = testbed.assemble(business.id, run_autotests=True)
@@ -104,7 +109,8 @@ def test_voice_versions_check_the_voice_settings() -> None:
     testbed.voice_provisioner.missing_settings = [
         EnvironmentVariableName("ELEVENLABS_API_KEY")
     ]
-    unconfigured = readiness(testbed, business.id, version.id)
+    with caplog.at_level(logging.INFO):
+        unconfigured = readiness(testbed, business.id, version.id)
 
     assert summarize(configured.checks)[-1] == (
         "voice_configuration",
@@ -113,12 +119,18 @@ def test_voice_versions_check_the_voice_settings() -> None:
         [],
     )
     # Development: a warning, the version may still go live (without voice).
+    # The owner reads no setting names; they are logged for the operator.
     assert summarize(unconfigured.checks)[-1] == (
         "voice_configuration",
         False,
         False,
-        ["ELEVENLABS_API_KEY"],
+        [],
     )
+    assert str(unconfigured.checks[-1].message) == (
+        "Phone calls are not available right now, so this version goes live "
+        "without answering calls."
+    )
+    assert "ELEVENLABS_API_KEY" in caplog.text
     assert unconfigured.is_ready is True
 
 
@@ -135,6 +147,10 @@ def test_missing_voice_settings_block_going_live_in_production() -> None:
     voice = result.checks[-1]
     assert voice.code is GoLiveCheckCode.VOICE_CONFIGURATION
     assert (voice.is_ok, voice.is_blocking) == (False, True)
+    assert str(voice.message) == (
+        "Phone calls are not available right now. Contact support."
+    )
+    assert "ELEVENLABS_WEBHOOK_SECRET" not in str(voice.model_dump())
     assert result.is_ready is False
 
 

@@ -13,7 +13,7 @@ I tuoi clienti scrivono al tuo bot Telegram, con il nome e la foto della tua att
 ## Collegare
 
 1. Apri **@BotFather** in Telegram e invia `/newbot`.
-2. Scegli un nome (quello della tua attività) e un nome utente che finisca con `bot`, per esempio `cafe_batumi_bot`.
+2. Scegli un nome (quello della tua attività) e un nome utente che finisca con `bot`, per esempio `trattoria_marco_bot`.
 3. BotFather ti manda una chiave (token) simile a `123456789:AAH…`. Copiala.
 4. Nel pannello apri **Assistente → [Canali](cabinet:assistant/channels)**, premi **Collega** sulla scheda di Telegram e incolla la chiave.
 

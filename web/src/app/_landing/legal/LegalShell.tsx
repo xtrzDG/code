@@ -10,9 +10,10 @@ import { LEGAL_PAGES, legalPath, localeHomePath, type LegalPage } from "@/lib/pu
 
 import { LandingFooter } from "../LandingFooter";
 import { LandingHeader } from "../LandingHeader";
+import { legalPageLabel } from "./legalLabels";
 
 /**
- * The frame of the public legal and contact pages: the site's header and
+ * The frame of the public legal, accessibility and contact pages: the site's header and
  * footer, the list of the documents (a row on phones, a column beside the
  * text on wide screens) and, while the texts are drafts, a banner that
  * says so above the text.
@@ -50,7 +51,7 @@ export function LegalShell({
                       item === page ? "bg-accent-soft font-medium text-accent-ink" : "text-ink-muted hover:bg-surface-muted hover:text-ink",
                     )}
                   >
-                    {t(`legalPages.nav.${item}`)}
+                    {t(legalPageLabel(item))}
                   </Link>
                 </li>
               ))}

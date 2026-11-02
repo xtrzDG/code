@@ -13,4 +13,7 @@ from app.schemas.typings.localization.constrained_strings import CountryCode
 STANDARD_VAT_RATES: Mapping[CountryCode, TaxRateBasisPoints] = {
     # Tax Code of Georgia, article 169: 18 % on taxable supplies.
     CountryCode("GE"): TaxRateBasisPoints(1800),
+    # Italy, DPR 633/1972, article 16: the ordinary rate (aliquota
+    # ordinaria) of 22 % on supplies of services.
+    CountryCode("IT"): TaxRateBasisPoints(2200),
 }

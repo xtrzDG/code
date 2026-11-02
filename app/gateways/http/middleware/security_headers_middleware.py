@@ -9,10 +9,17 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 type ErrorHandler = Callable[[Request, Exception], Awaitable[Response]]
 
-STRICT_TRANSPORT_SECURITY: str = "max-age=63072000; includeSubDomains"
+# The cabinet's own value (web/next.config.ts): two years, subdomains,
+# ready for the browsers' preload list.
+STRICT_TRANSPORT_SECURITY: str = "max-age=63072000; includeSubDomains; preload"
 # The API answers JSON, audio and two static files: nothing may frame it,
-# and a JSON answer opened as a page runs nothing.
-API_CONTENT_SECURITY_POLICY: str = "default-src 'none'; frame-ancestors 'none'"
+# and a JSON answer opened as a page runs nothing, loads nothing and
+# cannot point its relative links elsewhere.
+API_CONTENT_SECURITY_POLICY: str = (
+    "default-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+)
+# A page of the API opened in a window keeps no handle on its opener.
+CROSS_ORIGIN_OPENER_POLICY: str = "same-origin"
 # The interactive API description (outside production only) loads its
 # script and styles from a CDN, so it keeps no policy of its own.
 API_DESCRIPTION_PATHS: frozenset[str] = frozenset(
@@ -25,11 +32,13 @@ class SecurityHeadersMiddleware:
     """
     Adds what a header review expects to every answer that does not set it
     itself: `X-Content-Type-Options: nosniff`, `Referrer-Policy:
-    no-referrer`, `X-Frame-Options: DENY` with a `frame-ancestors 'none'`
-    policy, `Cache-Control: no-store` on the API routes (their answers are
-    personal or change at once; routes that may be cached say so, like the
-    widget script), and in production `Strict-Transport-Security` (two
-    years, subdomains included).
+    no-referrer`, `Cross-Origin-Opener-Policy: same-origin`,
+    `X-Frame-Options: DENY` with a `default-src 'none'; base-uri 'none';
+    frame-ancestors 'none'` policy, `Cache-Control: no-store` on the API
+    routes (their answers are personal or change at once; routes that may
+    be cached say so, like the widget script), and in production
+    `Strict-Transport-Security` (two years, subdomains included, preload:
+    the cabinet's value).
     """
 
     def __init__(self, app: ASGIApp, is_https_only: bool) -> None:
@@ -61,6 +70,7 @@ def add_security_headers(
 ) -> None:
     headers.setdefault("X-Content-Type-Options", "nosniff")
     headers.setdefault("Referrer-Policy", "no-referrer")
+    headers.setdefault("Cross-Origin-Opener-Policy", CROSS_ORIGIN_OPENER_POLICY)
     if path not in API_DESCRIPTION_PATHS:
         headers.setdefault("X-Frame-Options", "DENY")
         headers.setdefault("Content-Security-Policy", API_CONTENT_SECURITY_POLICY)

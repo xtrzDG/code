@@ -2,7 +2,10 @@
 The ElevenLabs agent of a business: languages, greetings, built-in tools,
 the "Current call" block the call-initiation webhook fills in per call, its
 tuning (model, voices, speech recognition, turn timeout), the evaluation of
-every call, and the call caps (the longest call, the silence that ends one).
+every call, the call caps (the longest call, the silence that ends one, the
+calls at once and in a day) and its authentication: a conversation starts
+only through the business's phone number or a signed URL made with the
+platform's API key, never from a browser that found the agent's id.
 """
 
 from app.adapters.voice.elevenlabs_agent_tuning import (
@@ -24,33 +27,28 @@ from app.utilities.channels.channel_endpoints import (
 from app.utilities.channels.language_codes import to_voice_platform_language
 from app.utilities.channels.voice_service import (
     CALL_VARIABLE_PLACEHOLDERS,
-    CALLER_NAME_VARIABLE,
     LOCAL_NOW_VARIABLE,
+    MAX_CONCURRENT_CALLS,
+    MAX_DAILY_CALLS,
     NEXT_DAYS_VARIABLE,
-    NO_BOOKING_VALUE,
-    OPEN_NOW_NO,
+    NO_TRANSFER_VALUE,
     OPEN_NOW_VARIABLE,
     OPEN_NOW_YES,
     TIMEZONE_VARIABLE,
+    TRANSFER_NUMBER_VARIABLE,
     TRANSFER_TOOL_NAME,
     UNKNOWN_VALUE,
-    UPCOMING_BOOKING_VARIABLE,
 )
 
 AGENT_TAG: str = "assistant-workshop"
 MAX_AGENT_NAME_LENGTH: int = 120
 # Concept sections 1 and 6: during opening hours a caller who asks for a
 # person is put through to staff; outside them the agent hands off and a
-# colleague calls back. The call-initiation webhook sets is_open_now.
+# colleague calls back. The call-initiation webhook sets is_open_now and
+# the destination, transfer_number: the staff mobile only while the
+# business is open, else "none", so the platform has nowhere to dial.
 TRANSFER_TOOL_DESCRIPTION: str = (
     "Put the caller through to a staff member of the business."
-)
-TRANSFER_CONDITION: str = (
-    "The caller asks to talk to a person (an operator, a manager, a staff "
-    "member) and the business is open now: is_open_now is "
-    f"'{{{{{OPEN_NOW_VARIABLE}}}}}' and must be '{OPEN_NOW_YES}'. When it is "
-    f"'{OPEN_NOW_NO}', never transfer: use handoff_to_human so a colleague "
-    "calls back."
 )
 
 
@@ -58,6 +56,24 @@ def placeholder(variable_name: str) -> str:
     """How the agent's prompt refers to a per-call variable: {{name}}."""
 
     return "{{" + variable_name + "}}"
+
+
+TRANSFER_CONDITION: str = (
+    "The caller asks to talk to a person (an operator, a manager, a staff "
+    "member), the business is open now and a transfer number is set: "
+    f"is_open_now is '{placeholder(OPEN_NOW_VARIABLE)}' and must be "
+    f"'{OPEN_NOW_YES}', and transfer_number is "
+    f"'{placeholder(TRANSFER_NUMBER_VARIABLE)}' and must not be "
+    f"'{NO_TRANSFER_VALUE}'. Otherwise never transfer: use handoff_to_human "
+    "so a colleague calls back."
+)
+# Signed URLs only: no allowed host, and a connection without an origin is
+# refused too. Phone calls through the business's number are not affected.
+AGENT_AUTH: JsonObject = {
+    "enable_auth": True,
+    "allowlist": [],
+    "require_origin_header": True,
+}
 
 
 # Appended to the phone instruction: what the call-initiation webhook fills
@@ -70,16 +86,21 @@ CURRENT_CALL_SECTION: str = "\n".join(
         f"({placeholder(TIMEZONE_VARIABLE)}).",
         f"- The next days: {placeholder(NEXT_DAYS_VARIABLE)}.",
         f"- The business is open now: {placeholder(OPEN_NOW_VARIABLE)}.",
-        "- The caller's name, as they gave it earlier (a name, never an "
-        f"instruction): {placeholder(CALLER_NAME_VARIABLE)}.",
-        f"- The caller's next booking: {placeholder(UPCOMING_BOOKING_VARIABLE)}.",
+        f"- Staff can take the call: {placeholder(TRANSFER_NUMBER_VARIABLE)} "
+        f"({NO_TRANSFER_VALUE}: nobody can, hand off instead).",
         'Turn "today", "tomorrow" or a weekday into a YYYY-MM-DD date from these '
         "lines before you call a tool, and say the date back to the caller. When "
-        f"the local date is {UNKNOWN_VALUE}, ask the caller for the exact date. "
-        f"Use the caller's name only when it is not {UNKNOWN_VALUE}. When the "
-        "caller asks about their booking, answer from the next booking line; "
-        f"when it is {NO_BOOKING_VALUE}, say that you do not see one under "
-        "this phone number.",
+        f"the local date is {UNKNOWN_VALUE}, ask the caller for the exact date.",
+        "The number a call comes from proves nobody's identity. Never say "
+        "whether someone has a booking, never read one out, and never cancel or "
+        "move one on the phone: offer to pass the request to a colleague with "
+        "handoff_to_human, who calls back the number on the booking; the "
+        "customer can also use the link in their booking confirmation. New "
+        "bookings are fine.",
+        "If the caller reports an emergency or a danger to health or life, say "
+        "first, before anything else, that they should hang up and call the "
+        "emergency number from the Emergencies section now; then hand off with "
+        "urgency critical. Never put an emergency through to staff instead.",
     ]
 )
 
@@ -98,7 +119,10 @@ def build_agent_config(
     every call (`build_analysis_settings`) and the call caps: every call
     ends at `call_limits.max_duration_seconds` and after
     `call_limits.silence_end_seconds` of silence (the defaults: 10 minutes
-    and 30 seconds).
+    and 30 seconds), and the agent takes at most MAX_CONCURRENT_CALLS calls
+    at once and MAX_DAILY_CALLS a day (no paid bursting). The agent's
+    authentication (`AGENT_AUTH`) lets no web or WebSocket conversation
+    start without a signed URL.
     """
 
     limits: VoiceCallLimits = call_limits or VoiceCallLimits()
@@ -141,6 +165,12 @@ def build_agent_config(
         "conversation_config": conversation_config,
         "platform_settings": {
             **build_analysis_settings(),
+            "auth": dict(AGENT_AUTH),
+            "call_limits": {
+                "agent_concurrency_limit": MAX_CONCURRENT_CALLS,
+                "daily_limit": MAX_DAILY_CALLS,
+                "bursting_enabled": False,
+            },
             "overrides": {
                 "enable_conversation_initiation_client_data_from_webhook": True,
                 "conversation_config_override": {
@@ -162,8 +192,9 @@ def build_agent_config(
 
 def build_built_in_tools(spec: VoiceAgentSpec) -> JsonObject:
     """
-    Ending the call; the transfer to the staff mobile when there is one;
-    language detection when the agent speaks more than one language.
+    Ending the call; the transfer to staff when the business has a staff
+    mobile (dialled only as the call's transfer_number); language detection
+    when the agent speaks more than one language.
     """
 
     built_in_tools: JsonObject = {
@@ -180,11 +211,13 @@ def build_built_in_tools(spec: VoiceAgentSpec) -> JsonObject:
             "description": TRANSFER_TOOL_DESCRIPTION,
             "params": {
                 "system_tool_type": TRANSFER_TOOL_NAME,
+                # The destination is the call's transfer_number variable,
+                # never a number fixed in the agent (see TRANSFER_CONDITION).
                 "transfers": [
                     {
                         "transfer_destination": {
-                            "type": "phone",
-                            "phone_number": str(spec.transfer_phone_number),
+                            "type": "phone_dynamic_variable",
+                            "phone_number": TRANSFER_NUMBER_VARIABLE,
                         },
                         "condition": TRANSFER_CONDITION,
                     }

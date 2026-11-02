@@ -24,19 +24,24 @@ function originOf(value: string | null | undefined): string | null {
 /** A host name with an optional port, nothing else ("app.example.com:8443"). */
 const HOST_PATTERN = /^[A-Za-z0-9.-]+(?::[0-9]{1,5})?$/;
 
+/**
+ * The origin the request came in on, as the cabinet's own proxy reports it
+ * (X-Forwarded-Host and -Proto, else Host); null for a host that is not a
+ * plain host name.
+ */
+export function requestOrigin(requestHeaders: Pick<Headers, "get">): string | null {
+  const host = (requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "").split(",")[0]?.trim() ?? "";
+  if (!HOST_PATTERN.test(host)) {
+    return null;
+  }
+  const forwardedProto = requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto === "https" || forwardedProto === "http" ? forwardedProto : "http";
+  return `${protocol}://${host.toLowerCase()}`;
+}
+
 export function siteOrigin(
   requestHeaders: Pick<Headers, "get">,
   env: Record<string, string | undefined> = process.env,
 ): string {
-  const configured = originOf(env.SITE_URL);
-  if (configured) {
-    return configured;
-  }
-  const host = (requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "").split(",")[0]?.trim() ?? "";
-  if (!HOST_PATTERN.test(host)) {
-    return FALLBACK_ORIGIN;
-  }
-  const forwardedProto = requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const protocol = forwardedProto === "https" || forwardedProto === "http" ? forwardedProto : "http";
-  return `${protocol}://${host}`;
+  return originOf(env.SITE_URL) ?? requestOrigin(requestHeaders) ?? FALLBACK_ORIGIN;
 }

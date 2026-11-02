@@ -37,8 +37,6 @@ export const valueEn = {
     title: "Your assistant is ready",
     lead: "Its first answers will show up here",
     body: "As soon as customers write or call, this card shows the bookings and money the assistant brought and the staff time it saved.",
-    sampleLabel: "Sample",
-    sampleCaption: "What this card will show (sample numbers)",
     shareTitle: "Try it yourself",
     shareText: "Open your chat page on a phone by scanning the code, or send the link to customers.",
     copy: "Copy link",

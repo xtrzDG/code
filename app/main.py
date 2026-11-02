@@ -37,7 +37,7 @@ from app.gateways.process_lifecycle import (
     release_process_resources,
     settle_startup_heap,
 )
-from app.gateways.startup_checks import check_database_roles, check_processor_uses
+from app.gateways.startup_checks import run_startup_checks
 from app.gateways.telemetry_lifecycle import (
     API_SERVICE_NAME,
     finish_telemetry,
@@ -111,8 +111,10 @@ def build_application(app_container: AppContainer) -> FastAPI:
 def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: size the request threads (THREADPOOL_SIZE), warm the country
-    catalog, check the DPA text, the sub-processor list and the database
-    roles, report the login code channels, seed the demo businesses
+    catalog, check production's settings (`run_startup_checks`: production
+    refuses unset, test or development values), the sub-processor list, the
+    database roles and the DPA text, report the login code channels, seed the
+    demo businesses
     (SEED_DEMO_DATA, once), point the platform bot at this API, start the
     trace flush, the pipeline watchdog and (EMBEDDED_WORKER) the worker,
     then, warmed up and before the first request, freeze the startup heap
@@ -127,9 +129,8 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         del http_application
         set_request_thread_limit(app_container)
         app_container.registries.country_registry().list_all()
+        run_startup_checks(app_container)
         check_dpa_document(app_container)
-        check_processor_uses(app_container)
-        check_database_roles(app_container)
         report_login_code_channels(app_container)
         seed_demo_data(app_container)
         configure_platform_bot(app_container)

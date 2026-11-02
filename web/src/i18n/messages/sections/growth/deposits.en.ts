@@ -83,7 +83,7 @@ export const depositsEn = {
     refundHours: "Refund when cancelled, hours before the visit",
     refundHint: "Cancelled earlier: you return the deposit. Later, or a no-show: the deposit stays with you.",
     manual:
-      "Payments are confirmed by hand: when the money is in your merchant account, open the booking and press “Paid”. Confirmation straight from the payment provider is not connected.",
+      "You confirm payments yourself: when the money is in your merchant account, open the booking and press “Paid”. Until then the place is held for the wait set above.",
     errors: {
       hold: "Enter minutes from 15 to 1440.",
       refund: "Enter hours from 0 to 720.",
@@ -92,7 +92,7 @@ export const depositsEn = {
   pages: {
     title: "Payment pages",
     description:
-      "Your own pages where customers pay: Flitt, Stripe Payment Links, TBC, Bank of Georgia or any provider with a link, in any country and currency.",
+      "Your own pages where customers pay: Flitt, Stripe Payment Links, Satispay, Nexi or any provider with a link, in any country and currency.",
     empty: "No payment page yet",
     emptyDescription: "Add the link of your payment page. The assistant sends it with the deposit.",
     add: "Add the page",

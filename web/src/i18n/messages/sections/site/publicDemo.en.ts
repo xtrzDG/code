@@ -4,7 +4,7 @@ export const publicDemoEn = {
   label: "Live demo of the assistant",
   badge: "Live demo",
   sampleBadge: "Example",
-  sandbox: "Sandbox: nothing is booked for real",
+  footer: "Demo: nothing is booked for real · please don't share personal details",
   pick: "Kind of business",
   place: "{niche} · {city}",
   greeting: "Hello! I'm the AI assistant of {business}. Ask me what your customers would ask: prices, opening hours, a booking.",
@@ -36,6 +36,5 @@ export const publicDemoEn = {
     offline: "No connection. Check the internet and try again.",
     failed: "The message did not go through. Try again.",
   },
-  privacy: "A public demo: please do not share personal details.",
   cta: "Create my own",
 } as const;

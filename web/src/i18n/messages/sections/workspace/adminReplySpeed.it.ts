@@ -10,7 +10,7 @@ export const adminReplySpeedIt: Translation<typeof adminReplySpeedEn> = {
   p95: "19 risposte su 20 entro",
   replies: "Risposte misurate",
   slowNote: "Più di una risposta su venti ha richiesto oltre 15 secondi. Controlla il fornitore del modello e gli strumenti dell'attività.",
-  empty: "Nessuna risposta misurata negli ultimi 7 giorni. Le chat vengono misurate da questo rilascio in poi; le chiamate e la chat di prova no.",
+  empty: "Nessuna risposta misurata negli ultimi 7 giorni. Si misurano le risposte in chat; le chiamate e la chat di prova no.",
   tableCaption: "Velocità di risposta per canale",
   channel: "Canale",
   channelReplies: "Risposte",

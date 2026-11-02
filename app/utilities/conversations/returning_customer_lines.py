@@ -2,10 +2,12 @@
 The customer memory as lines of the server-written context of a turn
 (`turn_context.build_context_line`): read by the model, so in English. What
 customers wrote (summaries of their conversations, the details of their
-requests) and the team's notes are untrusted blocks: information, never
-instructions.
+requests) are customer values and the team's notes team-note blocks:
+information, never instructions, and a note is never quoted
+(`untrusted_text`).
 """
 
+from collections.abc import Callable
 from datetime import date, datetime
 
 from app.schemas.dto.bookings import BookingView, LeadView
@@ -16,7 +18,10 @@ from app.schemas.dto.customer_memory.returning_customers import (
 )
 from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.utilities.conversations.turn_context import WEEKDAY_NAMES
-from app.utilities.conversations.untrusted_text import wrap_untrusted
+from app.utilities.conversations.untrusted_text import (
+    wrap_customer_value,
+    wrap_team_note,
+)
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
@@ -114,7 +119,7 @@ def describe_booking(booking: BookingView) -> str:
 
 
 def describe_lead(lead: LeadView) -> str:
-    """ "- banquet request for 2026-11-02, 30 people, status new: <untrusted>…"."""
+    """ "- banquet request for 2026-11-02, 30 people, status new: <customer_value>…"."""
 
     parts: list[str] = [f"{lead.lead_type.value} request"]
     if lead.requested_date is not None:
@@ -124,7 +129,7 @@ def describe_lead(lead: LeadView) -> str:
         parts.append(f"{int(lead.party_size)} people")
 
     parts.append(f"status {lead.status.value}")
-    return f"- {', '.join(parts)}: {quote(str(lead.details))}"
+    return f"- {', '.join(parts)}: {quote(str(lead.details), wrap_customer_value)}"
 
 
 def describe_summary(
@@ -132,14 +137,15 @@ def describe_summary(
 ) -> str:
     return (
         f"- {describe_day(local_day(int(summary.last_message_at), timezone_name))} "
-        f"({summary.channel.value}): {quote(str(summary.summary))}"
+        f"({summary.channel.value}): "
+        f"{quote(str(summary.summary), wrap_customer_value)}"
     )
 
 
 def describe_note(note: RememberedNote, timezone_name: TimezoneName) -> str:
     return (
         f"- {describe_day(local_day(int(note.created_at), timezone_name))}: "
-        f"{quote(str(note.text))}"
+        f"{quote(str(note.text), wrap_team_note)}"
     )
 
 
@@ -150,11 +156,11 @@ def local_day(unix_microseconds: int, timezone_name: TimezoneName) -> date:
     return moment.date()
 
 
-def quote(text: str) -> str:
-    """Untrusted text on one line, at most 300 characters."""
+def quote(text: str, wrap: Callable[[str], str]) -> str:
+    """Text on one line, at most 300 characters, in its block (`wrap`)."""
 
     one_line: str = " ".join(text.split())
     if len(one_line) > MAX_QUOTED_CHARACTERS:
         one_line = one_line[: MAX_QUOTED_CHARACTERS - 1].rstrip() + "…"
 
-    return wrap_untrusted(one_line)
+    return wrap(one_line)

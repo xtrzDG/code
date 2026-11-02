@@ -9,28 +9,33 @@ import {
   REQUEST_ID_HEADER,
   buildUpstreamHeaders,
   callBackend,
-  isCrossSiteRequest,
   jsonError,
   pickResponseHeaders,
   sanitizeRequestId,
 } from "./backend";
 import { BodyTooLargeError, bodyLimitFor, isDeclaredTooLarge, limitBodyStream, payloadTooLargeMessage } from "./bodyLimits";
+import { isCrossSiteRequest } from "./sameOrigin";
 import { clearSessionCookie, readSessionToken } from "./sessionCookie";
 
 const BODILESS_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
 const BODILESS_STATUSES: ReadonlySet<number> = new Set([101, 204, 205, 304]);
 
-/** Request id, cross-site check and API headers shared by the route handlers. */
+/**
+ * Request id, cross-site check (sameOrigin.ts: writes only from the site's
+ * own pages, audited exports never for another site; `backendPath` names
+ * the API path a relayed request goes to) and API headers shared by the
+ * route handlers.
+ */
 export function prepareBackendCall(
   request: NextRequest,
-  options: { useSession: boolean },
+  options: { useSession: boolean; backendPath?: string },
 ): { requestId: string; headers: Headers; token: string | undefined } | { refusal: Response } {
   const requestId = sanitizeRequestId(request.headers.get(REQUEST_ID_HEADER));
-  if (isCrossSiteRequest(request.method, request.headers)) {
+  if (isCrossSiteRequest(request.method, request.headers, options.backendPath ?? null)) {
     return { refusal: jsonError(403, "forbidden_origin", "Cross-site request refused.", requestId) };
   }
 
-  const token = options.useSession ? readSessionToken(request.cookies) : undefined;
+  const token = options.useSession ? readSessionToken(request.cookies, request.headers) : undefined;
   const headers = buildUpstreamHeaders(request.headers, {
     token,
     locale: matchLocale(request.cookies.get(LOCALE_COOKIE)?.value),
@@ -51,7 +56,7 @@ export async function relayToBackend(
   backendPath: string,
   options: { useSession: boolean },
 ): Promise<Response> {
-  const prepared = prepareBackendCall(request, options);
+  const prepared = prepareBackendCall(request, { ...options, backendPath });
   if ("refusal" in prepared) {
     return prepared.refusal;
   }

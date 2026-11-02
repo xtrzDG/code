@@ -60,7 +60,7 @@ export const dataTasksIt: Translation<typeof dataTasksEn> = {
   retry: "Riesegui",
   retried: "L'attività ripercorre di nuovo la sua tabella.",
   indexing: {
-    title: "Indicizzazione in corso",
-    body: "Un aggiornamento dei dati successivo all'ultima release è ancora in corso, quindi per qualche minuto alcune voci meno recenti potrebbero mancare da questo elenco.",
+    title: "Aggiornamento della ricerca",
+    body: "Per qualche minuto alcune voci meno recenti potrebbero mancare da questo elenco.",
   },
 };

@@ -35,6 +35,10 @@ from app.use_cases.conversations.tools.tool_phone_numbers import (
     require_verified_phone,
     resolve_phone,
 )
+from app.use_cases.conversations.tools.tool_texts import (
+    given_booking_note,
+    given_contact_name,
+)
 from app.utilities.conversations.business_today import (
     BusinessToday,
     describe_past_date,
@@ -99,7 +103,7 @@ def run_create_booking(
             business_id=context.business_id,
             contact_id=context.contact_id,
             conversation_id=context.conversation_id,
-            contact_name=tool_input.name,
+            contact_name=given_contact_name(tool_input.name),
             contact_phone_number=resolve_phone(
                 phone_number_parser, tool_input.phone, context
             ),
@@ -111,7 +115,7 @@ def run_create_booking(
             duration_minutes=tool_input.duration_minutes,
             nights=tool_input.nights,
             party_size=tool_input.party_size,
-            notes=tool_input.notes,
+            notes=given_booking_note(tool_input.notes),
             source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,

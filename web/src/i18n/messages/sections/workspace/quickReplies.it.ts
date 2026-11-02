@@ -39,11 +39,6 @@ export const quickRepliesIt: Translation<typeof quickRepliesEn> = {
     needOneText: "Scrivi il testo in almeno una lingua.",
     insert: "Inserisci",
     insertLabel: "Inserisci {variable} nel testo in {language}",
-    preview: "Anteprima",
-    sample: {
-      name: "Giulia",
-      bookingTime: "sab, 19:30",
-    },
     save: "Salva",
     saving: "Salvataggio…",
     cancel: "Annulla",

@@ -11,7 +11,7 @@ export type DpaText = Schema<"DpaDocumentView">;
 export type SupportContacts = Schema<"SupportContactsView">;
 
 /** The texts a public legal page renders from GET /v1/legal/{kind} (the DPA has its own route). */
-export type LegalTextKind = "terms" | "privacy" | "security";
+export type LegalTextKind = "terms" | "privacy" | "cookies" | "security";
 
 /** Drafts or final, the DPA in force and the operator (null: the API could not answer). */
 export async function loadLegalOverview(): Promise<LegalOverview | null> {

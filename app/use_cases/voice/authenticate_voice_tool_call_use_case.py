@@ -9,9 +9,16 @@ from app.schemas.dto.voice_webhooks import (
     VoiceToolCallArguments,
     VoiceToolWebhookRequest,
 )
-from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
+    NotFoundError,
+)
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
+)
+from app.utilities.channels.voice_service import (
+    CALLER_ID_BOUND_TOOLS,
+    CALLER_ID_REFUSAL,
 )
 from app.utilities.channels.voice_webhook_auth import require_voice_webhook_access
 
@@ -27,6 +34,11 @@ class AuthenticateVoiceToolCallUseCase(
     business comes from the verified credentials, never from the model's
     arguments; the caller id is read as a phone number of any country with
     the business country as the hint (withheld numbers stay unknown).
+
+    The caller id is no proof of who calls, so the tools that read or
+    change a customer's bookings by their identity (CALLER_ID_BOUND_TOOLS)
+    are refused once the webhook is authenticated (AccessDeniedError with
+    what the agent should do instead: hand the request to staff).
     """
 
     def __init__(
@@ -52,6 +64,9 @@ class AuthenticateVoiceToolCallUseCase(
         )
         if business is None:
             raise NotFoundError("The business of this voice agent was not found.")
+
+        if input_data.tool_name in CALLER_ID_BOUND_TOOLS:
+            raise AccessDeniedError(CALLER_ID_REFUSAL)
 
         arguments: VoiceToolCallArguments = self._voice_webhook_adapter.parse_tool_call(
             input_data.body

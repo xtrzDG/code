@@ -10,8 +10,8 @@ import { CABINET_LANGUAGES, DEFAULT_LOCALE, isCabinetLanguage, type Locale } fro
 /** Request header the proxy sets from the path's language (never from the browser). */
 export const PATH_LOCALE_HEADER = "x-aw-path-locale";
 
-/** The public legal and contact pages, in the order the footer lists them. */
-export const LEGAL_PAGES = ["terms", "privacy", "dpa", "security", "contact"] as const;
+/** The public legal, accessibility and contact pages, in the order the footer lists them. */
+export const LEGAL_PAGES = ["terms", "privacy", "cookies", "dpa", "security", "accessibility", "contact"] as const;
 
 export type LegalPage = (typeof LEGAL_PAGES)[number];
 
@@ -53,8 +53,9 @@ export function switchPathLocale(pathname: string, locale: Locale): string {
 }
 
 /**
- * Where a page without a language goes: "/privacy" -> "/ru/privacy" for a
- * Russian reader. Null for any other path.
+ * Where a page without a language goes: "/privacy" -> "/it/privacy",
+ * "/cookies" -> "/it/cookies", "/accessibility" -> "/it/accessibility" for
+ * an Italian reader. Null for any other path.
  */
 export function localizedRedirectPath(pathname: string, locale: Locale): string | null {
   const page = pathname.replace(/^\/+|\/+$/g, "");

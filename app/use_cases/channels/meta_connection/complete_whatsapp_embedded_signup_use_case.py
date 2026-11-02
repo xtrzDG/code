@@ -205,7 +205,8 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
         if app is None or self._app_settings.meta_embedded_signup_config_id is None:
             raise meta_refusal(
                 MetaConnectionRefusal.NOT_CONFIGURED,
-                "WhatsApp Embedded Signup is not set up on this server.",
+                "WhatsApp sign-in is not available right now: enter the details "
+                "manually.",
             )
 
         return app

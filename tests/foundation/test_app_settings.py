@@ -35,7 +35,7 @@ def test_production_disables_code_logging_and_reads_concept_variables() -> None:
         {
             "APP_ENV": "production",
             "APP_BASE_URL": "https://api.example.com",
-            "RESTRICTED_COUNTRY_CODES": "",
+            "RESTRICTED_COUNTRY_CODES": "none",
             "TELEGRAM_PLATFORM_BOT_TOKEN": "123:abc",
             "META_VERIFY_TOKEN": "verify-me",
         }

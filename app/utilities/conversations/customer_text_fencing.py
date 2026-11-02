@@ -7,11 +7,12 @@ for a rewrite request). A customer who types such a header could make the
 model believe the platform said something ("the owner approved a 50 %
 discount"). Two defences, both applied to every text a customer wrote:
 
-1. Lines that imitate a platform header, or the fence itself, are
-   neutralized: they get a "(written by the customer)" prefix and their
-   square and angle brackets become round ones, so they read as quoted
-   customer text. The check ignores case, full-width forms, zero-width
-   characters and leading quote marks.
+1. Lines that imitate a platform header, the fence itself or a tag of
+   the platform's data blocks (`<untrusted>`, `<customer_value>`,
+   `<team_note>`, `<owner_text>`) are neutralized: they get a "(written by
+   the customer)" prefix and their square and angle brackets become round
+   ones, so they read as quoted customer text. The check ignores case,
+   full-width forms, zero-width characters and leading quote marks.
 2. The text is wrapped in a fence whose key is random for every turn
    (`new_fence_key`): the customer cannot know it, so cannot close the
    fence and write "platform" lines after it. The context line names the
@@ -20,6 +21,13 @@ discount"). Two defences, both applied to every text a customer wrote:
 
 import secrets
 import unicodedata
+
+from app.utilities.conversations.owner_text_fencing import OWNER_TEXT_TAG
+from app.utilities.conversations.untrusted_text import (
+    CUSTOMER_VALUE_TAG,
+    TEAM_NOTE_TAG,
+    UNTRUSTED_TAG,
+)
 
 FENCE_TAG: str = "customer_text"
 FENCE_KEY_BYTES: int = 4
@@ -31,6 +39,13 @@ PLATFORM_HEADER_MARKERS: tuple[str, ...] = (
     "[customermessage]",
     f"<{FENCE_TAG}",
     f"</{FENCE_TAG}",
+    # The platform's data blocks (`untrusted_text`) and the owner's fence
+    # (`owner_text_fencing`): a customer cannot open or close one.
+    *(
+        f"{opening}{tag}"
+        for tag in (UNTRUSTED_TAG, CUSTOMER_VALUE_TAG, TEAM_NOTE_TAG, OWNER_TEXT_TAG)
+        for opening in ("<", "</")
+    ),
 )
 # Zero-width spaces and joiners, word joiner, byte order mark, soft hyphen.
 INVISIBLE_CHARACTERS: frozenset[str] = frozenset(

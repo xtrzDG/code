@@ -1,5 +1,7 @@
 """Which staff notification channels have a provider in this deployment."""
 
+import logging
+
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.handoffs import ManagerContactChannel
@@ -8,6 +10,8 @@ from app.schemas.domain.outbound_messages import OutboundTemplate
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.utilities.channels.language_codes import to_whatsapp_template_language
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def is_provider_configured(
@@ -43,17 +47,34 @@ LOGGED_IN_DEVELOPMENT: frozenset[ManagerContactChannel] = frozenset(
     {ManagerContactChannel.EMAIL, ManagerContactChannel.SMS}
 )
 
+# What owners and staff read (the notification's `last_error`) when the
+# platform cannot send by a channel. Which settings are missing is only
+# logged (MISSING_PROVIDER_SETTINGS), for the operator.
 MISSING_PROVIDER_TEXTS: dict[ManagerContactChannel, str] = {
-    ManagerContactChannel.TELEGRAM: "TELEGRAM_PLATFORM_BOT_TOKEN is not configured.",
-    ManagerContactChannel.WHATSAPP: (
-        "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or WHATSAPP_NOTIFICATION_TEMPLATE "
-        "is not configured."
+    ManagerContactChannel.TELEGRAM: (
+        "Telegram notifications are not available right now. Contact support."
     ),
-    ManagerContactChannel.EMAIL: "SMTP_HOST and SMTP_FROM are not configured.",
+    ManagerContactChannel.WHATSAPP: (
+        "WhatsApp notifications are not available right now. Contact support."
+    ),
+    ManagerContactChannel.EMAIL: (
+        "E-mail notifications are not available right now. Contact support."
+    ),
     ManagerContactChannel.SMS: (
-        "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and a sender are not configured."
+        "SMS notifications are not available right now. Contact support."
     ),
 }
+MISSING_PROVIDER_SETTINGS: dict[ManagerContactChannel, str] = {
+    ManagerContactChannel.TELEGRAM: "TELEGRAM_PLATFORM_BOT_TOKEN",
+    ManagerContactChannel.WHATSAPP: (
+        "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or WHATSAPP_NOTIFICATION_TEMPLATE"
+    ),
+    ManagerContactChannel.EMAIL: "SMTP_HOST and SMTP_FROM",
+    ManagerContactChannel.SMS: "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and a sender",
+}
+MISSING_TEMPLATE_PROVIDER_TEXT: str = MISSING_PROVIDER_TEXTS[
+    ManagerContactChannel.WHATSAPP
+]
 
 
 def missing_staff_provider(
@@ -61,9 +82,10 @@ def missing_staff_provider(
     channel: ManagerContactChannel,
 ) -> DeliveryErrorText | None:
     """
-    Why a channel cannot deliver here, None when it can. Telegram and
-    WhatsApp need their provider everywhere (their delivery is real);
-    e-mail and SMS are written to the log outside production.
+    Why a channel cannot deliver here, in words for the owner, None when it
+    can. Telegram and WhatsApp need their provider everywhere (their
+    delivery is real); e-mail and SMS are written to the log outside
+    production. The missing settings are logged.
     """
 
     if is_provider_configured(settings, channel):
@@ -74,19 +96,35 @@ def missing_staff_provider(
     ):
         return None
 
+    return report_missing_provider(channel)
+
+
+def report_missing_provider(channel: ManagerContactChannel) -> DeliveryErrorText:
+    """Logs which settings the channel lacks; returns what the owner reads."""
+
+    logger.warning(
+        "Staff %s notification not sent: %s not configured.",
+        channel.value,
+        MISSING_PROVIDER_SETTINGS[channel],
+    )
     return DeliveryErrorText(MISSING_PROVIDER_TEXTS[channel])
 
 
 def missing_template_provider(settings: AppSettings) -> DeliveryErrorText | None:
     """
     Why a message with a template of its own (an owner's report) cannot go
-    out on WhatsApp here: only the platform number is needed.
+    out on WhatsApp here, in words for the owner: only the platform number
+    is needed (logged when it is missing).
     """
 
     if settings.whatsapp_notification_phone_number_id is not None:
         return None
 
-    return DeliveryErrorText("WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID is not configured.")
+    logger.warning(
+        "WhatsApp report not sent: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID "
+        "not configured."
+    )
+    return DeliveryErrorText(MISSING_TEMPLATE_PROVIDER_TEXT)
 
 
 def is_delivery_simulated(

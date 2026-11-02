@@ -17,6 +17,10 @@ from app.use_cases.conversations.tools.booking_tool_handlers import (
     today_text,
 )
 from app.use_cases.conversations.tools.tool_outcomes import success_outcome
+from app.use_cases.conversations.tools.tool_texts import (
+    given_booking_note,
+    given_contact_name,
+)
 from app.utilities.conversations.business_today import BusinessToday
 from app.utilities.conversations.waitlist_payloads import render_waitlist_join
 
@@ -45,7 +49,7 @@ def run_join_waitlist(
             business_id=context.business_id,
             contact_id=context.contact_id,
             conversation_id=context.conversation_id,
-            contact_name=tool_input.name or context.contact_name,
+            contact_name=given_contact_name(tool_input.name) or context.contact_name,
             source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,
@@ -57,7 +61,7 @@ def run_join_waitlist(
             service_reference=tool_input.service_id,
             resource_reference=tool_input.resource_id,
             resource_kind=tool_input.resource_type,
-            notes=tool_input.notes,
+            notes=given_booking_note(tool_input.notes),
         )
     )
     return success_outcome(call, render_waitlist_join(receipt, today_text(today)))

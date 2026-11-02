@@ -32,7 +32,10 @@ SELLER_TAX_ID: str = "405999999"
 
 
 def seller_settings(is_vat_registered: bool) -> AppSettings:
-    """The billing settings with a seller registered for VAT, or not."""
+    """
+    The billing settings of a Georgian seller (named outright: the
+    development default is Italian) registered for VAT, or not.
+    """
 
     return assemble_app_settings(
         {
@@ -45,6 +48,8 @@ def seller_settings(is_vat_registered: bool) -> AppSettings:
             "SELLER_TAX_ID": SELLER_TAX_ID,
             "SELLER_ADDRESS": "1 Marjanishvili St\\n0102 Tbilisi",
             "SELLER_EMAIL": "Billing@Workshop.example",
+            "SELLER_COUNTRY_CODE": "GE",
+            "SELLER_TIME_ZONE": "Asia/Tbilisi",
             "PLATFORM_VAT_REGISTERED": "true" if is_vat_registered else "false",
         }
     )

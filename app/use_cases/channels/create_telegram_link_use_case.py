@@ -85,9 +85,12 @@ class CreateTelegramLinkUseCase(
             self._app_settings.telegram_platform_bot_token
         )
         if bot_token is None:
+            logger.warning(
+                "Telegram link not created: TELEGRAM_PLATFORM_BOT_TOKEN is missing."
+            )
             raise ExternalServiceError(
-                "Telegram notifications are not configured: "
-                "TELEGRAM_PLATFORM_BOT_TOKEN is missing."
+                "Telegram notifications are not available right now. "
+                "Contact support."
             )
 
         manager_name = input_data.request.name

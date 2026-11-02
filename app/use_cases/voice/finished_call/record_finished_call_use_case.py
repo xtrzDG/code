@@ -16,6 +16,9 @@ from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
 )
+from app.contracts.repositories.call_follow_up_repositories import (
+    CallSettingsRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
@@ -47,6 +50,7 @@ from app.use_cases.voice.finished_call.call_activity import (
     list_call_bookings,
 )
 from app.use_cases.voice.finished_call.call_business_lookup import find_call_business
+from app.use_cases.voice.finished_call.call_staff_part import keeps_call_recording
 from app.use_cases.voice.finished_call.call_usage_events import (
     build_transfer_usage_event,
     build_voice_usage_event,
@@ -78,7 +82,10 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
     decline_recording) gets a call marked `recording_declined`, kept so by
     every later report of it: its transcript is stored without e-mail,
     account, card or phone numbers, and the post-call flow queues the
-    deletion of its audio instead of the archive.
+    deletion of its audio instead of the archive. A call whose audio the
+    business does not keep is marked the same way: the recording is off
+    in Settings → Calls (the default), or a person took a transfer, so the
+    audio holds the staff member's conversation (`keeps_call_recording`).
     """
 
     def __init__(
@@ -93,9 +100,11 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         handoff_repo: HandoffRepoContract,
         usage_event_repo: UsageEventRepoContract,
         audit_log_repo: AuditLogRepoContract,
+        call_settings_repo: CallSettingsRepoContract,
         phone_number_parser: PhoneNumberParserContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._call_settings_repo: CallSettingsRepoContract = call_settings_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -174,8 +183,12 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         call.to_phone_number = assistant_number
         call.started_at = input_data.started_at
         call.duration_seconds = input_data.duration_seconds
-        call.recording_declined = call.recording_declined or (
-            AssistantToolName.DECLINE_RECORDING in input_data.called_tools
+        call.recording_declined = (
+            call.recording_declined
+            or AssistantToolName.DECLINE_RECORDING in input_data.called_tools
+            or not keeps_call_recording(
+                input_data, self._call_settings_repo.get_by_business(business.id)
+            )
         )
         call.transcript = render_call_transcript(
             input_data.transcript, call.recording_declined

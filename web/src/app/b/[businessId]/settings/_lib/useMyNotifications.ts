@@ -8,6 +8,7 @@ import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
+import { useAdminErrorDetail } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import {
@@ -48,6 +49,7 @@ export const DEVICE_PROBLEMS: Record<DeviceProblem, MessageKey> = {
 export function useMyNotifications() {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const adminDetail = useAdminErrorDetail();
   const { business } = useBusiness();
   const key = queryKeys.notifications.mine(business.id);
   const path = { business_id: business.id };
@@ -184,9 +186,8 @@ export function useMyNotifications() {
     } else {
       toast.show({
         tone: status === "dead" ? "error" : "info",
-        title: t(status === "dead" ? "notifications.device.testFailed" : "notifications.device.testPending", {
-          error: error ?? "",
-        }),
+        title: t(status === "dead" ? "notifications.device.testFailed" : "notifications.device.testPending"),
+        description: adminDetail(error),
       });
     }
   };

@@ -3,6 +3,50 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class AssistantBookingNote(BaseConstrainedTypedString):
+    """
+    The customer's wish as the assistant passes it to create_booking or
+    join_waitlist ("high chair", "late arrival"): 1 to 500 characters, no
+    control characters except line breaks and tabs.
+
+    Example:
+        note = AssistantBookingNote("High chair for a toddler")
+    """
+
+    min_length = 1
+    max_length = 500
+    pattern = r"^[^\x00-\x08\x0b\x0c\x0e-\x1f\x7f]*\Z"
+
+
+class AssistantLeadBudget(BaseConstrainedTypedString):
+    """
+    A request's budget as the assistant passes it to create_lead, in the
+    customer's words ("around 1500 EUR"): 1 to 100 characters on one line.
+
+    Example:
+        budget = AssistantLeadBudget("around 1500 EUR")
+    """
+
+    min_length = 1
+    max_length = 100
+    pattern = r"^[^\x00-\x1f\x7f  ]*\Z"
+
+
+class AssistantLeadDetails(BaseConstrainedTypedString):
+    """
+    What the customer wants from a manager as the assistant passes it to
+    create_lead (a banquet, a group stay, an order): 1 to 1000 characters,
+    no control characters except line breaks and tabs.
+
+    Example:
+        details = AssistantLeadDetails("Banquet for 30 guests, Georgian menu")
+    """
+
+    min_length = 1
+    max_length = 1000
+    pattern = r"^[^\x00-\x08\x0b\x0c\x0e-\x1f\x7f]*\Z"
+
+
 class BookingCalendarFileName(BaseConstrainedTypedString):
     """
     File name a guest's calendar file is saved under (ASCII, ".ics").

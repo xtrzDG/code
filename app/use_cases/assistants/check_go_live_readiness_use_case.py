@@ -1,5 +1,7 @@
 """Whether a version of the assistant may go live, check by check."""
 
+import logging
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import (
@@ -55,6 +57,15 @@ NO_SUBSCRIPTION_DETAIL: str = "none"
 # The detail of a gate passed because the free trial starts at go-live.
 TRIAL_AT_GO_LIVE_DETAIL: str = "trial_at_go_live"
 APP_BASE_URL_SETTING: str = "APP_BASE_URL"
+# What the owner reads when voice agents cannot be set up here; the missing
+# settings are logged for the operator.
+VOICE_UNAVAILABLE_MESSAGE: str = "Phone calls are not available right now. Contact support."
+VOICE_UNAVAILABLE_WARNING: str = (
+    "Phone calls are not available right now, so this version goes live "
+    "without answering calls."
+)
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class CheckGoLiveReadinessUseCase(
@@ -262,15 +273,16 @@ class CheckGoLiveReadinessUseCase(
         is_production: bool = (
             self._app_settings.environment is DeploymentEnvironment.PRODUCTION
         )
+        logger.log(
+            logging.WARNING if is_production else logging.INFO,
+            "Voice agents cannot be set up: %s not configured.",
+            names,
+        )
         return GoLiveCheck(
             code=GoLiveCheckCode.VOICE_CONFIGURATION,
             is_ok=False,
             is_blocking=is_production,
             message=GoLiveCheckMessage(
-                f"The voice agent cannot be set up: {names} is not configured."
-                if is_production
-                else f"Voice is not configured on this server ({names}); the "
-                "version goes live without a voice agent (development only)."
+                VOICE_UNAVAILABLE_MESSAGE if is_production else VOICE_UNAVAILABLE_WARNING
             ),
-            details=[GoLiveCheckDetail(str(name)) for name in missing],
         )

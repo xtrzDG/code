@@ -6,7 +6,6 @@ import {
   isValidShortcut,
   placeholderOf,
   placeholdersIn,
-  previewQuickReply,
   SHORTCUT_MAX_LENGTH,
 } from "./quickReplies";
 
@@ -34,18 +33,8 @@ describe("the variables of a text", () => {
   });
 
   it("are filled everywhere, and an empty value leaves them", () => {
-    expect(fillPlaceholder("{name}, see you, {name}", "name", " Nino ")).toBe("Nino, see you, Nino");
+    expect(fillPlaceholder("{name}, see you, {name}", "name", " Giulia ")).toBe("Giulia, see you, Giulia");
     expect(fillPlaceholder("{name}", "name", "  ")).toBe("{name}");
-  });
-
-  it("read as a customer would see them in the preview", () => {
-    expect(
-      previewQuickReply("{name}: {business_name} at {booking_time}", {
-        name: "Nino",
-        booking_time: "Fri 19:00",
-        business_name: "Salobie",
-      }),
-    ).toBe("Nino: Salobie at Fri 19:00");
   });
 });
 

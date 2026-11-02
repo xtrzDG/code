@@ -104,6 +104,8 @@ class TestStart:
         assert staff.status_code == 403
         assert no_signup.status_code == 422
         assert reason_codes(no_signup.json()) == ["meta_not_configured"]
+        assert "server" not in no_signup.json()["message"]
+        assert "not available right now" in no_signup.json()["message"]
         assert pages_still.status_code == 201
 
     def test_the_owner_confirms_it_is_them_before_meta_opens(self) -> None:

@@ -10,7 +10,8 @@
  * every platform admin) get no session yet: the answer is the second step,
  * {"mfa_required": true, "mfa_challenge", "is_new_user"}, finished by
  * POST /api/auth/mfa/verify. Where the visitor first came from (the
- * `aw_attr` cookie) goes along as `signup_attribution`.
+ * `aw_attr` cookie, kept only with their consent) goes along as
+ * `signup_attribution`.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -46,5 +47,5 @@ export async function POST(request: NextRequest): Promise<Response> {
       { headers: pickResponseHeaders(upstream.headers, requestId) },
     );
   }
-  return openSession(answer as LoginSessionView, upstream.headers, requestId);
+  return openSession(answer as LoginSessionView, upstream.headers, requestId, request.headers);
 }

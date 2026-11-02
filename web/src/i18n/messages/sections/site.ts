@@ -8,6 +8,10 @@
  */
 
 import type { Translation } from "../../translate";
+import { accessibilityEn } from "./site/accessibility.en";
+import { accessibilityIt } from "./site/accessibility.it";
+import { cookieConsentEn } from "./site/cookieConsent.en";
+import { cookieConsentIt } from "./site/cookieConsent.it";
 import { legalPagesEn } from "./site/legalPages.en";
 import { nichePageEn } from "./site/nichePage.en";
 import { publicDemoEn } from "./site/publicDemo.en";
@@ -25,6 +29,8 @@ export const siteEn = {
   nichePage: nichePageEn,
   legalPages: legalPagesEn,
   publicPricing: publicPricingEn,
+  cookieConsent: cookieConsentEn,
+  accessibility: accessibilityEn,
 } as const;
 
 export const siteIt: Translation<typeof siteEn> = {
@@ -33,4 +39,6 @@ export const siteIt: Translation<typeof siteEn> = {
   nichePage: nichePageIt,
   legalPages: legalPagesIt,
   publicPricing: publicPricingIt,
+  cookieConsent: cookieConsentIt,
+  accessibility: accessibilityIt,
 };

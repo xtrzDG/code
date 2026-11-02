@@ -42,7 +42,7 @@ export const inboxCardIt: Translation<typeof inboxCardEn> = {
   },
   technical: {
     title: "Dettagli tecnici",
-    hint: "Cosa c'è dietro le risposte: l'aggiornamento dell'assistente che le ha date e le sue richieste esatte ai tuoi dati.",
+    hint: "Cosa c'è dietro le risposte: la versione dell'assistente che le ha date, le sue richieste esatte ai dati dell'attività, i token e il costo dell'IA.",
     tokens: "Token",
     cost: "Costo AI",
     version: "Aggiornamento dell'assistente",

@@ -1,10 +1,13 @@
 import Link from "next/link";
 
 import type { NicheSummaryView } from "@/api/types";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 import type { Locale } from "@/i18n/config";
 import type { Translator } from "@/i18n/translate";
 import { LOGIN_PATH } from "@/lib/navigation";
 import { LEGAL_PAGES, legalPath, nichePath } from "@/lib/publicSite/paths";
+
+import { legalPageLabel } from "./legal/legalLabels";
 
 /** How many kinds of business the footer links to (the rest are on the landing page). */
 const FOOTER_NICHES = 8;
@@ -13,7 +16,8 @@ const LINK_CLASS = "text-ink-muted transition-colors hover:text-ink";
 
 /**
  * The public site's footer: the landing page's sections, the pages of the
- * kinds of business, the legal and contact pages, and the copyright.
+ * kinds of business, the legal, accessibility and contact pages, the way
+ * back to the cookie choice ("Cookie settings"), and the copyright.
  * `home` is "" on the landing page itself, else its address ("/ru").
  */
 export function LandingFooter({
@@ -81,10 +85,13 @@ export function LandingFooter({
             {LEGAL_PAGES.map((page) => (
               <li key={page}>
                 <Link href={legalPath(locale, page)} className={LINK_CLASS}>
-                  {t(`legalPages.nav.${page}`)}
+                  {t(legalPageLabel(page))}
                 </Link>
               </li>
             ))}
+            <li>
+              <CookieSettingsButton label={t("cookieConsent.settings")} className={`${LINK_CLASS} cursor-pointer text-start`} />
+            </li>
           </ul>
         </nav>
       </div>

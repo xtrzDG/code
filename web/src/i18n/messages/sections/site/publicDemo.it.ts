@@ -7,7 +7,7 @@ export const publicDemoIt: Translation<typeof publicDemoEn> = {
   label: "Demo dal vivo dell'assistente",
   badge: "Demo dal vivo",
   sampleBadge: "Esempio",
-  sandbox: "Ambiente di prova: nessuna prenotazione è reale",
+  footer: "Demo: nessuna prenotazione è reale · non condividere dati personali",
   pick: "Settore",
   place: "{niche} · {city}",
   greeting: "Ciao! Sono l'assistente AI di {business}. Chiedimi quello che chiederebbero i tuoi clienti: prezzi, orari di apertura, una prenotazione.",
@@ -39,6 +39,5 @@ export const publicDemoIt: Translation<typeof publicDemoEn> = {
     offline: "Nessuna connessione. Controlla internet e riprova.",
     failed: "Il messaggio non è stato inviato. Riprova.",
   },
-  privacy: "Demo pubblica: non condividere dati personali.",
   cta: "Crea il mio",
 };

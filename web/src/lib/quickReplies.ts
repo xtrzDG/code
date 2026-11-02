@@ -50,11 +50,6 @@ export function fillPlaceholder(text: string, variable: QuickReplyVariable, valu
   return filled ? text.split(placeholderOf(variable)).join(filled) : text;
 }
 
-/** The text as a customer would read it, with example values for the variables. */
-export function previewQuickReply(text: string, values: Readonly<Record<QuickReplyVariable, string>>): string {
-  return QUICK_REPLY_VARIABLES.reduce((result, variable) => fillPlaceholder(result, variable, values[variable]), text);
-}
-
 /** The text with `insert` put at the caret (or in place of the selection), and where the caret goes next. */
 export function insertAt(text: string, insert: string, start: number, end: number = start): { text: string; caret: number } {
   const from = Math.max(0, Math.min(start, text.length));

@@ -1,7 +1,13 @@
 """The Settings → Calls view of a business's call settings."""
 
+from dataclasses import dataclass
+
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.registries import CountryRegistryContract
+from app.contracts.repositories.business_repositories import (
+    BusinessProfileRepoContract,
+    ChannelRepoContract,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
@@ -14,11 +20,30 @@ from app.schemas.dto.calls.call_settings import (
 )
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.voice.call_settings.recording_notices import (
+    build_recording_notices,
+)
 from app.utilities.calls.call_follow_up_keys import call_settings_id_of
 from app.utilities.calls.text_back_texts import TEXT_BACK_MESSAGE_TEXT, template_body
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.voice_service import find_transfer_phone_number
 from app.utilities.scheduling.localized_formatting import choose_template_language
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CallSettingsSources:
+    """
+    What the view reads besides the settings: the WhatsApp channel, the
+    profile's staff number, the texts callers get and hear, the country's
+    recording rule, and whether the platform can send SMS.
+    """
+
+    channel_repo: ChannelRepoContract
+    business_profile_repo: BusinessProfileRepoContract
+    text_resolver: LocalizedTextResolverContract
+    country_registry: CountryRegistryContract
+    is_sms_available: bool
 
 
 def stored_or_default(
@@ -41,12 +66,10 @@ def stored_or_default(
 def build_call_settings_view(
     business: BusinessDocument,
     settings: CallSettingsDocument,
-    channel_repo: ChannelRepoContract,
-    text_resolver: LocalizedTextResolverContract,
-    is_sms_available: bool,
+    sources: CallSettingsSources,
 ) -> CallSettingsView:
     whatsapp: ChannelDocument | None = find_business_channel(
-        channel_repo, business.id, ChannelKind.WHATSAPP
+        sources.channel_repo, business.id, ChannelKind.WHATSAPP
     )
     return CallSettingsView(
         is_summary_enabled=settings.is_summary_enabled,
@@ -54,11 +77,20 @@ def build_call_settings_view(
         text_back_template_name=settings.text_back_template_name,
         is_sms_fallback_enabled=settings.is_sms_fallback_enabled,
         is_whatsapp_connected=whatsapp is not None and is_channel_active(whatsapp),
-        is_sms_available=is_sms_available,
+        is_sms_available=sources.is_sms_available,
         template_previews=[
-            build_template_preview(business, language, text_resolver)
+            build_template_preview(business, language, sources.text_resolver)
             for language in preview_languages(business)
         ],
+        is_recording_enabled=settings.is_recording_enabled,
+        recording_notices=build_recording_notices(
+            business, sources.country_registry, sources.text_resolver
+        ),
+        is_staff_transfer_confirmed=settings.is_staff_transfer_confirmed,
+        staff_transfer_confirmed_at=settings.staff_transfer_confirmed_at,
+        transfer_phone_number=find_transfer_phone_number(
+            business, sources.business_profile_repo.get_by_business(business.id)
+        ),
     )
 
 

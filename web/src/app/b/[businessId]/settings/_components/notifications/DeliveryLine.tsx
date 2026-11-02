@@ -3,6 +3,7 @@
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconAlert } from "@/components/icons";
 import { Badge } from "@/components/ui";
+import { DeliveryProblem } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 
 import { DELIVERY_LABELS, DELIVERY_TONES, type NotificationContact } from "../../_lib/notifications";
@@ -11,7 +12,8 @@ import { CHANNEL_LABELS } from "./contactTexts";
 /**
  * How notifications reach a contact: a channel the platform cannot send by
  * (no provider configured), or the latest notification's state with its
- * time and, when it failed, the provider's reason.
+ * time and, when it failed, a plain explanation (the provider's reason
+ * for platform admins only).
  */
 export function DeliveryLine({ status }: { status: NotificationContact }) {
   const { t } = useI18n();
@@ -41,7 +43,10 @@ export function DeliveryLine({ status }: { status: NotificationContact }) {
         </span>
       </p>
       {delivery.last_error && delivery.status !== "delivered" ? (
-        <p className="text-sm break-words text-danger">{delivery.last_error}</p>
+        <DeliveryProblem
+          error={delivery.last_error}
+          message={delivery.status === "pending" ? t("notifications.contacts.retrying") : undefined}
+        />
       ) : null}
     </div>
   );

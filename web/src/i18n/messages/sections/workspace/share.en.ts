@@ -9,7 +9,7 @@ export const shareEn = {
   pageLabel: "Chat page",
   pageHint: "Your chat on a page of its own: no website needed. Customers write there like in a messenger.",
   webChatOff: "The chat page uses the website chat. Turn the website chat on above, and the page starts working.",
-  notConfigured: "The chat page is not set up on this server yet (the cabinet's public address, CABINET_BASE_URL, is missing).",
+  notConfigured: "The chat page is not available right now. Contact support.",
   open: "Open",
   changeAddress: "Change address",
   addressLabel: "Address of the chat page",
@@ -43,7 +43,7 @@ export const shareEn = {
   },
   gaps: {
     reconnect_channel: "Reconnect {channel} to get its link: its public address is not known yet.",
-    not_configured: "Not available on this server yet.",
+    not_configured: "Not available right now. Contact support.",
   },
   showQr: "QR code for {link}",
   qrTitle: "QR code",

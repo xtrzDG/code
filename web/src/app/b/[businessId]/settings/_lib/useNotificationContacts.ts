@@ -8,6 +8,7 @@ import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
+import { useAdminErrorDetail } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 
 import type { ManagerContact } from "./contacts";
@@ -24,6 +25,7 @@ const identity = (contact: Pick<ManagerContact, "channel" | "address">) => `${co
 export function useNotificationContacts() {
   const { t } = useI18n();
   const toast = useToast();
+  const adminDetail = useAdminErrorDetail();
   const { business } = useBusiness();
   const key = queryKeys.notifications.contacts(business.id);
   const list = useQuery(key, () =>
@@ -49,8 +51,8 @@ export function useNotificationContacts() {
     }
     const outcome = contactCheckOutcome(result.data);
     // The contact's name is user content.
-    const title = { text: t(outcome.key, { error: result.data.delivery.last_error ?? "" }), values: { name: contact.name } };
-    toast.show({ tone: outcome.tone, title });
+    const title = { text: t(outcome.key), values: { name: contact.name } };
+    toast.show({ tone: outcome.tone, title, description: adminDetail(result.data.delivery.last_error) });
   };
 
   return {

@@ -10,7 +10,7 @@ export const tunnelBusinessEn = {
     title: "What's your business called?",
     text: "We'll create an assistant that answers your customers for you, day and night.",
     name: "Business name",
-    namePlaceholder: "For example, Salon Morgenrot",
+    namePlaceholder: "For example, Trattoria da Marco",
     kindTitle: "What do you do?",
     kindHint: "Pick the closest one. It decides what your assistant asks, books and knows.",
     kindFixed: "You chose this when the assistant was created; it can't be changed.",

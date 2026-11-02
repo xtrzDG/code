@@ -107,12 +107,13 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         schedule_exception_repo=repositories.schedule_exception_repo,
         contact_repo=repositories.contact_repo,
-        booking_repo=repositories.booking_repo,
-        resource_repo=repositories.resource_repo,
+        call_settings_repo=repositories.call_settings_repo,
+        usage_spend_repo=repositories.usage_spend_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         voice_webhook_adapter=adapters.voice_webhook_adapter,
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
+        text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         check_spend=spend_guard_use_cases.check_business_spend_use_case,
     )
@@ -150,6 +151,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         usage_event_repo=repositories.usage_event_repo,
         audit_log_repo=repositories.audit_log_repo,
+        call_settings_repo=repositories.call_settings_repo,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
     )

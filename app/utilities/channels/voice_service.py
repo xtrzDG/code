@@ -1,5 +1,6 @@
 """Whether the phone assistant may take a new call (concept section 7)."""
 
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
@@ -9,32 +10,59 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.utilities.channels.transfer_destinations import (
+    is_transfer_destination_allowed,
+)
 
 # The voice platform's tool that puts a caller through to staff, and the
-# per-call variable telling the agent whether the business is open now.
+# per-call variables telling the agent whether the business is open now and
+# where a transfer goes: the staff mobile only while the business is open
+# and the owner allowed transfers, else NO_TRANSFER_VALUE (no transfer).
 TRANSFER_TOOL_NAME: str = "transfer_to_number"
 OPEN_NOW_VARIABLE: str = "is_open_now"
 OPEN_NOW_YES: str = "yes"
 OPEN_NOW_NO: str = "no"
+TRANSFER_NUMBER_VARIABLE: str = "transfer_number"
+NO_TRANSFER_VALUE: str = "none"
 # Per-call variables of the "Current call" block: the business-local date
-# and time, the next days, the time zone, a known caller's name and their
-# next booking. The placeholders stand in until the call-initiation webhook
-# answers (or when it cannot).
+# and time, the next days and the time zone. The placeholders stand in
+# until the call-initiation webhook answers (or when it cannot): closed,
+# no transfer, unknown date. Nothing about the caller is among them: a
+# caller id is no proof of who calls.
 LOCAL_NOW_VARIABLE: str = "local_now"
 NEXT_DAYS_VARIABLE: str = "next_days"
 TIMEZONE_VARIABLE: str = "timezone"
-CALLER_NAME_VARIABLE: str = "caller_name"
-UPCOMING_BOOKING_VARIABLE: str = "upcoming_booking"
 UNKNOWN_VALUE: str = "unknown"
-NO_BOOKING_VALUE: str = "none"
 CALL_VARIABLE_PLACEHOLDERS: dict[str, str] = {
     OPEN_NOW_VARIABLE: OPEN_NOW_NO,
+    TRANSFER_NUMBER_VARIABLE: NO_TRANSFER_VALUE,
     LOCAL_NOW_VARIABLE: UNKNOWN_VALUE,
     NEXT_DAYS_VARIABLE: UNKNOWN_VALUE,
     TIMEZONE_VARIABLE: UNKNOWN_VALUE,
-    CALLER_NAME_VARIABLE: UNKNOWN_VALUE,
-    UPCOMING_BOOKING_VARIABLE: NO_BOOKING_VALUE,
 }
+# The tools that read or change a customer's bookings by who they are. On
+# a call the only identity is the caller id, which anyone can fake, so the
+# voice agent never runs them: staff call the number on the booking back.
+CALLER_ID_BOUND_TOOLS: frozenset[AssistantToolName] = frozenset(
+    {
+        AssistantToolName.LIST_MY_BOOKINGS,
+        AssistantToolName.CANCEL_BOOKING,
+        AssistantToolName.RESCHEDULE_BOOKING,
+    }
+)
+CALLER_ID_REFUSAL: str = (
+    "On a phone call the caller's number does not prove who is calling, so "
+    "bookings are not read out, cancelled or moved here. Do not say whether "
+    "a booking exists. Offer to pass the request to a colleague with "
+    "handoff_to_human: they call back the number on the booking. The "
+    "customer can also use the link in their booking confirmation."
+)
+# Caps of one business's phone line against runaway costs and abuse: the
+# calls the voice platform takes at once and in a day, and the minutes a
+# day after which new calls go to the missed-call flow until midnight.
+MAX_CONCURRENT_CALLS: int = 5
+MAX_DAILY_CALLS: int = 300
+MAX_DAILY_CALL_MINUTES: int = 600
 PHONE_CONTACT_CHANNELS: frozenset[ManagerContactChannel] = frozenset(
     {ManagerContactChannel.WHATSAPP, ManagerContactChannel.SMS}
 )
@@ -76,14 +104,23 @@ def find_transfer_phone_number(
     """
     The staff mobile a caller is put through to in opening hours: the
     profile's handoff phone, else the first manager reachable by phone
-    (WhatsApp or SMS). None when nobody can take a call.
+    (WhatsApp or SMS), whichever is an allowed transfer destination
+    (`transfer_destinations`: a mobile or landline of the business's
+    country or the EU, never a premium range). None when nobody can take
+    a call.
     """
 
+    candidates: list[E164PhoneNumber] = []
     if profile is not None and profile.contacts.handoff_phone_number is not None:
-        return profile.contacts.handoff_phone_number
+        candidates.append(profile.contacts.handoff_phone_number)
 
-    for contact in business.manager_contacts:
-        if contact.channel in PHONE_CONTACT_CHANNELS:
-            return E164PhoneNumber(str(contact.address))
+    candidates.extend(
+        E164PhoneNumber(str(contact.address))
+        for contact in business.manager_contacts
+        if contact.channel in PHONE_CONTACT_CHANNELS
+    )
+    for candidate in candidates:
+        if is_transfer_destination_allowed(candidate, business.country_code):
+            return candidate
 
     return None

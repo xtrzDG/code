@@ -145,7 +145,7 @@ def test_restricted_countries_cannot_sign_up() -> None:
 
 
 def test_settings_restriction_list_can_be_emptied() -> None:
-    testbed = build_accounts_testbed({"RESTRICTED_COUNTRY_CODES": ""})
+    testbed = build_accounts_testbed({"RESTRICTED_COUNTRY_CODES": "none"})
 
     challenge = testbed.request_phone_code(IRAN_MOBILE)
 

@@ -8,6 +8,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     TurnProgress,
     build_reply,
 )
+from app.utilities.conversations.guard_rewrite_note import build_guard_rewrite_note
 from app.utilities.deposits.payment_line_joining import with_payment_lines
 
 
@@ -43,9 +44,23 @@ def rewritten_reply(
         text=with_deposit_lines(text, progress),
         guard_verdict=ReplyGuardVerdict.REWRITTEN,
         guard_reasons=first.reasons,
-        unverified_values=list(first.unverified_values),
+        unverified_values=first.flagged_values,
         claim_findings=list(first.claim_findings),
         verifier_usage=[*first.verifier_usage, *second.verifier_usage],
+    )
+
+
+def rewrite_request(first: ReplyReview) -> MessageText:
+    """The platform's one request to rewrite what the first review found."""
+
+    return MessageText(
+        build_guard_rewrite_note(
+            [str(value) for value in first.unverified_values],
+            [str(finding.claim) for finding in first.unsupported_claims],
+            first.withheld_details,
+            [str(link) for link in first.foreign_links],
+            quotes_team_note=bool(first.quoted_notes),
+        )
     )
 
 
@@ -69,7 +84,7 @@ def handed_off_reply(
         failure=final.failure,
         guard_verdict=ReplyGuardVerdict.HANDED_OFF,
         guard_reasons=final.reasons,
-        unverified_values=list(final.unverified_values),
+        unverified_values=final.flagged_values,
         claim_findings=list(final.claim_findings),
         verifier_usage=[
             *first.verifier_usage,

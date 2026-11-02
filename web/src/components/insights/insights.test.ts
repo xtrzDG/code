@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { lookupMessage } from "@/i18n/translate";
 
 import { isOpenHandoff, sortHandoffs } from "./handoffs";
-import { allLabelKeys, BOOKING_STATUS, HANDOFF_STATUS, HANDOFF_URGENCY, LEAD_STATUS } from "./labels";
+import { allLabelKeys, BOOKING_STATUS, CUSTOMER_CHANNELS, HANDOFF_STATUS, HANDOFF_URGENCY, LEAD_STATUS } from "./labels";
 import { formatMicroUsd, formatPercent, sharePercent } from "./numbers";
 
 describe("enum labels", () => {
@@ -21,6 +21,12 @@ describe("enum labels", () => {
     expect(BOOKING_STATUS.pending.tone).toBe("warning");
     expect(BOOKING_STATUS.cancelled.tone).toBe("neutral");
     expect(LEAD_STATUS.won.tone).toBe("success");
+  });
+});
+
+describe("customer channels", () => {
+  it("offer only channels a business can connect, not Viber or the test chat", () => {
+    expect(CUSTOMER_CHANNELS).toEqual(["phone", "whatsapp", "telegram", "instagram", "messenger", "web_chat"]);
   });
 });
 

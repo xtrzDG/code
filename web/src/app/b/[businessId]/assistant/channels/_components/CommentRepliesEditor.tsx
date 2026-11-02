@@ -9,7 +9,7 @@ import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Switch } from "@/components/content/Switch";
 import { IconX } from "@/components/icons";
-import { Alert, Button, Field, Input, Textarea, useToast } from "@/components/ui";
+import { Button, Field, Input, Textarea, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -37,8 +37,8 @@ const PROBLEMS: Record<CommentRepliesProblem | KeywordProblem, MessageKey> = {
  * On the Instagram card: comment-to-DM. When a comment under a post names
  * one of the keywords, the assistant sends its author one message in
  * Direct. Owners turn it on and edit the keywords and the message; staff
- * see whether it is on. Until the release that answers comments, the card
- * says so and keeps the settings.
+ * see whether it is on. While the service does not answer comments
+ * (`is_available` false) the block is hidden; the saved settings stay.
  */
 export function CommentRepliesEditor({ channel, canManage }: { channel: ChannelView; canManage: boolean }) {
   const { t } = useI18n();
@@ -56,7 +56,7 @@ export function CommentRepliesEditor({ channel, canManage }: { channel: ChannelV
       body,
     }),
   );
-  if (!saved) {
+  if (!saved?.is_available) {
     return null;
   }
   const isDirty = !isSavedReplies(form, saved);
@@ -119,7 +119,6 @@ export function CommentRepliesEditor({ channel, canManage }: { channel: ChannelV
       <p id={`${id}-description`} className="text-sm text-ink-muted">
         {t("metaConnect.commentReplies.description")}
       </p>
-      {!saved.is_available ? <Alert tone="info">{t("metaConnect.commentReplies.unavailable")}</Alert> : null}
 
       {canManage && (form.isOn || isDirty) ? (
         <form noValidate onSubmit={(event) => void submit(event)} className="space-y-3">

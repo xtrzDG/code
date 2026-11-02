@@ -7,4 +7,6 @@ export const changelogIt: Translation<typeof changelogEn> = {
   title: "Novità",
   description: "Le ultime modifiche al pannello, dalla più recente.",
   newBadge: "Nuovo",
+  emptyTitle: "Nessuna novità da mostrare",
+  emptyDescription: "Qui troverai le modifiche al pannello, dalla più recente.",
 };

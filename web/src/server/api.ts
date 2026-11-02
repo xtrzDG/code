@@ -24,7 +24,7 @@ import { readSessionToken } from "./sessionCookie";
 export async function getServerApi(): Promise<Client<paths>> {
   const [cookieStore, locale, incoming] = await Promise.all([cookies(), getLocale(), headers()]);
   const upstreamHeaders = buildUpstreamHeaders(incoming, {
-    token: readSessionToken(cookieStore),
+    token: readSessionToken(cookieStore, incoming),
     locale,
     requestId: sanitizeRequestId(null),
   });
@@ -37,7 +37,8 @@ export async function getServerApi(): Promise<Client<paths>> {
 
 /** True when the request carries a session cookie (it may still be expired). */
 export async function hasSession(): Promise<boolean> {
-  return readSessionToken(await cookies()) !== undefined;
+  const [cookieStore, incoming] = await Promise.all([cookies(), headers()]);
+  return readSessionToken(cookieStore, incoming) !== undefined;
 }
 
 async function expiredSessionUrl(): Promise<string> {

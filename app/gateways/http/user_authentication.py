@@ -8,6 +8,9 @@ from starlette.concurrency import run_in_threadpool
 
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.session_assurance import SessionAssuranceContract
+from app.gateways.http.middleware.anonymous_request_limit_middleware import (
+    mark_credential_check,
+)
 from app.gateways.http.request_limits import limit_class_of
 from app.gateways.http.strict_request_parsing import read_client_ip_address
 from app.schemas.constants.access import BusinessAccessMode
@@ -99,7 +102,9 @@ def build_current_user_dependency(
             )
         return assurance.user_id
 
-    return resolve_current_user
+    # The per-address limit of anonymous requests leaves a request with an
+    # Authorization header to this check only on routes that use it.
+    return mark_credential_check(resolve_current_user)
 
 
 def parse_bearer_token(authorization: str | None) -> AccessToken:

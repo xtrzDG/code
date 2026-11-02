@@ -54,6 +54,13 @@ class PlatformSecret(BaseTypedString):
     """Platform-level credential (API key, webhook secret). Never logged."""
 
 
+class ProductionSettingProblem(BaseTypedString):
+    """
+    One reason production refuses to start (an unset, test or unsafe
+    setting), in English, naming its variable; never the value of a secret.
+    """
+
+
 class TraceSessionId(BaseTypedString):
     """
     The session of the quality journal (Langfuse `sessionId`) a trace

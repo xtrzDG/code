@@ -1,5 +1,6 @@
 """What the model is told and what backs its reply, read from the messages."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
@@ -13,6 +14,7 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.use_cases.conversations.replies.turn_progress import TurnProgress
 from app.utilities.conversations.turn_context import EarlierMessage
+from app.utilities.conversations.untrusted_text import strip_customer_values
 from app.utilities.media.attachment_texts import (
     describe_message_for_model,
     readable_message_text,
@@ -55,11 +57,14 @@ class ReplyEvidence:
     What backs a reply, read from the conversation once (technical record).
 
     `trusted`: what the business and the server said (the business name,
-    the context line, the facts, tool results and staff messages).
-    `customer`: what the customer wrote and the assistant repeated; it
-    backs times, dates, phones and counts, never a price. `own_contact`:
-    where the customer's own and the business's public contact details
-    may come from (no staff messages: staff may quote other customers).
+    the context line, the facts, tool results, staff messages and the
+    platform's own lines such as the emergency number), without the
+    customer values they repeat (a name, a request's details:
+    `strip_customer_values`). `customer`: what the customer wrote, those
+    values and what the assistant repeated; it backs times, dates, phones
+    and counts, never a price or a policy. `own_contact`: where the
+    customer's own and the business's public contact details may come from
+    (no staff messages: staff may quote other customers).
     """
 
     trusted: list[str]
@@ -71,14 +76,19 @@ def gather_reply_evidence(
     message_repo: MessageRepoContract,
     turn: PreparedTurn,
     progress: TurnProgress,
+    platform_texts: Sequence[str] = (),
 ) -> ReplyEvidence:
     """The evidence of the conversation's stored messages and this turn."""
 
+    customer_values: list[str] = []
     business_texts: list[str] = [
         str(turn.business.name),
-        str(turn.context_line),
+        *platform_texts,
         *(f"{fact.label}: {fact.value}" for fact in turn.version.facts),
-        *progress.tool_results,
+        *(
+            without_customer_values(text, customer_values)
+            for text in (str(turn.context_line), *progress.tool_results)
+        ),
     ]
     staff_texts: list[str] = []
     tool_texts: list[str] = []
@@ -105,16 +115,24 @@ def gather_reply_evidence(
 
         # Tool results of earlier replies and of voice-agent calls count.
         tool_texts.extend(
-            str(record.result_json)
+            without_customer_values(str(record.result_json), customer_values)
             for record in message.tool_calls
             if not record.is_error
         )
 
     return ReplyEvidence(
         trusted=[*business_texts, *staff_texts, *tool_texts],
-        customer=[*customer_written, *assistant_texts],
-        own_contact=[*business_texts, *tool_texts, *customer_written],
+        customer=[*customer_written, *customer_values, *assistant_texts],
+        own_contact=[*business_texts, *tool_texts, *customer_written, *customer_values],
     )
+
+
+def without_customer_values(text: str, customer_values: list[str]) -> str:
+    """The text without the customer values it repeats; they join `customer_values`."""
+
+    stripped, values = strip_customer_values(text)
+    customer_values.extend(values)
+    return stripped
 
 
 def find_unverified_reply_values(

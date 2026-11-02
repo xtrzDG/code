@@ -3,6 +3,7 @@
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { formatRelative } from "@/components/insights/dates";
 import { Alert, Button } from "@/components/ui";
+import { useAdminErrorDetail } from "@/components/workspace/DeliveryProblem";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -34,7 +35,7 @@ const RELATIVE_DAYS = 7;
  * A connected channel's health on its card: when the last customer message
  * came in and the last reply went out, and the current problem in plain
  * words with the button that fixes it (owners). What the platform said
- * stays one click away, for support.
+ * stays one click away for platform admins (support).
  */
 export function ChannelHealthPanel({
   kind,
@@ -52,10 +53,12 @@ export function ChannelHealthPanel({
 }) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
+  const adminDetail = useAdminErrorDetail();
   const health = channelHealth(kind, channel);
   if (!health || !channel) {
     return null;
   }
+  const technicalDetail = adminDetail(channel.last_error);
   const when = (value: number) => formatRelative(value, locale, { maxDays: RELATIVE_DAYS }) ?? format.dateTime(value);
 
   return (
@@ -97,11 +100,11 @@ export function ChannelHealthPanel({
           {health.since !== null ? (
             <p className="mt-1 text-xs">{t("channelSetup.health.since", { when: when(health.since) })}</p>
           ) : null}
-          {channel.last_error ? (
+          {technicalDetail ? (
             <details className="mt-1 text-xs">
               <summary className="cursor-pointer select-none">{t("channelSetup.health.technical")}</summary>
               <p dir="auto" className="mt-1 font-mono break-words">
-                {channel.last_error}
+                {technicalDetail}
               </p>
             </details>
           ) : null}

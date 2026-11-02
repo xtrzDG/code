@@ -68,8 +68,10 @@ def read_observability_settings(
         ),
         release_version=read_release_version(environment_variables),
         log_format=read_log_format(environment_variables, is_production),
-        langfuse_host=PublicBaseUrl(
-            read_text(environment_variables, "LANGFUSE_HOST", DEFAULT_LANGFUSE_HOST)
+        langfuse_host=parse_setting(
+            "LANGFUSE_HOST",
+            read_text(environment_variables, "LANGFUSE_HOST", DEFAULT_LANGFUSE_HOST),
+            PublicBaseUrl,
         ),
         is_llm_content_traced=IsLlmContentTraced(
             read_boolean(environment_variables, "LANGFUSE_CAPTURE_CONTENT", False)

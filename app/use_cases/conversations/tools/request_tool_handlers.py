@@ -17,8 +17,11 @@ from app.schemas.dto.handoffs import (
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
+from app.schemas.typings.bookings.strings import LeadBudgetText, LeadDetails
+from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.use_cases.conversations.tools.tool_outcomes import success_outcome
 from app.use_cases.conversations.tools.tool_phone_numbers import resolve_phone
+from app.use_cases.conversations.tools.tool_texts import given_contact_name
 from app.utilities.conversations.tool_payloads import (
     render_handoff,
     render_lead,
@@ -38,17 +41,19 @@ def run_create_lead(
             business_id=context.business_id,
             contact_id=context.contact_id,
             conversation_id=context.conversation_id,
-            contact_name=(
-                tool_input.name if tool_input.name is not None else context.contact_name
-            ),
+            contact_name=given_contact_name(tool_input.name) or context.contact_name,
             contact_phone_number=resolve_phone(
                 phone_number_parser, tool_input.phone, context
             ),
             lead_type=tool_input.lead_type,
-            details=tool_input.details,
+            details=LeadDetails(str(tool_input.details)),
             requested_date=tool_input.requested_date,
             party_size=tool_input.party_size,
-            budget=tool_input.budget,
+            budget=(
+                None
+                if tool_input.budget is None
+                else LeadBudgetText(str(tool_input.budget))
+            ),
             source_channel=context.channel,
             language=context.language,
             is_sandbox=context.is_sandbox,
@@ -73,7 +78,7 @@ def run_handoff_to_human(
             conversation_id=context.conversation_id,
             contact_id=context.contact_id,
             reason=tool_input.reason,
-            summary=tool_input.summary,
+            summary=HandoffSummary(str(tool_input.summary)),
             urgency=tool_input.urgency,
             source_channel=context.channel,
             language=context.language,

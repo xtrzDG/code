@@ -10,7 +10,7 @@ export const adminReplySpeedEn = {
   p95: "19 of 20 replies within",
   replies: "Measured replies",
   slowNote: "More than one reply in twenty took over 15 seconds. Check the model provider and the business's tools.",
-  empty: "No measured replies in the last 7 days. Chats are measured from this release on; calls and the test chat are not.",
+  empty: "No measured replies in the last 7 days. Chat replies are measured; calls and the test chat are not.",
   tableCaption: "Reply speed by channel",
   channel: "Channel",
   channelReplies: "Replies",

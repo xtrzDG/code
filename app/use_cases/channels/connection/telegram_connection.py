@@ -1,5 +1,6 @@
 """Connect a Telegram bot: check its token and set its webhook."""
 
+import logging
 import re
 
 from app.contracts.channel_clients import TelegramBotApiClientContract
@@ -29,6 +30,14 @@ from app.utilities.channels.channel_endpoints import (
 )
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
 
+logger: logging.Logger = logging.getLogger(__name__)
+
+# What the owner reads when the platform cannot take a bot right now; the
+# missing setting is logged for the operator.
+CONNECT_UNAVAILABLE_TEXT: str = (
+    "Telegram cannot be connected right now. Contact support."
+)
+
 # Token from @BotFather: "<bot id>:<35 characters>".
 TELEGRAM_BOT_TOKEN_PATTERN: re.Pattern[str] = re.compile(
     r"^[0-9]{5,20}:[A-Za-z0-9_\-]{30,100}$"
@@ -57,9 +66,8 @@ def connect_telegram(
     bot_token: ChannelSecret = read_bot_token(request.bot_token)
     encryption_key: PlatformSecret | None = app_settings.encryption_key
     if encryption_key is None:
-        raise ExternalServiceError(
-            "Telegram cannot be connected: ENCRYPTION_KEY is not configured."
-        )
+        logger.warning("Telegram cannot be connected: ENCRYPTION_KEY is not configured.")
+        raise ExternalServiceError(CONNECT_UNAVAILABLE_TEXT)
 
     webhook_url: ChannelWebhookUrl = build_webhook_url(
         app_settings, build_telegram_webhook_path(channel_id)
@@ -82,6 +90,7 @@ def build_webhook_url(app_settings: AppSettings, path: str) -> ChannelWebhookUrl
             join_public_url("" if base_url is None else str(base_url), path)
         )
     except ValueError as error:
-        raise ExternalServiceError(
+        logger.warning(
             "Webhooks need a public https APP_BASE_URL; it is missing or not https."
-        ) from error
+        )
+        raise ExternalServiceError(CONNECT_UNAVAILABLE_TEXT) from error

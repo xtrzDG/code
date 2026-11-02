@@ -8,6 +8,7 @@ import type { LegalPage } from "@/lib/publicSite/paths";
 
 import { publicPageMetadata } from "../publicMetadata";
 import { loadLegalOverview } from "./legalData";
+import { legalPageDescription, legalPageLabel } from "./legalLabels";
 
 /**
  * Metadata of a public legal or contact page. While the texts are drafts
@@ -23,8 +24,8 @@ export async function legalPageMetadata(params: Promise<{ locale: string }>, pag
   const metadata = await publicPageMetadata({
     locale,
     rest: `/${page}`,
-    title: `${t(`legalPages.nav.${page}`)} · ${t("common.appName")}`,
-    description: t(`legalPages.descriptions.${page}`),
+    title: `${t(legalPageLabel(page))} · ${t("common.appName")}`,
+    description: t(legalPageDescription(page)),
     siteName: t("common.appName"),
   });
   const isDraft = overview?.is_draft ?? true;

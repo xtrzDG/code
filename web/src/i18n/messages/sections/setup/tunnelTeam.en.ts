@@ -23,7 +23,7 @@ export const tunnelTeamEn = {
     someoneElse: "Someone else",
     someoneElseHint: "A manager or an administrator.",
     name: "Name",
-    namePlaceholder: "For example, Nino",
+    namePlaceholder: "For example, Giulia",
     channel: "How to reach them",
     channels: {
       whatsapp: "WhatsApp",
@@ -43,7 +43,7 @@ export const tunnelTeamEn = {
     telegramCode: "Or send the bot this code: {code}",
     telegramWaiting: "Waiting for Telegram…",
     telegramLinked: "{name} gets the messages in Telegram.",
-    telegramUnavailable: "Telegram isn't set up on this server yet. Choose another way.",
+    telegramUnavailable: "Telegram is not available right now. Choose another way.",
     handoffTitle: "It calls a person when",
     handoffHint: "You can change this later in Assistant → Business profile → Rules.",
     errors: {

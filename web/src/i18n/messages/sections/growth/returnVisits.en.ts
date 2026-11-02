@@ -65,8 +65,8 @@ export const returnVisitsEn = {
     skipped: "Not sent",
   },
   preview: {
-    title: "What customers read",
-    description: "The message in each language of your business, with the date filled in as it would be today.",
+    title: "Message customers get",
+    description: "The message in each language of your business. Dates in it are each customer's own.",
   },
   messages: {
     title: "Latest messages",

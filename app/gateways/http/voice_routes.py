@@ -21,6 +21,7 @@ from app.schemas.dto.voice_webhooks import (
     VoiceWebhookCredentials,
 )
 from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
     AuthenticationRequiredError,
     NotFoundError,
 )
@@ -40,16 +41,15 @@ from app.utilities.channels.channel_endpoints import (
 )
 from app.utilities.channels.language_codes import to_voice_platform_language
 from app.utilities.channels.voice_service import (
-    CALLER_NAME_VARIABLE,
+    CALLER_ID_BOUND_TOOLS,
     LOCAL_NOW_VARIABLE,
     NEXT_DAYS_VARIABLE,
-    NO_BOOKING_VALUE,
+    NO_TRANSFER_VALUE,
     OPEN_NOW_NO,
     OPEN_NOW_VARIABLE,
     OPEN_NOW_YES,
     TIMEZONE_VARIABLE,
-    UNKNOWN_VALUE,
-    UPCOMING_BOOKING_VARIABLE,
+    TRANSFER_NUMBER_VARIABLE,
 )
 from app.utilities.conversations.tool_payloads import render_tool_error
 
@@ -87,7 +87,10 @@ def build_voice_router(
     body); the post-call webhook carries ElevenLabs-Signature. A tool call
     answers within VOICE_TOOL_DEADLINE_SECONDS: a tool still running then
     is left to finish on its own, and the agent gets an error result it
-    can say to the caller.
+    can say to the caller. The tools that act on a customer's bookings by
+    who they are (CALLER_ID_BOUND_TOOLS) never run on a call: a caller id
+    proves nobody's identity, so once the webhook is authenticated the
+    agent gets an error result that tells it to hand the request to staff.
     """
 
     router = APIRouter(tags=["voice"], responses=standard_error_responses())
@@ -116,9 +119,20 @@ def build_voice_router(
         )
         result: VoiceToolCallResult | None = None
         with anyio.move_on_after(VOICE_TOOL_DEADLINE_SECONDS):
-            result = await anyio.to_thread.run_sync(
-                voice_tool_operator.operate, request, abandon_on_cancel=True
-            )
+            try:
+                result = await anyio.to_thread.run_sync(
+                    voice_tool_operator.operate, request, abandon_on_cancel=True
+                )
+            except AccessDeniedError as refusal:
+                if request.tool_name not in CALLER_ID_BOUND_TOOLS:
+                    raise
+
+                # Authenticated, and refused before it ran: the agent hears
+                # why and hands the request to staff.
+                return Response(
+                    content=str(render_tool_error(str(refusal))),
+                    media_type=JSON_MEDIA_TYPE,
+                )
 
         if result is None:
             LOGGER.warning(
@@ -189,25 +203,21 @@ def build_voice_router(
 def build_call_variables(initiation: CallInitiationData) -> dict[str, str]:
     """
     The per-call variables of the agent's "Current call" block: whether the
-    business is open, the local date and time, the next days, the time
-    zone, and a known caller's name and next booking ("unknown" / "none").
+    business is open, the staff number a transfer may go to ("none": no
+    transfer on this call), the local date and time, the next days and
+    the time zone.
     """
 
     return {
         OPEN_NOW_VARIABLE: OPEN_NOW_YES if initiation.is_open_now else OPEN_NOW_NO,
+        TRANSFER_NUMBER_VARIABLE: (
+            NO_TRANSFER_VALUE
+            if initiation.transfer_phone_number is None
+            else str(initiation.transfer_phone_number)
+        ),
         LOCAL_NOW_VARIABLE: str(initiation.local_now_text),
         NEXT_DAYS_VARIABLE: str(initiation.next_days_text),
         TIMEZONE_VARIABLE: str(initiation.timezone),
-        CALLER_NAME_VARIABLE: (
-            UNKNOWN_VALUE
-            if initiation.caller_name is None
-            else str(initiation.caller_name)
-        ),
-        UPCOMING_BOOKING_VARIABLE: (
-            NO_BOOKING_VALUE
-            if initiation.upcoming_booking_text is None
-            else str(initiation.upcoming_booking_text)
-        ),
     }
 
 

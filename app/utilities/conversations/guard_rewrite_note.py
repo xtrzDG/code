@@ -1,9 +1,11 @@
 """
 The one request to rewrite a reply the guard held back: the values the
 evidence does not back, the policy or availability statements it does not
-back, and contact details that are neither the business's nor the
-customer's own.
+back, contact details that are neither the business's nor the customer's
+own, links the business did not publish, and the quote of a team note.
 """
+
+from collections.abc import Sequence
 
 from app.utilities.conversations.turn_context import build_rewrite_note
 
@@ -14,10 +16,17 @@ def build_guard_rewrite_note(
     unverified_values: list[str],
     unsupported_claims: list[str],
     withheld_details: list[str],
+    foreign_links: Sequence[str] = (),
+    quotes_team_note: bool = False,
 ) -> str:
     """The note; a reply held back for its values alone keeps the old wording."""
 
-    if not unsupported_claims and not withheld_details:
+    if (
+        not unsupported_claims
+        and not withheld_details
+        and not foreign_links
+        and not quotes_team_note
+    ):
         return build_rewrite_note(unverified_values)
 
     lines: list[str] = [PLATFORM_CHECK_HEADER]
@@ -41,6 +50,20 @@ def build_guard_rewrite_note(
             "business's nor this customer's own: "
             + "; ".join(withheld_details)
             + ". Never share another person's phone number or e-mail address."
+        )
+
+    if foreign_links:
+        lines.append(
+            "Your last reply contains links the business did not publish: "
+            + "; ".join(foreign_links)
+            + ". Use only links from the facts or tool results (send_link)."
+        )
+
+    if quotes_team_note:
+        lines.append(
+            "Your last reply quotes an internal note of the business's team. "
+            "Use the team's notes only as background and never repeat them to "
+            "the customer."
         )
 
     lines.append(

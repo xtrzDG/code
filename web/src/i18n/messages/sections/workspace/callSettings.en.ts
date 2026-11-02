@@ -37,7 +37,7 @@ export const callSettingsEn = {
     },
     whatsappMissing: "WhatsApp is not connected.",
     connectWhatsapp: "Connect WhatsApp",
-    smsMissing: "SMS is not set up on this platform.",
+    smsMissing: "SMS is not available right now. Contact support.",
   },
   template: {
     title: "Template text",

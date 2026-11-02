@@ -35,7 +35,7 @@ export const adminIncidentEn = {
   breach: {
     title: "Notice to owners",
     description:
-      "Owners get it by e-mail, or by SMS without an address, in their cabinet language. English is required; add Georgian and Russian so each owner reads it in their own language.",
+      "Owners get it by e-mail, or by SMS without an address, in their cabinet language. English is required; add Italian so each owner reads it in their own language.",
     subjects: "People concerned (approx.)",
     records: "Records concerned (approx.)",
     language: "Notice language",

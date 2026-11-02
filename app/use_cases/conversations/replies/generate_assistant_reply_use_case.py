@@ -1,9 +1,10 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.brain import AssistantToolRegistryContract
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.registries import CountryRegistryContract
 from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
@@ -43,11 +44,21 @@ from app.use_cases.conversations.replies.customer_turn import build_customer_tur
 from app.use_cases.conversations.replies.guarded_replies import (
     clean_reply,
     handed_off_reply,
+    rewrite_request,
     rewritten_reply,
 )
 from app.use_cases.conversations.replies.reply_review import (
     ReplyReview,
     ReplyReviewer,
+)
+from app.use_cases.conversations.replies.round_limits import (
+    MAX_TOOL_CALLS_PER_RESPONSE,
+    SpendCheck,
+    SpendLimitReached,
+    ToolCallBatch,
+    refuse_past_hard_limit,
+    refused_call_outcome,
+    split_tool_calls,
 )
 from app.use_cases.conversations.replies.transcript_turns import (
     append_response,
@@ -61,7 +72,6 @@ from app.use_cases.conversations.replies.turn_progress import (
     start_progress,
 )
 from app.utilities.conversations.customer_text_fencing import new_fence_key
-from app.utilities.conversations.guard_rewrite_note import build_guard_rewrite_note
 
 
 class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply]):
@@ -75,20 +85,24 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     the hourly limit), so the model never loses those messages. Customer text is
     fenced with a key that is new for every turn and cannot imitate the
     platform's lines (`customer_text_fencing`). The model may call
-    the offered tools for up to `tool_round_limit` rounds; all results of a
-    round go back in one tool-results turn. Every turn gets the next
-    sequence number and is only ever appended.
+    the offered tools for up to `tool_round_limit` rounds, at most
+    `tool_call_limit` calls a response (`round_limits`); all results of a
+    round go back in one tool-results turn. Past the business's hard spend
+    limit no further round is asked (`check_spend`, as the engine does
+    before the first). Every turn gets the next sequence number and is only
+    ever appended.
 
     The final text passes the reply guard (`ReplyReviewer`): values missing
     from the facts, the conversation's tool results and the context (and,
     except for prices and percentages, from the customer's messages),
-    policy and availability claims the claim check's verifier finds
-    unsupported, and another person's phone number or e-mail address are
-    sent back once with a request to rewrite; a reply that still has them
-    is replaced by a handoff (failure PERSONAL_DATA, UNVERIFIED_NUMBERS or
-    UNSUPPORTED_CLAIM). A refusal, a provider error or no answer within the
-    round limit are failures too; the engine then passes the conversation
-    to a colleague.
+    links the business did not publish, policy and availability claims the
+    claim check's verifier finds unsupported, another person's phone
+    number or e-mail address and a quoted team note are sent back once
+    with a request to rewrite; a reply that still has them is replaced by
+    a handoff (failure PERSONAL_DATA, UNVERIFIED_NUMBERS or
+    UNSUPPORTED_CLAIM). A refusal, a provider error, the spend limit or no
+    answer within the round limit are failures too; the engine then passes
+    the conversation to a colleague.
     """
 
     def __init__(
@@ -107,13 +121,23 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         effort: LlmEffort,
         tool_round_limit: LlmToolRoundLimit,
         fence_key_factory: Callable[[], str] = new_fence_key,
+        country_registry: CountryRegistryContract | None = None,
+        platform_hosts: Sequence[str | None] = (),
+        check_spend: SpendCheck | None = None,
+        tool_call_limit: int = MAX_TOOL_CALLS_PER_RESPONSE,
     ) -> None:
         self._llm_adapter: LlmAdapterContract = llm_adapter
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
         self._message_repo: MessageRepoContract = message_repo
         self._reviewer: ReplyReviewer = ReplyReviewer(
-            message_repo, contact_repo, claim_check
+            message_repo,
+            contact_repo,
+            claim_check,
+            country_registry,
+            [host for host in platform_hosts if host is not None],
         )
+        self._check_spend: SpendCheck | None = check_spend
+        self._tool_call_limit: int = tool_call_limit
         self._tool_registry: AssistantToolRegistryContract = tool_registry
         self._run_assistant_tool: UseCaseContract[
             AssistantToolInvocation, AssistantToolOutcome
@@ -148,7 +172,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             text: MessageText | None = self._run_rounds(input_data, tools, progress)
         except LlmRefusedError:
             return build_reply(input_data, progress, failure=ReplyFailureKind.REFUSAL)
-        except ExternalServiceError:
+        except ExternalServiceError, SpendLimitReached:
             return build_reply(
                 input_data, progress, failure=ReplyFailureKind.PROVIDER_ERROR
             )
@@ -173,20 +197,13 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             turn,
             progress,
             LlmTurnRole.USER,
-            self._llm_adapter.build_user_text_turn(
-                MessageText(
-                    build_guard_rewrite_note(
-                        [str(value) for value in first.unverified_values],
-                        [str(finding.claim) for finding in first.unsupported_claims],
-                        first.withheld_details,
-                    )
-                )
-            ),
+            self._llm_adapter.build_user_text_turn(rewrite_request(first)),
         )
         rewritten_text: MessageText | None = None
         try:
+            refuse_past_hard_limit(self._check_spend, turn)
             rewritten_text = self._run_rounds(turn, tools, progress)
-        except ExternalServiceError:
+        except ExternalServiceError, SpendLimitReached:
             rewritten_text = None
 
         if rewritten_text is None or str(rewritten_text).strip() == "":
@@ -228,29 +245,41 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             if not response.tool_calls:
                 return response.text
 
-            results: list[LlmToolResult] = [
-                self._run_tool(turn, progress, call) for call in response.tool_calls
-            ]
             self._append(
                 turn,
                 progress,
                 LlmTurnRole.USER,
-                self._llm_adapter.build_tool_results_turn(results),
+                self._llm_adapter.build_tool_results_turn(
+                    self._run_tools(turn, progress, response.tool_calls)
+                ),
             )
             if progress.rounds_used >= int(self._tool_round_limit):
                 return None
 
-    def _run_tool(
+            refuse_past_hard_limit(self._check_spend, turn)
+
+    def _run_tools(
         self,
         turn: PreparedTurn,
         progress: TurnProgress,
-        call: LlmToolCall,
-    ) -> LlmToolResult:
-        outcome: AssistantToolOutcome = self._run_assistant_tool.run(
-            AssistantToolInvocation(context=turn.tool_context, call=call)
-        )
-        record_tool_outcome(progress, call, outcome)
-        return outcome.result
+        calls: Sequence[LlmToolCall],
+    ) -> list[LlmToolResult]:
+        """Every call's result: those past the per-response limit never ran."""
+
+        batch: ToolCallBatch = split_tool_calls(calls, self._tool_call_limit)
+        results: list[LlmToolResult] = []
+        for call in calls:
+            outcome: AssistantToolOutcome = (
+                self._run_assistant_tool.run(
+                    AssistantToolInvocation(context=turn.tool_context, call=call)
+                )
+                if call in batch.run
+                else refused_call_outcome(call, self._tool_call_limit)
+            )
+            record_tool_outcome(progress, call, outcome)
+            results.append(outcome.result)
+
+        return results
 
     def _append(
         self,

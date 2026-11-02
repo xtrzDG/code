@@ -70,24 +70,20 @@ test("the help center finds articles for anyone, signed in or not", async ({ pag
   expect(response?.status()).toBe(404);
 });
 
-test("What's new shows a dot in the account menu until it is opened", async ({ page, owner }) => {
+test("What's new has no pre-launch entries: no dot, and the page says there is nothing to show", async ({ page, owner }) => {
   await page.goto(`/b/${owner.businessId}/overview`);
   await waitForNetworkQuiet(page);
   const accountButton = page.getByRole("button", { name: new RegExp(en.account.menu) });
-  await expect(page.locator("[data-changelog-dot]")).toBeVisible();
+  await expect(page.locator("[data-changelog-dot]")).toHaveCount(0);
   await accountButton.click();
   const panel = page.getByRole("dialog", { name: en.account.menu });
   const whatsNew = panel.getByRole("link", { name: new RegExp(help.support.whatsNew) });
-  await expect(whatsNew).toContainText("1 new");
+  await expect(whatsNew).not.toContainText(/\d+ new/);
   await whatsNew.click();
 
   await expect(page.getByRole("heading", { level: 1, name: en.changelog.title })).toBeVisible();
-  await expect(page.getByText(en.changelog.newBadge, { exact: true })).toBeVisible();
-  await waitForNetworkQuiet(page);
-
-  await page.goto(`/b/${owner.businessId}/overview`);
-  await waitForNetworkQuiet(page);
-  await expect(page.locator("[data-changelog-dot]")).toHaveCount(0);
+  await expect(page.getByText(en.changelog.emptyTitle)).toBeVisible();
+  await expect(page.getByText(en.changelog.newBadge, { exact: true })).toHaveCount(0);
 });
 
 test.describe("on a phone", () => {

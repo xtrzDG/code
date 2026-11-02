@@ -62,7 +62,6 @@ export const reviewSettingsEn = {
     description:
       "Create a WhatsApp utility template with this text in Meta Business Manager, one translation per language; its only parameter is your business name. Customers get it in their language, or in English when there is no translation.",
     body: "Text for the template",
-    example: "What customers read",
   },
   requests: {
     title: "Latest requests",

@@ -163,7 +163,7 @@ def test_login_protection_settings_have_safe_defaults() -> None:
 def test_login_protection_settings_are_read_and_checked() -> None:
     settings = assemble_app_settings(
         {
-            "OTP_HIGH_RISK_COUNTRIES": "",
+            "OTP_HIGH_RISK_COUNTRIES": "none",
             "OTP_DENIED_PHONE_PREFIXES": "+4490, +882",
             "TURNSTILE_SITE_KEY": "0x4AAAAAAABkMYinukE8nzY",
             "TURNSTILE_SECRET_KEY": "0x4AAAA-secret",

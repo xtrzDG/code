@@ -5,7 +5,7 @@
  * cookie here on the server.
  */
 
-import { LOCALE_COOKIE_MAX_AGE_SECONDS, type Locale } from "@/i18n/config";
+import type { Locale } from "@/i18n/config";
 import type { ApiErrorCode } from "@/api/errors";
 
 /** Request header the proxy sets so Server Components know the current path. */
@@ -13,57 +13,45 @@ export const PATHNAME_HEADER = "x-aw-pathname";
 
 export const REQUEST_ID_HEADER = "x-request-id";
 
-const DEFAULT_BACKEND_URL = "http://localhost:8000";
+/** Where a development run (`next dev`, the unit tests) finds the API without BACKEND_URL. */
+const DEVELOPMENT_BACKEND_URL = "http://localhost:8000";
 
 /** Long LLM-backed calls (assembly, autotests, test chat, menu import) need time. */
 const UPSTREAM_TIMEOUT_MS = 180_000;
 
 const MAX_REQUEST_ID_LENGTH = 128;
 
-/** Base URL of the API from BACKEND_URL, without a trailing slash. */
+/** BACKEND_URL is missing where the cabinet serves real visitors. */
+export class BackendUrlMissingError extends Error {
+  constructor() {
+    super("BACKEND_URL is not set: the cabinet's server cannot reach the API. Set it to the API's internal address.");
+    this.name = "BackendUrlMissingError";
+  }
+}
+
+let reportedMissingBackendUrl = false;
+
+/**
+ * Base URL of the API from BACKEND_URL, without a trailing slash. A
+ * production server without it fails every API call with
+ * BackendUrlMissingError (logged once), instead of quietly asking
+ * localhost:8000; `next build` (which renders no page that calls the API)
+ * and development runs fall back to localhost:8000.
+ */
 export function getBackendUrl(env: Record<string, string | undefined> = process.env): string {
   const configured = env.BACKEND_URL?.trim();
-  return (configured ? configured : DEFAULT_BACKEND_URL).replace(/\/+$/, "");
-}
-
-/** Secure cookies in production unless COOKIE_SECURE=false (plain-HTTP staging). */
-export function isCookieSecure(env: Record<string, string | undefined> = process.env): boolean {
-  if (env.COOKIE_SECURE === "false") {
-    return false;
+  if (configured) {
+    return configured.replace(/\/+$/, "");
   }
-  if (env.COOKIE_SECURE === "true") {
-    return true;
+  if (env.NODE_ENV === "production" && env.NEXT_PHASE !== "phase-production-build") {
+    const error = new BackendUrlMissingError();
+    if (!reportedMissingBackendUrl) {
+      reportedMissingBackendUrl = true;
+      console.error(error.message);
+    }
+    throw error;
   }
-  return env.NODE_ENV === "production";
-}
-
-export interface CookieOptions {
-  httpOnly: boolean;
-  secure: boolean;
-  sameSite: "lax";
-  path: string;
-  expires?: Date;
-  maxAge?: number;
-}
-
-export function sessionCookieOptions(expires?: Date): CookieOptions {
-  return {
-    httpOnly: true,
-    secure: isCookieSecure(),
-    sameSite: "lax",
-    path: "/",
-    ...(expires ? { expires } : {}),
-  };
-}
-
-export function localeCookieOptions(): CookieOptions {
-  return {
-    httpOnly: false,
-    secure: isCookieSecure(),
-    sameSite: "lax",
-    path: "/",
-    maxAge: LOCALE_COOKIE_MAX_AGE_SECONDS,
-  };
+  return DEVELOPMENT_BACKEND_URL;
 }
 
 /** The API sends times as UNIX microseconds. */
@@ -208,33 +196,6 @@ export function pickResponseHeaders(upstream: Headers, requestId: string): Heade
     headers.set("cache-control", "no-store");
   }
   return headers;
-}
-
-const SAFE_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "OPTIONS"]);
-
-/**
- * True for a state-changing request sent by another site. The session cookie
- * is SameSite=Lax already; this also refuses cross-site requests that
- * carry it by other means (defence in depth against CSRF).
- */
-export function isCrossSiteRequest(method: string, headers: Headers): boolean {
-  if (SAFE_METHODS.has(method.toUpperCase())) {
-    return false;
-  }
-  const fetchSite = headers.get("sec-fetch-site");
-  if (fetchSite === "cross-site") {
-    return true;
-  }
-  const origin = headers.get("origin");
-  if (!origin) {
-    return false;
-  }
-  const host = headers.get("x-forwarded-host") ?? headers.get("host");
-  try {
-    return host !== null && new URL(origin).host !== host.split(",")[0]?.trim();
-  } catch {
-    return true;
-  }
 }
 
 /** An error answer in the backend's own format. */

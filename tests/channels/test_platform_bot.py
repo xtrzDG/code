@@ -44,7 +44,12 @@ class TestTelegramLinkCreation:
     def test_without_the_platform_bot_nothing_is_created(self) -> None:
         setup = PlatformBotSetup(build_settings(TELEGRAM_PLATFORM_BOT_TOKEN=""))
 
-        assert setup.create_link({"name": "Levan"}).status_code == 502
+        response = setup.create_link({"name": "Levan"})
+
+        assert response.status_code == 502
+        assert response.json()["message"] == (
+            "Telegram notifications are not available right now. Contact support."
+        )
         assert setup.testbed.link_repo.list_by_business(setup.business.id) == []
 
     def test_unreachable_bot_still_gives_the_code(self) -> None:

@@ -9,15 +9,17 @@ from app.utilities.assembly.instruction_parts import (
     InstructionParts,
     collect_instruction_parts,
 )
-from app.utilities.assembly.instruction_sections import (
-    build_booking_section,
+from app.utilities.assembly.instruction_rule_sections import (
     build_emergency_section,
-    build_fact_section,
     build_handoff_section,
-    build_language_section,
     build_message_section,
     build_niche_rule_section,
     build_prohibition_section,
+)
+from app.utilities.assembly.instruction_sections import (
+    build_booking_section,
+    build_fact_section,
+    build_language_section,
     build_role_section,
     build_style_section,
     join_sections,
@@ -63,7 +65,9 @@ class AssistantInstructionTransformer(
                 parts.niche_handoff_rules,
                 parts.staff_language_name,
             ),
-            build_prohibition_section(parts.forbidden_rules),
+            build_prohibition_section(
+                parts.owner_forbidden_rules, parts.niche_forbidden_rules
+            ),
             build_niche_rule_section(parts.niche_rules),
             build_emergency_section(parts.emergency_number),
             build_message_section(),

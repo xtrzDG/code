@@ -79,7 +79,7 @@ export const depositsIt: Translation<typeof depositsEn> = {
     refundHours: "Rimborso in caso di cancellazione, ore prima della visita",
     refundHint: "Se cancella prima, restituisci la caparra. Se cancella dopo o non si presenta, la caparra resta a te.",
     manual:
-      "I pagamenti si confermano a mano: quando i soldi sono sul tuo conto esercente, apri la prenotazione e premi “Pagata”. La conferma diretta dal fornitore dei pagamenti non è collegata.",
+      "I pagamenti li confermi tu: quando i soldi sono sul tuo conto esercente, apri la prenotazione e premi “Pagata”. Fino ad allora il posto resta riservato per l'attesa impostata sopra.",
     errors: {
       hold: "Inserisci un numero di minuti da 15 a 1440.",
       refund: "Inserisci un numero di ore da 0 a 720.",
@@ -88,7 +88,7 @@ export const depositsIt: Translation<typeof depositsEn> = {
   pages: {
     title: "Pagine di pagamento",
     description:
-      "Le tue pagine dove pagano i clienti: Flitt, Stripe Payment Links, TBC, Bank of Georgia o qualsiasi fornitore con un link, in qualsiasi paese e valuta.",
+      "Le tue pagine dove pagano i clienti: Flitt, Stripe Payment Links, Satispay, Nexi o qualsiasi fornitore con un link, in qualsiasi paese e valuta.",
     empty: "Ancora nessuna pagina di pagamento",
     emptyDescription: "Aggiungi il link della tua pagina di pagamento. L’assistente lo invia insieme alla caparra.",
     add: "Aggiungi la pagina",

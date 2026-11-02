@@ -84,14 +84,22 @@ describe("replies to comments on the Instagram card", () => {
     expect(screen.getByText(t("metaConnect.commentReplies.errors.keyword"))).toBeTruthy();
   });
 
-  it("say they wait for the next update, and staff only read them (in Italian too)", () => {
+  it("are only read by staff (in Italian too)", () => {
     const t = textsIn("it").t;
-    show(instagram({ is_on: true, is_available: false, keywords: ["תפריט"], reply_text: "שלום" }), false, "it");
+    show(instagram({ is_on: true, is_available: true, keywords: ["menù"], reply_text: "Ciao" }), false, "it");
 
-    expect(screen.getByText(t("metaConnect.commentReplies.unavailable"))).toBeTruthy();
-    expect(screen.getByText(t("metaConnect.commentReplies.summaryOn", { keywords: "תפריט" }))).toBeTruthy();
+    expect(screen.getByText(t("metaConnect.commentReplies.summaryOn", { keywords: "menù" }))).toBeTruthy();
     expect(screen.queryByRole("switch")).toBeNull();
     expect(screen.queryByRole("button", { name: t("metaConnect.commentReplies.save") })).toBeNull();
+  });
+
+  it("are hidden while the service does not answer comments, without a promise of an update", () => {
+    const { t } = textsIn("en");
+    show(instagram({ is_on: true, is_available: false, keywords: ["menu"], reply_text: "Our menu" }));
+
+    expect(screen.queryByText(t("metaConnect.commentReplies.title"))).toBeNull();
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/next update/);
   });
 
   it("show nothing on a channel without them", () => {

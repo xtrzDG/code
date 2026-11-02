@@ -40,7 +40,7 @@ export const metaConnectEn = {
   },
   refusals: {
     meta_link_expired: "This Facebook sign-in has ended. Start again.",
-    meta_not_configured: "Facebook sign-in is not set up on this server. Enter the details manually.",
+    meta_not_configured: "Facebook sign-in is not available right now. Enter the details manually.",
     meta_permission_missing:
       "Facebook did not give every permission we need. Start again and leave all the boxes ticked.",
     whatsapp_account_missing:
@@ -57,7 +57,6 @@ export const metaConnectEn = {
     toggle: "Reply in Direct to comments with a keyword",
     description:
       "When someone writes one of your keywords in a comment under a post, the assistant sends them one message in Direct. At most one a day to each person and 60 an hour.",
-    unavailable: "Replies to comments start with the next update of the service. Your settings are kept until then.",
     summaryOn: "On, for: {keywords}",
     summaryOff: "Off",
     keywords: "Keywords",

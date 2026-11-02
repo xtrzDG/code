@@ -37,7 +37,7 @@ async function isSessionRejected(token: string, request: NextRequest): Promise<b
 
 export async function GET(request: NextRequest): Promise<Response> {
   const next = request.nextUrl.searchParams.get("next");
-  const token = readSessionToken(request.cookies);
+  const token = readSessionToken(request.cookies, request.headers);
   if (token && !(await isSessionRejected(token, request))) {
     // The API returns 401 only for a missing or rejected session, so going
     // back to `next` cannot loop here.

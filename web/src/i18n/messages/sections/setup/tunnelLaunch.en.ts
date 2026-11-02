@@ -78,7 +78,7 @@ export const tunnelLaunchEn = {
     phoneTitle: "Test it from your phone",
     phoneText: "Point your phone's camera at the code and write a message, like a customer.",
     qrAlt: "QR code that opens {link}",
-    noLink: "Your page's link appears here once the cabinet's public address is set on the server.",
+    noLink: "Your page's link is not available right now. Contact support.",
     open: "Open my assistant",
     nextTitle: "Next, when you're ready",
     next: {

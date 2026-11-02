@@ -22,12 +22,18 @@ from app.gateways.http.middleware.anonymous_request_limit_middleware import (
 from app.gateways.http.middleware.body_size_limit_middleware import (
     BodySizeLimitMiddleware,
 )
+from app.gateways.http.middleware.request_deadline_middleware import (
+    RequestDeadlineMiddleware,
+)
 from app.gateways.http.middleware.request_telemetry_middleware import (
     RequestTelemetryMiddleware,
 )
 from app.gateways.http.middleware.security_headers_middleware import (
     SecurityHeadersMiddleware,
     with_security_headers,
+)
+from app.gateways.http.middleware.webhook_admission_middleware import (
+    WebhookAdmissionMiddleware,
 )
 from app.gateways.http.operation_ids import readable_operation_id
 from app.gateways.http.request_context_middleware import (
@@ -78,11 +84,15 @@ def build_http_application(
     widget routes answer CORS themselves. `GET /healthz` is pure liveness: an
     async handler that needs no request thread, so it answers while slow
     requests hold all of them. `lifespan` runs startup and shutdown work (see
-    `app.main`). Request bodies are limited per route (413), every answer
-    carries the security headers, and in production the API description
-    (/docs, /openapi.json) is not served and HSTS is sent. With
-    `anonymous_request_admission`, requests without a token count against
-    their client network's generic limit (429 with Retry-After). Every
+    `app.main`). Request bodies are limited per route (413), an API route
+    that has not answered within its deadline is answered 504, every
+    answer carries the security headers, and in production the API
+    description (/docs, /openapi.json) is not served and HSTS is sent.
+    The providers' webhooks are admitted before their bodies are read (a
+    flood budget per provider and client network, 429; an unsigned
+    delivery, 401). With `anonymous_request_admission`, requests without a
+    verified credential count against their client network's generic
+    limit (429 with Retry-After). Every
     request is measured (`service_metrics`, by route template) and traced
     (`span_tracer`), its trace id in its log lines, and counted for the API
     availability SLI (`api_availability`). Creating routes with an
@@ -104,6 +114,8 @@ def build_http_application(
     install_idempotency(http_application)
     # Inside CORS (added below), so a refused body still answers with CORS.
     http_application.add_middleware(BodySizeLimitMiddleware)
+    # Inside CORS too: the widget can read a 504 like any other refusal.
+    http_application.add_middleware(RequestDeadlineMiddleware)
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
         error_reporter.capture_exception(error)
@@ -144,8 +156,13 @@ def build_http_application(
 
     if anonymous_request_admission is not None:
         http_application.add_middleware(
-            AnonymousRequestLimitMiddleware, admit=anonymous_request_admission
+            AnonymousRequestLimitMiddleware,
+            admit=anonymous_request_admission,
+            routes=lambda: http_application.routes,
         )
+
+    # Before anything reads a webhook's body (its route, the body limit).
+    http_application.add_middleware(WebhookAdmissionMiddleware)
 
     http_application.add_middleware(WidgetCorsMiddleware)
     # Inside the request id, outside everything that can refuse a request

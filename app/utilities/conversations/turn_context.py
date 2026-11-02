@@ -15,6 +15,7 @@ from app.utilities.conversations.customer_text_fencing import (
     describe_fence,
     fence_customer_text,
 )
+from app.utilities.conversations.untrusted_text import wrap_customer_value
 
 WEEKDAY_NAMES: tuple[str, ...] = (
     "Monday",
@@ -86,7 +87,10 @@ def build_context_line(context: TurnContext) -> str:
         Next days: Fri 2026-10-02, Sat 2026-10-03, ...
         Channel: whatsapp.
         Reply language: Georgian (ka).
-        Customer: Giorgi, phone +995555123456.
+        Customer: <customer_value>Giorgi</customer_value>, phone +995555123456.
+
+    The customer's name is the customer's own value: fenced, it can never
+    read as a line of the platform.
     """
 
     lines: list[str] = [
@@ -103,7 +107,7 @@ def build_context_line(context: TurnContext) -> str:
     lines.append(context.reply_language_note)
     customer_details: list[str] = []
     if context.customer_name is not None:
-        customer_details.append(context.customer_name)
+        customer_details.append(wrap_customer_value(context.customer_name))
 
     if context.customer_phone_number is not None:
         customer_details.append(f"phone {context.customer_phone_number}")

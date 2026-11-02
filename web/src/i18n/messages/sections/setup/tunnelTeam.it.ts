@@ -42,7 +42,7 @@ export const tunnelTeamIt: Translation<typeof tunnelTeamEn> = {
     telegramCode: "Oppure invia al bot questo codice: {code}",
     telegramWaiting: "In attesa di Telegram…",
     telegramLinked: "{name} riceve i messaggi su Telegram.",
-    telegramUnavailable: "Telegram non è ancora configurato su questo server. Scegli un altro modo.",
+    telegramUnavailable: "Telegram non è disponibile al momento. Scegli un altro modo.",
     handoffTitle: "Chiama una persona quando",
     handoffHint: "Puoi cambiarlo in seguito in Assistente → Profilo dell'attività → Regole.",
     errors: {

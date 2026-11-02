@@ -86,9 +86,11 @@ class TestConnectTelegram:
         ):
             setup = CabinetSetup(build_settings(**overrides))
             setup.script_telegram()
-            assert (
-                setup.put("telegram", {"bot_token": TELEGRAM_BOT_TOKEN}).status_code
-                == 502
+            response = setup.put("telegram", {"bot_token": TELEGRAM_BOT_TOKEN})
+            assert response.status_code == 502
+            # The owner reads a plain refusal; the setting is only logged.
+            assert response.json()["message"] == (
+                "Telegram cannot be connected right now. Contact support."
             )
             assert setup.testbed.telegram_transport.requests_to("/setWebhook") == []
 

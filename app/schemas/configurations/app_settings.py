@@ -68,6 +68,7 @@ from app.schemas.typings.platform.constrained_integers import (
 )
 from app.schemas.typings.platform.constrained_strings import (
     CabinetBaseUrl,
+    EnvironmentVariableName,
     ReleaseVersion,
 )
 from app.schemas.typings.platform.strings import (
@@ -112,6 +113,9 @@ class AppSettings(AppSettingsSections):
         default_factory=list[PlatformSecret], repr=False
     )
     llm_provider: LlmProvider
+    # The model providers whose API key is set (OPENAI_API_KEY,
+    # ANTHROPIC_API_KEY): the SDKs read the keys, the settings only this.
+    keyed_llm_providers: frozenset[LlmProvider] = frozenset()
     llm_model_id: LlmModelId
     llm_judge_model_id: LlmModelId
     # Call summaries for staff (LLM_SUMMARY_MODEL_ID); None: the chat model.
@@ -250,3 +254,7 @@ class AppSettings(AppSettingsSections):
     # (RECORDINGS_S3_*), encrypted per business, in production.
     recording_storage_kind: RecordingStorageKind = RecordingStorageKind.LOCAL
     recordings_object_storage: ObjectStorageConnection | None = None
+    # Variables production must set that are blank here, their development
+    # defaults standing in (the seller's identity): production refuses to
+    # start on them (`check_production_requirements`).
+    development_default_variables: tuple[EnvironmentVariableName, ...] = ()

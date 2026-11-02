@@ -129,8 +129,12 @@ def check_login_code_providers(environment_variables: Mapping[str, str]) -> None
 
 
 def read_smtp_security(environment_variables: Mapping[str, str]) -> SmtpSecurity:
-    return SmtpSecurity(
-        read_text(environment_variables, "SMTP_SECURITY", SmtpSecurity.STARTTLS)
+    return parse_setting(
+        "SMTP_SECURITY",
+        read_text(
+            environment_variables, "SMTP_SECURITY", SmtpSecurity.STARTTLS
+        ).lower(),
+        SmtpSecurity,
     )
 
 

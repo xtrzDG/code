@@ -100,7 +100,7 @@ export const billingEn = {
     current: "Current plan",
     switchTo: "Switch to this plan",
     startTrial: "Start free trial",
-    empty: "Plans for your country are not available yet.",
+    empty: "Plans are not available for your country.",
     estimatedNote: "Prices with ≈ are a guide only: converted at {source} as of {date}; the invoice shows the exact amount.",
   },
   invoices: {
@@ -140,7 +140,7 @@ export const billingEn = {
     legalName: "Legal name",
     legalNameHint: "As registered, e.g. “Trattoria da Gino S.r.l.”.",
     taxId: "Tax ID",
-    taxIdHint: "The number the tax office knows the company by; in Georgia, its identification code.",
+    taxIdHint: "The company's VAT number (in Italy, the Partita IVA) or the tax code the tax office knows it by.",
     country: "Country",
     countryHint: "Where the company is registered; it decides the VAT.",
     billingEmail: "E-mail for invoices",
@@ -151,7 +151,7 @@ export const billingEn = {
       not_registered: "not charged, the platform is not registered for VAT.",
       standard: "{rate} is included in each invoice.",
       reverse_charge: "none on the invoice: reverse charge, you account for the VAT in your country.",
-      outside_scope: "none: the service is supplied to a buyer outside Georgia.",
+      outside_scope: "none: the service is supplied to a buyer outside the platform's country.",
     },
     errors: {
       legalName: "Enter the legal name.",

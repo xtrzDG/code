@@ -47,7 +47,7 @@ export async function relayEventStream(
   backendPath: string,
   connectTimeoutMs: number = EVENT_STREAM_CONNECT_TIMEOUT_MS,
 ): Promise<Response> {
-  const prepared = prepareBackendCall(request, { useSession: true });
+  const prepared = prepareBackendCall(request, { useSession: true, backendPath });
   if ("refusal" in prepared) {
     return prepared.refusal;
   }

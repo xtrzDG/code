@@ -17,6 +17,10 @@ from app.schemas.dto.profiles.business_profile import (
     SaveProfileCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.profiles.owner_instructions import (
+    check_rule_instructions,
+    check_tone_instruction,
+)
 from app.utilities.knowledge.niche_answers import merge_niche_answers
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
 from app.utilities.knowledge.profile_links import store_profile_links
@@ -41,7 +45,9 @@ class SaveProfileUseCase(UseCaseContract[SaveProfileCommand, BusinessProfileView
 
     Applies the same validation as the wizard steps: niche answers, hours
     without overlaps, phones of any country in E.164, booking rules with the
-    deposit in the business currency, one link per kind. Contact phone
+    deposit in the business currency, one link per kind, and the tone and
+    rules that join the assistant's instruction as instructions
+    (`owner_instructions`). Contact phone
     changes are written to the audit log.
     """
 
@@ -97,11 +103,15 @@ class SaveProfileUseCase(UseCaseContract[SaveProfileCommand, BusinessProfileView
             template,
             business,
         )
-        profile.handoff_rules = check_rules(
-            profile_input.handoff_rules, subject="handoff"
+        profile.handoff_rules = check_rule_instructions(
+            check_rules(profile_input.handoff_rules, subject="handoff"),
+            subject="handoff",
         )
-        profile.forbidden = check_rules(profile_input.forbidden, subject="forbidden")
-        profile.tone = check_tone(profile_input.tone)
+        profile.forbidden = check_rule_instructions(
+            check_rules(profile_input.forbidden, subject="forbidden"),
+            subject="forbidden",
+        )
+        profile.tone = check_tone_instruction(check_tone(profile_input.tone))
         store_profile_links(profile, validate_links(profile_input.links))
         profile.niche_answers = merge_niche_answers(
             template=template,

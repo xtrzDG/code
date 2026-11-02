@@ -17,20 +17,6 @@ class CallNextDaysText(BaseTypedString):
     """
 
 
-class CallUpcomingBookingText(BaseTypedString):
-    """
-    The caller's next booking as the voice agent learns it when the call
-    starts: "Saturday 2026-10-03 20:00, Table 4, 4 people".
-    """
-
-
-class CallerNameText(BaseTypedString):
-    """
-    A known caller's name as the voice agent receives it: from the contact,
-    on one line, without brackets or markup, and short.
-    """
-
-
 class ChannelExternalId(BaseTypedString):
     """
     Business account inside a channel (concept channels.external_id).

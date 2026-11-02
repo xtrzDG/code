@@ -70,9 +70,10 @@ def speak_facts(facts: Sequence[BusinessFact]) -> SpokenFactTable:
             continue
 
         spoken_value: str = speak_text(value)
+        spoken_label: str = speak_text(str(fact.label))
         table.rows.append(
             (
-                speak_text(str(fact.label)),
+                wrap_untrusted(spoken_label) if fact.is_imported else spoken_label,
                 wrap_untrusted(spoken_value) if fact.is_imported else spoken_value,
             )
         )

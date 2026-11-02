@@ -8,12 +8,15 @@ import { LOGIN_PATH } from "@/lib/navigation";
 
 import { IconLogout } from "../icons";
 
+import { signOut } from "./signOut";
+
 const DEFAULT_LOOK =
   "inline-flex h-8 items-center gap-2 rounded-lg px-2.5 text-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink";
 
 /**
- * Ends the session (POST /api/auth/logout) and opens the sign-in page.
- * `className` replaces the default look (a quiet button) when given.
+ * Ends the session (POST /api/auth/logout), forgets what it left in this
+ * browser (signOut.ts) and opens the sign-in page. `className` replaces
+ * the default look (a quiet button) when given.
  */
 export function SignOutButton({ className, iconOnlyOnPhones = false }: { className?: string; iconOnlyOnPhones?: boolean }) {
   const { t } = useI18n();
@@ -25,12 +28,9 @@ export function SignOutButton({ className, iconOnlyOnPhones = false }: { classNa
       disabled={isPending}
       onClick={async () => {
         setPending(true);
-        try {
-          await fetch("/api/auth/logout", { method: "POST" });
-        } finally {
-          // A full load drops every bit of client state of the old session.
-          window.location.assign(LOGIN_PATH);
-        }
+        await signOut();
+        // A full load drops every bit of client state of the old session.
+        window.location.assign(LOGIN_PATH);
       }}
       className={cn("cursor-pointer disabled:opacity-60", className ?? DEFAULT_LOOK)}
     >

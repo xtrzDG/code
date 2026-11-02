@@ -10,7 +10,7 @@ export const passkeysEn = {
     "Confirm it is you with your fingerprint, face or device PIN instead of a code. A passkey works only on this site, so it cannot be phished.",
   recommended: "The safest second factor: add a passkey on each device you use.",
   unavailable:
-    "Passkeys are not set up on this server yet. Use the authenticator app below.",
+    "Passkeys are not available right now. Use the authenticator app below.",
   unsupported:
     "This browser cannot use passkeys. Open the cabinet in another browser or use the authenticator app.",
   empty: "No passkeys yet.",

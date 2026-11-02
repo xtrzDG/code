@@ -15,14 +15,20 @@ from app.schemas.typings.invoicing.constrained_integers import TaxRateBasisPoint
 from app.schemas.typings.invoicing.constrained_strings import (
     TaxpayerIdentificationNumber,
 )
-from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    TimezoneName,
+)
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from tests.invoicing.invoicing_world import seller_settings
 
 REGISTERED: SellerSettings = SellerSettings(
-    tax_id=TaxpayerIdentificationNumber("405999999"), is_vat_registered=True
+    country_code=CountryCode("GE"),
+    time_zone=TimezoneName("Asia/Tbilisi"),
+    tax_id=TaxpayerIdentificationNumber("405999999"),
+    is_vat_registered=True,
 )
 
 

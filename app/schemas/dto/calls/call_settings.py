@@ -14,8 +14,10 @@ from app.schemas.constants.calls import (
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.booleans import (
+    IsCallRecordingEnabled,
     IsCallSummaryEnabled,
     IsSmsFallbackEnabled,
+    IsStaffTransferConfirmed,
     IsTextBackEnabled,
 )
 from app.schemas.typings.calls.prefixed_id import MissedCallId
@@ -38,13 +40,19 @@ class CallSettingsRequest(ImmutableDTO):
     """
     The owner's choices: summaries to staff after every call, a message
     to a caller who did not get through (on WhatsApp, in the approved
-    template `text_back_template_name`, else by SMS when allowed).
+    template `text_back_template_name`, else by SMS when allowed), the
+    recording of the calls (`is_recording_enabled`) and the confirmation
+    that staff taking transferred calls were told the voice platform may
+    process them (`is_staff_transfer_confirmed`); these two stay as they
+    are when the request leaves them out (null).
     """
 
     is_summary_enabled: IsCallSummaryEnabled = True
     is_text_back_enabled: IsTextBackEnabled = False
     text_back_template_name: WhatsAppTemplateName | None = None
     is_sms_fallback_enabled: IsSmsFallbackEnabled = True
+    is_recording_enabled: IsCallRecordingEnabled | None = None
+    is_staff_transfer_confirmed: IsStaffTransferConfirmed | None = None
 
 
 class CallSettingsQuery(ImmutableDTO):
@@ -70,11 +78,21 @@ class TextBackTemplatePreview(ImmutableDTO):
     example: MessageText
 
 
+class CallNoticePreview(ImmutableDTO):
+    """What a caller hears about the recording and the privacy notice."""
+
+    language: LanguageTag
+    text: MessageText
+
+
 class CallSettingsView(ImmutableDTO):
     """
     The settings with what they rely on: whether the business's WhatsApp
     number is connected, whether the platform can send SMS, and the
-    text-back in each language of the business.
+    text-back in each language of the business; the recording with the
+    notice callers hear in each language (`recording_notices`), and the
+    staff number transfers go to (None: no allowed staff number) with the
+    owner's confirmation of the staff notice (who confirmed it, when).
     """
 
     is_summary_enabled: IsCallSummaryEnabled
@@ -86,6 +104,13 @@ class CallSettingsView(ImmutableDTO):
     template_previews: list[TextBackTemplatePreview] = Field(
         default_factory=list[TextBackTemplatePreview]
     )
+    is_recording_enabled: IsCallRecordingEnabled = False
+    recording_notices: list[CallNoticePreview] = Field(
+        default_factory=list[CallNoticePreview]
+    )
+    is_staff_transfer_confirmed: IsStaffTransferConfirmed = False
+    staff_transfer_confirmed_at: Microseconds | None = None
+    transfer_phone_number: E164PhoneNumber | None = None
 
 
 class TextBackPageQuery(ImmutableDTO):

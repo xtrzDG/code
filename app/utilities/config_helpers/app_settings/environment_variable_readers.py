@@ -6,6 +6,8 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 
 TRUE_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
+# A list variable with a default is emptied only by this word: blank is unset.
+EMPTY_LIST_VALUE: str = "none"
 
 
 def read_text(
@@ -35,6 +37,21 @@ def read_integer(
         raise ValidationFailedError(
             f"{variable_name} must be an integer, got {raw_value!r}."
         ) from error
+
+
+def read_typed_integer[TypedValue](
+    environment_variables: Mapping[str, str],
+    variable_name: str,
+    default_value: int,
+    typed_value_type: Callable[[int], TypedValue],
+) -> TypedValue:
+    """An integer setting in its primitive's range; errors name the variable."""
+
+    return parse_setting(
+        variable_name,
+        read_integer(environment_variables, variable_name, default_value),
+        typed_value_type,
+    )
 
 
 def read_float(
@@ -79,9 +96,18 @@ def read_list(
     variable_name: str,
     default_value: str,
 ) -> list[str]:
-    raw_value: str = environment_variables.get(variable_name, default_value)
+    """
+    Upper-cased comma-separated items; a blank value is unset (the default
+    applies, so an empty field of a deployment form never turns a list off),
+    and `none` is the empty list.
+    """
+
+    raw_value: str = environment_variables.get(variable_name, "").strip()
+    if raw_value.lower() == EMPTY_LIST_VALUE:
+        return []
+
     items: list[str] = []
-    for raw_item in raw_value.split(","):
+    for raw_item in (raw_value or default_value).split(","):
         item: str = raw_item.strip().upper()
         if item != "":
             items.append(item)

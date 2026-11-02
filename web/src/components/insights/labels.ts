@@ -35,16 +35,12 @@ export const CHANNEL_LABELS: Record<ChannelKind, MessageKey> = {
   owner_test: "insights.channels.owner_test",
 };
 
-/** Channels a customer can reach the business through (not the owner's test chat). */
-export const CUSTOMER_CHANNELS: readonly ChannelKind[] = [
-  "phone",
-  "whatsapp",
-  "telegram",
-  "instagram",
-  "messenger",
-  "viber",
-  "web_chat",
-];
+/**
+ * Channels a customer can reach the business through (not the owner's test
+ * chat), for filters and booking sources. Viber cannot be connected, so it
+ * is not offered (its label stays for old records).
+ */
+export const CUSTOMER_CHANNELS: readonly ChannelKind[] = ["phone", "whatsapp", "telegram", "instagram", "messenger", "web_chat"];
 
 export const CONVERSATION_STATUS: Record<ConversationStatus, StatusLabel> = {
   open: { label: "conversations.status.open", tone: "info" },

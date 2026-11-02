@@ -10,13 +10,18 @@
  *    reported to (server/contentSecurityPolicy.ts); the pages where an
  *    owner signs in with Facebook also let its SDK in
  *    (lib/metaSignInPages.ts);
- *  - a session under the cookie's old name moves to `__Host-aw_session`;
+ *  - a session under the cookie's old name moves to `__Host-aw_session`
+ *    outside production; in production that cookie is only dropped
+ *    (server/sessionCookie.ts);
  *  - the public hosted chat page (/c/{address}) gets its business and a
  *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
  *  - a guest's booking page (/r/{token}) is never indexed, cached or
  *    named in a Referer (the address is the key to the booking);
  *  - a visitor's first landing or hosted chat page keeps where they came
- *    from in the `aw_attr` cookie (server/attributionCookie.ts);
+ *    from in the `aw_attr` cookie, only once they accepted it on the
+ *    public site's cookie banner (`aw_consent`); without consent the
+ *    cookie is never set and one already there is dropped
+ *    (server/attributionCookie.ts);
  *  - a public page in a language (/ka, /ru/for/hotel) is rendered in it,
  *    and a first-time visitor's cabinet starts in it too; a legal page
  *    without a language (/privacy) goes to the reader's (lib/publicSite).
@@ -29,15 +34,9 @@ import { isMetaSignInPage } from "@/lib/metaSignInPages";
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
 import { PATH_LOCALE_HEADER, localizedRedirectPath, pathLocale } from "@/lib/publicSite/paths";
 import { isBookingPagePath } from "@/lib/bookingPage/paths";
-import {
-  PATHNAME_HEADER,
-  buildUpstreamHeaders,
-  callBackend,
-  isCookieSecure,
-  localeCookieOptions,
-  sanitizeRequestId,
-} from "@/server/backend";
+import { PATHNAME_HEADER, buildUpstreamHeaders, callBackend, sanitizeRequestId } from "@/server/backend";
 import { rememberFirstVisit } from "@/server/attributionCookie";
+import { isCookieSecure, localeCookieOptions } from "@/server/cookieSecurity";
 import {
   NONCE_HEADER,
   REPORTING_ENDPOINTS,
@@ -78,7 +77,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
 async function route(request: NextRequest): Promise<NextResponse> {
   const { pathname, search, searchParams } = request.nextUrl;
-  const token = readSessionToken(request.cookies);
+  const token = readSessionToken(request.cookies, request.headers);
 
   // The payment page (Flitt) returns the payer with a cross-site form POST,
   // which never carries the SameSite=Lax session cookie. Pages take no plain
@@ -115,7 +114,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
   const policy = buildContentSecurityPolicy({
     nonce,
     isDevelopment: process.env.NODE_ENV === "development",
-    isHttps: isCookieSecure(),
+    isHttps: isCookieSecure(request.headers),
     allowsFacebookSignIn: isMetaSignInPage(pathname),
   });
   requestHeaders.set(CSP_HEADER, policy);
@@ -156,7 +155,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
     response.headers.set("cache-control", "private, no-store");
   }
   if (newLocale) {
-    response.cookies.set(LOCALE_COOKIE, newLocale, localeCookieOptions());
+    response.cookies.set(LOCALE_COOKIE, newLocale, localeCookieOptions(request.headers));
   }
   return response;
 }

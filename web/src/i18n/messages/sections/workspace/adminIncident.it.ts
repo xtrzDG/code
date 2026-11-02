@@ -34,7 +34,7 @@ export const adminIncidentIt: Translation<typeof adminIncidentEn> = {
   breach: {
     title: "Avviso ai titolari",
     description:
-      "I titolari lo ricevono via e-mail, o via SMS se non hanno un indirizzo, nella lingua del loro pannello. L'inglese è obbligatorio; aggiungi georgiano e russo così ogni titolare lo legge nella sua lingua.",
+      "I titolari lo ricevono via e-mail, o via SMS se non hanno un indirizzo, nella lingua del loro pannello. L'inglese è obbligatorio; aggiungi l'italiano così ogni titolare lo legge nella sua lingua.",
     subjects: "Persone coinvolte (circa)",
     records: "Dati coinvolti (circa)",
     language: "Lingua dell'avviso",

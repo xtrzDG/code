@@ -57,7 +57,8 @@ class GoLiveCheck(ImmutableDTO):
     - profile_gaps: the blocking gap kinds ("no_opening_hours", ...);
     - staff_contact: "no_handoff_contact" while nobody receives handoffs;
     - autotests: the version status, then the latest run's status;
-    - voice_configuration: the missing server settings ("APP_BASE_URL").
+    - voice_configuration: none (which settings are missing is logged for
+      the operator, never shown to the owner).
     """
 
     code: GoLiveCheckCode

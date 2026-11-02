@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * "Technical details": what is behind a message (the model, tokens and AI
- * cost for platform admins; the exact requests the assistant made to the
- * business's data, with their answers, for everyone who opens it) and the
- * conversation's totals. Closed by default for everyone, who read the
- * plain actions above it; a person's own open or close is remembered
- * (_lib/technicalDetails).
+ * "Technical details", for platform admins only: what is behind a message
+ * (the model, tokens, AI cost and the exact requests the assistant made to
+ * the business's data, with their answers) and the conversation's totals
+ * (the assistant version, tokens and cost). Owners and staff read the
+ * plain actions above instead. Closed by default; a person's own open or
+ * close is remembered (_lib/technicalDetails).
  */
 
 import { useEffect, useRef, type ReactNode } from "react";
@@ -85,20 +85,23 @@ function ToolCallDetails({ call }: { call: ToolCallView }) {
   );
 }
 
-/** Whether a message has anything behind it to show. */
+/** Whether a message has anything behind it to show: only to platform admins. */
 export function hasTechnicalDetails(message: MessageView, isPlatformAdmin: boolean): boolean {
-  return (message.tool_calls?.length ?? 0) > 0 || (isPlatformAdmin && Boolean(message.model_id || message.input_tokens));
+  return isPlatformAdmin && ((message.tool_calls?.length ?? 0) > 0 || Boolean(message.model_id || message.input_tokens));
 }
 
-/** The technical details of one message. */
+/** The technical details of one message (platform admins only). */
 export function MessageTechnicalDetails({ message, className }: { message: MessageView; className?: string }) {
   const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
   const { isPlatformAdmin } = useBusiness();
+  if (!isPlatformAdmin) {
+    return null;
+  }
   const tokens = message.input_tokens + message.output_tokens;
   return (
     <Disclosure label={t("inboxCard.technical.message")} className={className}>
-      {isPlatformAdmin && (message.model_id || tokens > 0) ? (
+      {message.model_id || tokens > 0 ? (
         <p className="text-xs text-ink-muted">
           {[
             message.model_id,
@@ -116,7 +119,7 @@ export function MessageTechnicalDetails({ message, className }: { message: Messa
   );
 }
 
-/** The conversation's totals (platform admins: tokens and AI cost; everyone: the update that answered). */
+/** The conversation's totals for platform admins: the assistant version that answered, tokens and AI cost. */
 export function ConversationTechnicalDetails({
   totals,
   versionId,
@@ -127,25 +130,24 @@ export function ConversationTechnicalDetails({
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const { isPlatformAdmin } = useBusiness();
+  if (!isPlatformAdmin) {
+    return null;
+  }
   return (
     <Disclosure label={t("inboxCard.technical.title")}>
       <p className="text-xs text-ink-muted">{t("inboxCard.technical.hint")}</p>
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs">
         <dt className="text-ink-subtle">{t("inboxCard.technical.version")}</dt>
         <dd className="font-mono break-all text-ink">{versionId}</dd>
-        {isPlatformAdmin ? (
-          <>
-            <dt className="text-ink-subtle">{t("inboxCard.technical.tokens")}</dt>
-            <dd className="text-ink tabular-nums">
-              {t("conversations.usage.tokensValue", {
-                input: format.number(totals.inputTokens),
-                output: format.number(totals.outputTokens),
-              })}
-            </dd>
-            <dt className="text-ink-subtle">{t("inboxCard.technical.cost")}</dt>
-            <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
-          </>
-        ) : null}
+        <dt className="text-ink-subtle">{t("inboxCard.technical.tokens")}</dt>
+        <dd className="text-ink tabular-nums">
+          {t("conversations.usage.tokensValue", {
+            input: format.number(totals.inputTokens),
+            output: format.number(totals.outputTokens),
+          })}
+        </dd>
+        <dt className="text-ink-subtle">{t("inboxCard.technical.cost")}</dt>
+        <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
       </dl>
     </Disclosure>
   );

@@ -36,7 +36,7 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     },
     whatsappMissing: "WhatsApp non è collegato.",
     connectWhatsapp: "Collega WhatsApp",
-    smsMissing: "Gli SMS non sono configurati su questa piattaforma.",
+    smsMissing: "Gli SMS non sono disponibili al momento. Contatta l'assistenza.",
   },
   template: {
     title: "Testo del modello",

@@ -38,7 +38,7 @@ export const calendarSyncIt: Translation<typeof calendarSyncEn> = {
   google: {
     title: "Google Calendar",
     description: "Gli orari occupati di un calendario Google bloccano questa risorsa.",
-    notAvailable: "Google Calendar non è configurato su questo server.",
+    notAvailable: "Google Calendar non è disponibile al momento. Contatta l'assistenza.",
     connectFirst: "Collega prima Google Calendar: l'account Google dell'attività si collega nella pagina Canali.",
     openChannels: "Apri Canali",
     calendar: "Calendario",
@@ -122,7 +122,7 @@ export const calendarSyncIt: Translation<typeof calendarSyncEn> = {
     timeout: "Il sistema di prenotazione ha impiegato troppo a rispondere. Riprova.",
     unreachable: "Il sistema di prenotazione non è raggiungibile. Riprova.",
     provider_error: "Il sistema di prenotazione ha risposto con un errore. Riprova.",
-    public_address_missing: "Questo server non ha ancora un indirizzo pubblico per il calendario.",
+    public_address_missing: "Il link del calendario non è disponibile al momento. Contatta l'assistenza.",
   },
   integrations: {
     description: "I calendari e i sistemi di prenotazione con cui lavora la tua attività, e come si sincronizzano.",

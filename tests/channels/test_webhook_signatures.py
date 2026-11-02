@@ -14,6 +14,7 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.voice_webhook_auth import require_voice_webhook_access
 from app.utilities.channels.webhook_signatures import (
+    ELEVENLABS_FUTURE_SKEW_SECONDS,
     ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS,
     derive_telegram_webhook_secret,
     derive_voice_tool_secret,
@@ -117,6 +118,24 @@ def test_elevenlabs_signature_valid_wrong_and_stale() -> None:
     future_now: int = NOW - ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS - 1
     assert not is_valid_elevenlabs_signature(secret, BODY, header, future_now)
     assert not is_valid_elevenlabs_signature(secret, BODY, None, NOW)
+
+
+def test_an_elevenlabs_timestamp_ahead_of_the_clock_is_skew_up_to_five_minutes() -> (
+    None
+):
+    secret = PlatformSecret(ELEVENLABS_WEBHOOK_SECRET)
+    header = WebhookSignatureHeader(sign_elevenlabs(BODY, NOW))
+
+    assert is_valid_elevenlabs_signature(
+        secret, BODY, header, NOW - ELEVENLABS_FUTURE_SKEW_SECONDS
+    )
+    assert not is_valid_elevenlabs_signature(
+        secret, BODY, header, NOW - ELEVENLABS_FUTURE_SKEW_SECONDS - 1
+    )
+    # The documented 30 minutes into the past stay accepted.
+    assert is_valid_elevenlabs_signature(
+        secret, BODY, header, NOW + ELEVENLABS_SIGNATURE_TOLERANCE_SECONDS
+    )
 
 
 def test_elevenlabs_signature_matches_the_sdk_algorithm() -> None:

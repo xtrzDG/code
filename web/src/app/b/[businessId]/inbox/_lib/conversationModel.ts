@@ -27,7 +27,6 @@ const CHANNELS: readonly ChannelKind[] = [
   "messenger",
   "telegram",
   "web_chat",
-  "viber",
   "owner_test",
 ];
 const STATUSES: readonly ConversationStatus[] = ["open", "handoff", "closed"];

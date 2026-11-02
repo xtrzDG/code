@@ -7,6 +7,7 @@ import re
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.gateways.http.middleware.error_answers import client_address_of
 from app.schemas.constants.errors import ApiErrorCode
 from app.schemas.dto.errors import ErrorBody
 from app.schemas.typings.platform.strings import ErrorMessageText
@@ -16,11 +17,20 @@ from app.utilities.channels.channel_endpoints import (
     VOICE_CALL_INITIATION_PATH,
     VOICE_POST_CALL_PATH,
 )
+from app.utilities.observability.security_events import (
+    REQUEST_BODY_REFUSED,
+    log_security_event,
+)
 
 KIBIBYTE: int = 1024
 MEBIBYTE: int = 1024 * KIBIBYTE
 # JSON of a cabinet form, a widget message or a sign-in.
 DEFAULT_BODY_LIMIT_BYTES: int = 256 * KIBIBYTE
+# A request that only reads (GET, HEAD, OPTIONS) has no use for a body.
+READING_BODY_LIMIT_BYTES: int = KIBIBYTE
+READING_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS"})
+# A telephony line's call notification: a form of a few dozen short fields.
+TELEPHONY_FORM_BODY_LIMIT_BYTES: int = 64 * KIBIBYTE
 # Batched platform deliveries (Meta, Telegram, Flitt, a call's start).
 WEBHOOK_BODY_LIMIT_BYTES: int = MEBIBYTE
 # The full transcript and analysis of a long call (ElevenLabs).
@@ -38,6 +48,7 @@ BODY_LIMITS: tuple[tuple[re.Pattern[str], int], ...] = (
         MENU_IMPORT_BODY_LIMIT_BYTES,
     ),
     (re.compile(rf"^{re.escape(VOICE_POST_CALL_PATH)}$"), POST_CALL_BODY_LIMIT_BYTES),
+    (re.compile(r"^/v1/telephony/"), TELEPHONY_FORM_BODY_LIMIT_BYTES),
     (
         re.compile(
             r"^(/v1/channels/telegram/[^/]+/webhook"
@@ -58,9 +69,10 @@ class RequestBodyTooLargeError(Exception):
 class BodySizeLimitMiddleware:
     """
     Refuses a request body over the limit of its route with 413
-    `payload_too_large`: 256 KB by default, 1 MB for platform webhooks,
-    5 MB for the post-call report, 21 MB for a menu import (a 15 MB file
-    in base64) and 26 MB for a website visitor's upload. A declared
+    `payload_too_large`: 1 KB for a request that only reads, 256 KB by
+    default, 64 KB for a telephony line's notification, 1 MB for platform
+    webhooks, 5 MB for the post-call report, 21 MB for a menu import (a
+    15 MB file in base64) and 26 MB for a website visitor's upload. A declared
     Content-Length over the limit is refused before any byte is read; a
     chunked or understated body is counted as it streams, and reading
     stops at the limit.
@@ -74,9 +86,12 @@ class BodySizeLimitMiddleware:
             await self.app(scope, receive, send)
             return
 
-        limit: int = find_body_limit(str(scope.get("path", "")))
+        limit: int = find_body_limit(
+            str(scope.get("path", "")), str(scope.get("method", ""))
+        )
         declared_length: int | None = read_content_length(scope)
         if declared_length is not None and declared_length > limit:
+            refuse_body(scope, "declared_too_large")
             await send_payload_too_large(send, limit)
             return
 
@@ -106,10 +121,14 @@ class BodySizeLimitMiddleware:
             if is_response_started:
                 raise
 
+            refuse_body(scope, "streamed_too_large")
             await send_payload_too_large(send, limit)
 
 
-def find_body_limit(path: str) -> int:
+def find_body_limit(path: str, method: str = "POST") -> int:
+    if method.upper() in READING_METHODS:
+        return READING_BODY_LIMIT_BYTES
+
     for pattern, limit in BODY_LIMITS:
         if pattern.match(path):
             return limit
@@ -124,6 +143,25 @@ def read_content_length(scope: Scope) -> int | None:
             return int(raw_value) if raw_value.isdigit() else None
 
     return None
+
+
+def refuse_body(scope: Scope, reason: str) -> None:
+    log_security_event(
+        REQUEST_BODY_REFUSED,
+        path=route_class_of(str(scope.get("path", ""))),
+        reason=reason,
+        client_address=client_address_of(scope),
+    )
+
+
+def route_class_of(path: str) -> str:
+    """The pattern of the limit a path falls under (logs carry no ids)."""
+
+    for pattern, _ in BODY_LIMITS:
+        if pattern.match(path):
+            return pattern.pattern
+
+    return "default"
 
 
 async def send_payload_too_large(send: Send, limit: int) -> None:

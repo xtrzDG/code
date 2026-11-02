@@ -9,11 +9,11 @@ import { en } from "./support/messages";
  * every demo turn is a sandbox turn, so a booking is only shown as one.
  */
 test.describe("the landing page's live demo", () => {
-  test("answers a visitor in sandbox and says what would happen", async ({ page }) => {
+  test("answers a visitor as a demo and says what would happen", async ({ page }) => {
     await page.goto("/en");
     const chat = page.getByTestId("demo-chat");
     await expect(chat.getByText(DEMO_RESTAURANT).first()).toBeVisible();
-    await expect(chat.getByText(en.publicDemo.sandbox)).toBeVisible();
+    await expect(chat.getByText(en.publicDemo.footer)).toBeVisible();
 
     // A starter in the visitor's language sends itself: the restaurant's own
     // question through the alias its owner approved in English.

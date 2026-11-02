@@ -9,6 +9,7 @@ from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
+    parse_setting,
     read_boolean,
     read_text,
 )
@@ -62,12 +63,14 @@ def read_elevenlabs_base_url(
         ValidationFailedError: a non-EU host in production without the flag.
     """
 
-    base_url = PublicBaseUrl(
+    base_url: PublicBaseUrl = parse_setting(
+        "ELEVENLABS_API_BASE_URL",
         read_text(
             environment_variables,
             "ELEVENLABS_API_BASE_URL",
             DEFAULT_ELEVENLABS_API_BASE_URL,
-        )
+        ),
+        PublicBaseUrl,
     )
     host: str = (urlsplit(str(base_url)).hostname or "").lower()
     is_eu_host: bool = host == DEFAULT_ELEVENLABS_HOST or host.endswith(

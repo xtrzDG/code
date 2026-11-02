@@ -28,6 +28,10 @@ from app.schemas.dto.profiles.profile_steps import (
     SaveProfileStepCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.profiles.owner_instructions import (
+    check_rule_instructions,
+    check_tone_instruction,
+)
 from app.utilities.knowledge.faq_items import faq_entry_to_upsert_input
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
@@ -132,13 +136,15 @@ class SaveProfileStepUseCase(
                 knowledge_inputs = [
                     faq_entry_to_upsert_input(entry) for entry in step_input.faq
                 ]
-                profile.handoff_rules = check_rules(
-                    step_input.handoff_rules, subject="handoff"
+                profile.handoff_rules = check_rule_instructions(
+                    check_rules(step_input.handoff_rules, subject="handoff"),
+                    subject="handoff",
                 )
-                profile.forbidden = check_rules(
-                    step_input.forbidden, subject="forbidden"
+                profile.forbidden = check_rule_instructions(
+                    check_rules(step_input.forbidden, subject="forbidden"),
+                    subject="forbidden",
                 )
-                profile.tone = check_tone(step_input.tone)
+                profile.tone = check_tone_instruction(check_tone(step_input.tone))
             case ChannelsStepInput():
                 step = ProfileWizardStep.CHANNELS
                 store_profile_links(profile, validate_links(step_input.links))

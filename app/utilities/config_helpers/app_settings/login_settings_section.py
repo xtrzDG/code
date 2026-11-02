@@ -3,7 +3,7 @@ OTP_*, TURNSTILE_* and SESSION_LIFETIME_SECONDS: login codes, their abuse
 limits and bot check, and cabinet sessions.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import TypedDict
 
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -26,16 +26,16 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     optional_text,
     parse_setting,
     read_boolean,
-    read_integer,
     read_list,
     read_raw_list,
+    read_typed_integer,
 )
 
 # Destinations that SMS providers' fraud reports name often for SMS pumping
 # (international revenue share fraud): small Pacific territories and some
 # African networks with high termination rates. A code request for a phone
 # there needs the bot check; set OTP_HIGH_RISK_COUNTRIES to replace the list
-# (an empty value turns the signal off).
+# (`none` turns the signal off; a blank value keeps this list).
 DEFAULT_OTP_HIGH_RISK_COUNTRIES: str = (
     "CF,CK,ER,GN,GW,KI,KM,LR,MR,NR,NU,PG,SB,SL,SO,ST,TD,TK,TL,TV,VU"
 )
@@ -87,34 +87,27 @@ def read_login_settings(
     environment_variables: Mapping[str, str],
     is_otp_code_logging_enabled: bool,
 ) -> LoginSettingsSection:
+    def integer[Typed](name: str, default: int, typed: Callable[[int], Typed]) -> Typed:
+        return read_typed_integer(environment_variables, name, default, typed)
+
     return LoginSettingsSection(
-        otp_lifetime_seconds=OtpLifetimeSeconds(
-            read_integer(environment_variables, "OTP_LIFETIME_SECONDS", 600)
+        otp_lifetime_seconds=integer("OTP_LIFETIME_SECONDS", 600, OtpLifetimeSeconds),
+        otp_max_failed_attempts=integer("OTP_MAX_FAILED_ATTEMPTS", 5, OtpAttemptCount),
+        otp_sends_per_destination_per_hour=integer(
+            "OTP_SENDS_PER_DESTINATION_PER_HOUR", 5, OtpSendLimit
         ),
-        otp_max_failed_attempts=OtpAttemptCount(
-            read_integer(environment_variables, "OTP_MAX_FAILED_ATTEMPTS", 5)
+        otp_sends_per_ip_per_hour=integer(
+            "OTP_SENDS_PER_IP_PER_HOUR", 10, OtpSendLimit
         ),
-        otp_sends_per_destination_per_hour=OtpSendLimit(
-            read_integer(environment_variables, "OTP_SENDS_PER_DESTINATION_PER_HOUR", 5)
+        otp_sends_per_hour=integer("OTP_SENDS_PER_HOUR", 300, OtpSendLimit),
+        otp_sends_per_country_per_hour=integer(
+            "OTP_SENDS_PER_COUNTRY_PER_HOUR", 100, OtpSendLimit
         ),
-        otp_sends_per_ip_per_hour=OtpSendLimit(
-            read_integer(environment_variables, "OTP_SENDS_PER_IP_PER_HOUR", 10)
+        otp_sends_to_verified_users_per_hour=integer(
+            "OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR", 300, OtpSendLimit
         ),
-        otp_sends_per_hour=OtpSendLimit(
-            read_integer(environment_variables, "OTP_SENDS_PER_HOUR", 300)
-        ),
-        otp_sends_per_country_per_hour=OtpSendLimit(
-            read_integer(environment_variables, "OTP_SENDS_PER_COUNTRY_PER_HOUR", 100)
-        ),
-        otp_sends_to_verified_users_per_hour=OtpSendLimit(
-            read_integer(
-                environment_variables, "OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR", 300
-            )
-        ),
-        otp_verifies_per_ip_per_10_minutes=OtpVerifyLimit(
-            read_integer(
-                environment_variables, "OTP_VERIFIES_PER_IP_PER_10_MINUTES", 20
-            )
+        otp_verifies_per_ip_per_10_minutes=integer(
+            "OTP_VERIFIES_PER_IP_PER_10_MINUTES", 20, OtpVerifyLimit
         ),
         otp_high_risk_country_codes=[
             parse_setting("OTP_HIGH_RISK_COUNTRIES", country_code, CountryCode)
@@ -134,12 +127,8 @@ def read_login_settings(
         is_otp_code_logging_enabled=IsOtpCodeLoggingEnabled(
             is_otp_code_logging_enabled
         ),
-        session_lifetime_seconds=SessionLifetimeSeconds(
-            read_integer(
-                environment_variables,
-                "SESSION_LIFETIME_SECONDS",
-                30 * 24 * 60 * 60,
-            )
+        session_lifetime_seconds=integer(
+            "SESSION_LIFETIME_SECONDS", 30 * 24 * 60 * 60, SessionLifetimeSeconds
         ),
     )
 

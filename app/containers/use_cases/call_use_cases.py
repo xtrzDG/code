@@ -247,7 +247,9 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         ),
         call_settings_repo=repositories.call_settings_repo,
         channel_repo=repositories.channel_repo,
+        business_profile_repo=repositories.business_profile_repo,
         text_resolver=utilities.localized_text_resolver,
+        country_registry=registries.country_registry,
         sms_client=clients.twilio_messaging_client,
     )
     update_call_settings_use_case: Factory[
@@ -259,8 +261,10 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         ),
         call_settings_repo=repositories.call_settings_repo,
         channel_repo=repositories.channel_repo,
+        business_profile_repo=repositories.business_profile_repo,
         audit_log_repo=repositories.audit_log_repo,
         text_resolver=utilities.localized_text_resolver,
+        country_registry=registries.country_registry,
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
     )

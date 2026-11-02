@@ -25,6 +25,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     TimezoneName,
 )
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_setting,
@@ -34,17 +35,31 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
 )
 from app.utilities.localization.timezones import is_known_timezone_name
 
+# The seller's identity: production has no default for these (the
+# development defaults name an Italian "Assistant Workshop").
+SELLER_IDENTITY_VARIABLES: tuple[str, ...] = (
+    "SELLER_LEGAL_NAME",
+    "SELLER_COUNTRY_CODE",
+    "SELLER_TIME_ZONE",
+)
+
 
 class SellerSettingsSection(TypedDict):
-    """The `AppSettings` field of the seller on invoices."""
+    """The `AppSettings` fields of the seller on invoices."""
 
     seller: SellerSettings
+    development_default_variables: tuple[EnvironmentVariableName, ...]
 
 
 def read_seller_settings(
     environment_variables: Mapping[str, str],
 ) -> SellerSettingsSection:
     """
+    The development defaults stand in for an unset identity (an Italian
+    "Assistant Workshop" in Europe/Rome); `development_default_variables`
+    names them, so production refuses to start on them
+    (`check_production_requirements`).
+
     Raises:
         ValidationFailedError: a value has the wrong form, the time zone is
             unknown, or VAT registration is on without the seller's tax number.
@@ -63,6 +78,11 @@ def read_seller_settings(
         )
 
     return SellerSettingsSection(
+        development_default_variables=tuple(
+            EnvironmentVariableName(variable_name)
+            for variable_name in SELLER_IDENTITY_VARIABLES
+            if environment_variables.get(variable_name, "").strip() == ""
+        ),
         seller=SellerSettings(
             legal_name=parse_setting(
                 "SELLER_LEGAL_NAME",
@@ -112,7 +132,7 @@ def read_seller_settings(
                 InvoiceSeries,
             ),
             is_vat_registered=is_vat_registered,
-        )
+        ),
     )
 
 

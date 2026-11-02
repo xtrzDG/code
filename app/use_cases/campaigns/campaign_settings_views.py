@@ -59,7 +59,7 @@ def stored_or_niche_default(
 
 @dataclass(frozen=True)
 class CampaignSettingsReader:
-    """Builds the settings view: the niche's rule, the month, previews."""
+    """Builds the settings view: the niche's rule, the month, the message."""
 
     message_repo: CampaignMessageRepoContract
     segment_repo: CustomerSegmentRepoContract
@@ -112,7 +112,10 @@ class CampaignSettingsReader:
         language: LanguageTag,
         now: Microseconds,
     ) -> CampaignMessagePreview:
-        """The message as a customer would read it, an arrival in `delay_days`."""
+        """
+        The message customers get in `language`; a note before a visit names
+        the day `delay_days` from now, each customer's own date when sent.
+        """
 
         zone = load_time_zone(business.timezone)
         arrival: datetime = datetime.fromtimestamp(

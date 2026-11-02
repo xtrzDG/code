@@ -1,6 +1,7 @@
 """
-CORS_ALLOWED_ORIGINS, the request threads and database connections, the
-background worker, the development demo data and the recordings directory.
+APP_ENV, CORS_ALLOWED_ORIGINS, the request threads and database
+connections, the background worker, the development demo data and the
+recordings directory.
 """
 
 from collections.abc import Mapping
@@ -29,6 +30,7 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_integer,
     read_raw_list,
     read_text,
+    read_typed_integer,
 )
 from app.utilities.config_helpers.app_settings.worker_lane_settings import (
     read_worker_lane_concurrency,
@@ -42,6 +44,12 @@ DEFAULT_RECORDINGS_DIRECTORY: str = "var/recordings"
 EMBEDDED_WORKER_AUTO: str = "auto"
 # Request handlers that may run at once in threads (AnyIO's default is 40).
 DEFAULT_THREADPOOL_SIZE: int = 64
+# Render sets RENDER=true on every service: there a missing APP_ENV is a
+# deployment mistake, never a development machine.
+RENDER_MARKER_VARIABLE: str = "RENDER"
+# A browser sends the cabinet's cookies only to listed origins; "*" would
+# list every site.
+ANY_ORIGIN: str = "*"
 
 
 class RuntimeSettingsSection(TypedDict):
@@ -58,6 +66,63 @@ class RuntimeSettingsSection(TypedDict):
     recordings_directory: LocalDirectoryPath
 
 
+def read_deployment_environment(
+    environment_variables: Mapping[str, str],
+) -> DeploymentEnvironment:
+    """
+    APP_ENV: development (the default on a developer's machine), test or
+    production.
+
+    Raises:
+        ValidationFailedError: another value (a typo such as "prod" must not
+            start a process with development's leniency), or APP_ENV unset
+            where Render runs the process (RENDER is set).
+    """
+
+    raw_value: str = environment_variables.get("APP_ENV", "").strip().lower()
+    if raw_value == "":
+        if environment_variables.get(RENDER_MARKER_VARIABLE, "").strip() != "":
+            raise ValidationFailedError(
+                "APP_ENV is not set, and this process runs on Render (RENDER is "
+                "set): set APP_ENV=production (render.yaml sets it for every "
+                "backend service) or development explicitly."
+            )
+
+        return DeploymentEnvironment.DEVELOPMENT
+
+    try:
+        return DeploymentEnvironment(raw_value)
+    except ValueError as error:
+        raise ValidationFailedError(
+            "APP_ENV must be one of "
+            + ", ".join(environment.value for environment in DeploymentEnvironment)
+            + f", got {raw_value!r}."
+        ) from error
+
+
+def read_cors_allowed_origins(
+    environment_variables: Mapping[str, str],
+) -> list[PublicBaseUrl]:
+    """
+    CORS_ALLOWED_ORIGINS: the cabinet's origins (comma-separated).
+
+    Raises:
+        ValidationFailedError: "*" or a value that is not an http(s) origin.
+    """
+
+    origins: list[str] = read_raw_list(environment_variables, "CORS_ALLOWED_ORIGINS")
+    if ANY_ORIGIN in origins:
+        raise ValidationFailedError(
+            'CORS_ALLOWED_ORIGINS cannot be "*": the cabinet signs in with '
+            "cookies, so list its origins (https://app.example.com)."
+        )
+
+    return [
+        parse_setting("CORS_ALLOWED_ORIGINS", origin, PublicBaseUrl)
+        for origin in origins
+    ]
+
+
 def read_runtime_settings(
     environment_variables: Mapping[str, str],
     environment: DeploymentEnvironment,
@@ -67,10 +132,7 @@ def read_runtime_settings(
         environment_variables, "THREADPOOL_SIZE", DEFAULT_THREADPOOL_SIZE
     )
     return RuntimeSettingsSection(
-        cors_allowed_origins=[
-            PublicBaseUrl(origin)
-            for origin in read_raw_list(environment_variables, "CORS_ALLOWED_ORIGINS")
-        ],
+        cors_allowed_origins=read_cors_allowed_origins(environment_variables),
         threadpool_size=parse_setting(
             "THREADPOOL_SIZE", threadpool_size, ThreadPoolSize
         ),
@@ -83,8 +145,8 @@ def read_runtime_settings(
             ),
             DatabasePoolSize,
         ),
-        worker_poll_seconds=WorkerPollSeconds(
-            read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
+        worker_poll_seconds=read_typed_integer(
+            environment_variables, "WORKER_POLL_SECONDS", 15, WorkerPollSeconds
         ),
         worker_lane_concurrency=read_worker_lane_concurrency(environment_variables),
         worker_lanes=read_worker_lanes(environment_variables),

@@ -182,7 +182,9 @@ class TestManagerNotifications:
         assert retried.status is OutboundMessageStatus.DELIVERED
         assert retried.attempts == 2
 
-    def test_missing_configuration_is_dead_at_once(self) -> None:
+    def test_missing_configuration_is_dead_at_once(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         unconfigured = ChannelsTestbed(
             build_settings(
                 TELEGRAM_PLATFORM_BOT_TOKEN="",
@@ -201,11 +203,13 @@ class TestManagerNotifications:
         reasons = sorted(
             str(message.last_error) for message in outbox_of(unconfigured, BUSINESS_ID)
         )
+        # Owners read a plain reason; the missing settings go to the log.
         assert reasons == [
-            "TELEGRAM_PLATFORM_BOT_TOKEN is not configured.",
-            "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or WHATSAPP_NOTIFICATION_TEMPLATE "
-            "is not configured.",
+            "Telegram notifications are not available right now. Contact support.",
+            "WhatsApp notifications are not available right now. Contact support.",
         ]
+        assert "TELEGRAM_PLATFORM_BOT_TOKEN" in caplog.text
+        assert "WHATSAPP_NOTIFICATION_TEMPLATE" in caplog.text
 
     def test_email_and_sms_without_a_provider(
         self, caplog: pytest.LogCaptureFixture

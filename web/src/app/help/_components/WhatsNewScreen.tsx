@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 import { useHelpProgress } from "@/components/help/useHelp";
-import { IconArrowLeft } from "@/components/icons";
-import { Badge, PageHeader } from "@/components/ui";
+import { IconArrowLeft, IconSparkles } from "@/components/icons";
+import { Badge, EmptyState, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatDate } from "@/lib/format";
 import { entryDay, newestFirst, newestKey, unreadKeys } from "@/lib/help/changelog";
@@ -15,7 +15,10 @@ import { CHANGELOG } from "../../../../content/changelog";
 
 const ENTRIES = newestFirst(CHANGELOG);
 
-/** "What's new", newest first; `readKey` is the newest entry this person had read before the page opened. */
+/**
+ * "What's new", newest first; `readKey` is the newest entry this person had
+ * read before the page opened. Without entries, an empty state says so.
+ */
 export function WhatsNewScreen({ signedIn, readKey }: { signedIn: boolean; readKey: string | null }) {
   const { t, locale } = useI18n();
   const { markChangelogRead } = useHelpProgress(false);
@@ -36,30 +39,34 @@ export function WhatsNewScreen({ signedIn, readKey }: { signedIn: boolean; readK
         {t("helpCenter.allArticles")}
       </Link>
       <PageHeader title={t("changelog.title")} description={t("changelog.description")} />
-      <ol className="space-y-4">
-        {ENTRIES.map((entry) => {
-          const text = entry.texts[locale];
-          const day = entryDay(entry);
-          return (
-            <li key={entry.key}>
-              <article aria-labelledby={`entry-${entry.key}`} className="space-y-2 rounded-2xl border border-line bg-surface p-5">
-                <p className="flex flex-wrap items-center gap-2 text-sm text-ink-subtle">
-                  {day ? <time dateTime={day.toISOString().slice(0, 10)}>{formatDate(day, { locale, timeZone: "UTC", dateStyle: "long" })}</time> : null}
-                  {unread.includes(entry.key) ? <Badge tone="accent">{t("changelog.newBadge")}</Badge> : null}
-                </p>
-                <h2 id={`entry-${entry.key}`} className="text-lg font-semibold text-ink">
-                  {text.title}
-                </h2>
-                {text.body.map((paragraph, index) => (
-                  <p key={index} className="text-sm leading-relaxed text-ink-muted">
-                    {paragraph}
+      {ENTRIES.length === 0 ? (
+        <EmptyState icon={<IconSparkles className="size-6" />} title={t("changelog.emptyTitle")} description={t("changelog.emptyDescription")} />
+      ) : (
+        <ol className="space-y-4">
+          {ENTRIES.map((entry) => {
+            const text = entry.texts[locale];
+            const day = entryDay(entry);
+            return (
+              <li key={entry.key}>
+                <article aria-labelledby={`entry-${entry.key}`} className="space-y-2 rounded-2xl border border-line bg-surface p-5">
+                  <p className="flex flex-wrap items-center gap-2 text-sm text-ink-subtle">
+                    {day ? <time dateTime={day.toISOString().slice(0, 10)}>{formatDate(day, { locale, timeZone: "UTC", dateStyle: "long" })}</time> : null}
+                    {unread.includes(entry.key) ? <Badge tone="accent">{t("changelog.newBadge")}</Badge> : null}
                   </p>
-                ))}
-              </article>
-            </li>
-          );
-        })}
-      </ol>
+                  <h2 id={`entry-${entry.key}`} className="text-lg font-semibold text-ink">
+                    {text.title}
+                  </h2>
+                  {text.body.map((paragraph, index) => (
+                    <p key={index} className="text-sm leading-relaxed text-ink-muted">
+                      {paragraph}
+                    </p>
+                  ))}
+                </article>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }

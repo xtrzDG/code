@@ -61,7 +61,7 @@ export const dataTasksEn = {
   retry: "Walk again",
   retried: "The task walks its table again.",
   indexing: {
-    title: "Still indexing",
-    body: "A data update after the last release is still running, so some older entries may be missing from this list for a few minutes.",
+    title: "Updating search",
+    body: "Some older entries may be missing from this list for a few minutes.",
   },
 } as const;

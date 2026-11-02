@@ -9,7 +9,7 @@ export const passkeysIt: Translation<typeof passkeysEn> = {
     "Conferma che sei tu con l'impronta digitale, il volto o il PIN del dispositivo invece di un codice. Una passkey funziona solo su questo sito, quindi non può essere rubata con il phishing.",
   recommended: "Il secondo fattore più sicuro: aggiungi una passkey su ogni dispositivo che usi.",
   unavailable:
-    "Le passkey non sono ancora configurate su questo server. Usa l'app di autenticazione qui sotto.",
+    "Le passkey non sono disponibili al momento. Usa l'app di autenticazione qui sotto.",
   unsupported:
     "Questo browser non supporta le passkey. Apri il pannello in un altro browser o usa l'app di autenticazione.",
   empty: "Ancora nessuna passkey.",

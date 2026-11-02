@@ -159,7 +159,7 @@ export const channelsIt: Translation<typeof channelsEn> = {
     notConnectedToast: "Nessun calendario era collegato",
     connected: "Collegato",
     notConnected: "Non collegato",
-    notConfigured: "Google Calendar non è ancora configurato su questo server: mancano le credenziali Google della piattaforma.",
+    notConfigured: "Google Calendar non è disponibile al momento. Contatta l'assistenza.",
     calendarLabel: "Calendario",
     primaryCalendar: "Calendario principale dell'account Google",
     connectedAt: "Collegato",

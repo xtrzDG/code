@@ -13,9 +13,12 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
+# Development and tests only: production names its seller itself
+# (SELLER_LEGAL_NAME, SELLER_COUNTRY_CODE, SELLER_TIME_ZONE; the startup
+# check refuses these defaults there). Italy is the first market.
 DEFAULT_SELLER_LEGAL_NAME: str = "Assistant Workshop"
-DEFAULT_SELLER_COUNTRY_CODE: str = "GE"
-DEFAULT_SELLER_TIME_ZONE: str = "Asia/Tbilisi"
+DEFAULT_SELLER_COUNTRY_CODE: str = "IT"
+DEFAULT_SELLER_TIME_ZONE: str = "Europe/Rome"
 DEFAULT_INVOICE_SERIES: str = "AW"
 
 
@@ -25,7 +28,8 @@ class SellerSettings(ImmutableDTO):
     name, tax number, address and e-mail, the country whose VAT rules
     apply, the time zone its invoice years and dates follow, the prefix of
     its invoice numbers, and whether it is registered for VAT
-    (PLATFORM_VAT_REGISTERED; Georgia then adds 18 % for Georgian buyers).
+    (PLATFORM_VAT_REGISTERED; the seller's country then adds its standard
+    rate for buyers there, `app/registries/billing/tax_policy_catalog.py`).
     """
 
     legal_name: BillingLegalName = BillingLegalName(DEFAULT_SELLER_LEGAL_NAME)

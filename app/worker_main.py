@@ -26,7 +26,7 @@ from app.gateways.process_lifecycle import (
     release_process_resources,
     settle_startup_heap,
 )
-from app.gateways.startup_checks import check_database_roles, check_processor_uses
+from app.gateways.startup_checks import run_startup_checks
 from app.gateways.telemetry_lifecycle import (
     WORKER_SERVICE_NAME,
     finish_telemetry,
@@ -46,9 +46,10 @@ def main(
     stop_event: threading.Event | None = None,
 ) -> int:
     """
-    Run the worker until stopped; returns the process exit code. A flow of
-    personal data to a provider the sub-processor list does not cover stops
-    it in production before it starts (`check_processor_uses`). The reply
+    Run the worker until stopped; returns the process exit code. In
+    production an unset, test or development setting, or a flow of personal
+    data to a provider the sub-processor list does not cover, stops it
+    before it starts (`run_startup_checks`). The reply
     guard's locale data is loaded before the lanes start, not by the first
     customer's turn (`warm_turn_caches`). Its startup heap is frozen once
     all of that is built, before the first job (`settle_startup_heap`).
@@ -57,9 +58,9 @@ def main(
     container: AppContainer = AppContainer() if app_container is None else app_container
     stop: threading.Event = threading.Event() if stop_event is None else stop_event
     install_stop_signal_handlers(stop)
-    # The worker sends the nightly quality sample: it checks the providers too.
-    check_processor_uses(container)
-    check_database_roles(container)
+    # The worker runs on the same settings and sends the nightly quality
+    # sample: it checks production's settings and the providers too.
+    run_startup_checks(container)
     warm_turn_caches()
     worker: BackgroundWorker = container.gateways.background_worker()
     metrics_server: WorkerMetricsServer | None = start_worker_metrics(container)

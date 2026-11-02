@@ -137,7 +137,8 @@ class ConnectMetaPageUseCase(UseCaseContract[ConnectMetaPageCommand, ChannelView
         if app is None:
             raise meta_refusal(
                 MetaConnectionRefusal.NOT_CONFIGURED,
-                "Facebook sign-in is not set up on this server.",
+                "Facebook sign-in is not available right now: enter the details "
+                "manually.",
             )
 
         now: Microseconds = self._wall_clock.now_unix()

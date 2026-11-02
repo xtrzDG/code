@@ -1,3 +1,4 @@
+from base_typed_string import BaseTypedStringConstraintViolationError
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import RequestRateLimitRegistryContract
@@ -15,6 +16,7 @@ from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.strings import WidgetContactNameInput
+from app.schemas.typings.contacts.constrained_strings import CustomerGivenName
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.use_cases.channels.uploads.message_uploads import (
@@ -31,8 +33,6 @@ from app.utilities.channels.widget_rate_limits import (
     refuse_too_frequent_widget_requests,
 )
 from app.utilities.sharing.acquisition_sources import normalize_source
-
-MAX_CONTACT_NAME_LENGTH: int = 100
 
 
 class AcceptWidgetMessageUseCase(
@@ -132,7 +132,15 @@ class AcceptWidgetMessageUseCase(
 
 
 def read_contact_name(raw_name: WidgetContactNameInput | None) -> ContactName | None:
-    """The visitor's name without surrounding spaces; blank means none."""
+    """
+    The visitor's name without surrounding spaces; blank means none. A name
+    must be a `CustomerGivenName` (at most 60 characters on one line, no
+    markup): it reaches the model's context and the team's inbox.
+
+    Raises:
+        ValidationFailedError: the name is too long, spans lines or carries
+            markup or invisible characters.
+    """
 
     if raw_name is None:
         return None
@@ -141,9 +149,12 @@ def read_contact_name(raw_name: WidgetContactNameInput | None) -> ContactName | 
     if name_text == "":
         return None
 
-    if len(name_text) > MAX_CONTACT_NAME_LENGTH:
+    try:
+        given_name = CustomerGivenName(name_text)
+    except BaseTypedStringConstraintViolationError as error:
         raise ValidationFailedError(
-            f"contact_name must be at most {MAX_CONTACT_NAME_LENGTH} characters."
-        )
+            "contact_name must be a name of at most 60 characters on one line, "
+            "without markup characters."
+        ) from error
 
-    return ContactName(name_text)
+    return ContactName(str(given_name))

@@ -62,8 +62,8 @@ export const returnVisitsIt: Translation<typeof returnVisitsEn> = {
     skipped: "Non inviati",
   },
   preview: {
-    title: "Cosa leggono i clienti",
-    description: "Il messaggio in ogni lingua della tua attività, con la data compilata come sarebbe oggi.",
+    title: "Messaggio che ricevono i clienti",
+    description: "Il messaggio in ogni lingua della tua attività. Le date al suo interno sono quelle di ciascun cliente.",
   },
   messages: {
     title: "Ultimi messaggi",

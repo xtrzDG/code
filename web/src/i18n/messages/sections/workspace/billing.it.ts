@@ -100,7 +100,7 @@ export const billingIt: Translation<typeof billingEn> = {
     current: "Piano attuale",
     switchTo: "Passa a questo piano",
     startTrial: "Inizia la prova gratuita",
-    empty: "I piani per il tuo Paese non sono ancora disponibili.",
+    empty: "I piani non sono disponibili per il tuo Paese.",
     estimatedNote: "I prezzi con ≈ sono solo indicativi: convertiti secondo {source} al {date}; la fattura riporta l'importo esatto.",
   },
   invoices: {
@@ -140,7 +140,7 @@ export const billingIt: Translation<typeof billingEn> = {
     legalName: "Ragione sociale",
     legalNameHint: "Come registrata, ad esempio “Trattoria da Gino S.r.l.”.",
     taxId: "Codice fiscale o partita IVA",
-    taxIdHint: "Il numero con cui il fisco identifica l'azienda; in Georgia, il suo codice identificativo.",
+    taxIdHint: "La partita IVA dell'azienda o il codice fiscale con cui la identifica il fisco.",
     country: "Paese",
     countryHint: "Dove è registrata l'azienda; determina l'IVA.",
     billingEmail: "E-mail per le fatture",
@@ -151,7 +151,7 @@ export const billingIt: Translation<typeof billingEn> = {
       not_registered: "non applicata, la piattaforma non è registrata ai fini IVA.",
       standard: "{rate} inclusa in ogni fattura.",
       reverse_charge: "non in fattura: inversione contabile (reverse charge), l'IVA la versi tu nel tuo Paese.",
-      outside_scope: "nessuna: il servizio è fornito a un acquirente fuori dalla Georgia.",
+      outside_scope: "nessuna: il servizio è fornito a un acquirente fuori dal Paese della piattaforma.",
     },
     errors: {
       legalName: "Inserisci la ragione sociale.",

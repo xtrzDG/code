@@ -15,6 +15,9 @@ from fastapi import Header, Request
 from starlette.concurrency import run_in_threadpool
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.middleware.anonymous_request_limit_middleware import (
+    mark_credential_check,
+)
 from app.gateways.http.strict_request_parsing import read_client_ip_address
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.dto.public_api.access import ApiKeyCredentials, ApiKeyPrincipal
@@ -84,7 +87,9 @@ def build_api_key_authentication(
     ) -> UserId:
         return (await resolve_api_key(request, authorization)).created_by
 
-    return resolve_api_key, resolve_key_owner
+    return mark_credential_check(resolve_api_key), mark_credential_check(
+        resolve_key_owner
+    )
 
 
 def request_api_key_id(request: Request) -> ApiKeyId | None:

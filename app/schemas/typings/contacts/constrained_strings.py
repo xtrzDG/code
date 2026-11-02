@@ -16,6 +16,29 @@ class ContactSearchText(BaseConstrainedTypedString):
     max_length = 100
 
 
+class CustomerGivenName(BaseConstrainedTypedString):
+    """
+    The name a customer gave: for a booking, a request or a place on the
+    waitlist (the assistant's tools) and in the website chat. 1 to 60
+    characters on one line, no spaces at either end, no control or
+    invisible characters and no markup (< > [ ] { } ` * # | \\), so a name
+    can never pose as a line or a tag of the platform in the model's
+    context.
+
+    Example:
+        name = CustomerGivenName("Giulia Rossi")
+    """
+
+    min_length = 1
+    max_length = 60
+    pattern = (
+        r"^[^\s<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f​-‏ -‮"
+        r"⁠-⁯﻿](?:[^<>\[\]{}`*#|\\\x00-\x1f\x7f-\x9f"
+        r"​-‏ -‮⁠-⁯﻿]{0,58}[^\s<>\[\]{}`*#|\\"
+        r"\x00-\x1f\x7f-\x9f​-‏ -‮⁠-⁯﻿])?\Z"
+    )
+
+
 class CustomerTag(BaseConstrainedTypedString):
     """
     A label the team puts on customers ("regular", "allergy", "wholesale"):

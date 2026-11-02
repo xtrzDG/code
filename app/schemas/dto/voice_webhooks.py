@@ -18,10 +18,8 @@ from app.schemas.typings.channels.booleans import (
 )
 from app.schemas.typings.channels.constrained_integers import CallOffsetSeconds
 from app.schemas.typings.channels.strings import (
-    CallerNameText,
     CallLocalTimeText,
     CallNextDaysText,
-    CallUpcomingBookingText,
     PresentedWebhookSecret,
     WebhookSignatureHeader,
 )
@@ -90,13 +88,16 @@ class CallInitiationWebhookRequest(ImmutableDTO):
 
 class CallInitiationData(ImmutableDTO):
     """
-    How the agent starts the call: the greeting with the AI disclosure and
-    recording notice, in the business's default language, and whether the
-    business is open now (a call is put through to staff only then).
+    How the agent starts the call: the greeting with the AI disclosure,
+    the recording notice and where the privacy notice is, in the business's
+    default language, and whether the business is open now.
 
-    The agent also learns the call's local date and time, the next days and
-    the time zone (so "tomorrow" becomes a date), and for a caller known by
-    their verified phone, their name and next booking.
+    `transfer_phone_number` is the staff mobile the agent may put the
+    caller through to: set only while the business is open, the owner
+    allowed transfers and the number is an allowed destination; None means
+    no transfer on this call. The agent also learns the call's local date
+    and time, the next days and the time zone (so "tomorrow" becomes a
+    date). Nothing about the caller: a caller id proves nobody's identity.
     """
 
     business_id: BusinessId
@@ -104,11 +105,10 @@ class CallInitiationData(ImmutableDTO):
     language: LanguageTag
     caller_phone_number: E164PhoneNumber | None = None
     is_open_now: IsOpenNow = False
+    transfer_phone_number: E164PhoneNumber | None = None
     local_now_text: CallLocalTimeText
     next_days_text: CallNextDaysText
     timezone: TimezoneName
-    caller_name: CallerNameText | None = None
-    upcoming_booking_text: CallUpcomingBookingText | None = None
 
 
 # --- Post-call webhook -----------------------------------------------------

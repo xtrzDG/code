@@ -43,6 +43,7 @@ export const it: Messages = {
     requestId: "ID richiesta: {id}",
     typeToConfirm: "Digita {text} per confermare",
     undo: "Annulla",
+    deliveryProblem: "Invio non riuscito. Se succede ancora, contatta l'assistenza.",
   },
   language: {
     label: "Lingua dell’interfaccia",
@@ -101,7 +102,7 @@ export const it: Messages = {
     sendByChannelInstead: "Nessun codice? Invialo via {channel}",
     changeDestination: "Usa un altro numero o un’altra e-mail",
     sessionExpired: "La sessione è scaduta. Accedi di nuovo.",
-    countryUnavailable: "non ancora disponibile",
+    countryUnavailable: "non disponibile",
     botCheck: {
       title: "Ancora un passaggio",
       hint: "Conferma di non essere un robot e ti invieremo subito il codice.",
@@ -122,7 +123,7 @@ export const it: Messages = {
       wrongCode: "Il codice è sbagliato o scaduto. Controllalo o chiedine uno nuovo.",
       tooManyAttempts: "Troppi tentativi. Attendi un po’ e chiedi un nuovo codice.",
       resendTooSoon: "Ti abbiamo appena inviato un codice. Attendi 30 secondi prima di chiederne un altro.",
-      countryRestricted: "La registrazione non è ancora disponibile in questo paese. Puoi accedere con l’e-mail.",
+      countryRestricted: "La registrazione non è disponibile in questo paese. Puoi accedere con l’e-mail.",
       cannotReceive: "Questo numero non può ricevere codici. Usa un numero di cellulare o accedi con l’e-mail.",
     },
   },
@@ -139,7 +140,7 @@ export const it: Messages = {
     },
     status: {
       onboarding: "Profilo in compilazione",
-      testing: "In prova",
+      testing: "In configurazione",
       live: "Online",
       paused: "In pausa",
     },

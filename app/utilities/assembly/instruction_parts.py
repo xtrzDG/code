@@ -38,7 +38,8 @@ class InstructionParts:
     facts: list[BusinessFact]
     business_handoff_rules: list[str]
     niche_handoff_rules: list[str]
-    forbidden_rules: list[str]
+    owner_forbidden_rules: list[str]
+    niche_forbidden_rules: list[str]
     niche_rules: list[str]
     country_name: str
     timezone_name: str
@@ -47,9 +48,10 @@ class InstructionParts:
 
 def collect_instruction_parts(source: AssistantInstructionSource) -> InstructionParts:
     """
-    The texts of both instructions. Handoff rules of the niche that the
-    owner already lists are dropped; the fact table is limited for a big
-    catalog (`limit_knowledge_facts`).
+    The texts of both instructions. Handoff rules and prohibitions of the
+    niche that the owner already lists are dropped (the owner's own are kept
+    apart: they are fenced as the owner's text); the fact table is limited
+    for a big catalog (`limit_knowledge_facts`).
     """
 
     business: BusinessDocument = source.business
@@ -59,6 +61,12 @@ def collect_instruction_parts(source: AssistantInstructionSource) -> Instruction
         [str(rule) for rule in profile.handoff_rules]
     )
     known_handoff_rules: set[str] = {rule.casefold() for rule in business_handoff_rules}
+    owner_forbidden_rules: list[str] = unique_preserving_order(
+        [str(rule) for rule in profile.forbidden]
+    )
+    known_forbidden_rules: set[str] = {
+        rule.casefold() for rule in owner_forbidden_rules
+    }
     return InstructionParts(
         business_name=str(business.name),
         business_type=read_english_text(niche.names),
@@ -87,12 +95,14 @@ def collect_instruction_parts(source: AssistantInstructionSource) -> Instruction
             )
             if rule.casefold() not in known_handoff_rules
         ],
-        forbidden_rules=unique_preserving_order(
-            [
-                *(str(rule) for rule in profile.forbidden),
-                *read_english_rule_lines(niche.default_forbidden_rules),
-            ]
-        ),
+        owner_forbidden_rules=owner_forbidden_rules,
+        niche_forbidden_rules=[
+            rule
+            for rule in unique_preserving_order(
+                read_english_rule_lines(niche.default_forbidden_rules)
+            )
+            if rule.casefold() not in known_forbidden_rules
+        ],
         niche_rules=unique_preserving_order([str(rule) for rule in niche.prompt_rules]),
         country_name=str(source.country.english_name),
         timezone_name=str(business.timezone),
