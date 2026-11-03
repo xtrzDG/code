@@ -8,6 +8,14 @@ which the backup's pg_dump reads too). An address that names a weaker
 mode (`disable`, `allow`, `prefer`) is refused whatever PGSSLMODE says:
 libpq lets the address win. A problem names the variable, never the
 address (it holds the password).
+
+One exception: an address on the hosting platform's private network,
+whose host is a single-label name (Render's internal database address
+`dpg-…-a`, a compose service `postgres`), never leaves that network and
+may be reached without TLS: Render's internal connections do not require
+it and may not offer it, so demanding it there would stop production
+from reaching its database. Every dotted host (a public or external
+address) must still require TLS.
 """
 
 import re
@@ -49,8 +57,29 @@ def find_database_tls_problems(
     return [
         unencrypted_address_problem(variable_name)
         for variable_name, address in addresses
-        if address is not None and not is_tls_required(address, roles.default_ssl_mode)
+        if address is not None
+        and not is_private_network_address(address)
+        and not is_tls_required(address, roles.default_ssl_mode)
     ]
+
+
+def is_private_network_address(address: DatabaseUrl) -> bool:
+    """
+    Whether a URI address's host is a single-label name of the platform's
+    private network (no dot, not an IP address). Key/value strings and
+    unreadable addresses are never treated as private.
+    """
+
+    text: str = str(address).strip()
+    if not text.startswith(URI_SCHEMES):
+        return False
+
+    try:
+        host: str | None = urlsplit(text).hostname
+    except ValueError:
+        return False
+
+    return bool(host) and "." not in str(host) and ":" not in str(host)
 
 
 def is_tls_required(

@@ -130,3 +130,39 @@ def test_every_ssl_mode_is_either_encrypted_or_clear_text() -> None:
     for mode in DatabaseSslMode:
         address = DatabaseUrl(f"{PLAIN}?sslmode={mode.value}")
         assert is_tls_required(address, None) is (mode in ENCRYPTED_SSL_MODES)
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "postgresql://workshop:fake-password@dpg-cr0abc123def456-a/workshop",
+        "postgres://workshop:fake-password@dpg-cr0abc123def456-a:5432/workshop",
+        "postgresql://workshop:fake-password@postgres/workshop?sslmode=disable",
+    ],
+)
+def test_an_internal_private_network_address_needs_no_tls(address: str) -> None:
+    changes: dict[str, str | None] = {name: address for name in ADDRESS_VARIABLES}
+    changes["PGSSLMODE"] = None
+
+    assert problems_with(changes) == []
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "dpg-cr0abc123def456-a.frankfurt-postgres.render.com",
+        "10.0.0.5",
+        "[::1]",
+    ],
+)
+def test_a_dotted_or_ip_host_still_needs_tls(host: str) -> None:
+    [problem] = problems_with(
+        {
+            "PGSSLMODE": None,
+            "DATABASE_URL": f"postgresql://workshop:fake-password@{host}/workshop",
+            "DATABASE_URL_TENANT": f"{PLAIN}?sslmode=require",
+            "DATABASE_URL_PLATFORM": f"{PLAIN}?sslmode=require",
+        }
+    )
+
+    assert problem.startswith("DATABASE_URL does not require TLS")

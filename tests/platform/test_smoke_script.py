@@ -161,9 +161,7 @@ def test_a_release_that_publishes_what_it_must_not_fails(published: str) -> None
         result = run_smoke(url, f"{url}/cabinet")
 
     assert result.returncode == 1
-    assert f"{published} answered 200: a release must not publish it" in (
-        result.stderr
-    )
+    assert f"{published} answered 200: a release must not publish it" in (result.stderr)
     # What leaked is never copied into the log.
     assert "refs/heads/main" not in result.stdout + result.stderr
 

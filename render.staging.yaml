@@ -41,11 +41,11 @@ databases:
 envVarGroups:
   - name: workshop-staging
     envVars:
-      # Every database connection requires TLS (libpq's default for the
-      # addresses below, which name no sslmode; pg_dump of the backup too):
-      # production refuses to start with an address that does not.
-      - key: PGSSLMODE
-        value: require
+      # The databases are reached by their internal addresses (fromDatabase
+      # connectionString), on Render's private network, which does not
+      # require TLS and may not offer it: no PGSSLMODE here. Production
+      # still refuses any external (dotted) database address that does not
+      # require TLS (app/utilities/config_helpers/production/database_tls_requirements.py).
       # Staging runs exactly the production code paths and guards.
       - key: APP_ENV
         value: production
