@@ -18,6 +18,7 @@ policy and the gates of the code are in `SECURITY.md`.
 | `docs/security/change-risk.md` | the risk classes of a pull request and the differential review of HIGH ones | `tests/legal/test_change_risk.py` |
 | `docs/security/access-review.md` | the quarterly review of who can reach what | `tests/legal/test_security_documents.py` |
 | `docs/security/readiness-checklist.json` | the launch requirements, each with its source and how to verify it | |
+| `docs/security/readiness-checklist.md` | where the repository stands on each launch requirement: done, partial or an owner step, with the evidence or what remains | `tests/legal/test_readiness_checklist.py` |
 | `docs/legal/drafts/dpa-art28-annex.md` | which DPA clause covers each duty of Article 28(3) GDPR | `tests/legal/test_dpa_art28_annex.py` |
 | `docs/security/information-security-policy.md` | the information security policy: roles, rules and where each is carried out; who acknowledged it | `tests/legal/test_information_security_policy.py` |
 | `docs/security/risk-register.md` | the business risks (AI, telephony fraud, payments, privacy, security, availability, legal, people) with likelihood, impact, owner and treatment | `tests/legal/test_risk_register.py` |
