@@ -5,15 +5,16 @@ import type { assistantControlsEn } from "./assistantControls.en";
 
 export const assistantControlsIt: Translation<typeof assistantControlsEn> = {
   title: "Controlli dell'assistente",
-  description:
-    "Impedite all'assistente di agire da solo, subito: la modifica vale dal messaggio successivo. Usateli quando sbaglia; riattivateli quando è sistemato.",
+  description: "Fermate subito l'assistente quando sbaglia: la modifica vale dal messaggio successivo.",
   handOver: {
     label: "Passa ogni cliente al team",
-    hint: "L'assistente smette di rispondere da solo: ogni nuovo messaggio aspetta il vostro team nella posta in arrivo (il cliente sa che risponderà un collega) e le chiamate vanno al vostro numero di inoltro.",
+    hint: "I nuovi messaggi aspettano il vostro team nella posta in arrivo e le chiamate vanno al vostro numero di inoltro.",
   },
   actions: {
     title: "Cosa può fare l'assistente",
-    hint: "Un'azione disattivata viene rifiutata quando l'assistente la tenta; allora prende una richiesta o passa il cliente a un collega.",
+    hint: "Un'azione disattivata viene rifiutata: l'assistente prende una richiesta o passa il cliente a un collega.",
+    allOn: "Tutte attive",
+    someOff: "Alcune disattivate",
     create_booking: "Creare prenotazioni",
     reschedule_booking: "Spostare prenotazioni",
     cancel_booking: "Annullare prenotazioni",

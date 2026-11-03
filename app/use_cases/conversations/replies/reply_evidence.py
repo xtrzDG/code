@@ -1,12 +1,12 @@
 """What the model is told and what backs its reply, read from the messages."""
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
-from app.schemas.domain.conversations import LlmTurnDocument
+from app.schemas.domain.conversations import LlmTurnDocument, ToolCallRecord
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.typings.conversations.strings import (
     MessageText,
@@ -64,12 +64,15 @@ class ReplyEvidence:
     values and what the assistant repeated; it backs times, dates, phones
     and counts, never a price or a policy. `own_contact`: where the
     customer's own and the business's public contact details may come from
-    (no staff messages: staff may quote other customers).
+    (no staff messages: staff may quote other customers). `tool_calls`:
+    the tool calls of the conversation's earlier replies and calls (what a
+    booking claim may repeat, `booking_claims`).
     """
 
     trusted: list[str]
     customer: list[str]
     own_contact: list[str]
+    tool_calls: list[ToolCallRecord] = field(default_factory=list[ToolCallRecord])
 
 
 def gather_reply_evidence(
@@ -94,6 +97,7 @@ def gather_reply_evidence(
     tool_texts: list[str] = []
     customer_written: list[str] = [str(turn.customer_text)]
     assistant_texts: list[str] = []
+    tool_calls: list[ToolCallRecord] = []
     for message in message_repo.list_by_conversation(
         turn.business.id, turn.conversation.id
     ):
@@ -114,6 +118,7 @@ def gather_reply_evidence(
             staff_texts.append(str(message.text))
 
         # Tool results of earlier replies and of voice-agent calls count.
+        tool_calls.extend(message.tool_calls)
         tool_texts.extend(
             without_customer_values(str(record.result_json), customer_values)
             for record in message.tool_calls
@@ -124,6 +129,7 @@ def gather_reply_evidence(
         trusted=[*business_texts, *staff_texts, *tool_texts],
         customer=[*customer_written, *customer_values, *assistant_texts],
         own_contact=[*business_texts, *tool_texts, *customer_written, *customer_values],
+        tool_calls=tool_calls,
     )
 
 

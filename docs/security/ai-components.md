@@ -36,6 +36,14 @@ floating alias, naming the snapshot to set instead
 | Knowledge embeddings | `text-embedding-3-small` | `EMBEDDINGS_MODEL_ID` | OpenAI |
 | Development, tests, evals in CI, preview stand | `scripted` | `LLM_PROVIDER=scripted` | none (offline) |
 
+An assistant version keeps the model id it was assembled with
+(`AssistantVersionDocument.model_id`): a version assembled before the
+defaults were pinned still names the alias (`gpt-5-mini`) until the next
+assembly or apply; the startup warning covers the environment only. The
+list prices of the pinned snapshots equal their aliases'
+(`app/utilities/assembly/llm_costs.py`), so spend, autotest estimates and
+the quality judge's budget price them the same.
+
 `gpt-4o-transcribe` and `text-embedding-3-small` are published by OpenAI
 without a dated snapshot; a change of their behaviour shows in the voice
 note and knowledge search tests of the nightly live run.

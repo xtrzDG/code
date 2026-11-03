@@ -46,6 +46,14 @@ EXEMPTION_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"\b(no|without( a| any)?|exempt from( the| any)?|waived?( the)?|waives( the)?"
         r"|skips?( the)?|skipped( the)?)\s+(deposits?|prepayments?|fees?|charges?"
         r"|payments?)\b",
+        r"(\bnot|n'?t|\bnever|\bno longer)\s+(need|needs|needed|require|requires"
+        r"|required)\s+(to pay\s+)?(a\s+|any\s+|the\s+)?(deposits?|prepayments?"
+        r"|fees?|charges?|payments?)\b",
+        r"\b(deposits?|prepayments?|fees?|charges?)\s+(is|are|was|were|has been"
+        r"|have been)\s+((not|never)\s+(required|needed|necessary|due|charged)"
+        r"|waived|dropped|cancelled|canceled)\b",
+        r"\b(deposits?|prepayments?|fees?|charges?)\s+(isn'?t|aren'?t|wasn'?t"
+        r"|weren'?t)\s+(required|needed|necessary|due|charged)\b",
         r"\b(is|are)\s+(exempt|entitled|allowed|permitted)\b",
         r"\b(discount\w*|\d+\s?% off|percent off|free of charge|for free"
         r"|complimentary|on the house|vip)\b",

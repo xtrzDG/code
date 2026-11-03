@@ -17,6 +17,8 @@ from app.schemas.configurations.media_settings import DEFAULT_TRANSCRIPTION_MODE
 from app.schemas.configurations.voice_agent_settings import DEFAULT_VOICE_AGENT_LLM
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
+from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES, estimate_llm_cost
 from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
@@ -41,6 +43,7 @@ from app.utilities.conversations.llm_models import (
     find_anthropic_model_features,
     find_llm_token_price,
 )
+from app.utilities.quality.quality_costs import price_of
 from app.utilities.spend.cheaper_models import CHEAPER_MODEL_IDS
 
 REPOSITORY: Path = Path(__file__).resolve().parents[2]
@@ -120,6 +123,31 @@ def test_a_pinned_snapshot_keeps_its_alias_price_and_features() -> None:
             assert find_anthropic_model_features(
                 snapshot
             ) == find_anthropic_model_features(alias)
+
+
+def test_a_pinned_default_keeps_its_list_price_where_ids_must_match() -> None:
+    """
+    The autotest estimate and the quality judge's nightly budget look a
+    model's list price up by its exact id: a pinned default costs what its
+    alias costs there, never nothing (the estimate) or the dearest model's
+    price (the budget).
+    """
+
+    tokens = (LlmTokenCount(1_000), LlmTokenCount(500))
+    alias_of: dict[str, str] = {
+        snapshot: alias for alias, snapshot in FLOATING_MODEL_ALIASES.items()
+    }
+    for model_id in default_model_ids():
+        if model_id == "scripted":
+            continue
+
+        pinned = LlmModelId(model_id)
+        aliased = LlmModelId(alias_of.get(model_id, model_id))
+        assert estimate_llm_cost(DEFAULT_LLM_TOKEN_PRICES, pinned, *tokens) > 0
+        assert estimate_llm_cost(
+            DEFAULT_LLM_TOKEN_PRICES, pinned, *tokens
+        ) == estimate_llm_cost(DEFAULT_LLM_TOKEN_PRICES, aliased, *tokens)
+        assert price_of(DEFAULT_LLM_TOKEN_PRICES, pinned).model_id == pinned
 
 
 @pytest.mark.parametrize("relative_path", CONFIG_FILES)

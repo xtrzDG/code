@@ -167,6 +167,7 @@ class ReplyReviewer:
             str(text),
             [*turn.version.languages, turn.reply_language],
             progress.tool_calls,
+            evidence.tool_calls,
         )
         result: ClaimCheckResult = (
             self._claim_check.check_claims(

@@ -6,15 +6,16 @@
 
 export const assistantControlsEn = {
   title: "Assistant controls",
-  description:
-    "Stop the assistant from acting on its own, at once: the change applies from the next message. Use these when it misbehaves; switch them back when it is fixed.",
+  description: "Stop the assistant at once when it misbehaves: a change applies from the next message.",
   handOver: {
     label: "Pass every customer to the team",
-    hint: "The assistant stops answering by itself: each new message waits for your team in the inbox (the customer hears that a colleague will reply), and calls go to your forwarding number.",
+    hint: "New messages wait for your team in the inbox, and calls go to your forwarding number.",
   },
   actions: {
     title: "What the assistant may do",
-    hint: "An action switched off is refused when the assistant tries it; it then takes a request or passes the customer to a colleague.",
+    hint: "A switched-off action is refused; the assistant takes a request or passes the customer to a colleague instead.",
+    allOn: "All on",
+    someOff: "Some off",
     create_booking: "Make bookings",
     reschedule_booking: "Move bookings",
     cancel_booking: "Cancel bookings",

@@ -148,3 +148,80 @@ def test_a_confirmation_after_create_booking_passes() -> None:
 
     assert reply.guard_verdict is ReplyGuardVerdict.CLEAN
     assert len(reply.created_booking_ids) == 1
+
+
+@pytest.mark.parametrize(
+    ("text", "language", "earlier", "is_backed"),
+    [
+        ("Your table is confirmed.", "en", AssistantToolName.CREATE_BOOKING, True),
+        ("La prenotazione è confermata.", "it", AssistantToolName.CREATE_BOOKING, True),
+        ("Your table is confirmed.", "en", AssistantToolName.LIST_MY_BOOKINGS, True),
+        ("Your booking is cancelled.", "en", AssistantToolName.CREATE_BOOKING, False),
+        ("Your booking is cancelled.", "en", AssistantToolName.CANCEL_BOOKING, True),
+        (
+            "Ho annullato la prenotazione.",
+            "it",
+            AssistantToolName.CREATE_BOOKING,
+            False,
+        ),
+        ("I have moved your booking.", "en", AssistantToolName.CREATE_BOOKING, False),
+        (
+            "Бронь перенесена на 20:00.",
+            "ru",
+            AssistantToolName.RESCHEDULE_BOOKING,
+            True,
+        ),
+        (
+            "Your new table is booked and the old one is cancelled.",
+            "en",
+            AssistantToolName.CREATE_BOOKING,
+            False,
+        ),
+    ],
+)
+def test_an_earlier_tool_call_backs_a_repeated_claim_of_its_kind_only(
+    text: str, language: str, earlier: AssistantToolName, is_backed: bool
+) -> None:
+    claims = find_unbacked_booking_claims(
+        text, [LanguageTag(language)], [], [tool_record(earlier, is_error=False)]
+    )
+    failed = find_unbacked_booking_claims(
+        text, [LanguageTag(language)], [], [tool_record(earlier, is_error=True)]
+    )
+
+    assert (claims == []) is is_backed
+    assert failed != []
+
+
+def test_a_later_reply_may_repeat_the_booking_an_earlier_turn_made() -> None:
+    world = build_world(
+        scripted(
+            call_tool(AssistantToolName.CREATE_BOOKING, CREATE_INPUT),
+            say("Done! You are booked for 2 October at 19:30, Нино."),
+            say("You're welcome, Нино! Your booking is confirmed. See you!"),
+        )
+    )
+    world.send("A table for 4 on 2 October at 19:30", name="Нино")
+
+    reply = world.send("Thank you!", name="Нино")
+
+    assert reply.guard_verdict is ReplyGuardVerdict.CLEAN
+    assert len(requests_of(world)) == 3
+
+
+def test_an_earlier_booking_never_backs_a_cancellation_the_turn_did_not_make() -> None:
+    world = build_world(
+        scripted(
+            call_tool(AssistantToolName.CREATE_BOOKING, CREATE_INPUT),
+            say("Done! You are booked for 2 October at 19:30, Нино."),
+            say("Your booking has been cancelled."),
+            say("I can pass the cancellation to a colleague right away."),
+        )
+    )
+    world.send("A table for 4 on 2 October at 19:30", name="Нино")
+
+    reply = world.send("Please cancel it.", name="Нино")
+
+    assert reply.guard_verdict is ReplyGuardVerdict.REWRITTEN
+    note = user_turn_text(requests_of(world)[3].transcript[-1])
+    assert "Your booking has been cancelled." in note

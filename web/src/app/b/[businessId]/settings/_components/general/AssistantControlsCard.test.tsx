@@ -70,6 +70,22 @@ describe("AssistantControlsCard: an owner's kill switches", () => {
     expect(await screen.findByText(t("assistantControls.handedOver"))).toBeTruthy();
   });
 
+  it.each([
+    [[] as Schema<"AssistantSettingsView">["disabled_tools"], "assistantControls.actions.allOn"],
+    [["send_link"] as Schema<"AssistantSettingsView">["disabled_tools"], "assistantControls.actions.someOff"],
+  ] as const)("folds the actions under a line that says whether any is off (%j)", async (disabledTools, summaryKey) => {
+    const { t } = textsIn("en");
+    answerGet(() => ok({ ...stored, disabled_tools: disabledTools }));
+    renderCard();
+
+    const actions = await screen.findByTestId("assistant-actions");
+    expect(actions.tagName).toBe("DETAILS");
+    expect(actions.hasAttribute("open")).toBe(false);
+    const summary = actions.querySelector("summary");
+    expect(summary?.textContent).toContain(t("assistantControls.actions.title"));
+    expect(summary?.textContent).toContain(t(summaryKey));
+  });
+
   it("switches an action off", async () => {
     const user = userEvent.setup();
     const { t } = textsIn("en");
@@ -77,6 +93,8 @@ describe("AssistantControlsCard: an owner's kill switches", () => {
     vi.mocked(api.PUT).mockImplementation((() => ok({ ...stored, disabled_tools: ["cancel_booking", "send_link"] })) as never);
     renderCard();
 
+    await user.click(await screen.findByText(t("assistantControls.actions.title")));
+    expect((await screen.findByTestId("assistant-actions")).hasAttribute("open")).toBe(true);
     await user.click(await screen.findByRole("switch", { name: t("assistantControls.actions.cancel_booking") }));
 
     expect(vi.mocked(api.PUT)).toHaveBeenCalledWith(SETTINGS, {
