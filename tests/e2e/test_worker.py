@@ -64,6 +64,9 @@ from app.gateways.worker.periodic.purge_business_exports import (
 from app.gateways.worker.periodic.purge_idempotency_keys import (
     PURGE_IDEMPOTENCY_KEYS_JOB,
 )
+from app.gateways.worker.periodic.purge_expired_audit_log import (
+    PURGE_EXPIRED_AUDIT_LOG_JOB,
+)
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
 from app.gateways.worker.periodic.purge_webhook_deliveries import (
     PURGE_WEBHOOK_DELIVERIES_JOB,
@@ -195,6 +198,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (PURGE_EXPIRED_PERSONAL_DATA_JOB, 86_400),
         (PURGE_IDEMPOTENCY_KEYS_JOB, 3_600),
         (VERIFY_AUDIT_CHAIN_JOB, 86_400),
+        (PURGE_EXPIRED_AUDIT_LOG_JOB, 86_400),
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),

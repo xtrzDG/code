@@ -6,8 +6,11 @@ once, and a refund or chargeback that arrives before the approval it
 reverses stands (the late approval pays nothing).
 """
 
+import json
+
 import pytest
 
+from app.containers.app import AppContainer
 from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.payments import PaymentStatus, PaymentWebhookOutcome
 from app.schemas.domain.payments import PaymentOrderDocument
@@ -22,6 +25,9 @@ from app.use_cases.billing.payment_webhook.payment_notification_jobs import (
     APPLY_PAYMENT_NOTIFICATION_JOB,
     decode_payment_notification,
 )
+from app.use_cases.billing.payment_webhook.receive_payment_webhook_use_case import (
+    ReceivePaymentWebhookUseCase,
+)
 from tests.billing.paid_world import checkout, payment_order
 from tests.billing.queued_webhook_world import QueuedWebhookWorld
 
@@ -32,7 +38,9 @@ def order_of(world: QueuedWebhookWorld) -> PaymentOrderDocument:
     return payment_order(world.paid, checkout(world.paid))
 
 
-def reload(world: QueuedWebhookWorld, order: PaymentOrderDocument) -> PaymentOrderDocument:
+def reload(
+    world: QueuedWebhookWorld, order: PaymentOrderDocument
+) -> PaymentOrderDocument:
     stored = world.paid.testbed.payment_order_repo.get(order.id)
     assert stored is not None
     return stored
@@ -111,7 +119,10 @@ def test_a_refund_before_its_approval_stands() -> None:
     assert invoice_statuses(world) == {InvoiceStatus.ISSUED}
     # Only the refund was read back; the late approval asked nothing.
     assert testbed.flitt.status_queries == [str(order.id)]
-    assert world.documents.receipts == []
+    # The refund was applied (no invoice paid to mail); the approval was not.
+    assert [r.outcome for r in world.documents.receipts] == [
+        PaymentWebhookOutcome.APPLIED
+    ]
     assert world.deliver(approved).outcome is PaymentWebhookOutcome.DUPLICATE
 
 
@@ -177,8 +188,19 @@ def test_a_payload_the_platform_did_not_seal_is_refused() -> None:
     with pytest.raises(ValidationFailedError):
         decode_payment_notification(
             JobPayloadJson(
-                '{"payment_order_id": "%s", "sealed_event": "not-sealed"}'
-                % PaymentOrderId()
+                json.dumps(
+                    {"payment_order_id": str(PaymentOrderId()), "sealed_event": "x"}
+                )
             ),
             cipher,
         )
+
+
+def test_the_application_queues_payment_webhooks_and_its_worker_applies_them() -> None:
+    container = AppContainer()
+
+    assert isinstance(
+        container.orchestrators.billing.receive_payment_webhook_use_case(),
+        ReceivePaymentWebhookUseCase,
+    )
+    assert APPLY_PAYMENT_NOTIFICATION_JOB in container.gateways.queued_job_operators()

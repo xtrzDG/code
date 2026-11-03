@@ -46,3 +46,5 @@ class AuditChainRepositoriesContainer(containers.DeclarativeContainer):
     )
     # The purge of a chain's oldest entries (`workshop purge-audit-log`).
     audit_chain_purges = audit_chain_collections.audit_chain_purges
+    # The daily job's purge past the retention (`purge_expired_audit_log`).
+    audit_retention_purges = audit_chain_collections.audit_retention_purges

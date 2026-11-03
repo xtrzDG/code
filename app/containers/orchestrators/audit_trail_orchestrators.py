@@ -27,3 +27,6 @@ class AuditTrailOrchestratorsContainer(containers.DeclarativeContainer):
     purge_audit_log_orchestrator = use_case_orchestrator(
         audit_trail_use_cases.purge_audit_log_use_case
     )
+    purge_expired_audit_log_orchestrator = use_case_orchestrator(
+        audit_trail_use_cases.purge_expired_audit_log_use_case
+    )

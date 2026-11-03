@@ -7,8 +7,9 @@ name: Schedule watch
 # vulnerability reporting stay on; dependency-audit.yml: advisories in the
 # lockfiles; zap-staging.yml: the active scan of staging; image-rescan.yml:
 # the release images against today's CVEs; synthetics.yml: production's
-# flows) fail silently when GitHub stops scheduling
-# them (60 days without a push), a secret expires or every run is red.
+# flows; payment-page-integrity.yml: the payment pages' scripts) fail
+# silently when GitHub stops scheduling them (60 days without a push), a
+# secret expires or every run is red.
 # Every morning this checks that each had a successful scheduled run in the
 # last 8 days and otherwise opens one issue per workflow (once: an open
 # issue is not opened again; docs/operations/runbooks/README.md, "Game
@@ -42,7 +43,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          WATCHED: "restore-drill.yml perf.yml evals-nightly.yml zap.yml repo-settings.yml dependency-audit.yml zap-staging.yml image-rescan.yml synthetics.yml"
+          WATCHED: "restore-drill.yml perf.yml evals-nightly.yml zap.yml repo-settings.yml dependency-audit.yml zap-staging.yml image-rescan.yml synthetics.yml payment-page-integrity.yml"
           MAX_AGE_DAYS: "8"
         run: |
           set -euo pipefail

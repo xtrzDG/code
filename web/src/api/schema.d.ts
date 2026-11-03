@@ -16169,10 +16169,12 @@ export interface components {
         PaymentStatus: "created" | "processing" | "approved" | "declined" | "expired" | "reversed";
         /**
          * PaymentWebhookOutcome
-         * @description What processing one provider notification did.
+         * @description What processing one provider notification did. The webhook itself
+         *     answers QUEUED (verified and queued for a worker), DUPLICATE or
+         *     IGNORED; the worker that applies it gets the others (API-03).
          * @enum {string}
          */
-        PaymentWebhookOutcome: "applied" | "duplicate" | "ignored" | "refund_due";
+        PaymentWebhookOutcome: "applied" | "duplicate" | "ignored" | "refund_due" | "queued";
         /**
          * PaymentWebhookReceipt
          * @description Answer to the provider: what the notification changed.
@@ -16683,7 +16685,10 @@ export interface components {
          *     26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume
          *     (an alert at 60, refused from 200: SMS pumping through a tenant).
          *     OTP_CONVERSION: most login codes of the last hour were never used
-         *     (SMS pumping through sign-in).
+         *     (SMS pumping through sign-in). TENANT_PAYMENT_DECLINES: the payments
+         *     of one business were declined 5 times within two hours (card testing
+         *     through the platform's payment pages; from 10 its new payment pages
+         *     are refused).
          *     BOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,
          *     or more cancellations, in an hour than its hourly cap of either (fake
          *     bookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:
@@ -16692,7 +16697,7 @@ export interface components {
          *     the marketing category (the number risks a restriction).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch" | "webhook_signature_failures" | "storage_errors" | "api_latency" | "backup_failed" | "tenant_sms_volume" | "otp_conversion" | "booking_spike" | "cancellation_spike" | "whatsapp_quality";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch" | "webhook_signature_failures" | "storage_errors" | "api_latency" | "backup_failed" | "tenant_sms_volume" | "otp_conversion" | "tenant_payment_declines" | "booking_spike" | "cancellation_spike" | "whatsapp_quality";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.

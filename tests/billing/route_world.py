@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.payments import PaymentWebhookReceipt
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
 from tests.billing.billing_settings import CABINET_ORIGIN, GEORGIA
 from tests.billing.billing_testbed import BillingTestbed, bearer
@@ -49,3 +50,8 @@ class RouteWorld:
         )
         assert order is not None
         return order
+
+    def run_payment_jobs(self) -> list[PaymentWebhookReceipt]:
+        """The worker: applies what the payment webhooks queued (API-03)."""
+
+        return self.testbed.payment_jobs.run()

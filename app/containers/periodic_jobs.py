@@ -47,6 +47,9 @@ from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_business_exports import (
     purge_business_exports_job,
 )
+from app.gateways.worker.periodic.purge_expired_audit_log import (
+    purge_expired_audit_log_job,
+)
 from app.gateways.worker.periodic.purge_idempotency_keys import (
     purge_idempotency_keys_job,
 )
@@ -250,6 +253,10 @@ def periodic_job_specs(
         Factory(  # The audit log's hash chains, checked daily (1193).
             verify_audit_chain_job,
             operator=operators.audit_trail.verify_audit_chains_operator,
+        ),
+        Factory(  # The audit log past its 1,095 days, purged daily (1250).
+            purge_expired_audit_log_job,
+            operator=operators.audit_trail.purge_expired_audit_log_operator,
         ),
         Factory(  # Sub-processor changes told 30 days ahead (DPA 8.3).
             send_subprocessor_notices_job,

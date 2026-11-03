@@ -364,6 +364,9 @@ jobs:
     name: Security (dependencies, secrets, static analysis)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # the dependency review's summary comment on the pull request
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -396,12 +399,29 @@ jobs:
 
       # The dependencies a pull request adds or updates (SDLC-02): a high or
       # critical advisory or a denied licence fails it; the rules and the
-      # reviewed exceptions are in .github/dependency-review-config.yml.
+      # reviewed exceptions are in .github/dependency-review-config.yml. Its
+      # summary is also a comment on the pull request (a fork's read-only
+      # token cannot comment: the summary stays in the run).
       - name: Dependencies this pull request changes (dependency review)
         if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           config-file: ./.github/dependency-review-config.yml
+
+      # The direct dependencies it adds, measured on npm and PyPI (SDLC-02):
+      # first and latest release, publishers, deprecation or archival, code
+      # run on install, licence, source, and lookalikes of popular names. A
+      # failing signal stops it unless .github/dependency-registry-review.toml
+      # accepts it with a reason; the report is the run summary, also when
+      # the review above failed.
+      - name: New dependencies on their registries
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/base" "$BASE_SHA"
+          uv run --no-project python -m scripts.dependency_registry_review \
+            --base "$RUNNER_TEMP/base" --summary "$GITHUB_STEP_SUMMARY"
 
       # Reviewed false positives are listed by fingerprint in .gitleaksignore.
       - name: Secrets in the whole history (gitleaks)

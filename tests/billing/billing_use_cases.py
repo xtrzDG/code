@@ -47,6 +47,7 @@ from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.admin_cabinet_parts import build_open_client_cabinet
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
 from tests.billing.billing_infrastructure import BillingInfrastructure
+from tests.billing.payment_job_queue import PaymentJobs
 from tests.billing.payment_parts import PaymentParts, build_payment_parts
 from tests.foundation.access_support import (
     ACCESS_SETTINGS,
@@ -170,6 +171,13 @@ class BillingUseCases(BillingInfrastructure):
             start_checkout=self.start_checkout,
         )
         self.process_webhook = self.payments.process_webhook
+        # The webhook routes as production runs them: verified and queued.
+        self.payment_jobs = PaymentJobs(
+            self.payment_gateway,
+            self.payment_order_repo,
+            self.secret_cipher,
+            self.payments.apply_event,
+        )
         self.end_trials = EndTrialsUseCase(
             business_repo=self.business_repo,
             subscription_repo=self.subscription_repo,

@@ -28,4 +28,6 @@ class SynchronousPaymentWebhook(
         ] = apply_event
 
     def run(self, input_data: PaymentWebhookDelivery) -> PaymentWebhookReceipt:
-        return self._apply_event.run(self._payment_gateway.read_notification(input_data))
+        return self._apply_event.run(
+            self._payment_gateway.read_notification(input_data)
+        )

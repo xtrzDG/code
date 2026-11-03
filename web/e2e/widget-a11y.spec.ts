@@ -46,3 +46,25 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await widgetViolations(page), "open, with a conversation").toEqual([]);
   });
 }
+
+// The header's text is picked for AA on the business's colour and no more
+// (colors.js accentColors): on an accent where white (#767676, 4.54:1) or
+// the ink (#828282, 4.57:1) only just reaches it, every line on the header,
+// the AI disclosure under the name too, still passes at full strength.
+for (const [accent, background, text] of [
+  ["#767676", "rgb(118, 118, 118)", "rgb(255, 255, 255)"],
+  ["#828282", "rgb(130, 130, 130)", "rgb(26, 24, 22)"],
+] as const) {
+  test(`the header passes the audit on an accent at the edge of AA (${accent})`, async ({ page }) => {
+    const api = new FakeWidgetApi();
+    await serveSite(page.context(), api, { attributes: { "data-color": accent } });
+    await page.goto(`${SITE}/`);
+
+    await page.getByRole("button", { name: "Open chat" }).click();
+    await expect(chat(page)).toBeVisible();
+    const header = chat(page).locator(".aw-header");
+    await expect(header).toHaveCSS("background-color", background);
+    await expect(header.locator(".aw-subtitle")).toHaveCSS("color", text);
+    expect(await widgetViolations(page), "open").toEqual([]);
+  });
+}

@@ -107,11 +107,12 @@ def test_a_signed_stripe_event_is_applied_over_http() -> None:
         content=payload,
         headers={"Stripe-Signature": f"t={now},v1=0000"},
     )
-    applied = world.client.post(
+    queued = world.client.post(
         STRIPE_WEBHOOK_PATH,
         content=payload,
         headers={"Stripe-Signature": sign_stripe_event(payload, now)},
     )
+    applied = world.run_payment_jobs()
     repeated = world.client.post(
         STRIPE_WEBHOOK_PATH,
         content=payload,
@@ -125,11 +126,12 @@ def test_a_signed_stripe_event_is_applied_over_http() -> None:
 
     assert unsigned.status_code == 403
     assert forged.status_code == 403
-    assert applied.status_code == 200
-    assert applied.json() == {
-        "outcome": "applied",
+    assert queued.status_code == 200
+    assert queued.json() == {
+        "outcome": "queued",
         "payment_order_id": str(order.id),
     }
+    assert [receipt.outcome.value for receipt in applied] == ["applied"]
     assert repeated.json()["outcome"] == "duplicate"
     assert malformed.status_code == 422
 

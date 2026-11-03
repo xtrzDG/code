@@ -7,6 +7,9 @@
 # copyleft that reaches a hosted service, source-available or
 # non-commercial terms). The OpenSSF Scorecard of each changed package is
 # shown with a warning below level 3 (maintenance, archival, publishers).
+# The summary is a comment on the pull request, updated on every push; the
+# direct dependencies it adds are also measured on their registries
+# (scripts/dependency_registry_review.py, the step after this one).
 fail-on-severity: high
 fail-on-scopes:
   - runtime
@@ -35,4 +38,4 @@ allow-dependencies-licenses:
   - pkg:pypi/pyphen
 show-openssf-scorecard: true
 warn-on-openssf-scorecard-level: 3
-comment-summary-in-pr: never
+comment-summary-in-pr: always

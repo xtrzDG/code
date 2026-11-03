@@ -68,7 +68,10 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   await expect(contacts.getByRole("link", { name: "Chat" })).toHaveAttribute("href", /\/c\/[A-Za-z0-9_-]+$/);
   // At the foot: the business's privacy notice (its chat's) and the accessibility statement.
   const links = page.getByTestId("customer-page-links");
-  await expect(links.getByRole("link", { name: "Privacy notice" })).toHaveAttribute("href", /\/c\/[A-Za-z0-9_-]+\/privacy$/);
+  const privacy = links.getByRole("link", { name: "Privacy notice" });
+  await expect(privacy).toHaveAttribute("href", /^\/c\/[A-Za-z0-9_-]+\/privacy$/);
+  // The platform's notice (named by its full address on this site) opens in place.
+  await expect(privacy).not.toHaveAttribute("target");
   await expect(links.getByRole("link", { name: "Accessibility" })).toHaveAttribute("href", "/en/accessibility");
   await expect(page.getByTestId("cookie-consent")).toHaveCount(0);
 

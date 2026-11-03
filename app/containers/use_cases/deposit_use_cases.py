@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Dependency, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.container_edges import composed_container_edge
@@ -10,6 +10,9 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.notifications.owner_account_email_facilitator import (
+    OwnerAccountEmailFacilitator,
+)
 from app.schemas.dto.deposits.deposit_report import DepositReport, DepositReportQuery
 from app.schemas.dto.deposits.deposit_settings import (
     AddPaymentLinkCommand,
@@ -31,6 +34,9 @@ from app.schemas.dto.deposits.payment_link_requests import (
     SendPaymentLinkCommand,
 )
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.transformers.notifications.staff_notification_text_transformer import (
+    StaffNotificationTextTransformer,
+)
 from app.use_cases.deposits.add_payment_link_use_case import AddPaymentLinkUseCase
 from app.use_cases.deposits.deposit_hold_release import DepositHoldRelease
 from app.use_cases.deposits.deposit_issuing import DepositIssuing
@@ -77,6 +83,9 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # CABINET_BASE_URL (a CabinetBaseUrl or None; a Dependency checks no
+    # type): the links of the owners' e-mails open the cabinet.
+    cabinet_base_url: Dependency[object] = Dependency()
 
     authorize = account_use_cases.authorize_business_access_use_case
     wall_clock = time_provider.microsecond_wall_clock
@@ -96,6 +105,19 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
             PaymentPageNotices,
             staff_alerts=facilitators.staff_alert_facilitator,
             resolver=utilities.localized_text_resolver,
+            # Each owner's account e-mail too (PAY-06).
+            owner_emails=Factory(
+                OwnerAccountEmailFacilitator,
+                user_repo=repositories.user_repo,
+                manager_notifier=facilitators.manager_notification_facilitator,
+                link_signer=facilitators.staff_link_signer,
+                text_transformer=Factory(
+                    StaffNotificationTextTransformer,
+                    text_resolver=utilities.localized_text_resolver,
+                ),
+                cabinet_base_url=cabinet_base_url,
+                wall_clock=wall_clock,
+            ),
         ),
     )
 

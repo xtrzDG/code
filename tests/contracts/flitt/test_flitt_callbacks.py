@@ -1,9 +1,10 @@
 """
 Flitt payment callbacks, signed as Flitt documents it: every documented
 callback matches the callback shape and verifies as recorded, the adapter
-reads the payment the billing flow needs, and the webhook route applies a
-callback in every encoding Flitt uses. A status Flitt may add later is
-refused with 422 and changes nothing, never a 500.
+reads the payment the billing flow needs, and the webhook route queues a
+callback in every encoding Flitt uses for the worker that applies it. A
+status Flitt may add later is refused with 422 and changes nothing, never
+a 500.
 """
 
 import json
@@ -166,8 +167,11 @@ def test_approved_callback_pays_the_invoices_in_every_encoding(encoding: str) ->
         )
 
     assert response.status_code == 200, response.text
-    assert response.json()["outcome"] == "applied"
-    # The approval took effect only after Flitt's status API confirmed it.
+    assert response.json()["outcome"] == "queued"
+    # Queued without asking Flitt; the worker applied it only after Flitt's
+    # status API confirmed it.
+    assert world.testbed.flitt.status_queries == []
+    assert [r.outcome.value for r in world.run_payment_jobs()] == ["applied"]
     assert world.testbed.flitt.status_queries == [callback["order_id"]]
     page = world.client.get(world.billing_path(), headers=bearer(world.owner))
     assert {invoice["status"] for invoice in page.json()["invoices"]} == {"paid"}
@@ -180,7 +184,8 @@ def test_declined_callback_leaves_the_invoices_open() -> None:
     response = post_json(world, world_callback(world, "callback_declined.json"))
 
     assert response.status_code == 200, response.text
-    assert response.json()["outcome"] == "applied"
+    assert response.json()["outcome"] == "queued"
+    assert [r.outcome.value for r in world.run_payment_jobs()] == ["applied"]
     page = world.client.get(world.billing_path(), headers=bearer(world.owner))
     assert "paid" not in {invoice["status"] for invoice in page.json()["invoices"]}
 

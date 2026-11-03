@@ -27,3 +27,6 @@ class AuditTrailPipelinesContainer(containers.DeclarativeContainer):
     purge_audit_log_pipeline = orchestrator_pipeline(
         audit_trail.purge_audit_log_orchestrator
     )
+    purge_expired_audit_log_pipeline = orchestrator_pipeline(
+        audit_trail.purge_expired_audit_log_orchestrator
+    )

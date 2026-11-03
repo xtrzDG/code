@@ -44,6 +44,7 @@ HEALTH_CODES: tuple[PlatformAlertCode, ...] = (
     PlatformAlertCode.BACKUP_FAILED,
     PlatformAlertCode.TENANT_SMS_VOLUME,
     PlatformAlertCode.OTP_CONVERSION,
+    PlatformAlertCode.TENANT_PAYMENT_DECLINES,
 )
 
 
@@ -117,6 +118,11 @@ def test_every_health_alert_is_quiet_on_a_quiet_platform() -> None:
             5,
         ),
         (PlatformAlertCode.TENANT_SMS_VOLUME, (PlatformSignal.TENANT_SMS_SURGE,), 0),
+        (
+            PlatformAlertCode.TENANT_PAYMENT_DECLINES,
+            (PlatformSignal.TENANT_PAYMENT_DECLINES,),
+            0,
+        ),
     ],
 )
 def test_a_burst_above_the_threshold_fires(

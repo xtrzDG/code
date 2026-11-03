@@ -84,7 +84,8 @@
   border: 0;
   border-radius: 12px;
   background: var(--hc-accent);
-  color: #fff;
+  /* The text the page picks for the accent (accentColors): ink on a light one. */
+  color: var(--hc-on-accent);
   font: inherit;
   font-size: 15px;
   font-weight: 600;

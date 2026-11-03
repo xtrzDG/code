@@ -3,7 +3,8 @@ Text the widget shows on the business's accent (the business's name and
 the AI disclosure line in the header) keeps its full colour: accentColors
 picks that colour for WCAG AA (4.5:1) and no more, so a faded line would
 fall below AA wherever the title just meets it. The same holds for the
-detail under a failed message on its danger tint. The browser audit
+detail under a failed message on its danger tint and for the label of a
+voice message still on its way (only its photo fades). The browser audit
 (web/e2e/widget-a11y.spec.ts, axe) checks the rendered widget.
 """
 
@@ -34,12 +35,18 @@ COLOUR_CONSTANTS: tuple[str, ...] = (
 )
 
 
-def widget_css() -> str:
-    """The stylesheet's literal text (its `var CSS = [...]` strings, joined)."""
+def stylesheet(name: str) -> str:
+    """A stylesheet's literal text (its `var <name> = [...]` strings, joined)."""
 
-    match = re.search(r"var CSS = \[(.*?)\]\.join\(\"\"\);", SCRIPT_SOURCE, re.S)
+    match = re.search(rf"var {name} = \[(.*?)\]\.join\(\"\"\);", SCRIPT_SOURCE, re.S)
     assert match is not None
     return "".join(re.findall(r'"((?:[^"\\]|\\.)*)"', match.group(1)))
+
+
+def widget_css() -> str:
+    """The main stylesheet (`var CSS`)."""
+
+    return stylesheet("CSS")
 
 
 def declarations(css: str, selector: str) -> str:
@@ -57,6 +64,15 @@ def declarations(css: str, selector: str) -> str:
 )
 def test_text_on_a_colour_chosen_for_aa_is_never_faded(selector: str) -> None:
     assert "opacity" not in declarations(widget_css(), selector)
+
+
+def test_an_upload_on_its_way_fades_its_photo_and_mutes_its_label() -> None:
+    media: str = stylesheet("MEDIA_CSS")
+    busy: str = declarations(media, ".aw-tray-item[aria-busy=true]")
+
+    assert "opacity" not in busy
+    assert "color:var(--aw-muted)" in busy
+    assert "opacity" in declarations(media, ".aw-tray-item[aria-busy=true] img")
 
 
 def test_the_header_text_is_the_colour_chosen_for_the_accent() -> None:

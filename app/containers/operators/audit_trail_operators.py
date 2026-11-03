@@ -36,3 +36,6 @@ class AuditTrailOperatorsContainer(containers.DeclarativeContainer):
     purge_audit_log_operator = pipeline_operator(
         audit_trail_pipelines.purge_audit_log_pipeline, storage_scope
     )
+    purge_expired_audit_log_operator = pipeline_operator(
+        audit_trail_pipelines.purge_expired_audit_log_pipeline, storage_scope
+    )

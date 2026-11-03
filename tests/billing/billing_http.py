@@ -31,7 +31,7 @@ def build_billing_http_client(testbed: BillingUseCases) -> TestClient:
             subscribe_operator=PipelineOperator(
                 OrchestratorPipeline(testbed.subscribe)
             ),
-            payment_webhook_operator=build_operator(testbed.process_webhook),
+            payment_webhook_operator=build_operator(testbed.payment_jobs.receive),
             current_user=current_user,
         )
     )
@@ -41,7 +41,7 @@ def build_billing_http_client(testbed: BillingUseCases) -> TestClient:
                 testbed.payments.get_payment_method
             ),
             start_card_setup_operator=build_operator(testbed.payments.start_card_setup),
-            payment_webhook_operator=build_operator(testbed.process_webhook),
+            payment_webhook_operator=build_operator(testbed.payment_jobs.receive),
             current_user=current_user,
         )
     )

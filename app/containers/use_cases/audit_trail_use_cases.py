@@ -29,13 +29,17 @@ from app.use_cases.compliance.audit_chain.verify_audit_chains_use_case import (
     VerifyAuditChainsUseCase,
 )
 from app.use_cases.maintenance.purge_audit_log_use_case import PurgeAuditLogUseCase
+from app.use_cases.maintenance.purge_expired_audit_log_use_case import (
+    PurgeExpiredAuditLogUseCase,
+)
 
 
 class AuditTrailUseCasesContainer(containers.DeclarativeContainer):
     """
     The audit log's hash chains (R13-AUDIT-TRAIL, migration 1193): the
     owner's view of the business's chain, the platform admin's audit view
-    and chain overview, and the daily `verify_audit_chain` job.
+    and chain overview, the daily `verify_audit_chain` job and the daily
+    purge past the retention.
     """
 
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -82,4 +86,20 @@ class AuditTrailUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The daily `purge_expired_audit_log` job: the same purge past the
+    # 1,095-day retention, on the database's function the platform role
+    # may call (migration 1250).
+    purge_expired_audit_log_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            PurgeExpiredAuditLogUseCase,
+            purge_audit_log=Factory(
+                PurgeAuditLogUseCase,
+                purges=repositories.audit_retention_purges,
+                business_repo=repositories.business_repo,
+                audit_log_repo=repositories.audit_log_repo,
+                wall_clock=time_provider.microsecond_wall_clock,
+            ),
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )

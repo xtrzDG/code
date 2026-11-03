@@ -218,6 +218,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         registries=registries, repositories=repositories,
         time_provider=time_provider, utilities=utilities,
         account_use_cases=accounts,
+        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
     )  # fmt: skip
     # Two-way availability: resources' calendars, the sync job, exports (1160).
     calendars: CalendarSyncUseCasesContainer = Container(  # type: ignore[assignment]

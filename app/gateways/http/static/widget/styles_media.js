@@ -22,7 +22,10 @@
     "padding:0 10px;font-size:13px;color:var(--aw-fg);}",
     ".aw-tray-item img{width:56px;height:56px;object-fit:cover;border-radius:12px;",
     "margin-inline:-11px;}",
-    ".aw-tray-item[aria-busy=true]{opacity:.55;}",
+    // On its way: the photo faded, the label muted (a faded label would
+    // fall below AA on its bubble).
+    ".aw-tray-item[aria-busy=true]{color:var(--aw-muted);}",
+    ".aw-tray-item[aria-busy=true] img{opacity:.55;}",
     ".aw-remove{position:absolute;top:-8px;inset-inline-end:-8px;width:24px;height:24px;",
     "border:2px solid var(--aw-bg);border-radius:50%;background:var(--aw-fg);color:var(--aw-bg);",
     "cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}",

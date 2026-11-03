@@ -7,6 +7,12 @@ database's purge function (`workshop.purge_audit_chain`, migration 1193)
 refuses a newer cutoff itself and stores the cutoff in the chain's
 checkpoint; the chain's check accepts a checkpoint over the newest entry
 it verified only when that cutoff is old enough (else HEAD_LOST).
+
+The audit and security log itself is kept 1,095 days (PRIV-07,
+docs/security/data-classification.md): the worker's daily
+`purge_expired_audit_log` job removes the entries written before
+`retention_cutoff`, through the database's `workshop.purge_expired_audit_chain`
+(migration 1250), which never goes past the same retention by its own clock.
 """
 
 from typed_time_provider import Microseconds
@@ -15,6 +21,7 @@ from app.schemas.typings.compliance.constrained_integers import AuditRetentionDa
 
 MINIMUM_AUDIT_RETENTION_DAYS: AuditRetentionDays = AuditRetentionDays(365)
 MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
+AUDIT_LOG_RETENTION_DAYS: AuditRetentionDays = AuditRetentionDays(1_095)
 
 
 def newest_allowed_cutoff(now: Microseconds) -> Microseconds:
@@ -29,3 +36,12 @@ def is_cutoff_allowed(cutoff: Microseconds, now: Microseconds) -> bool:
     """Whether a purge at `now` may remove entries written before `cutoff`."""
 
     return int(cutoff) <= int(newest_allowed_cutoff(now))
+
+
+def retention_cutoff(now: Microseconds) -> Microseconds:
+    """
+    The cutoff of the daily purge at `now`: entries written before it are
+    past the audit log's retention.
+    """
+
+    return Microseconds(int(now) - int(AUDIT_LOG_RETENTION_DAYS) * MICROSECONDS_PER_DAY)

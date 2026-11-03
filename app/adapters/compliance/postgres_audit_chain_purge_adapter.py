@@ -17,6 +17,10 @@ from app.schemas.typings.compliance.constrained_integers import (
 from app.schemas.typings.compliance.constrained_strings import AuditChainKey
 
 PURGE_STATEMENT: LiteralString = "select workshop.purge_audit_chain(%s, %s, %s)"
+# The platform role's purge past the 1,095-day retention (migration 1250).
+RETENTION_PURGE_STATEMENT: LiteralString = (
+    "select workshop.purge_expired_audit_chain(%s, %s, %s)"
+)
 AUDIT_TABLE: str = "audit_log_entries"
 
 
@@ -26,10 +30,18 @@ class PostgresAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
     platform-wide transaction. The function runs with its owner's rights
     (the application's role cannot delete audit entries any other way) and
     refuses a cutoff younger than the minimum retention by its own clock.
+    With RETENTION_PURGE_STATEMENT on the platform pool it is the daily
+    job's `workshop.purge_expired_audit_chain` (1250), which purges no
+    entry younger than the audit log's 1,095-day retention.
     """
 
-    def __init__(self, connection_pool: PostgresConnectionPoolClient) -> None:
+    def __init__(
+        self,
+        connection_pool: PostgresConnectionPoolClient,
+        statement: LiteralString = PURGE_STATEMENT,
+    ) -> None:
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._statement: LiteralString = statement
 
     def purge(
         self,
@@ -46,7 +58,7 @@ class PostgresAuditChainPurgeAdapter(AuditChainPurgeAdapterContract):
         try:
             with platform_transaction(self._connection_pool, AUDIT_TABLE) as connection:
                 row: TupleRow | None = connection.execute(
-                    PURGE_STATEMENT,
+                    self._statement,
                     (str(chain_key), int(created_before), int(max_entries)),
                 ).fetchone()
         except database_errors.InvalidParameterValue as error:

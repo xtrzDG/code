@@ -2,7 +2,8 @@
 A Flitt callback that pays or refunds takes effect only when Flitt's
 status API reports the same order status and amount (API-02): a callback
 signed with a leaked key, or one the order has moved past, changes nothing
-and is answered 409, so Flitt sends it again.
+and is refused with a conflict: the queued job that applies it runs again
+later (API-03; the route itself only queues, test_queued_payment_webhooks).
 """
 
 import json
@@ -89,7 +90,7 @@ def test_a_refund_is_read_back_and_a_decline_is_not() -> None:
     assert len(flitt.status_queries) == queries_before + 1
 
 
-def test_the_webhook_answers_409_until_flitt_confirms() -> None:
+def test_the_queued_callback_waits_until_flitt_confirms() -> None:
     world = RouteWorld()
     world.start_trial()
     order = world.checkout()
@@ -97,14 +98,15 @@ def test_the_webhook_answers_409_until_flitt_confirms() -> None:
     body = json.dumps(sign_flitt_callback(parameters))
     world.testbed.flitt.order_states[str(order.id)] = {"order_status": "created"}
 
-    refused = world.client.post(
+    queued = world.client.post(
         WEBHOOK_PATH, content=body, headers={"Content-Type": "application/json"}
     )
+    refused = world.run_payment_jobs()
     world.testbed.flitt.know_callback(parameters)
-    applied = world.client.post(
-        WEBHOOK_PATH, content=body, headers={"Content-Type": "application/json"}
-    )
+    applied = world.run_payment_jobs()
 
-    assert refused.status_code == 409
-    assert applied.status_code == 200
-    assert applied.json()["outcome"] == "applied"
+    assert queued.status_code == 200
+    assert queued.json()["outcome"] == "queued"
+    assert refused == []
+    assert isinstance(world.testbed.payment_jobs.failures[-1], ConflictError)
+    assert [receipt.outcome.value for receipt in applied] == ["applied"]

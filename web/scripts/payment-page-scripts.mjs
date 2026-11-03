@@ -47,8 +47,8 @@ export function entryScripts(buildManifest, clientManifest) {
   for (const list of Object.values(clientManifest.entryJSFiles ?? {})) {
     files.push(...list);
   }
-  for (const module of Object.values(clientManifest.clientModules ?? {})) {
-    files.push(...(module.chunks ?? []).map((chunk) => chunk.replace(/^\/_next\//, "")));
+  for (const clientModule of Object.values(clientManifest.clientModules ?? {})) {
+    files.push(...(clientModule.chunks ?? []).map((chunk) => chunk.replace(/^\/_next\//, "")));
   }
   return [...new Set(files.filter((file) => SCRIPT_PATH.test(file)))].sort();
 }

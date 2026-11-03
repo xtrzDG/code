@@ -147,10 +147,21 @@ def test_flitt_webhook_applies_payments_once() -> None:
         headers={"Content-Type": "application/json"},
     )
 
+    applied = world.run_payment_jobs()
+    third = world.client.post(
+        WEBHOOK_PATH,
+        content=body,
+        headers={"Content-Type": "application/json"},
+    )
+
+    # Both copies are verified and queued at once (API-03); the worker
+    # applies the first and finds the second applied already.
     assert first.status_code == 200
-    assert first.json() == {"outcome": "applied", "payment_order_id": str(order.id)}
-    assert second.status_code == 200
-    assert second.json()["outcome"] == "duplicate"
+    assert first.json() == {"outcome": "queued", "payment_order_id": str(order.id)}
+    assert second.json()["outcome"] == "queued"
+    assert [receipt.outcome.value for receipt in applied] == ["applied", "duplicate"]
+    assert third.status_code == 200
+    assert third.json()["outcome"] == "duplicate"
     page = world.client.get(world.billing_path(), headers=bearer(world.owner))
     assert page.json()["subscription"]["has_auto_debit"] is True
     assert {invoice["status"] for invoice in page.json()["invoices"]} == {"paid"}
@@ -171,7 +182,8 @@ def test_flitt_webhook_accepts_form_posts() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == "applied"
+    assert response.json()["outcome"] == "queued"
+    assert [r.outcome.value for r in world.run_payment_jobs()] == ["applied"]
 
 
 def test_flitt_webhook_rejects_bad_notifications() -> None:

@@ -25,9 +25,9 @@ system dependencies and the cached packages all follow the image.
 | `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
 | `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4; api-fuzz 1/1) | pytest with coverage on four xdist workers, one part of a group each; `Backend tests (api-fuzz 1/1)` runs `-m api_fuzz` alone (`tests/api_fuzz`: hypothesis over every documented operation, and hostile bodies), which the other parts leave out | — | ~4:15 (tests ~3:15) |
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
-| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
+| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the secret scan of the build, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
 | `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
-| `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
+| `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
 | `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 222 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
@@ -108,6 +108,54 @@ the floor of its part.
   push to `main` starts: CI (whose run on `main` publishes the signed
   images deploy smoke verifies), CodeQL, Lighthouse and the ZAP baseline.
 
+## Dependencies a pull request adds
+
+On a pull request `security` runs GitHub's dependency review
+(`.github/dependency-review-config.yml`: a high advisory or a denied
+licence fails; its summary is a comment on the pull request, which is why
+the job may write pull requests, and a fork's read-only token only skips
+the comment) and then `scripts/dependency_registry_review.py` (SDLC-02).
+The latter compares the manifests (`web/`, `integrations/zapier/` and
+`.github/tools/lhci/` package.json, `pyproject.toml`) with the pull
+request's base, checked out as a worktree, and measures each new direct
+dependency on npm or PyPI: first and latest release, how many accounts may
+publish it, deprecation, archival or yanked releases, code run on install,
+licence and source repository. It fails on a name the registry does not
+know, a deprecated or archived package, one first released fewer than 30
+days ago, or a lookalike of a popular or already used name, unless
+`.github/dependency-registry-review.toml` accepts that signal with a
+reason; the rest are warnings in the run summary, which holds the table.
+A registry that does not answer fails the step (nothing was measured):
+run the job again.
+
+## Payment page integrity
+
+`payment-page-integrity.yml` runs every Monday (and by hand) with read-only
+permissions and no secret (PAY-02; PCI DSS 11.6.1 intent). It compares the
+scripts of the payment pages, the billing page and the hosted chat page
+(which shows a deposit's payment link), with the reviewed inventory
+`web/payment-page-scripts.json` (every first-party chunk with its SHA-384,
+`web/scripts/payment-page-scripts.mjs`): with the repository variable
+`PRODUCTION_CABINET_URL`, each listed file as production serves it;
+without it, the scripts of a fresh build of `main`. A difference fails the
+run and opens the issue "Payment page scripts changed"; the schedule watch
+notices when the workflow stops running.
+
+Every deploy that changes these pages' scripts (most cabinet changes do)
+changes the inventory. After such a deploy, review the changed scripts and
+update the inventory from the build of the commit production runs:
+
+```bash
+git switch --detach origin/release
+cd web && npm ci && npm run build
+node scripts/payment-page-integrity.mjs --build .next --update
+```
+
+then commit `web/payment-page-scripts.json` in a reviewed pull request
+(without production's address, the failed run's artifact
+`payment-page-scripts` is the same file, built from `main`). A change no
+reviewed commit explains is an incident (`docs/operations/incident.md`).
+
 ## Backend tests in parts
 
 `tests/conftest.py` marks the tests that reach Postgres (`postgres`); CI
@@ -132,7 +180,15 @@ or split the slow files) and warns about files without a duration.
 `web-build` only builds: it restores `web/.next/cache` (Turbopack's build
 cache; key: the lockfile and a hash of `web/src`, `web/public` and
 `next.config.ts`, falling back to the newest cache of the same lockfile),
-runs `next build` and keeps `.next` without its cache as `cabinet-build`.
+runs `next build`, scans the build for secrets and keeps `.next` without
+its cache as `cabinet-build`. The scan (`web/scripts/scan-bundle-secrets.mjs`,
+WEB-05, about a second) fails on a key shape of the platform's providers
+(Stripe `sk_`/`rk_`/`whsec_`, ElevenLabs, AWS, a PEM key, the platform's
+`awk_` keys, Sentry, model providers) in `.next/static` or `.next/server`,
+and on the value of a secret variable of `web/.env.example` or
+`.env.example` in the browser's files when the build's environment has one
+(CI's has none). A hit is fixed in the code and a real key rotated; there
+is no exception list.
 Locally the first build of this worktree took 1:44, a later one of the
 same sources 13 seconds from that cache (about 260 MB); after a change only
 what it touched compiles again.

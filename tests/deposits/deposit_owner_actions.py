@@ -1,7 +1,12 @@
 """The owner's changes to the deposit settings, made through their use cases."""
 
-from app.contracts.notifications import StaffAlertFacilitatorContract
+from app.contracts.notifications import (
+    StaffAlertFacilitatorContract,
+    StaffAlertTextsContract,
+)
+from app.contracts.owner_emails import OwnerAccountEmailFacilitatorContract
 from app.contracts.session_assurance import StepUpGuardContract
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.deposits import DepositSettingsDocument
 from app.schemas.dto.deposits.deposit_settings import (
     DepositSettingsRequest,
@@ -9,8 +14,12 @@ from app.schemas.dto.deposits.deposit_settings import (
     RemovePaymentLinkCommand,
     UpdateDepositSettingsCommand,
 )
+from app.schemas.dto.notifications.staff_alerts import StaffAlert
 from app.schemas.typings.deposits.constrained_integers import DepositHoldMinutes
 from app.schemas.typings.deposits.prefixed_id import PaymentLinkId
+from app.schemas.typings.handoffs.constrained_integers import (
+    DeliveredNotificationCount,
+)
 from app.use_cases.deposits.deposit_settings_changes import DepositSettingsChanges
 from app.use_cases.deposits.payment_page_notices import PaymentPageNotices
 from app.use_cases.deposits.remove_payment_link_use_case import (
@@ -23,10 +32,28 @@ from tests.deposits.deposit_world import DepositWorld
 from tests.foundation.access_support import AllowStepUp
 
 
+class RecordingOwnerEmails(OwnerAccountEmailFacilitatorContract):
+    """The notices the owners' account e-mails would get."""
+
+    def __init__(self) -> None:
+        self.notices: list[tuple[StaffAlert, StaffAlertTextsContract]] = []
+
+    def email_owners(
+        self,
+        business: BusinessDocument,
+        alert: StaffAlert,
+        texts: StaffAlertTextsContract,
+    ) -> DeliveredNotificationCount:
+        del business
+        self.notices.append((alert, texts))
+        return DeliveredNotificationCount(1)
+
+
 def owner_changes(
     world: DepositWorld,
     step_up: StepUpGuardContract | None = None,
     staff_alerts: StaffAlertFacilitatorContract | None = None,
+    owner_emails: OwnerAccountEmailFacilitatorContract | None = None,
 ) -> DepositSettingsChanges:
     """The write path; a page change passes the step-up unless `step_up` says."""
 
@@ -37,7 +64,9 @@ def owner_changes(
         wall_clock=world.clock.wall_clock,
         step_up=step_up or AllowStepUp(),
         page_notices=PaymentPageNotices(
-            staff_alerts or world.staff_alerts, world.resolver
+            staff_alerts or world.staff_alerts,
+            world.resolver,
+            owner_emails or RecordingOwnerEmails(),
         ),
     )
 

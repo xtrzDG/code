@@ -32,7 +32,9 @@ def test_the_build_is_scanned_right_after_it_is_made() -> None:
 
     assert names.index("No secrets in the build") == names.index("Build") + 1
     assert job["defaults"]["run"]["working-directory"] == "web"
-    assert str(scan["run"]).startswith("node scripts/scan-bundle-secrets.mjs --build .next")
+    assert str(scan["run"]).startswith(
+        "node scripts/scan-bundle-secrets.mjs --build .next"
+    )
     assert "--env-example .env.example" in scan["run"]
     assert "--env-example ../.env.example" in scan["run"]
     assert "continue-on-error" not in scan
