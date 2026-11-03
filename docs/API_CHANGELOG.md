@@ -67,8 +67,10 @@ client that follows the description already handles.
   answers 422), and stored messages and assistant versions name it only
   once its release gate opens.
 - **Changed** `POST /v1/auth/otp/start` also answers 429 for a code to a
-  new phone whose number range (its first 7 characters) or country used
-  too few of the codes it got in the last six hours.
+  new phone when its number range (the first 7 characters) used under
+  10 % of its settled codes of the last six hours, or when its country
+  used under 30 % of them and already had 10 codes to new phones this
+  hour.
 - **Added** `BookingView.is_health_note_withheld` (default false): when
   true, `notes` is null because they hold health data and the viewer acts
   neither as owner nor as staff (an agency helper, platform support). It

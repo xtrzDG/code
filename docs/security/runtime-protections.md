@@ -123,7 +123,12 @@ moves.
   page the conversation and its visitor key live in the tab's
   `sessionStorage` and leave with it; on a business's own site a
   conversation idle for a day is wiped from the device
-  (`tests/channels/test_widget_storage_expiry.py`).
+  (`tests/channels/test_widget_storage_expiry.py`), and nothing is written
+  to the site's storage until the visitor opens or uses the chat: the key
+  is made on the first message, handoff, upload or rating, and an unused
+  key of older versions is removed on load
+  (`app/gateways/http/static/widget/storage.js`,
+  `tests/channels/test_widget_lazy_storage.py`).
 
 ## The API's edge
 
