@@ -36,9 +36,7 @@ def request_unused_codes(testbed: AccountsTestbed, network: str, count: int) -> 
         testbed.request_phone_code(range_number(network, index))
 
 
-def test_a_range_whose_codes_go_unused_is_denied_while_they_are_in_the_window() -> (
-    None
-):
+def test_a_range_whose_codes_go_unused_is_denied_while_they_are_in_the_window() -> None:
     testbed = build_accounts_testbed()
     request_unused_codes(testbed, "555", 10)
     testbed.clock.advance(CODE_LIFETIME_SECONDS + 1)

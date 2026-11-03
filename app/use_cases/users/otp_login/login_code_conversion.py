@@ -102,7 +102,11 @@ def refuse_over_conversion_throttle(
     ]
     hour_start: int = int(now) - CAP_WINDOW_SECONDS * MICROSECONDS_PER_SECOND
     sent_this_hour: int = len(
-        [challenge for challenge in in_country if int(challenge.created_at) > hour_start]
+        [
+            challenge
+            for challenge in in_country
+            if int(challenge.created_at) > hour_start
+        ]
     )
     if sent_this_hour >= int(THROTTLED_SENDS_PER_COUNTRY_PER_HOUR) and converts_under(
         in_country, now, COUNTRY_MIN_SETTLED, COUNTRY_CONVERSION_FLOOR_PERCENT

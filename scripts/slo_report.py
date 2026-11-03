@@ -10,7 +10,8 @@ dashboard's "Product service levels" row
         uv run python -m scripts.slo_report [--json] [--out report.md]
 
 PROMETHEUS_USER and PROMETHEUS_TOKEN are Grafana Cloud's basic auth (a
-token alone is sent as a bearer token; neither for a local Prometheus).
+token alone is sent as a bearer token; neither for a local Prometheus). A
+token goes only over https, or plain http to this machine.
 The three main budgets come from /admin/system (GET
 /v1/admin/system/error-budget); booking success has no Prometheus series
 and is reported as not measured. Exit 0 with the report, 1 when a budget
@@ -36,6 +37,7 @@ EXIT_OK: int = 0
 EXIT_SPENT: int = 1
 EXIT_UNREACHABLE: int = 2
 TIMEOUT_SECONDS: float = 30.0
+LOCAL_HOSTS: frozenset[str] = frozenset({"localhost", "127.0.0.1", "::1"})
 TITLES: Mapping[str, str] = {
     "calls_answered": "Calls answered",
     "voice_latency": "Voice latency (tool p95 under 2 s, per day)",
@@ -63,6 +65,14 @@ def read_value(payload: object) -> float | None:
 
     sample = cast(dict[str, Any], result[0])
     return float(cast(list[Any], sample["value"])[1])
+
+
+def is_exposed_token(environment: Mapping[str, str]) -> bool:
+    """A token that would cross the network unencrypted (plain http, not here)."""
+
+    url = httpx.URL(environment["PROMETHEUS_URL"].strip())
+    has_token: bool = bool(environment.get("PROMETHEUS_TOKEN", "").strip())
+    return has_token and url.scheme != "https" and url.host not in LOCAL_HOSTS
 
 
 def build_client(
@@ -132,6 +142,10 @@ def run(
     options = parser.parse_args(arguments)
     if not environment.get("PROMETHEUS_URL", "").strip():
         output.write("PROMETHEUS_URL is not set: nothing to read.\n")
+        return EXIT_UNREACHABLE
+
+    if is_exposed_token(environment):
+        output.write("PROMETHEUS_TOKEN goes only over https: use an https URL.\n")
         return EXIT_UNREACHABLE
 
     with build_client(environment, transport) as client:

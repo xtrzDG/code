@@ -1,8 +1,8 @@
 /**
  * `platformBrakes.*` texts of the admin System page's platform brakes card
- * (the global pause of every assistant, the daily budget stop) and payment
- * reconciliation card, in English: the reference the other languages are
- * typed against.
+ * (the global pause of every assistant, the daily budget stop), payment
+ * reconciliation card and card of the campaigns held over their opt-out
+ * rate, in English: the reference the other languages are typed against.
  */
 
 export const platformBrakesEn = {
@@ -64,5 +64,19 @@ export const platformBrakesEn = {
       renewal_paid_at_provider:
         "Renewal paid at the provider, not recorded here",
     },
+  },
+  campaignHolds: {
+    title: "Campaigns held for review",
+    description:
+      "A client's return-visit campaign stops writing when 5% or more of at least 40 customers it wrote to in 30 days asked for no more messages. Agree on a narrower audience with the owner before you lift the hold; after that only the messages sent since count.",
+    client: "Client",
+    heldSince: "Held since",
+    optedOut: "Opted out",
+    optedOutOf: "{optedOut} of {sent}",
+    release: "Lift the hold",
+    releaseTitle: "Lift the hold on this campaign?",
+    releaseDescription:
+      "The campaign writes to the client's customers again from its next hourly run, and the owners are told. The client's audit log keeps your reason.",
+    released: "The campaign writes again",
   },
 };

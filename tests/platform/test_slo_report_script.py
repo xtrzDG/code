@@ -123,3 +123,23 @@ def test_without_prometheus_nothing_is_reported() -> None:
 
     assert code == 2
     assert "Prometheus did not answer: bad query" in refused.getvalue()
+
+
+def test_a_token_never_travels_over_plain_http() -> None:
+    seen: list[httpx.Request] = []
+    output = io.StringIO()
+    remote = {
+        "PROMETHEUS_URL": "http://prometheus.example.test",
+        "PROMETHEUS_TOKEN": "t0k",
+    }
+
+    assert run([], remote, output, prometheus(HEALTHY, seen)) == 2
+    assert "only over https" in output.getvalue()
+    assert seen == []
+
+    local = {
+        "PROMETHEUS_URL": "http://localhost:9090/api/prom",
+        "PROMETHEUS_TOKEN": "t0k",
+    }
+    assert run([], local, io.StringIO(), prometheus(HEALTHY, seen)) == 0
+    assert seen[-1].headers["Authorization"] == "Bearer t0k"

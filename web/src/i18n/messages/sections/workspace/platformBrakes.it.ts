@@ -1,4 +1,4 @@
-/** `platformBrakes.*` texts of the admin System page's platform brakes and payment reconciliation cards, in Italian. */
+/** `platformBrakes.*` texts of the admin System page's platform brakes, payment reconciliation and campaign hold cards, in Italian. */
 
 import type { Translation } from "../../../translate";
 import type { platformBrakesEn } from "./platformBrakes.en";
@@ -63,5 +63,19 @@ export const platformBrakesIt: Translation<typeof platformBrakesEn> = {
       renewal_paid_at_provider:
         "Rinnovo pagato presso il provider, non registrato qui",
     },
+  },
+  campaignHolds: {
+    title: "Campagne in verifica",
+    description:
+      "La campagna di ritorno di un cliente smette di scrivere quando il 5% o più di almeno 40 clienti a cui ha scritto in 30 giorni ha chiesto di non ricevere più messaggi. Concorda con il titolare un pubblico più ristretto prima di togliere il blocco; da allora contano solo i messaggi inviati dopo.",
+    client: "Cliente",
+    heldSince: "In verifica dal",
+    optedOut: "Disiscritti",
+    optedOutOf: "{optedOut} su {sent}",
+    release: "Togli il blocco",
+    releaseTitle: "Togliere il blocco a questa campagna?",
+    releaseDescription:
+      "La campagna torna a scrivere ai clienti dell'attività dalla prossima esecuzione oraria e i titolari vengono avvisati. Il registro di audit del cliente conserva il tuo motivo.",
+    released: "La campagna torna a scrivere",
   },
 };

@@ -51,6 +51,8 @@ export const platformQueryKeys = {
     platformBrakes: () => ["admin", "platformBrakes"] as const,
     /** The latest daily payment reconciliation (GET /v1/admin/payments/reconciliation). */
     paymentReconciliation: () => ["admin", "paymentReconciliation"] as const,
+    /** Campaigns held over their opt-out rate (GET /v1/admin/campaign-holds). */
+    campaignHolds: () => ["admin", "campaignHolds"] as const,
     /** The dead letters of the background queue. */
     deadJobs: () => ["admin", "jobs", "dead"] as const,
     dataTasks: () => ["admin", "system", "data-tasks"] as const,

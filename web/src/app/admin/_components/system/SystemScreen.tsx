@@ -22,6 +22,7 @@ import { ErrorBudgetCard } from "./ErrorBudgetCard";
 import { IncidentDialog } from "./IncidentDialog";
 import { IncidentsCard } from "./IncidentsCard";
 import { BackupsCard, DatabaseCard } from "./StorageCards";
+import { CampaignHoldsCard } from "./CampaignHoldsCard";
 import { PaymentReconciliationCard } from "./PaymentReconciliationCard";
 import { PlatformBrakesCard } from "./PlatformBrakesCard";
 import { LanesCard, WorkersCard } from "./WorkersAndQueues";
@@ -35,7 +36,8 @@ import { LanesCard, WorkersCard } from "./WorkersAndQueues";
  * error budgets and the announcements of the public status page sit under
  * the alerts. The platform's brakes (the global pause, which `canPause`
  * SUPER admins set, and the daily budget stop) come first, the daily
- * payment reconciliation after the dead letters.
+ * payment reconciliation after the dead letters. The campaigns held over
+ * their opt-out rate follow the alerts (SUPER admins release them).
  */
 export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
   const { t, tp } = useI18n();
@@ -88,6 +90,7 @@ export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
         <div className="space-y-6">
           <PlatformBrakesCard canPause={canPause} />
           <AlertsCard alerts={data.alerts} />
+          <CampaignHoldsCard canRelease={canPause} />
           <ErrorBudgetCard />
           <AnnouncementsCard />
           {/* Full width: both tables have six columns. */}

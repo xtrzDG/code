@@ -146,16 +146,18 @@ def test_a_released_campaign_is_measured_only_on_the_messages_sent_since() -> No
     world.clock.move_to(
         datetime.fromtimestamp(int(released_at) / 1_000_000, UTC) + timedelta(hours=1)
     )
-    assert gate.is_held(
-        world.business, settings_of(world), world.clock.now_microseconds()
-    ) is False
+    assert (
+        gate.is_held(world.business, settings_of(world), world.clock.now_microseconds())
+        is False
+    )
     assert notifier.notifications == []
 
     # New messages past the rate hold it again.
     reach(world, 40, stops=3, days_ago=0)
-    assert gate.is_held(
-        world.business, settings_of(world), world.clock.now_microseconds()
-    ) is True
+    assert (
+        gate.is_held(world.business, settings_of(world), world.clock.now_microseconds())
+        is True
+    )
     hold = settings_of(world).review_hold
     assert hold is not None
     assert (int(hold.sent), int(hold.opted_out)) == (40, 3)
