@@ -111,7 +111,7 @@ def test_healthz_answers_while_slow_requests_hold_every_request_thread() -> None
     @router.get("/slow")
     def slow() -> dict[str, str]:
         entered.release()
-        release.wait(timeout=10)
+        release.wait(timeout=60)
         return {"status": "done"}
 
     application = build_http_application(
@@ -130,8 +130,11 @@ def test_healthz_answers_while_slow_requests_hold_every_request_thread() -> None
             slow_requests = [
                 asyncio.create_task(client.get("/slow")) for _ in range(SLOW_REQUESTS)
             ]
+            # Every slow request must hold its thread before /healthz is
+            # asked; on a loaded machine starting 64 threads can take a
+            # while, so wait for each (a miss fails here, not as a count).
             for _ in range(SLOW_REQUESTS):
-                await asyncio.to_thread(entered.acquire, True, 5)
+                assert await asyncio.to_thread(entered.acquire, True, 30)
             busy_threads: int = int(limiter.borrowed_tokens)
 
             started = time.monotonic()

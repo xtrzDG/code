@@ -13,6 +13,7 @@ payment reconciliations (1230). Part of DOCUMENT_COLLECTIONS
 
 from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.data_tasks import DataTaskStateDocument
+from app.schemas.domain.feature_flags import FeatureFlagDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
@@ -22,7 +23,6 @@ from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
 )
-from app.schemas.domain.feature_flags import FeatureFlagDocument
 from app.schemas.domain.service_levels import (
     ServiceLevelHourDocument,
     ServiceLevelSlotDocument,
