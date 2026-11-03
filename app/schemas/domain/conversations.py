@@ -205,9 +205,7 @@ class MessageDocument(BaseDocument):
     optional. `tool_calls` may name offer_choices once its release gate is
     open (a new value). Version 8 (W19): they may name send_payment_link
     once its release gate is open (a new value; version 7 rows read as is).
-    Version 9 (W20): decline_recording likewise (version 8 rows read as is).
-    Version 10 (ACC-03): send_call_transcript likewise (version 9 rows read
-    as is).
+    Versions 9 (W20), 10 (ACC-03): decline_recording, send_call_transcript.
     """
 
     schema_version: SchemaVersion = SchemaVersion("10")

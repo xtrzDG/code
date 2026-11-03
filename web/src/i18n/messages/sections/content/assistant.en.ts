@@ -94,6 +94,7 @@ export const assistantEn = {
     reschedule_booking: { name: "Move a booking", description: "Moves a booking to another time." },
     list_my_bookings: { name: "Look up my bookings", description: "Tells customers their own bookings still to come." },
     decline_recording: { name: "Stop recording a call", description: "On a phone call, notes that the caller does not want to be recorded: the audio is deleted after the call and only a transcript without phone, card or account numbers is kept." },
+    send_call_transcript: { name: "Text the call transcript", description: "On a phone call, a caller who asks for the call in writing gets its transcript by message right after the call, when a connected messenger reaches them." },
     join_waitlist: { name: "Add to the waitlist", description: "When the day is full, puts the customer on the waitlist; a freed place is offered to them." },
     create_lead: { name: "Take a request", description: "Passes a request (banquet, group, order) to the manager." },
     handoff_to_human: { name: "Pass to a person", description: "Hands the conversation over to your staff." },

@@ -21,9 +21,9 @@ from app.schemas.dto.assistant_tools import (
     RecordUnansweredQuestionToolInput,
     RescheduleBookingToolInput,
     SearchKnowledgeToolInput,
-    SendCallTranscriptToolInput,
     SendLinkToolInput,
 )
+from app.schemas.dto.call_tool_inputs import SendCallTranscriptToolInput
 from app.schemas.dto.deposits.payment_link_requests import SendPaymentLinkToolInput
 
 INPUT_MODELS: dict[AssistantToolName, type[Any]] = {

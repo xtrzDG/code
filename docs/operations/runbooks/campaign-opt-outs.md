@@ -13,8 +13,9 @@ settings stay as they are.
 
 ## Check
 
-1. Which business? Admin → Clients → Campaign holds lists every held
-   campaign with the time and the figures (customers reached, opt-outs).
+1. Which business? `GET /v1/admin/campaign-holds` lists every held
+   campaign with the time and the figures (customers reached, opt-outs);
+   the worker's warning line names the business too.
 2. Open the client: what does the campaign write (Bookings → Return
    visits of the business, through "Open cabinet"), to whom (all
    customers or a segment), and how often? Did the customers give
@@ -28,8 +29,9 @@ settings stay as they are.
   were broken, and keep the evidence.
 - A real business with a clumsy message or audience: agree with the owner
   on a narrower audience (a segment of customers who gave consent) or a
-  longer delay, then release the hold on Admin → Clients → Campaign holds
-  ("Release"), with the reason. The release is audited and the owners are
+  longer delay, then release the hold with
+  `POST /v1/admin/campaign-holds/{business_id}/release` and the reason
+  (SUPER admins). The release is audited and the owners are
   told that their campaign writes again.
 
 ## Afterwards

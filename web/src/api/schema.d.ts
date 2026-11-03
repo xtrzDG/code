@@ -73,6 +73,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/campaign-holds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Admin Campaign Holds */
+        get: operations["admin_list_admin_campaign_holds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/campaign-holds/{business_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Release Admin Campaign Hold */
+        post: operations["admin_release_admin_campaign_hold"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/clients": {
         parameters: {
             query?: never;
@@ -7023,7 +7057,7 @@ export interface components {
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording" | "send_call_transcript";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -9165,6 +9199,25 @@ export interface components {
          * @enum {string}
          */
         CampaignAudience: "all_customers" | "segment";
+        /** CampaignHoldList */
+        CampaignHoldList: {
+            /** Items */
+            items?: components["schemas"]["CampaignHoldView"][];
+        };
+        /**
+         * CampaignHoldView
+         * @description One held campaign: its business, when it was held, and the figures.
+         */
+        CampaignHoldView: {
+            /** Business Id */
+            business_id: string;
+            /** Held At */
+            held_at: number;
+            /** Opted Out */
+            opted_out: number;
+            /** Sent */
+            sent: number;
+        };
         /**
          * CampaignMessageDocument
          * @description One message of a business's campaign to one customer, about one booking
@@ -14669,7 +14722,7 @@ export interface components {
          *     optional. `tool_calls` may name offer_choices once its release gate is
          *     open (a new value). Version 8 (W19): they may name send_payment_link
          *     once its release gate is open (a new value; version 7 rows read as is).
-         *     Version 9 (W20): decline_recording likewise (version 8 rows read as is).
+         *     Versions 9 (W20), 10 (ACC-03): decline_recording, send_call_transcript.
          */
         MessageDocument: {
             /** Attachments */
@@ -14729,7 +14782,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 9
+             * @default 10
              */
             schema_version: string;
             /** Sent By */
@@ -16725,9 +16778,12 @@ export interface components {
          *     Meta flagged or downgraded a business's WhatsApp number, lowered a
          *     template's quality, paused or disabled a template, or moved one into
          *     the marketing category (the number risks a restriction).
+         *     CAMPAIGN_OPT_OUTS: a business's campaign was held for review because
+         *     too many of the customers it wrote to asked for no more messages
+         *     (ABUSE-05).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch" | "webhook_signature_failures" | "storage_errors" | "api_latency" | "backup_failed" | "tenant_sms_volume" | "otp_conversion" | "tenant_payment_declines" | "booking_spike" | "cancellation_spike" | "whatsapp_quality";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down" | "bulk_personal_data" | "tenant_hopping" | "failed_sign_in_checks" | "audit_chain_broken" | "voice_health" | "spend_budget_stop" | "missed_job_runs" | "payment_mismatch" | "webhook_signature_failures" | "storage_errors" | "api_latency" | "backup_failed" | "tenant_sms_volume" | "otp_conversion" | "tenant_payment_declines" | "booking_spike" | "cancellation_spike" | "whatsapp_quality" | "campaign_opt_outs";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -21156,6 +21212,185 @@ export interface operations {
             };
         };
     };
+    admin_list_admin_campaign_holds: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignHoldList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_release_admin_campaign_hold: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Reason */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignHoldView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     admin_list_clients: {
         parameters: {
             query?: {
@@ -25010,7 +25245,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Disabled Tools */
-                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording")[] | null;
+                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording" | "send_call_transcript")[] | null;
                     /** Is Paused */
                     is_paused: boolean;
                     /** Reason */
@@ -30159,7 +30394,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Disabled Tools */
-                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording")[] | null;
+                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording" | "send_call_transcript")[] | null;
                     /** Is Paused */
                     is_paused?: boolean | null;
                     /**

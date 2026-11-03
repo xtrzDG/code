@@ -82,6 +82,9 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "platform_ops.check_platform_alerts_operator": "alerts job: platform-wide counts",
     "platform_ops.get_admin_system_operator": "platform admin's system page",
     "platform_ops.list_incidents_operator": "platform admin's incident log",
+    "platform.list_campaign_holds_operator": (
+        "platform admin's campaigns held over their opt-out rate, every business"
+    ),
     "platform_ops.record_maintenance_run_operator": "backup CLIs' run log",
     "platform_ops.check_channel_credentials_operator": "Meta token check job",
     "reliability.check_pipeline_health_operator": (

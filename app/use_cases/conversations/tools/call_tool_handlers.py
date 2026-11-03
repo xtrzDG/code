@@ -13,8 +13,8 @@ from app.schemas.dto.assistant_tools import (
     AssistantToolContext,
     AssistantToolOutcome,
     DeclineRecordingToolInput,
-    SendCallTranscriptToolInput,
 )
+from app.schemas.dto.call_tool_inputs import SendCallTranscriptToolInput
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.typings.conversations.strings import LlmToolResultJson
 from app.use_cases.conversations.tools.tool_outcomes import (

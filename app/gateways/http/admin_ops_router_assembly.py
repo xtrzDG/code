@@ -6,6 +6,9 @@ post-deploy data tasks.
 from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.admin_campaign_hold_routes import (
+    build_admin_campaign_hold_router,
+)
 from app.gateways.http.admin_data_task_routes import build_admin_data_task_router
 from app.gateways.http.admin_jobs_routes import build_admin_jobs_router
 from app.gateways.http.admin_ops_routes import build_admin_ops_router
@@ -18,8 +21,8 @@ def build_admin_ops_routers(
     current_user: CurrentUserDependency,
 ) -> list[APIRouter]:
     """
-    /v1/admin/jobs, GET /v1/admin/system (its error budget and data tasks)
-    and /v1/admin/incidents.
+    /v1/admin/jobs, GET /v1/admin/system (its error budget and data tasks),
+    /v1/admin/incidents and /v1/admin/campaign-holds.
     """
 
     platform = operators.platform
@@ -45,5 +48,10 @@ def build_admin_ops_routers(
         build_error_budget_router(
             get_error_budget_operator=operators.telemetry.get_error_budget_operator(),
             current_user=current_user,
+        ),
+        build_admin_campaign_hold_router(
+            current_user=current_user,
+            list_campaign_holds=platform.list_campaign_holds_operator(),
+            release_campaign_hold=platform.release_campaign_hold_operator(),
         ),
     ]

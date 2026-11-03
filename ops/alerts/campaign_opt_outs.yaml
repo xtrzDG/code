@@ -5,7 +5,7 @@
 # back). From 40 reached customers, 3 opt-outs and 5 % it holds the
 # campaign (CampaignReviewGate): nothing more is sent until a platform
 # admin releases it, the owners are told why, and the platform signal
-# campaign_hold counts once. The admin's Campaign holds list names the
+# campaign_hold counts once. GET /v1/admin/campaign-holds names the
 # business and its figures.
 code: campaign_opt_outs
 severity: sev3

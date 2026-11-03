@@ -2086,7 +2086,8 @@
           "record_unanswered_question",
           "offer_choices",
           "send_payment_link",
-          "decline_recording"
+          "decline_recording",
+          "send_call_transcript"
         ],
         "title": "AssistantToolName",
         "type": "string"
@@ -7784,6 +7785,52 @@
         ],
         "title": "CampaignAudience",
         "type": "string"
+      },
+      "CampaignHoldList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignHoldView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "CampaignHoldList",
+        "type": "object"
+      },
+      "CampaignHoldView": {
+        "additionalProperties": false,
+        "description": "One held campaign: its business, when it was held, and the figures.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "held_at": {
+            "title": "Held At",
+            "type": "integer"
+          },
+          "opted_out": {
+            "minimum": 0.0,
+            "title": "Opted Out",
+            "type": "integer"
+          },
+          "sent": {
+            "minimum": 0.0,
+            "title": "Sent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "held_at",
+          "sent",
+          "opted_out"
+        ],
+        "title": "CampaignHoldView",
+        "type": "object"
       },
       "CampaignMessageDocument": {
         "additionalProperties": false,
@@ -21287,7 +21334,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional (version 2 rows read as is).\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional (version 3 as is).\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).\nVersion 9 (W20): decline_recording likewise (version 8 rows read as is).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional (version 2 rows read as is).\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional (version 3 as is).\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).\nVersions 9 (W20), 10 (ACC-03): decline_recording, send_call_transcript.",
         "properties": {
           "attachments": {
             "items": {
@@ -21453,7 +21500,7 @@
             "title": "Reply Latency Ms"
           },
           "schema_version": {
-            "default": "9",
+            "default": "10",
             "title": "Schema Version",
             "type": "string"
           },
@@ -26443,7 +26490,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day. SPEND_BUDGET_STOP: today's provider\nspend reached the share of the daily budget where every assistant\nstops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).\nMISSED_JOB_RUNS: a periodic job has not succeeded within its interval\nand grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).\nPAYMENT_MISMATCH: the daily reconciliation found payments whose status\nat Flitt or Stripe differs from the platform's record.\nWEBHOOK_SIGNATURE_FAILURES: a burst of webhook deliveries refused as\nunsigned, badly signed or stale (a secret out of step, or probing).\nSTORAGE_ERRORS: the database or the object storage failed requests and\njobs. API_LATENCY: too many API requests took longer than 2 s.\nBACKUP_FAILED: the last off-site backup failed, or none succeeded for\n26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume\n(an alert at 60, refused from 200: SMS pumping through a tenant).\nOTP_CONVERSION: most login codes of the last hour were never used\n(SMS pumping through sign-in). TENANT_PAYMENT_DECLINES: the payments\nof one business were declined 5 times within two hours (card testing\nthrough the platform's payment pages; from 10 its new payment pages\nare refused).\nBOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,\nor more cancellations, in an hour than its hourly cap of either (fake\nbookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:\nMeta flagged or downgraded a business's WhatsApp number, lowered a\ntemplate's quality, paused or disabled a template, or moved one into\nthe marketing category (the number risks a restriction).",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.\nBULK_PERSONAL_DATA: one business exported or erased personal data more\nthan 20 times in an hour. TENANT_HOPPING: one platform admin entered or\nchanged more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more\nthan 50 wrong sign-in codes in an hour for one destination (a phone, an\ne-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the\ndaily check found an audit hash chain broken (an entry changed,\nremoved or put in). VOICE_HEALTH: calls of the voice platform's API\nfail, or its finished-call reports stopped while the 7 days before\nexpect calls at this time of day. SPEND_BUDGET_STOP: today's provider\nspend reached the share of the daily budget where every assistant\nstops calling the model (PLATFORM_DAILY_SPEND_STOP_PERCENT).\nMISSED_JOB_RUNS: a periodic job has not succeeded within its interval\nand grace (its heartbeat in `periodic_job_heartbeats`, not Sentry).\nPAYMENT_MISMATCH: the daily reconciliation found payments whose status\nat Flitt or Stripe differs from the platform's record.\nWEBHOOK_SIGNATURE_FAILURES: a burst of webhook deliveries refused as\nunsigned, badly signed or stale (a secret out of step, or probing).\nSTORAGE_ERRORS: the database or the object storage failed requests and\njobs. API_LATENCY: too many API requests took longer than 2 s.\nBACKUP_FAILED: the last off-site backup failed, or none succeeded for\n26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume\n(an alert at 60, refused from 200: SMS pumping through a tenant).\nOTP_CONVERSION: most login codes of the last hour were never used\n(SMS pumping through sign-in). TENANT_PAYMENT_DECLINES: the payments\nof one business were declined 5 times within two hours (card testing\nthrough the platform's payment pages; from 10 its new payment pages\nare refused).\nBOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,\nor more cancellations, in an hour than its hourly cap of either (fake\nbookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:\nMeta flagged or downgraded a business's WhatsApp number, lowered a\ntemplate's quality, paused or disabled a template, or moved one into\nthe marketing category (the number risks a restriction).\nCAMPAIGN_OPT_OUTS: a business's campaign was held for review because\ntoo many of the customers it wrote to asked for no more messages\n(ABUSE-05).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -26479,7 +26526,8 @@
           "tenant_payment_declines",
           "booking_spike",
           "cancellation_spike",
-          "whatsapp_quality"
+          "whatsapp_quality",
+          "campaign_opt_outs"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -37260,6 +37308,258 @@
         ]
       }
     },
+    "/v1/admin/campaign-holds": {
+      "get": {
+        "operationId": "admin_list_admin_campaign_holds",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignHoldList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Admin Campaign Holds",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/campaign-holds/{business_id}/release": {
+      "post": {
+        "operationId": "admin_release_admin_campaign_hold",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Why the admin lets the held campaign write again.",
+                "properties": {
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "title": "ReleaseCampaignHoldBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignHoldView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Release Admin Campaign Hold",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/clients": {
       "get": {
         "operationId": "admin_list_clients",
@@ -43478,7 +43778,8 @@
                             "record_unanswered_question",
                             "offer_choices",
                             "send_payment_link",
-                            "decline_recording"
+                            "decline_recording",
+                            "send_call_transcript"
                           ],
                           "title": "AssistantToolName",
                           "type": "string"
@@ -51632,7 +51933,8 @@
                             "record_unanswered_question",
                             "offer_choices",
                             "send_payment_link",
-                            "decline_recording"
+                            "decline_recording",
+                            "send_call_transcript"
                           ],
                           "title": "AssistantToolName",
                           "type": "string"

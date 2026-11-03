@@ -67,3 +67,12 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
     report_widget_error_operator = pipeline_operator(
         platform_pipelines.report_widget_error_pipeline, storage_scope
     )
+    # Campaigns held over their opt-out rate (ABUSE-05): the list reads every
+    # business's campaign settings (platform-wide); a release changes one
+    # business's (in its scope).
+    list_campaign_holds_operator = platform_pipeline_operator(
+        platform_pipelines.list_campaign_holds_pipeline, storage_scope
+    )
+    release_campaign_hold_operator = pipeline_operator(
+        platform_pipelines.release_campaign_hold_pipeline, storage_scope
+    )

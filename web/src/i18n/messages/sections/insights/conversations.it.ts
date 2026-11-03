@@ -134,6 +134,7 @@ export const conversationsIt: Translation<typeof conversationsEn> = {
     reschedule_booking: "Ha spostato una prenotazione",
     list_my_bookings: "Ha consultato le prenotazioni del cliente",
     decline_recording: "Ha registrato che chi chiama ha rifiutato la registrazione",
+    send_call_transcript: "Ha inviato a chi chiama la trascrizione della chiamata",
     join_waitlist: "Ha aggiunto il cliente alla lista d'attesa",
     create_lead: "Ha creato un lead",
     handoff_to_human: "Ha passato la conversazione a una persona",

@@ -94,6 +94,7 @@ export const assistantIt: Translation<typeof assistantEn> = {
     reschedule_booking: { name: "Sposta una prenotazione", description: "Sposta una prenotazione a un altro orario." },
     list_my_bookings: { name: "Consulta le mie prenotazioni", description: "Comunica ai clienti le loro prenotazioni future." },
     decline_recording: { name: "Interrompi la registrazione della chiamata", description: "Durante una chiamata, registra che il chiamante non vuole essere registrato: l'audio viene eliminato dopo la chiamata e si conserva solo una trascrizione senza numeri di telefono, di carta o di conto." },
+    send_call_transcript: { name: "Invia la trascrizione della chiamata", description: "Durante una chiamata, chi chiede la chiamata per iscritto riceve la trascrizione per messaggio subito dopo la fine, se un messenger collegato lo raggiunge." },
     join_waitlist: { name: "Aggiungi alla lista d'attesa", description: "Quando la giornata è al completo, inserisce il cliente nella lista d'attesa; se si libera un posto, glielo propone." },
     create_lead: { name: "Raccogli una richiesta", description: "Inoltra una richiesta (banchetto, gruppo, ordine) al responsabile." },
     handoff_to_human: { name: "Passa a una persona", description: "Passa la conversazione al tuo personale." },

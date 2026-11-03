@@ -82,6 +82,7 @@ export const adminSystemIt: Translation<typeof adminSystemEn> = {
       booking_spike: "Un cliente riceve un'ondata di nuove prenotazioni",
       cancellation_spike: "Le prenotazioni di un cliente vengono annullate in massa",
       whatsapp_quality: "Meta segnala un numero o un modello WhatsApp",
+      campaign_opt_outs: "La campagna di un cliente è sospesa per troppe disiscrizioni",
     },
   },
   errorBudget: {

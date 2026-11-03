@@ -59,3 +59,10 @@ class PlatformOrchestratorsContainer(containers.DeclarativeContainer):
     report_widget_error_orchestrator = use_case_orchestrator(
         platform_use_cases.report_widget_error_use_case
     )
+    # Campaigns held over their opt-out rate (ABUSE-05).
+    list_campaign_holds_orchestrator = use_case_orchestrator(
+        platform_use_cases.list_campaign_holds_use_case
+    )
+    release_campaign_hold_orchestrator = use_case_orchestrator(
+        platform_use_cases.release_campaign_hold_use_case
+    )

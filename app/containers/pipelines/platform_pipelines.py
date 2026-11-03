@@ -61,3 +61,10 @@ class PlatformPipelinesContainer(containers.DeclarativeContainer):
     report_widget_error_pipeline = orchestrator_pipeline(
         platform_orchestrators.report_widget_error_orchestrator
     )
+    # Campaigns held over their opt-out rate (ABUSE-05).
+    list_campaign_holds_pipeline = orchestrator_pipeline(
+        platform_orchestrators.list_campaign_holds_orchestrator
+    )
+    release_campaign_hold_pipeline = orchestrator_pipeline(
+        platform_orchestrators.release_campaign_hold_orchestrator
+    )

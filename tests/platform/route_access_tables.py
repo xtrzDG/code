@@ -143,6 +143,7 @@ ADMIN_BODIES: dict[str, dict[str, object]] = {
         "reference": "Transfer 1",
     },
     "PUT /v1/admin/platform/pause": {"is_paused": True, "reason": REASON},
+    "POST /v1/admin/campaign-holds/{business_id}/release": {"reason": REASON},
     f"POST {A}/open": {"reason": REASON},
     f"POST {A}/trial-extension": {"days": 7, "reason": REASON},
     f"POST {A}/discount": {"percent": 10, "last_day": "2026-12-31", "reason": REASON},

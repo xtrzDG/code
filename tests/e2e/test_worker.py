@@ -246,7 +246,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         WRITE_BOOKING_SYSTEM_BOOKING_JOB,
         DELETE_BUSINESS_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (49, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (50, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush, the end of the waitlist's expired holds and the
     # deposits' holds and reminders.

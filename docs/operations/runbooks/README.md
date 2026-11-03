@@ -43,6 +43,7 @@ which runbook is `../dependency-map.md`.
 | [tenant-sms-volume](tenant-sms-volume.md) | `tenant_sms_volume`, `otp_conversion` | SEV2 |
 | [tenant-payment-declines](tenant-payment-declines.md) | `tenant_payment_declines` (card testing; new payment pages braked) | SEV2 |
 | [booking-abuse](booking-abuse.md) | `booking_spike`, `cancellation_spike` | SEV3 |
+| [campaign-opt-outs](campaign-opt-outs.md) | `campaign_opt_outs` (a campaign held over its opt-out rate) | SEV3 |
 | [whatsapp-quality](whatsapp-quality.md) | `whatsapp_quality` | SEV2 |
 | [privacy-requests](privacy-requests.md) | none: a person asks the platform about their own data (access, copy, correction, erasure) | none; answer within a month |
 | [secret-rotation](secret-rotation.md) | none: the yearly rotation, an offboarding or a leak of a webhook secret | none; SEV1 for a leak |

@@ -38,11 +38,11 @@ at each request, so a change takes effect at the next one.
 | `account` | 38 | 26 | 2 |
 | `staff` | 115 | 40 | 0 |
 | `owner` | 155 | 115 | 1 |
-| `platform_admin` | 58 | 33 | 0 |
+| `platform_admin` | 60 | 34 | 0 |
 | `api_key` | 14 | 5 | 0 |
 | `operator_token` | 1 | 0 | 0 |
 | `as_api` | 0 | 0 | 5 |
-| **All** | 457 | 249 | 22 |
+| **All** | 459 | 250 | 22 |
 
 ## A business's operations by area
 

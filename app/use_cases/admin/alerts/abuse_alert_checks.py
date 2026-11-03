@@ -75,7 +75,7 @@ class AbuseAlertChecks:
             rule,
             held,
             f"{held} campaigns held for review in the last {minutes(rule)} "
-            "minutes; the admin's Campaign holds list names them.",
+            "minutes; GET /v1/admin/campaign-holds names them.",
         )
 
     def _recent(self, signal: PlatformSignal, now: Microseconds) -> int:

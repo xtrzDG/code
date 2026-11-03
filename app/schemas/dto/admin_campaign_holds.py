@@ -28,6 +28,12 @@ class ListCampaignHoldsQuery(ImmutableDTO):
     user_id: UserId
 
 
+class ReleaseCampaignHoldBody(ImmutableDTO):
+    """Why the admin lets the held campaign write again."""
+
+    reason: AdminActionReason
+
+
 class ReleaseCampaignHoldCommand(ImmutableDTO):
     """A platform admin lets a held campaign write again, with the reason."""
 

@@ -27,4 +27,8 @@ export const TOOL_LABELS: Record<AssistantToolName, { name: MessageKey; descript
     name: "assistant.tools.decline_recording.name",
     description: "assistant.tools.decline_recording.description",
   },
+  send_call_transcript: {
+    name: "assistant.tools.send_call_transcript.name",
+    description: "assistant.tools.send_call_transcript.description",
+  },
 };

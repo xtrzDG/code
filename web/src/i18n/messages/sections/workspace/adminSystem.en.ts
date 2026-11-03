@@ -84,6 +84,7 @@ export const adminSystemEn = {
       booking_spike: "A client gets a flood of new bookings",
       cancellation_spike: "A client's bookings are cancelled en masse",
       whatsapp_quality: "Meta warns about a WhatsApp number or template",
+      campaign_opt_outs: "A client's campaign is held over its opt-out rate",
     },
   },
   errorBudget: {

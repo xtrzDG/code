@@ -3,7 +3,9 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.adapters.compliance.audit_chain_purge_adapter_factory import (
     build_audit_chain_purge_adapter,
-    build_audit_retention_purge_adapter,
+)
+from app.adapters.compliance.postgres_audit_chain_purge_adapter import (
+    RETENTION_PURGE_STATEMENT,
 )
 from app.containers.adapters.document_collection_provider import document_collection
 from app.containers.adapters.document_collections_container import (
@@ -79,9 +81,10 @@ class AuditChainCollectionsContainer(containers.DeclarativeContainer):
     )
     # The daily purge past the 1,095-day retention, on the platform pool.
     audit_retention_purges: Singleton[AuditChainPurgeAdapterContract] = Singleton(
-        build_audit_retention_purge_adapter,
+        build_audit_chain_purge_adapter,
         connection_pool=clients.postgres_platform_pool,
         entries=audit_entry_collections.audit_log_entry_collection,
         checkpoints=audit_chain_checkpoint_collection,
         wall_clock=time_provider.microsecond_wall_clock,
+        statement=RETENTION_PURGE_STATEMENT,
     )

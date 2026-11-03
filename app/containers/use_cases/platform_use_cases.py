@@ -21,6 +21,12 @@ from app.schemas.dto.admin import (
     ClientSummarySource,
     OpenClientCabinetCommand,
 )
+from app.schemas.dto.admin_campaign_holds import (
+    CampaignHoldList,
+    CampaignHoldView,
+    ListCampaignHoldsQuery,
+    ReleaseCampaignHoldCommand,
+)
 from app.schemas.dto.admin_jobs import (
     AdminJobActionResult,
     AdminJobCommand,
@@ -30,6 +36,12 @@ from app.schemas.dto.admin_jobs import (
 from app.schemas.dto.health import ReadinessQuery, ReadinessReport
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.widget_errors import WidgetErrorCommand
+from app.use_cases.admin.abuse.list_campaign_holds_use_case import (
+    ListCampaignHoldsUseCase,
+)
+from app.use_cases.admin.abuse.release_campaign_hold_use_case import (
+    ReleaseCampaignHoldUseCase,
+)
 from app.use_cases.admin.authorize_platform_admin_use_case import (
     AuthorizePlatformAdminUseCase,
 )
@@ -231,4 +243,27 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
             rate_limit_registry=registries.request_rate_limit_registry,
             wall_clock=time_provider.microsecond_wall_clock,
         )
+    )
+
+    # --- Campaigns held over their opt-out rate (ABUSE-05): the admin's
+    # list (platform-wide) and release (in the business's scope).
+    list_campaign_holds_use_case: Factory[
+        UseCaseContract[ListCampaignHoldsQuery, CampaignHoldList]
+    ] = Factory(
+        ListCampaignHoldsUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        campaign_settings_repo=repositories.campaign_settings_repo,
+    )
+    release_campaign_hold_use_case: Factory[
+        UseCaseContract[ReleaseCampaignHoldCommand, CampaignHoldView]
+    ] = Factory(
+        ReleaseCampaignHoldUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        campaign_settings_repo=repositories.campaign_settings_repo,
+        user_repo=repositories.user_repo,
+        manager_notifier=facilitators.manager_notification_facilitator,
+        text_resolver=utilities.localized_text_resolver,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
