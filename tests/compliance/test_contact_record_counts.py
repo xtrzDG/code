@@ -35,6 +35,7 @@ def test_the_count_holds_the_contact_and_every_record() -> None:
 
 
 def test_every_kind_of_record_counts_one_each() -> None:
+    """A list added to ContactRecords but not to the count fails here."""
     contact = ContactDocument(business_id=BusinessId())
     lists: list[str] = [
         name

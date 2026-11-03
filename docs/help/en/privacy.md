@@ -21,7 +21,7 @@ Read and accept the DPA in **Settings → [Privacy](cabinet:settings/privacy)**.
 
 ## Leaving or switching to another provider
 
-**Settings → [Privacy](cabinet:settings/privacy) → Export your data → Prepare full export** gives everything in one archive: customers, conversations, calls and their recordings, bookings, the knowledge base, your setup (every version of the assistant's instructions, the call and privacy settings, the channels without their passwords) and your customers' marketing consents. Each kind of record is a JSON file, the cabinet's tables are CSV, and the README inside explains the format. Recordings beyond 2 GB of audio are listed with a link to download them one by one. After you close the business the export stays available for 30 days; then the data is deleted and you get a deletion certificate.
+**Settings → [Privacy](cabinet:settings/privacy) → Export your data → Prepare full export** gives everything in one archive: customers, conversations, calls and their recordings, bookings, the knowledge base, your setup (every version of the assistant's instructions, the call and privacy settings, closed days and special hours, the settings of deposits, the waitlist, campaigns and feedback, segments, quick replies, the channels without their passwords), your team's notes and your customers' marketing consents. Each kind of record is a JSON file, the cabinet's tables are CSV, and the README inside explains the format. Recordings beyond 2 GB of audio are listed with a link to download them one by one. After you close the business the export stays available for 30 days; then the data is deleted and you get a deletion certificate.
 
 ## Who saw what
 

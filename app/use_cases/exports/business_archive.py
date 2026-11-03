@@ -87,8 +87,13 @@ microseconds since 1970; ids are the platform's own, so records refer to
 each other by them). The configuration: business_profile.json (what the
 setup was told), assistant_versions.json (every version of the
 assistant's instructions), call_settings.json, privacy_settings.json,
-channels.json (without credentials) and consent_records.json (the
-customers' marketing consents and withdrawals). Recordings: recordings/
+channels.json (without credentials), consent_records.json (the
+customers' marketing consents and withdrawals) and the rest of the setup:
+schedule_exceptions.json (closed days, special hours), deposit_settings,
+waitlist_settings, campaign_settings, review_settings, inbox_settings,
+assistant_settings and customer_settings (.json each),
+customer_segments.json, quick_reply_libraries.json and
+conversation_notes.json (the team's notes). Recordings: recordings/
 holds the calls' audio, named by call id; recordings.json lists every
 recording, what the archive holds of it and the API path that downloads
 it. CSV: the cabinet's tables, as their downloads (local times, UTF-8).

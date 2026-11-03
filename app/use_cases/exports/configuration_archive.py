@@ -60,6 +60,13 @@ class ConfigurationArchive:
     def pages(self, business: BusinessDocument) -> dict[str, DocumentPages]:
         """Each configuration file's documents (none: an empty array)."""
 
+        pages: dict[str, DocumentPages] = self._own_pages(business)
+        if self.setup is not None:
+            pages.update(self.setup.pages(business.id))
+
+        return pages
+
+    def _own_pages(self, business: BusinessDocument) -> dict[str, DocumentPages]:
         business_id = business.id
         profile: BusinessProfileDocument | None = self.profile_repo.get_by_business(
             business_id
@@ -67,10 +74,7 @@ class ConfigurationArchive:
         call_settings: CallSettingsDocument | None = (
             self.call_settings_repo.get_by_business(business_id)
         )
-        setup: dict[str, DocumentPages] = (
-            {} if self.setup is None else self.setup.pages(business_id)
-        )
-        return setup | {
+        return {
             "business_profile": single_page([] if profile is None else [profile]),
             "assistant_versions": pages_in_write_order(
                 self.assistant_version_repo, business_id, lambda item: str(item.id)

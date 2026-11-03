@@ -30,6 +30,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.exports.archive_pages import DocumentPages
 from app.use_cases.shared.document_pages import pages_in_write_order
 
+
 @dataclass(frozen=True)
 class SetupArchive:
     schedule_exception_repo: BusinessDocumentPagesContract[ScheduleExceptionDocument]
@@ -47,38 +48,50 @@ class SetupArchive:
     def pages(self, business_id: BusinessId) -> dict[str, DocumentPages]:
         """Each file's documents, read a keyset page at a time (none: [])."""
 
+        # Each read alone, so its document type (and its id) is its own.
+        exceptions = pages_in_write_order(
+            self.schedule_exception_repo, business_id, lambda item: str(item.id)
+        )
+        deposits = pages_in_write_order(
+            self.deposit_settings_repo, business_id, lambda item: str(item.id)
+        )
+        waitlist = pages_in_write_order(
+            self.waitlist_settings_repo, business_id, lambda item: str(item.id)
+        )
+        campaign = pages_in_write_order(
+            self.campaign_settings_repo, business_id, lambda item: str(item.id)
+        )
+        reviews = pages_in_write_order(
+            self.review_settings_repo, business_id, lambda item: str(item.id)
+        )
+        inbox = pages_in_write_order(
+            self.inbox_settings_repo, business_id, lambda item: str(item.id)
+        )
+        assistant = pages_in_write_order(
+            self.assistant_settings_repo, business_id, lambda item: str(item.id)
+        )
+        customers = pages_in_write_order(
+            self.customer_settings_repo, business_id, lambda item: str(item.id)
+        )
+        segments = pages_in_write_order(
+            self.customer_segment_repo, business_id, lambda item: str(item.id)
+        )
+        replies = pages_in_write_order(
+            self.quick_reply_library_repo, business_id, lambda item: str(item.id)
+        )
+        notes = pages_in_write_order(
+            self.conversation_note_repo, business_id, lambda item: str(item.id)
+        )
         return {
-            "schedule_exceptions": pages_in_write_order(
-                self.schedule_exception_repo, business_id, lambda item: str(item.id)
-            ),
-            "deposit_settings": pages_in_write_order(
-                self.deposit_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "waitlist_settings": pages_in_write_order(
-                self.waitlist_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "campaign_settings": pages_in_write_order(
-                self.campaign_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "review_settings": pages_in_write_order(
-                self.review_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "inbox_settings": pages_in_write_order(
-                self.inbox_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "assistant_settings": pages_in_write_order(
-                self.assistant_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "customer_settings": pages_in_write_order(
-                self.customer_settings_repo, business_id, lambda item: str(item.id)
-            ),
-            "customer_segments": pages_in_write_order(
-                self.customer_segment_repo, business_id, lambda item: str(item.id)
-            ),
-            "quick_reply_libraries": pages_in_write_order(
-                self.quick_reply_library_repo, business_id, lambda item: str(item.id)
-            ),
-            "conversation_notes": pages_in_write_order(
-                self.conversation_note_repo, business_id, lambda item: str(item.id)
-            ),
+            "schedule_exceptions": exceptions,
+            "deposit_settings": deposits,
+            "waitlist_settings": waitlist,
+            "campaign_settings": campaign,
+            "review_settings": reviews,
+            "inbox_settings": inbox,
+            "assistant_settings": assistant,
+            "customer_settings": customers,
+            "customer_segments": segments,
+            "quick_reply_libraries": replies,
+            "conversation_notes": notes,
         }

@@ -13,6 +13,7 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.use_cases.campaigns.marketing_template import (
     dedicated_marketing_template,
     service_template_names,
@@ -128,11 +129,28 @@ def test_the_campaign_keeps_its_own_marketing_template() -> None:
 
 
 @pytest.mark.parametrize(
-    "service", ["reminder", "booking_confirmation", "notification", "waitlist"]
+    "service",
+    [
+        "reminder",
+        "booking_confirmation",
+        "notification",
+        "owner_report",
+        "waitlist",
+    ],
 )
 def test_a_service_messages_utility_template_never_carries_a_campaign(
     service: str,
 ) -> None:
     settings = settings_with(**{service: "comeback_marketing"})
+
+    assert dedicated_marketing_template(settings) is None
+
+
+def test_the_sign_in_codes_template_never_carries_a_campaign() -> None:
+    settings = settings_with().model_copy(
+        update={
+            "whatsapp_otp_template_name": WhatsAppTemplateName("comeback_marketing")
+        }
+    )
 
     assert dedicated_marketing_template(settings) is None

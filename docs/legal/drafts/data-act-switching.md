@@ -35,6 +35,10 @@ is a new number):
 | `call_settings.json`, `privacy_settings.json` | Settings → Calls and Settings → Privacy |
 | `channels.json` | The connected channels, **without** credentials or WhatsApp PINs |
 | `consent_records.json` | The consent ledger: every marketing consent and withdrawal |
+| `schedule_exceptions.json` | Closed days and special opening hours |
+| `deposit_settings.json`, `waitlist_settings.json`, `campaign_settings.json`, `review_settings.json`, `inbox_settings.json`, `assistant_settings.json`, `customer_settings.json` | The settings of deposits (with the payment links customers are sent), the waitlist, the return-visit campaign, visit feedback, the inbox, the assistant and the customers (the business's tags) |
+| `customer_segments.json`, `quick_reply_libraries.json` | Customer segments, the team's quick replies |
+| `conversation_notes.json` | The team's notes on conversations |
 | `recordings/<call id>.<ext>` | The calls' audio (mp3, wav, ogg, webm, m4a or bin) |
 | `recordings.json` | Every recording: `status` `included` / `left_out` (past the archive's 2 GiB of audio) / `unavailable` / `incomplete`, its `file`, `media_type`, `total_bytes` and the `download_path` that downloads it while the account is open |
 | `csv/*.csv` | The cabinet's tables (bookings, leads, contacts, conversations, audit log) as their downloads: UTF-8 with BOM, local times |
@@ -46,8 +50,9 @@ point to each other by them (a message's `conversation_id`, a booking's
 `contact_id`). The stored shapes of every version are recorded in
 `tests/storage/document_schemas/` with a golden example per version in
 `tests/storage/golden/`; that is the machine-readable schema a receiving
-provider validates against. Secrets never leave: channel tokens and PINs,
-review link tokens.
+provider validates against (`tests/e2e/test_full_export_journey.py` reads
+every JSON file of an export back as its stored kind; there is no import
+tool). Secrets never leave: channel tokens and PINs, review link tokens.
 
 Single customers: **Customers → a customer → Export** gives one customer's
 records as JSON (GDPR art. 15 and 20), consent ledger included.

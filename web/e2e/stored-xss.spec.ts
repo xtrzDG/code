@@ -2,8 +2,8 @@
  * Stored XSS against the real API (INP-02): markup and javascript: links a
  * visitor writes in the website chat, a customer's name typed with a
  * booking and a knowledge text are shown as text in the cabinet (the
- * conversation, the customer's page, the customer list, the knowledge
- * base), never as elements, and nothing in them runs.
+ * conversation, the inbox list, the customer's page, the customer list,
+ * the knowledge base), never as elements, and nothing in them runs.
  */
 
 import type { APIRequestContext, Page } from "@playwright/test";
@@ -103,6 +103,11 @@ test("markup a visitor writes stays text in the conversation and on the customer
   await page.getByRole("link", { name: en.customers.standing.open.replace("{line}", en.customers.standing.new) }).click();
   await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/customers/contact_`));
   await expect(page.getByRole("heading", { name }).first()).toBeVisible();
+  await expectNothingRan(page);
+
+  // The inbox list, which shows the start of the latest message.
+  await page.goto(`/b/${owner.businessId}/inbox`);
+  await expect(page.locator(`[data-inbox-row="${conversationId}"]`)).toBeVisible();
   await expectNothingRan(page);
 });
 

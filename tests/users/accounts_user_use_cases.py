@@ -37,18 +37,10 @@ from app.use_cases.businesses.update_business_settings_use_case import (
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
-from app.use_cases.users.logout_use_case import LogoutUseCase
 from app.use_cases.users.otp_login.send_login_code_use_case import (
     SendLoginCodeUseCase,
 )
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
-from app.use_cases.users.sessions.list_my_sessions_use_case import (
-    ListMySessionsUseCase,
-)
-from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
-    RevokeOtherSessionsUseCase,
-)
-from app.use_cases.users.sessions.revoke_session_use_case import RevokeSessionUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
 from app.utilities.security.require_recent_authentication import (
@@ -69,8 +61,7 @@ from tests.users.accounts_recorders import (
     RecordingAssistantResumption,
     RecordingVoiceAgentRemoval,
 )
-from tests.users.accounts_repositories import AccountsRepositories
-from tests.users.fake_ip_countries import TEST_IP_COUNTRIES, FixedIpCountries
+from tests.users.accounts_session_use_cases import AccountsSessionUseCases
 from tests.users.login_protection_fakes import (
     FakeBotCheck,
     RecordingCapAlerts,
@@ -78,7 +69,7 @@ from tests.users.login_protection_fakes import (
 )
 
 
-class AccountsUserUseCases(AccountsRepositories):
+class AccountsUserUseCases(AccountsSessionUseCases):
     """Login, current user, business and team use cases over the repositories."""
 
     def __init__(
@@ -184,28 +175,6 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
             platform_admins=self.platform_admins,
             app_settings=self.settings,
-        )
-        self.logout = LogoutUseCase(
-            user_session_repo=self.user_session_repo,
-            audit_log_repo=self.audit_log_repo,
-            wall_clock=wall_clock,
-        )
-        self.list_my_sessions = ListMySessionsUseCase(
-            user_session_repo=self.user_session_repo,
-            session_assurance=self.session_assurance,
-            wall_clock=wall_clock,
-            ip_countries=FixedIpCountries(TEST_IP_COUNTRIES),
-        )
-        self.revoke_session = RevokeSessionUseCase(
-            user_session_repo=self.user_session_repo,
-            audit_log_repo=self.audit_log_repo,
-            wall_clock=wall_clock,
-        )
-        self.revoke_other_sessions = RevokeOtherSessionsUseCase(
-            user_session_repo=self.user_session_repo,
-            session_assurance=self.session_assurance,
-            audit_log_repo=self.audit_log_repo,
-            wall_clock=wall_clock,
         )
         self.get_current_user = GetCurrentUserUseCase(
             user_repo=self.user_repo,

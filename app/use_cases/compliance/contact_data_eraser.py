@@ -101,9 +101,10 @@ class ContactDataEraser:
     as proof. The copies the sub-processors keep (the traces of the
     conversations' model calls at Langfuse, the calls at ElevenLabs) are
     deleted by queued jobs with retries (`processor_erasure`), so a
-    processor's outage never fails the erasure. The events the bookings have in the business's Google
-    Calendar go last (`calendar_erasure`): rewritten without the guest
-    while the booking still takes its time, deleted otherwise. Erasing
+    processor's outage never fails the erasure. The events the bookings
+    have in the business's Google Calendar go last (`calendar_erasure`):
+    rewritten without the guest while the booking still takes its time,
+    deleted otherwise. Erasing
     what is gone already is no error, so it runs again after a restore.
     """
 

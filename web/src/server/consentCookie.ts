@@ -6,8 +6,8 @@
  * answer) and the answer's pseudonymous receipt id, which the server's
  * consent log names too (consentLog.ts), for six months; then, or when
  * the version changes because the cookies asked about change, the banner
- * asks again. An answer stored before receipts ("1.granted") still counts. Accepting lets the
- * proxy keep where the visitor first came from (`aw_attr`,
+ * asks again. An answer stored before receipts ("1.granted") still counts.
+ * Accepting lets the proxy keep where the visitor first came from (`aw_attr`,
  * attributionCookie.ts); rejecting, closing the banner or not answering
  * keeps nothing, and a later rejection drops what was kept.
  */

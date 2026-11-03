@@ -65,6 +65,7 @@ from app.use_cases.exports.recording_archive import RecordingArchive
 from app.use_cases.exports.run_business_export_use_case import (
     RunBusinessExportUseCase,
 )
+from app.use_cases.exports.setup_archive import SetupArchive
 from app.use_cases.exports.start_business_export_use_case import (
     StartBusinessExportUseCase,
 )
@@ -139,6 +140,20 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
             privacy_settings_repo=repositories.privacy_settings_repo,
             channel_repo=repositories.channel_repo,
             consent_record_repo=repositories.consent_record_repo,
+            setup=Factory(
+                SetupArchive,
+                schedule_exception_repo=repositories.schedule_exception_repo,
+                deposit_settings_repo=repositories.deposit_settings_repo,
+                waitlist_settings_repo=repositories.waitlist_settings_repo,
+                campaign_settings_repo=repositories.campaign_settings_repo,
+                review_settings_repo=repositories.review_settings_repo,
+                inbox_settings_repo=repositories.inbox_settings_repo,
+                assistant_settings_repo=repositories.assistant_settings_repo,
+                customer_settings_repo=repositories.customer_settings_repo,
+                customer_segment_repo=repositories.customer_segment_repo,
+                quick_reply_library_repo=repositories.quick_reply_library_repo,
+                conversation_note_repo=repositories.conversation_note_repo,
+            ),
         ),
         recordings=Factory(
             RecordingArchive,

@@ -47,9 +47,9 @@ class BreakingStorage(InMemoryRecordingStorage):
         location: RecordingLocation,
         wanted: RecordingByteRange | None = None,
     ) -> RecordingPart | None:
-        if wanted is not None and wanted.first_byte is not None:
-            if int(wanted.first_byte) > 0:
-                raise ExternalServiceError("Object storage unreachable.")
+        offset = None if wanted is None else wanted.first_byte
+        if offset is not None and int(offset) > 0:
+            raise ExternalServiceError("Object storage unreachable.")
 
         return super().read(location, wanted)
 

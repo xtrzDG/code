@@ -17,13 +17,18 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 def service_template_names(settings: AppSettings) -> frozenset[str]:
-    """The utility templates of the service messages the platform sends."""
+    """
+    The templates of the messages the platform sends that are not
+    marketing: the service messages' utility templates and the sign-in
+    codes' authentication template.
+    """
 
     names: tuple[WhatsAppTemplateName | None, ...] = (
         settings.whatsapp_booking_confirmation_template_name,
         settings.whatsapp_reminder_template_name,
         settings.whatsapp_notification_template_name,
         settings.whatsapp_owner_report_template_name,
+        settings.whatsapp_otp_template_name,
         settings.growth.waitlist_template_name,
     )
     return frozenset(str(name) for name in names if name is not None)
