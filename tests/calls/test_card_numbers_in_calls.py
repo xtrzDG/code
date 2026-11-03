@@ -9,6 +9,7 @@ number alone leaves a recorded call's audio, masked in its transcript.
 from typing import Any
 
 from tests.calls.call_steps import add_staff_chat, save_call_settings
+from tests.calls.test_declined_recordings import answered_reports
 from tests.channels.post_call_steps import post_call_payload, process_call, stored_calls
 from tests.channels.telegram_updates import connect_bot, post_update
 from tests.channels.testbed import ChannelsTestbed
@@ -57,6 +58,28 @@ def test_a_recorded_call_keeps_no_card_in_its_transcript_summary_or_audio() -> N
     # The audio would keep the card: the call keeps none, as if declined.
     assert call.recording_declined is True
     assert call.recording_path is None
+    assert setup.testbed.recording_storage.deleted == [PLATFORM_COPY]
+    # Nor does the inbox keep the voice platform's raw report.
+    [report] = answered_reports(setup)
+    assert report.payload is None
+
+
+def test_a_card_read_over_several_turns_is_masked_and_its_audio_not_kept() -> None:
+    setup = build_voice_setup()
+    save_call_settings(setup, is_recording_enabled=True)
+    payload = card_payload("My card is 4242 4242", declined=False)
+    payload["data"]["transcript"] += [
+        {"role": "agent", "message": "Please do not.", "time_in_call_secs": 84},
+        {"role": "user", "message": "4242 4242.", "time_in_call_secs": 86},
+    ]
+
+    process_call(setup, payload)
+
+    [call] = stored_calls(setup)
+    transcript = str(call.transcript)
+    assert "My card is [card number]" in transcript
+    assert "[card number]." in transcript and "4242" not in transcript
+    assert call.recording_declined is True
     assert setup.testbed.recording_storage.deleted == [PLATFORM_COPY]
 
 

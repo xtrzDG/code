@@ -24,6 +24,7 @@ from app.utilities.channels.json_values import (
 from app.utilities.channels.language_codes import from_voice_platform_language
 from app.utilities.channels.voice_service import TRANSFER_TOOL_NAME
 from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
+from app.utilities.privacy.split_card_numbers import mask_split_card_numbers
 
 MICRO_USD_PER_USD: int = 1_000_000
 TRANSCRIPT_AUTHORS: dict[str, MessageAuthor] = {
@@ -79,8 +80,9 @@ def read_raw_number(
 def read_transcript(items: list[JsonObject]) -> list[FinishedCallTranscriptLine]:
     """
     The spoken lines of the call, card, security code, IBAN and ID numbers
-    masked: a recorded call's transcript, its summary, its audit and its
-    conversation never keep a number a caller read out.
+    masked, also a card the caller read out over several turns
+    (`mask_split_card_numbers`): a recorded call's transcript, its summary,
+    its audit and its conversation never keep a number a caller read out.
     """
 
     lines: list[FinishedCallTranscriptLine] = []
@@ -101,6 +103,24 @@ def read_transcript(items: list[JsonObject]) -> list[FinishedCallTranscriptLine]
                 ),
             )
         )
+
+    return mask_caller_pieces(lines)
+
+
+def mask_caller_pieces(
+    lines: list[FinishedCallTranscriptLine],
+) -> list[FinishedCallTranscriptLine]:
+    """The caller's lines with the pieces of a card read over several masked."""
+
+    said: list[int] = [
+        index
+        for index, line in enumerate(lines)
+        if line.author is MessageAuthor.CUSTOMER
+    ]
+    masked: list[str] = mask_split_card_numbers([str(lines[i].text) for i in said])
+    for index, text in zip(said, masked, strict=True):
+        if text != str(lines[index].text):
+            lines[index] = lines[index].model_copy(update={"text": MessageText(text)})
 
     return lines
 

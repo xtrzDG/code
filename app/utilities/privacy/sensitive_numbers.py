@@ -5,8 +5,9 @@ never keeps a card number (PCI DSS SAQ A), and nobody needs a customer's
 account or ID number to book a table (GDPR data minimization).
 
 - A payment card number: 13 to 19 digits, together or in groups separated
-  by single spaces or hyphens ("4242 4242 4242 4242", "3782-822463-10005",
-  digits a speech recognizer wrote one by one), that passes the Luhn check
+  by up to three spaces, tabs, line breaks or hyphens ("4242 4242 4242
+  4242", "3782-822463-10005", "4242 - 4242", a group per line, digits a
+  speech recognizer wrote one by one), that passes the Luhn check
   and does not start with 0. A phone number written the international way
   (a leading +), an all-digit UUID or digits joined to letters (an
   identifier) are not one. The expiry date and the security code said
@@ -43,16 +44,19 @@ MASKING_PLACEHOLDERS: tuple[str, ...] = (
     ACCOUNT_PLACEHOLDER,
     ID_NUMBER_PLACEHOLDER,
 )
-# A run of at least 13 digits with single spaces or hyphens between them. A
+# What may stand between a card's digit groups: spaces (also the no-break
+# and thin ones), tabs, line breaks and hyphens.
+GROUP_SEPARATORS: str = r"[ \t\n\u00a0\u2009\u202f\-]"
+# A run of at least 13 digits with up to three separators between them. A
 # run right after "+" is a phone number, one after a decimal point or
 # before a decimal part (0.30000000000000004) a fraction, one joined to
 # letters ("booking_d1234567-8901-2345-bb47-...", "id42424242...x") part of
 # an identifier.
 DIGIT_RUN_PATTERN: re.Pattern[str] = re.compile(
-    r"(?<!\d[.,])(?<![\w+])(?<!\w-)\d(?:[ \u00a0\-]?\d){12,}"
+    rf"(?<!\d[.,])(?<![\w+])(?<!\w-)\d(?:{GROUP_SEPARATORS}{{0,3}}\d){{12,}}"
     r"(?![.,]?\d)(?!-?\w)"
 )
-DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(r"[ \u00a0\-]")
+DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(rf"{GROUP_SEPARATORS}+")
 UUID_SHAPE: re.Pattern[str] = re.compile(r"\d{8}-\d{4}-\d{4}-\d{4}-\d{12}")
 # Right after a masked card, up to three of: the rest of an expiry date
 # ("/26" once the month joined the card's digits), an expiry date ("12/26")
@@ -156,13 +160,18 @@ def holds_card_number(groups: list[str]) -> bool:
     return False
 
 
+def is_card_run(run: str) -> bool:
+    """Whether one run `DIGIT_RUN_PATTERN` found holds a card number."""
+
+    if UUID_SHAPE.fullmatch(run):
+        return False
+
+    return holds_card_number(DIGIT_GROUP_SEPARATOR.split(run))
+
+
 def _card_placeholder(match: re.Match[str]) -> str:
     run: str = match.group(0)
-    if UUID_SHAPE.fullmatch(run):
-        return run
-
-    groups: list[str] = DIGIT_GROUP_SEPARATOR.split(run)
-    return CARD_PLACEHOLDER if holds_card_number(groups) else run
+    return CARD_PLACEHOLDER if is_card_run(run) else run
 
 
 def _iban_placeholder(match: re.Match[str]) -> str:

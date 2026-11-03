@@ -14,7 +14,7 @@ def test_defaults_follow_the_concept_stack() -> None:
 
     assert settings.environment is DeploymentEnvironment.DEVELOPMENT
     assert settings.llm_provider is LlmProvider.OPENAI
-    assert settings.llm_model_id == "gpt-5-mini"
+    assert settings.llm_model_id == "gpt-5-mini-2025-08-07"
     assert settings.openai_base_url == "https://eu.api.openai.com/v1"
     assert settings.llm_chat_effort is LlmEffort.LOW
     assert settings.is_otp_code_logging_enabled is True

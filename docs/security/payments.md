@@ -79,9 +79,10 @@ codes, PINs or banking passwords, never to repeat one and to point to the
 payment link (the prohibition rules,
 `app/utilities/assembly/instruction_rule_sections.py`; evals
 `carddata__it`, `carddata__en`). A customer may still send one. A
-Luhn-valid 13 to 19 digit number (spaced, dashed, or said digit by digit),
-the digits said right after it, a named security code, an IBAN and an ID
-number become placeholders (`app/utilities/privacy/sensitive_numbers.py`):
+Luhn-valid 13 to 19 digit number (spaced, dashed, a group per line, or
+said digit by digit), the digits said right after it, a named security
+code, an IBAN and an ID number become placeholders
+(`app/utilities/privacy/sensitive_numbers.py`):
 
 | Where | Masked at |
 | --- | --- |
@@ -89,8 +90,9 @@ number become placeholders (`app/utilities/privacy/sensitive_numbers.py`):
 | an Instagram comment | `accept_instagram_comments_use_case.py` |
 | the website chat, the hosted chat, the owner's test chat, the API | `app/use_cases/conversations/turns/inbound_message_rules.py` |
 | a voice note's transcript | `transcribe_voice_note_use_case.py` |
-| the turn the model reads (also messages stored before masking) | `app/use_cases/conversations/replies/customer_turn.py` |
-| a call's transcript, recorded or not, and its summary | `app/adapters/voice/elevenlabs_post_call_reading.py` |
+| the turn the model reads: this message and those the assistant stayed silent on (also ones stored before masking) | `app/use_cases/conversations/replies/customer_turn.py` |
+| a call's transcript, recorded or not, and its summary; a card read out over several turns too (`split_card_numbers.py`) | `app/adapters/voice/elevenlabs_post_call_reading.py` |
+| what the voice platform's model puts into a tool call (a booking's notes, a summary for staff) before the tool runs | `app/orchestrators/conversations/voice_tool_call_orchestrator.py` |
 | the quality journal (Langfuse), even with raw text allowed | `app/adapters/llm/tracing_llm_adapter.py` |
 | log lines (message, traceback, text fields) | `app/utilities/observability/log_formatting.py` |
 | error reports (Sentry) | `app/facilitators/observability/sentry_event_scrubbing.py` |
@@ -111,8 +113,17 @@ What masking cannot reach:
   deletes it.
 - The messenger (WhatsApp, Telegram, Instagram, Messenger) keeps its copy
   of the customer's message on the customer's and the business's devices.
-- Conversations stored before masking existed are masked for the model,
-  not rewritten in storage.
+- A photo of a card is stored like any photo and shown to the model; no
+  text is read out of pictures.
+- A card typed over several chat messages: each message is masked on its
+  own, so pieces of fewer than 13 digits stay (a call's turns are read
+  together, above). A number the speech recognizer wrote as words ("four
+  two four two") is not a number to the masking.
+- Stored before masking existed: messages and transcripts are not
+  rewritten in storage; the model's turns kept before then (the
+  conversation's earlier turns, sent again as history) reach the model as
+  they were stored, until the conversation has been quiet for 24 hours
+  and the next message starts a new one.
 
 ## PCI DSS scope
 
@@ -127,7 +138,7 @@ platform meets them:
 | card-not-present (e-commerce) transactions only | billing is online only; no terminal, no phone orders |
 | all processing of account data is outsourced to PCI DSS compliant third parties | Stripe (Level 1) and Flitt (certificate on file, `docs/operations/vendor-register.md`) |
 | the payment page comes entirely from the provider (redirect) | the cabinet sends the browser to the provider's URL; no card field, iframe or provider script on our pages |
-| no electronic storage, processing or transmission of account data on our systems | no PAN or security code is ever accepted; one typed or said by mistake is masked before storage, model, logs and traces, and its call audio is deleted (above) |
+| no electronic storage, processing or transmission of account data on our systems | no PAN or security code is ever accepted; one typed or said by mistake is masked before storage, model, logs and traces, and its call audio is deleted (above, with the limits listed there: a photo of a card, a card typed over several messages) |
 | paper records with account data, if any, are not electronic | none exist |
 | the pages that send to the payment page are protected | the cabinet's CSP runs scripts only with the page's nonce, enforces Trusted Types, posts forms only to itself and `pay.flitt.com` and reports violations (`web/src/server/contentSecurityPolicy.ts`); the billing pages load no third-party script (Turnstile runs on sign-in, Facebook's SDK on the Meta connection pages) |
 
@@ -160,3 +171,11 @@ affects how the business's customers pay, hence the matrix below.
   and refund wording of the deposit lines.
 - Keep Flitt's PCI DSS certificate and Stripe's attestation on file in the
   vendor register each year.
+- Before the first SAQ and then yearly, scan a data-only dump of the
+  production database, 7 days of exported logs and the storage listing for
+  card numbers, expecting none (each hit is checked by hand: a Luhn-valid
+  order number looks the same), and keep the output as evidence:
+  `pg_dump --data-only "$DATABASE_URL" > dump.sql`, then
+  `uv run python -m scripts.card_number_scan dump.sql logs/*.jsonl`
+  (`scripts/card_number_scan.py`; it prints the file and line of a hit,
+  never its digits).

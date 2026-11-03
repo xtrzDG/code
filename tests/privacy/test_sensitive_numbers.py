@@ -22,6 +22,7 @@ from app.utilities.privacy.sensitive_numbers import (
 )
 
 NBSP: str = chr(0xA0)
+THIN_SPACE: str = chr(0x2009)
 
 
 def test_the_payment_test_message_is_masked() -> None:
@@ -43,6 +44,12 @@ def test_the_payment_test_message_is_masked() -> None:
         "3782 822463 10005",
         "6011 1111 1111 1117",
         "4111111111111111",
+        # Pasted or typed with wider gaps, a group per line.
+        "4242  4242  4242  4242",
+        "4242 - 4242 - 4242 - 4242",
+        "4242\t4242\t4242\t4242",
+        "4242\n4242\n4242\n4242",
+        THIN_SPACE.join(["4242"] * 4),
     ],
 )
 def test_luhn_valid_cards_are_masked_however_written(written: str) -> None:
@@ -114,6 +121,8 @@ def test_an_italian_tax_code_and_a_named_document_are_masked() -> None:
         "RSSMRA85T10A562X is not a tax code: its check letter is wrong.",
         "documento di trasporto 2026",
         "The cvv? I will pay on the link.",
+        "+39 347 123 4567\n4 persone\n20 30",
+        "Rooms 101 - 102 - 103 - 104, 2 adults and 1 child.",
     ],
 )
 def test_other_numbers_stay(text: str) -> None:

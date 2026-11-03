@@ -227,3 +227,22 @@ def test_phone_conversation_from_voice_calls_continues_in_chat_turns() -> None:
 
     assert reply.conversation_id == world.conversations()[0].id
     assert reply.text == "კი, ხვალ 19:30-ზე გელოდებით."
+
+
+def test_a_card_the_voice_agent_put_into_a_tool_call_is_never_kept() -> None:
+    # The voice platform's model heard the caller read out a card and,
+    # against its rules, wrote it into the booking's notes (PAY-05).
+    world = build_world(scripted())
+    noted = BOOKING_INPUT.replace(
+        '"notes":null', '"notes":"pays by card 4242 4242 4242 4242 cvv 123"'
+    )
+
+    _, is_error = voice_call(world, AssistantToolName.CREATE_BOOKING, noted)
+
+    assert is_error is False
+    command = world.bookings.commands[0]
+    assert isinstance(command, CreateBookingCommand)
+    assert str(command.notes) == "pays by card [card number] cvv [security code]"
+    [conversation] = world.conversations()
+    [message] = world.messages(conversation.id)
+    assert "4242" not in str(message.tool_calls[0].input_json)

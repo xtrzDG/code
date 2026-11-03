@@ -15,8 +15,12 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
-from app.schemas.typings.conversations.strings import LlmToolCallId
+from app.schemas.typings.conversations.strings import (
+    LlmToolCallId,
+    LlmToolInputJson,
+)
 from app.utilities.observability.log_context import bound_log_context
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 
 VOICE_CALL_ID_PREFIX: str = "voice_"
 
@@ -27,7 +31,10 @@ class VoiceToolCallOrchestrator(VoiceToolCallOrchestratorContract):
     server-side checks as the chat (concept section 7): find or start the
     call's conversation, execute the tool, keep the call in the feed. No
     language model is involved, so the answer comes back well within the
-    one-second target.
+    one-second target. The voice platform's model heard the caller, so a
+    card, security code, IBAN or ID number it put into the arguments (a
+    booking's notes, a summary for staff) is masked before the tool runs
+    or the call is kept: no booking, lead or feed entry stores one.
     """
 
     def __init__(
@@ -78,7 +85,9 @@ class VoiceToolCallOrchestrator(VoiceToolCallOrchestratorContract):
         call = LlmToolCall(
             call_id=LlmToolCallId(f"{VOICE_CALL_ID_PREFIX}{uuid.uuid4().hex}"),
             tool_name=input_data.tool_name,
-            input_json=input_data.input_json,
+            input_json=LlmToolInputJson(
+                mask_sensitive_numbers(str(input_data.input_json))
+            ),
         )
         outcome: AssistantToolOutcome = self._run_assistant_tool.run(
             AssistantToolInvocation(context=context, call=call)
