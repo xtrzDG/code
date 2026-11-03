@@ -136,8 +136,9 @@ run the job again.
 
 ## Payment page integrity
 
-`payment-page-integrity.yml` runs every Monday (and by hand) with read-only
-permissions and no secret (PAY-02; PCI DSS 11.6.1 intent). It compares the
+`payment-page-integrity.yml` runs every Monday (and by hand) with no secret
+(PAY-02; PCI DSS 11.6.1 intent); its check reads only, and only the step
+that opens the issue may write issues. It compares the
 scripts of the payment pages, the billing page and the hosted chat page
 (which shows a deposit's payment link), with the reviewed inventory
 `web/payment-page-scripts.json` (every first-party chunk with its SHA-384,

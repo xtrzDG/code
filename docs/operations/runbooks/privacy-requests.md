@@ -56,7 +56,8 @@ support explains these two points when an owner asks:
   business's knowledge items that name the customer
   (`records.knowledge_mentions`): by their whole name (without case,
   accents and punctuation, also surname first) or by one of their numbers
-  in any format, also inside a list of numbers. Each comes with its title,
+  (a run of at least eight of its digits, however punctuated), also
+  inside a list of numbers. Each comes with its title,
   text, attribute values and aliases, so the mention itself is in the
   copy. Those texts may name other people: the owner removes third
   parties' data before sending the copy (art. 15(4)). Items a brand shares

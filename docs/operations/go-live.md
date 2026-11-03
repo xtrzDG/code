@@ -592,8 +592,8 @@ Russian).
    Once, against staging, script 500 sign-in code requests to sequential
    numbers (the checklist's VOICE-03 verification; no such script is in
    the repository) and keep the result; expect the caps and the throttle
-   to refuse them past their thresholds. Turn on a second factor on the platform's Stripe and Flitt
-   consoles as well (risk register R10).
+   to refuse them past their thresholds. Turn on a second factor on the
+   platform's Stripe and Flitt consoles as well (risk register R10).
 4. **Real-model evaluations.** With the provider keys of step 5 the
    nightly `evals-nightly.yml` measures the assistant against the real
    models (floor 85 % via `min_pass_rate`, ceiling 2 % hallucinations via

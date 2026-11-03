@@ -26,6 +26,6 @@ Sostituisci le parti tra parentesi quadre.
 - Rispondi alle richieste sull'accessibilità entro 30 giorni; inoltraci tramite il supporto le domande sulle pagine stesse.
 - Le foto, i menu e i testi che carichi sono contenuti tuoi: dai alle foto una breve descrizione e scrivi i menu come testo, non solo come immagini.
 
-## Chi chiama e sente o parla con difficoltà
+## Chi chiama e ha difficoltà a sentire o a parlare
 
 L'assistente telefonico ripete l'ultima risposta e parla più lentamente ogni volta che chi chiama lo chiede. Chi chiama può anche chiedere la chiamata per iscritto: quando un messenger che hai collegato (Telegram, WhatsApp, Messenger o Instagram) lo raggiunge, la trascrizione della chiamata gli arriva per messaggio subito dopo la fine, insieme ai link che l'assistente ha promesso. L'assistente telefonico non accetta l'inserimento da tastiera (DTMF, "premi 1 per..."), quindi non lo chiede mai. L'alternativa è il testo: chi non riesce a parlare o a sentire al telefono può prenotare, modificare o annullare, e fare le stesse domande, nella chat del tuo sito, nella tua pagina di chat, su WhatsApp o nella pagina di prenotazione, dove l'assistente offre gli stessi servizi. Indica questi canali accanto al tuo numero di telefono nel testo qui sopra.

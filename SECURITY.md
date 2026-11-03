@@ -107,7 +107,7 @@ On a schedule, so that what was safe yesterday is checked again today
 | hourly | `synthetics.yml` | production as customers meet it: health, a widget chat round trip, and a booking made and cancelled through the public API |
 | daily | `repo-settings.yml` | the repository settings below |
 | weekly | `payment-page-integrity.yml` | the payment pages' scripts (billing page, hosted chat page) against their reviewed SHA-384 inventory: with `PRODUCTION_CABINET_URL`, as production serves them against the `release` branch's inventory, otherwise a fresh build of `main` (the variable and the `release` branch are owner steps, `docs/operations/go-live.md`); no secrets, the check reads only, and only its issue step may write issues; a difference fails the run and opens the issue "Payment page scripts changed" (PCI DSS 6.4.3 and 11.6.1 intent) |
-| nightly | `evals-nightly.yml` | the assistant against the real models (with `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; without both the run is skipped with a notice, which is the case until the owner sets them): pass rate at least 85 % and hallucination rate at most 2 % (its inputs `min_pass_rate`, `max_hallucination_rate`) |
+| nightly | `evals-nightly.yml` | the assistant against the real models (with `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; without both the run is skipped with a notice; setting them is an owner step, `docs/operations/go-live.md`): pass rate at least 85 % and hallucination rate at most 2 % (its inputs `min_pass_rate`, `max_hallucination_rate`) |
 
 ### Signed images and build provenance
 
@@ -342,14 +342,13 @@ admins after a recent sign-in and audited; no code path reads one yet
 vertical's evaluation set has at least 100 scenarios with a hallucination
 rate, and a pull request that touches what the model sees replays the
 recorded answers of them all; the real models are measured by a nightly
-run that stays skipped until the owner sets the provider keys. The
-product's error budgets are computed from Prometheus in the Grafana
-dashboard and `scripts/slo_report.py` (booking success is not measured
-yet, and the admin System page still shows only the earlier budgets), and
-the weekly `perf.yml` rehearses the pending migrations on a synthetic,
-production-sized database (no rehearsal or rollback drill has run yet).
-The
-code and tests of each: [docs/security/threat-model.md](docs/security/threat-model.md)
+run, which is skipped while the provider keys are not set (an owner
+step). The product's error budgets are computed from Prometheus in the
+Grafana dashboard and `scripts/slo_report.py` (booking success is not
+measured yet, and the admin System page still shows only the earlier
+budgets), and the weekly `perf.yml` rehearses the pending migrations on a
+synthetic, production-sized database (no rehearsal or rollback drill has
+run yet). The code and tests of each: [docs/security/threat-model.md](docs/security/threat-model.md)
 (rows 2 to 5, 7, 12, 16, 22 and 34 to 40, with what stays open under
 "Accepted risks").
 

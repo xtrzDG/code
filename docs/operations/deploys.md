@@ -731,10 +731,14 @@ as a one-off job **after** the deploy that added the columns, never in
 
 ## Staged rollouts: feature flags
 
-A risky change ships dark behind a flag of the registry
-(`app/utilities/feature_flags/feature_flag_catalog.py`; the first is
-`release_canary`), which the code asks per business at request time
-(`FeatureFlagGateContract`): one keyed read of the `feature_flags`
+A risky change can ship dark behind a flag of the registry
+(`app/utilities/feature_flags/feature_flag_catalog.py`), which the code
+asks per business at request time (`FeatureFlagGateContract`). No code
+path reads a flag yet: the registry's only flag, `release_canary`, guards
+nothing and exists to check a rollout through
+`GET /v1/admin/feature-flags/release_canary/businesses/{business_id}`
+before a change leans on a flag of its own. A read is one keyed read of
+the `feature_flags`
 collection, so a change holds at the next request of every process and a
 flag never set is off. A flag holds for a business when it is on and the
 business is on its inclusion list, or it is not excluded and its bucket

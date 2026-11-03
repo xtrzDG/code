@@ -43,7 +43,13 @@ the hosted chat page (`data-mode="page"`) the same conversation lives in the
 tab's `sessionStorage` only and leaves with the tab; the page removes one an
 earlier version left in `localStorage`. Only the chosen language and the
 rated answers stay in `localStorage`; whether the window is open and the
-visit's source are kept for the tab (`sessionStorage`). The cookie
+visit's source are kept for the tab (`sessionStorage`). On a business's
+own site nothing of this is written until the visitor opens or uses the
+chat (CONS-07, `app/gateways/http/static/widget/storage.js`): the visitor
+key is made on the first message, handoff, upload or rating, the source
+and the open state are kept only after the visitor acts, and a key an
+earlier version made on load and no message used is removed
+(`tests/channels/test_widget_lazy_storage.py`). The cookie
 statement (`docs/legal/cookies-2026-11-03.en.md`, section 4) says the same,
 and `web/src/lib/cookieStatement.test.ts` compares it with the script. The owner picks the brand colour and the button's corner in the cabinet
 (`PUT …/channels/web` with `widget_color` and `widget_position`); the

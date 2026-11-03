@@ -53,7 +53,10 @@ to businesses (owner step at the end).
      resends after the 200). After 5 attempts, about 7.5 minutes, the job
      is dead: the `dead_jobs` alert fires and the daily reconciliation
      reports the order (`payment_mismatch`); nothing re-queues it by
-     itself (accepted risk, `docs/security/threat-model.md`);
+     itself (accepted risk, `docs/security/threat-model.md`), and a SUPER
+     admin runs it again by hand once Flitt confirms the status
+     (`POST /v1/admin/jobs/{job_id}/retry`, audited;
+     `docs/operations/runbooks/payment-mismatch.md`);
    - each order's notifications are applied under a lock across processes
      (`app/registries/locks/payment_notification_lock_registry.py`)
      against the keys the order already applied, so two copies of one
@@ -173,7 +176,7 @@ platform meets them:
 | the payment page comes entirely from the provider (redirect) | the cabinet sends the browser to the provider's URL; no card field, iframe or provider script on our pages |
 | no electronic storage, processing or transmission of account data on our systems | no PAN or security code is ever accepted; one typed or said by mistake is masked before storage, model, logs and traces, and its call audio is deleted (above, with the limits listed there: a photo of a card, a card typed over several messages) |
 | paper records with account data, if any, are not electronic | none exist |
-| the pages that send to the payment page are protected | the cabinet's CSP runs scripts only with the page's nonce, enforces Trusted Types, posts forms only to itself and `pay.flitt.com` and reports violations (`web/src/server/contentSecurityPolicy.ts`); the billing page's policy names no third-party host at all (`web/src/lib/paymentPages.ts`: Turnstile runs on sign-in only, Facebook's SDK on the Meta connection pages); the scripts of the billing page and the hosted chat page are inventoried with their SHA-384 (`web/payment-page-scripts.json`): every pull request's build is compared with it and a weekly run compares what production serves (`docs/operations/ci.md`, "Payment page integrity") |
+| the pages that send to the payment page are protected | the cabinet's CSP runs scripts only with the page's nonce, enforces Trusted Types, posts forms only to itself and `pay.flitt.com` and reports violations (`web/src/server/contentSecurityPolicy.ts`); the billing page's policy names no third-party host at all (`web/src/lib/paymentPages.ts`: Turnstile runs on sign-in only, Facebook's SDK on the Meta connection pages); the scripts of the billing page and the hosted chat page are inventoried with their SHA-384 (`web/payment-page-scripts.json`): every pull request's build is compared with it (a change is a warning the pull request answers by updating the inventory) and a weekly run compares what production serves once the owner sets `PRODUCTION_CABINET_URL`, a fresh build of `main` until then (`docs/operations/ci.md`, "Payment page integrity") |
 
 For deposits the platform is not the merchant and never sees the card, so
 it does not enter the business's cardholder data environment; it writes a
