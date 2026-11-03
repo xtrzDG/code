@@ -18,6 +18,10 @@ export const adminSessionsIt: Translation<typeof adminSessionsEn> = {
     other: "Accesso su {count} dispositivi",
   },
   notSignedIn: "Nessun accesso attivo",
+  signedIn: {
+    one: "{count} con accesso attivo",
+    other: "{count} con accesso attivo",
+  },
   lastUsed: "Ultimo utilizzo: {date}",
   end: "Chiudi le sessioni",
   endLabel: "Chiudi le sessioni di {name}",

@@ -106,6 +106,8 @@ export const adminEn = {
     },
     usageTitle: "Package usage",
     costTitle: "Cost and margin",
+    /** The cost card folded into a row on a phone. */
+    marginFold: "Margin {margin}",
     costPeriod: "Period {start} – {end}",
     llmCost: "Language model",
     providerCostUsd: "All providers",

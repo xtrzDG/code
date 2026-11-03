@@ -106,6 +106,7 @@ export const adminIt: Translation<typeof adminEn> = {
     },
     usageTitle: "Uso del pacchetto",
     costTitle: "Costi e margine",
+    marginFold: "Margine {margin}",
     costPeriod: "Periodo {start} – {end}",
     llmCost: "Modello linguistico",
     providerCostUsd: "Tutti i fornitori",

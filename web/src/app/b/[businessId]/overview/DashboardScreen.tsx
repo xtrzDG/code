@@ -10,7 +10,7 @@ import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
 import { useToday } from "@/components/insights/useToday";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
-import { Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, PageHeader, PhoneFold } from "@/components/ui";
 import { useSetupProgress } from "@/components/setupGuide/useSetupProgress";
 import { AnswersToImproveCard } from "@/components/teaching/AnswersToImproveCard";
 import { useValueOfDates } from "@/components/value/useValueQueries";
@@ -32,7 +32,7 @@ import {
 } from "./_components/dashboardModel";
 import { OverviewStats } from "./_components/OverviewStats";
 import { PeriodPicker } from "./_components/PeriodPicker";
-import { PhoneFold, PhoneFolds } from "./_components/PhoneFold";
+import { OverviewFolds } from "./_components/PhoneFold";
 import { SetupGuideCard } from "./_components/setupGuide/SetupGuideCard";
 import { TodayBlock } from "./_components/TodayBlock";
 import { TodayQueue } from "./_components/TodayQueue";
@@ -83,7 +83,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const showsValue = isOwner && (business.status === "live" || business.status === "paused");
 
   return (
-    <PhoneFolds>
+    <OverviewFolds>
       <PageHeader
         title={t("navigation.pages.overviewDashboard")}
         actions={<PeriodPicker value={period} onChange={choosePeriod} />}
@@ -173,6 +173,6 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         {/* "Invite a business — a month free", from the tenth booking (owners), after everything above, on every screen. */}
         {isOwner ? <InviteCard /> : null}
       </div>
-    </PhoneFolds>
+    </OverviewFolds>
   );
 }

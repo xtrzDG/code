@@ -19,6 +19,11 @@ export const adminSessionsEn = {
     other: "Signed in on {count} devices",
   },
   notSignedIn: "Not signed in",
+  /** The card folded into a row on a phone. */
+  signedIn: {
+    one: "{count} signed in",
+    other: "{count} signed in",
+  },
   lastUsed: "Last used {date}",
   end: "End sessions",
   endLabel: "End sessions of {name}",

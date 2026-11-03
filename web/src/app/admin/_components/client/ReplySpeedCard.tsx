@@ -17,16 +17,9 @@ import { channelRows, formatWait, isSlowPercentile } from "../../_lib/replySpeed
  */
 export function ReplySpeedCard({ summary }: { summary: AdminClientSummary }) {
   const { t, locale } = useI18n();
+  const wait = useWaitText();
   const speed = summary.reply_speed;
   const rows = channelRows(speed);
-
-  const wait = (milliseconds: number | null | undefined) => {
-    if (milliseconds === null || milliseconds === undefined) {
-      return "—";
-    }
-    const { value, unit } = formatWait(milliseconds, locale);
-    return t(unit === "minutes" ? "adminReplySpeed.minutes" : "adminReplySpeed.seconds", { value });
-  };
 
   return (
     <Card title={t("adminReplySpeed.title")} description={t("adminReplySpeed.description")}>
@@ -84,4 +77,16 @@ export function ReplySpeedCard({ summary }: { summary: AdminClientSummary }) {
       )}
     </Card>
   );
+}
+
+/** A wait in the interface language ("7.5 s", "2 min"); "—" without one. */
+export function useWaitText(): (milliseconds: number | null | undefined) => string {
+  const { t, locale } = useI18n();
+  return (milliseconds) => {
+    if (milliseconds === null || milliseconds === undefined) {
+      return "—";
+    }
+    const { value, unit } = formatWait(milliseconds, locale);
+    return t(unit === "minutes" ? "adminReplySpeed.minutes" : "adminReplySpeed.seconds", { value });
+  };
 }

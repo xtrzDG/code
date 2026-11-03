@@ -6,7 +6,9 @@ import type { BusinessView, CurrentUserView } from "@/api/types";
 import { BusinessProvider } from "@/components/business/BusinessContext";
 import { renderInLocale } from "@/test/render";
 
-import { PhoneFold, PhoneFolds } from "./PhoneFold";
+import { PhoneFold } from "@/components/ui";
+
+import { OverviewFolds } from "./PhoneFold";
 
 const business = { id: "business_1", viewer_role: "owner", status: "live" } as unknown as BusinessView;
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
@@ -15,14 +17,14 @@ const REMEMBERED = "aw.pref.overview-open:user_owner";
 function Folds() {
   return (
     <BusinessProvider business={business} me={me}>
-      <PhoneFolds>
+      <OverviewFolds>
         <PhoneFold name="languages" title="Languages" summary="Russian: 35 %">
           <p>Russian 15</p>
         </PhoneFold>
         <PhoneFold name="channels" title="Channels">
           <p>Website chat 16</p>
         </PhoneFold>
-      </PhoneFolds>
+      </OverviewFolds>
     </BusinessProvider>
   );
 }
@@ -31,7 +33,7 @@ function row(name: RegExp) {
   return screen.getByRole("button", { name });
 }
 
-describe("PhoneFold", () => {
+describe("OverviewFolds", () => {
   afterEach(() => window.localStorage.clear());
 
   it("folds each block into a row with its summary; a tap opens it and the open ones are remembered", async () => {

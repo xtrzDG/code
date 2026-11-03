@@ -19,4 +19,5 @@ export const adminReplySpeedIt: Translation<typeof adminReplySpeedEn> = {
   seconds: "{value} s",
   minutes: "{value} min",
   issueLabel: "Risposte lente",
+  fold: "Mediana {wait}",
 };

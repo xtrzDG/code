@@ -19,6 +19,7 @@ export { Modal, ModalFooter } from "./Modal";
 export { OverflowMenu, type MenuAction } from "./OverflowMenu";
 export { PageHeader, SubPages, usePageLevel, type PagePrimaryAction } from "./PageHeader";
 export { PageHelpProvider, usePageHelp } from "./PageHelp";
+export { PhoneFold, PhoneFolds } from "./PhoneFold";
 export {
   PhoneChromeProvider, usePhoneChrome, usePhoneChromeSnapshot, usePhoneFab, usePhoneLive
 } from "./PhoneChrome";

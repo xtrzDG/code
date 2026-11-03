@@ -19,4 +19,5 @@ export const adminReplyGuardIt: Translation<typeof adminReplyGuardEn> = {
     "Qualcuno continua a cercare di cambiare le istruzioni dell'assistente. Dopo tre tentativi il contatto viene fermato per un giorno; dai un'occhiata alle conversazioni.",
   empty: "Nessuna risposta controllata negli ultimi 7 giorni.",
   issueLabel: "Picco di risposte bloccate",
+  fold: "{share} bloccate",
 };

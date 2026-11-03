@@ -22,6 +22,7 @@ export default async function AdminClientPage({ params }: PageProps<"/admin/clie
   return (
     <AdminClientScreen
       businessId={businessId}
+      userId={me.user.id}
       canManageBilling={hasAdminPermission(me, "manage_client_billing")}
       canWriteNotes={hasAdminPermission(me, "write_client_notes")}
       canEndSessions={hasAdminPermission(me, "change_client_cabinet")}

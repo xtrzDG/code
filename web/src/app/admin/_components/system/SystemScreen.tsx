@@ -4,12 +4,12 @@ import { useMemo, useState } from "react";
 
 import { IconPlus } from "@/components/icons";
 import { LiveStatus } from "@/components/shell/LiveStatus";
-import { Badge, Button, Card, ErrorState, LoadingRegion, PageHeader, SkeletonCard } from "@/components/ui";
+import { Badge, Button, Card, ErrorState, LoadingRegion, PageHeader, PhoneFold, PhoneFolds, SkeletonCard } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
 
 import type { CreateIncidentBody } from "../../_lib/incidentForm";
-import { attentionCount, withCircuits } from "../../_lib/system";
+import { attentionCount, withCircuits, type AdminSystem } from "../../_lib/system";
 import { useAdminSystem } from "../../_lib/useAdminSystem";
 import { useIncidents } from "../../_lib/useIncidents";
 import { AlertsCard } from "./AlertsCard";
@@ -25,7 +25,13 @@ import { BackupsCard, DatabaseCard } from "./StorageCards";
 import { CampaignHoldsCard } from "./CampaignHoldsCard";
 import { PaymentReconciliationCard } from "./PaymentReconciliationCard";
 import { PlatformBrakesCard } from "./PlatformBrakesCard";
+import { useSystemFolds } from "./systemFolds";
 import { LanesCard, WorkersCard } from "./WorkersAndQueues";
+
+/** The folded rows a person opened on a phone, remembered for them (lib/userPreference.ts). */
+const OPEN_FOLDS_PREFERENCE = "admin-system-open";
+
+type IncidentLog = ReturnType<typeof useIncidents>["incidents"];
 
 /**
  * /admin/system: what on call looks at first (docs/operations/slo.md). The
@@ -38,8 +44,13 @@ import { LanesCard, WorkersCard } from "./WorkersAndQueues";
  * SUPER admins set, and the daily budget stop) come first, the daily
  * payment reconciliation after the dead letters. The campaigns held over
  * their opt-out rate follow the alerts (SUPER admins release them).
+ *
+ * On a phone the brakes, the alerts, the held campaigns and the error
+ * budgets stay open; every card after them folds into a row with its
+ * figure or state (PhoneFold, systemFolds.tsx) that opens on a tap, so the
+ * page reads as one status board. Large screens show every card.
  */
-export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
+export function SystemScreen({ canPause = false, userId }: { canPause?: boolean; userId: string }) {
   const { t, tp } = useI18n();
   const toast = useToast();
   const system = useAdminSystem();
@@ -61,7 +72,7 @@ export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
   };
 
   return (
-    <>
+    <PhoneFolds preference={OPEN_FOLDS_PREFERENCE} userId={userId}>
       <PageHeader
         title={t("adminSystem.title")}
         description={t("adminSystem.description")}
@@ -92,24 +103,7 @@ export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
           <AlertsCard alerts={data.alerts} />
           <CampaignHoldsCard canRelease={canPause} />
           <ErrorBudgetCard />
-          <AnnouncementsCard />
-          {/* Full width: both tables have six columns. */}
-          <WorkersCard workers={data.workers} />
-          <CircuitsCard circuits={data.circuits} />
-          <LanesCard lanes={data.lanes} />
-          <DeadLettersCard tallies={data.dead_jobs} />
-          <PaymentReconciliationCard />
-          <DataTasksCard />
-          <div className="grid gap-6 xl:grid-cols-2">
-            <ChannelsCard
-              inError={data.channels_in_error}
-              inErrorCount={data.channels_in_error_count}
-              expiring={data.expiring_credentials}
-            />
-            <BackupsCard system={data} />
-          </div>
-          <DatabaseCard totalBytes={data.database_bytes} tables={data.tables} />
-          <IncidentsCard incidents={incidents} onRecord={() => setRecordOpen(true)} />
+          <SystemDetails data={data} incidents={incidents} onRecord={() => setRecordOpen(true)} />
         </div>
       )}
 
@@ -120,7 +114,61 @@ export function SystemScreen({ canPause = false }: { canPause?: boolean }) {
         isRecording={isRecording}
         error={createError}
       />
-    </>
+    </PhoneFolds>
+  );
+}
+
+/**
+ * The cards after the error budgets, each a PhoneFold: one row each on a
+ * phone, the cards themselves from large screens (a flex column, as the
+ * folds' wrappers take no box there).
+ */
+function SystemDetails({ data, incidents, onRecord }: { data: AdminSystem; incidents: IncidentLog; onRecord: () => void }) {
+  const { t } = useI18n();
+  const folds = useSystemFolds(data, incidents.items);
+  return (
+    <div className="flex flex-col gap-6 max-lg:gap-4">
+      <PhoneFold name="announcements" title={t("adminStatus.title")}>
+        <AnnouncementsCard />
+      </PhoneFold>
+      {/* Full width: both tables have six columns. */}
+      <PhoneFold name="workers" title={t("adminSystem.workers.title")} summary={folds.workers}>
+        <WorkersCard workers={data.workers} />
+      </PhoneFold>
+      <PhoneFold name="circuits" title={t("providerCircuits.title")} summary={folds.circuits}>
+        <CircuitsCard circuits={data.circuits} />
+      </PhoneFold>
+      <PhoneFold name="lanes" title={t("adminSystem.lanes.title")} summary={folds.lanes}>
+        <LanesCard lanes={data.lanes} />
+      </PhoneFold>
+      <PhoneFold name="dead-letters" title={t("adminSystem.deadLetters.title")} summary={folds.deadLetters}>
+        <DeadLettersCard tallies={data.dead_jobs} />
+      </PhoneFold>
+      <PhoneFold name="reconciliation" title={t("platformBrakes.reconciliation.title")} summary={folds.reconciliation}>
+        <PaymentReconciliationCard />
+      </PhoneFold>
+      <PhoneFold name="data-tasks" title={t("dataTasks.title")}>
+        <DataTasksCard />
+      </PhoneFold>
+      <div className="grid gap-6 max-lg:gap-4 xl:grid-cols-2">
+        <PhoneFold name="channels" title={t("adminSystem.channels.title")} summary={folds.channels}>
+          <ChannelsCard
+            inError={data.channels_in_error}
+            inErrorCount={data.channels_in_error_count}
+            expiring={data.expiring_credentials}
+          />
+        </PhoneFold>
+        <PhoneFold name="backups" title={t("adminSystem.backups.title")} summary={folds.backups}>
+          <BackupsCard system={data} />
+        </PhoneFold>
+      </div>
+      <PhoneFold name="database" title={t("adminSystem.database.title")} summary={folds.database}>
+        <DatabaseCard totalBytes={data.database_bytes} tables={data.tables} />
+      </PhoneFold>
+      <PhoneFold name="incidents" title={t("adminSystem.incidents.title")} summary={folds.incidents}>
+        <IncidentsCard incidents={incidents} onRecord={onRecord} />
+      </PhoneFold>
+    </div>
   );
 }
 

@@ -19,4 +19,6 @@ export const adminReplySpeedEn = {
   seconds: "{value} s",
   minutes: "{value} min",
   issueLabel: "Slow replies",
+  /** The card folded into a row on a phone. */
+  fold: "Median {wait}",
 } as const;

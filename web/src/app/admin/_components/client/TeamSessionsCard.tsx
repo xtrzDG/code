@@ -3,12 +3,13 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import type { Schema } from "@/api/types";
 import { useMutation } from "@/api/useMutation";
-import { useQuery } from "@/api/useQuery";
 import { Badge, Button, Card, ConfirmDialog, ErrorState, SkeletonRows, UserContent, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
+import { useClientMembers } from "../../_lib/useClientCards";
 import { useClientFormat } from "../../_lib/useClientFormat";
 
 type Member = Schema<"ClientMemberSessionsView">;
@@ -32,17 +33,14 @@ export function TeamSessionsCard({
   const { t, tp } = useI18n();
   const toast = useToast();
   const { dateTime } = useClientFormat(timeZone);
-  const key = ["admin", "client", businessId, "members"] as const;
-  const members = useQuery(key, () =>
-    api.GET("/v1/admin/clients/{business_id}/members", { params: { path: { business_id: businessId } } }),
-  );
+  const members = useClientMembers(businessId);
   const [ending, setEnding] = useState<Member | null>(null);
   const end = useMutation(
     (member: Member) =>
       api.POST("/v1/admin/clients/{business_id}/members/{member_user_id}/sessions/revoke", {
         params: { path: { business_id: businessId, member_user_id: member.user_id } },
       }),
-    { invalidate: [key], errorToast: false },
+    { invalidate: [queryKeys.admin.clientMembers(businessId)], errorToast: false },
   );
   const nameOf = (member: Member) => member.display_name || member.masked_login || t("adminSessions.unnamed");
 

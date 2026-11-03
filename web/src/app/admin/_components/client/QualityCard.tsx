@@ -1,8 +1,5 @@
 "use client";
 
-import { api } from "@/api/client";
-import { queryKeys } from "@/api/queryKeys";
-import { useQuery } from "@/api/useQuery";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import { Alert, Badge, Card, ErrorState, Skeleton, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
@@ -13,6 +10,7 @@ import { useHydrated } from "@/lib/csp/clientStyle";
 import { formatNumber, languageName } from "@/lib/format";
 
 import { barHeight, hasWeekComparison, judgedDays, weakCriteria, type ClientQuality, type QualityDay } from "../../_lib/quality";
+import { useClientQuality } from "../../_lib/useClientCards";
 import { useClientFormat } from "../../_lib/useClientFormat";
 import { CRITERION_LABELS } from "../labels";
 
@@ -25,9 +23,7 @@ const BAR_TONES = { success: "bg-success", warning: "bg-warning", danger: "bg-da
  */
 export function QualityCard({ businessId, timeZone }: { businessId: string; timeZone: string }) {
   const { t } = useI18n();
-  const quality = useQuery(queryKeys.admin.clientQuality(businessId), () =>
-    api.GET("/v1/admin/clients/{business_id}/quality", { params: { path: { business_id: businessId } } }),
-  );
+  const quality = useClientQuality(businessId);
 
   return (
     <Card data-quality-card title={t("quality.admin.title")} description={t("quality.admin.description")}>

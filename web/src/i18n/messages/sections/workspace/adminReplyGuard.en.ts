@@ -19,4 +19,6 @@ export const adminReplyGuardEn = {
     "Someone keeps trying to change the assistant's instructions. The contacts are stopped for a day after three attempts; look at the conversations.",
   empty: "No checked replies in the last 7 days.",
   issueLabel: "Reply guard spike",
+  /** The card folded into a row on a phone. */
+  fold: "{share} held back",
 } as const;

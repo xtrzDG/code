@@ -3,10 +3,8 @@
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { InviteLinkPanel } from "@/components/referrals/InviteLinkPanel";
 import { useReferralProgram } from "@/components/referrals/useReferralProgram";
-import { Card } from "@/components/ui";
+import { Card, PhoneFold } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-
-import { PhoneFold } from "./PhoneFold";
 
 /**
  * "Invite a business — a month free" on the Overview (owners), from the

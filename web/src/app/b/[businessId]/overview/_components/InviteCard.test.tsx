@@ -7,7 +7,7 @@ import { BusinessProvider } from "@/components/business/BusinessContext";
 import { renderInLocale } from "@/test/render";
 
 import { InviteCard } from "./InviteCard";
-import { PhoneFolds } from "./PhoneFold";
+import { OverviewFolds } from "./PhoneFold";
 
 const program = vi.hoisted(() => ({ data: { is_invite_card_due: true } as { is_invite_card_due: boolean } | undefined }));
 
@@ -20,9 +20,9 @@ const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown a
 function Overview() {
   return (
     <BusinessProvider business={business} me={me}>
-      <PhoneFolds>
+      <OverviewFolds>
         <InviteCard />
-      </PhoneFolds>
+      </OverviewFolds>
     </BusinessProvider>
   );
 }

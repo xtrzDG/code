@@ -14,7 +14,7 @@ import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dat
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
 import { DayZeroIllustration } from "@/components/illustrations";
-import { Button, Card, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState, PhoneFold } from "@/components/ui";
 import type { ValueModel } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -24,7 +24,6 @@ import { BarList } from "./DashboardWidgets";
 import { toBars, type Bar } from "./dashboardModel";
 import { PackageCard } from "./PackageCard";
 import { PeriodTiles } from "./PeriodTiles";
-import { PhoneFold } from "./PhoneFold";
 import { TrendChart } from "./TrendChart";
 
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
