@@ -44,10 +44,18 @@ test("the chat page opens the business's chat in English at its current address,
     new RegExp(`/c/${business.slug}/privacy$`),
   );
 
-  // The visitor key stays in the browser, never in the address.
-  const sessionKey = await page.evaluate((id) => localStorage.getItem(`aw-chat:${id}:session`), business.id);
-  expect(sessionKey).toMatch(/^v1_/);
-  expect(page.url()).not.toContain(sessionKey ?? "-");
+  // The visitor key stays in the browser, never in the address, and on the
+  // chat page only for the tab: the conversation leaves with it.
+  const keys = await page.evaluate(
+    (id) => ({
+      tab: sessionStorage.getItem(`aw-chat:${id}:session`),
+      device: localStorage.getItem(`aw-chat:${id}:session`),
+    }),
+    business.id,
+  );
+  expect(keys.tab).toMatch(/^v1_/);
+  expect(keys.device).toBeNull();
+  expect(page.url()).not.toContain(keys.tab ?? "-");
   await expect(page.getByRole("textbox")).toBeEditable();
 });
 

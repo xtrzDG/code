@@ -44,7 +44,11 @@ test("the owner checks staff contacts and sees how notifications reach them", as
   // A Telegram chat is named, never shown by its numeric id.
   await expect(levan.getByText(en.notifications.contacts.telegramChat)).toBeVisible();
   await expect(levan).not.toContainText("777000111");
-  await expect(levan.getByText(en.notifications.contacts.providerMissing)).toBeVisible();
+  // The badge alone (the reason under the test button below repeats its words).
+  await expect(levan.getByText(en.notifications.contacts.providerMissing, { exact: true })).toBeVisible();
+  await expect(
+    levan.getByText(fill(en.notifications.contacts.providerMissingHint, { channel: en.settings.contacts.channels.telegram })),
+  ).toBeVisible();
 
   // A channel the server has no provider for (this suite has no SMTP and no
   // platform bot): no test to send, and the reason is read with the button.
