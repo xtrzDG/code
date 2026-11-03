@@ -281,11 +281,14 @@ Channel and calendar tokens are stored sealed with the newest key of
 `ENCRYPTION_KEYS`; older keys only open what they sealed until a platform
 admin's re-encryption run (`POST /v1/admin/security/encryption-keys/rotate`)
 moves everything to the newest one. Off-site backups are encrypted with
-age before they leave Render, into a bucket at another provider with
-Object Lock; their private keys are held by the restore drill's own machine in
-the EU and in escrow, never by the service that writes the backups. Production's backups are decrypted only on the platform's drill
-machine in the EU; GitHub-hosted runners restore synthetic data only
-(the workflow's production job stays off). Custody, escrow and the rotation runbook:
+age before they leave Render, into a bucket at another provider, in its own
+account, with Object Lock (set up, and proven delete-denied once a year,
+by the owner: `docs/operations/go-live.md`, section 6); their private keys
+are held by the restore drill's own machine in the EU, at a provider the
+DPA's list names, and in escrow, never by the service that writes the
+backups. Production's backups are decrypted only on that machine;
+GitHub-hosted runners restore synthetic data only (the workflow's
+production job stays off). Custody, escrow and the rotation runbook:
 [docs/operations/backup-restore.md](docs/operations/backup-restore.md).
 
 ### Governance documents

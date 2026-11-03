@@ -140,6 +140,14 @@ def test_github_hosted_runners_restore_no_production_backup_by_default() -> None
     assert production["environment"] == "backup-drill"
     assert all("GitHub" not in entry.name.model_dump_json() for entry in entries())
     assert "`RESTORE_DRILL_ON_GITHUB` unset" in register
+    # The drill machine sees production's data decrypted: its provider is a
+    # sub-processor before the drill's key reaches it.
+    backups = " ".join(read("docs/operations/backup-restore.md").split())
+    assert (
+        "before the drill key reaches the machine, its provider is in the "
+        "DPA's list for this purpose"
+    ) in backups
+    assert "never receives `BACKUP_AGE_IDENTITY`" in backups
     # The GitHub-hosted job of every night holds neither key nor bucket.
     hosted = str(jobs["round-trip"])
     assert "secrets." not in hosted

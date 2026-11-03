@@ -119,10 +119,11 @@ snapshot every night, encrypts it in the age format with the public keys of
 `BACKUP_AGE_PUBLIC_KEY` (no private key is on the servers) and stores it in
 another provider's EU bucket (`BACKUP_S3_*`) with a manifest: the rows of
 every table, the migrations, the tables under row-level security. Restore
-drills (`.github/workflows/restore-drill.yml`): every night a backup →
-restore round on the current code, every Monday a fresh production copy into
-a scratch database; rows, migrations and business isolation are checked and
-reported to Sentry Crons. To rotate the encryption key put the new key first
+drills: every night a backup → restore round on the current code with
+synthetic data (`.github/workflows/restore-drill.yml`), every Monday a fresh
+production copy into a scratch database on the platform's EU drill machine
+(never on GitHub's runners); rows, migrations and business isolation are
+checked and reported to Sentry Crons. To rotate the encryption key put the new key first
 in `ENCRYPTION_KEYS`, then a platform admin starts the re-encryption (cabinet
 → Encryption keys, or `POST /v1/admin/security/encryption-keys/rotate`). RPO,
 RTO, key custody and the step-by-step restore are in

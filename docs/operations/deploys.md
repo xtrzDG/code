@@ -717,8 +717,9 @@ report a broken flow right after a deploy:
    ```
 
    `scripts/rollback.py` takes the services that deploy `release` from
-   `render.yaml` (API, worker, batch worker, backup cron, cabinet; the API
-   first, the cabinet last), finds each one's last live deploy of that
+   `render.yaml` (API, worker, batch worker, cabinet, then the backup cron:
+   the API first, the cabinet after the workers, the cron that no customer
+   reaches at the end), finds each one's last live deploy of that
    commit and rolls it back through the Render API; it changes nothing
    when one service never ran that commit, and stops at the first refusal
    (`tests/platform/test_rollback_script.py`). By hand, the same: Render →
@@ -727,7 +728,10 @@ report a broken flow right after a deploy:
    commit, the only force push ever made to it: add "Repository admin" to
    the bypass of `release`'s ruleset, `git push --force-with-lease origin
    <good-commit>:release`, remove the bypass. Render then deploys that
-   commit, so the services stay on it.
+   commit, so the services stay on it. Should Render have switched a
+   service's auto-deploy off with the rollback, switch it on again
+   (service → Settings → Auto-Deploy), or the next promotion will not
+   reach it; the first rollback drill records whether it does.
 3. **Check.** Run the smoke workflow by hand (Actions → Deploy smoke test →
    Run workflow → production) and look at Sentry.
 4. **Data.** Documents the bad release wrote stay and are read tolerantly

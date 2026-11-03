@@ -48,6 +48,13 @@ The alert's detail line names both figures:
 
 ## Mitigate
 
+- Numbers rented through the platform (Twilio, `PHONE_NUMBER_PROVIDER`)
+  fall back by themselves when the voice platform does not take a call:
+  Twilio's voice fallback puts the caller through to the staff mobile on
+  duty (`app/gateways/http/twilio_voice_routes.py`), and an unanswered one
+  becomes a missed call with its text-back. Check the fallback dials show
+  in the missed calls; when the agent answers but fails inside calls, the
+  fallback does not fire, so treat those numbers like the next bullet.
 - Tell affected owners (template in `../incident.md`) to forward their
   number to a person for the duration: in Zadarma's cabinet (call
   forwarding) or their phone's own forwarding.

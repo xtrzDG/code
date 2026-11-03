@@ -1,7 +1,8 @@
 """
 The one-command rollback (scripts/rollback.py, REL-08): it rolls back
-every service of render.yaml that deploys `release`, the API first and the
-cabinet last, to the last live deploy of the good commit; without --apply
+every service of render.yaml that deploys `release`, the API first, the
+cabinet after the workers and the backup cron last, to the last live deploy
+of the good commit; without --apply
 it only plans, a service without such a deploy stops it before anything
 changes, and a refusal stops it at once.
 """
@@ -86,7 +87,13 @@ def test_every_service_of_release_is_rolled_back_in_the_runbooks_order() -> None
     services = release_services()
 
     assert set(services) == set(ROLLBACK_ORDER)
-    assert services[0] == "workshop-api" and services[-1] == "workshop-cabinet"
+    assert services[0] == "workshop-api"
+    # The cabinet follows the API and the workers; the backup cron, which no
+    # customer reaches, comes last, so its refusal leaves nobody on the bad
+    # commit.
+    assert services.index("workshop-cabinet") > services.index("workshop-worker")
+    assert services.index("workshop-cabinet") > services.index("workshop-batch-worker")
+    assert services[-1] == "workshop-backup"
 
 
 def test_without_apply_it_only_plans() -> None:

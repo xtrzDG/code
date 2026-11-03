@@ -7,12 +7,14 @@ Production rollback in one command (docs/operations/deploys.md, "Rollback"):
 
 Every service that deploys `release` (render.yaml) is rolled back, through
 the Render API, to its last successful deploy of <good-commit>: the API
-first, then the workers and the cron, the cabinet last, as the runbook
-orders them. Without --apply nothing changes: it prints which deploy each
-service would return to and stops with exit code 1 when a service has
-none. With --apply it rolls back service after service and stops at the
-first refusal. Moving `release` to the good commit (the ruleset bypass)
-stays the runbook's second step; the command for it is printed at the end.
+first, then the workers, then the cabinet, as the runbook orders them, and
+the backup cron at the very end, so a refusal there leaves no service
+customers use on the bad commit. Without --apply nothing changes: it
+prints which deploy each service would return to and stops with exit code
+1 when a service has none. With --apply it rolls back service after
+service and stops at the first refusal. Moving `release` to the good
+commit (the ruleset bypass) stays the runbook's second step; the command
+for it is printed at the end.
 
 Exit codes: 0 done (or the plan is complete), 1 a service has no deploy of
 that commit or Render refused, 2 wrong arguments or no RENDER_API_KEY.
@@ -33,13 +35,14 @@ RENDER_API: str = "https://api.render.com/v1"
 BLUEPRINT: Path = Path(__file__).resolve().parents[1] / "render.yaml"
 RELEASE_BRANCH: str = "release"
 # The runbook's order: the API before the code that reads what it writes,
-# the cabinet (which calls the API) last.
+# the cabinet (which calls the API) after both; the nightly backup cron,
+# which no customer reaches, at the very end.
 ROLLBACK_ORDER: tuple[str, ...] = (
     "workshop-api",
     "workshop-worker",
     "workshop-batch-worker",
-    "workshop-backup",
     "workshop-cabinet",
+    "workshop-backup",
 )
 COMMIT: re.Pattern[str] = re.compile(r"^[0-9a-f]{40}$")
 DEPLOY_PAGE: int = 100

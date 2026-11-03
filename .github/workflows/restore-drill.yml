@@ -8,7 +8,7 @@ name: Restore drill
 # - production, on Mondays and on demand: production's newest backup
 #   (the code of `release`) restored into a throwaway Postgres 16 and
 #   checked, with a Sentry Crons check-in (monitor restore-drill). Off
-#   unless the repository variables BACKUP_S3_BUCKET is set and
+#   unless the repository variable BACKUP_S3_BUCKET is set and
 #   RESTORE_DRILL_ON_GITHUB is "true": it decrypts production's data on a
 #   GitHub-hosted runner, a transfer to GitHub, which is no sub-processor.
 #   Turn it on only after GitHub is announced in the DPA's list (30 days'

@@ -527,7 +527,7 @@ Messenger и Instagram распознаёт модель OpenAI `LLM_TRANSCRIBE_
 от суперпользователя, затем `select workshop.enable_knowledge_embeddings();`
 от роли миграций (до этого поиск остаётся по словам, ключ ни на что не
 влияет). После этого резервные копии содержат расширение `vector`: сервер,
-на который их восстанавливают (учения `.github/workflows/restore-drill.yml` и запасной сервер
+на который их восстанавливают (учения `.github/workflows/restore-drill.yml`, машина учений и запасной сервер
 из docs/operations/backup-restore.md), должен предлагать pgvector, а на
 запасном сервере администратор заранее выполняет `create extension vector;`
 в `template1`. Эмбеддинги — новая цель субобработчика OpenAI: уведомление
@@ -1703,7 +1703,11 @@ Render сам делает снимки базы и восстанавливае
    Render, не GitHub): Postgres 16 с pgvector, ветка `release`, ключ учений
    к бакету, `BACKUP_AGE_IDENTITY` и `SENTRY_DSN`, еженедельный таймер с
    `restore_check --report` (`docs/operations/backup-restore.md`, «Where the
-   production drill runs»). Задача `production` в GitHub расшифровала бы
+   production drill runs»). Поставщик этой машины видит расшифрованные
+   данные production, поэтому он субобработчик: до того как ключ учений
+   попадёт на машину, он должен стоять в списке DPA с этой целью (проще
+   всего — поставщик бакета копий, его запись расширена и объявлена за 30
+   дней). Задача `production` в GitHub расшифровала бы
    данные production на машине GitHub — это передача GitHub, которого нет
    в списке субобработчиков; она выключена, пока переменная
    `RESTORE_DRILL_ON_GITHUB` не равна `true` (включать только после
@@ -2087,9 +2091,11 @@ Read-only» (имя секрета — в SECURITY.md).
    кабинета>` и раздел 7.
 5. **Окружения GitHub.** `staging` и `production` с переменными `API_URL` и
    `CABINET_URL` (у staging ещё `SMOKE_WIDGET_BUSINESS_ID` и
-   `SMOKE_EXPECT_REPLY`); `backup-drill` с секретами
+   `SMOKE_EXPECT_REPLY`); `backup-drill` пустое, пока переменная
+   `RESTORE_DRILL_ON_GITHUB` не задана: секреты учений
    `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` (ключ учений),
-   `BACKUP_AGE_IDENTITY` и `SENTRY_DSN`. Переменные репозитория
+   `BACKUP_AGE_IDENTITY` и `SENTRY_DSN` лежат на машине учений (шаг 6,
+   раздел 4.11). Переменные репозитория
    `PRODUCTION_API_URL`, `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`,
    `BACKUP_S3_BUCKET`, `SENTRY_ORG`, `SENTRY_PROJECT`; секреты репозитория
    `SENTRY_AUTH_TOKEN`, `REPO_SETTINGS_TOKEN`, ключи ночной оценки ответов

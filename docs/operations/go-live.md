@@ -44,7 +44,7 @@ What GitHub showed on that day, and why the steps come in this order:
 
 | Workflow | Cron (UTC) | Scheduled runs | What it still needs |
 | --- | --- | --- | --- |
-| `restore-drill.yml` | `23 2 * * *`, `41 3 * * 1` | the nightly round trip green every day since 2026-10-04 (run 40288959906); the Monday production job is skipped (run 40298721869) | step 6: `BACKUP_S3_BUCKET` and the `backup-drill` environment |
+| `restore-drill.yml` | `23 2 * * *`, `41 3 * * 1` | the nightly round trip green every day since 2026-10-04 (run 40288959906); the Monday production job is skipped (run 40298721869) | step 6: the drill machine (the workflow's production job stays off unless `RESTORE_DRILL_ON_GITHUB`) |
 | `perf.yml` | `17 4 * * 1` | green on 2026-10-26 (run 40304785133) after red runs on 10-05, 10-12 and 10-19 | step 10: the tier, and the baseline |
 | `evals-nightly.yml` | `23 2 * * *` | green every night (run 40288729650), but the benchmark is skipped | step 5: `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` |
 | `contracts-live.yml` | `47 3 * * *` | runs every night; the drift job is red whenever a vendor changed a specification (the "Provider drift" issue); the sandbox calls skip every provider without its secret | step 5: the sandbox secrets |
@@ -253,12 +253,12 @@ rest. Names only: the values are yours.
 | --- | --- | --- | --- |
 | environment `staging` | `API_URL`, `CABINET_URL`, `SMOKE_WIDGET_BUSINESS_ID` (step 2); `SMOKE_EXPECT_REPLY` stays empty (a real model answers staging's test chat, any answer passes) | none | `deploy-smoke.yml` |
 | environment `production` | `API_URL`, `CABINET_URL` (no smoke business unless one real model answer per deploy is wanted) | none | `deploy-smoke.yml` |
-| environment `backup-drill` | none | `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY` (the drill's read-only key), `BACKUP_AGE_IDENTITY` (the drill's private age key), `SENTRY_DSN` (the backend project) | `restore-drill.yml`, production job |
+| environment `backup-drill` | none | only while `RESTORE_DRILL_ON_GITHUB` is `true` (GitHub announced as a sub-processor first, `docs/operations/vendor-register.md`): `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY` (the drill's read-only key), `BACKUP_AGE_IDENTITY` (the drill's private age key), `SENTRY_DSN` (the backend project); otherwise empty, the drill machine holds them (step 6) | `restore-drill.yml`, production job |
 | environment `production-release` (required reviewers, `main` as its only branch) | none | `RELEASE_DEPLOY_KEY` (the private half of a deploy key with write access, docs/operations/deploys.md, "One-time setup") | `deploy-smoke.yml`, the promotion to `release` |
 | repository | `PRODUCTION_URL` (the production API's https address, as `PRODUCTION_API_URL`), `MONITORING_BUSINESS_ID` (a live business kept for the checks: open for a booking for one at 12:00 every day, its staff notifications off), `PRODUCTION_CABINET_URL` (optional) | `MONITORING_API_KEY` (an API key of that business with `bookings:write`) | `synthetics.yml`, every hour; a run without them fails and names what is missing |
 | repository | `STAGING_URL` (the staging API's https address) | `STAGING_SCAN_API_KEY` (an API key of a staging business that exists for the scan, every scope) | `zap-staging.yml`, every Sunday; never production |
 | repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` asks for the approval only in a run started by hand, docs/operations/deploys.md) | none | `deploy-smoke.yml` |
-| repository | `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_PREFIX` (optional, `workshop/` by default) | none | `restore-drill.yml`: the Monday drill runs only once `BACKUP_S3_BUCKET` is set |
+| repository | `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_PREFIX` (optional, `workshop/` by default), `RESTORE_DRILL_ON_GITHUB` (leave unset: the production drill runs on the drill machine, step 6) | none | `restore-drill.yml`: the Monday job runs only once `BACKUP_S3_BUCKET` is set and `RESTORE_DRILL_ON_GITHUB` is `true` |
 | repository | `SENTRY_ORG`, `SENTRY_PROJECT` (step 7) | `SENTRY_AUTH_TOKEN` (step 7) | `ci.yml`, the cabinet's source maps |
 | repository | `LEGAL_TEXTS_FINAL` (`true` once the lawyer approved the legal texts, docs/legal/README.md) | none | `ci.yml` |
 | repository | none | `REPO_SETTINGS_TOKEN` (step 1) | `repo-settings.yml` |
@@ -312,8 +312,9 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    age-keygen -o escrow.txt && age-keygen -y escrow.txt   # prints the escrow public key
    ```
 
-   The drill's private key becomes the secret `BACKUP_AGE_IDENTITY` of
-   `backup-drill`. The escrow key is printed, sealed in the company safe and
+   The drill's private key becomes `BACKUP_AGE_IDENTITY` on the drill
+   machine (item 6), never a GitHub secret while the workflow's production
+   job is off. The escrow key is printed, sealed in the company safe and
    copied into the founders' password manager; two named people can reach
    it. Then delete both files from the machine.
 4. Render, `workshop-backup`: `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`,
@@ -323,10 +324,13 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    `workshop-batch-worker`: the same bucket and public keys with the
    ledger's key. Retention (`BACKUP_KEEP_DAILY`, `BACKUP_KEEP_MONTHLY`)
    and the overdue mark (`BACKUP_MAX_AGE_HOURS`) have defaults.
-5. GitHub: the repository variables and the `backup-drill` secrets of
-   step 5.
+5. GitHub: the repository variables of step 5 (`backup-drill` stays
+   empty while `RESTORE_DRILL_ON_GITHUB` is unset).
 6. The drill machine of the production drill: a small VM in Germany at a
-   provider other than Render, with Postgres 16 and pgvector, the
+   provider other than Render that the DPA's list already names for the
+   restore test (the backup bucket's provider, its list entry widened and
+   announced 30 days ahead: `docs/operations/backup-restore.md`, "Where
+   the production drill runs"), with Postgres 16 and pgvector, the
    `release` checkout, the drill's bucket key and `BACKUP_AGE_IDENTITY`,
    and the weekly timer of `docs/operations/backup-restore.md` ("Where the
    production drill runs"). Leave `RESTORE_DRILL_ON_GITHUB` unset: the
@@ -375,7 +379,8 @@ Check:
    `workshop-worker`, `workshop-batch-worker` and `workshop-backup` copy
    it. `SENTRY_DSN` of the cabinet project on `workshop-cabinet`. The same
    on `workshop-staging-api` and `workshop-staging-cabinet` with staging's
-   projects, and the backend DSN as the `backup-drill` secret.
+   projects, and the backend DSN on the drill machine (and as the
+   `backup-drill` secret only while `RESTORE_DRILL_ON_GITHUB` is on).
 3. Readable cabinet stack traces: the repository secret
    `SENTRY_AUTH_TOKEN` (an organization token that may upload releases)
    and the repository variables `SENTRY_ORG` and `SENTRY_PROJECT` (the

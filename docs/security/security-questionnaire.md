@@ -16,10 +16,10 @@ checks that every answer cites evidence that exists.
 
 | # | Question | Answer | Evidence |
 | --- | --- | --- | --- |
-| 1 | Do you have an information security policy? | Yes, approved by the founder, reviewed yearly and acknowledged by everyone with access. | `docs/security/information-security-policy.md` |
+| 1 | Do you have an information security policy? | Yes: written, reviewed yearly, to be signed by the founder and acknowledged by everyone before access (the acknowledgment table of the policy; the first signatures are a launch step: quote the table's state, never more). | `docs/security/information-security-policy.md` |
 | 2 | Do you keep a risk register? | Yes: likelihood, impact, owner and treatment per risk, AI, telephony fraud, payments and privacy included, reviewed yearly. | `docs/security/risk-register.md` |
 | 3 | Do you hold SOC 2 or ISO 27001? | Not yet. The controls are documented and evidenced; a SOC 2 Type I is planned when customers require it (roadmap). Vendor reports (Render, OpenAI, Stripe and others) are available on request. | `docs/security/roadmap.md`, `docs/operations/vendor-register.md` |
-| 4 | Is staff trained on security and AI? | Yes, before first access and yearly, with records. | `docs/security/ai-literacy.md` |
+| 4 | Is staff trained on security and AI? | The training (AI capabilities and limits, prompt injection and social engineering, data protection, incidents) is written and is given before first access and yearly, with records per person; quote the records table as it stands (the first session is planned there). | `docs/security/ai-literacy.md` |
 | 5 | Which laws apply to you? | GDPR (processor and controller), the AI Act (provider of a limited-risk system), the Data Act switching rules, the Italian Codice privacy; NIS2 and the CRA do not apply today. | `docs/security/regulatory-register.md` |
 
 ## Data protection
@@ -27,7 +27,7 @@ checks that every answer cites evidence that exists.
 | # | Question | Answer | Evidence |
 | --- | --- | --- | --- |
 | 6 | Do you sign a DPA? | Yes, every business accepts the Art. 28 DPA in the cabinet; the accepted version and time are recorded. | `docs/legal/dpa-2026-10-06.en.md`, `docs/legal/drafts/dpa-art28-annex.md` |
-| 7 | Where is our data stored? | In the EU: application and database in Frankfurt; language model and voice in EU residency; backups at another EU provider. | `docs/security/data-classification.md` |
+| 7 | Where is our data stored? | In the EU: application and database in Frankfurt; language model and voice in EU residency; backups at another EU provider. Outside the EU only where the list of sub-processors says so, each with its transfer mechanism (the optional quality review, the messengers and calendars a business connects). | `docs/security/data-classification.md` |
 | 8 | Which sub-processors do you use, and under which transfer mechanism? | The public list gives purpose, location and mechanism for each, with 30 days' notice of changes. | `GET /v1/legal/subprocessors`, `app/registries/legal/` |
 | 9 | Do you train AI models on our data? | No, and the model providers' contracts exclude training. | DPA 2.3, `docs/security/ai-components.md` |
 | 10 | Can we export and delete data? | Yes: per customer and for the whole business, from the cabinet; deletion reaches the sub-processors' copies and comes with a certificate. | `docs/help/en/privacy.md` |
@@ -61,8 +61,8 @@ checks that every answer cites evidence that exists.
 | # | Question | Answer | Evidence |
 | --- | --- | --- | --- |
 | 25 | What are your RPO and RTO? | Internally RPO 5 minutes (point-in-time recovery) and 24 hours for the loss of the hosting account, RTO 2 hours; the SLA draft commits to RPO 15 minutes and RTO 4 hours. | `docs/operations/backup-restore.md`, `docs/legal/drafts/sla.md` |
-| 26 | Are backups tested? | A nightly automated restore of a seeded database and a weekly one of production's newest backup, with integrity checks and timings; a timed full restore every quarter, recorded (the first is planned with the launch setup). | `docs/operations/restore-test-report.md` |
-| 27 | Are backups immutable? | The off-site bucket is set up at a separate provider and account with Object Lock in compliance mode (31 days) and deleted versions kept 400 days, so no application or deploy key can destroy a backup within the retention window; the delete-denied test is recorded at setup. | `docs/operations/backup-restore.md`, `docs/operations/go-live.md` |
-| 28 | What happens if the assistant is down? | Calls go to the business's own phone; chats wait for the team; the status page shows each component. | `docs/operations/runbooks/voice-outage.md`, `docs/operations/status-page.md` |
+| 26 | Are backups tested? | A nightly automated restore of a seeded database; a weekly one of production's newest backup on the platform's EU drill machine once it is set up at launch, with integrity checks and timings; a timed full restore every quarter, recorded (the first is planned with the launch setup). | `docs/operations/restore-test-report.md` |
+| 27 | Are backups immutable? | The off-site bucket is created at launch at a separate provider and account with Object Lock in compliance mode (31 days) and deleted versions kept 400 days, so no application or deploy key can destroy a backup within the retention window; the delete-denied test is recorded at setup and yearly (quote its row of the report). | `docs/operations/backup-restore.md`, `docs/operations/go-live.md` |
+| 28 | What happens if the assistant is down? | Calls to numbers rented through the platform go to the staff mobile on duty by themselves; on its own numbers the business switches on forwarding, and we tell it when; chats wait for the team; the status page shows each component. | `docs/operations/runbooks/voice-outage.md`, `docs/operations/status-page.md` |
 | 29 | Do you have an incident response plan? | Yes: severities, roles (lead, scribe, communicator, privacy lead), clocks (48 hours to businesses, 72 hours to the Garante, the PSP's deadline), postmortems and a yearly tabletop. | `docs/operations/incident.md`, `docs/operations/tabletop.md` |
 | 30 | What availability do you commit to? | The SLA draft: 99.5% monthly for the assistant's answers, with support hours and credits; to be adopted with the terms. | `docs/legal/drafts/sla.md`, `docs/operations/slo.md` |

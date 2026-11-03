@@ -56,7 +56,11 @@ it on is a transfer to GitHub (US, its DPA with DPF and SCCs) that must
 first be announced in the DPA's list with 30 days' notice. Until then the
 `backup-drill` environment's copy of the drill's private age key is not
 needed and can be deleted (it opens backups but reaches no bucket by
-itself).
+itself). The drill machine's own provider sees production's data
+decrypted, so it is a sub-processor too: it gets the drill's key only once
+the DPA's list names it for the restore test (the backup bucket's
+provider, its object storage entry widened and announced 30 days ahead;
+`docs/operations/backup-restore.md`, "Where the production drill runs").
 
 **If the Data Privacy Framework falls.** The EU-US framework is challenged
 before the Court of Justice (the Latombe appeal, C-703/25 P). Every vendor

@@ -47,6 +47,7 @@ by staff in the cabinet, never by the assistant). Where it is used:
 | Use | What it sees | Decision about a person? |
 | --- | --- | --- |
 | The deposit report (`app/utilities/deposits/deposit_report_math.py`) | the business's no-show rate with and without deposits, as counts and a percent over a period | no: an aggregate for the owner; deposits are set per place, service or banquet (`DepositTarget`), never per customer |
+| The deposit of that booking (`app/utilities/deposits/deposit_settlement.py`) | that one booking's own status | about that booking only, under the deposit terms the customer saw when paying: a paid deposit is kept when staff mark the booking a no-show (staff can undo the status for ten minutes, and the money is in the business's own payment account, which can still refund it); never about the person's other bookings |
 | Rebooking campaigns (`app/use_cases/campaigns/campaign_targets.py`) | whether a customer's later booking was cancelled or a no-show, so it does not count as "came back" | no: it only decides whether an invitation the customer consented to is still useful; no-shows are never invited for being no-shows |
 | The customer's card | the bookings with their statuses, the team's tags, VIP and block | the team's own decisions (a block is set by a person and can be lifted) |
 | The assistant's memory of a customer (`app/utilities/conversations/memory_facts.py`) | a short summary of facts from earlier conversations, filtered of instructions and claimed exemptions | no: it keeps context for the next answer; it holds no booking outcomes or scores |
@@ -67,7 +68,7 @@ rule; a deposit, a booking limit or a refusal that depends on a person's
 history; a shared list of customers across businesses (never: each
 business's data stays its own); and emotion or sentiment analysis of
 callers (`docs/security/ai-act-assessment.md`). The pull request template
-asks for it (`.github/pull_request_template.md`, "Data").
+asks for it (`.github/pull_request_template.md`, "Records of processing").
 
 ## Necessity and proportionality
 

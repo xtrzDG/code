@@ -252,10 +252,10 @@ everything new; the others only open and verify what they sealed.
 
 Sentry Crons monitor `restore-drill` (weekly, with margin) gets the
 production drill's check-ins; a failed check is reported as an error with
-the list. Where the drill runs with `DATABASE_URL` (a weekly Render cron
-next to production) it records its run for `/admin/system` like the
-backup; the GitHub workflow cannot reach Render's private database, so
-its drills show in Sentry Crons and the workflow's history only. Exit
+the list. Where the drill runs with `DATABASE_URL` it records its run for
+`/admin/system` like the backup; the drill machine and the GitHub workflow
+cannot reach Render's private database, so their drills show in Sentry
+Crons and their reports only. Exit
 codes: 0 the backup restores, 1 a check or the restore failed, 2 not
 configured.
 
@@ -269,7 +269,7 @@ configured.
 - `production`, Mondays and on demand: checks out `release` (the code
   production runs), restores production's newest backup into a throwaway
   Postgres 16 and checks it. **Off by default**: it runs only when the
-  repository variables `BACKUP_S3_BUCKET` is set and
+  repository variable `BACKUP_S3_BUCKET` is set and
   `RESTORE_DRILL_ON_GITHUB` is `true`, because it decrypts production's
   data on a GitHub-hosted runner, a transfer to GitHub that the DPA's list
   does not name. Turn it on only after GitHub is announced as a
@@ -288,7 +288,9 @@ provider other than Render (e.g. Hetzner or Scaleway in Germany), with
 Postgres 16 and pgvector for the scratch database, this repository's
 `release` checkout, the drill's read-only bucket key and
 `BACKUP_AGE_IDENTITY`, and nothing else of the platform. A weekly timer
-(Monday 03:41 UTC) runs
+(Monday 03:41 UTC) first brings the checkout to `release` (`git fetch`
+with a read-only deploy key, `git checkout --detach origin/release`,
+`uv sync --frozen`), so the drill runs the code production runs, then
 `uv run python -m app.gateways.cli.restore_check --report <dated file>`
 with `SENTRY_DSN` set, so Sentry Crons `restore-drill` sees each run and
 the reports stay on the machine for the quarterly record. GitHub-hosted
@@ -296,6 +298,17 @@ runners restore synthetic data only, so GitHub is no sub-processor
 (`docs/operations/vendor-register.md`, "GitHub and the restore drill").
 Until the machine exists, the weekly production proof does not run (an
 owner action of `docs/operations/go-live.md`, section 6).
+
+Not on Render, because the drill's key opens twelve months of history,
+customers erased since included: kept off Render, a compromise of the
+Render account reaches today's data, not the backups'. But the machine's
+provider sees production's data decrypted, so it is a sub-processor like
+any other: **before the drill key reaches the machine, its provider is in
+the DPA's list for this purpose**. The simplest is the backup bucket's own
+provider: the list's EU object storage entry (`app/registries/legal/`)
+then names the weekly restore test of the backups as a purpose of its own,
+announced 30 days ahead like any change of the list (DPA 8.3). A provider
+the list does not name never receives `BACKUP_AGE_IDENTITY`.
 
 Both install the Postgres 17 client: the image's `pg_dump` is Debian's 17,
 and an archive opens only with a `pg_restore` at least as new.
