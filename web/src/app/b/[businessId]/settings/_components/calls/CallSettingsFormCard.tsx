@@ -9,7 +9,7 @@ import { AutosaveHint } from "@/components/forms/AutosaveHint";
 import { SavePill } from "@/components/forms/SavePill";
 import type { FieldSaveState } from "@/components/forms/autosaveTypes";
 import { useAutosaveForm } from "@/components/forms/useAutosaveForm";
-import { Alert, ButtonLink, Card, Field, Input } from "@/components/ui";
+import { Alert, ButtonLink, Card, Field, Input, PhoneFold } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -65,7 +65,7 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
   const pill = (field: keyof CallSettingsForm) => <SavePill state={form.fieldState(field)} onRetry={form.retry} />;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex justify-end">
         <AutosaveHint state={form.state} />
       </div>
@@ -144,19 +144,26 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
         </div>
       </Card>
 
-      <RecordingCard
-        isRecording={values.isRecordingEnabled}
-        businessName={business.name}
-        switchRow={
-          <SwitchRow
-            label={t("callSettings.recording.toggle")}
-            checked={values.isRecordingEnabled}
-            status={form.fieldState("isRecordingEnabled")}
-            onRetry={form.retry}
-            onChange={(isRecordingEnabled) => form.update("isRecordingEnabled", isRecordingEnabled)}
-          />
-        }
-      />
+      {/* On a phone a row with the recording's state (CallsTab): most of the card is what callers hear. */}
+      <PhoneFold
+        name="recording"
+        title={t("callSettings.recording.title")}
+        summary={t(values.isRecordingEnabled ? "callSettings.recording.stateOn" : "callSettings.recording.stateOff")}
+      >
+        <RecordingCard
+          isRecording={values.isRecordingEnabled}
+          businessName={business.name}
+          switchRow={
+            <SwitchRow
+              label={t("callSettings.recording.toggle")}
+              checked={values.isRecordingEnabled}
+              status={form.fieldState("isRecordingEnabled")}
+              onRetry={form.retry}
+              onChange={(isRecordingEnabled) => form.update("isRecordingEnabled", isRecordingEnabled)}
+            />
+          }
+        />
+      </PhoneFold>
 
       <TransferCard
         readiness={transferReadiness(values, form.stored)}

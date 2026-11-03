@@ -557,7 +557,8 @@ web/
                                ErrorState, Skeleton kit (Skeleton, SkeletonText, SkeletonRows,
                                SkeletonCard, SkeletonCardList, SkeletonPageHeader, LoadingRegion),
                                Spinner, LoadingBlock, PageHeader, Alert, TimeField, DateField,
-                               DateTimeField (the cabinet's clock and calendar, see Forms)
+                               DateTimeField (the cabinet's clock and calendar, see Forms),
+                               PhoneFold / PhoneFolds (a card folded into a row below `lg`)
       forms/                   settings forms that save themselves: useAutosaveForm (the save loop in
                                autosaveEngine.ts), SavePill (a field's "Saved"), AutosaveHint (the
                                form's line), saveTracking (the counter SaveTracker shares)
@@ -898,6 +899,19 @@ them, answer a person, and take back a wrong tap.
   rows with their leading number (`PhoneFold`); which ones a person opened
   is remembered for them in this browser (`overview-open`). From `lg` the
   folds take no box and the page is as before.
+- **Platform admin's System and client pages** (`admin/_components/system/SystemScreen.tsx`,
+  `AdminClientScreen.tsx`): the same `PhoneFold` of the UI kit. On the
+  System page the brakes, the alerts, the held campaigns and the error
+  budgets stay open and every card after them is a row with its figure or
+  state, red or amber when it wants a look (`systemFolds.tsx`: workers,
+  circuits, queues, dead letters, payments, channels, backups, database,
+  incidents); on a client's page the team's sign-ins, reply speed, reply
+  guard, quality and cost fold (`clientFolds.tsx`). Remembered as
+  `admin-system-open` and `admin-client-open`.
+- **Settings → Calls** (`settings/_components/CallsTab.tsx`): the switches
+  stay open; the recording (its state in the row), the template texts for
+  Meta (how many languages) and the latest text-backs (how many) fold
+  (`settings-calls-open`).
 - **Offer lines** (`components/setup/offer/OfferLine.tsx`, the tunnel's
   offer step and Profile → What you offer): the name and the price share one
   row, an example's tag sits on the line's frame and removing is in the

@@ -51,6 +51,8 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     noticePrivacy: "{business} è titolare del trattamento dei suoi dati e li usa solo per gestire la sua richiesta. Per l'informativa privacy completa, mi chieda il link o consulti la nostra pagina web.",
     noticeHint: "In ogni lingua della tua attività. Chi chiama può rifiutare la registrazione e la chiamata prosegue senza; chi è titolare dei suoi dati, per cosa li usa e dove leggere l'informativa completa vengono detti sia che tu registri sia che non registri.",
     turnedOff: "La registrazione delle chiamate è disattivata",
+    stateOn: "Attiva",
+    stateOff: "Disattivata",
   },
   transfers: {
     title: "Trasferimenti al personale",
@@ -75,6 +77,10 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
     description:
       "Crea in Meta Business Manager un modello WhatsApp di utilità con questo testo, con una traduzione per ogni lingua; il suo unico parametro è il nome della tua attività. Chi chiama lo riceve nella sua lingua, oppure in inglese se manca la traduzione.",
     body: "Testo per il modello",
+    languages: {
+      one: "{count} lingua",
+      other: "{count} lingue",
+    },
   },
   history: {
     title: "Ultimi messaggi dopo le chiamate perse",

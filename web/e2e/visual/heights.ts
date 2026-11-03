@@ -26,9 +26,8 @@ const LONG_PHONE_PAGES: readonly (readonly [RegExp, number])[] = [
   [/\/b\/[^/]+\/settings$/, 4.75],
   [/\/assistant\/channels$/, 4.25],
   [/\/b\/[^/]+\/overview$/, 4.25],
-  [/^\/admin\/system$/, 7],
   [/^\/admin\/metrics$/, 7.5],
-  [/^\/admin\/clients\/[^/]+$/, 8.25],
+  [/^\/admin\/clients\/[^/]+$/, 5.25],
 ];
 
 /** The phone screens a page may take: four, or its budget in LONG_PHONE_PAGES. */

@@ -21,6 +21,7 @@ import { adminReplySpeedEn } from "./workspace/adminReplySpeed.en";
 import { adminSecurityEn } from "./workspace/adminSecurity.en";
 import { adminSpendEn } from "./workspace/adminSpend.en";
 import { adminSystemEn } from "./workspace/adminSystem.en";
+import { adminSystemFoldsEn } from "./workspace/adminSystemFolds.en";
 import { dataTasksEn } from "./workspace/dataTasks.en";
 import { providerCircuitsEn } from "./workspace/providerCircuits.en";
 import { platformBrakesEn } from "./workspace/platformBrakes.en";
@@ -79,7 +80,7 @@ export const workspaceEn = {
   adminStory: adminStoryEn,
   adminReplySpeed: adminReplySpeedEn,
   adminReplyGuard: adminReplyGuardEn,
-  adminSystem: adminSystemEn,
+  adminSystem: { ...adminSystemEn, folds: adminSystemFoldsEn },
   adminTeam: adminTeamEn,
   adminIncident: adminIncidentEn,
   share: shareEn,

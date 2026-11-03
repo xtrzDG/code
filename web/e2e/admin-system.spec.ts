@@ -3,7 +3,8 @@
  * letters, channels, backups and database of the e2e API, and recording a
  * personal data breach for one business, which notifies its owner and
  * writes an entry in that business's audit log. Owners get "Page not
- * found"; on a phone the page fits and passes the accessibility audit.
+ * found"; on a phone the cards after the error budgets fold into rows that
+ * open on a tap, and the page fits and passes the accessibility audit.
  */
 
 import AxeBuilder from "@axe-core/playwright";
@@ -136,7 +137,16 @@ test.describe("on a phone", () => {
 
       await page.goto("/admin/system");
       await expect(page.getByRole("heading", { level: 1, name: texts.title })).toBeVisible();
-      await expect(page.getByRole("region", { name: texts.lanes.title })).toBeVisible();
+      await expect(page.getByRole("region", { name: texts.alerts.title })).toBeVisible();
+      // The queues are a folded row with their due jobs; a tap opens the card.
+      const lanes = page.getByRole("region", { name: texts.lanes.title });
+      const lanesRow = page.getByRole("button", { name: new RegExp(`^${texts.lanes.title}`) });
+      await expect(lanes).toBeHidden();
+      await expect(lanesRow).toHaveAttribute("aria-expanded", "false");
+      await expect(lanesRow).toContainText(/\d+ due/);
+      await lanesRow.click();
+      await expect(lanesRow).toHaveAttribute("aria-expanded", "true");
+      await expect(lanes.getByRole("rowheader", { name: texts.lanes.names.inbound })).toBeVisible();
       await waitForNetworkQuiet(page);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();

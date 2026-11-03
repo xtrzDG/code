@@ -164,10 +164,14 @@ test("the latest text-backs say what each caller got", async ({ page, owner }) =
   ).toBeVisible();
 });
 
-test("on a phone Settings → Calls fits the screen", async ({ page, owner }) => {
+test("on a phone Settings → Calls fits the screen, the template texts folded into a row", async ({ page, owner }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`/b/${owner.businessId}/settings/calls`);
 
+  const template = page.getByRole("button", { name: new RegExp(`^${calls.template.title}`) });
+  await expect(template).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("heading", { name: calls.template.title })).toBeHidden();
+  await template.click();
   await expect(page.getByRole("heading", { name: calls.template.title })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);

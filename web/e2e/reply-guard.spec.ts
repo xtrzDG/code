@@ -5,6 +5,8 @@
  * change the assistant's instructions — the verdicts seeding stored on the
  * replies (Lukas Weber's corkage fee passed to staff, a Georgian reply
  * rewritten for an unsupported parking claim), as the inbox shows them.
+ * On a phone the card is a folded row with the share held back; a tap
+ * opens it.
  */
 
 import { signInAsPlatformAdmin } from "./support/admin";
@@ -22,6 +24,10 @@ test("the platform admin sees what the reply guard did for the demo restaurant",
   const page = await context.newPage();
 
   await page.goto(`/admin/clients/${owner.businessId}`);
+  const row = page.getByRole("button", { name: new RegExp(`^${en.adminReplyGuard.title}`) });
+  await expect(row).toHaveAttribute("aria-expanded", "false");
+  await expect(row).toContainText(new RegExp(en.adminReplyGuard.fold.replace("{share}", "\\d+%")));
+  await row.click();
   const card = page.locator("section", { has: page.getByRole("heading", { level: 2, name: en.adminReplyGuard.title }) });
   const fact = (label: string) =>
     card

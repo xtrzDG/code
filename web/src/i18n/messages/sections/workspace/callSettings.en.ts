@@ -53,6 +53,9 @@ export const callSettingsEn = {
     noticePrivacy: "{business} is responsible for your data and uses it only to handle your request. For the full privacy notice, ask me for the link or see our web page.",
     noticeHint: "In each language of your business. Callers may say no to the recording and the call goes on without one; who is responsible for their data, what it is used for and where to read the full privacy notice are said whether or not you record.",
     turnedOff: "Call recording is off",
+    /** The card folded into a row on a phone: whether calls are recorded. */
+    stateOn: "On",
+    stateOff: "Off",
   },
   transfers: {
     title: "Transfers to staff",
@@ -77,6 +80,11 @@ export const callSettingsEn = {
     description:
       "Create a WhatsApp utility template with this text in Meta Business Manager, one translation per language; its only parameter is your business name. Callers get it in their language, or in English when there is no translation.",
     body: "Text for the template",
+    /** The card folded into a row on a phone: how many translations it holds. */
+    languages: {
+      one: "{count} language",
+      other: "{count} languages",
+    },
   },
   history: {
     title: "Latest text-backs",

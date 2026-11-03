@@ -16,6 +16,7 @@ import { adminSecurityIt } from "./adminSecurity.it";
 import { adminSpendIt } from "./adminSpend.it";
 import { adminStoryIt } from "./adminStory.it";
 import { adminSystemIt } from "./adminSystem.it";
+import { adminSystemFoldsIt } from "./adminSystemFolds.it";
 import { adminTeamIt } from "./adminTeam.it";
 import { billingIt } from "./billing.it";
 import { billingCardIt } from "./billingCard.it";
@@ -74,7 +75,7 @@ export const workspaceIt: Translation<typeof workspaceEn> = {
   adminStory: adminStoryIt,
   adminReplySpeed: adminReplySpeedIt,
   adminReplyGuard: adminReplyGuardIt,
-  adminSystem: adminSystemIt,
+  adminSystem: { ...adminSystemIt, folds: adminSystemFoldsIt },
   adminTeam: adminTeamIt,
   adminIncident: adminIncidentIt,
   share: shareIt,

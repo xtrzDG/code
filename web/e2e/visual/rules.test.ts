@@ -66,6 +66,8 @@ describe("the phone height rule", () => {
     expect(phoneScreensAllowed("/b/business_1/assistant/knowledge")).toBe(7);
     expect(phoneScreensAllowed("/b/business_1/settings")).toBe(4.75);
     expect(phoneScreensAllowed("/b/business_1/settings/team")).toBe(4);
-    expect(phoneScreensAllowed("/admin/clients/business_1")).toBe(8.25);
+    expect(phoneScreensAllowed("/admin/clients/business_1")).toBe(5.25);
+    // Folded on a phone (its cards after the error budgets are rows): back within four screens.
+    expect(phoneScreensAllowed("/admin/system")).toBe(4);
   });
 });
