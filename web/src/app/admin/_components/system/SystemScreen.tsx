@@ -147,7 +147,7 @@ function SystemDetails({ data, incidents, onRecord }: { data: AdminSystem; incid
       <PhoneFold name="reconciliation" title={t("platformBrakes.reconciliation.title")} summary={folds.reconciliation}>
         <PaymentReconciliationCard />
       </PhoneFold>
-      <PhoneFold name="data-tasks" title={t("dataTasks.title")}>
+      <PhoneFold name="data-tasks" title={t("dataTasks.title")} summary={folds.dataTasks}>
         <DataTasksCard />
       </PhoneFold>
       <div className="grid gap-6 max-lg:gap-4 xl:grid-cols-2">

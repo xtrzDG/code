@@ -6,6 +6,7 @@ import { queryCache } from "@/api/queryCache";
 import { answerGet, failure, ok, pending } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
+import type { DataTasksView } from "../../_lib/dataTasks";
 import type { Incident } from "../../_lib/incidentForm";
 import type { PaymentReconciliation } from "../../_lib/platformBrakes";
 import type { AdminSystem, ChannelIssue, Lane, MaintenanceRun, WorkerPulse } from "../../_lib/system";
@@ -72,6 +73,25 @@ function system(overrides: Partial<AdminSystem> = {}): AdminSystem {
 
 const matched: PaymentReconciliation = { day: "2026-11-02", ran_at: NOW, checked_count: 12, unreadable_count: 0, mismatches: [] };
 
+/** The post-deploy data tasks after a settled deploy: every task done. */
+function dataTasks(overrides: Partial<DataTasksView> = {}): DataTasksView {
+  return {
+    tasks: [],
+    open_count: 0,
+    failed_count: 0,
+    stalled_count: 0,
+    batch_size: 5000,
+    checked_at: NOW,
+    rollout: { is_settled: true, release: "4718714", other_releases: [], settles_at: null },
+    ...overrides,
+  };
+}
+
+/** The reconciliation and the data tasks the page's own reads answer. */
+function answerReads(reconciliation: PaymentReconciliation, tasks: DataTasksView = dataTasks()) {
+  answerGet((path) => (path === "/v1/admin/system/data-tasks" ? ok(tasks) : ok(reconciliation)));
+}
+
 function Probe({ data, incidents }: { data: AdminSystem; incidents?: Incident[] }) {
   const folds = useSystemFolds(data, incidents);
   return (
@@ -96,7 +116,7 @@ const said = (name: keyof SystemFolds) => {
 describe("useSystemFolds: what the System page's folded rows say on a phone", () => {
   beforeEach(() => {
     queryCache.clear();
-    answerGet(() => ok(matched));
+    answerReads(matched);
   });
 
   it.each(["en", "it"] as const)("says each healthy card's figure plainly, in %s", async (locale) => {
@@ -112,11 +132,27 @@ describe("useSystemFolds: what the System page's folded rows say on a phone", ()
     expect(said("database").text).toBe(t("adminSystem.bytes.gb", { value: locale === "it" ? "4,2" : "4.2" }));
     expect(said("incidents")).toEqual({ text: t("adminSystem.folds.noneOpen"), tone: null });
     await waitFor(() => expect(said("reconciliation")).toEqual({ text: t("adminSystem.folds.allMatch"), tone: null }));
+    await waitFor(() => expect(said("dataTasks")).toEqual({ text: t("adminSystem.folds.noneOpen"), tone: null }));
   });
 
   it("colours what wants a look", async () => {
     const { t, tp } = textsIn("en");
-    answerGet(() => ok({ ...matched, mismatches: [{ payment_order_id: "payment_order_1" }] }));
+    answerReads(
+      {
+        ...matched,
+        mismatches: [
+          {
+            business_id: "business_1",
+            kind: "paid_at_provider",
+            payment_order_id: "payment_order_1",
+            provider: "flitt",
+            provider_status: "approved",
+            recorded_status: "processing",
+          },
+        ],
+      },
+      dataTasks({ open_count: 3, failed_count: 1 }),
+    );
     renderInLocale(
       <Probe
         data={system({
@@ -148,6 +184,21 @@ describe("useSystemFolds: what the System page's folded rows say on a phone", ()
     await waitFor(() =>
       expect(said("reconciliation")).toEqual({ text: t("platformBrakes.reconciliation.differs"), tone: "text-danger" }),
     );
+    // A failed data task needs a person: it comes before the open count.
+    await waitFor(() => expect(said("dataTasks")).toEqual({ text: t("dataTasks.failed", { count: "1" }), tone: "text-danger" }));
+  });
+
+  it("says how many data tasks are still open, in red once one has stalled for over a day", async () => {
+    const { tp } = textsIn("en");
+    answerReads(matched, dataTasks({ open_count: 2 }));
+    const view = renderInLocale(<Probe data={system()} />);
+    await waitFor(() => expect(said("dataTasks")).toEqual({ text: tp("dataTasks.open", 2), tone: "text-warning" }));
+    view.unmount();
+
+    queryCache.clear();
+    answerReads(matched, dataTasks({ open_count: 2, stalled_count: 1 }));
+    renderInLocale(<Probe data={system()} />);
+    await waitFor(() => expect(said("dataTasks")).toEqual({ text: tp("dataTasks.open", 2), tone: "text-danger" }));
   });
 
   it("warns of tokens running out, a missing backup and a backlog", () => {
@@ -169,10 +220,10 @@ describe("useSystemFolds: what the System page's folded rows say on a phone", ()
     expect(said("workers")).toEqual({ text: t("adminSystem.folds.none"), tone: "text-danger" });
   });
 
-  it("says nothing it does not know yet: no circuits, no lanes, an unmeasured database, incidents or a reconciliation still loading", () => {
+  it("says nothing it does not know yet: no circuits, no lanes, an unmeasured database, incidents, a reconciliation or data tasks still loading", () => {
     answerGet(() => pending());
     renderInLocale(<Probe data={system({ circuits: [], lanes: [], database_bytes: null })} />);
-    for (const name of ["circuits", "lanes", "database", "incidents", "reconciliation"] as const) {
+    for (const name of ["circuits", "lanes", "database", "incidents", "reconciliation", "dataTasks"] as const) {
       expect(fold(name).textContent, name).toBe("");
     }
   });
@@ -185,7 +236,7 @@ describe("useSystemFolds: what the System page's folded rows say on a phone", ()
     view.unmount();
 
     queryCache.clear();
-    answerGet(() => ok({ ...matched, ran_at: null }));
+    answerReads({ ...matched, ran_at: null });
     renderInLocale(<Probe data={system()} />);
     await waitFor(() => expect(fold("workers").textContent).not.toBe(""));
     expect(fold("reconciliation").textContent).toBe("");

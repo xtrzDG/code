@@ -15,7 +15,7 @@ import { DATA_TASKS_POLL_MS, type DataTask } from "./dataTasks";
  * one again (POST …/{task_key}/retry, audited).
  */
 export function useDataTasks() {
-  const tasks = useQuery(queryKeys.admin.dataTasks(), () => api.GET("/v1/admin/system/data-tasks"), { staleMs: 0 });
+  const tasks = useDataTasksView();
   const { reload } = tasks;
   const retry = useMutation(
     (task: DataTask) =>
@@ -42,4 +42,13 @@ export function useDataTasks() {
   };
 
   return { tasks, walkAgain, isRetrying: retry.isPending };
+}
+
+/**
+ * The read alone, loaded again on every mount: the card (useDataTasks) and
+ * the System page's folded row on a phone (systemFolds.tsx) share its
+ * cached answer and one request.
+ */
+export function useDataTasksView() {
+  return useQuery(queryKeys.admin.dataTasks(), () => api.GET("/v1/admin/system/data-tasks"), { staleMs: 0 });
 }

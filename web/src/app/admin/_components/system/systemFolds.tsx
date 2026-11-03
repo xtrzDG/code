@@ -4,8 +4,9 @@
  * What each detail card of /admin/system says in its folded row on a phone
  * (PhoneFold): the one figure or state on call looks for, in the danger or
  * warning colour when it wants a look (a stale worker, a circuit not
- * closed, dead jobs, a channel in error, differing payments, an open
- * incident). A card without such a figure folds with its name only.
+ * closed, dead jobs, a failed or stalled data task, a channel in error,
+ * differing payments, an open incident). A card without such a figure
+ * (the announcements) folds with its name only.
  */
 
 import type { ReactNode } from "react";
@@ -16,6 +17,7 @@ import { openCircuitCount } from "../../_lib/circuits";
 import type { Incident } from "../../_lib/incidentForm";
 import { hasMismatches } from "../../_lib/platformBrakes";
 import { RUN_STATE_TONES, backupState, laneTone, type AdminSystem } from "../../_lib/system";
+import { useDataTasksView } from "../../_lib/useDataTasks";
 import { usePaymentReconciliation } from "../../_lib/usePlatformBrakes";
 import { foldNote as noted, type FoldTone as Tone } from "../foldNote";
 import { RUN_STATE_NAMES, useSystemFormat } from "./useSystemFormat";
@@ -26,6 +28,7 @@ export interface SystemFolds {
   lanes: ReactNode;
   deadLetters: ReactNode;
   reconciliation: ReactNode;
+  dataTasks: ReactNode;
   channels: ReactNode;
   backups: ReactNode;
   database: ReactNode;
@@ -42,6 +45,7 @@ export function useSystemFolds(system: AdminSystem, incidents: readonly Incident
   const { t, tp } = useI18n();
   const format = useSystemFormat();
   const reconciliation = usePaymentReconciliation().data;
+  const dataTasks = useDataTasksView().data;
 
   const stale = system.workers.filter((worker) => worker.is_stale).length;
   const notClosed = openCircuitCount(system.circuits);
@@ -72,6 +76,14 @@ export function useSystemFolds(system: AdminSystem, incidents: readonly Incident
       : hasMismatches(reconciliation)
         ? noted(t("platformBrakes.reconciliation.differs"), "danger")
         : t("adminSystem.folds.allMatch"),
+    // A failed task needs a person; one stalled for over a day is open in red.
+    dataTasks: !dataTasks
+      ? null
+      : dataTasks.failed_count > 0
+        ? noted(t("dataTasks.failed", { count: format.number(dataTasks.failed_count) }), "danger")
+        : dataTasks.open_count > 0
+          ? noted(tp("dataTasks.open", dataTasks.open_count), dataTasks.stalled_count > 0 ? "danger" : "warning")
+          : t("adminSystem.folds.noneOpen"),
     channels:
       system.channels_in_error_count > 0
         ? noted(tp("adminSystem.folds.inError", system.channels_in_error_count), "danger")
