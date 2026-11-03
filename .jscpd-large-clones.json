@@ -100,13 +100,6 @@
     },
     {
       "files": [
-        "app/use_cases/contacts/change_customer_blocking_use_case.py",
-        "app/use_cases/contacts/change_customer_card_use_case.py"
-      ],
-      "count": 1
-    },
-    {
-      "files": [
         "app/use_cases/feedback/request/feedback_routes.py",
         "app/use_cases/shared/proactive_routes.py"
       ],

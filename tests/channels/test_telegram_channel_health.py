@@ -51,7 +51,10 @@ class TestTelegramChannelHealth:
             .json()
         )
         assert view["status"] == "error"
-        assert view["last_error"] == str(broken.last_error)
+        # The owner reads the reason in the cabinet's terms; Telegram's own
+        # words are for platform admins only (API-05).
+        assert view["last_error"] is None
+        assert view["last_error_reason"] == "credential_rejected"
         assert view["last_error_at"] == int(testbed.clock.now_microseconds())
 
         # The channel still receives messages; a delivered reply heals it.

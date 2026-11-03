@@ -79,7 +79,7 @@ describe("notification preferences", () => {
 
 describe("notification checks and devices", () => {
   const result = (status: "delivered" | "pending" | "dead", isSimulated = false): NotificationCheckResult => ({
-    delivery: { status, attempted_at: 1 },
+    delivery: { status, attempted_at: 1, is_last_delivery_failed: status === "dead" },
     is_simulated: isSimulated,
   });
 
@@ -92,8 +92,8 @@ describe("notification checks and devices", () => {
 
   it("recognise this browser's device while it keeps its subscription", () => {
     const devices: PushDevice[] = [
-      { id: "push_1", language: "en", created_at: 1 },
-      { id: "push_2", language: "ka", created_at: 2 },
+      { id: "push_1", language: "en", created_at: 1, is_last_delivery_failed: false },
+      { id: "push_2", language: "ka", created_at: 2, is_last_delivery_failed: false },
     ];
     const remembered = { endpoint: "https://fcm.googleapis.com/x", deviceId: "push_2" };
     expect(findThisDevice(devices, remembered, "https://fcm.googleapis.com/x")?.id).toBe("push_2");

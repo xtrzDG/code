@@ -16,6 +16,9 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.feedback.customer_signals import CustomerSignalReply
+from app.use_cases.conversations.see_platform_details_use_case import (
+    SeePlatformDetailsUseCase,
+)
 
 
 class FeedbackUseCasesContainer(containers.DeclarativeContainer):
@@ -79,5 +82,10 @@ def feedback_root(
             wall_clock=time_provider.microsecond_wall_clock,
             app_base_url=config.app_settings.provided.app_base_url,
             consent_record_repo=repositories.consent_record_repo,
+            see_platform_details=Factory(
+                SeePlatformDetailsUseCase,
+                user_repo=repositories.user_repo,
+                platform_admins=registries.platform_admin_registry,
+            ),
         ),
     )

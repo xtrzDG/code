@@ -4,7 +4,10 @@ from app.containers.meta_connection.meta_connection_dependencies import (
 from app.containers.meta_connection.meta_connection_use_case_factories import (
     MetaConnectionUseCaseFactories,
 )
-from app.containers.role_chain_factories import business_scoped_operator
+from app.containers.role_chain_factories import (
+    business_scoped_operator,
+    team_view_operator,
+)
 from app.contracts.operator_contract import OperatorContract
 from app.operators.business_scoped_pipeline_operator import (
     BusinessScopedPipelineOperator,
@@ -26,14 +29,16 @@ from app.schemas.dto.channels.meta_connection import (
     StartMetaConnectionCommand,
 )
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.utilities.deliveries.provider_error_details import team_channel
 
 
 class MetaConnectionOperatorFactories:
     """
     One operator per endpoint of Meta's self-serve connection, each the
-    generic role chain over one use case, and the worker's private reply to
-    a comment (its own orchestrator: claim the inbox event, reply, finish or
-    release it). Each runs in the storage scope of the business its input
+    generic role chain over one use case (a channel answered with its
+    last_error only for platform admins, API-05), and the worker's private
+    reply to a comment (its own orchestrator: claim the inbox event, reply,
+    finish or release it). Each runs in the storage scope of the business its input
     names.
     """
 
@@ -63,8 +68,10 @@ class MetaConnectionOperatorFactories:
     def complete_whatsapp_signup(
         self,
     ) -> OperatorContract[CompleteWhatsAppSignupCommand, ChannelView]:
-        return business_scoped_operator(
+        return team_view_operator(
             self._use_cases.complete_whatsapp_signup(),
+            self._dependencies.see_platform_details,
+            team_channel,
             self._dependencies.storage_scope,
         )
 
@@ -76,15 +83,21 @@ class MetaConnectionOperatorFactories:
     def connect_meta_page(
         self,
     ) -> OperatorContract[ConnectMetaPageCommand, ChannelView]:
-        return business_scoped_operator(
-            self._use_cases.connect_meta_page(), self._dependencies.storage_scope
+        return team_view_operator(
+            self._use_cases.connect_meta_page(),
+            self._dependencies.see_platform_details,
+            team_channel,
+            self._dependencies.storage_scope,
         )
 
     def set_comment_replies(
         self,
     ) -> OperatorContract[SetInstagramCommentRepliesCommand, ChannelView]:
-        return business_scoped_operator(
-            self._use_cases.set_comment_replies(), self._dependencies.storage_scope
+        return team_view_operator(
+            self._use_cases.set_comment_replies(),
+            self._dependencies.see_platform_details,
+            team_channel,
+            self._dependencies.storage_scope,
         )
 
     def process_comment_trigger(self) -> OperatorContract[QueuedJobInput, JobReport]:

@@ -33,6 +33,8 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -66,5 +68,8 @@ class FeedbackDependencies:
     storage_scope: StorageScopeContract
     wall_clock: WallClock[Microseconds]
     app_base_url: PublicBaseUrl | None
+    # Whether a person sees platform details: a request's last_error (the
+    # provider's own words) only for platform admins (API-05).
+    see_platform_details: UseCaseContract[UserId, IsPlatformAdmin]
     # The consent ledger a STOP's withdrawal is written to.
     consent_record_repo: ConsentRecordRepoContract | None = None

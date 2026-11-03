@@ -75,7 +75,7 @@ function RequestRow({ item }: { item: FeedbackRequestView }) {
             {t("reviewSettings.requests.notAskedBecause", { reason: t(SKIP_REASON_LABELS[item.skip_reason]) })}
           </p>
         ) : null}
-        {item.status === "failed" && item.last_error ? <DeliveryProblem error={item.last_error} /> : null}
+        {item.status === "failed" ? <DeliveryProblem error={item.last_error} /> : null}
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
         <Badge tone={REQUEST_STATUS_TONES[item.status]}>{t(REQUEST_STATUS_LABELS[item.status])}</Badge>

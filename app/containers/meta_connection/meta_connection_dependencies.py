@@ -34,6 +34,8 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.deliveries import InboundAnswer, InboundEventClaim, InboundFailure
 from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -76,3 +78,6 @@ class MetaConnectionDependencies:
     unit_of_work: StorageUnitOfWorkContract
     app_settings: AppSettings
     wall_clock: WallClock[Microseconds]
+    # Whether a person sees platform details: a channel's last_error (the
+    # provider's own words) only for platform admins (API-05).
+    see_platform_details: UseCaseContract[UserId, IsPlatformAdmin]

@@ -37,7 +37,15 @@ def team_feedback_requests(page: FeedbackRequestPage) -> FeedbackRequestPage:
 
 
 def team_delivery(delivery: StaffDeliveryView) -> StaffDeliveryView:
-    return delivery.model_copy(update=WITHOUT_ERROR)
+    """Without the provider's words, but still saying the attempt failed."""
+
+    return delivery.model_copy(
+        update={
+            **WITHOUT_ERROR,
+            "is_last_delivery_failed": delivery.is_last_delivery_failed
+            or delivery.last_error is not None,
+        }
+    )
 
 
 def team_notification_contacts(
@@ -62,7 +70,15 @@ def team_notification_check(result: NotificationCheckResult) -> NotificationChec
 
 
 def team_device(device: PushDeviceView) -> PushDeviceView:
-    return device.model_copy(update=WITHOUT_ERROR)
+    """Without the push service's words, but still saying the last failed."""
+
+    return device.model_copy(
+        update={
+            **WITHOUT_ERROR,
+            "is_last_delivery_failed": device.is_last_delivery_failed
+            or device.last_error is not None,
+        }
+    )
 
 
 def team_notification_settings(

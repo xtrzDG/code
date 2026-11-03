@@ -28211,7 +28211,7 @@
       },
       "PushDeviceView": {
         "additionalProperties": false,
-        "description": "One device of the signed-in user that shows notifications.",
+        "description": "One device of the signed-in user that shows notifications.\n`is_last_delivery_failed`: the last notification did not arrive;\n`last_error`, the push service's own words, goes to platform admins\nonly (None for everyone else, API-05).",
         "properties": {
           "created_at": {
             "title": "Created At",
@@ -28231,6 +28231,11 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "is_last_delivery_failed": {
+            "default": false,
+            "title": "Is Last Delivery Failed",
+            "type": "boolean"
           },
           "language": {
             "maxLength": 16,
@@ -30908,7 +30913,7 @@
       },
       "StaffDeliveryView": {
         "additionalProperties": false,
-        "description": "How the latest notification to a contact or device went: sending\n(`pending`, also while held for quiet hours or waiting for a retry),\n`delivered` or `dead` with the reason, and when one last arrived.",
+        "description": "How the latest notification to a contact or device went: sending\n(`pending`, also while held for quiet hours or waiting for a retry),\n`delivered` or `dead`, and when one last arrived.\n`is_last_delivery_failed` says the latest attempt failed (retried while\n`pending`); `last_error`, the provider's own words, goes to platform\nadmins only (None for everyone else, API-05).",
         "properties": {
           "attempted_at": {
             "title": "Attempted At",
@@ -30924,6 +30929,11 @@
               }
             ],
             "title": "Delivered At"
+          },
+          "is_last_delivery_failed": {
+            "default": false,
+            "title": "Is Last Delivery Failed",
+            "type": "boolean"
           },
           "last_error": {
             "anyOf": [

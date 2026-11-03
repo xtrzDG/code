@@ -14,6 +14,9 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
+from app.use_cases.conversations.see_platform_details_use_case import (
+    SeePlatformDetailsUseCase,
+)
 
 
 def meta_connection_root_provider(
@@ -66,5 +69,10 @@ def meta_connection_root_provider(
             unit_of_work=adapters.storage_unit_of_work,
             app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
+            see_platform_details=Factory(
+                SeePlatformDetailsUseCase,
+                user_repo=repositories.user_repo,
+                platform_admins=registries.platform_admin_registry,
+            ),
         ),
     )

@@ -56,7 +56,9 @@ class NotificationOrchestratorsContainer(containers.DeclarativeContainer):
         team_notification_check,
     )
     get_notification_settings_orchestrator = team_view_orchestrator(
-        use_case_orchestrator(notification_use_cases.get_notification_settings_use_case),
+        use_case_orchestrator(
+            notification_use_cases.get_notification_settings_use_case
+        ),
         see_platform_details,
         team_notification_settings,
     )

@@ -18,7 +18,7 @@ type MyNotifications = ReturnType<typeof useMyNotifications>;
 function DeviceDelivery({ device }: { device: PushDevice }) {
   const { t } = useI18n();
   const format = useBusinessFormat();
-  if (device.last_error) {
+  if (device.is_last_delivery_failed) {
     return <DeliveryProblem error={device.last_error} message={t("notifications.device.lastError")} />;
   }
   return (

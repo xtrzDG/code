@@ -5,6 +5,7 @@ from app.containers.feedback.feedback_use_case_factories import (
 from app.containers.role_chain_factories import (
     business_scoped_operator,
     platform_wide_operator,
+    team_view_operator,
 )
 from app.contracts.operator_contract import OperatorContract
 from app.schemas.dto.feedback.feedback_requests import (
@@ -19,6 +20,7 @@ from app.schemas.dto.feedback.review_settings import (
 )
 from app.schemas.dto.feedback.review_stats import ReviewStatsQuery, ReviewStatsView
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.utilities.deliveries.provider_error_details import team_feedback_requests
 
 
 class FeedbackOperatorFactories:
@@ -73,7 +75,11 @@ class FeedbackOperatorFactories:
     def list_feedback_requests(
         self,
     ) -> OperatorContract[FeedbackRequestPageQuery, FeedbackRequestPage]:
-        return business_scoped_operator(
+        """A request's last_error only for platform admins (API-05)."""
+
+        return team_view_operator(
             self._use_cases.list_feedback_requests(),
+            self._dependencies.see_platform_details,
+            team_feedback_requests,
             self._dependencies.storage_scope,
         )

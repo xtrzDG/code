@@ -1,11 +1,14 @@
 """The channel, channel settings and voice routers over a channels testbed."""
 
+from collections.abc import Callable
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.contracts.acting_user import ActingUserInputContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.gateways.http.channel_routes import build_channel_router
@@ -29,6 +32,7 @@ from app.orchestrators.channels.widget_message_orchestrator import (
 from app.orchestrators.channels.widget_messages_orchestrator import (
     WidgetMessagesOrchestrator,
 )
+from app.orchestrators.team_view_orchestrator import TeamViewOrchestrator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
@@ -46,6 +50,9 @@ from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhoo
 from app.use_cases.channels.widget_stream.issue_widget_stream_ticket_use_case import (
     IssueWidgetStreamTicketUseCase,
 )
+from app.use_cases.conversations.see_platform_details_use_case import (
+    SeePlatformDetailsUseCase,
+)
 from app.use_cases.voice.authenticate_post_call_use_case import (
     AuthenticatePostCallUseCase,
 )
@@ -53,11 +60,13 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
+from app.utilities.deliveries.provider_error_details import team_channel, team_channels
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from app.utilities.security.widget_stream_ticket_signer import (
     WidgetStreamTicketSigner,
 )
 from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
+from tests.foundation.admin_team import FixedAdminTeam
 from tests.referrals.referral_parts import ReferralRepositories
 
 # The widget's stream tickets are signed with this key in the channel tests.
@@ -78,6 +87,24 @@ def wrap_use_case[InputData, OutputData](
     """Operator -> pipeline -> orchestrator -> the given use case."""
 
     return PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
+
+
+def wrap_team_view[InputData: ActingUserInputContract, OutputData](
+    use_case: UseCaseContract[InputData, OutputData],
+    testbed: ChannelsCallFollowUps,
+    for_team: Callable[[OutputData], OutputData],
+) -> PipelineOperator[InputData, OutputData]:
+    """As the application wires it: the raw provider errors for admins only."""
+
+    return PipelineOperator(
+        OrchestratorPipeline(
+            TeamViewOrchestrator(
+                UseCaseOrchestrator(use_case),
+                SeePlatformDetailsUseCase(testbed.user_repo, FixedAdminTeam()),
+                for_team,
+            )
+        )
+    )
 
 
 def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
@@ -154,9 +181,15 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
     )
     http_application.include_router(
         build_channel_settings_router(
-            list_channels_operator=wrap_use_case(testbed.list_channels),
-            connect_channel_operator=wrap_use_case(testbed.connect_channel),
-            disable_channel_operator=wrap_use_case(testbed.disable_channel),
+            list_channels_operator=wrap_team_view(
+                testbed.list_channels, testbed, team_channels
+            ),
+            connect_channel_operator=wrap_team_view(
+                testbed.connect_channel, testbed, team_channel
+            ),
+            disable_channel_operator=wrap_team_view(
+                testbed.disable_channel, testbed, team_channel
+            ),
             widget_snippet_operator=wrap_use_case(
                 GetWidgetSnippetUseCase(
                     testbed.authorize_business_access, testbed.settings
@@ -166,8 +199,8 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
             current_user=build_current_user_dependency(
                 testbed.authentication, SessionAssuranceContext()
             ),
-            set_whatsapp_staff_template_operator=wrap_use_case(
-                testbed.set_whatsapp_staff_template
+            set_whatsapp_staff_template_operator=wrap_team_view(
+                testbed.set_whatsapp_staff_template, testbed, team_channel
             ),
         )
     )

@@ -11,6 +11,92 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-03 — readiness checklist round: admin passkeys, revocable booking links, staff recording access, assistant kill switches, platform-only provider errors, payments status
+
+Spec: `74e08a9a30712a55`
+
+Everything below is additive within `/v1`; the new refusals are errors a
+client that follows the description already handles. (Skeleton listing
+every `/v1` change of the round; wording to be polished.)
+
+- **Changed** `PUT /v1/businesses/{business_id}/security`:
+  `require_mfa_for_members` is optional (null keeps the stored value) and
+  the new optional `staff_may_play_recordings` lets staff play call
+  recordings (off by default); two factors are demanded only when turning
+  `require_mfa_for_members` on. `BusinessSecurityView` adds
+  `staff_may_play_recordings`.
+- **Changed** `GET /v1/businesses/{business_id}/calls/{call_id}/recording`:
+  staff get 403 `access_denied` unless the owner allowed staff playback.
+- **Added** `POST /v1/businesses/{business_id}/bookings/{booking_id}/manage-links/revoke`
+  (204; owners and staff; audited as UPDATE of `booking_manage_links`):
+  every manage link and page credential sent so far answers 404
+  `link_expired`. Manage tokens are now versions 4 (links) and 5 (page
+  credentials), 80 characters, with the booking's link generation inside
+  the MAC; versions 1–3 still read as generation 0.
+- **Added** `LoginSessionView.second_factor_suggested` (owners and brand
+  owners without a second factor). Where `ADMIN_PASSKEY_REQUIRED` is on,
+  admin endpoints answer 403 `passkey_required` until the admin has a
+  passkey, `POST /v1/auth/mfa/verify` with an app code from an admin who
+  has a passkey answers 403 `passkey_required`, and a support look into a
+  client's cabinet needs a passkey (404 otherwise). Admin sessions end
+  after 15 idle minutes (401).
+- **Changed** creating an API key and creating, updating or rotating a
+  webhook endpoint need a recent confirmation (401 `step_up_required`).
+  With Turnstile on, `POST /v1/auth/otp/start` always asks a token for a
+  phone (403 `challenge_required`). `DELETE /v1/me` also revokes the API
+  keys the person created and the webhooks those keys subscribed.
+- **Changed** `POST /v1/payments/flitt/webhook` answers 409 when Flitt's
+  status API does not confirm an approved or reversed callback (same
+  status and amount); Flitt sends it again.
+- **Changed** `PUT /v1/businesses/{business_id}/assistant-settings` takes
+  optional `is_paused` and `disabled_tools` (create_booking,
+  reschedule_booking, cancel_booking, join_waitlist, create_lead,
+  send_link, send_payment_link; owners only); `AssistantSettingsView`
+  adds both. `PUT /v1/admin/platform/pause` takes optional
+  `disabled_tools` (SUPER admin, step-up; audited `tools_switched`; the
+  same state again is 409); `PlatformPauseView` adds `disabled_tools`.
+  The business audit log has the entity `knowledge_item`.
+- **Changed** `POST /v1/businesses/{business_id}/phone-line/number` answers
+  409 `payment_method_required` without a paid plan or a card on file;
+  `PUT /v1/businesses/{business_id}/call-settings` answers 422
+  `marketing_template` for a text-back template in Meta's MARKETING
+  category. `PlatformAlertCode` adds `booking_spike`,
+  `cancellation_spike` and `whatsapp_quality`.
+- **Changed** owners and staff get the conversation card, its messages,
+  a staff reply and the test chat without platform details
+  (`GET /v1/businesses/{business_id}/conversations/{conversation_id}`,
+  `GET …/messages`, `POST …/messages`, `POST /v1/businesses/{business_id}/test-chat`):
+  tool-call `input_json`/`result_json`, a message's `model_id`, tokens and
+  `cost_micro_usd` and the card's `usage` are null (now nullable); platform
+  admins still get them.
+- **Changed** a provider's raw error text (`last_error`) is answered to
+  platform admins only; owners and staff get null and keep the plain
+  state: `GET /v1/businesses/{business_id}/text-backs` (`TextBackView`),
+  `GET …/feedback-requests` (`FeedbackRequestView`),
+  `GET …/notification-contacts` and `POST …/notification-contacts/{contact_key}/test`
+  (`StaffDeliveryView`), `GET·PUT …/notification-preferences`,
+  `POST …/push-subscriptions` and `POST …/push-subscriptions/{subscription_id}/test`
+  (`PushDeviceView`, `StaffDeliveryView`), and every channel answer
+  (`GET …/channels`, `PUT …/channels/{channel}`, `…/channels/{channel}/page`,
+  `…/channels/whatsapp/staff-template(s)`, `POST …/channels/whatsapp/embedded-signup`,
+  `PUT …/channels/instagram/comment-replies`; `ChannelView` keeps
+  `last_error_reason` and `last_error_at`). **Added**
+  `StaffDeliveryView.is_last_delivery_failed` and
+  `PushDeviceView.is_last_delivery_failed`.
+- **Added** `GET /v1/businesses/{business_id}/channels/web/snippet` answers
+  `loader_url` and `loader_integrity`; the snippet loads the immutable
+  `/widget/v/<version>.js` with SRI (a public static route outside the
+  description). `GET /v1/widget/{business_id}/config` adds
+  `business_phone_number`.
+- **Added** `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`
+  adds `records.consent_records` (the marketing consent ledger); the full
+  business export is archive format 2.
+- **Added** `StatusComponent` `payments` (`GET /v1/platform/status` shows
+  it; announcements naming it answer 422 until the `status_payments`
+  release gate opens). Admin system circuits may list
+  `provider:google_calendar`, `provider:cal_com` and
+  `provider:twilio_numbers`.
+
 ## 2026-11-02 — readiness round: sessions, platform brakes, marketing consent, call settings, idempotent money actions and request limits
 
 Spec: `b80c99a7707f9a64`

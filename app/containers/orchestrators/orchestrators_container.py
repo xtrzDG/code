@@ -85,6 +85,11 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     orchestrators).
     """
 
+    # Whether a person sees platform details (API-05), for the contexts
+    # whose answers carry a provider's raw error text.
+    see_platform_details = (
+        CoreOrchestratorsContainer.use_cases.conversation_feed
+    ).see_platform_details_use_case
     inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
         InboxOrchestratorsContainer,
         inbox_use_cases=CoreOrchestratorsContainer.use_cases.inbox,

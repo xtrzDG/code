@@ -48,9 +48,10 @@ function asViewer(isPlatformAdmin: boolean) {
 describe("TextBackHistoryCard", () => {
   it.each(["en", "it"] as const)("tells the owner a text-back failed without the raw error (%s)", (locale) => {
     const Owner = asViewer(false);
+    // The API answers owners without the provider's words (API-05).
     renderInLocale(
       <Owner>
-        <TextBackHistoryCard textBacks={page([failed])} />
+        <TextBackHistoryCard textBacks={page([{ ...failed, last_error: null }])} />
       </Owner>,
       { locale },
     );

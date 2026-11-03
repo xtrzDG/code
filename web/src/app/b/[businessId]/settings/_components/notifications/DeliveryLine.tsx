@@ -42,7 +42,7 @@ export function DeliveryLine({ status }: { status: NotificationContact }) {
             : t("notifications.contacts.attemptedAt", { time: format.dateTime(delivery.attempted_at) })}
         </span>
       </p>
-      {delivery.last_error && delivery.status !== "delivered" ? (
+      {delivery.is_last_delivery_failed && delivery.status !== "delivered" ? (
         <DeliveryProblem
           error={delivery.last_error}
           message={delivery.status === "pending" ? t("notifications.contacts.retrying") : undefined}

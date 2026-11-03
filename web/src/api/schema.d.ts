@@ -17323,6 +17323,9 @@ export interface components {
         /**
          * PushDeviceView
          * @description One device of the signed-in user that shows notifications.
+         *     `is_last_delivery_failed`: the last notification did not arrive;
+         *     `last_error`, the push service's own words, goes to platform admins
+         *     only (None for everyone else, API-05).
          */
         PushDeviceView: {
             /** Created At */
@@ -17331,6 +17334,11 @@ export interface components {
             delivered_at?: number | null;
             /** Id */
             id: string;
+            /**
+             * Is Last Delivery Failed
+             * @default false
+             */
+            is_last_delivery_failed: boolean;
             /** Language */
             language: string;
             /** Last Error */
@@ -18472,13 +18480,21 @@ export interface components {
          * StaffDeliveryView
          * @description How the latest notification to a contact or device went: sending
          *     (`pending`, also while held for quiet hours or waiting for a retry),
-         *     `delivered` or `dead` with the reason, and when one last arrived.
+         *     `delivered` or `dead`, and when one last arrived.
+         *     `is_last_delivery_failed` says the latest attempt failed (retried while
+         *     `pending`); `last_error`, the provider's own words, goes to platform
+         *     admins only (None for everyone else, API-05).
          */
         StaffDeliveryView: {
             /** Attempted At */
             attempted_at: number;
             /** Delivered At */
             delivered_at?: number | null;
+            /**
+             * Is Last Delivery Failed
+             * @default false
+             */
+            is_last_delivery_failed: boolean;
             /** Last Error */
             last_error?: string | null;
             status: components["schemas"]["OutboundMessageStatus"];
