@@ -1,14 +1,16 @@
 # Evaluation dataset of the clinic niche: Vake Family Clinic in ka, ru, en, he, ar.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: clinic
 business:
   name: Vake Family Clinic
-  languages: [ka, ru, en, he, ar]
+  languages: [ka, ru, en, he, ar, it]
   prices: {consultation: '80', follow_up_visit: '50', blood_test: '35'}
   answers: {insurance: 'Yes, we work with Aldagi, GPI and Imedi L insurance.', test_results: Results come by e-mail within 2 working days.}
+  knowledge:
+  - {title: 'Which doctors work at the clinic?', body: 'A family doctor, a paediatrician and a cardiologist.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -1214,3 +1216,83 @@ scenarios:
   expect:
     prices: ['80']
     handoff: false
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much a blood test costs.
+  customer: ['hi how much is a blood tessed at your clinic']
+  assistant:
+  - call:
+      get_price: {item_name: Blood test}
+  - {say: 'A blood test costs 35 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['35']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much a doctor's consultation costs.
+  customer: ['buongiorno quanto visita medico']
+  assistant:
+  - call:
+      get_price: {item_name: Doctor's consultation}
+  - {say: 'La visita medica costa 80 GEL e dura 30 minuti. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['80']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask how test results are delivered.
+  customer: ['allo ze results of ze analysis ow I receive them']
+  assistant:
+  - {say: 'Results come by e-mail within 2 working days. Can I help with anything else?'}
+  expect:
+    facts: [e-mail]
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask for a consultation on Thursday at five in the afternoon (the transcript says 5).
+  customer: ['vorrei una visita dal medico giovedì alle 5']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: intende giovedì alle 17:00? Giovedì la clinica è aperta dalle 09:00 alle 19:00.'}
+  expect:
+    facts: ['17:00']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: consultation, language: en, item: 'Doctor''s consultation', ask: 'What does it cost to see a doctor?', say: 'A doctor''s consultation costs 80 GEL and takes 30 minutes.', prices: ['80']}
+- {id: blood_test, language: en, item: 'Blood test', ask: 'How much is a blood test?', say: 'A blood test costs 35 GEL.', prices: ['35']}
+- {id: saturday, language: en, ask: 'Are you open on Saturday?', say: 'Yes, on Saturday we are open from 10:00 to 15:00.', facts: ['15:00']}
+- {id: insurance, language: en, ask: 'Do you accept Imedi L insurance?', say: 'Yes, we work with Aldagi, GPI and Imedi L insurance.', facts: ['Imedi L']}
+- {id: results, language: en, ask: 'How will I get the results of my blood test?', say: 'Your results come by e-mail within 2 working days. Can I help with anything else?', facts: ['e-mail']}
+- {id: cancel, language: en, ask: 'How early do I have to cancel an appointment?', say: 'Please let us know at least 24 hours in advance if you cannot come.', facts: ['24 hours']}
+- {id: doctors, language: en, ask: 'Is there a paediatrician at the clinic?', say: 'Yes, a family doctor, a paediatrician and a cardiologist work at the clinic.', facts: ['paediatrician']}
+- {id: mri, language: en, unknown: true, ask: 'Do you do MRI scans?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['we do MRI', 'MRI costs']}
+- {id: sick_note, language: en, unknown: true, ask: 'Can the doctor give me a sick note for my employer?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['sick note is', 'we issue sick notes']}
+- {id: italian_doctor, language: en, unknown: true, ask: 'Does any doctor speak Italian?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['speaks Italian']}
+- {id: follow_up, language: it, item: 'Follow-up visit', ask: 'Buongiorno, quanto costa una visita di controllo?', say: 'Una visita di controllo costa 50 GEL e dura 20 minuti.', prices: ['50']}
+- {id: consultation, language: it, item: 'Doctor''s consultation', ask: 'Quanto costa una visita dal medico?', say: 'La visita medica costa 80 GEL e dura 30 minuti.', prices: ['80']}
+- {id: weekday_hours, language: it, ask: 'Che orari ha la clinica durante la settimana?', say: 'Dal lunedì al venerdì la clinica è aperta dalle 09:00 alle 19:00.', facts: ['09:00']}
+- {id: insurance, language: it, ask: 'Posso usare la mia assicurazione sanitaria da voi?', say: 'Sì, lavoriamo con le assicurazioni Aldagi, GPI e Imedi L.', facts: ['Aldagi']}
+- {id: results, language: it, ask: 'Buongiorno, come posso avere il risultato di un''analisi del sangue?', say: 'I risultati arrivano per e-mail entro 2 giorni lavorativi.', facts: ['e-mail']}
+- {id: notice, language: it, ask: 'Posso prenotare una visita per tra mezz''ora?', say: 'Serve un preavviso di almeno 60 minuti, quindi tra mezz''ora non è possibile.', facts: ['60 minuti']}
+- {id: ultrasound, language: it, unknown: true, ask: 'Fate anche le ecografie?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['facciamo le ecografie', 'l''ecografia costa']}
+- {id: sport_certificate, language: it, unknown: true, ask: 'Fate il certificato medico per lo sport?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['facciamo il certificato', 'il certificato costa']}
+- {id: italian_doctor, language: it, unknown: true, ask: 'C''è un medico che parla italiano?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['parla italiano']}

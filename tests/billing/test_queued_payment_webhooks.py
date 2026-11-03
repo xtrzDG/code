@@ -101,6 +101,51 @@ def test_replays_apply_once_and_tell_the_owner_once() -> None:
     assert len(world.paid.testbed.notifier.sent) == notices_before + 1
 
 
+def test_replayed_approvals_pay_once_and_mail_the_invoices_once() -> None:
+    world = QueuedWebhookWorld()
+    order = order_of(world)
+    parameters = world.paid.testbed.callback_parameters(
+        order, "approved", payment_id=16
+    )
+
+    queued = [world.deliver(parameters).outcome for _ in range(REPLAYS)]
+    world.run_jobs()
+    late = [world.deliver(parameters).outcome for _ in range(REPLAYS)]
+
+    assert queued == [PaymentWebhookOutcome.QUEUED] * REPLAYS
+    assert late == [PaymentWebhookOutcome.DUPLICATE] * REPLAYS
+    assert reload(world, order).processed_notification_keys == ["16:approved"]
+    assert invoice_statuses(world) == {InvoiceStatus.PAID}
+    # Flitt was asked once; the invoice e-mails went out once.
+    assert world.paid.testbed.flitt.status_queries == [str(order.id)]
+    assert [r.outcome for r in world.documents.receipts] == [
+        PaymentWebhookOutcome.APPLIED
+    ]
+
+
+def test_an_approval_refunded_before_its_job_ran_never_pays() -> None:
+    world = QueuedWebhookWorld()
+    order = order_of(world)
+    testbed = world.paid.testbed
+    approved = testbed.callback_parameters(order, "approved", payment_id=17)
+    world.deliver(approved)
+    # Refunded at once: Flitt's record says reversed when the approval runs.
+    world.deliver(testbed.callback_parameters(order, "reversed", payment_id=17))
+
+    # The approval is not confirmed and waits; the refund overtakes it.
+    assert world.run_jobs() == 1
+    assert isinstance(world.failures[-1], ConflictError)
+    # Its retry sees the refund: seen, nothing paid, Flitt not asked again.
+    assert world.run_jobs() == 1
+
+    stored = reload(world, order)
+    assert stored.status is PaymentStatus.REVERSED
+    assert stored.processed_notification_keys == ["17:reversed", "17:approved"]
+    assert invoice_statuses(world) == {InvoiceStatus.ISSUED}
+    assert testbed.flitt.status_queries == [str(order.id), str(order.id)]
+    assert world.queue.jobs == []
+
+
 def test_a_refund_before_its_approval_stands() -> None:
     world = QueuedWebhookWorld()
     order = order_of(world)

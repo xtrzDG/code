@@ -179,6 +179,65 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # AI-12: a change to what the model sees (prompts and their snapshots,
+  # tool definitions and inputs, model pins, the conversation engine, the
+  # reply guard) or to the evaluation harness replays every recorded
+  # conversation offline, with no provider and no key, and must keep every
+  # scenario passing and no answer asserting what the business's data does
+  # not hold (scripts/eval_replay_scope.py, evals/README.md). Other pull
+  # requests skip the replay here; tests/evals replays inside the backend
+  # tests either way. "CI passed" needs this job, so it blocks the merge.
+  evals:
+    name: Evals replay gate (prompts, models, tools)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The base commit of the pull request, to list what it changes.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Does the change touch what the model sees?
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            python3 scripts/eval_replay_scope.py --all
+          else
+            python3 scripts/eval_replay_scope.py --base "$BASE_SHA"
+          fi
+
+      - name: Install uv and Python 3.14
+        if: ${{ steps.scope.outputs.replay == 'true' }}
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        if: ${{ steps.scope.outputs.replay == 'true' }}
+        run: uv sync --frozen
+
+      # Exit code 1: a cassette is stale (re-record it in this pull request),
+      # a scenario fails or a reply hallucinated.
+      - name: Replay every recorded conversation
+        if: ${{ steps.scope.outputs.replay == 'true' }}
+        run: |
+          set +e
+          uv run python -m scripts.run_evals --workers 4 --min-pass-rate 1 \
+            --max-hallucination-rate 0 --out reports/evals/replay
+          status=$?
+          if [ -f reports/evals/replay/summary.md ]; then
+            cat reports/evals/replay/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
+
   coverage:
     name: Backend coverage (every part, at least 95 %)
     needs: backend-tests
@@ -819,7 +878,7 @@ jobs:
   # succeeded, skipped or cancelled ones included.
   ci-passed:
     name: CI passed (every gate)
-    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e, visual]
+    needs: [backend-checks, backend-tests, evals, coverage, web-build, web-checks, security, images, e2e, visual]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 2

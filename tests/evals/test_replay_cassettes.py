@@ -1,6 +1,7 @@
 """
 The CI gate of the evaluation harness: every dataset scenario replays from
-its committed cassette through the real conversation engine and scores as
+its committed cassette through the real conversation engine, asserts
+nothing the business's data does not hold (grounding_check) and scores as
 the accepted baseline says (evals/baselines/scripted.json).
 
 A stale cassette means the instruction, the tools or the conversation path
@@ -54,6 +55,16 @@ def test_the_cassettes_replay_as_the_baseline_says(niche: str) -> None:
     assert not stale, (
         f"{len(stale)} scenario(s) of {niche} no longer match their cassette. "
         f"If the change is intended, run `{RECORD_COMMAND}`.\n\n" + "\n\n".join(stale)
+    )
+    hallucinated = [
+        f"{scenario.key}: {note}"
+        for scenario in outcome.scenarios
+        for sample in scenario.samples
+        for note in sample.hallucinations
+    ]
+    assert not hallucinated, (
+        "The recorded answers assert what the business's data does not hold:\n"
+        + "\n".join(hallucinated)
     )
     changed = [
         describe_failure(scenario)

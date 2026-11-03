@@ -9,8 +9,8 @@ from app.schemas.typings.storage.constrained_strings import AdvisoryLockKey
 
 PAYMENT_NOTIFICATION_LOCK_PURPOSE: str = "payment-notification"
 # The holder may wait for the provider (a status read, a stop of charges,
-# each within its own timeout): a copy waits longer than that, and a
-# provider whose copy still finds the lock taken sends it again.
+# each within its own timeout): a copy waits longer than that, and the
+# queued job of a copy that still finds the lock taken tries again.
 PAYMENT_NOTIFICATION_LOCK_WAIT: LockWaitSeconds = LockWaitSeconds(45)
 
 

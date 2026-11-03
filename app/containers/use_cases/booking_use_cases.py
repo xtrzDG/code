@@ -12,6 +12,7 @@ from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.booking_confirmation_providers import (
     booking_confirmation_use_case,
 )
+from app.containers.use_cases.health_note_guards import health_note_guarded
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.booking_manage import (
@@ -115,47 +116,53 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
     )
     cancel_booking_use_case: Factory[
         UseCaseContract[CancelBookingCommand, BookingResult]
-    ] = Factory(
-        CancelBookingUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
-        booking_repo=repositories.booking_repo,
-        contact_repo=repositories.contact_repo,
-        lock_registry=registries.business_lock_registry,
-        phone_number_parser=utilities.phone_number_parser,
-        confirmation_transformer=transformers.cancellation_confirmation_transformer,
-        staff_notification_transformer=transformers.booking_cancelled_notification_transformer,
-        staff_brief_transformer=transformers.staff_alert_brief_transformer,
-        staff_alerts=facilitators.staff_alert_facilitator,
-        calendar_sync=facilitators.calendar_sync_facilitator,
-        live_events=facilitators.event_publisher,
-        growth=facilitators.growth_bookings,
-        wall_clock=time_provider.microsecond_wall_clock,
+    ] = health_note_guarded(
+        Factory(
+            CancelBookingUseCase,
+            business_repo=repositories.business_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            resource_repo=repositories.resource_repo,
+            schedule_exception_repo=repositories.schedule_exception_repo,
+            booking_repo=repositories.booking_repo,
+            contact_repo=repositories.contact_repo,
+            lock_registry=registries.business_lock_registry,
+            phone_number_parser=utilities.phone_number_parser,
+            confirmation_transformer=transformers.cancellation_confirmation_transformer,
+            staff_notification_transformer=transformers.booking_cancelled_notification_transformer,
+            staff_brief_transformer=transformers.staff_alert_brief_transformer,
+            staff_alerts=facilitators.staff_alert_facilitator,
+            calendar_sync=facilitators.calendar_sync_facilitator,
+            live_events=facilitators.event_publisher,
+            growth=facilitators.growth_bookings,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+        repositories,
     )
     reschedule_booking_use_case: Factory[
         UseCaseContract[RescheduleBookingCommand, BookingResult]
-    ] = Factory(
-        RescheduleBookingUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
-        booking_repo=repositories.booking_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        contact_repo=repositories.contact_repo,
-        lock_registry=registries.business_lock_registry,
-        phone_number_parser=utilities.phone_number_parser,
-        confirmation_transformer=transformers.reschedule_confirmation_transformer,
-        staff_notification_transformer=transformers.booking_moved_notification_transformer,
-        staff_brief_transformer=transformers.staff_alert_brief_transformer,
-        staff_alerts=facilitators.staff_alert_facilitator,
-        calendar_sync=facilitators.calendar_sync_facilitator,
-        live_events=facilitators.event_publisher,
-        growth=facilitators.growth_bookings,
-        busy_times_repo=repositories.calendar_busy_times_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
+    ] = health_note_guarded(
+        Factory(
+            RescheduleBookingUseCase,
+            business_repo=repositories.business_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            resource_repo=repositories.resource_repo,
+            schedule_exception_repo=repositories.schedule_exception_repo,
+            booking_repo=repositories.booking_repo,
+            knowledge_item_repo=repositories.knowledge_item_repo,
+            contact_repo=repositories.contact_repo,
+            lock_registry=registries.business_lock_registry,
+            phone_number_parser=utilities.phone_number_parser,
+            confirmation_transformer=transformers.reschedule_confirmation_transformer,
+            staff_notification_transformer=transformers.booking_moved_notification_transformer,
+            staff_brief_transformer=transformers.staff_alert_brief_transformer,
+            staff_alerts=facilitators.staff_alert_facilitator,
+            calendar_sync=facilitators.calendar_sync_facilitator,
+            live_events=facilitators.event_publisher,
+            growth=facilitators.growth_bookings,
+            busy_times_repo=repositories.calendar_busy_times_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+        repositories,
     )
     # The customer's own bookings to come (model tool list_my_bookings).
     list_customer_bookings_use_case: Factory[
@@ -184,25 +191,28 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
     )
     create_manual_booking_use_case: Factory[
         UseCaseContract[ManualBookingCommand, BookingResult]
-    ] = Factory(
-        CreateManualBookingUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
-        booking_repo=repositories.booking_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        contact_repo=repositories.contact_repo,
-        conversation_repo=repositories.conversation_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        lock_registry=registries.business_lock_registry,
-        phone_number_parser=utilities.phone_number_parser,
-        confirmation_transformer=transformers.booking_confirmation_transformer,
-        calendar_sync=facilitators.calendar_sync_facilitator,
-        live_events=facilitators.event_publisher,
-        growth=facilitators.growth_bookings,
-        busy_times_repo=repositories.calendar_busy_times_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
+    ] = health_note_guarded(
+        Factory(
+            CreateManualBookingUseCase,
+            business_repo=repositories.business_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            resource_repo=repositories.resource_repo,
+            schedule_exception_repo=repositories.schedule_exception_repo,
+            booking_repo=repositories.booking_repo,
+            knowledge_item_repo=repositories.knowledge_item_repo,
+            contact_repo=repositories.contact_repo,
+            conversation_repo=repositories.conversation_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            lock_registry=registries.business_lock_registry,
+            phone_number_parser=utilities.phone_number_parser,
+            confirmation_transformer=transformers.booking_confirmation_transformer,
+            calendar_sync=facilitators.calendar_sync_facilitator,
+            live_events=facilitators.event_publisher,
+            growth=facilitators.growth_bookings,
+            busy_times_repo=repositories.calendar_busy_times_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+        repositories,
     )
     # Staff changes of a booking and their Undo share one transition.
     booking_status_transition: Factory[BookingStatusTransition] = Factory(
@@ -223,15 +233,22 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
     )
     update_booking_use_case: Factory[
         UseCaseContract[UpdateBookingCommand, BookingView]
-    ] = Factory(
-        UpdateBookingUseCase,
-        transition=booking_status_transition,
-        contact_repo=repositories.contact_repo,
-        audit_log_repo=repositories.audit_log_repo,
+    ] = health_note_guarded(
+        Factory(
+            UpdateBookingUseCase,
+            transition=booking_status_transition,
+            contact_repo=repositories.contact_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            brand_repo=repositories.brand_repo,
+        ),
+        repositories,
     )
     revert_booking_status_use_case: Factory[
         UseCaseContract[RevertBookingStatusCommand, BookingView]
-    ] = Factory(RevertBookingStatusUseCase, transition=booking_status_transition)
+    ] = health_note_guarded(
+        Factory(RevertBookingStatusUseCase, transition=booking_status_transition),
+        repositories,
+    )
     send_booking_reminders_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
             SendBookingRemindersUseCase,

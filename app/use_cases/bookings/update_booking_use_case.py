@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -26,6 +27,7 @@ from app.use_cases.bookings.booking_status_transition import BookingStatusTransi
 from app.use_cases.bookings.booking_support import SchedulingInputs, find_resource
 from app.use_cases.bookings.freed_places import held_place_of
 from app.use_cases.bookings.moved_placements import ensure_free_at_booked_time
+from app.use_cases.shared.health_note_privacy import refuse_hidden_note_change
 from app.use_cases.shared.operations_support import (
     ContactDetails,
     update_contact_details,
@@ -48,7 +50,9 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
       a free unit then (the booking itself not counted). The online-booking
       limits (notice, maximum party) do not apply to staff, as for manual
       bookings. The time is changed by rescheduling.
-    - Notes: an empty text removes them.
+    - Notes: an empty text removes them. Notes with health data are
+      changed only by the owner and staff, who see them (PRIV-10): an
+      agency helper's change would overwrite a note it cannot see.
     - Contact name: renames the customer (audited as a contact change).
 
     Checks and writes run under the business lock. The booking change is
@@ -61,7 +65,9 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         transition: BookingStatusTransition,
         contact_repo: ContactRepoContract,
         audit_log_repo: AuditLogRepoContract,
+        brand_repo: BrandRepoContract | None = None,
     ) -> None:
+        self._brand_repo: BrandRepoContract | None = brand_repo
         self._transition: BookingStatusTransition = transition
         self._contact_repo: ContactRepoContract = contact_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
@@ -81,6 +87,13 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
             input_data.business_id, input_data.booking_id
         ) as booking:
             held_before: FreedPlace | None = held_place_of(booking)
+            if input_data.notes is not None:
+                refuse_hidden_note_change(
+                    self._brand_repo,
+                    inputs.business,
+                    booking.notes,
+                    input_data.actor_id,
+                )
             is_changed: bool = self._apply_placement(booking, input_data, inputs, now)
             is_changed = apply_notes_change(booking, input_data.notes) or is_changed
             is_changed = (

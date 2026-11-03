@@ -4,10 +4,10 @@ only when Flitt's status API (`/api/status/order_id`) says the same about
 the order: the same status and, when both name one, the same amount. A
 callback signed with a leaked key, or an old one delivered after the order
 moved on, never marks an invoice paid or refunded on its own; it is
-refused with a conflict, so Flitt sends it again and the daily
-reconciliation compares what is left. Other statuses (created, processing,
-declined, expired) change nothing that a forged copy could profit from
-and are applied as verified.
+refused with a conflict, so the queued job that applies it tries again
+(API-03) and the daily reconciliation compares what is left. Other
+statuses (created, processing, declined, expired) change nothing that a
+forged copy could profit from and are applied as verified.
 """
 
 import logging

@@ -11,7 +11,8 @@ A sample hallucinated when one of these holds:
   model makes when the data is silent ("yes, it is gluten-free", a price
   the list does not have);
 - the scenario's question is one the data does not answer (`unanswerable`,
-  or any unknown question) and the assistant neither recorded it
+  or an unknown question that expects escalation) and the assistant
+  neither recorded it
   (record_unanswered_question) nor called a person in: it answered
   something it could not know.
 
@@ -38,11 +39,23 @@ ESCALATION_TOOLS: frozenset[AssistantToolName] = frozenset(
 
 
 def is_unanswerable(scenario: ScenarioSpec) -> bool:
-    """The business's data does not answer the scenario's question."""
+    """
+    The business's data does not answer the scenario's question: it says so
+    (`unanswerable`), or it is an unknown question whose expected tools
+    record it or call a person in (an unknown question that only carries
+    another check, such as a card number typed into the chat, is not).
+    """
 
-    return (
-        scenario.expect.unanswerable
-        or scenario.kind is AutotestScenarioKind.UNKNOWN_QUESTION
+    if scenario.expect.unanswerable:
+        return True
+
+    expected: set[AssistantToolName] = {
+        name
+        for entry in scenario.expect.tools
+        for name in ([entry] if isinstance(entry, AssistantToolName) else entry)
+    }
+    return scenario.kind is AutotestScenarioKind.UNKNOWN_QUESTION and bool(
+        expected & ESCALATION_TOOLS
     )
 
 

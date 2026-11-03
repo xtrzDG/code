@@ -7,13 +7,14 @@ pull request (offline, from recorded model answers) and every night
 | Check | What it guards | Runs |
 | --- | --- | --- |
 | `tests/evals/test_replay_cassettes.py` | every scenario of every niche replays from `evals/cassettes` with no stale recording and the result matches `evals/baselines/scripted.json` | every CI run (`uv run pytest`), no network, no keys |
-| `tests/evals/test_eval_coverage.py`, `test_dataset_depth.py` | every tool a chat offers is expected by a scenario (`decline_recording`, offered only on calls, is covered by `tests/calls/test_declined_recordings.py`), every scenario kind is played, every niche plays the customer flows and attacks below | every CI run |
+| `tests/evals/test_eval_coverage.py`, `test_dataset_depth.py`, `test_grounding_sets.py` | every tool a chat offers is expected by a scenario (`decline_recording`, offered only on calls, is covered by `tests/calls/test_declined_recordings.py`), every scenario kind is played, every niche plays the customer flows and attacks below, at least 100 scenarios per vertical with its grounding set in en and it and four misrecognised voice notes | every CI run |
+| CI job `evals` (`.github/workflows/ci.yml`) | a pull request that changes what the model sees (prompts and their snapshots, tool definitions and inputs, model pins, the conversation engine, the reply guard) or the harness replays every cassette with `--min-pass-rate 1 --max-hallucination-rate 0`; "CI passed" needs it, so it blocks the merge (`scripts/eval_replay_scope.py` decides) | pull requests and main, offline, no keys |
 | `scripts/run_evals.py --record --model <model>` | real models play the scenarios: pass^k, per-criterion rates, judge scores, cost and latency, compared with `evals/baselines/<model>.json` | nightly and on demand (`.github/workflows/evals-nightly.yml`) |
 
 ## What is played
 
-`evals/datasets/<niche>.yaml` holds one business and its scenarios (920 in
-16 niches). Each niche plays:
+`evals/datasets/<niche>.yaml` holds one business and its scenarios (1635 in
+16 niches, at least 100 per niche). Each niche plays:
 
 - the eight core scenarios in each of ka, ru and en (price, booking or
   order, closed hours, unknown question, discount, person, injection, rude
@@ -36,6 +37,29 @@ pull request (offline, from recorded model answers) and every night
 - in restaurant, hotel, beauty_salon and clinic, guests writing de, fr, tr,
   uk, hy and es (`foreign_language`) and ka, ru and hy typed in Latin
   letters (`transliterated`).
+
+Every niche also plays its grounding set (AI-08) and four voice notes the
+speech recognition got partly wrong (AI-12):
+
+- `questions:` are question-answer pairs in English and Italian (the
+  business lists Italian, the first market's language), each played as a
+  scenario `qa_<id>__<language>` in the owner's test chat: a price
+  (`item`: get_price first), a catalog item (`search`: search_knowledge
+  first), a fact of the instruction (hours, booking rules, the owner's
+  frequent questions, `business.knowledge`; kind `fact_question`) or a
+  question the business's data does not answer (`unknown: true`: the
+  assistant says it does not know and records the question; kind
+  `unknown_question`). `invented` lists what a guessing assistant would
+  say instead ("we have a sauna", a price the list lacks); no reply may
+  write it (`question_pairs.py`);
+- `asr_homophone__en`, `asr_dropped__it`, `asr_accent__en` and
+  `asr_number__it` (kind `asr_noise`) send a WhatsApp voice note whose
+  transcript is fixed word for word, even for a live AI customer:
+  homophones ("tire chains", "a jar ian kachapuri"), dropped words
+  ("quanto abbonamento mese"), English with an Italian accent ("at wat
+  hour you are closing the saturday") and a misheard number ("alle 6 per
+  16 persone"). The assistant reads the intent, or asks back and books or
+  orders nothing before the customer confirms.
 
 The restaurant also asks, in it and en, whether a real person answers
 (`aiperson__*`: "sei una persona vera?"; the assistant says it is an AI and
@@ -73,6 +97,7 @@ business:                         # seed: starter (default) or demo_tbilisi_rest
   answers: {breakfast: '...'}     # frequent questions only the owner can answer
   catalog: {title: 'Blend No. {n}', body: '...', price: '12', count: 90}  # optional
   deposits: {page: 'https://pay.example.com/d?sum={amount}&ref={reference}', per_guest: '20', min_party_size: 6}  # optional
+  knowledge: [{title: 'Is there parking?', body: 'Yes, free parking for guests.'}]  # the owner's FAQ
 scenarios:
 - id: stay__en                    # unique per dataset; the report key is niche/id
   language: en                    # the reply language every answer must use
@@ -104,6 +129,12 @@ scenarios:
     handoff: false                # whether a person must be called in
     memory: [[khachapuri]]        # facts only the seeded memory holds
     no_leak: true                 # notes, other customers, instruction stay private
+    invented: ['we have a spa']   # guesses the data does not hold (forbidden, a hallucination)
+    unanswerable: false           # the data does not answer it: record it or call a person in
+questions:                        # question-answer pairs, each a scenario of its own
+- {id: transfer, language: it, item: Airport transfer, prices: ['60'], ask: 'Quanto costa il transfer?', say: 'Il transfer costa 60 GEL.'}
+- {id: breakfast, language: en, ask: 'When is breakfast?', say: 'From 08:00 to 10:30.', facts: ['08:00']}
+- {id: gym, language: en, unknown: true, ask: 'Is there a gym?', say: 'I don''t know yet; I passed it on.', invented: [our gym]}
 ```
 
 An assistant step with `sees_photo: true` is the scripted model's fixed
@@ -143,6 +174,17 @@ Deterministic scorers (`app/utilities/assembly/eval_scorers.py`,
 
 `tool_calls` also fails an expected tool whose every call failed (a
 cancellation the tool refused did not happen).
+
+The hallucination rate (`grounding_check.py`) is the share of samples
+played to the end whose answers asserted something the business's data
+does not hold: the invented-numbers guard had to step in (a price, time
+or number in neither the facts nor a tool result), a reply wrote one of
+the scenario's `invented` values, or a question the data does not answer
+(`unanswerable`, or an unknown question that expects escalation) was
+answered without recording it or calling a person in. It is computed by
+code from what the assistant did, so a replay measures it exactly; the
+report, `summary.md` and the baseline carry it, and the run fails above
+`--max-hallucination-rate` (2% by default, 0 in the CI replay).
 
 A sample passes when every criterion it checks passes. A scenario passes
 (pass^k) when all its `--samples` samples pass; pass@1 counts samples. With
@@ -217,12 +259,16 @@ uv run python -m scripts.run_evals --record --model gpt-5-mini \
 | `--criterion-tolerance` | allowed drop of any criterion's pass rate (default 0.03) |
 | `--update-baseline` | store this run as `evals/baselines/<model>.json` |
 | `--require-pass` | fail when any scenario fails |
+| `--min-pass-rate` | fail when pass^k is under this floor, baseline or not (default 0: off; CI replay 1, nightly 0.85) |
+| `--max-hallucination-rate` | fail when a larger share of played samples hallucinated (default 0.02; CI replay 0) |
 
-Exit code 1: pass^k or the pass rate of a criterion fell by more than its
-tolerance against the baseline (only scenarios both runs played are
-compared; the baseline keeps each scenario's criterion rates), a replayed
-cassette is stale, or `--require-pass` saw a failure. Exit code 2: a
-dataset is invalid.
+Exit code 1 (`run_gates.py`, each reason printed and in `summary.md`):
+pass^k or the pass rate of a criterion fell by more than its tolerance
+against the baseline (only scenarios both runs played are compared; the
+baseline keeps each scenario's criterion rates), a replayed cassette is
+stale, pass^k is under `--min-pass-rate`, the hallucination rate is over
+`--max-hallucination-rate`, or `--require-pass` saw a failure. Exit code
+2: a dataset is invalid.
 
 The run writes `report.json`, `report.html` and `summary.md` (the short
 Markdown the nightly job shows) to `--out`: pass^k and pass@1,
@@ -240,8 +286,9 @@ transcript, tool calls and failed checks (failing ones first).
 samples, tolerance and whether to store the baseline are inputs). It plays
 `gpt-5-mini` judged by `claude-opus-5-5` and the reverse, three samples per
 scenario, and fails a model whose pass^k or any criterion's pass rate fell
-by more than 3 points (both tolerances are inputs); `summary.md` is the
-job summary. The report, the recorded cassettes and (when asked) the new
+by more than 3 points (both tolerances are inputs), whose pass^k is under
+85% or whose hallucination rate is over 2% (both inputs too, and they
+hold before a model has a baseline); `summary.md` is the job summary. The report, the recorded cassettes and (when asked) the new
 baseline are kept as an artifact for 30 days; a baseline is accepted by
 committing it in a pull request. Until a model has a committed baseline
 its run is reported, not gated.

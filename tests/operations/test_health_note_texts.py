@@ -43,6 +43,12 @@ HEALTH_NOTE: str = "Nut allergy, carries an EpiPen"
         "Аллергия на орехи",
         "Zöliakie",
         "ALLERGIE AUX NOIX",
+        "Viene in carrozzina",
+        "Gravida, terzo mese",
+        "Ipertensione, niente sauna",
+        "In chemioterapia",
+        "Non vedente, con cane guida",
+        "Allergic to latex gloves",
     ],
 )
 def test_health_notes_are_recognised(notes: str) -> None:
@@ -58,6 +64,8 @@ def test_health_notes_are_recognised(notes: str) -> None:
         "Trattamento viso",
         "Late arrival, 20 minutes",
         "Vegetarian menu",
+        "Seggiolone per il bambino",
+        "Tavolo vicino alla finestra",
     ],
 )
 def test_other_notes_are_not(notes: str) -> None:

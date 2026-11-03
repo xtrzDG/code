@@ -5,7 +5,8 @@ name: Evals nightly
 # family, three samples per scenario (pass^3), compared with
 # evals/baselines/<model>.json. The run fails when pass^k, or the pass rate
 # of any deterministic criterion (language identity, memory, leaks, tool
-# calls, ...), drops by more than 3 points; summary.md becomes the job
+# calls, ...), drops by more than 3 points, when pass^k is under 85% or
+# when more than 2% of the samples hallucinate; summary.md becomes the job
 # summary, and the report (JSON, HTML, Markdown) and the recorded cassettes
 # are kept as an artifact. Without OPENAI_API_KEY and ANTHROPIC_API_KEY the benchmark is
 # skipped with a notice. Pull requests replay the committed cassettes
@@ -31,6 +32,14 @@ on:
         description: "Allowed drop of any criterion's pass rate (0.03 = 3 points)"
         type: string
         default: "0.03"
+      min_pass_rate:
+        description: "Fail below this pass^k, baseline or not (0.85 = 85%)"
+        type: string
+        default: "0.85"
+      max_hallucination_rate:
+        description: "Fail when more samples than this share hallucinated (0.02 = 2%)"
+        type: string
+        default: "0.02"
       update_baseline:
         description: "Store this run as the model's baseline (artifact; commit it in a PR)"
         type: boolean
@@ -66,6 +75,8 @@ jobs:
       SAMPLES: ${{ inputs.samples || 3 }}
       TOLERANCE: ${{ inputs.tolerance || '0.03' }}
       CRITERION_TOLERANCE: ${{ inputs.criterion_tolerance || '0.03' }}
+      MIN_PASS_RATE: ${{ inputs.min_pass_rate || '0.85' }}
+      MAX_HALLUCINATION_RATE: ${{ inputs.max_hallucination_rate || '0.02' }}
       UPDATE_BASELINE: ${{ inputs.update_baseline && '--update-baseline' || '' }}
       MODEL: ${{ matrix.model }}
       JUDGE: ${{ matrix.judge }}
@@ -102,7 +113,9 @@ jobs:
         run: uv sync --frozen
 
       # Exit code 1: pass^k or a criterion's pass rate fell by more than its
-      # tolerance (only scenarios both runs played are compared).
+      # tolerance (only scenarios both runs played are compared), pass^k is
+      # under the floor, or the hallucination rate is over the ceiling; the
+      # floor and the ceiling hold before a model has a baseline too.
       - name: Play the datasets and compare with the baseline
         if: ${{ steps.keys.outputs.enabled == 'true' }}
         shell: bash
@@ -119,6 +132,7 @@ jobs:
             --model "$MODEL" --judge-model "$JUDGE" \
             --samples "$SAMPLES" --tolerance "$TOLERANCE" \
             --criterion-tolerance "$CRITERION_TOLERANCE" --workers 8 \
+            --min-pass-rate "$MIN_PASS_RATE" --max-hallucination-rate "$MAX_HALLUCINATION_RATE" \
             --cassettes "reports/evals/$MODEL/cassettes" --out "reports/evals/$MODEL" \
             "${niche_arguments[@]}" ${UPDATE_BASELINE:+"$UPDATE_BASELINE"} 2>&1 | tee "reports/evals/$MODEL/run.log"
           status=${PIPESTATUS[0]}

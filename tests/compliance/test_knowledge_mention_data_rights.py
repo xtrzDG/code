@@ -10,13 +10,18 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.privacy import KnowledgeMentionMatch
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.knowledge import KnowledgeAttribute, KnowledgeItemDocument
 from app.schemas.dto.compliance import ContactRecordsQuery
 from app.schemas.dto.knowledge_admin import (
     KnowledgeItemPatch,
     UpdateKnowledgeItemCommand,
 )
-from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
+from app.schemas.typings.knowledge.constrained_strings import KnowledgeAttributeKey
+from app.schemas.typings.knowledge.strings import (
+    KnowledgeAttributeValue,
+    KnowledgeBody,
+    KnowledgeTitle,
+)
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 from tests.compliance.two_tenants import TwoTenants, command, seed_two_tenants
 from tests.knowledge.harness import KnowledgeHarness
@@ -165,3 +170,28 @@ def test_the_owner_sees_the_flag_and_a_save_clears_it() -> None:
     after = harness.knowledge_item_repo.get(business.id, details.id)
     assert after is not None
     assert after.erased_customer_flagged_at is None
+
+
+def test_the_export_carries_the_attribute_that_holds_the_customers_number() -> None:
+    tenants = seed_two_tenants()
+    item = KnowledgeItemDocument(
+        business_id=tenants.business.id,
+        kind=KnowledgeItemKind.FAQ,
+        title=KnowledgeTitle("Regulars"),
+        attributes=[
+            KnowledgeAttribute(
+                key=KnowledgeAttributeKey("phone"),
+                value=KnowledgeAttributeValue("+995 577 12 34 56 / +995 599 000000"),
+            )
+        ],
+    )
+    tenants.testbed.knowledge_item_repo.save(item)
+
+    export = tenants.testbed.export_contact_data.run(
+        command(tenants, tenants.visitor.contact.id)
+    )
+
+    (mention,) = export.records.knowledge_mentions
+    assert mention.knowledge_item_id == item.id
+    assert mention.matched_on == [KnowledgeMentionMatch.PHONE]
+    assert mention.attributes == item.attributes

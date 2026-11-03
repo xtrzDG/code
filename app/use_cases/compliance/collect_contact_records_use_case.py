@@ -208,6 +208,8 @@ class CollectContactRecordsUseCase(
                         knowledge_item_id=item.id,
                         title=item.title,
                         body=item.body,
+                        attributes=list(item.attributes),
+                        aliases=list(item.aliases),
                         matched_on=matched,
                     )
                 )

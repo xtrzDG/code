@@ -113,7 +113,7 @@ class PaymentGatewayAdapterContract(AdapterContract, Protocol):
         Raises:
             ConflictError: the provider reports another status or amount,
                 or does not know the order (the notification is not applied
-                now; the provider sends it again).
+                now; its queued job tries again).
             ExternalServiceError: the provider could not be asked.
         """
         raise NotImplementedError

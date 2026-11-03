@@ -15,9 +15,13 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.utilities.paging.cursor_paging import encode_page_cursor
 from tests.integrations.integration_shop import IntegrationShop
 
 THEIR_CONTACT_NAME: str = "Zurab"
+# A page position past every record (lists run newest first): the page
+# after it is the key's whole list, whatever record the cursor names.
+FAR_SORT_KEY: int = 2**62
 
 
 @dataclass(frozen=True)
@@ -43,6 +47,17 @@ class TheirRecords:
             "lead_id": self.lead_id,
             "conversation_id": self.conversation_id,
             "webhook_id": self.webhook_id,
+        }
+
+    def query_values(self) -> dict[str, str]:
+        """
+        A value for each query parameter of the public API: a page cursor
+        names B's booking (the page after it is still the key's own list).
+        """
+
+        return {
+            "limit": "100",
+            "cursor": str(encode_page_cursor(FAR_SORT_KEY, self.booking_id)),
         }
 
     def markers(self) -> set[str]:

@@ -64,7 +64,8 @@ class ApplyPaymentStatusUseCase(
 ):
     """
     What a payment's status does to its order, invoices and subscription
-    (ProcessPaymentWebhookUseCase hands it each new (payment, status) pair).
+    (ApplyPaymentEventUseCase, run by the queued job a payment webhook
+    queued, hands it each new (payment, status) pair).
 
     - approved, first payment of a checkout: its invoices become PAID and
       the card's automatic charges replace those of an earlier checkout (one

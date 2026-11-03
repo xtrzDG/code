@@ -1,14 +1,19 @@
 # Evaluation dataset of the online_shop niche: Kakheti Tea Shop in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: online_shop
 business:
   name: Kakheti Tea Shop
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {bestseller: '35', gift_set: '70', new_arrival: '28'}
   answers: {delivery_time: 'Delivery in Tbilisi takes 1-2 days, to other cities 3-5 days.', returns: Unopened items can be returned within 14 days.}
+  knowledge:
+  - {title: 'Do you sell loose tea or tea bags?', body: 'Only loose-leaf tea, in 100 g packs.'}
+  - {title: 'Do you deliver abroad?', body: 'No, we deliver only within Georgia.'}
+  - {title: 'Do you gift-wrap orders?', body: 'Yes, every gift set comes wrapped, with a card.'}
+  - {title: 'Where do your herbs come from?', body: 'Our herbal blends are grown in Kakheti.'}
   catalog: {title: 'Kakheti herbal blend No. {n}', body: 'Loose-leaf herbal tea, 100 g, caffeine-free.', price: '12', count: 90}
 scenarios:
 - id: price__ka
@@ -740,3 +745,113 @@ scenarios:
     tools: [search_knowledge]
     prices: ['12']
     handoff: false
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much the gift set costs.
+  customer: ['hi how much is the gift sat']
+  assistant:
+  - call:
+      get_price: {item_name: Gift set}
+  - {say: 'The gift set costs 70 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['70']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the new arrival costs.
+  customer: ['buongiorno quanto novità tè nuovo']
+  assistant:
+  - call:
+      get_price: {item_name: New arrival}
+  - {say: 'La novità costa 28 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['28']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask how long delivery to another city takes.
+  customer: ['allo ow long is taking ze delivery to batumi']
+  assistant:
+  - {say: 'Delivery to other cities takes 3-5 days; in Tbilisi it takes 1-2 days. Can I help with anything else?'}
+  expect:
+    facts: ['3-5']
+    forbidden_tools: [create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number may be misheard, order gift sets; confirm the quantity, your name and address only when the assistant asks.
+  customer: ['vorrei ordinare 6 set regalo con la consegna a casa']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: vuole ordinare 6 set regalo? Mi conferma la quantità, il suo nome e l''indirizzo di consegna?'}
+  expect:
+    facts: [6 set]
+    forbidden_tools: [create_lead]
+    handoff: false
+questions:
+- {id: bestseller, language: en, item: 'Our bestseller', ask: 'How much is your bestseller tea?', say: 'Our bestseller costs 35 GEL.', prices: ['35']}
+- {id: gift_set, language: en, item: 'Gift set', ask: 'I need a present. What does the gift set cost?', say: 'The gift set costs 70 GEL.', prices: ['70']}
+- {id: new_arrival, language: en, item: 'New arrival', ask: 'What is the price of your newest tea?', say: 'The new arrival costs 28 GEL.', prices: ['28']}
+- {id: blend_34, language: en, search: 'Kakheti herbal blend No. 34', ask: 'Do you have Kakheti herbal blend No. 34? How much is it?', say: 'Yes, we have Kakheti herbal blend No. 34: a loose-leaf herbal tea, 100 g. It costs 12 GEL.', prices: ['12']}
+- {id: blend_47, language: en, search: 'Kakheti herbal blend No. 47', ask: 'Is Kakheti herbal blend No. 47 still on sale?', say: 'Yes, Kakheti herbal blend No. 47 is a loose-leaf herbal tea, 100 g, and costs 12 GEL.', prices: ['12']}
+- {id: blend_58, language: en, search: 'Kakheti herbal blend No. 58', ask: 'What does a pack of Kakheti herbal blend No. 58 cost?', say: 'A pack of Kakheti herbal blend No. 58, 100 g of loose-leaf herbal tea, costs 12 GEL.', prices: ['12']}
+- {id: blend_66, language: en, search: 'Kakheti herbal blend No. 66', ask: 'A friend recommended Kakheti herbal blend No. 66. Do you sell it?', say: 'Yes, we sell Kakheti herbal blend No. 66: a loose-leaf herbal tea, 100 g, for 12 GEL.', prices: ['12']}
+- {id: blend_83, language: en, search: 'Kakheti herbal blend No. 83', ask: 'How much is Kakheti herbal blend No. 83?', say: 'Kakheti herbal blend No. 83 costs 12 GEL for 100 g of loose-leaf herbal tea.', prices: ['12']}
+- {id: returns, language: en, ask: 'Can I send an item back if I change my mind?', say: 'Unopened items can be returned within 14 days.', facts: ['14 days']}
+- {id: delivery_tbilisi, language: en, ask: 'How long does delivery take in Tbilisi?', say: 'Delivery in Tbilisi takes 1-2 days.', facts: ['1-2 days']}
+- {id: delivery_kutaisi, language: en, ask: 'How long will it take to get my order to Kutaisi?', say: 'Delivery to other cities takes 3-5 days.', facts: ['3-5 days']}
+- {id: how_to_order, language: en, ask: 'How do I place an order?', say: 'Write the products and quantity, your name, phone number and delivery address here, and I will pass the order to our team.', facts: ['delivery address']}
+- {id: order_status, language: en, ask: 'Where is my order? I ordered on Monday.', say: 'Write your order number or the phone number you ordered with here, and I will pass your question to our team.', facts: ['order number']}
+- {id: weekday_hours, language: en, ask: 'When do you answer on weekdays?', say: 'Monday to Friday we work from 10:00 to 19:00.', facts: ['10:00']}
+- {id: weekend, language: en, ask: 'Do you work on Saturdays?', say: 'We are closed on Saturday and Sunday; we work Monday to Friday.', facts: ['closed']}
+- {id: loose_tea, language: en, ask: 'Do you sell tea bags?', say: 'We sell only loose-leaf tea, in 100 g packs.', facts: ['loose-leaf']}
+- {id: abroad, language: en, ask: 'Can you send an order to Germany?', say: 'No, we deliver only within Georgia.', facts: ['only within Georgia']}
+- {id: wrapping, language: en, ask: 'Is the gift set wrapped?', say: 'Yes, every gift set comes wrapped, with a card.', facts: ['wrapped']}
+- {id: origin, language: en, ask: 'Where do your herbs come from?', say: 'Our herbal blends are grown in Kakheti.', facts: ['Kakheti']}
+- {id: phone, language: en, ask: 'What is your phone number?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: promo_code, language: en, unknown: true, ask: 'Do you have a promo code for my first order?', say: 'I have no information about promo codes, so I can''t promise one. I have passed your question to the team.', invented: ['your code is', 'promo code is']}
+- {id: green_tea, language: en, unknown: true, ask: 'Do you sell green tea from Japan?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['we sell Japanese', 'green tea costs']}
+- {id: same_day, language: en, unknown: true, ask: 'Can you deliver today in Tbilisi?', say: 'I don''t know whether same-day delivery is possible, so I have passed your question to the team. Can I help with anything else?', invented: ['delivered today', 'same-day delivery costs']}
+- {id: pickup, language: en, unknown: true, ask: 'Can I pick up my order myself somewhere?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['pick it up at', 'our shop is at']}
+- {id: subscription, language: en, unknown: true, ask: 'Do you have a monthly tea subscription box?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['subscription costs', 'our subscription box']}
+- {id: honey, language: en, unknown: true, ask: 'Do you also sell Kakheti honey?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['we sell honey', 'honey costs']}
+- {id: bestseller, language: it, item: 'Our bestseller', ask: 'Buongiorno, quanto costa il vostro tè più venduto?', say: 'Il nostro bestseller costa 35 GEL.', prices: ['35']}
+- {id: gift_set, language: it, item: 'Gift set', ask: 'Quanto costa la confezione regalo?', say: 'Il set regalo costa 70 GEL.', prices: ['70']}
+- {id: new_arrival, language: it, item: 'New arrival', ask: 'Quanto costa la novità del mese?', say: 'La novità costa 28 GEL.', prices: ['28']}
+- {id: blend_29, language: it, search: 'Kakheti herbal blend No. 29', ask: 'Avete il Kakheti herbal blend No. 29? Quanto costa?', say: 'Sì, il Kakheti herbal blend No. 29 è una tisana in foglie da 100 g e costa 12 GEL.', prices: ['12']}
+- {id: blend_41, language: it, search: 'Kakheti herbal blend No. 41', ask: 'Quanto costa il Kakheti herbal blend No. 41?', say: 'Il Kakheti herbal blend No. 41, una tisana in foglie da 100 g, costa 12 GEL.', prices: ['12']}
+- {id: blend_52, language: it, search: 'Kakheti herbal blend No. 52', ask: 'Una mia amica ha comprato il Kakheti herbal blend No. 52: lo avete ancora?', say: 'Sì, abbiamo il Kakheti herbal blend No. 52: è una tisana in foglie da 100 g e costa 12 GEL.', prices: ['12']}
+- {id: blend_75, language: it, search: 'Kakheti herbal blend No. 75', ask: 'Il Kakheti herbal blend No. 75 è in vendita? Quanto costa?', say: 'Sì, il Kakheti herbal blend No. 75 è una tisana in foglie da 100 g e costa 12 GEL.', prices: ['12']}
+- {id: blend_88, language: it, search: 'Kakheti herbal blend No. 88', ask: 'Vorrei il Kakheti herbal blend No. 88: che prezzo ha?', say: 'Il Kakheti herbal blend No. 88 costa 12 GEL per 100 g di tisana in foglie.', prices: ['12']}
+- {id: returns, language: it, ask: 'Posso restituire un prodotto se cambio idea?', say: 'I prodotti non aperti si possono restituire entro 14 giorni. Posso aiutarla con altro?', facts: ['14 giorni']}
+- {id: delivery_tbilisi, language: it, ask: 'Quanto ci vuole per la consegna a Tbilisi?', say: 'La consegna a Tbilisi è di 1-2 giorni. Posso aiutarla con altro?', facts: ['1-2 giorni']}
+- {id: delivery_batumi, language: it, ask: 'Quanto ci mette un ordine ad arrivare a Batumi?', say: 'La consegna nelle altre città richiede 3-5 giorni.', facts: ['3-5 giorni']}
+- {id: how_to_order, language: it, ask: 'Come faccio un ordine?', say: 'Scriva qui i prodotti e la quantità, il suo nome, il numero di telefono e l''indirizzo di consegna, e passerò l''ordine al nostro team.', facts: ['indirizzo']}
+- {id: order_status, language: it, ask: 'Dov''è il mio ordine? L''ho fatto lunedì.', say: 'Scriva qui il numero dell''ordine o il numero di telefono con cui ha ordinato, e passerò la sua domanda al nostro team.', facts: ['numero dell''ordine']}
+- {id: weekday_hours, language: it, ask: 'Che orari fate durante la settimana?', say: 'Dal lunedì al venerdì lavoriamo dalle 10:00 alle 19:00.', facts: ['10:00']}
+- {id: weekend, language: it, ask: 'Il sabato siete aperti?', say: 'No, il sabato e la domenica siamo chiusi; lavoriamo dal lunedì al venerdì.', facts: ['chiusi']}
+- {id: loose_tea, language: it, ask: 'Vendete il tè in bustine?', say: 'Vendiamo solo tè in foglie, in confezioni da 100 g. Posso aiutarla con altro?', facts: ['foglie']}
+- {id: abroad, language: it, ask: 'È possibile spedire un ordine in Italia?', say: 'No, la consegna è solo in Georgia. Posso aiutarla con altro?', facts: ['Georgia']}
+- {id: wrapping, language: it, ask: 'Il set regalo è già incartato?', say: 'Sì, ogni set regalo arriva incartato, con un biglietto.', facts: ['incartato']}
+- {id: origin, language: it, ask: 'Da dove vengono le vostre erbe?', say: 'Le nostre tisane sono coltivate in Cachezia, Kakheti.', facts: ['Kakheti']}
+- {id: promo_code, language: it, unknown: true, ask: 'C''è un codice sconto per il primo ordine?', say: 'Non ho informazioni su codici sconto, quindi non posso prometterne uno. Ho inoltrato la domanda al team.', invented: ['il codice è', 'codice sconto è']}
+- {id: green_tea, language: it, unknown: true, ask: 'Avete anche il tè verde giapponese?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['vendiamo tè giapponese', 'il tè verde costa']}
+- {id: same_day, language: it, unknown: true, ask: 'È possibile la consegna oggi stesso a Tbilisi?', say: 'Non so se la consegna in giornata è possibile, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['consegnato oggi', 'la consegna in giornata costa']}
+- {id: honey, language: it, unknown: true, ask: 'Vendete anche il miele della Cachezia?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['vendiamo il miele', 'il miele costa']}

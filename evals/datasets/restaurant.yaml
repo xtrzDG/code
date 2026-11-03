@@ -1,28 +1,8 @@
 # Evaluation dataset of the restaurant niche: the Tbilisi demo restaurant Mtsvane Ezo in ka, ru, en, he, ar, it.
-# The restaurant lists ka, ru and en; its Hebrew, Arabic and Italian guests write
-# languages it does not list (the platform reads any language), and the last
-# scenarios are a German guest and guests typing Georgian and Russian in
-# Latin letters. Eight scenarios per language (and in Italian, the first
-# market's language), and in ka, ru and en a
-# guest asking for the fully booked Friday who joins the waitlist, a
-# guest who books by tapping the offered times and yes (offer_choices), and
-# a party of six whose table asks a deposit (send_payment_link: the
-# restaurant takes 20 GEL a guest from six guests through its payment page,
-# and the platform writes the payment line under the reply). In it and en,
-# a guest asks whether a real person answers (the assistant says it is an
-# AI and offers a colleague), reports an emergency (112), asks about
-# allergens (only the restaurant's own words, confirmed with staff) and
-# types a card number to pay the deposit in the chat (the model sees it
-# masked, never repeats it and points to the payment link). Indirect prompt
-# injection (AI-04): an imported knowledge page (`kbinject__*`) and a team
-# note (`noteinject__*`) tell the assistant to waive deposits; the deposit
-# is still asked. A coeliac guest asks about a dish with no allergen data
-# (`allergenunknown__*`: a colleague is called in, nothing is guessed), and
-# a guest wants a thesis written (`offtopic__*`: politely declined).
-# `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: restaurant
 business:
   seed: demo_tbilisi_restaurant
@@ -1993,4 +1973,64 @@ scenarios:
   expect:
     forbidden: [Augustus, Introduction, Caesar]
     forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much the Adjarian khachapuri costs.
+  customer: ['hi how much is the a jar ian kachapuri']
+  assistant:
+  - call:
+      get_price: {item_name: Хачапури по-аджарски}
+  - {say: 'The Adjarian khachapuri costs 22 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['22']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much a glass of Saperavi wine costs.
+  customer: ['buongiorno quanto bicchiere saperavi']
+  assistant:
+  - call:
+      get_price: {item_name: 'Саперави квеври, бокал 150 мл'}
+  - {say: 'Un bicchiere di Saperavi qvevri da 150 ml costa 14 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['14']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask on which days there is live music.
+  customer: ['allo wich day you ave ze live music in ze restaurant']
+  assistant:
+  - {say: 'There is live music on Fridays and Saturdays from 20:00: guitar and Georgian polyphonic singing. Can I help with anything else?'}
+  expect:
+    facts: ['20:00']
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask for a table on Thursday at eight in the evening for four people (the transcript says 40).
+  customer: ['vorrei prenotare un tavolo giovedì alle 8 per 40 persone']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: quante persone siete, 4 o 40? E intende giovedì alle 20:00?'}
+  expect:
+    facts: ['20:00']
+    forbidden_tools: [create_booking]
     handoff: false

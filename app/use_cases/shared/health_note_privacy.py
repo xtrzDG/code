@@ -12,7 +12,9 @@ from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.bookings.booleans import SeesHealthNotes
+from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.shared.brand_reach import acting_role
 from app.utilities.brands.brand_access import direct_role
@@ -48,3 +50,22 @@ def protect_health_note(view: BookingView, sees_notes: SeesHealthNotes) -> Booki
         return view
 
     return view.model_copy(update={"notes": None, "is_health_note_withheld": True})
+
+
+def refuse_hidden_note_change(
+    brand_repo: BrandRepoContract | None,
+    business: BusinessDocument,
+    notes: BookingNote | None,
+    user_id: UserId,
+) -> None:
+    """
+    Raises:
+        AccessDeniedError: the booking's `notes` hold health data the person
+            does not see, so they may not replace them either: an allergy
+            note overwritten unseen would no longer reach the staff.
+    """
+
+    if is_health_note(notes) and not sees_health_notes(brand_repo, business, user_id):
+        raise AccessDeniedError(
+            "Only the owner and staff change notes that hold health details."
+        )

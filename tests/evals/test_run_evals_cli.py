@@ -109,6 +109,34 @@ def test_a_failing_expectation_and_a_broken_dataset(workspace: Path) -> None:
     assert main(arguments(workspace)) == 2
 
 
+def test_the_pass_rate_floor_and_the_hallucination_ceiling_set_the_exit_code(
+    workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(arguments(workspace, "--record")) == 0
+    assert main(arguments(workspace, "--min-pass-rate", "1")) == 0
+
+    path = workspace / "datasets" / "hotel.yaml"
+    path.write_text(DATASET.replace('forbidden: ["%"]', 'invented: ["180"]'), "utf-8")
+
+    # The reply names a price the scenario says is invented: one of two
+    # samples hallucinated, over the default ceiling of 2%.
+    assert main(arguments(workspace)) == 1
+    output = capsys.readouterr().out
+    assert "hallucination rate 50.0% (1/2)" in output
+    assert "FAILED: hallucination rate 50.0% (1/2 samples)" in output
+    assert main(arguments(workspace, "--max-hallucination-rate", "1")) == 0
+    assert (
+        main(
+            arguments(
+                workspace, "--max-hallucination-rate", "1", "--min-pass-rate", "1"
+            )
+        )
+        == 1
+    )
+    summary = (workspace / "out" / "summary.md").read_text(encoding="utf-8")
+    assert "- **failed**: pass^k 50.0% is under the floor 100.0%" in summary
+
+
 def test_options_choose_models_and_modes(tmp_path: Path) -> None:
     replay = parse_options([])
     live = parse_options(

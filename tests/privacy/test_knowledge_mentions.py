@@ -14,6 +14,7 @@ from app.schemas.typings.knowledge.strings import (
     KnowledgeBody,
     KnowledgeTitle,
 )
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.privacy.knowledge_mentions import mention_matches
 
 BUSINESS: BusinessId = BusinessId()
@@ -66,3 +67,39 @@ def test_a_customer_without_name_or_number_is_named_by_no_item() -> None:
     customer = ContactDocument(business_id=BUSINESS)
 
     assert mention_matches(item("Anyone", "+39 333 123 4567"), customer) == []
+
+
+def test_a_number_written_among_others_in_one_run_names_the_customer() -> None:
+    customer = ContactDocument(
+        business_id=BUSINESS, phone_number=E164PhoneNumber("+393331234567")
+    )
+
+    for written in (
+        "Suppliers: 333 1234567 - 333 7654321",
+        "Tel. 0039 333 1234567 / 02 12345678",
+        "Booked 12/03/2026 3331234567",
+    ):
+        assert mention_matches(item("Contacts", written), customer) == [
+            KnowledgeMentionMatch.PHONE
+        ], written
+
+
+def test_a_run_without_the_whole_number_names_nobody() -> None:
+    customer = ContactDocument(
+        business_id=BUSINESS, phone_number=E164PhoneNumber("+393331234567")
+    )
+
+    assert mention_matches(item("Contacts", "333 1234 / 02 7654321"), customer) == []
+
+
+def test_the_name_with_the_surname_first_or_with_punctuation_names_the_customer() -> (
+    None
+):
+    customer = ContactDocument(business_id=BUSINESS, name=ContactName("Mario Rossi"))
+
+    for written in ("ROSSI, Mario", "Tavolo di Mario-Rossi", "mario.rossi@example.it"):
+        assert mention_matches(item("Regulars", written), customer) == [
+            KnowledgeMentionMatch.NAME
+        ], written
+    for unrelated in ("Mario Rossini", "Rossi Maria", "Mario, Luca and Rossi"):
+        assert mention_matches(item("Regulars", unrelated), customer) == [], unrelated

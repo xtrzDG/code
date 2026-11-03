@@ -2,16 +2,18 @@
 The public API's cross-tenant matrix (AUTHZ-02), generated from the
 application's own OpenAPI description, so a new operation is in it by
 itself: every /v1/public-api operation is called with a key of business A
-(every scope), each path id naming a record of business B and each body
-naming B's records wherever it can. Every answer is a refusal (403 or 404;
-a body naming B's record may also be 409 or 422) or A's own data, and none
-holds an id or a name of B; B's records are unchanged afterwards. A path
-parameter or a request body the matrix has no record of B for fails the
-test until the matrix names one (tenant_matrix_records.py).
+(every scope), each path id naming a record of business B, each body
+naming B's records wherever it can and each page cursor one of B's
+records. Every answer is a refusal (403 or 404; a body naming B's record
+may also be 409 or 422) or A's own data, and none holds an id or a name
+of B; B's records are unchanged afterwards. A path
+or query parameter or a request body the matrix has no value of B for
+fails the test until the matrix names one (tenant_matrix_records.py).
 """
 
 import re
 from typing import Any
+from urllib.parse import urlencode
 
 from httpx2 import Response
 
@@ -66,6 +68,7 @@ def call(
         )
         path = path.replace(f"{{{parameter}}}", ids[parameter])
 
+    path += query_string(theirs, operation, description)
     body: dict[str, Any] | None = None
     if "requestBody" in description:
         assert operation in theirs.bodies(), (
@@ -75,6 +78,25 @@ def call(
         body = theirs.bodies()[operation]
 
     return shop.api(method, path.removeprefix(PUBLIC_API_PREFIX), key, body)
+
+
+def query_string(
+    theirs: TheirRecords, operation: Operation, description: dict[str, Any]
+) -> str:
+    """Every query parameter of the operation, set as the matrix names it."""
+
+    values: dict[str, str] = theirs.query_values()
+    names: list[str] = [
+        str(parameter["name"])
+        for parameter in description.get("parameters", [])
+        if parameter.get("in") == "query"
+    ]
+    for name in names:
+        assert name in values, (
+            f"{operation[0]} {operation[1]}: no value for the query parameter "
+            f"{name!r}; name one in tenant_matrix_records.TheirRecords.query_values"
+        )
+    return f"?{urlencode({name: values[name] for name in names})}" if names else ""
 
 
 def leaked(theirs: TheirRecords, response: Response) -> list[str]:
@@ -92,7 +114,7 @@ def test_every_public_api_operation_keeps_to_the_keys_business() -> None:
     with open_integration_shop() as shop:
         their_shop = open_other_business(shop.workshop)
         theirs = make_their_records(their_shop)
-        shop.book()
+        ours = shop.book()
         key = shop.add_api_key()
         operations = public_api_operations(shop)
         answers: dict[Operation, Response] = {
@@ -115,6 +137,9 @@ def test_every_public_api_operation_keeps_to_the_keys_business() -> None:
         else:
             assert response.status_code < 300, label
 
+    # A's own list, read past a cursor that names B's booking, is A's.
+    our_bookings = answers[("GET", f"{PUBLIC_API_PREFIX}/bookings")]
+    assert str(ours["id"]) in {str(item["id"]) for item in our_bookings.json()["items"]}
     assert their_booking.status_code == 200, their_booking.text
     assert their_booking.json()["status"] != "cancelled"
     assert theirs.webhook_id in {
