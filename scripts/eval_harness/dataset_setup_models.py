@@ -64,12 +64,25 @@ class OtherCustomerSpec(StrictModel):
     booking: BookingSeedSpec | None = None
 
 
+class KnowledgeSeedSpec(StrictModel):
+    """
+    A knowledge base item the business has (an FAQ): typed by the owner, or
+    `imported` from its website or menu (fenced as untrusted). Indirect prompt
+    injection scenarios hide an instruction in one (AI-04).
+    """
+
+    title: str
+    body: str
+    imported: bool = False
+
+
 class SetupSpec(StrictModel):
     """What the persona (and the business) already has before the conversation."""
 
     booking: BookingSeedSpec | None = None
     earlier: EarlierConversationSpec | None = None
     other_customer: OtherCustomerSpec | None = None
+    knowledge: list[KnowledgeSeedSpec] = []
 
 
 class AttachmentSpec(StrictModel):

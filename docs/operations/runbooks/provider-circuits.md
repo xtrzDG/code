@@ -18,7 +18,6 @@ models in [llm-outage](llm-outage.md)):
 | `provider:flitt` | Flitt (Georgia, Armenia): creating a checkout or a card page, stopping automatic charges, retrying a declined charge |
 | `provider:stripe` | Stripe (the EU, the US, Israel): the same calls, apart from Flitt's circuit |
 | `provider:elevenlabs` | ElevenLabs, the voice platform: setting up voice agents and their tools, the voice checks of autotests, call recordings, deleting conversations, importing and assigning rented numbers. A call the voice platform cannot take still reaches staff: rented numbers fall back to the staff mobile through Twilio (docs/LAUNCH.md, section 4.6) |
-
 | `provider:google_calendar` | Google Calendar of every business: mirroring bookings into it, reading its busy times, erasing a customer's events, the consent's token calls. While open a mirror is retried later, a busy-time read keeps the busy times read before (shown as "unreachable") |
 | `provider:cal_com` | Cal.com, the booking system: reading its bookings as busy times, writing and cancelling the platform's bookings there (queued, retried) |
 | `provider:twilio_numbers` | Twilio's phone numbers: the offer, its price, renting, the call fallback, returning a number (apart from `provider:twilio_sms`) |

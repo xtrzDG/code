@@ -34,6 +34,7 @@ import { callSettingsEn } from "./workspace/callSettings.en";
 import { channelSetupEn } from "./workspace/channelSetup.en";
 import { channelPagesEn } from "./workspace/channelPages.en";
 import { channelsEn } from "./workspace/channels.en";
+import { assistantControlsEn } from "./workspace/assistantControls.en";
 import { customerMemoryEn } from "./workspace/customerMemory.en";
 import { dataExportsEn } from "./workspace/dataExports.en";
 import { formFieldsEn } from "./workspace/formFields.en";
@@ -86,6 +87,7 @@ export const workspaceEn = {
   dataExports: dataExportsEn,
   quality: qualityEn,
   customerMemory: customerMemoryEn,
+  assistantControls: assistantControlsEn,
   privacyRetention: privacyRetentionEn,
   widgetSites: widgetSitesEn,
   adminSpend: adminSpendEn,

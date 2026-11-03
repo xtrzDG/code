@@ -78,6 +78,12 @@
           var notice = el("p", "aw-notice");
           notice.textContent = text(item.key || "handedOff");
           log.appendChild(notice);
+          // Waiting for the team (the assistant failed or gave no answer in
+          // time, or a person was asked for): the business's phone too.
+          var waitingContact = fallbackContact();
+          if (waitingContact) {
+            log.appendChild(waitingContact);
+          }
           return;
         }
         var row = messageRow(item.role, item.text, item.direction, item.role === "staff" ? text("staff") : "");

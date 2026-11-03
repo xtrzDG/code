@@ -64,12 +64,30 @@ export function SecondStepForm({
         isStartingApp={flow.isStartingSetup}
         problem={passkey.problem ?? flow.problem}
         onAddPasskey={passkey.enroll}
-        onUseApp={() => {
-          setUseApp(true);
-          void flow.startSetup();
-        }}
+        onUseApp={
+          passkey.canUseApp
+            ? () => {
+                setUseApp(true);
+                void flow.startSetup();
+              }
+            : null
+        }
         onStartOver={onStartOver}
       />
+    );
+  }
+
+  if (flow.requiresEnrollment && !passkey.canUseApp) {
+    // A platform admin held to passkeys, in a browser that cannot make one.
+    return (
+      <div className="space-y-5">
+        <Heading title={t("mfa.enrollment.title")} description={t("passkeys.enrollment.passkeyOnly")} />
+        <div className="border-t border-line pt-4 text-center">
+          <Button variant="ghost" size="sm" onClick={onStartOver}>
+            {t("mfa.secondStep.startOver")}
+          </Button>
+        </div>
+      </div>
     );
   }
 

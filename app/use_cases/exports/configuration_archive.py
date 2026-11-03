@@ -7,7 +7,9 @@ assistant with its instructions, tools, languages and facts
 the connected channels without their credentials (channels.json: the
 encrypted token and the WhatsApp numbers' PINs never leave), and the
 consent ledger (consent_records.json), each a JSON array like every
-collection of the archive.
+collection of the archive; the rest of the setup (opening hours'
+exceptions, the features' settings, segments, quick replies, the team's
+notes) comes from `setup_archive`.
 """
 
 from dataclasses import dataclass
@@ -32,6 +34,7 @@ from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.use_cases.exports.archive_pages import DocumentPages, single_page
+from app.use_cases.exports.setup_archive import SetupArchive
 from app.use_cases.shared.document_pages import pages_in_write_order
 
 
@@ -52,6 +55,7 @@ class ConfigurationArchive:
     privacy_settings_repo: BusinessPrivacySettingsRepoContract
     channel_repo: ChannelRepoContract
     consent_record_repo: ConsentRecordRepoContract
+    setup: SetupArchive | None = None
 
     def pages(self, business: BusinessDocument) -> dict[str, DocumentPages]:
         """Each configuration file's documents (none: an empty array)."""
@@ -63,7 +67,10 @@ class ConfigurationArchive:
         call_settings: CallSettingsDocument | None = (
             self.call_settings_repo.get_by_business(business_id)
         )
-        return {
+        setup: dict[str, DocumentPages] = (
+            {} if self.setup is None else self.setup.pages(business_id)
+        )
+        return setup | {
             "business_profile": single_page([] if profile is None else [profile]),
             "assistant_versions": pages_in_write_order(
                 self.assistant_version_repo, business_id, lambda item: str(item.id)

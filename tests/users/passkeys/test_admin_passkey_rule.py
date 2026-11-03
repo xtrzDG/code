@@ -3,16 +3,22 @@ Platform admins on passkeys (ADMIN_PASSKEY_REQUIRED, on by default in
 production): a new admin sets up a passkey (never the app), an admin with
 a passkey answers with it (never the app's code, a recovery code stays the
 way back in), and an admin who has only the app signs in but finds the
-admin pages closed until a passkey is added in Account → Security.
+admin pages (and looks into a client's cabinet) closed until a passkey is
+added in Account → Security.
 Development and tests keep the app (the setting is off there).
 """
 
 from collections.abc import Iterator
 
 import pytest
+from typed_time_provider import Microseconds
 
+from app.schemas.constants.access import SupportAccessKind
 from app.schemas.domain.mfa import TotpFactorDocument
+from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.mfa.constrained_integers import TotpTimeStep
+from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
@@ -20,6 +26,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from app.utilities.security.totp_codes import generate_totp_secret
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import ADMIN_EMAIL, CABINET_ORIGIN, E2E_ENVIRONMENT
+from tests.e2e.journeys import sign_in_and_create_restaurant
 from tests.users.mfa.mfa_api import login_code_step, reason_codes, second_step
 from tests.users.passkeys.passkey_api import add_passkey, new_authenticator
 
@@ -58,7 +65,8 @@ def give_app(workshop: Workshop, user_id: str) -> None:
 
 
 def admin_id(workshop: Workshop) -> str:
-    admin = workshop.container.repositories.user_repo().find_by_email(ADMIN_EMAIL)
+    users = workshop.container.repositories.user_repo()
+    admin = users.find_by_email(EmailAddress(ADMIN_EMAIL))
     assert admin is not None
     return str(admin.id)
 
@@ -156,3 +164,43 @@ def test_development_and_tests_keep_the_app_by_default(
     settings = assemble_app_settings(environment)
 
     assert settings.sessions.is_admin_passkey_required is expected
+
+
+def test_a_look_into_a_cabinet_needs_the_passkey_too(workshop: Workshop) -> None:
+    owner_token, _, business_id = sign_in_and_create_restaurant(workshop)
+    login_code_step(workshop, ADMIN_EMAIL)
+    give_app(workshop, admin_id(workshop))
+    step = login_code_step(workshop, ADMIN_EMAIL)
+    token: str = second_step(
+        workshop,
+        step,
+        code=workshop.authenticators.code_for(ADMIN_EMAIL, workshop.clock),
+    ).json()["access_token"]
+    # A look opened before passkeys were required (a grant still open).
+    now = workshop.clock.wall_clock.now_unix()
+    container = workshop.container
+    with container.utilities.storage_scope().platform_wide():
+        container.repositories.support_access_grant_repo().save(
+            SupportAccessGrantDocument(
+                business_id=BusinessId(business_id),
+                kind=SupportAccessKind.SESSION,
+                granted_by=UserId(admin_id(workshop)),
+                admin_user_id=UserId(admin_id(workshop)),
+                expires_at=Microseconds(int(now) + 3_600_000_000),
+                created_at=now,
+                updated_at=now,
+            )
+        )
+
+    with_app_only = workshop.client.get(
+        f"/v1/businesses/{business_id}", headers=bearer(token)
+    )
+    added = add_passkey(workshop, token, new_authenticator())
+    with_passkey = workshop.client.get(
+        f"/v1/businesses/{business_id}", headers=bearer(token)
+    )
+
+    assert owner_token
+    assert with_app_only.status_code == 404
+    assert added.status_code == 201, added.text
+    assert with_passkey.status_code == 200, with_passkey.text

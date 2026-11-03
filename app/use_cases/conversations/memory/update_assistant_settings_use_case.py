@@ -5,6 +5,7 @@ from app.contracts.repositories.customer_memory_repositories import (
     AssistantSettingsRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistant_settings import AssistantSettingsDocument
@@ -19,6 +20,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.utilities.conversations.tool_switches import check_switchable
 from app.utilities.memory.assistant_settings_views import view_assistant_settings
 
 ASSISTANT_SETTINGS_ENTITY: AuditEntityName = AuditEntityName("assistant_settings")
@@ -32,8 +34,13 @@ class UpdateAssistantSettingsUseCase(
     reach it or not. Off takes effect at the next customer message: no
     summaries are written and no memory reaches the assistant; summaries
     already written stay with their conversations (the customer's data
-    erasure removes them). Audited (UPDATE of "assistant_settings"): it
-    decides what the assistant reads of customers' personal data.
+    erasure removes them). The owner's controls change when sent: a pause
+    (the spend guard then holds every turn and call back) and the actions
+    switched off (`tool_switches`). Audited (UPDATE of
+    "assistant_settings"): it decides what the assistant reads and does.
+
+    Raises:
+        ValidationFailedError: a tool that may not be switched off.
     """
 
     def __init__(
@@ -63,10 +70,20 @@ class UpdateAssistantSettingsUseCase(
             )
         )
         now: Microseconds = self._wall_clock.now_unix()
+        request = input_data.settings
+        disabled_tools: list[AssistantToolName] | None = (
+            None
+            if request.disabled_tools is None
+            else check_switchable(request.disabled_tools)
+        )
 
         def update(stored: AssistantSettingsDocument) -> None:
-            stored.remembers_customers = input_data.settings.remembers_customers
-            stored.shares_team_notes = input_data.settings.shares_team_notes
+            stored.remembers_customers = request.remembers_customers
+            stored.shares_team_notes = request.shares_team_notes
+            if request.is_paused is not None:
+                stored.is_paused = request.is_paused
+            if disabled_tools is not None:
+                stored.disabled_tools = disabled_tools
 
         settings: AssistantSettingsDocument = self._assistant_settings_repo.change(
             business.id, update, now

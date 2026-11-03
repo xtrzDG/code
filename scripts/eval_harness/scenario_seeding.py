@@ -12,9 +12,11 @@ sees is the same in every run (and its recorded answers replay).
 from typed_time_provider import Microseconds
 
 from app.containers.app import AppContainer
+from app.registries.demo.demo_foundation_parts import knowledge_item
 from app.schemas.constants.bookings import LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.assistant_settings import AssistantSettingsDocument
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -87,6 +89,22 @@ def seed_customer(
 
         if setup.earlier is not None:
             remember(container, seeded, contact, setup.earlier, owner_id, now)
+
+        for item in setup.knowledge:
+            container.repositories.knowledge_item_repo().save(
+                knowledge_item(
+                    seeded.business,
+                    KnowledgeItemKind.FAQ,
+                    item.title,
+                    since=now,
+                    body=item.body,
+                    source=(
+                        KnowledgeItemSource.MENU_IMPORT
+                        if item.imported
+                        else KnowledgeItemSource.OWNER
+                    ),
+                )
+            )
 
         other = setup.other_customer
         if other is not None:

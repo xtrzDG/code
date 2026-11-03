@@ -5,8 +5,11 @@ business's hourly bucket, shared by every process. The new booking past
 BOOKING_SURGE_PER_HOUR of an hour, and the cancellation past
 CANCELLATION_SURGE_PER_HOUR, count the platform signal of the
 `booking_spike` or `cancellation_spike` alert once, and a warning line
-names the business (never a customer). Nothing is refused: the booking
-caps (`booking_limits.py`) refuse, this only tells the platform team.
+names the business (never a customer). Concurrent processes may count
+past the edge together, so whichever first sees the count over it claims
+the hour's alert (a counter of one per business, kind and hour) and only
+that one reports it. Nothing is refused: the booking caps
+(`booking_limits.py`) refuse, this only tells the platform team.
 
 A booking announced as changed counts as a cancellation when it is
 CANCELLED now and was written within RECENT_CHANGE_SECONDS (the change
@@ -36,7 +39,10 @@ from app.schemas.dto.rate_limits import RateLimitCounter, RateLimitWindow
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.platform.constrained_integers import RateWindowSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    RateWindowSeconds,
+    RequestsPerWindow,
+)
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.utilities.limits.sliding_window_limits import locate_window
 from app.utilities.monitoring.signal_windows import UNLIMITED
@@ -45,12 +51,16 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 HOUR: RateWindowSeconds = RateWindowSeconds(60 * 60)
 # A busy restaurant takes a few dozen bookings in its best hour; a script
 # holding every slot takes far more. Cancellations come one at a time.
-BOOKING_SURGE_PER_HOUR: int = 40
-CANCELLATION_SURGE_PER_HOUR: int = 15
+BOOKING_SURGE_PER_HOUR: RequestsPerWindow = RequestsPerWindow(40)
+CANCELLATION_SURGE_PER_HOUR: RequestsPerWindow = RequestsPerWindow(15)
 RECENT_CHANGE_SECONDS: int = 60
 MICROSECONDS_PER_SECOND: int = 1_000_000
 NEW_BOOKINGS_KEY: str = "booking-surge:new:"
 CANCELLATIONS_KEY: str = "booking-surge:cancelled:"
+# The hour's alert of a business and kind, claimed once: the hour's start
+# is in the key, so the claim of the hour before never weighs on it.
+ALERTED_KEY: str = "booking-surge:alerted:"
+ONE_ALERT: RequestsPerWindow = RequestsPerWindow(1)
 
 
 class BookingSurgeObserverFacilitator(BusinessEventObserverContract):
@@ -106,13 +116,24 @@ class BookingSurgeObserverFacilitator(BusinessEventObserverContract):
         age: int = int(self._wall_clock.now_unix()) - int(booking.updated_at)
         return age <= RECENT_CHANGE_SECONDS * MICROSECONDS_PER_SECOND
 
-    def _count(self, business_id: BusinessId, prefix: str, surge: int) -> None:
+    def _count(
+        self, business_id: BusinessId, prefix: str, surge: RequestsPerWindow
+    ) -> None:
         key = RateLimitKey(f"{prefix}{business_id}")
         window: RateLimitWindow = locate_window(self._wall_clock.now_unix(), HOUR)
         self._buckets.count_if_within(
             [RateLimitCounter(key=key, limit=UNLIMITED)], window
         )
-        if int(self._buckets.read_counts(key, window).current_count) != surge + 1:
+        if int(self._buckets.read_counts(key, window).current_count) <= int(surge):
+            return
+
+        claim = RateLimitKey(f"{ALERTED_KEY}{prefix}{business_id}:{window.started_at}")
+        if (
+            self._buckets.count_if_within(
+                [RateLimitCounter(key=claim, limit=ONE_ALERT)], window
+            )
+            is not None
+        ):
             return
 
         is_new: bool = prefix == NEW_BOOKINGS_KEY
@@ -124,7 +145,7 @@ class BookingSurgeObserverFacilitator(BusinessEventObserverContract):
         LOGGER.warning(
             "Business %s had more than %s %s this hour",
             business_id,
-            surge,
+            int(surge),
             "new bookings" if is_new else "cancellations",
         )
 

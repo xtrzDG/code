@@ -42,7 +42,9 @@ class AuthorizeSupportAccessUseCase(
 
     - Only admins whose role opens client cabinets (SUPER, SUPPORT_READONLY;
       read from the admin team at every call) with a session signed in with
-      two factors; anyone else gets NotFoundError, as for a foreign id.
+      two factors, and with a passkey where admins must use one
+      (ADMIN_PASSKEY_REQUIRED, production); anyone else gets
+      NotFoundError, as for a foreign id.
     - Only during an open look into this cabinet (the hour after "Open
       cabinet" with a reason): without one, AccessDeniedError with the
       reason `support_access_required`.
@@ -123,6 +125,10 @@ class AuthorizeSupportAccessUseCase(
             return None
 
         if assurance is not None and not is_two_factor_session(assurance, user.id):
+            return None
+
+        if self._platform_admins.needs_passkey(user):
+            # Where admins must use passkeys (production), as the admin pages.
             return None
 
         return self._platform_admins.role_of(user)

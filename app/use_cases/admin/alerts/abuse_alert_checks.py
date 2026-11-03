@@ -2,7 +2,8 @@
 The checks of the abuse alert rules (`abuse_alert_rules.py`): the events
 of their signals in the window still filling and the one before. The
 detail never names a customer: the warning lines of the log name the
-business (bookings) or the template and number (WhatsApp).
+business (bookings) or its WhatsApp Business Account and the template or
+the number's event (WhatsApp).
 """
 
 from collections.abc import Mapping
@@ -62,7 +63,7 @@ class AbuseAlertChecks:
             rule,
             warnings,
             f"{warnings} quality warnings from Meta in the last {minutes(rule)} "
-            "minutes; the log names the number or the template.",
+            "minutes; the log names the business account and the template.",
         )
 
     def _recent(self, signal: PlatformSignal, now: Microseconds) -> int:

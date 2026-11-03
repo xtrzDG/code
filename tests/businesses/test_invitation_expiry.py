@@ -6,15 +6,21 @@ owner may invite them again. Accounts that already signed in join at once
 and stay, as before.
 """
 
+from collections.abc import Callable
+from typing import cast
+
 import pytest
 
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.businesses import BusinessQuery, InviteStaffRequest
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.lapsed_invitations import LapsedInvitations
 from tests.businesses.team_steps import invite, remove
 from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
@@ -128,3 +134,49 @@ def test_a_business_never_loses_its_last_owner_to_a_lapse() -> None:
     heir = testbed.sign_in_with_phone(GERMANY_MOBILE)
 
     assert members_of(testbed, business) == {heir.user.id}
+
+
+class ReinvitedMeanwhile:
+    """The business store, with the owner inviting again just before the update."""
+
+    def __init__(self, testbed: AccountsTestbed, user_id: UserId) -> None:
+        self._testbed: AccountsTestbed = testbed
+        self._user_id: UserId = user_id
+
+    def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
+        return self._testbed.business_repo.list_by_member(user_id)
+
+    def update(
+        self, business_id: BusinessId, apply: Callable[[BusinessDocument], None]
+    ) -> BusinessDocument:
+        now = self._testbed.clock.now_microseconds()
+
+        def renew(current: BusinessDocument) -> None:
+            for member in current.members:
+                if member.user_id == self._user_id:
+                    member.invited_at = now
+
+        self._testbed.business_repo.update(business_id, renew)
+        return self._testbed.business_repo.update(business_id, apply)
+
+
+def test_an_invitation_renewed_meanwhile_is_kept_and_not_logged() -> None:
+    testbed, owner_id, business = with_invitation()
+    testbed.clock.advance(8 * DAY_SECONDS)
+    (invited_id,) = members_of(testbed, business) - {owner_id}
+    invited = testbed.user_repo.get(invited_id)
+    assert invited is not None
+    lapses = LapsedInvitations(
+        cast(BusinessRepoContract, ReinvitedMeanwhile(testbed, invited.id)),
+        testbed.audit_log_repo,
+    )
+
+    removed = lapses.remove(invited, testbed.clock.now_microseconds())
+
+    assert removed == []
+    assert members_of(testbed, business) == {owner_id, invited.id}
+    assert not [
+        entry
+        for entry in testbed.audit_log_repo.list_by_business(business.id)
+        if entry.action is AuditAction.DELETE and entry.entity == "business_member"
+    ]

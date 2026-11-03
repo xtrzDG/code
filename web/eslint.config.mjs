@@ -6,7 +6,7 @@ import nextTs from "eslint-config-next/typescript";
  * The only files that may hand markup to the browser (INP-02): each was
  * reviewed and builds its markup from constant or escaped parts, never
  * from a customer's, a model's or an owner's text. Everything else renders
- * text through React, which escapes it. src/lib/csp/htmlSinks.test.ts
+ * text through React, which escapes it. src/lib/csp/htmlSinks.policy.test.ts
  * keeps this list and the code in step.
  */
 const REVIEWED_HTML_SINK_FILES = [

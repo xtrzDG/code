@@ -4,7 +4,8 @@ redirect hop, calendar feed or webhook address that is not a public https
 address (a private or metadata IP, an intranet name, credentials in it, a
 port other than 80/443, another scheme). The line names the refusal and
 the target host only, never the path or query (an ICS feed's secret lives
-there) and never who typed it.
+there); who asked is only the pseudonymous actor every security line
+carries (`security_events.py`).
 """
 
 from urllib.parse import urlsplit

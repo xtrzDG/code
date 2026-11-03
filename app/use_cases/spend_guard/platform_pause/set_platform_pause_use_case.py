@@ -11,6 +11,7 @@ from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
 from app.schemas.constants.access import PlatformAdminPermission
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.platform_pauses import PlatformPauseDocument
@@ -26,6 +27,7 @@ from app.schemas.typings.compliance.strings import (
 from app.use_cases.spend_guard.platform_pause.platform_pause_views import (
     build_platform_pause_view,
 )
+from app.utilities.conversations.tool_switches import check_switchable
 from app.utilities.spend.platform_brakes import (
     read_budget_stop,
 )
@@ -34,6 +36,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 AUDITED_ENTITY: AuditEntityName = AuditEntityName("platform_pause")
 PAUSED: AuditEntityReference = AuditEntityReference("paused")
 RESUMED: AuditEntityReference = AuditEntityReference("resumed")
+TOOLS_SWITCHED: AuditEntityReference = AuditEntityReference("tools_switched")
 
 
 class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPauseView]):
@@ -49,11 +52,16 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
     business setting changes either way. Every change is written to the
     platform's audit log (UPDATE of `platform_pause`, `paused` or
     `resumed`, with the reason and the address) and logged as a warning.
+    The same request may switch assistant actions off for every business
+    (`disabled_tools`, `tool_switches`); a change of those alone is
+    audited as `tools_switched`.
 
     Raises:
         AccessDeniedError: the user is not a SUPER platform admin.
         StepUpRequiredError: the session did not prove its person lately.
-        ConflictError: the platform is already paused (or running).
+        ConflictError: the platform is already paused (or running) and
+            the switched-off tools stay the same.
+        ValidationFailedError: a tool that may not be switched off.
     """
 
     def __init__(
@@ -89,7 +97,15 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
         request = input_data.request
         stored: PlatformPauseDocument | None = self._pause_repo.get()
         is_paused: bool = stored is not None and stored.is_paused
-        if is_paused == request.is_paused:
+        stored_tools: list[AssistantToolName] = (
+            [] if stored is None else list(stored.disabled_tools)
+        )
+        disabled_tools: list[AssistantToolName] = (
+            stored_tools
+            if request.disabled_tools is None
+            else check_switchable(request.disabled_tools)
+        )
+        if is_paused == request.is_paused and disabled_tools == stored_tools:
             raise ConflictError(
                 "Every assistant is already paused."
                 if is_paused
@@ -102,6 +118,7 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
             reason=request.reason,
             changed_by=admin.id,
             changed_at=now,
+            disabled_tools=disabled_tools,
             created_at=now if stored is None else stored.created_at,
             updated_at=now,
         )
@@ -110,7 +127,13 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
             actor_id=admin.id,
             action=AuditAction.UPDATE,
             entity=AUDITED_ENTITY,
-            entity_id=PAUSED if request.is_paused else RESUMED,
+            entity_id=(
+                TOOLS_SWITCHED
+                if is_paused == request.is_paused
+                else PAUSED
+                if request.is_paused
+                else RESUMED
+            ),
             ip_address=input_data.client_ip_address,
             reason=AdminActionReason(str(request.reason)),
             created_at=now,
@@ -120,7 +143,7 @@ class SetPlatformPauseUseCase(UseCaseContract[PlatformPauseCommand, PlatformPaus
         # The reason stays in the audit log; free text never goes to the logs.
         logger.warning(
             "Every assistant %s by platform admin %s (audit entry %s)",
-            "paused" if request.is_paused else "resumed",
+            entry.entity_id,
             admin.id,
             entry.id,
         )

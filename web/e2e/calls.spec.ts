@@ -95,9 +95,12 @@ test("recording is off until the owner turns it on, and transfers wait for the s
   const recording = page.getByRole("switch", { name: calls.recording.toggle });
   await expect(recording).toHaveAttribute("aria-checked", "false");
   // What callers hear, as the call's greeting says it: how to reach a person,
-  // where the privacy notice is, and the recording once it is on.
+  // who is responsible for their data and where the privacy notice is, and
+  // the recording once it is on.
   await expect(page.getByText(calls.recording.noticeOperator)).toBeVisible();
-  await expect(page.getByText(calls.recording.noticePrivacy)).toBeVisible();
+  await expect(
+    page.getByText(calls.recording.noticePrivacy.replace("{business}", owner.businessName)),
+  ).toBeVisible();
   await expect(page.getByText(calls.recording.noticeRecorded)).toHaveCount(0);
 
   const recorded = nextSave(page, "/call-settings");

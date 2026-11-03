@@ -11,9 +11,11 @@ import httpx
 
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
+from app.schemas.exceptions.provider_errors import BusyTimeSourceOutageError
 
 ACCESS_DENIED_STATUSES: frozenset[int] = frozenset({401, 403})
 GONE_STATUSES: frozenset[int] = frozenset({404, 410})
+SERVER_ERROR_STATUS: int = 500
 # Bookings that take their time: confirmed, or waiting for confirmation.
 BUSY_BOOKING_STATUSES: frozenset[str] = frozenset({"accepted", "pending"})
 
@@ -31,6 +33,11 @@ def read_data(response: httpx.Response, operation: str) -> object:
         raise BusyTimeSourceError(
             f"Cal.com does not know it ({operation}: HTTP {status}).",
             CalendarSyncProblem.NOT_FOUND,
+        )
+    if status >= SERVER_ERROR_STATUS:
+        # Cal.com is in trouble: its circuit counts it (REL-04).
+        raise BusyTimeSourceOutageError(
+            f"Cal.com answered HTTP {status} ({operation})."
         )
     if status >= 400:
         raise BusyTimeSourceError(

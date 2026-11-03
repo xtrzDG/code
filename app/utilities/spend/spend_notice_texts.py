@@ -50,6 +50,30 @@ HARD_LIMIT_OWNER_NOTICE: LocalizedText = build_localized_text(
     "ასისტენტი კი ზარებს არ იღებს. გთხოვთ, კლიენტებს შემოსულებიდან უპასუხოთ. "
     "თუ ასეთ დატვირთვას ელოდით, სთხოვეთ მხარდაჭერას ლიმიტის გაზრდა.",
 )
+MONTHLY_HARD_LIMIT_OWNER_NOTICE: LocalizedText = build_localized_text(
+    en="{business}: this month's AI and call costs reached {spend}, the monthly "
+    "limit of {limit}. Until the end of the month the assistant no longer "
+    "answers by itself: new messages wait for your team in the inbox, and "
+    "calls are not taken by the voice assistant. Please answer customers "
+    "from the inbox. If you expected this much traffic, ask support to raise "
+    "the limit.",
+    it="{business}: questo mese i costi di IA e chiamate hanno raggiunto "
+    "{spend}, il limite mensile di {limit}. Fino alla fine del mese "
+    "l'assistente non risponde più da solo: i nuovi messaggi aspettano il "
+    "vostro team nella posta in arrivo e l'assistente vocale non prende le "
+    "chiamate. Rispondete ai clienti dalla posta in arrivo. Se vi aspettavate "
+    "tanto traffico, chiedete al supporto di alzare il limite.",
+    ru="{business}: расходы на ИИ и звонки в этом месяце достигли {spend} — "
+    "это месячный лимит {limit}. До конца месяца ассистент больше не "
+    "отвечает сам: новые сообщения ждут вашу команду во входящих, а "
+    "голосовой ассистент не принимает звонки. Пожалуйста, отвечайте клиентам "
+    "из входящих. Если вы ждали такой поток, попросите поддержку поднять лимит.",
+)
+MONTHLY_HARD_LIMIT_TEAM_NOTICE: str = (
+    "Spend guard: {business} reached its hard monthly limit ({spend} of "
+    "{limit}) on {day}; it only takes messages for its team until the end of "
+    "its month. Runbook: docs/operations/runbooks/spend-spike.md"
+)
 OWNER_NOTICES: dict[SpendLevel, LocalizedText] = {
     SpendLevel.SOFT_LIMIT: SOFT_LIMIT_OWNER_NOTICE,
     SpendLevel.HARD_LIMIT: HARD_LIMIT_OWNER_NOTICE,

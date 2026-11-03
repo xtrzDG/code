@@ -142,7 +142,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
                 value: JsonObject | None = read_object(change, "value")
                 if read_text(change, "field") != MESSAGES_FIELD or value is None:
                     skipped.append(other_field_kind(change))
-                    report_quality_warnings(change, self._signal_counter)
+                    report_quality_warnings(entry, change, self._signal_counter)
                     continue
 
                 skipped.extend(status_kinds(value))

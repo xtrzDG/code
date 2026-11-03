@@ -7,6 +7,10 @@ from app.contracts.repositories.business_closure_repositories import (
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.integration_repositories import (
+    ApiKeyRepoContract,
+    WebhookEndpointRepoContract,
+)
 from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
@@ -44,6 +48,7 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.platform.constrained_strings import ErrorReasonCode
 from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.api_key_revocation import ApiKeyRevocation
 from app.use_cases.users.account_deletion.account_departure_checks import (
     require_no_orphans,
 )
@@ -63,7 +68,10 @@ class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
     sign-in). Refused while they are the last owner of a business that is
     not closing, or of a brand, and for a member of the platform team (the
     team removes them first). Otherwise they leave every business and brand
-    (each business's log records it), and their sessions (this one too),
+    (each business's log records it), the API keys they made for a
+    business are revoked as when an owner removes them from the team
+    (ApiKeyRevocation: each audited, with the webhooks those keys
+    subscribed), and their sessions (this one too),
     authenticator, recovery codes, passkeys, devices for notifications,
     notification preferences and reminder answers go, then the account
     itself; the platform's audit chain records the deletion. Records of
@@ -89,6 +97,8 @@ class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
         platform_admins: PlatformAdminRegistryContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        api_key_repo: ApiKeyRepoContract,
+        webhook_endpoint_repo: WebhookEndpointRepoContract,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
         self._storage_scope: StorageScopeContract = storage_scope
@@ -110,6 +120,9 @@ class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._api_keys: ApiKeyRevocation = ApiKeyRevocation(
+            api_key_repo, webhook_endpoint_repo, audit_log_repo
+        )
 
     def run(self, input_data: DeleteCurrentUserCommand) -> None:
         self._step_up.require_recent_authentication()
@@ -163,6 +176,10 @@ class DeleteCurrentUserUseCase(UseCaseContract[DeleteCurrentUserCommand, None]):
             self._push_subscription_repo.delete(business_id, device.id)
         self._preferences_repo.delete(business_id, user_id)
         self._security_nudge_repo.forget(business_id, user_id)
+        # A key must not outlive its maker's place in the team.
+        self._api_keys.revoke_created_by(
+            business_id, user_id, user_id, now, input_data.client_ip_address
+        )
         self._audit(business_id, MEMBER_ENTITY, input_data, now)
 
     def _leave_brand(

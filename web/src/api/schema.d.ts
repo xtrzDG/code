@@ -7004,6 +7004,13 @@ export interface components {
          * @description The settings as stored; `updated_at` None while the defaults apply.
          */
         AssistantSettingsView: {
+            /** Disabled Tools */
+            disabled_tools?: components["schemas"]["AssistantToolName"][];
+            /**
+             * Is Paused
+             * @default false
+             */
+            is_paused: boolean;
             /** Remembers Customers */
             remembers_customers: boolean;
             /** Shares Team Notes */
@@ -16765,6 +16772,8 @@ export interface components {
             changed_at?: number | null;
             /** Changed By */
             changed_by?: string | null;
+            /** Disabled Tools */
+            disabled_tools?: components["schemas"]["AssistantToolName"][];
             /** Is Paused */
             is_paused: boolean;
             /** Reason */
@@ -24930,6 +24939,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Disabled Tools */
+                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording")[] | null;
                     /** Is Paused */
                     is_paused: boolean;
                     /** Reason */
@@ -30077,6 +30088,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Disabled Tools */
+                    disabled_tools?: ("search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link" | "decline_recording")[] | null;
+                    /** Is Paused */
+                    is_paused?: boolean | null;
                     /**
                      * Remembers Customers
                      * @default true

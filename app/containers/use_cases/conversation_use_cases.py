@@ -67,6 +67,9 @@ from app.use_cases.conversations.replies.generate_assistant_reply_use_case impor
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
 )
+from app.use_cases.conversations.tools.tool_switch_guard_use_case import (
+    ToolSwitchGuardUseCase,
+)
 from app.use_cases.conversations.transcribe_voice_note_use_case import (
     TranscribeVoiceNoteUseCase,
 )
@@ -106,7 +109,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         app_settings=config.app_settings,
     )
-    run_assistant_tool_use_case: Factory[
+    unswitched_run_assistant_tool_use_case: Factory[
         UseCaseContract[AssistantToolInvocation, AssistantToolOutcome]
     ] = Factory(
         RunAssistantToolUseCase,
@@ -127,6 +130,16 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
         send_booking_confirmation=booking_use_cases.send_booking_confirmation_use_case,
+    )
+    # Every tool call (chats and calls) passes the owner's and the platform's
+    # tool switches first (AI-10).
+    run_assistant_tool_use_case: Factory[
+        UseCaseContract[AssistantToolInvocation, AssistantToolOutcome]
+    ] = Factory(
+        ToolSwitchGuardUseCase,
+        run_assistant_tool=unswitched_run_assistant_tool_use_case,
+        assistant_settings_repo=repositories.assistant_settings_repo,
+        platform_pause_repo=repositories.platform_pause_repo,
     )
     # What the assistant remembers of a returning customer (1121).
     recall_customer_memory_use_case: Factory[
@@ -159,6 +172,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         contact_message_limit=config.app_settings.provided.contact_message_limit_per_hour,
         injection_flag_limit=config.app_settings.provided.reply_safety.injection_flag_limit,
         recall_customer_memory=recall_customer_memory_use_case,
+        rate_limits=registries.request_rate_limit_registry,
     )
     # The customer's turn adds the spend check (`check_spend`) where the
     # turn orchestrator is wired; autotests play without it.

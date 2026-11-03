@@ -77,7 +77,11 @@ class LapsedInvitations:
                         if member.user_id != user.id
                     ]
 
-            self._business_repo.update(business.id, drop)
+            stored: BusinessDocument = self._business_repo.update(business.id, drop)
+            if any(member.user_id == user.id for member in stored.members):
+                # Invited again meanwhile (a fresh invitation): they stay.
+                continue
+
             self._audit_log_repo.append(
                 AuditLogEntryDocument(
                     business_id=business.id,

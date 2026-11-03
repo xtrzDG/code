@@ -6,9 +6,10 @@ is in trouble, and so count against its circuit breaker (REL-04).
 These providers answer one business's own problem with an error too: a
 revoked consent, a calendar or event type that is gone, a refused key.
 Such an answer says nothing about the provider, so only a call that got
-no answer (a timeout, a connection error) or a server error counts; with
-many businesses on one circuit, one business's broken setting never opens
-it for the others.
+no answer (a timeout, a connection error) or a server error (HTTP 5xx:
+ProviderOutageError, or BusyTimeSourceOutageError for a busy-time read)
+counts; with many businesses on one circuit, one business's broken
+setting never opens it for the others.
 """
 
 from collections.abc import Callable
@@ -18,7 +19,10 @@ from app.schemas.constants.calendar_sync import CalendarSyncProblem
 from app.schemas.exceptions.application_errors import ProviderCircuitOpenError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
-from app.schemas.exceptions.provider_errors import ProviderOutageError
+from app.schemas.exceptions.provider_errors import (
+    BusyTimeSourceOutageError,
+    ProviderOutageError,
+)
 from app.schemas.typings.resilience.constrained_strings import CircuitName
 from app.utilities.resilience.circuit_calls import call_through_circuit
 
@@ -29,10 +33,12 @@ UNANSWERED_PROBLEMS: frozenset[CalendarSyncProblem] = frozenset(
 
 def is_integration_outage(error: ApplicationError) -> bool:
     """
-    A busy-time read that timed out or could not reach the provider, or a
-    call the provider did not answer or answered with a 5xx.
+    A busy-time read that timed out, could not reach the provider or got a
+    5xx, or another call the provider did not answer or answered with a 5xx.
     """
 
+    if isinstance(error, BusyTimeSourceOutageError):
+        return True
     if isinstance(error, BusyTimeSourceError):
         return error.problem in UNANSWERED_PROBLEMS
 

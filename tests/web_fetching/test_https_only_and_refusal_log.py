@@ -94,7 +94,7 @@ def test_a_redirect_to_plain_http_is_still_read_over_https() -> None:
         ("http://[::1]/", "not_public", "::1"),
         ("http://2130706433/", "not_public", "2130706433"),
         ("https://cafe.example:6379/", "port_not_allowed", "cafe.example"),
-        ("http://2130706433/", "not_public", "2130706433"),
+        ("http://0177.0.0.1/", "not_public", "0177.0.0.1"),
         ("http://127.1/", "not_public", "127.1"),
         ("http://0x7f000001/", "not_public", "0x7f000001"),
         ("https://user:pw@cafe.example/", "credentials_in_url", "cafe.example"),

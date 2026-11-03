@@ -21,8 +21,8 @@ class CircuitBreakingBookingSystemAdapter(BookingSystemConnectorContract):
     """
     Decorator of one booking system's connector (Cal.com): every call goes
     through the provider's circuit (`provider:cal_com`, shared by every
-    business). Calls that timed out or could not reach the provider count
-    against it; a refused key or a missing event type (one business's own
+    business). Calls that timed out, could not reach the provider or got a
+    5xx count against it; a refused key or a missing event type (one business's own
     setting) never does. While the circuit is open a call fails at once
     with BusyTimeSourceError UNREACHABLE, as the connector's own outages
     do, so the busy-time sync keeps the busy times read before and the

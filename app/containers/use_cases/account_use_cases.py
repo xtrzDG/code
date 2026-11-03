@@ -164,6 +164,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         recovery_code_repo=repositories.recovery_code_repo,
         passkey_ceremony=adapters.passkey_ceremony,
         business_repo=repositories.business_repo,
+        brand_repo=repositories.brand_repo,
     )
     authenticate_user_use_case: Factory[
         UseCaseContract[SessionCheck, SessionAssurance]

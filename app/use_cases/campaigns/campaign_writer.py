@@ -65,8 +65,8 @@ class CampaignWriter:
     never applies. A customer without consent gets nothing and nothing is
     stored, so a consent given while the booking is still due counts. A
     consent from before an erasure of the customer's number or account
-    (a contact a restored backup brought back) counts as taken back
-    (OPTED_OUT).
+    (another contact the customer had with that number or account) counts
+    as taken back (OPTED_OUT).
     Service messages (confirmations, reminders, the booking's link) are
     other flows and need no marketing consent.
 
@@ -173,7 +173,7 @@ class CampaignWriter:
     ) -> bool:
         """
         The consent was given before one of the customer's numbers or
-        accounts was erased (a contact a restored backup brought back):
+        accounts was erased (another contact the customer had with them):
         the erasure took it back.
         """
 

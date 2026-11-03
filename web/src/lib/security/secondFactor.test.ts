@@ -66,6 +66,12 @@ describe("refused codes", () => {
     ).toBeNull();
   });
 
+  it("tells a platform admin held to passkeys that the app's code is not enough", () => {
+    expect(
+      secondFactorProblem(refusal(403, "access_denied", ["passkey_required"])),
+    ).toBe("passkeys.errors.adminPasskeyOnly");
+  });
+
   it("finds a reason only on API errors", () => {
     expect(
       hasReason(

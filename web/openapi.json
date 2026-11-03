@@ -2030,6 +2030,18 @@
         "additionalProperties": false,
         "description": "The settings as stored; `updated_at` None while the defaults apply.",
         "properties": {
+          "disabled_tools": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantToolName"
+            },
+            "title": "Disabled Tools",
+            "type": "array"
+          },
+          "is_paused": {
+            "default": false,
+            "title": "Is Paused",
+            "type": "boolean"
+          },
           "remembers_customers": {
             "title": "Remembers Customers",
             "type": "boolean"
@@ -26620,6 +26632,13 @@
             ],
             "title": "Changed By"
           },
+          "disabled_tools": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantToolName"
+            },
+            "title": "Disabled Tools",
+            "type": "array"
+          },
           "is_paused": {
             "title": "Is Paused",
             "type": "boolean"
@@ -43327,8 +43346,41 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Body of PUT /v1/admin/platform/pause: pause (true) or resume (false)\nevery assistant, with the reason the audit log keeps.",
+                "description": "Body of PUT /v1/admin/platform/pause: pause (true) or resume (false)\nevery assistant, with the reason the audit log keeps; `disabled_tools`,\nwhen sent, are the assistant actions switched off for every business\n(left out, they stay as they are).",
                 "properties": {
+                  "disabled_tools": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "Tool the language model may call (concept section 5).",
+                          "enum": [
+                            "search_knowledge",
+                            "get_price",
+                            "check_availability",
+                            "create_booking",
+                            "cancel_booking",
+                            "reschedule_booking",
+                            "list_my_bookings",
+                            "join_waitlist",
+                            "create_lead",
+                            "handoff_to_human",
+                            "send_link",
+                            "record_unanswered_question",
+                            "offer_choices",
+                            "send_payment_link",
+                            "decline_recording"
+                          ],
+                          "title": "AssistantToolName",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Disabled Tools"
+                  },
                   "is_paused": {
                     "title": "Is Paused",
                     "type": "boolean"
@@ -51448,8 +51500,52 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The owner's choices: remember returning customers (their visits,\nbookings, open requests and what earlier conversations were about), and\nlet the team's internal notes on them reach that memory.",
+                "description": "The owner's choices: remember returning customers (their visits,\nbookings, open requests and what earlier conversations were about), and\nlet the team's internal notes on them reach that memory. `is_paused`\nand `disabled_tools` (the owner's controls) change only when sent:\nleft out, they stay as they are.",
                 "properties": {
+                  "disabled_tools": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "Tool the language model may call (concept section 5).",
+                          "enum": [
+                            "search_knowledge",
+                            "get_price",
+                            "check_availability",
+                            "create_booking",
+                            "cancel_booking",
+                            "reschedule_booking",
+                            "list_my_bookings",
+                            "join_waitlist",
+                            "create_lead",
+                            "handoff_to_human",
+                            "send_link",
+                            "record_unanswered_question",
+                            "offer_choices",
+                            "send_payment_link",
+                            "decline_recording"
+                          ],
+                          "title": "AssistantToolName",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Disabled Tools"
+                  },
+                  "is_paused": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Paused"
+                  },
                   "remembers_customers": {
                     "default": true,
                     "title": "Remembers Customers",

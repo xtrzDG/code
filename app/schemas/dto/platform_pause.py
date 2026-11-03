@@ -1,8 +1,10 @@
 """The platform's global pause and daily budget stop, for the admin."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.spend import PlatformBrake
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -35,11 +37,14 @@ class PlatformPauseQuery(ImmutableDTO):
 class PlatformPauseRequest(ImmutableDTO):
     """
     Body of PUT /v1/admin/platform/pause: pause (true) or resume (false)
-    every assistant, with the reason the audit log keeps.
+    every assistant, with the reason the audit log keeps; `disabled_tools`,
+    when sent, are the assistant actions switched off for every business
+    (left out, they stay as they are).
     """
 
     is_paused: IsPlatformPaused
     reason: PlatformPauseReason
+    disabled_tools: list[AssistantToolName] | None = None
 
 
 class PlatformPauseCommand(ImmutableDTO):
@@ -59,6 +64,9 @@ class PlatformPauseView(ImmutableDTO):
     """
 
     is_paused: IsPlatformPaused
+    disabled_tools: list[AssistantToolName] = Field(
+        default_factory=list[AssistantToolName]
+    )
     reason: PlatformPauseReason | None = None
     changed_by: UserId | None = None
     changed_at: Microseconds | None = None

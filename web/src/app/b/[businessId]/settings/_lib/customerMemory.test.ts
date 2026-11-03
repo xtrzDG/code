@@ -6,7 +6,7 @@ const ON = { remembersCustomers: true, sharesTeamNotes: false };
 
 describe("customer memory switches", () => {
   it("reads the stored settings", () => {
-    expect(memorySwitches({ remembers_customers: false, shares_team_notes: true, updated_at: null })).toEqual({
+    expect(memorySwitches({ remembers_customers: false, shares_team_notes: true, is_paused: false, updated_at: null })).toEqual({
       remembersCustomers: false,
       sharesTeamNotes: true,
     });

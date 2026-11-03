@@ -9,15 +9,26 @@ The limits of one reply's model rounds.
   `spend_brake`), the business's spend of its day is checked again: past
   its hard limit no further model call is made and the turn goes to the
   team, so a long tool loop cannot run past the limit.
+- A call repeated too often in the turn does not run (`turn_budget`).
 """
+
+from collections.abc import Sequence
 
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.spend import SpendLevel
-from app.schemas.dto.assistant_tools import AssistantToolOutcome
+from app.schemas.dto.assistant_tools import (
+    AssistantToolInvocation,
+    AssistantToolOutcome,
+)
 from app.schemas.dto.conversation_engine import PreparedTurn
-from app.schemas.dto.conversations import LlmToolCall
+from app.schemas.dto.conversations import LlmToolCall, LlmToolResult
 from app.schemas.dto.spend_guard import SpendCheckRequest, SpendVerdict
 from app.schemas.typings.assistants.constrained_integers import LlmToolCallLimit
+from app.use_cases.conversations.replies.turn_budget import repeated_call_outcome
+from app.use_cases.conversations.replies.turn_progress import (
+    TurnProgress,
+    record_tool_outcome,
+)
 from app.use_cases.conversations.tools.tool_outcomes import error_outcome
 
 MAX_TOOL_CALLS_PER_RESPONSE: LlmToolCallLimit = LlmToolCallLimit(5)
@@ -39,6 +50,40 @@ def refused_call_outcome(
     """The error result of a call past the limit (it never ran)."""
 
     return error_outcome(call, TOO_MANY_TOOL_CALLS.format(limit=int(limit)))
+
+
+def run_tool_calls(
+    run_assistant_tool: UseCaseContract[AssistantToolInvocation, AssistantToolOutcome],
+    turn: PreparedTurn,
+    progress: TurnProgress,
+    calls: Sequence[LlmToolCall],
+    limit: LlmToolCallLimit,
+) -> list[LlmToolResult]:
+    """
+    Every call's result, recorded in the turn's progress: those past the
+    per-response limit and those repeated too often never ran.
+    """
+
+    results: list[LlmToolResult] = []
+    repeated: bool = False
+    for position, call in enumerate(calls):
+        outcome: AssistantToolOutcome | None = None
+        if position >= int(limit):
+            outcome = refused_call_outcome(call, limit)
+        else:
+            outcome = repeated_call_outcome(progress, call)
+            repeated = repeated or outcome is not None
+        if outcome is None:
+            outcome = run_assistant_tool.run(
+                AssistantToolInvocation(context=turn.tool_context, call=call)
+            )
+        record_tool_outcome(progress, call, outcome)
+        results.append(outcome.result)
+
+    if repeated:
+        progress.repeat_rounds += 1
+
+    return results
 
 
 def refuse_past_hard_limit(check: SpendCheck | None, turn: PreparedTurn) -> None:

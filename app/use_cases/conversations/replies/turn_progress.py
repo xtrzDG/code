@@ -60,6 +60,8 @@ class TurnProgress:
     deposit_lines: list[IssuedDepositLine] = field(
         default_factory=list[IssuedDepositLine]
     )
+    # Rounds in which a call repeated too often was refused (`turn_budget`).
+    repeat_rounds: int = 0
 
 
 def start_progress(stored_turns: list[LlmTurnDocument]) -> TurnProgress:

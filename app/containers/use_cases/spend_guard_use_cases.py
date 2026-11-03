@@ -127,6 +127,7 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         settings=config.app_settings.provided.spend_guard,
         platform_pause_repo=repositories.platform_pause_repo,
         platform_spend_gauge=platform_spend_gauge,
+        assistant_settings_repo=repositories.assistant_settings_repo,
     )
     platform_admin_check = platform_admin_check(repositories, registries, utilities)
     get_platform_pause_use_case, set_platform_pause_use_case = platform_pause_use_cases(

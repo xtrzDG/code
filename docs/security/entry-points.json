@@ -472,7 +472,7 @@
     {"method": "GET", "path": "/widget.js", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "the public website chat script"},
     {"method": "GET", "path": "/widget/accessibility", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "a redirect to the public accessibility statement (tests/channels/test_widget_footer_links.py)"},
     {"method": "GET", "path": "/widget/demo", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "the widget's demo page; not served in production (tests/channels/test_widget_demo_page.py)", "in_production": false},
-    {"method": "GET", "path": "/widget/v/8cc8877aaa264465.js", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "an immutable loader of the public chat script, pinned by the embed code's integrity hash (tests/channels/test_widget_loader.py)"}
+    {"method": "GET", "path": "/widget/v/2e745a02e608f46f.js", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "an immutable loader of the public chat script, pinned by the embed code's integrity hash (tests/channels/test_widget_loader.py)"}
   ],
   "cabinet": [
     {"method": "DELETE", "path": "/api/backend/[...path]", "access": "as_api", "scope": "as the API operation", "changes_state": true, "protected_by": "the session cookie becomes the bearer token; only /v1/* is forwarded"},

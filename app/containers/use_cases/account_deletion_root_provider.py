@@ -119,6 +119,8 @@ def account_deletion_root_provider(
             notification_preferences_repo=repositories.notification_preferences_repo,
             security_nudge_repo=repositories.security_nudge_repo,
             platform_admins=registries.platform_admin_registry,
+            api_key_repo=repositories.api_key_repo,
+            webhook_endpoint_repo=repositories.webhook_endpoint_repo,
             app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
         ),

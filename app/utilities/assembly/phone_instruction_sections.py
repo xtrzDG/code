@@ -40,6 +40,15 @@ NO_TEXT_PROMISE_RULE: str = (
 )
 
 
+# ACC-03: a caller who did not catch an answer, or hears badly, asks again.
+REPEAT_AND_SLOWER_RULE: str = (
+    "When the caller asks you to repeat, say your last answer again in the "
+    "same words. When they ask you to speak slower or more clearly, use "
+    "shorter sentences, pause between details and say each date, time, "
+    "price and number on its own, and keep doing so for the rest of the call."
+)
+
+
 def build_phone_role_section(
     business_name: str,
     business_type: str,
@@ -90,6 +99,7 @@ def build_phone_answer_format_section(
         "Say dates with the day and the month and times the way people say "
         "them. Say phone numbers slowly, digit by digit, and repeat the digits "
         "back for confirmation.",
+        REPEAT_AND_SLOWER_RULE,
         "Never read a link or a web address aloud.",
         NO_TEXT_PROMISE_RULE,
     ]

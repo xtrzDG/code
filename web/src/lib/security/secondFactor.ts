@@ -42,9 +42,13 @@ export function hasReason(error: unknown, code: string): boolean {
 
 /**
  * The text of a refused second factor: a wrong (or used) code, a sign-in
- * step that expired, or too many tries; null for other failures (a toast).
+ * step that expired, too many tries, or a platform admin's code where a
+ * passkey is required (production); null for other failures (a toast).
  */
 export function secondFactorProblem(error: ApiError): MessageKey | null {
+  if (hasReason(error, "passkey_required")) {
+    return "passkeys.errors.adminPasskeyOnly";
+  }
   if (hasReason(error, "wrong_code")) {
     return "mfa.errors.wrongCode";
   }

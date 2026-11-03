@@ -52,7 +52,10 @@ def find_existing_voice_agent_id(
 #   caller's name or bookings, no tools bound to the caller id
 #   (list_my_bookings, cancel_booking, reschedule_booking) and the provider
 #   recording the voice only while the business records calls.
-VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(3)
+# 4: the provider's retention backstop (`privacy.retention_days`: a day, a
+#   week while the business records calls) and the filler said when an
+#   answer is late (`turn.soft_timeout_config`).
+VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(4)
 
 
 def needs_voice_agent_resync(version: AssistantVersionDocument) -> bool:

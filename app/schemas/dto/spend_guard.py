@@ -24,6 +24,7 @@ from app.schemas.typings.billing.constrained_integers import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.spend.booleans import IsMonthlySpendLimit
 from app.schemas.typings.spend.constrained_integers import (
     CallMaxDurationSeconds,
     CallSilenceEndSeconds,
@@ -84,7 +85,11 @@ class SpendVerdict(ImmutableDTO):
 
 
 class SpendLimitPassing(ImmutableDTO):
-    """A business passed one of its limits today, for the first time."""
+    """
+    A business passed one of its limits today, for the first time;
+    `is_monthly`: the hard limit of its month (`spend_micro_usd` is then
+    the month's spend so far).
+    """
 
     business: BusinessDocument
     level: SpendLevel
@@ -92,6 +97,7 @@ class SpendLimitPassing(ImmutableDTO):
     spend_micro_usd: CostMicroUsd
     limit_micro_usd: DailySpendLimitMicroUsd
     providers: list[ProviderSpend] = Field(default_factory=list[ProviderSpend])
+    is_monthly: IsMonthlySpendLimit = False
 
 
 class BusinessSpendMark(ImmutableDTO):

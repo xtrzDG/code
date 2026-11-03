@@ -5,6 +5,7 @@ from app.contracts.legal_text_registries import LegalTextRegistryContract
 from app.contracts.passkeys import PasskeyCeremonyAdapterContract
 from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import (
@@ -22,6 +23,7 @@ from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.brands import BrandMemberRole
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
@@ -60,8 +62,9 @@ class VerifyOtpLoginUseCase(
     session. Everyone else gets a
     one-factor session at once (SignInCompletion: the token is returned
     once, only its hash is stored, the login is audited and counted); an
-    owner of a business among them is asked to set up a second factor
-    (`second_factor_suggested`, at every such sign-in until they do). The
+    owner of a business or a brand among them is asked to set up a second
+    factor (`second_factor_suggested`, at every such sign-in until they
+    do). The
     first sign-in of an invited account ends its team invitations older
     than seven days (`LapsedInvitations`); a
     wrong code is audited as LOGIN_FAILED, the one that locks the code as
@@ -92,8 +95,10 @@ class VerifyOtpLoginUseCase(
         recovery_code_repo: RecoveryCodeRepoContract,
         passkey_ceremony: PasskeyCeremonyAdapterContract,
         business_repo: BusinessRepoContract,
+        brand_repo: BrandRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._lapsed_invitations: LapsedInvitations = LapsedInvitations(
             business_repo, audit_log_repo
         )
@@ -166,12 +171,16 @@ class VerifyOtpLoginUseCase(
         )
 
     def _owns_a_business(self, user: UserDocument) -> bool:
-        """An owner without a second factor is asked to set one up."""
+        """An owner (of a business or a brand) is asked to set up a second factor."""
 
         return any(
             member.user_id == user.id and member.role is BusinessMemberRole.OWNER
             for business in self._business_repo.list_by_member(user.id)
             for member in business.members
+        ) or any(
+            member.user_id == user.id and member.role is BrandMemberRole.BRAND_OWNER
+            for brand in self._brand_repo.list_by_member(user.id)
+            for member in brand.members
         )
 
     def _find_or_create_user(

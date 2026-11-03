@@ -35,6 +35,11 @@
     }
   }
   widget.async = true;
+  // A site whose Content Security Policy allows scripts by nonce allows
+  // the widget this tag loads, too.
+  if (own.nonce) {
+    widget.nonce = own.nonce;
+  }
 
   try {
     widget.src = trustedUrl(widgetUrl);

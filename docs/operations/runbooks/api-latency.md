@@ -1,9 +1,13 @@
 # API latency
 
 **Alert:** `api_latency` (SEV2): more than 5 % of the API requests of the
-last 30 minutes took longer than 2 s (at least 200 requests; health probes
-do not count). The website chat and the cabinet feel slow; the status page
-shows them degraded while it fires.
+last 30 minutes took longer than 2 s to start their answer (at least 200
+requests; health probes do not count). A stream (live events, an export)
+counts by its first byte, not by how long it stays open; routes that wait
+for the model by design (the test chat, the public demo chat, assembling
+an assistant, imports, suggestions) are never counted slow: the
+`answer_budget_*` alerts measure the model. The website chat and the
+cabinet feel slow; the status page shows them degraded while it fires.
 
 ## Check
 

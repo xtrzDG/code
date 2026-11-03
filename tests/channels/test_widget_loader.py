@@ -29,7 +29,7 @@ from app.utilities.channels.widget_loader import (
 # source changes this address: the old file must then stay served (add it
 # to published_widget_loaders beside the new one), or those websites lose
 # the chat.
-FIRST_PUBLISHED_PATH: str = "/widget/v/8cc8877aaa264465.js"
+FIRST_PUBLISHED_PATH: str = "/widget/v/2e745a02e608f46f.js"
 
 
 def client(environment: DeploymentEnvironment) -> TestClient:
@@ -101,5 +101,7 @@ def test_the_loader_only_adds_the_widget_with_the_tag_settings() -> None:
     assert 'var WIDGET_FILE = "/widget.js";' in source
     assert 'attribute.name.indexOf("data-") === 0' in source
     assert "createScriptURL" in source
+    # A site that allows scripts by nonce allows the widget the loader adds.
+    assert "widget.nonce = own.nonce;" in source
     for forbidden in ("innerHTML", "document.write", "eval(", "Storage", "http:"):
         assert forbidden not in source

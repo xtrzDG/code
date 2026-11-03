@@ -19,6 +19,8 @@ from app.schemas.typings.platform.constrained_strings import JobName, JobSerialK
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.utilities.jobs.platform_alert_lane import platform_alert_lane
 from app.utilities.spend.spend_notice_texts import (
+    MONTHLY_HARD_LIMIT_OWNER_NOTICE,
+    MONTHLY_HARD_LIMIT_TEAM_NOTICE,
     OWNER_NOTICES,
     TEAM_NOTICES,
     fill_notice,
@@ -57,7 +59,11 @@ class SpendLimitNoticeFacilitator(SpendLimitNoticeFacilitatorContract):
     def announce(
         self, passing: SpendLimitPassing, owners: list[ManagerContact]
     ) -> None:
-        owner_notice = OWNER_NOTICES.get(passing.level)
+        owner_notice = (
+            MONTHLY_HARD_LIMIT_OWNER_NOTICE
+            if passing.is_monthly
+            else OWNER_NOTICES.get(passing.level)
+        )
         if owner_notice is not None:
             for owner in owners:
                 text = MessageText(
@@ -72,7 +78,11 @@ class SpendLimitNoticeFacilitator(SpendLimitNoticeFacilitatorContract):
                     )
                 )
 
-        team_notice = TEAM_NOTICES.get(passing.level)
+        team_notice = (
+            MONTHLY_HARD_LIMIT_TEAM_NOTICE
+            if passing.is_monthly
+            else TEAM_NOTICES.get(passing.level)
+        )
         if team_notice is None:
             return
 

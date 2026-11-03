@@ -3,7 +3,10 @@ Which store an error comes from, for the `storage_errors` platform alert
 (LOG-04): the database when a psycopg error lies underneath (the storage
 adapters translate it and keep it as the cause), the object storage when
 it was raised in the object storage client. Every other error is none of
-them. The chain of causes is walked a few links deep, never in a loop.
+them, and so is a database that answered about the data (psycopg's
+IntegrityError and DataError: a duplicate key, a text it cannot store),
+which says nothing about the store's health. The chain of causes is
+walked a few links deep, never in a loop.
 """
 
 from enum import StrEnum
@@ -12,6 +15,8 @@ from types import TracebackType
 MAX_CHAIN_LINKS: int = 8
 DATABASE_MODULE_PREFIX: str = "psycopg"
 OBJECT_STORAGE_MODULE_PREFIX: str = "app.clients.object_storage"
+# psycopg's classes of an answer about the data, not of a failing store.
+DATABASE_DATA_ANSWERS: frozenset[str] = frozenset({"IntegrityError", "DataError"})
 
 
 class StoreFailureKind(StrEnum):
@@ -31,7 +36,7 @@ def store_failure_of(error: BaseException) -> StoreFailureKind | None:
     ):
         seen.add(id(current))
         if type(current).__module__.startswith(DATABASE_MODULE_PREFIX):
-            return StoreFailureKind.DATABASE
+            return None if is_data_answer(current) else StoreFailureKind.DATABASE
         if raised_in(current.__traceback__, OBJECT_STORAGE_MODULE_PREFIX):
             return StoreFailureKind.OBJECT_STORAGE
         current = current.__cause__ or current.__context__
@@ -50,3 +55,13 @@ def raised_in(trace: TracebackType | None, module_prefix: str) -> bool:
 
     module: object = innermost.tb_frame.f_globals.get("__name__")
     return isinstance(module, str) and module.startswith(module_prefix)
+
+
+def is_data_answer(error: BaseException) -> bool:
+    """Whether a psycopg error is the database's answer about the data."""
+
+    return any(
+        kind.__module__ == DATABASE_MODULE_PREFIX
+        and kind.__name__ in DATABASE_DATA_ANSWERS
+        for kind in type(error).__mro__
+    )

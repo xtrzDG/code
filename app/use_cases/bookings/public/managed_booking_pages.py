@@ -64,7 +64,7 @@ CHANGED_MESSAGE: str = (
     "This booking was changed after the link was sent; open the latest confirmation."
 )
 REVOKED_MESSAGE: str = (
-    "This booking link no longer works; ask the business for a new one."
+    "This booking link no longer works; contact the business about the booking."
 )
 NOT_ACTIVE_MESSAGE: str = "This booking can no longer be changed."
 STARTED_MESSAGE: str = "This booking has started and can no longer be changed here."

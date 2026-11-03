@@ -32,3 +32,19 @@ def test_the_count_holds_the_contact_and_every_record() -> None:
         )
         == 3
     )
+
+
+def test_every_kind_of_record_counts_one_each() -> None:
+    contact = ContactDocument(business_id=BusinessId())
+    lists: list[str] = [
+        name
+        for name, value in ContactRecords(contact=contact)
+        if isinstance(value, list)
+    ]
+    # One record in each list (their content does not matter to the count).
+    values: dict[str, object] = {name: [object()] for name in lists}
+    filled = ContactRecords.model_construct(None, contact=contact, **values)
+
+    assert "consent_records" in lists
+    assert len(lists) >= 14
+    assert int(exported_record_count(filled)) == 1 + len(lists)

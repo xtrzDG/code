@@ -10,6 +10,7 @@ import { ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { BusinessView } from "../_lib/general";
+import { AssistantControlsCard } from "./general/AssistantControlsCard";
 import { AssistantStatusCard } from "./general/AssistantStatusCard";
 import { BrandMembershipCard } from "./general/BrandMembershipCard";
 import { CloseBusinessCard } from "./general/CloseBusinessCard";
@@ -18,7 +19,8 @@ import { GeneralSettingsForm } from "./general/GeneralSettingsForm";
 
 /**
  * Business details, languages and time, recording retention; the
- * assistant's live/paused switch and its memory of returning customers;
+ * assistant's live/paused switch, its memory of returning customers and
+ * the owner's kill switches (pass customers to the team, actions off);
  * for owners of a brand's location, the brand and leaving it; for owners,
  * closing the business (the danger zone). The form starts from the business as
  * stored when the tab opens (the layout's copy may be older), and saves
@@ -48,6 +50,7 @@ export function GeneralTab() {
     <div className="space-y-6">
       <AssistantStatusCard onSaved={setSwitched} />
       <CustomerMemoryCard />
+      <AssistantControlsCard />
       {stored.data ? (
         <GeneralSettingsForm key={business.id} initial={stored.data} switched={switched} />
       ) : stored.error ? (

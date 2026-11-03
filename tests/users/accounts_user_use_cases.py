@@ -176,6 +176,7 @@ class AccountsUserUseCases(AccountsRepositories):
             recovery_code_repo=self.recovery_code_repo,
             passkey_ceremony=WebAuthnPasskeyCeremonyAdapter(self.settings),
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,

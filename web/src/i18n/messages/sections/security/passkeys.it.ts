@@ -47,6 +47,10 @@ export const passkeysIt: Translation<typeof passkeysEn> = {
       "Gli amministratori accedono con un secondo fattore. La passkey è il più sicuro: aggiungine una ora oppure configura un'app di autenticazione.",
     add: "Aggiungi una passkey",
     useApp: "Configura invece un'app di autenticazione",
+    passkeyRequired:
+      "Gli amministratori della piattaforma accedono con una passkey, che non si può rubare con un sito falso: aggiungine una ora su questo dispositivo o sul telefono.",
+    passkeyOnly:
+      "Gli amministratori della piattaforma proteggono l'account con una passkey e questo browser non può crearne una. Apri il pannello in un browser che supporta le passkey.",
   },
   stepUp: {
     use: "Conferma con una passkey",
@@ -65,5 +69,7 @@ export const passkeysIt: Translation<typeof passkeysEn> = {
     suspended:
       "Questa passkey è stata rifiutata: una sua copia potrebbe essere in uso. Accedi in un altro modo, poi rimuovila.",
     unavailable: "Le passkey non sono disponibili qui. Usa invece un codice.",
+    adminPasskeyOnly:
+      "Gli amministratori della piattaforma accedono con la passkey, non con l'app di autenticazione. Usa la passkey, oppure un codice di recupero se l'hai persa.",
   },
 };

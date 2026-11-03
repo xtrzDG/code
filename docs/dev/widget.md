@@ -21,14 +21,20 @@ folder) with the tag's `data-*` attributes, so the widget itself keeps
 updating with every deploy. A published loader never changes: a new one is
 a new file, and the old one stays served (`published_widget_loaders`,
 `tests/channels/test_widget_loader.py` pins the first address). Embed codes
-pasted before the loader name `/widget.js` directly and keep working.
+pasted before the loader name `/widget.js` directly and keep working. The
+integrity hash covers the loader only: `/widget.js` changes with every
+deploy, so it has none and is trusted as the API's own file over TLS. A
+`nonce` on the tag is passed on to the widget, for sites whose Content
+Security Policy allows scripts by nonce.
 
 `/widget.js` is a script without dependencies or cookies: a button and a
 chat window in a shadow DOM (the site's and the widget's styles never mix),
 the visitor's browser language among the business's languages,
 right-to-left writing for Hebrew and Arabic, a typing indicator, errors with
-a retry (when the chat cannot answer at all, also the business's public
-phone, `business_phone_number` of the config, as a call link), a
+a retry (when the chat cannot answer at all, and under the notice that
+the team will answer when the assistant failed, gave no answer in time or
+a person was asked for, also the business's public phone,
+`business_phone_number` of the config, as a call link), a
 full-screen window on phones, keyboard control. A random key in
 `localStorage` recognises the visitor; the last messages, the read position
 and an open handoff are kept there too, and a conversation idle for 24 hours

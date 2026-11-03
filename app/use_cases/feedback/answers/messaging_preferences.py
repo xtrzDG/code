@@ -89,18 +89,20 @@ class MessagingPreferences:
             self.suppression_list.suppress(turn.business.id, identities, now)
             stopped = with_opt_out(contact, turn.conversation.channel)
             if stopped != contact.opted_out_channels:
+                given: MarketingConsent | None = contact.marketing_consent
                 self._store(contact, stopped, AuditAction.CREATE, now)
-                # The save took the consent back (`keep_card_fields`).
-                saved: ContactDocument | None = self.contact_repo.get(
-                    contact.business_id, contact.id
-                )
-                self._record_withdrawal(
-                    turn,
-                    contact,
-                    contact.marketing_consent,
-                    None if saved is None else saved.marketing_consent,
-                    now,
-                )
+                if given is not None and given.is_active:
+                    # The save took the consent back (`keep_card_fields`).
+                    saved: ContactDocument | None = self.contact_repo.get(
+                        contact.business_id, contact.id
+                    )
+                    self._record_withdrawal(
+                        turn,
+                        contact,
+                        given,
+                        None if saved is None else saved.marketing_consent,
+                        now,
+                    )
             else:
                 self._withdraw_consent(turn, contact, now)
 

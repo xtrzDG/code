@@ -79,6 +79,11 @@ export function usePasskeyStep(
     canSignIn: isSupported && methods.includes("passkey"),
     /** A platform admin may add a passkey as the first second factor. */
     canEnroll: isSupported && enrollmentMethods.includes("passkey"),
+    /**
+     * The app may be set up (not for a platform admin held to passkeys,
+     * whose step lists the passkey alone).
+     */
+    canUseApp: enrollmentMethods.length === 0 || enrollmentMethods.includes("totp"),
     /** The person also has a code (authenticator app or recovery codes). */
     hasCodes: methods.some((method) => method !== "passkey"),
     isWorking,

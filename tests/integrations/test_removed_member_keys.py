@@ -3,7 +3,7 @@ Removing a member ends everything they hold in the business at once: their
 cabinet session is refused on the business's routes (membership is read
 at every request), and the API keys they made are revoked with them, each
 audited, with the webhooks those keys subscribed. Keys other people made
-keep working.
+keep working. Deleting one's own account does the same.
 """
 
 from app.schemas.constants.compliance import AuditAction
@@ -101,3 +101,35 @@ def test_removing_a_member_without_keys_revokes_nothing() -> None:
     assert removed.status_code == 204, removed.text
     assert our_key.status_code == 200
     assert deletions == []
+
+
+def test_a_member_deleting_their_account_takes_their_keys() -> None:
+    with open_integration_shop() as shop:
+        token, member_id = co_owner_token(shop)
+        theirs = key_as(shop, token, "Their Zapier")
+        ours = shop.add_api_key(name="Our CRM")
+        shop.api(
+            "POST",
+            "/webhooks",
+            theirs,
+            {"url": "https://hooks.zapier.com/2", "event_types": ["lead.created"]},
+        )
+
+        deleted = shop.client.delete("/v1/me", headers=bearer(token))
+        their_key = shop.api("GET", "/me", theirs)
+        our_key = shop.api("GET", "/me", ours)
+        keys = {
+            item["name"]: item
+            for item in shop.get(f"{shop.base}/api-keys").json()["items"]
+        }
+        webhooks = shop.get(f"{shop.base}/webhooks").json()["items"]
+        deletions = key_deletions(shop)
+
+    assert deleted.status_code == 204, deleted.text
+    assert their_key.status_code == 401
+    assert our_key.status_code == 200, our_key.text
+    assert keys["Their Zapier"]["status"] == "revoked"
+    assert keys["Our CRM"]["status"] == "active"
+    assert webhooks == []
+    # Audited in the business's log, the departing person as the actor.
+    assert deletions == [(member_id, keys["Their Zapier"]["id"])]

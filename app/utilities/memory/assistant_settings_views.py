@@ -23,5 +23,7 @@ def view_assistant_settings(
     return AssistantSettingsView(
         remembers_customers=stored.remembers_customers,
         shares_team_notes=stored.shares_team_notes,
+        is_paused=stored.is_paused,
+        disabled_tools=list(stored.disabled_tools),
         updated_at=stored.updated_at,
     )

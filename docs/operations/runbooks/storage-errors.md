@@ -3,7 +3,10 @@
 **Alert:** `storage_errors` (SEV1): more than 5 requests or jobs failed in
 15 to 30 minutes because the database (a Postgres error underneath) or the
 object storage (recordings, files, export archives) failed. The processes
-that answered the request or ran the job count it. A database that is down
+that answered the request or ran the job count it. A database that
+answered about the data (a duplicate key, a missing row a key points to,
+a text it cannot store) does not count: that is the code's or the data's
+problem, not the store's. A database that is down
 altogether also stops this count: `GET /readyz` (the uptime monitor) and
 `worker_down` cover that ([database-failover](database-failover.md)).
 

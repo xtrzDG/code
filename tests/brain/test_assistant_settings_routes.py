@@ -90,6 +90,8 @@ def test_the_defaults_remember_customers_without_the_team_notes(
     assert response.json() == {
         "remembers_customers": True,
         "shares_team_notes": False,
+        "is_paused": False,
+        "disabled_tools": [],
         "updated_at": None,
     }
 

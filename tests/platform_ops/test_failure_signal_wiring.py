@@ -1,8 +1,10 @@
 """
 The HTTP application counts the failure signals of the platform health
 alerts (LOG-04): a webhook refused by the admission or by its verifier, an
-unexpected database failure, and a request slower than 2 s; probes and an
-application without signals count nothing.
+unexpected database failure, and a request whose answer started 2 s or
+more after it came in (a stream that stays open longer is not slow);
+probes, routes that wait for the model and an application without
+signals count nothing.
 """
 
 from types import SimpleNamespace
@@ -10,6 +12,7 @@ from types import SimpleNamespace
 import psycopg
 import pytest
 from fastapi import APIRouter, FastAPI
+from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
 
 from app.gateways.failure_signals import FailureSignals
@@ -37,6 +40,14 @@ def build_application(signals: FailureSignals | None) -> FastAPI:
     @router.get("/v1/fine")
     def fine() -> dict[str, bool]:
         return {"ok": True}
+
+    @router.get("/v1/businesses/{business_id}/test-chat")
+    def test_chat(business_id: str) -> dict[str, str]:
+        return {"reply": business_id}
+
+    @router.get("/v1/stream")
+    def stream() -> StreamingResponse:
+        return StreamingResponse(iter([b"data: 1\n\n"]), media_type="text/event-stream")
 
     return build_http_application(
         routers=[router],
@@ -114,6 +125,46 @@ def test_slow_requests_are_counted_but_not_probes(
 
     client.get(path)
 
+    assert counted.calls == signals
+
+
+class ScriptedClock:
+    """perf_counter readings in turn: arrival, answer start, end (then the last)."""
+
+    def __init__(self, *readings: float) -> None:
+        self.readings: list[float] = list(readings)
+
+    def perf_counter(self) -> float:
+        return self.readings.pop(0) if len(self.readings) > 1 else self.readings[0]
+
+
+@pytest.mark.parametrize(
+    ("path", "readings", "signals"),
+    [
+        # A live-events stream answers at once and stays open five minutes.
+        ("/v1/stream", (100.0, 100.2, 400.0), []),
+        # An answer that started 3 s late is slow, however short its body.
+        ("/v1/stream", (100.0, 103.0, 103.1), [PlatformSignal.SLOW_API_REQUEST]),
+        ("/v1/fine", (100.0, 102.5, 102.5), [PlatformSignal.SLOW_API_REQUEST]),
+        # The test chat waits for the model: answer latency measures that.
+        ("/v1/businesses/b1/test-chat", (100.0, 108.0, 108.0), []),
+    ],
+)
+def test_a_request_is_as_slow_as_its_answer_started(
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+    readings: tuple[float, ...],
+    signals: list[PlatformSignal],
+) -> None:
+    counted = CountedSignals()
+    client = client_counting(counted)
+    monkeypatch.setattr(
+        request_telemetry_middleware,
+        "time",
+        SimpleNamespace(perf_counter=ScriptedClock(*readings).perf_counter),
+    )
+
+    assert client.get(path).status_code == 200
     assert counted.calls == signals
 
 

@@ -2,7 +2,7 @@
 
 **Alert:** `webhook_signature_failures` (SEV2): more than 30 webhook
 deliveries were refused in 15 to 30 minutes as unsigned, badly signed or
-stale (the API processes count every refusal, at most one a second per
+stale (the API processes count every refusal, at most 60 a minute per
 process). Each refusal is also an `app.security` line with
 `security_event=webhook_delivery_refused`, the `provider`, the `reason`
 and the client network ([log inventory](../../security/log-inventory.md)).

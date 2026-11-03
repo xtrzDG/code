@@ -1,7 +1,9 @@
-# API requests that took longer than 2 s (platform signal
-# slow_api_request, counted by the API processes, at most one a second
-# per process) against every API request of the same 30 minutes (the
-# api_availability service level slots). Health probes do not count.
+# API requests whose answer started 2 s or more after they came in
+# (platform signal slow_api_request, counted by the API processes, at
+# most 60 a minute per process; a stream counts by its first byte, and
+# routes that wait for the model by design never count) against every API
+# request of the same 30 minutes (the api_availability service level
+# slots). Health probes do not count.
 code: api_latency
 severity: sev2
 summary: More than 5 % of API requests took longer than 2 s in the last 30 minutes.

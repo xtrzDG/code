@@ -55,7 +55,8 @@ def test_an_old_agent_gets_the_new_tools_without_a_new_publish() -> None:
 
 def test_an_agent_of_the_previous_revision_is_set_up_again() -> None:
     # Revision 3 brought the agent's auth, call caps, the per-call transfer
-    # number and the Current call block without the caller's name.
+    # number and the Current call block without the caller's name; 4 the
+    # provider's retention backstop and the filler of a late answer.
     testbed = AssemblyTestbed()
     lines = phone_lines()
     business_id, old = published_before_revisions(testbed, lines)
@@ -68,7 +69,7 @@ def test_an_agent_of_the_previous_revision_is_set_up_again() -> None:
 
     report: JobReport = resync_use_case(testbed, lines).run(TICK)
 
-    assert VoiceAgentRevision(3) == VOICE_AGENT_REVISION
+    assert VoiceAgentRevision(4) == VOICE_AGENT_REVISION
     assert int(report.processed_count) == 1
     [spec] = testbed.voice_provisioner.specs
     assert spec.existing_agent_id == old.voice_agent_id

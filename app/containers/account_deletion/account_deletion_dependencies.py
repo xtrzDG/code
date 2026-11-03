@@ -47,6 +47,10 @@ from app.contracts.repositories.business_repositories import (
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import LlmTurnRepoContract
+from app.contracts.repositories.integration_repositories import (
+    ApiKeyRepoContract,
+    WebhookEndpointRepoContract,
+)
 from app.contracts.repositories.mfa_repositories import (
     RecoveryCodeRepoContract,
     TotpFactorRepoContract,
@@ -148,5 +152,8 @@ class AccountDeletionDependencies:
     notification_preferences_repo: NotificationPreferencesRepoContract
     security_nudge_repo: SecurityNudgeRepoContract
     platform_admins: PlatformAdminRegistryContract
+    # The API keys the person made leave with them.
+    api_key_repo: ApiKeyRepoContract
+    webhook_endpoint_repo: WebhookEndpointRepoContract
     app_settings: AppSettings
     wall_clock: WallClock[Microseconds]

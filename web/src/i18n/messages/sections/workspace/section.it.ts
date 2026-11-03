@@ -27,6 +27,7 @@ import { channelPagesIt } from "./channelPages.it";
 import { channelSetupIt } from "./channelSetup.it";
 import { channelsIt } from "./channels.it";
 import { workspaceCommonIt } from "./common.it";
+import { assistantControlsIt } from "./assistantControls.it";
 import { customerMemoryIt } from "./customerMemory.it";
 import { dataExportsIt } from "./dataExports.it";
 import { dataTasksIt } from "./dataTasks.it";
@@ -81,6 +82,7 @@ export const workspaceIt: Translation<typeof workspaceEn> = {
   dataExports: dataExportsIt,
   quality: qualityIt,
   customerMemory: customerMemoryIt,
+  assistantControls: assistantControlsIt,
   privacyRetention: privacyRetentionIt,
   widgetSites: widgetSitesIt,
   adminSpend: adminSpendIt,

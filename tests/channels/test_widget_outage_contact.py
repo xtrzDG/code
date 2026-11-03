@@ -54,3 +54,17 @@ def test_only_an_e164_number_becomes_a_link() -> None:
     assert pattern.fullmatch("+390612345678")
     for refused in ("390612345678", "+39 06 1234", "javascript:alert(1)", "+1"):
         assert pattern.fullmatch(refused) is None
+
+
+def test_a_visitor_left_waiting_for_the_team_is_offered_the_phone_too() -> None:
+    """
+    The agent failed or gave no answer in time (the "noAnswer" notice, the
+    handoff after a failed turn) or a person was asked for: the visitor
+    waits for the team, and the business's phone is right under that notice.
+    """
+    render: str = function_body("renderLog")
+    notice: str = render[render.index('item.role === "notice"') :]
+    notice = notice[: notice.index("return;")]
+
+    assert "fallbackContact()" in notice
+    assert ".aw-notice+.aw-fallback{align-self:center;" in SCRIPT_SOURCE

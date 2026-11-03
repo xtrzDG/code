@@ -1,8 +1,8 @@
 # Mass bookings of one business (ABUSE-04, OAT-021 denial of inventory):
 # every announced new booking counts in the business's hourly bucket
-# (BookingSurgeObserverFacilitator); the 41st of an hour counts the
-# platform signal booking_surge once and a warning line names the
-# business. Owners' test chats never count. The booking caps refuse; this
+# (BookingSurgeObserverFacilitator); the first count past 40 in an hour
+# claims the hour's alert (once, however many processes count) and counts
+# the platform signal booking_surge; a warning line names the business. Owners' test chats never count. The booking caps refuse; this
 # only tells the platform team.
 code: booking_spike
 severity: sev3

@@ -3,7 +3,7 @@ Every erased customer leaves a suppression hash (PRIV-08): digests of their
 numbers and accounts as erasure entries, apart from STOP. They never hold
 back a message the customer asks for (a new booking's reminder), never
 lift with START, and keep any marketing on a consent given before the
-erasure (a contact a restored backup brought back) from reaching them. The
+erasure (another contact with the same number) from reaching them. The
 erasure also hands the customer's bookings, as it left them, to the
 business's calendar, which forgets the guest.
 """

@@ -1,22 +1,31 @@
 """
-Booking confirmations, reminders and a deposit's line and reminders are
-service messages: none of their texts, in any language, carries a
-promotional word, a discount code or a link written into it
-(`promotion_lint`). Campaign texts are marketing and are not linted here:
-they go only with consent, by day, in their own MARKETING template.
+Booking confirmations (of a booking, a cancellation, a move), reminders, a
+deposit's line, reminders, refund terms and refund receipts, and the
+waitlist's offer of a freed place (a utility template) are service
+messages: none of their texts, in any language, carries a promotional
+word, a discount code or a link written into it (`promotion_lint`).
+Campaign texts are marketing and are not linted here: they go only with
+consent, by day, in their own MARKETING template.
 """
 
 from types import ModuleType
 
 import pytest
 
-from app.transformers.notifications import booking_reminder_transformer
+from app.transformers.notifications import (
+    booking_reminder_transformer,
+    cancellation_confirmation_transformer,
+    reschedule_confirmation_transformer,
+)
 from app.utilities.bookings import booking_confirmation_texts
 from app.utilities.deposits import (
     deposit_line_texts,
+    deposit_refund_terms,
     deposit_refund_terms_texts,
+    deposit_refund_texts,
     deposit_reminder_texts,
 )
+from app.utilities.waitlist import waitlist_offer_texts
 from tests.campaigns.promotion_lint import (
     lint_module,
     localized_texts,
@@ -25,10 +34,15 @@ from tests.campaigns.promotion_lint import (
 
 SERVICE_TEXT_MODULES: tuple[ModuleType, ...] = (
     booking_confirmation_texts,
+    cancellation_confirmation_transformer,
+    reschedule_confirmation_transformer,
     booking_reminder_transformer,
     deposit_line_texts,
+    deposit_refund_terms,
     deposit_refund_terms_texts,
+    deposit_refund_texts,
     deposit_reminder_texts,
+    waitlist_offer_texts,
 )
 
 

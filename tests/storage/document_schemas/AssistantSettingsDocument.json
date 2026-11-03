@@ -1,7 +1,7 @@
 {
   "collection": "assistant_settings",
   "document_type": "AssistantSettingsDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -12,16 +12,43 @@
       "created_at": {
         "type": "integer"
       },
+      "disabled_tools": {
+        "items": {
+          "enum": [
+            "search_knowledge",
+            "get_price",
+            "check_availability",
+            "create_booking",
+            "cancel_booking",
+            "reschedule_booking",
+            "list_my_bookings",
+            "join_waitlist",
+            "create_lead",
+            "handoff_to_human",
+            "send_link",
+            "record_unanswered_question",
+            "offer_choices",
+            "send_payment_link",
+            "decline_recording"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
       "id": {
         "pattern": "^assistant_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "is_paused": {
+        "default": false,
+        "type": "boolean"
       },
       "remembers_customers": {
         "default": true,
         "type": "boolean"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "shares_team_notes": {

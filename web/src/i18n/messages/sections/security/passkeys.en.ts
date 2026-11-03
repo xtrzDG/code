@@ -48,6 +48,10 @@ export const passkeysEn = {
       "Admins sign in with a second factor. A passkey is the safest: add one now, or set up an authenticator app.",
     add: "Add a passkey",
     useApp: "Set up an authenticator app instead",
+    passkeyRequired:
+      "Platform admins sign in with a passkey, which cannot be phished: add one now on this device or your phone.",
+    passkeyOnly:
+      "Platform admins protect their account with a passkey, and this browser cannot make one. Open the cabinet in a browser that supports passkeys.",
   },
   stepUp: {
     use: "Confirm with a passkey",
@@ -66,5 +70,7 @@ export const passkeysEn = {
     suspended:
       "This passkey was refused: a copy of it may be in use. Use another way to sign in, then remove it.",
     unavailable: "Passkeys are not available here. Use a code instead.",
+    adminPasskeyOnly:
+      "Platform admins sign in with their passkey, not the authenticator app. Use the passkey, or a recovery code if it is lost.",
   },
 } as const;

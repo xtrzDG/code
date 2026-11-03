@@ -25,6 +25,7 @@ from app.schemas.dto.calendar_sync.busy_reads import (
     GoogleCalendarEntry,
 )
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
+from app.schemas.exceptions.provider_errors import BusyTimeSourceOutageError
 from app.schemas.typings.bookings.strings import (
     CalendarDisplayName,
     ExternalCalendarId,
@@ -48,6 +49,7 @@ MAX_CALENDAR_NAME_LENGTH: int = 200
 # read) or lost it: the owner connects Google Calendar again.
 RECONNECT_STATUSES: frozenset[int] = frozenset({401, 403})
 GONE_STATUSES: frozenset[int] = frozenset({404, 410})
+SERVER_ERROR_STATUS: int = 500
 
 
 def free_busy_body(
@@ -74,6 +76,9 @@ def ensure_readable(response: httpx.Response, operation: str) -> None:
         raise BusyTimeSourceError(summary, CalendarSyncProblem.NEEDS_RECONNECT)
     if status in GONE_STATUSES:
         raise BusyTimeSourceError(summary, CalendarSyncProblem.NOT_FOUND)
+    if status >= SERVER_ERROR_STATUS:
+        # Google is in trouble: its circuit counts it (REL-04).
+        raise BusyTimeSourceOutageError(summary)
     raise BusyTimeSourceError(summary, CalendarSyncProblem.PROVIDER_ERROR)
 
 

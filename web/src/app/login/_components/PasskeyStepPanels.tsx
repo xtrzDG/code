@@ -86,7 +86,8 @@ export function PasskeyEnrollmentChoice({
   isStartingApp: boolean;
   problem: string | null;
   onAddPasskey: () => void;
-  onUseApp: () => void;
+  /** Null where the app is not offered (a platform admin held to passkeys). */
+  onUseApp: (() => void) | null;
   onStartOver: () => void;
 }) {
   const { t } = useI18n();
@@ -94,7 +95,7 @@ export function PasskeyEnrollmentChoice({
     <div className="space-y-5">
       <StepHeading
         title={t("mfa.enrollment.title")}
-        description={t("passkeys.enrollment.description")}
+        description={t(onUseApp ? "passkeys.enrollment.description" : "passkeys.enrollment.passkeyRequired")}
       />
       <div className="space-y-2">
         <Button
@@ -106,16 +107,18 @@ export function PasskeyEnrollmentChoice({
         >
           {t("passkeys.enrollment.add")}
         </Button>
-        <Button
-          fullWidth
-          variant="secondary"
-          isLoading={isStartingApp}
-          loadingText={t("mfa.enrollment.starting")}
-          disabled={isWorking}
-          onClick={onUseApp}
-        >
-          {t("passkeys.enrollment.useApp")}
-        </Button>
+        {onUseApp ? (
+          <Button
+            fullWidth
+            variant="secondary"
+            isLoading={isStartingApp}
+            loadingText={t("mfa.enrollment.starting")}
+            disabled={isWorking}
+            onClick={onUseApp}
+          >
+            {t("passkeys.enrollment.useApp")}
+          </Button>
+        ) : null}
       </div>
       {problem ? (
         <p className="text-sm text-danger" role="alert">

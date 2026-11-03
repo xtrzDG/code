@@ -7,7 +7,8 @@ archive's recordings stop at MAX_ARCHIVED_RECORDING_BYTES: a recording
 past that is listed with the API path that downloads it instead.
 recordings.json lists every call with a recording and what the archive
 holds of it (`ArchivedRecording`). A recording the storage no longer has,
-or cannot give, is listed as such and never fails the export.
+cannot give or refuses to look up (a stored path it does not keep) is
+listed as such and never fails the export.
 """
 
 import json
@@ -25,7 +26,10 @@ from app.schemas.dto.call_recordings import (
     RecordingPart,
 )
 from app.schemas.dto.privacy.archived_recordings import ArchivedRecording
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    ExternalServiceError,
+    ValidationFailedError,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.constrained_integers import (
     RecordingByteCount,
@@ -138,7 +142,11 @@ class RecordingArchive:
         return described.model_copy(update={"status": status, "file": file}), written
 
     def _read(self, location: RecordingLocation, offset: int) -> RecordingPart | None:
-        """One megabyte from `offset`; None when the storage cannot give it."""
+        """
+        One megabyte from `offset`; None when the storage cannot give it
+        (unreachable, the recording does not open, or a stored path it
+        refuses to look up).
+        """
 
         try:
             return self.recording_storage.read(
@@ -148,7 +156,7 @@ class RecordingArchive:
                     last_byte=RecordingByteOffset(offset + CHUNK_BYTES - 1),
                 ),
             )
-        except ExternalServiceError as error:
+        except (ExternalServiceError, ValidationFailedError) as error:
             LOGGER.warning(
                 "A recording of %s could not be read for an export: %s",
                 location.business_id,

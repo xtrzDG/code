@@ -153,4 +153,6 @@ class DeletionUseCaseFactories:
             platform_admins=given.platform_admins,
             audit_log_repo=given.audit_log_repo,
             wall_clock=given.wall_clock,
+            api_key_repo=given.api_key_repo,
+            webhook_endpoint_repo=given.webhook_endpoint_repo,
         )

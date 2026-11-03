@@ -6,6 +6,9 @@ from app.contracts.platform_safety import (
     PlatformSpendGaugeContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.customer_memory_repositories import (
+    AssistantSettingsRepoContract,
+)
 from app.contracts.repositories.spend_guard_repositories import (
     BusinessLimitsRepoContract,
     SpendLimitMarkRepoContract,
@@ -34,8 +37,13 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.spend.constrained_integers import DailySpendLimitMicroUsd
-from app.schemas.typings.spend.constrained_strings import SpendDay
+from app.schemas.typings.spend.prefixed_id import SpendLimitMarkId
 from app.use_cases.shared.owner_contacts import owner_contacts
+from app.use_cases.spend_guard.monthly_spend_limit import (
+    business_month_start,
+    monthly_hard_limit,
+    monthly_mark_id_of,
+)
 from app.utilities.spend.cheaper_models import cheaper_model_of
 from app.utilities.spend.platform_brakes import (
     read_platform_brake,
@@ -70,6 +78,11 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
     turns with one read by id; raising the limit lets the business answer
     again the same day.
 
+    On top of the day, the business's month has a hard limit too
+    (`monthly_spend_limit`): a business kept just under its daily limit day
+    after day stops at it until its month ends, marked, audited and told
+    once like the daily one.
+
     First of all the platform's own brakes (`read_platform_brake`): while a
     platform admin paused every assistant, or the platform's provider
     spend of the UTC day reached its daily budget stop, every business is
@@ -77,7 +90,9 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
     language, that a colleague takes over) and its
     calls to the forwarding number. Nothing is marked, audited or told per
     business (the platform alerts tell the team about the stop; the pause
-    is audited where it is set).
+    is audited where it is set). Then the owner's own pause (Settings →
+    General, AI-10): while it holds, the business is at HARD_LIMIT the
+    same way, until the owner resumes it.
     """
 
     def __init__(
@@ -92,6 +107,7 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         settings: SpendGuardSettings,
         platform_pause_repo: PlatformPauseRepoContract,
         platform_spend_gauge: PlatformSpendGaugeContract,
+        assistant_settings_repo: AssistantSettingsRepoContract,
     ) -> None:
         self._limits_repo: BusinessLimitsRepoContract = business_limits_repo
         self._marks: SpendLimitMarkRepoContract = spend_limit_mark_repo
@@ -103,6 +119,9 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         self._settings: SpendGuardSettings = settings
         self._pause_repo: PlatformPauseRepoContract = platform_pause_repo
         self._spend_gauge: PlatformSpendGaugeContract = platform_spend_gauge
+        self._assistant_settings_repo: AssistantSettingsRepoContract = (
+            assistant_settings_repo
+        )
 
     def run(self, input_data: SpendCheckRequest) -> SpendVerdict:
         business: BusinessDocument = input_data.business
@@ -116,7 +135,7 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         brake: PlatformBrakeReading = read_platform_brake(
             self._pause_repo, self._spend_gauge, self._settings, input_data.now
         )
-        if brake.brake is not None:
+        if brake.brake is not None or self._is_paused_by_owner(business):
             return SpendVerdict(
                 level=SpendLevel.HARD_LIMIT,
                 day=day,
@@ -137,6 +156,24 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
                 limits=limits,
             )
 
+        month, month_started_at = business_month_start(
+            input_data.now, business.timezone
+        )
+        month_limit: DailySpendLimitMicroUsd = monthly_hard_limit(limits)
+        month_mark_id: SpendLimitMarkId = monthly_mark_id_of(business.id, month)
+        month_mark: SpendLimitMarkDocument | None = self._marks.get(
+            business.id, month_mark_id
+        )
+        if month_mark is not None and int(month_mark.limit_micro_usd) >= int(
+            month_limit
+        ):
+            return SpendVerdict(
+                level=SpendLevel.HARD_LIMIT,
+                day=day,
+                spend_micro_usd=month_mark.spend_micro_usd,
+                limits=limits,
+            )
+
         providers: list[ProviderSpend] = price_usage(
             self._usage.sum_business(
                 business.id, day_started_at, Microseconds(int(input_data.now) + 1)
@@ -144,8 +181,50 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
         )
         spend: CostMicroUsd = total_spend(providers)
         level: SpendLevel = level_of(spend, limits)
+        if level is not SpendLevel.HARD_LIMIT and int(spend) > 0:
+            month_providers: list[ProviderSpend] = price_usage(
+                self._usage.sum_business(
+                    business.id,
+                    month_started_at,
+                    Microseconds(int(input_data.now) + 1),
+                )
+            )
+            month_spend: CostMicroUsd = total_spend(month_providers)
+            if int(month_spend) >= int(month_limit):
+                passing = SpendLimitPassing(
+                    business=business,
+                    level=SpendLevel.HARD_LIMIT,
+                    day=day,
+                    spend_micro_usd=month_spend,
+                    limit_micro_usd=month_limit,
+                    providers=month_providers,
+                    is_monthly=True,
+                )
+                self._mark_once(passing, month_mark_id, input_data.now)
+                return SpendVerdict(
+                    level=SpendLevel.HARD_LIMIT,
+                    day=day,
+                    spend_micro_usd=month_spend,
+                    limits=limits,
+                )
+
         if level is not SpendLevel.NORMAL:
-            self._mark_once(business, level, day, spend, limits, providers, input_data)
+            self._mark_once(
+                SpendLimitPassing(
+                    business=business,
+                    level=level,
+                    day=day,
+                    spend_micro_usd=spend,
+                    limit_micro_usd=(
+                        limits.hard_limit_micro_usd
+                        if level is SpendLevel.HARD_LIMIT
+                        else limits.soft_limit_micro_usd
+                    ),
+                    providers=providers,
+                ),
+                spend_limit_mark_id_of(business.id, day, level),
+                input_data.now,
+            )
 
         return SpendVerdict(
             level=level,
@@ -161,58 +240,46 @@ class CheckBusinessSpendUseCase(UseCaseContract[SpendCheckRequest, SpendVerdict]
             ),
         )
 
+    def _is_paused_by_owner(self, business: BusinessDocument) -> bool:
+        settings = self._assistant_settings_repo.get_by_business(business.id)
+        return settings is not None and settings.is_paused
+
     def _mark_once(
-        self,
-        business: BusinessDocument,
-        level: SpendLevel,
-        day: SpendDay,
-        spend: CostMicroUsd,
-        limits: SpendLimits,
-        providers: list[ProviderSpend],
-        input_data: SpendCheckRequest,
+        self, passing: SpendLimitPassing, mark_id: SpendLimitMarkId, now: Microseconds
     ) -> None:
-        limit: DailySpendLimitMicroUsd = (
-            limits.hard_limit_micro_usd
-            if level is SpendLevel.HARD_LIMIT
-            else limits.soft_limit_micro_usd
-        )
+        """
+        Store the limit's mark; the one process that stores it tells the
+        owners and the team and audits a hard limit.
+        """
+
+        business: BusinessDocument = passing.business
         mark = SpendLimitMarkDocument(
-            id=spend_limit_mark_id_of(business.id, day, level),
+            id=mark_id,
             business_id=business.id,
-            day=day,
-            level=level,
-            spend_micro_usd=spend,
-            limit_micro_usd=limit,
-            reached_at=input_data.now,
-            created_at=input_data.now,
-            updated_at=input_data.now,
+            day=passing.day,
+            level=passing.level,
+            spend_micro_usd=passing.spend_micro_usd,
+            limit_micro_usd=passing.limit_micro_usd,
+            reached_at=now,
+            created_at=now,
+            updated_at=now,
         )
         if not self._marks.insert_if_absent(mark):
             return
 
-        if level is SpendLevel.HARD_LIMIT:
+        if passing.level is SpendLevel.HARD_LIMIT:
             self._audit_log_repo.append(
                 AuditLogEntryDocument(
                     business_id=business.id,
                     action=AuditAction.SPEND_LIMIT_REACHED,
                     entity=AUDITED_ENTITY,
                     entity_id=AuditEntityReference(str(business.id)),
-                    created_at=input_data.now,
-                    updated_at=input_data.now,
+                    created_at=now,
+                    updated_at=now,
                 )
             )
 
-        self._notices.announce(
-            SpendLimitPassing(
-                business=business,
-                level=level,
-                day=day,
-                spend_micro_usd=spend,
-                limit_micro_usd=limit,
-                providers=providers,
-            ),
-            owner_contacts(business, self._user_repo),
-        )
+        self._notices.announce(passing, owner_contacts(business, self._user_repo))
 
 
 def level_of(spend: CostMicroUsd, limits: SpendLimits) -> SpendLevel:

@@ -16,14 +16,24 @@ WhatsApp number or one of its templates, the step before a restriction
   template, and a marketing template may only reach customers who gave
   marketing consent.
 
-The WhatsApp webhook logs each warning ("WhatsApp quality warning: ...")
-with the number's event or the template's name and language, and counts
-one platform signal each (`report_quality_warnings`).
+The WhatsApp webhook logs each warning ("WhatsApp quality warning of
+business account ...") with the WhatsApp Business Account id and the
+number's event or the template's name and language, and counts one
+platform signal each (`report_quality_warnings`).
+
+**Prerequisite:** Meta sends these warnings only to an app subscribed to
+their webhook fields. In the Meta app (WhatsApp → Configuration →
+Webhook fields) subscribe, besides `messages`, to
+`phone_number_quality_update`, `message_template_quality_update`,
+`message_template_status_update` and `template_category_update`; without
+them this alert never fires.
 
 ## Check
 
-1. Which number or template? Search the API logs for "WhatsApp quality
-   warning"; the webhook's phone number id names the business's channel.
+1. Which business? Search the API logs for "WhatsApp quality warning";
+   the business account id it names is the channel's
+   `whatsapp_business_account_id` (a WhatsApp channel connected by hand
+   without that id: find the account in Meta Business Manager instead).
 2. In Meta Business Manager (WhatsApp Manager → Insights and Message
    templates): the number's quality rating and messaging limit, the
    template's quality, status and category.

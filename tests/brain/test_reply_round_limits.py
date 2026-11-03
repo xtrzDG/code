@@ -29,13 +29,17 @@ SEARCH: str = '{"query": "khinkali", "language": null}'
 
 
 def many_searches(count: int) -> ScriptedLlmTurn:
+    """Searches for different dishes (a repeated one is refused on its own)."""
+
     return ScriptedLlmTurn(
         tool_calls=[
             ScriptedToolCall(
                 tool_name=AssistantToolName.SEARCH_KNOWLEDGE,
-                input_json=LlmToolInputJson(SEARCH),
+                input_json=LlmToolInputJson(
+                    f'{{"query": "khinkali {number}", "language": null}}'
+                ),
             )
-            for _ in range(count)
+            for number in range(count)
         ]
     )
 

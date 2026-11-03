@@ -6,6 +6,9 @@ Example:
 
 AcceptsFailedAutotests = bool
 CarriesBusinessChanges = bool
+# The owner paused the assistant: customers go to the team (Settings →
+# General).
+IsAssistantPaused = bool
 IsAutotestCaseActive = bool
 IsAutotestRunPassed = bool
 IsFullAutotestCoverage = bool

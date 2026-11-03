@@ -24,6 +24,9 @@ from app.facilitators.spend_guard.spend_limit_notice_facilitator import (
 from app.registries.limits.platform_spend_gauge_registry import (
     PlatformSpendGaugeRegistry,
 )
+from app.repositories.assistant_settings_repository import (
+    AssistantSettingsRepository,
+)
 from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.platform_safety_repositories import PlatformPauseRepository
@@ -39,6 +42,7 @@ from app.schemas.constants.billing import PlanKey, UsageKind
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
+from app.schemas.domain.assistant_settings import AssistantSettingsDocument
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.business_limits import (
     BusinessLimitsDocument,
@@ -124,6 +128,7 @@ class SpendWorld:
     check: CheckBusinessSpendUseCase
     usage_spend: CountingUsageSpend
     pauses: PlatformPauseRepository
+    assistant_settings: AssistantSettingsRepository
 
     def spend(
         self,
@@ -231,6 +236,9 @@ def build_spend_world(
     pauses = PlatformPauseRepository(
         InMemoryDocumentCollectionAdapter(PlatformPauseDocument)
     )
+    assistant_settings = AssistantSettingsRepository(
+        InMemoryDocumentCollectionAdapter(AssistantSettingsDocument)
+    )
     check = CheckBusinessSpendUseCase(
         business_limits_repo=limits,
         spend_limit_mark_repo=marks if wrap_marks is None else wrap_marks(marks),
@@ -249,6 +257,7 @@ def build_spend_world(
         platform_spend_gauge=PlatformSpendGaugeRegistry(
             usage_spend, StorageScopeContext()
         ),
+        assistant_settings_repo=assistant_settings,
     )
     return SpendWorld(
         business=business,
@@ -262,4 +271,5 @@ def build_spend_world(
         check=check,
         usage_spend=usage_spend,
         pauses=pauses,
+        assistant_settings=assistant_settings,
     )

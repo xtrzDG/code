@@ -6,6 +6,7 @@ with two factors is not asked; a business may still require a second
 factor of its whole team (test_business_security.py).
 """
 
+from app.schemas.typings.users.prefixed_id import UserId
 from tests.e2e.harness import Workshop, bearer
 from tests.e2e.journeys import GEORGIAN_OWNER_PHONE, sign_in_and_create_restaurant
 from tests.users.mfa.mfa_api import (
@@ -16,6 +17,7 @@ from tests.users.mfa.mfa_api import (
 )
 
 STAFF_PHONE: str = "+995 555 77 88 99"
+BRAND_OWNER_PHONE: str = "+995 555 66 55 44"
 
 
 def test_a_new_account_is_not_asked(workshop: Workshop) -> None:
@@ -62,3 +64,32 @@ def test_staff_are_not_asked(workshop: Workshop) -> None:
 
     assert invited.status_code == 201, invited.text
     assert staff["second_factor_suggested"] is False
+
+
+def test_a_brand_owner_without_a_business_of_their_own_is_asked(
+    workshop: Workshop,
+) -> None:
+    token, _, business_id = sign_in_and_create_restaurant(workshop)
+    owner = bearer(token)
+    brand = workshop.client.post(
+        "/v1/brands",
+        json={"name": "Salobie Group", "business_id": business_id},
+        headers=owner,
+    )
+    invited = workshop.client.post(
+        f"/v1/brands/{brand.json()['id']}/members",
+        json={"phone_number": BRAND_OWNER_PHONE, "role": "brand_owner"},
+        headers=owner,
+    )
+
+    brand_owner = login_code_step(workshop, BRAND_OWNER_PHONE)
+    user_id = str(brand_owner["user"]["id"])
+    businesses = workshop.container.repositories.business_repo().list_by_member(
+        UserId(user_id)
+    )
+
+    assert brand.status_code == 201, brand.text
+    assert invited.status_code == 201, invited.text
+    # A member of no business: the brand alone makes them an owner.
+    assert businesses == []
+    assert brand_owner["second_factor_suggested"] is True

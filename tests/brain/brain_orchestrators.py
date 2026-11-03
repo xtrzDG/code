@@ -7,8 +7,14 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
 )
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.contracts.llm import LlmAdapterContract
-from app.contracts.registries import CountryRegistryContract
+from app.contracts.registries import (
+    CountryRegistryContract,
+    RequestRateLimitRegistryContract,
+)
 from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
     ConversationTurnOrchestrator,
@@ -18,6 +24,9 @@ from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
+)
 from app.registries.locks.reply_lock_registry import ReplyLockRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 from app.schemas.constants.assistants import LlmEffort
@@ -66,8 +75,8 @@ class GuardOptions:
     """
     The reply guard's claim check (off), the injection brake limit, the
     spend guard of the turn (none) and of its later model rounds (none),
-    the country registry the emergency number comes from (none) and the
-    platform's addresses its links may use.
+    the country registry the emergency number comes from (none), the
+    platform's addresses its links may use and the request counters.
     """
 
     claim_check: ClaimCheckFacilitatorContract = field(
@@ -78,6 +87,12 @@ class GuardOptions:
     round_spend_check: SpendCheck | None = None
     country_registry: CountryRegistryContract | None = None
     platform_base_urls: tuple[str, ...] = ()
+    # The shared request counters (the new-conversation cap per network).
+    rate_limits: RequestRateLimitRegistryContract = field(
+        default_factory=lambda: RequestRateLimitRegistry(
+            InMemoryRateLimitBucketAdapter()
+        )
+    )
 
 
 @dataclass(frozen=True)
@@ -126,6 +141,7 @@ def build_brain_orchestrators(
                 note_repo=repos.memory.note_repo,
                 job_queue=repos.memory.jobs,
             ),
+            rate_limits=options.rate_limits,
         ),
         generate_reply=GenerateAssistantReplyUseCase(
             llm_adapter=llm,

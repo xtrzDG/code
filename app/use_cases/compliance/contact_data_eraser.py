@@ -95,13 +95,13 @@ class ContactDataEraser:
     kept on purpose), so the erasure never makes them reachable again, and
     every erased customer leaves the digests of their numbers and accounts
     as erasure entries (`remember_erasure`), so no marketing on a consent
-    given before the erasure reaches them (a restored backup's); a consent
-    still given is taken back in the consent ledger, which keeps the
-    customer's history by contact id only as proof. The
-    copies the sub-processors keep (the traces of the conversations' model
-    calls at Langfuse, the calls at ElevenLabs) are deleted by queued jobs
-    with retries (`processor_erasure`), so a processor's outage never fails
-    the erasure. The events the bookings have in the business's Google
+    given before the erasure reaches them (on another contact with the
+    same number or account); a consent still given is taken back in the
+    consent ledger, which keeps the customer's history by contact id only
+    as proof. The copies the sub-processors keep (the traces of the
+    conversations' model calls at Langfuse, the calls at ElevenLabs) are
+    deleted by queued jobs with retries (`processor_erasure`), so a
+    processor's outage never fails the erasure. The events the bookings have in the business's Google
     Calendar go last (`calendar_erasure`): rewritten without the guest
     while the booking still takes its time, deleted otherwise. Erasing
     what is gone already is no error, so it runs again after a restore.

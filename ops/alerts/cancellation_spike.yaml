@@ -1,7 +1,8 @@
 # Mass cancellations of one business (ABUSE-04): every booking announced
 # as changed that was just CANCELLED counts in the business's hourly
-# bucket (BookingSurgeObserverFacilitator); the 16th of an hour counts the
-# platform signal cancellation_surge once and a warning line names the
+# bucket (BookingSurgeObserverFacilitator); the first count past 15 in an
+# hour claims the hour's alert (once, however many processes count) and
+# counts the platform signal cancellation_surge; a warning line names the
 # business.
 code: cancellation_spike
 severity: sev3

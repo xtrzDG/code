@@ -55,6 +55,8 @@ def test_allergens_come_only_from_the_business_with_a_word_to_confirm(
 
     assert "which allergens it has or whether it suits a diet" in never
     assert "always suggest confirming it with the staff" in never
+    assert "do not guess: say you cannot confirm it" in never
+    assert "pass the question to a colleague with handoff_to_human" in never
 
 
 def test_owner_texts_are_fenced_and_cannot_pose_as_the_platform() -> None:

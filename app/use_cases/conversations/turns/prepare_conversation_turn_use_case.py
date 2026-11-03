@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LanguageDetectorContract
+from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -53,6 +54,9 @@ from app.use_cases.conversations.turns.inbound_message_rules import (
     clean_inbound_message,
     is_sandbox_message,
 )
+from app.use_cases.conversations.turns.network_conversation_cap import (
+    is_past_network_conversation_cap,
+)
 from app.use_cases.conversations.turns.prepared_turn_parts import (
     build_tool_context,
     build_turn_context_line,
@@ -86,33 +90,23 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
     """
     Find everything one customer message belongs to and store it.
 
-    1. The business; real messages need a LIVE business (sandbox and owner
-       test messages do not).
+    1. The business; real messages need a LIVE business (not sandbox ones).
     2. The contact by channel identity, then by a phone the channel proved
-       (only a contact whose own phone is proved the same way; never for
-       sandbox messages), else a new one; missing name, phone and identity
-       are added, and a phone the channel proved is remembered as verified.
-    3. The conversation of the contact in this channel and sandbox mode that
-       staff still own (HANDOFF, however long ago, so the bot stays silent
-       until the handoff is closed), else one with a message in the last 24
-       hours, pinned to its assistant version; a message asking for another
-       version, or no open conversation, starts a new one pinned to the
-       requested or published version (ConflictError when the business has
-       none).
-    4. The gate: staff own a conversation in HANDOFF (silence in chat, a
-       call-back promise on the phone); a message that looks like prompt
-       injection is flagged on the stored message, and a contact with
-       INJECTION_FLAG_LIMIT flagged messages in a day, or past the hourly
-       per-contact limit, is answered once with a stop message, then the
-       assistant stays silent.
-    5. The customer's language, any language (`detect_any`: a message that
-       tells too little keeps the conversation's, then the contact's, then
-       the version default language), the after-hours flag from
-       the profile hours in the business time zone, the inbound message and
-       the context line for the model. A message with nothing the assistant
-       can read (a sticker, a file, a voice note without words) is answered
-       with the platform's request to write (ATTACHMENT_NOTICE); voice-note
-       transcripts and places count as what the customer said.
+       (`resolve_contact`), else a new one, completed and verified.
+    3. The conversation (`resolve_conversation`): one staff still own
+       (HANDOFF), else one with a message in the last 24 hours, else a new
+       one pinned to the requested or published version (ConflictError
+       when the business has none).
+    4. The gate (`turn_gate`): staff own a conversation in HANDOFF; a
+       message that looks like prompt injection is flagged, and a contact
+       past INJECTION_FLAG_LIMIT flags in a day or the hourly limit, or a
+       new website conversation past its network's hourly cap
+       (`network_conversation_cap`), is answered once with a stop message.
+    5. The customer's language (`detect_any`; a message that tells too
+       little keeps the conversation's, the contact's, then the version's),
+       the after-hours flag, the inbound message and the context line. A
+       message with nothing readable (a sticker, a file) gets the request
+       to write (ATTACHMENT_NOTICE); transcripts and places count as text.
     6. The customer memory (`RecallCustomerMemoryUseCase`): a returning
        customer's memory joins the context line of the first reply only.
     """
@@ -132,6 +126,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         contact_message_limit: ContactMessageLimit,
         injection_flag_limit: InjectionFlagLimit,
         recall_customer_memory: UseCaseContract[CustomerMemoryRequest, CustomerMemory],
+        rate_limits: RequestRateLimitRegistryContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -152,6 +147,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         self._recall_customer_memory: UseCaseContract[
             CustomerMemoryRequest, CustomerMemory
         ] = recall_customer_memory
+        self._rate_limits: RequestRateLimitRegistryContract = rate_limits
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
         input_data = clean_inbound_message(input_data)
@@ -208,6 +204,10 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             written_text, attachments
         ):
             gate = TurnGate.ATTACHMENT_NOTICE
+        if gate is TurnGate.ANSWER and is_past_network_conversation_cap(
+            self._rate_limits, input_data, is_new_conversation, is_sandbox, now
+        ):
+            gate = TurnGate.LIMIT_NOTICE
 
         detected: DetectedLanguage = detect_turn_language(
             self._language_detector, customer_text, version, conversation, contact

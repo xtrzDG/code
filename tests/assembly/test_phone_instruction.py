@@ -8,6 +8,7 @@ from app.utilities.assembly.assistant_tools import select_assistant_tools
 from app.utilities.assembly.phone_instruction_sections import (
     NO_TEXT_PROMISE_RULE,
     PHONE_EXISTING_BOOKING_RULES,
+    REPEAT_AND_SLOWER_RULE,
 )
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.test_assistant_instruction import build_instruction_source
@@ -171,3 +172,12 @@ def test_the_phone_answers_in_short_spoken_sentences() -> None:
     assert "never say a currency code" in answer_format
     assert "digit by digit" in answer_format
     assert "markdown" in answer_format
+
+
+def test_a_caller_may_ask_to_repeat_or_to_speak_slower() -> None:
+    prompt = assemble_phone_prompt(AssemblyTestbed())
+    answer_format = prompt.split("# Answer format\n")[1].split("\n\n")[0]
+
+    assert REPEAT_AND_SLOWER_RULE in answer_format
+    assert "asks you to repeat" in REPEAT_AND_SLOWER_RULE
+    assert "speak slower" in REPEAT_AND_SLOWER_RULE

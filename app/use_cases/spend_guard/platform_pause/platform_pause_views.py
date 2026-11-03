@@ -23,6 +23,7 @@ def build_platform_pause_view(
     budget = budget_stop.budget_micro_usd
     return PlatformPauseView(
         is_paused=is_paused,
+        disabled_tools=[] if pause is None else list(pause.disabled_tools),
         reason=None if pause is None else pause.reason,
         changed_by=None if pause is None else pause.changed_by,
         changed_at=None if pause is None else pause.changed_at,

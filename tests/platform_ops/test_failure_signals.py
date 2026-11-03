@@ -86,6 +86,32 @@ def test_other_errors_come_from_no_store(error: Exception) -> None:
     assert store_failure_of(error) is None
 
 
+@pytest.mark.parametrize(
+    ("database_error", "kind"),
+    [
+        (psycopg.errors.UniqueViolation("duplicate key"), None),
+        (psycopg.errors.ForeignKeyViolation("no such row"), None),
+        (psycopg.errors.UntranslatableCharacter("NUL in text"), None),
+        (psycopg.errors.QueryCanceled("statement timeout"), StoreFailureKind.DATABASE),
+        (psycopg.errors.SerializationFailure("retry"), StoreFailureKind.DATABASE),
+        (psycopg.errors.UndefinedTable("no table"), StoreFailureKind.DATABASE),
+    ],
+)
+def test_an_answer_about_the_data_is_no_store_failure(
+    database_error: psycopg.Error, kind: StoreFailureKind | None
+) -> None:
+    try:
+        try:
+            raise database_error
+        except psycopg.Error as cause:
+            raise ExternalServiceError("The write failed.") from cause
+    except ExternalServiceError as error:
+        translated = error
+
+    assert store_failure_of(database_error) is kind
+    assert store_failure_of(translated) is kind
+
+
 def test_a_cycle_of_causes_ends() -> None:
     first = RuntimeError("first")
     second = RuntimeError("second")
