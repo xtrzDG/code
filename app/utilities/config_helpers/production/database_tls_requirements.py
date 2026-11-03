@@ -37,6 +37,9 @@ CLEAR_TEXT_SSL_MODES: frozenset[DatabaseSslMode] = frozenset(
     {DatabaseSslMode.DISABLE, DatabaseSslMode.ALLOW, DatabaseSslMode.PREFER}
 )
 URI_SCHEMES: tuple[str, ...] = ("postgresql://", "postgres://")
+# Query parameters by which a URI names another server than its own host
+# (libpq lets them win): such an address is never treated as private.
+HOST_OVERRIDE_PARAMETERS: frozenset[str] = frozenset({"host", "hostaddr"})
 # `sslmode=value` in a key/value connection string (`host=db sslmode=require`).
 KEYWORD_SSL_MODE: re.Pattern[str] = re.compile(
     r"(?:^|\s)sslmode\s*=\s*'?([A-Za-z-]+)'?(?:\s|$)"
@@ -66,8 +69,9 @@ def find_database_tls_problems(
 def is_private_network_address(address: DatabaseUrl) -> bool:
     """
     Whether a URI address's host is a single-label name of the platform's
-    private network (no dot, not an IP address). Key/value strings and
-    unreadable addresses are never treated as private.
+    private network (no dot, not an IP address). Key/value strings,
+    unreadable addresses and a URI whose query names another server
+    (`?host=`, `?hostaddr=`) are never treated as private.
     """
 
     text: str = str(address).strip()
@@ -75,8 +79,13 @@ def is_private_network_address(address: DatabaseUrl) -> bool:
         return False
 
     try:
-        host: str | None = urlsplit(text).hostname
+        parts = urlsplit(text)
+        host: str | None = parts.hostname
     except ValueError:
+        return False
+
+    named: set[str] = set(parse_qs(parts.query, keep_blank_values=True))
+    if named & HOST_OVERRIDE_PARAMETERS:
         return False
 
     return bool(host) and "." not in str(host) and ":" not in str(host)

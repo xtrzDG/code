@@ -166,3 +166,22 @@ def test_a_dotted_or_ip_host_still_needs_tls(host: str) -> None:
     )
 
     assert problem.startswith("DATABASE_URL does not require TLS")
+
+
+@pytest.mark.parametrize(
+    "query", ["host=db.example.com", "hostaddr=10.0.0.5", "host=db.example.com&a=b"]
+)
+def test_a_single_label_address_that_names_another_server_needs_tls(
+    query: str,
+) -> None:
+    # libpq lets the query's host or hostaddr win over the URI's own host.
+    [problem] = problems_with(
+        {
+            "PGSSLMODE": None,
+            "DATABASE_URL": f"postgresql://workshop:fake-password@postgres/workshop?{query}",
+            "DATABASE_URL_TENANT": f"{PLAIN}?sslmode=require",
+            "DATABASE_URL_PLATFORM": f"{PLAIN}?sslmode=require",
+        }
+    )
+
+    assert problem.startswith("DATABASE_URL does not require TLS")
