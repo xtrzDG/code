@@ -83,7 +83,7 @@ Every pull request and every push to `main` runs (`.github/workflows/`):
 | Software bill of materials | syft (CycloneDX JSON per image, kept 30 days as a CI artifact and, on `main`, attested to each published image) | — |
 | New dependencies | `actions/dependency-review-action` on pull requests with `.github/dependency-review-config.yml` (its summary also a comment on the pull request) | a new dependency with a high vulnerability, or a denied licence (AGPL, GPL, SSPL, BUSL, CC-BY-NC) without a reviewed exception |
 | New dependencies on their registries | `scripts/dependency_registry_review.py` on pull requests: each new direct dependency of the cabinet, the Zapier app, the Lighthouse tool and `pyproject.toml` measured on npm or PyPI (age, publishers, deprecation, install-time code, licence, source, lookalike names) | a name the registry does not know, a deprecated, archived, quarantined or wholly yanked package, one first released under 30 days ago, a lookalike of a popular or already used name, or one installed from outside the registry (`not-from-registry`), unless `.github/dependency-registry-review.toml` accepts it with a reason; a registry that does not answer |
-| Secrets in the cabinet build | `web/scripts/scan-bundle-secrets.mjs` right after `next build` (`web-build`) | a provider key shape in `.next/static` or `.next/server`, or the value of a secret variable of `web/.env.example` or `.env.example` in what browsers receive; no exception list |
+| Secrets in the cabinet build | `web/scripts/scan-bundle-secrets.mjs` right after `next build` (`web-build`) | a provider key shape in `.next/static` or `.next/server`, or the value of a secret variable of `web/.env.example` or `.env.example` in what browsers receive when the build's environment holds one (CI's build holds none, so there only the key shapes are checked); no exception list |
 | Payment pages' scripts | `web/scripts/payment-page-integrity.mjs` in `web-build` against `web/payment-page-scripts.json` (SHA-384 of every first-party script of the billing page and the hosted chat page) | a build it cannot read; a changed script is a warning with the table, and the pull request updates the inventory |
 | The assistant's recorded answers | `Evals replay gate` (`evals`): when a change touches what the model sees, every recorded conversation replayed offline without keys | a stale cassette, a failing scenario or any hallucination (`--min-pass-rate 1 --max-hallucination-rate 0`) |
 | API contract | `oasdiff breaking` against the merge base | breaking changes without the `api-breaking` label |
@@ -106,8 +106,8 @@ On a schedule, so that what was safe yesterday is checked again today
 | weekly | `zap-staging.yml` | the active scan of staging (below) |
 | hourly | `synthetics.yml` | production as customers meet it: health, a widget chat round trip, and a booking made and cancelled through the public API |
 | daily | `repo-settings.yml` | the repository settings below |
-| weekly | `payment-page-integrity.yml` | the payment pages' scripts (billing page, hosted chat page) against their reviewed SHA-384 inventory: with `PRODUCTION_CABINET_URL`, as production serves them against the `release` branch's inventory, otherwise a fresh build of `main`; read-only, no secrets; a difference fails the run and opens the issue "Payment page scripts changed" (PCI DSS 6.4.3 and 11.6.1 intent) |
-| nightly | `evals-nightly.yml` | the assistant against the real models (with `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; skipped with a notice without them): pass rate at least 85 % and hallucination rate at most 2 % (its inputs `min_pass_rate`, `max_hallucination_rate`) |
+| weekly | `payment-page-integrity.yml` | the payment pages' scripts (billing page, hosted chat page) against their reviewed SHA-384 inventory: with `PRODUCTION_CABINET_URL`, as production serves them against the `release` branch's inventory, otherwise a fresh build of `main` (the variable and the `release` branch are owner steps, `docs/operations/go-live.md`); no secrets, the check reads only, and only its issue step may write issues; a difference fails the run and opens the issue "Payment page scripts changed" (PCI DSS 6.4.3 and 11.6.1 intent) |
+| nightly | `evals-nightly.yml` | the assistant against the real models (with `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; without both the run is skipped with a notice, which is the case until the owner sets them): pass rate at least 85 % and hallucination rate at most 2 % (its inputs `min_pass_rate`, `max_hallucination_rate`) |
 
 ### Signed images and build provenance
 
@@ -228,10 +228,10 @@ together with the settings themselves, in a reviewed pull request.
   `index-url`, `registry=` in `web/.npmrc`) is not measured and rests on
   the review of `.github/` and the dependency review.
 - The cabinet's build is scanned for secrets before it is kept (WEB-05):
-  key shapes in every file of `.next/static` and `.next/server`, and the
-  values of secret variables in what browsers receive (`.next/static` and
-  the prerendered pages); a hit is fixed in the code and a real key is
-  rotated. The cabinet's proxy drops `x-middleware-subrequest` (the
+  key shapes in every file of `.next/static` and `.next/server`, and, when
+  the build's environment holds them (CI's does not), the values of secret
+  variables in what browsers receive (`.next/static` and the prerendered
+  pages); a hit is fixed in the code and a real key is rotated. The cabinet's proxy drops `x-middleware-subrequest` (the
   middleware bypass of CVE-2025-29927) from every request it forwards
   (`web/src/server/middlewareSubrequest.ts`); the installed Next.js no
   longer reads it, a test holds Next.js at 16.0.7 or later and React at
@@ -315,11 +315,14 @@ within two hours alert the platform (`tenant_payment_declines`) and ten
 refuse its new checkout and card pages for a while (card testing). The
 billing page's policy names no third-party host, and the scripts of the
 payment pages are checked against a reviewed SHA-384 inventory in every
-pull request and every week. A change of the pages guests pay deposits on
-is also e-mailed to every owner's account address. A cross-tenant matrix
-built from the API description calls every public API operation, its
-query parameters included, with one business's key against another's
-records. The audit log's 1,095-day purge runs daily on the platform role
+pull request and every week (against the files production serves once
+the owner sets `PRODUCTION_CABINET_URL`; until then against a fresh build
+of `main`). A change of the pages guests pay deposits on is also e-mailed
+to every owner who signs in with an e-mail address (owners who sign in by
+phone hear of it on their devices and the staff contacts only). A
+cross-tenant matrix built from the API description calls every public API
+operation, its query parameters included, with one business's key against
+another's records. The audit log's 1,095-day purge runs daily on the platform role
 through a database function that never removes a newer entry. A
 customer's export lists the knowledge items that name them, and their
 erasure flags those items for the owner instead of editing them. Booking
@@ -333,13 +336,19 @@ six hours were used. A caller may ask for the call's transcript by
 message; the phone assistant takes no keypad (DTMF) input, and the text
 channels are the documented fallback. A return-visit campaign whose
 customers opt out at 5 % or more is held for the platform team's review.
-Feature flags let a risky change reach a few businesses first, set only
-by SUPER admins after a recent sign-in and audited. Every vertical's
-evaluation set has at least 100 scenarios with a hallucination rate, a
-pull request that touches what the model sees replays them all, and the
-real models are measured nightly. The product's error budgets are
-computed from Prometheus (booking success is not measured yet), and the
-pending migrations are rehearsed weekly on a production-sized copy. The
+Per-business feature flags exist for staged rollouts, set only by SUPER
+admins after a recent sign-in and audited; no code path reads one yet
+(the registry's only flag, `release_canary`, guards nothing). Every
+vertical's evaluation set has at least 100 scenarios with a hallucination
+rate, and a pull request that touches what the model sees replays the
+recorded answers of them all; the real models are measured by a nightly
+run that stays skipped until the owner sets the provider keys. The
+product's error budgets are computed from Prometheus in the Grafana
+dashboard and `scripts/slo_report.py` (booking success is not measured
+yet, and the admin System page still shows only the earlier budgets), and
+the weekly `perf.yml` rehearses the pending migrations on a synthetic,
+production-sized database (no rehearsal or rollback drill has run yet).
+The
 code and tests of each: [docs/security/threat-model.md](docs/security/threat-model.md)
 (rows 2 to 5, 7, 12, 16, 22 and 34 to 40, with what stays open under
 "Accepted risks").
