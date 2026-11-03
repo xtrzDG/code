@@ -5,9 +5,15 @@ unused codes are in the six-hour window, so a burst cannot come back as
 soon as its codes are an hour old.
 """
 
-import pytest
+import logging
 
-from app.facilitators.users.login_code_cap_alert_facilitator import describe_alert
+import pytest
+import sentry_sdk
+
+from app.facilitators.users.login_code_cap_alert_facilitator import (
+    LoginCodeCapAlertFacilitator,
+    describe_alert,
+)
 from app.schemas.constants.users import LoginCodeCap
 from app.schemas.dto.login_protection import LoginCodeCapAlert
 from app.schemas.exceptions.login_errors import LoginCodeCapReachedError
@@ -17,6 +23,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.users.constrained_integers import OtpSendLimit
 from app.use_cases.users.otp_login.login_code_conversion import find_number_range
+from tests.users.accounts_clock import AdjustableClock
 from tests.users.accounts_phones import GERMANY_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
@@ -180,3 +187,33 @@ def test_a_denied_range_is_named_in_the_alert_line() -> None:
         "Login code cap reached for GE (number range +995555): 1 login code to "
         "a number range whose codes go unused"
     )
+
+
+def test_the_log_line_leaves_the_number_range_out(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    events: list[str] = []
+
+    def record_event(message: str, level: str) -> None:
+        del level
+        events.append(message)
+
+    monkeypatch.setattr(sentry_sdk, "capture_message", record_event)
+    alerts = LoginCodeCapAlertFacilitator(
+        None, [], AdjustableClock().build_wall_clock()
+    )
+
+    with caplog.at_level(logging.WARNING):
+        alerts.report_cap_reached(
+            LoginCodeCapAlert(
+                cap=LoginCodeCap.NUMBER_RANGE_CONVERSION,
+                limit=OtpSendLimit(1),
+                country_code=CountryCode("GE"),
+                phone_number_prefix=PhoneNumberPrefix("+995555"),
+            )
+        )
+
+    [logged] = [record.getMessage() for record in caplog.records]
+    assert logged.startswith("Login code cap reached for GE: 1 login code to")
+    assert "+995555" not in logged
+    assert ["+995555" in event for event in events] == [True]

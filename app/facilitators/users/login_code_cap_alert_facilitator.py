@@ -82,7 +82,9 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
             return
 
         summary: str = describe_alert(alert)
-        logger.warning("%s", summary)
+        # The log names the cap and country only: the number range goes to
+        # Sentry and the admins' e-mail, never into the log lines.
+        logger.warning("%s", describe_cap(alert))
         try:
             sentry_sdk.capture_message(summary, level="warning")
         except Exception:  # noqa: BLE001 - alerting must never fail the caller
@@ -97,13 +99,22 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         )
 
 
-def describe_alert(alert: LoginCodeCapAlert) -> str:
+def describe_cap(alert: LoginCodeCapAlert) -> str:
     """One English line: which cap refused sends, its limit and country."""
 
     country: str = "" if alert.country_code is None else f" for {alert.country_code}"
-    if alert.phone_number_prefix is not None:
-        country += f" (number range {alert.phone_number_prefix})"
     return (
         f"Login code cap reached{country}: {int(alert.limit)} "
         f"{CAP_DESCRIPTIONS[alert.cap]} in the last hour."
     )
+
+
+def describe_alert(alert: LoginCodeCapAlert) -> str:
+    """The cap's line (describe_cap), with the number range when one was denied."""
+
+    line: str = describe_cap(alert)
+    if alert.phone_number_prefix is None:
+        return line
+
+    head, _, tail = line.partition(":")
+    return f"{head} (number range {alert.phone_number_prefix}):{tail}"

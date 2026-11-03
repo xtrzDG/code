@@ -18,6 +18,11 @@ WIDGET_ACCESSIBILITY_PATH: str = "/widget/accessibility"
 # The public site's locales (web/src/i18n/config.ts LOCALES); the first is
 # its fallback.
 PUBLIC_SITE_LOCALES: tuple[str, ...] = ("en", "it")
+# The statement's path in each locale: the redirect only ever takes one of
+# these constants, never text from the request.
+STATEMENT_PATHS: dict[str, str] = {
+    locale: f"/{locale}/accessibility" for locale in PUBLIC_SITE_LOCALES
+}
 # The address only changes with a release: browsers keep it for a day.
 REDIRECT_CACHE_CONTROL: str = "public, max-age=86400"
 MAX_LANGUAGE_LENGTH: int = 35
@@ -52,8 +57,11 @@ def build_widget_accessibility_router(
             raise NotFoundError("The public site is not configured here.")
 
         site: str = str(public_site_base_url).rstrip("/")
+        statement: str = STATEMENT_PATHS.get(
+            public_site_locale(language), STATEMENT_PATHS[PUBLIC_SITE_LOCALES[0]]
+        )
         return RedirectResponse(
-            f"{site}/{public_site_locale(language)}/accessibility",
+            f"{site}{statement}",
             status_code=302,
             headers={"Cache-Control": REDIRECT_CACHE_CONTROL},
         )
