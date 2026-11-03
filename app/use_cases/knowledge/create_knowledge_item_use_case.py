@@ -1,4 +1,5 @@
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -20,7 +21,9 @@ class CreateKnowledgeItemUseCase(
 
     The kind must be one the niche uses, and a price must be in the business
     currency; the assistant can quote it after the next assembly. Its
-    performers must be resources of the business.
+    performers must be resources of the business. The team member who adds
+    it is its author (`created_by`, `updated_by`) and the addition is
+    audited.
     """
 
     def run(self, input_data: CreateKnowledgeItemCommand) -> KnowledgeItemDetails:
@@ -31,8 +34,10 @@ class CreateKnowledgeItemUseCase(
             item_input=input_data.item,
             source=input_data.source,
             now=self._wall_clock.now_unix(),
+        ).model_copy(
+            update={"created_by": input_data.user_id, "updated_by": input_data.user_id}
         )
-        resources: list[ResourceDocument] = self._save_checked(item)
+        resources: list[ResourceDocument] = self._save_checked(item, AuditAction.CREATE)
         return to_item_details(
             item,
             business.currency_code,

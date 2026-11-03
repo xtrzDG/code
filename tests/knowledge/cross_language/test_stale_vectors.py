@@ -24,6 +24,7 @@ from app.use_cases.knowledge.update_knowledge_item_use_case import (
     UpdateKnowledgeItemUseCase,
 )
 from app.use_cases.shared.knowledge_index_queue import INDEX_KNOWLEDGE_JOB
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.cross_language.world import CrossLanguageWorld
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 
@@ -55,6 +56,7 @@ def test_a_vector_of_an_items_old_text_is_ignored_until_it_is_indexed_again() ->
 def test_creating_editing_and_deleting_an_item_queue_its_indexing() -> None:
     world = CrossLanguageWorld()
     queue = RecordingJobQueue()
+    audit = audit_log_repository()
     create = CreateKnowledgeItemUseCase(
         business_repo=world.business_repo,
         knowledge_item_repo=world.knowledge_item_repo,
@@ -62,6 +64,7 @@ def test_creating_editing_and_deleting_an_item_queue_its_indexing() -> None:
         niche_template_registry=world.niche_template_registry,
         wall_clock=world.wall_clock,
         job_queue=queue,
+        audit_log_repo=audit,
     )
     update = UpdateKnowledgeItemUseCase(
         business_repo=world.business_repo,
@@ -70,9 +73,13 @@ def test_creating_editing_and_deleting_an_item_queue_its_indexing() -> None:
         niche_template_registry=world.niche_template_registry,
         wall_clock=world.wall_clock,
         job_queue=queue,
+        audit_log_repo=audit,
     )
     delete = DeleteKnowledgeItemUseCase(
-        knowledge_item_repo=world.knowledge_item_repo, job_queue=queue
+        knowledge_item_repo=world.knowledge_item_repo,
+        job_queue=queue,
+        audit_log_repo=audit,
+        wall_clock=world.wall_clock,
     )
 
     created = create.run(

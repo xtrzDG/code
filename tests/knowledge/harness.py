@@ -143,6 +143,7 @@ class KnowledgeHarness(KnowledgeStore):
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
             job_queue=self.job_queue,
+            audit_log_repo=self.audit_log_repo,
         )
         self.update_knowledge_item = UpdateKnowledgeItemUseCase(
             business_repo=self.business_repo,
@@ -151,10 +152,13 @@ class KnowledgeHarness(KnowledgeStore):
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
             job_queue=self.job_queue,
+            audit_log_repo=self.audit_log_repo,
         )
         self.delete_knowledge_item = DeleteKnowledgeItemUseCase(
             knowledge_item_repo=self.knowledge_item_repo,
             job_queue=self.job_queue,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=self.wall_clock,
         )
         self.get_knowledge_item = GetKnowledgeItemUseCase(
             business_repo=self.business_repo,

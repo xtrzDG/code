@@ -56,10 +56,15 @@ def rewrite_request(first: ReplyReview) -> MessageText:
     return MessageText(
         build_guard_rewrite_note(
             [str(value) for value in first.unverified_values],
-            [str(finding.claim) for finding in first.unsupported_claims],
+            [
+                str(finding.claim)
+                for finding in first.unsupported_claims
+                if str(finding.claim) not in first.booking_claims
+            ],
             first.withheld_details,
             [str(link) for link in first.foreign_links],
             quotes_team_note=bool(first.quoted_notes),
+            booking_claims=first.booking_claims,
         )
     )
 

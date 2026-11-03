@@ -79,6 +79,7 @@ export const settingsRecordsIt: Translation<typeof settingsRecordsEn> = {
       webhook_delivery: "Consegna del webhook",
       contact: "Cliente",
       booking: "Prenotazione",
+      knowledge_item: "Voce della base di conoscenza",
       manager_contacts: "Contatti per le notifiche",
       channel: "Canale",
       call: "Chiamata",

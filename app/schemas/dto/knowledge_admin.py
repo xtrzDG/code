@@ -46,6 +46,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import FormattedMoneyText
 from app.schemas.typings.maintenance.booleans import IsListIndexing
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class KnowledgeItemInput(ImmutableDTO):
@@ -133,28 +134,35 @@ class KnowledgeItemPatch(ImmutableDTO):
 
 
 class CreateKnowledgeItemCommand(ImmutableDTO):
-    """Add one item; `language` formats the returned price (owner language)."""
+    """
+    Add one item; `language` formats the returned price (owner language).
+    `user_id` is the team member who adds it (its author, audited); None
+    when the platform adds it.
+    """
 
     business_id: BusinessId
     item: KnowledgeItemInput
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER
     language: LanguageTag | None = None
+    user_id: UserId | None = None
 
 
 class UpdateKnowledgeItemCommand(ImmutableDTO):
-    """Change one item of the business."""
+    """Change one item of the business; `user_id` as in the create command."""
 
     business_id: BusinessId
     item_id: KnowledgeItemId
     patch: KnowledgeItemPatch
     language: LanguageTag | None = None
+    user_id: UserId | None = None
 
 
 class DeleteKnowledgeItemCommand(ImmutableDTO):
-    """Delete one item of the business."""
+    """Delete one item of the business; `user_id` as in the create command."""
 
     business_id: BusinessId
     item_id: KnowledgeItemId
+    user_id: UserId | None = None
 
 
 class UpsertKnowledgeItemsCommand(ImmutableDTO):

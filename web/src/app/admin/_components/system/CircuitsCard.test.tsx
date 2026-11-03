@@ -52,6 +52,9 @@ describe("circuits", () => {
     expect(circuitProvider("provider:meta")).toBe("meta");
     expect(circuitProvider("provider:platform_bot")).toBe("platform_bot");
     expect(circuitProvider("provider:elevenlabs")).toBe("elevenlabs");
+    expect(circuitProvider("provider:google_calendar")).toBe("google_calendar");
+    expect(circuitProvider("provider:cal_com")).toBe("cal_com");
+    expect(circuitProvider("provider:twilio_numbers")).toBe("twilio_numbers");
     expect(circuitProvider("provider:pigeon")).toBeNull();
     expect(circuitProvider("anthropic:claude-sonnet-5-5")).toBeNull();
   });

@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.contracts.whatsapp_templates import WhatsAppTemplateCatalogClientContract
 from app.gateways.http.call_settings_routes import build_call_settings_router
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.telephony_routes import build_telephony_router
@@ -29,7 +30,8 @@ from tests.channels.testbed import ChannelsTestbed
 
 
 def build_calls_http_client(
-    testbed: ChannelsTestbed, template_catalog: FakeTemplateCatalog | None = None
+    testbed: ChannelsTestbed,
+    template_catalog: WhatsAppTemplateCatalogClientContract | None = None,
 ) -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)

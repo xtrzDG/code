@@ -75,6 +75,32 @@ def test_no_module_builds_an_httpx_client_itself() -> None:
     assert builders == []
 
 
+def test_no_module_sends_a_request_without_a_client() -> None:
+    """`httpx.get(...)` and friends build a client of their own each call."""
+
+    shortcuts: frozenset[str] = frozenset(
+        f"httpx.{name}"
+        for name in (
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "head",
+            "request",
+            "stream",
+        )
+    )
+    direct = [
+        f"{module}:{call.lineno}"
+        for module, tree in MODULES
+        for call in calls(tree)
+        if callee(call) in shortcuts
+    ]
+
+    assert direct == []
+
+
 def test_nothing_turns_tls_checks_off_or_follows_redirects() -> None:
     unsafe: list[str] = []
     for module, tree in MODULES:

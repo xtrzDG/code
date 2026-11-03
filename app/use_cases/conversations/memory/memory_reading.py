@@ -12,8 +12,12 @@ from app.schemas.dto.customer_memory.returning_customers import (
     RememberedNote,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.constrained_strings import (
+    ConversationSummaryText,
+)
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.shared.lead_views import build_lead_view
+from app.utilities.conversations.memory_facts import keep_memory_facts
 
 # The latest conversations whose summaries, requests and notes are read.
 RECALLED_CONVERSATION_COUNT: int = 10
@@ -31,17 +35,27 @@ OPEN_LEAD_STATUSES: frozenset[LeadStatus] = frozenset(
 def remembered_summaries(
     earlier: list[ConversationDocument],
 ) -> list[RememberedConversation]:
-    """The summaries of the latest earlier conversations, the latest first."""
+    """
+    The summaries of the latest earlier conversations, the latest first;
+    a sentence stored before the memory filter that instructs the
+    assistant or claims a rule is left out here too (`keep_memory_facts`).
+    """
 
-    return [
-        RememberedConversation(
-            last_message_at=conversation.last_message_at,
-            channel=conversation.channel,
-            summary=conversation.summary,
+    remembered: list[RememberedConversation] = []
+    for conversation in earlier:
+        summary: ConversationSummaryText | None = keep_memory_facts(
+            conversation.summary
         )
-        for conversation in earlier
-        if conversation.summary is not None
-    ][:MAX_SUMMARIES]
+        if summary is not None:
+            remembered.append(
+                RememberedConversation(
+                    last_message_at=conversation.last_message_at,
+                    channel=conversation.channel,
+                    summary=summary,
+                )
+            )
+
+    return remembered[:MAX_SUMMARIES]
 
 
 def open_leads(

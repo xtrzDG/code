@@ -1,8 +1,9 @@
 """
 The one request to rewrite a reply the guard held back: the values the
 evidence does not back, the policy or availability statements it does not
-back, contact details that are neither the business's nor the customer's
-own, links the business did not publish, and the quote of a team note.
+back, a booking said to be done that no booking tool made, contact details
+that are neither the business's nor the customer's own, links the business
+did not publish, and the quote of a team note.
 """
 
 from collections.abc import Sequence
@@ -18,6 +19,7 @@ def build_guard_rewrite_note(
     withheld_details: list[str],
     foreign_links: Sequence[str] = (),
     quotes_team_note: bool = False,
+    booking_claims: Sequence[str] = (),
 ) -> str:
     """The note; a reply held back for its values alone keeps the old wording."""
 
@@ -26,6 +28,7 @@ def build_guard_rewrite_note(
         and not withheld_details
         and not foreign_links
         and not quotes_team_note
+        and not booking_claims
     ):
         return build_rewrite_note(unverified_values)
 
@@ -42,6 +45,15 @@ def build_guard_rewrite_note(
         lines.append(
             "The facts and tool results do not back these statements of your "
             "last reply: " + " | ".join(unsupported_claims)
+        )
+
+    if booking_claims:
+        lines.append(
+            "No booking tool succeeded in this turn, yet your last reply says a "
+            "booking is made, confirmed, moved or cancelled: "
+            + " | ".join(booking_claims)
+            + " Say so only after create_booking, reschedule_booking or "
+            "cancel_booking succeeded (or list_my_bookings shows it)."
         )
 
     if withheld_details:

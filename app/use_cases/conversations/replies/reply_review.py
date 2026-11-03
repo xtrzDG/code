@@ -1,7 +1,8 @@
 """
 The reply guard's look at one reply text: invented values and links,
-unsupported policy and availability claims, other people's contact details
-and quoted team notes.
+unsupported policy and availability claims, a booking said to be done that
+no booking tool of the turn made, other people's contact details and
+quoted team notes.
 """
 
 from collections.abc import Sequence
@@ -14,7 +15,11 @@ from app.contracts.repositories.conversation_repositories import (
     MessageRepoContract,
 )
 from app.schemas.constants.conversation_engine import ReplyFailureKind
-from app.schemas.constants.reply_safety import ClaimVerdict, ReplyGuardReason
+from app.schemas.constants.reply_safety import (
+    ClaimTopic,
+    ClaimVerdict,
+    ReplyGuardReason,
+)
 from app.schemas.domain.conversations import ClaimFinding
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.reply_safety import (
@@ -24,6 +29,7 @@ from app.schemas.dto.reply_safety import (
     VerifierUsage,
 )
 from app.schemas.typings.conversations.strings import (
+    ClaimText,
     MessageText,
     ReplyEvidenceText,
     UnverifiedReplyValue,
@@ -38,6 +44,7 @@ from app.use_cases.conversations.replies.reply_evidence import (
 )
 from app.use_cases.conversations.replies.turn_progress import TurnProgress
 from app.utilities.conversations.reply_choices_text import text_with_options
+from app.utilities.reply_guard.booking_claims import find_unbacked_booking_claims
 from app.utilities.reply_guard.claim_candidates import find_claim_candidates
 from app.utilities.reply_guard.deposit_amount_check import (
     find_deposit_amount_mismatches,
@@ -68,6 +75,9 @@ class ReplyReview:
         default_factory=list[UnverifiedReplyValue]
     )
     quoted_notes: list[str] = field(default_factory=list[str])
+    # Sentences saying a booking is done with no booking tool success in the
+    # turn; also in `claim_findings` as unsupported (stored as claims).
+    booking_claims: list[str] = field(default_factory=list[str])
 
     @property
     def flagged_values(self) -> list[UnverifiedReplyValue]:
@@ -153,6 +163,11 @@ class ReplyReviewer:
         candidates: list[ClaimCandidate] = find_claim_candidates(
             str(text), [*turn.version.languages, turn.reply_language]
         )
+        booking_claims: list[str] = find_unbacked_booking_claims(
+            str(text),
+            [*turn.version.languages, turn.reply_language],
+            progress.tool_calls,
+        )
         result: ClaimCheckResult = (
             self._claim_check.check_claims(
                 ClaimCheckRequest(
@@ -175,7 +190,11 @@ class ReplyReviewer:
                     ),
                 ]
             ),
-            claim_findings=list(result.findings),
+            claim_findings=[
+                *result.findings,
+                *(unbacked_booking_finding(claim) for claim in booking_claims),
+            ],
+            booking_claims=booking_claims,
             withheld_details=find_withheld_contact_details(
                 self._contact_repo, turn, str(text), evidence
             ),
@@ -201,6 +220,20 @@ class ReplyReviewer:
             self._country_registry.get(turn.business.country_code).emergency_number
         )
         return [f"Emergency number: {number}"]
+
+
+def unbacked_booking_finding(claim: str) -> ClaimFinding:
+    """
+    A booking claim as the stored claim findings keep it: an unsupported
+    statement of availability (the reasons and topics the release before
+    reads).
+    """
+
+    return ClaimFinding(
+        claim=ClaimText(claim),
+        topic=ClaimTopic.AVAILABILITY,
+        verdict=ClaimVerdict.UNSUPPORTED,
+    )
 
 
 def unique_values(

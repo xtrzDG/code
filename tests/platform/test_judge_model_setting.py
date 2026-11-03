@@ -16,11 +16,11 @@ BOTH_KEYS: dict[str, str] = {
     ("environment", "judge"),
     [
         ({"LLM_PROVIDER": "openai", **BOTH_KEYS}, "claude-sonnet-5-5"),
-        ({"LLM_PROVIDER": "anthropic", **BOTH_KEYS}, "gpt-5-mini"),
+        ({"LLM_PROVIDER": "anthropic", **BOTH_KEYS}, "gpt-5-mini-2025-08-07"),
         # Without the other provider's key the judge stays on its own.
         (
             {"LLM_PROVIDER": "openai", "OPENAI_API_KEY": "test-openai-key"},
-            "gpt-5-mini",
+            "gpt-5-mini-2025-08-07",
         ),
         (
             {"LLM_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "test-key"},

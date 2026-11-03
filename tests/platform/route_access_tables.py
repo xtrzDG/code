@@ -6,6 +6,8 @@ operation without credentials; adding a public operation means adding it
 here with its reason.
 """
 
+from app.utilities.channels.widget_loader import published_widget_loaders
+
 # Operations open to anyone, by "METHOD path", and why that is safe.
 PUBLIC_OPERATIONS: dict[str, str] = {
     "GET /v1/auth/login-options": "which sign-in methods exist; no account data",
@@ -87,6 +89,14 @@ UNDOCUMENTED_ROUTES: dict[str, str] = {
     "/healthz/pipeline": "whether the worker pulses: no business data",
     "/metrics": "METRICS_TOKEN (tests/e2e/test_service_metrics.py)",
     "/widget.js": "the public website chat script",
+    # The loaders embed codes name (one path per published loader).
+    **{
+        path: (
+            "an immutable loader of the public chat script, pinned by the "
+            "embed code's integrity hash (tests/channels/test_widget_loader.py)"
+        )
+        for path in published_widget_loaders()
+    },
     "/widget/accessibility": (
         "a redirect to the public accessibility statement "
         "(tests/channels/test_widget_footer_links.py)"

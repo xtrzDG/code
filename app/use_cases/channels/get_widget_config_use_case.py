@@ -29,7 +29,10 @@ from app.schemas.dto.channels.widget import (
 from app.schemas.dto.setup.starter_catalog import StarterAnswers
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.shared.widget_languages import (
     build_widget_greetings,
@@ -110,6 +113,10 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
             self._business_profile_repo.get_by_business(business.id)
         )
         assistant_languages: list[LanguageTag] = self._assistant_languages(business)
+        # Offered when the chat cannot answer (the widget's outage line).
+        business_phone_number: E164PhoneNumber | None = (
+            None if profile is None else profile.contacts.public_phone_number
+        )
         return WidgetConfigView(
             business_id=business.id,
             business_name=business.name,
@@ -134,9 +141,7 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
                 business, POWERED_BY_SOURCE_TAG
             ),
             attachments=widget_attachment_rules(self._app_settings.media),
-            business_phone_number=(
-                None if profile is None else profile.contacts.public_phone_number
-            ),
+            business_phone_number=business_phone_number,
         )
 
     def _starter_questions(

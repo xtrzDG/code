@@ -14,7 +14,8 @@ from app.schemas.typings.meta_connection.constrained_strings import (
 class WhatsAppTemplateCatalogClientContract(ClientContract, Protocol):
     """
     `GET /{waba}/message_templates` of the Graph API. Errors:
-    ExternalServiceError when Meta cannot be asked or refuses the token.
+    ExternalServiceError when Meta cannot be asked or refuses the token,
+    ValidationFailedError when it does not know the account.
     """
 
     def find_categories(

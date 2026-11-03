@@ -37,14 +37,16 @@ def test_the_cheaper_model_stays_with_the_assistants_provider() -> None:
             )
         )
 
-    assert cheaper("gpt-5-mini") == "gpt-5-nano"
-    assert cheaper("claude-opus-5-5") == "claude-haiku-4-5"
+    assert cheaper("gpt-5-mini") == "gpt-5-nano-2025-08-07"
+    assert cheaper("claude-opus-5-5") == "claude-haiku-4-5-20251001"
     assert cheaper("scripted") == "scripted"
     assert cheaper("gpt-5-mini", configured="gpt-5-mini-2025-08-07") == (
         "gpt-5-mini-2025-08-07"
     )
     # Another provider's model cannot continue the conversation's turns.
-    assert cheaper("gpt-5-mini", configured="claude-haiku-4-5") == "gpt-5-nano"
+    assert cheaper("gpt-5-mini", configured="claude-haiku-4-5") == (
+        "gpt-5-nano-2025-08-07"
+    )
     assert cheaper("mystery-model") == "mystery-model"
 
 

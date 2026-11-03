@@ -31,5 +31,8 @@ export const providerCircuitsEn = {
     stripe: "Payments (Stripe)",
     elevenlabs: "Voice (ElevenLabs)",
     web_push: "Web push",
+    google_calendar: "Google Calendar",
+    cal_com: "Booking system (Cal.com)",
+    twilio_numbers: "Phone numbers (Twilio)",
   },
 } as const;

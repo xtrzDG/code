@@ -32,17 +32,17 @@ at each request, so a change takes effect at the next one.
 
 | Access class | API operations | Of them changing state | Cabinet routes |
 | --- | ---: | ---: | ---: |
-| `public` | 45 | 11 | 14 |
+| `public` | 46 | 11 | 14 |
 | `signed_webhook` | 13 | 11 | 0 |
 | `customer` | 17 | 8 | 0 |
 | `account` | 38 | 26 | 2 |
-| `staff` | 114 | 39 | 0 |
+| `staff` | 115 | 40 | 0 |
 | `owner` | 155 | 115 | 1 |
 | `platform_admin` | 58 | 33 | 0 |
 | `api_key` | 14 | 5 | 0 |
 | `operator_token` | 1 | 0 | 0 |
 | `as_api` | 0 | 0 | 5 |
-| **All** | 455 | 248 | 22 |
+| **All** | 457 | 249 | 22 |
 
 ## A business's operations by area
 
@@ -68,7 +68,7 @@ owner's consent.
 | `/autotest-cases` | 5 | 5 | 0 | 0 |
 | `/availability` | 1 | 0 | 1 | 0 |
 | `/billing` | 16 | 16 | 0 | 0 |
-| `/bookings` | 7 | 0 | 2 | 5 |
+| `/bookings` | 8 | 0 | 2 | 6 |
 | `/brand` | 2 | 1 | 1 | 0 |
 | `/business-exports` | 3 | 3 | 0 | 0 |
 | `/call-forwarding-instructions` | 1 | 0 | 1 | 0 |

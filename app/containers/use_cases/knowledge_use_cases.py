@@ -203,6 +203,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
         job_queue=job_queue,
+        audit_log_repo=repositories.audit_log_repo,
     )
     get_knowledge_item_use_case: Factory[
         UseCaseContract[KnowledgeItemQuery, KnowledgeItemDetails]
@@ -232,6 +233,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
         job_queue=job_queue,
+        audit_log_repo=repositories.audit_log_repo,
     )
     delete_knowledge_item_use_case: Factory[
         UseCaseContract[DeleteKnowledgeItemCommand, KnowledgeItemDeletion]
@@ -239,6 +241,8 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         DeleteKnowledgeItemUseCase,
         knowledge_item_repo=repositories.knowledge_item_repo,
         job_queue=job_queue,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     upsert_knowledge_items_use_case: Factory[
         UseCaseContract[UpsertKnowledgeItemsCommand, KnowledgeItemList]

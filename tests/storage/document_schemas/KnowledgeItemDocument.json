@@ -1,7 +1,7 @@
 {
   "collection": "knowledge_items",
   "document_type": "KnowledgeItemDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -132,6 +132,18 @@
       "created_at": {
         "type": "integer"
       },
+      "created_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "currency_code": {
         "anyOf": [
           {
@@ -221,7 +233,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "seasonal_rates": {
@@ -303,6 +315,18 @@
       },
       "updated_at": {
         "type": "integer"
+      },
+      "updated_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       }
     },
     "required": [

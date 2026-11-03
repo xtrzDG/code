@@ -19,8 +19,13 @@ models in [llm-outage](llm-outage.md)):
 | `provider:stripe` | Stripe (the EU, the US, Israel): the same calls, apart from Flitt's circuit |
 | `provider:elevenlabs` | ElevenLabs, the voice platform: setting up voice agents and their tools, the voice checks of autotests, call recordings, deleting conversations, importing and assigning rented numbers. A call the voice platform cannot take still reaches staff: rented numbers fall back to the staff mobile through Twilio (docs/LAUNCH.md, section 4.6) |
 
+| `provider:google_calendar` | Google Calendar of every business: mirroring bookings into it, reading its busy times, erasing a customer's events, the consent's token calls. While open a mirror is retried later, a busy-time read keeps the busy times read before (shown as "unreachable") |
+| `provider:cal_com` | Cal.com, the booking system: reading its bookings as busy times, writing and cancelling the platform's bookings there (queued, retried) |
+| `provider:twilio_numbers` | Twilio's phone numbers: the offer, its price, renting, the call fallback, returning a number (apart from `provider:twilio_sms`) |
+
 Web push has none: it reaches many push services, and one being down is not
-the others'. Login codes do not go through the circuits.
+the others'. Zadarma has none either: the platform only receives its call
+notifications and calls no Zadarma API (numbers are bought by hand). Login codes do not go through the circuits.
 
 ## How it works
 
@@ -33,7 +38,13 @@ the others'. Login codes do not go through the circuits.
   (`PaymentsNotConfiguredError`) leave `provider:flitt` and
   `provider:stripe` closed. ElevenLabs likewise: a 4xx (a voice, model or
   agent setting it does not accept, a bad key) and a 429 leave
-  `provider:elevenlabs` closed; a 408 or a 5xx counts.
+  `provider:elevenlabs` closed; a 408 or a 5xx counts. The integration
+  circuits (`provider:google_calendar`, `provider:cal_com`,
+  `provider:twilio_numbers`) are shared by every business, so they count
+  only a call that got no answer (a timeout, a connection error) or a 5xx
+  (`ProviderOutageError`, `app/utilities/resilience/integration_outages.py`):
+  a revoked consent, a calendar or event type that is gone or a refused key
+  is one business's own problem and never opens them for the others.
 - **Typing signals are best effort.** They run only while the circuit is
   closed and never report a success (they often make no call at all), so
   they cannot take the half-open trial or close a circuit; a typing call

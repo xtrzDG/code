@@ -7,9 +7,10 @@ When the owner names a template, the business's WhatsApp account is asked
 for that template's category (its own token from Embedded Signup, else
 the platform's system user token); a MARKETING one is refused with the
 reason `marketing_template`. Where the account cannot be asked (no
-business account id on record, no token, Meta unreachable) the name is
-kept and the warning logged: Meta's own warning that a template moved
-into MARKETING still reaches the WHATSAPP_QUALITY alert.
+business account id on record, no token that opens, Meta unreachable or
+refusing the question) the name is kept and the warning logged: Meta's
+own warning that a template moved into MARKETING still reaches the
+WHATSAPP_QUALITY alert.
 """
 
 import logging
@@ -22,10 +23,8 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.whatsapp_templates import WhatsAppTemplateCategory
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.errors import ErrorReason
-from app.schemas.exceptions.application_errors import (
-    ExternalServiceError,
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.channels.strings import ChannelSecret
@@ -79,7 +78,7 @@ class TextBackTemplateCheck:
             categories: list[WhatsAppTemplateCategory] = self._catalog.find_categories(
                 token, channel.whatsapp_business_account_id, template_name
             )
-        except ExternalServiceError as error:
+        except ApplicationError as error:
             LOGGER.warning(
                 "The category of WhatsApp template %s of business %s is unknown: %s",
                 template_name,

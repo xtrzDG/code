@@ -75,7 +75,7 @@ def test_quality_journal_is_langfuse_only_with_both_keys() -> None:
 @pytest.mark.parametrize(
     ("environment", "expected_model"),
     [
-        ({}, "gpt-5-mini"),
+        ({}, "gpt-5-mini-2025-08-07"),
         ({"LLM_MODEL_ID": "gpt-5"}, "gpt-5"),
         ({"LLM_PROVIDER": "anthropic"}, str(DEFAULT_MENU_EXTRACTION_MODEL_ID)),
         ({"LLM_PROVIDER": "scripted"}, str(DEFAULT_MENU_EXTRACTION_MODEL_ID)),

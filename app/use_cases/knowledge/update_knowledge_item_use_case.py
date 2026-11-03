@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -25,7 +26,8 @@ class UpdateKnowledgeItemUseCase(
     Inactive items stay in the cabinet, but the assistant no longer finds or
     quotes them. An item of another business is reported as missing. A new
     performer list is the whole truth: resources left out stop listing the
-    item among their services (or as their room type).
+    item among their services (or as their room type). The team member who
+    changes it is kept as `updated_by` and the change is audited.
     """
 
     def run(self, input_data: UpdateKnowledgeItemCommand) -> KnowledgeItemDetails:
@@ -44,8 +46,10 @@ class UpdateKnowledgeItemUseCase(
             existing=existing,
             patch=input_data.patch,
             now=now,
+        ).model_copy(update={"updated_by": input_data.user_id})
+        resources: list[ResourceDocument] = self._save_checked(
+            updated, AuditAction.UPDATE
         )
-        resources: list[ResourceDocument] = self._save_checked(updated)
         if input_data.patch.performer_resource_ids is not None:
             resources = unlink_left_out_resources(
                 self._resource_repo, updated, resources, now

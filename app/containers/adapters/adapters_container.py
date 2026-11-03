@@ -205,9 +205,8 @@ class AdaptersContainer(containers.DeclarativeContainer):
 
     # --- Messaging channels, each behind its provider's circuit.
     channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]
-        ChannelAdaptersContainer, clients=clients, config=config,
-        utilities=utilities, circuit_breaker=circuit_breaker,
-        rate_limit_buckets=rate_limit_buckets,
+        ChannelAdaptersContainer, clients=clients, config=config, utilities=utilities,
+        circuit_breaker=circuit_breaker, rate_limit_buckets=rate_limit_buckets,
         wall_clock=time_provider.microsecond_wall_clock,
     )  # fmt: skip
     telegram_channel_adapter = channels.telegram_channel_adapter

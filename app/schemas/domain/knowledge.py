@@ -35,6 +35,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class KnowledgeAttribute(PersistentDocument):
@@ -114,7 +115,11 @@ class KnowledgeItemDocument(BaseDocument):
     # 5: `aliases`, the title in other languages of the business, and
     # `alias_request`, what the alias model was last asked about the item
     # (R17-CROSS-LANG-SEARCH; optional, empty and None for every older item).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # 6: `created_by` and `updated_by`, the team member who added the item
+    # and who changed it last in the cabinet (AI-11; optional, None for
+    # items the platform wrote and every older item). Each such change also
+    # has its entry in the business's audit log (`knowledge_item`).
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
     kind: KnowledgeItemKind
@@ -140,3 +145,5 @@ class KnowledgeItemDocument(BaseDocument):
     import_batch_id: MenuImportBatchId | None = None
     correction_of: MessageId | None = None
     shared_key: KnowledgeShareKey | None = None
+    created_by: UserId | None = None
+    updated_by: UserId | None = None

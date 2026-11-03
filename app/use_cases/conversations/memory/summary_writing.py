@@ -20,6 +20,7 @@ from app.schemas.typings.conversations.constrained_strings import (
     ConversationSummaryText,
 )
 from app.schemas.typings.conversations.strings import MessageText
+from app.utilities.conversations.memory_facts import keep_memory_facts
 from app.utilities.media.attachment_texts import readable_message_text
 from app.utilities.memory.conversation_summary_prompt import (
     CONVERSATION_SUMMARY_SYSTEM_PROMPT,
@@ -64,7 +65,9 @@ def ask_for_summary(
     lines: list[tuple[MessageAuthor, str]],
 ) -> ConversationSummaryText | None:
     """
-    The model's summary, None when it wrote nothing readable.
+    The model's summary, None when it wrote nothing readable. Sentences that
+    instruct the assistant or claim a rule or an exemption for the customer
+    are never remembered (`keep_memory_facts`).
 
     Raises:
         ExternalServiceError, LlmRefusedError: the model call failed.
@@ -85,8 +88,8 @@ def ask_for_summary(
             call_limits=SUMMARY_CALL_LIMITS,
         )
     )
-    summary: ConversationSummaryText | None = read_conversation_summary(
-        None if response.text is None else str(response.text)
+    summary: ConversationSummaryText | None = keep_memory_facts(
+        read_conversation_summary(None if response.text is None else str(response.text))
     )
     if summary is None:
         LOGGER.warning("The model wrote no readable conversation summary.")

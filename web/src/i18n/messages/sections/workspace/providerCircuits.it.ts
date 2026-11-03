@@ -30,5 +30,8 @@ export const providerCircuitsIt: Translation<typeof providerCircuitsEn> = {
     stripe: "Pagamenti (Stripe)",
     elevenlabs: "Voce (ElevenLabs)",
     web_push: "Notifiche web push",
+    google_calendar: "Google Calendar",
+    cal_com: "Sistema di prenotazione (Cal.com)",
+    twilio_numbers: "Numeri di telefono (Twilio)",
   },
 };

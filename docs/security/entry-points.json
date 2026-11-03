@@ -167,6 +167,7 @@
     {"method": "GET", "path": "/v1/businesses/{business_id}/bookings/grid", "access": "staff", "scope": "business", "changes_state": false, "protected_by": "cabinet session token of a member of the business"},
     {"method": "PATCH", "path": "/v1/businesses/{business_id}/bookings/{booking_id}", "access": "staff", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
     {"method": "POST", "path": "/v1/businesses/{business_id}/bookings/{booking_id}/cancel", "access": "staff", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
+    {"method": "POST", "path": "/v1/businesses/{business_id}/bookings/{booking_id}/manage-links/revoke", "access": "staff", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
     {"method": "POST", "path": "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule", "access": "staff", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
     {"method": "POST", "path": "/v1/businesses/{business_id}/bookings/{booking_id}/revert-status", "access": "staff", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
     {"method": "DELETE", "path": "/v1/businesses/{business_id}/brand", "access": "owner", "scope": "business", "changes_state": true, "protected_by": "cabinet session token of a member of the business"},
@@ -470,7 +471,8 @@
     {"method": "OPTIONS", "path": "/v1/widget/{business_id}/rating", "access": "public", "scope": "none", "changes_state": false, "protected_by": "CORS preflight of the website chat: no data"},
     {"method": "GET", "path": "/widget.js", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "the public website chat script"},
     {"method": "GET", "path": "/widget/accessibility", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "a redirect to the public accessibility statement (tests/channels/test_widget_footer_links.py)"},
-    {"method": "GET", "path": "/widget/demo", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "the widget's demo page; not served in production (tests/channels/test_widget_demo_page.py)", "in_production": false}
+    {"method": "GET", "path": "/widget/demo", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "the widget's demo page; not served in production (tests/channels/test_widget_demo_page.py)", "in_production": false},
+    {"method": "GET", "path": "/widget/v/8cc8877aaa264465.js", "access": "public", "scope": "platform", "changes_state": false, "protected_by": "an immutable loader of the public chat script, pinned by the embed code's integrity hash (tests/channels/test_widget_loader.py)"}
   ],
   "cabinet": [
     {"method": "DELETE", "path": "/api/backend/[...path]", "access": "as_api", "scope": "as the API operation", "changes_state": true, "protected_by": "the session cookie becomes the bearer token; only /v1/* is forwarded"},

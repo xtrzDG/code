@@ -20,6 +20,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.knowledge.update_knowledge_item_use_case import (
     UpdateKnowledgeItemUseCase,
 )
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.cross_language.fakes import PhraseBookAliasSuggester
 from tests.knowledge.cross_language.world import CrossLanguageWorld
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
@@ -61,6 +62,7 @@ def edit_during_the_call(
         niche_template_registry=world.niche_template_registry,
         wall_clock=world.wall_clock,
         job_queue=RecordingJobQueue(),
+        audit_log_repo=audit_log_repository(),
     )
     [item] = world.knowledge_item_repo.list_by_business(world.business.id)
     update.run(

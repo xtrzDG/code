@@ -117,6 +117,25 @@ def test_where_meta_cannot_be_asked_the_name_is_kept(
     assert "category of WhatsApp template missed_call" in caplog.text
 
 
+@pytest.mark.parametrize("status", [400, 403, 500])
+def test_where_meta_refuses_the_question_the_name_is_kept(
+    setup: VoiceSetup, status: int
+) -> None:
+    def refuse(request: httpx.Request) -> httpx.Response:
+        del request
+        return httpx.Response(
+            status, json={"error": {"code": 100, "message": "Unsupported get"}}
+        )
+
+    catalog = MetaTemplateCatalogClient(transport=httpx.MockTransport(refuse))
+    client = build_calls_http_client(setup.testbed, catalog)
+
+    response = name_template(client, setup, "missed_call")
+
+    assert response.status_code == 200, response.text
+    assert stored_name(setup) == "missed_call"
+
+
 def test_a_number_without_its_business_account_is_not_asked() -> None:
     setup = build_voice_setup()
     setup.testbed.add_channel(setup.business.id, ChannelKind.WHATSAPP, "15550001111")

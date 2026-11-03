@@ -10,8 +10,13 @@ from pathlib import Path
 import pytest
 
 from app.containers.factories import DEFAULT_MENU_EXTRACTION_MODEL_ID
+from app.registries.localization.voice_profile_registry import VOICE_PROFILES
+from app.schemas.configurations.embedding_settings import DEFAULT_EMBEDDINGS_MODEL_ID
+from app.schemas.configurations.media_settings import DEFAULT_TRANSCRIPTION_MODEL_ID
+from app.schemas.configurations.voice_agent_settings import DEFAULT_VOICE_AGENT_LLM
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.utilities.assembly.voice_agents import VOICE_AGENT_REVISION
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
@@ -43,7 +48,8 @@ BOTH_KEYS: dict[str, str] = {
 }
 # A model id written as a setting's value in a deploy or CI file.
 CONFIGURED_MODEL: re.Pattern[str] = re.compile(
-    r"(?:MODEL_ID|model|judge)\s*[:=]\s*[\"']?([a-z0-9][a-z0-9.\-]+)", re.IGNORECASE
+    r"(?:MODEL_ID|model|judge)[ \t]*[:=][ \t]*[\"']?([a-z0-9][a-z0-9.\-]+)",
+    re.IGNORECASE,
 )
 CONFIG_FILES: tuple[str, ...] = (
     ".env.example",
@@ -82,7 +88,9 @@ def test_assembled_settings_call_only_pinned_models(provider: str) -> None:
         settings.reply_speed.llm_fallback_model_id,
     ]
 
-    assert [str(m) for m in models if m is not None and not is_pinned_model_id(str(m))] == []
+    assert [
+        str(m) for m in models if m is not None and not is_pinned_model_id(str(m))
+    ] == []
 
 
 @pytest.mark.parametrize(
@@ -123,3 +131,19 @@ def test_the_scripted_provider_keeps_its_offline_model() -> None:
     settings = assemble_app_settings({"LLM_PROVIDER": LlmProvider.SCRIPTED.value})
 
     assert settings.llm_model_id == "scripted"
+
+
+def test_the_component_inventory_lists_every_pin() -> None:
+    inventory = (REPOSITORY / "docs/security/ai-components.md").read_text(
+        encoding="utf-8"
+    )
+    pins: set[str] = {
+        *default_model_ids(),
+        DEFAULT_TRANSCRIPTION_MODEL_ID,
+        DEFAULT_EMBEDDINGS_MODEL_ID,
+        DEFAULT_VOICE_AGENT_LLM,
+        *(str(profile.tts_model) for profile in VOICE_PROFILES.values()),
+    }
+
+    assert [pin for pin in sorted(pins) if f"`{pin}`" not in inventory] == []
+    assert f"`VOICE_AGENT_REVISION` (now {int(VOICE_AGENT_REVISION)}" in inventory

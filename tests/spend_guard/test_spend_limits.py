@@ -65,7 +65,7 @@ def test_past_the_soft_limit_the_turn_uses_the_cheaper_model_and_tells_once() ->
     second = check(world)
 
     assert first.level is SpendLevel.SOFT_LIMIT
-    assert first.cheaper_model_id == "gpt-5-nano"
+    assert first.cheaper_model_id == "gpt-5-nano-2025-08-07"
     assert second.level is SpendLevel.SOFT_LIMIT
     (notification,) = world.notifier.notifications
     assert str(notification.contact.address) == "owner@salobie.example"

@@ -80,6 +80,7 @@ export const settingsRecordsEn = {
       webhook_delivery: "Webhook delivery",
       contact: "Customer",
       booking: "Booking",
+      knowledge_item: "Knowledge base item",
       manager_contacts: "Notification contacts",
       channel: "Channel",
       call: "Call",

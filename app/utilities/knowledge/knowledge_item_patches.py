@@ -139,6 +139,8 @@ def patch_knowledge_item(
         import_batch_id=existing.import_batch_id,
         correction_of=existing.correction_of,
         shared_key=existing.shared_key,
+        created_by=existing.created_by,
+        updated_by=existing.updated_by,
         created_at=existing.created_at,
         updated_at=now,
     )

@@ -135,6 +135,7 @@ def build_knowledge_router(
                 business_id=business.id,
                 item=item,
                 language=parse_language_parameter(language),
+                user_id=user_id,
             )
         )
 
@@ -195,6 +196,7 @@ def build_knowledge_router(
                 ),
                 patch=patch,
                 language=parse_language_parameter(language),
+                user_id=user_id,
             )
         )
 
@@ -233,6 +235,7 @@ def build_knowledge_router(
                 item_id=parse_path_identifier(
                     item_id, KnowledgeItemId, "Knowledge item"
                 ),
+                user_id=user_id,
             )
         )
 
