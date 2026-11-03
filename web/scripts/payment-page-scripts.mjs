@@ -130,9 +130,9 @@ export function renderReport(changes, source) {
     return `${lines.join("\n")}\n`;
   }
   lines.push(
-    `**${changes.length} difference(s).** A deploy that changed these pages explains them only if the`,
-    "changed scripts come from reviewed commits: then update the inventory (docs/operations/ci.md,",
-    '"Payment page integrity"). Otherwise treat it as an incident (docs/operations/incident.md).',
+    `**${changes.length} difference(s).** Only reviewed code explains them: in a pull request, review`,
+    "the changed scripts and update the inventory in it; on the deployed site, a change no reviewed",
+    'commit made is an incident (docs/operations/ci.md, "Payment page integrity"; docs/operations/incident.md).',
     "",
     "| Page | Script | Change | Detail |",
     "| --- | --- | --- | --- |",

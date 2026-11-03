@@ -25,7 +25,7 @@ system dependencies and the cached packages all follow the image.
 | `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
 | `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4; api-fuzz 1/1) | pytest with coverage on four xdist workers, one part of a group each; `Backend tests (api-fuzz 1/1)` runs `-m api_fuzz` alone (`tests/api_fuzz`: hypothesis over every documented operation, and hostile bodies), which the other parts leave out | — | ~4:15 (tests ~3:15) |
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
-| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the secret scan of the build, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
+| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the secret scan of the build, the payment pages' scripts against their inventory, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
 | `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
@@ -122,9 +122,14 @@ dependency on npm or PyPI: first and latest release, how many accounts may
 publish it, deprecation, archival or yanked releases, code run on install,
 licence and source repository. It fails on a name the registry does not
 know, a deprecated or archived package, one first released fewer than 30
-days ago, or a lookalike of a popular or already used name, unless
-`.github/dependency-registry-review.toml` accepts that signal with a
-reason; the rest are warnings in the run summary, which holds the table.
+days ago, a lookalike of a popular or already used name (names in one
+npm scope are not compared with each other: only the scope's owner
+publishes there), or a dependency installed from a git repository, an
+address, a local path, the workspace or another index (`not-from-registry`:
+also when only its origin changed; an npm alias `npm:other@1` is measured
+as `other`), unless `.github/dependency-registry-review.toml` accepts that
+signal with a reason; the rest are warnings in the run summary, which
+holds the table.
 A registry that does not answer fails the step (nothing was measured):
 run the job again.
 
@@ -136,25 +141,28 @@ scripts of the payment pages, the billing page and the hosted chat page
 (which shows a deposit's payment link), with the reviewed inventory
 `web/payment-page-scripts.json` (every first-party chunk with its SHA-384,
 `web/scripts/payment-page-scripts.mjs`): with the repository variable
-`PRODUCTION_CABINET_URL`, each listed file as production serves it;
-without it, the scripts of a fresh build of `main`. A difference fails the
-run and opens the issue "Payment page scripts changed"; the schedule watch
-notices when the workflow stops running.
+`PRODUCTION_CABINET_URL`, each file the inventory of the `release` branch
+lists (the commit production runs), as production serves it; without it,
+the scripts of a fresh build of `main`. A difference fails the run and
+opens the issue "Payment page scripts changed"; the schedule watch notices
+when the workflow stops running.
 
-Every deploy that changes these pages' scripts (most cabinet changes do)
-changes the inventory. After such a deploy, review the changed scripts and
-update the inventory from the build of the commit production runs:
+The inventory follows the code: `web-build` compares every pull request's
+build with it (step "Payment pages' scripts against the inventory"), and a
+pull request that changes these pages' scripts (most cabinet changes do)
+gets a warning and the table in its run summary. Review the changed
+scripts with the code, then update the inventory in the same pull request:
 
 ```bash
-git switch --detach origin/release
-cd web && npm ci && npm run build
+cd web && npm run build
 node scripts/payment-page-integrity.mjs --build .next --update
 ```
 
-then commit `web/payment-page-scripts.json` in a reviewed pull request
-(without production's address, the failed run's artifact
-`payment-page-scripts` is the same file, built from `main`). A change no
-reviewed commit explains is an incident (`docs/operations/incident.md`).
+and commit `web/payment-page-scripts.json` with the change (the failed
+weekly run's artifact `payment-page-scripts` is the same file, built from
+`main`). Promoting `main` to `release` then carries the inventory to the
+commit production runs. A difference no reviewed commit explains is an
+incident (`docs/operations/incident.md`).
 
 ## Backend tests in parts
 
@@ -186,9 +194,11 @@ WEB-05, about a second) fails on a key shape of the platform's providers
 (Stripe `sk_`/`rk_`/`whsec_`, ElevenLabs, AWS, a PEM key, the platform's
 `awk_` keys, Sentry, model providers) in `.next/static` or `.next/server`,
 and on the value of a secret variable of `web/.env.example` or
-`.env.example` in the browser's files when the build's environment has one
-(CI's has none). A hit is fixed in the code and a real key rotated; there
-is no exception list.
+`.env.example` in what browsers receive (`.next/static` and the prerendered
+pages) when the build's environment has one (CI's has none). A hit is fixed
+in the code and a real key rotated; there is no exception list. The job
+then compares the payment pages' scripts with their inventory (a warning
+on a change, "Payment page integrity" above).
 Locally the first build of this worktree took 1:44, a later one of the
 same sources 13 seconds from that cache (about 260 MB); after a change only
 what it touched compiles again.

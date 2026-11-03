@@ -18,6 +18,7 @@ import {
   SECRET_RULES,
   documentedVariables,
   findSecrets,
+  isBrowserFile,
   isSecretVariable,
   masked,
   secretValues,
@@ -134,6 +135,23 @@ describe("the secret variables' values", () => {
       { file: "static/chunks/a.js", rule: "the value of BACKEND_URL", excerpt: masked("http://api.internal:8000") },
     ]);
     expect(findSecrets("server/app/page.js", text, { values })).toEqual([]);
+  });
+
+  it("are looked for in every file browsers receive: static files and prerendered pages", () => {
+    for (const file of [
+      "static/chunks/0abc.js",
+      "static/chunks/0abc.js.map",
+      "static/media/app.css",
+      "server/app/_global-error.html",
+      "server/app/_global-error.segments/__PAGE__.segment.rsc",
+      "server/app/icon.svg.body",
+      "server/pages/500.html",
+    ]) {
+      expect(isBrowserFile(file), file).toBe(true);
+    }
+    for (const file of ["server/app/b/page.js", "server/chunks/ssr/0abc.js", "server/app/icon.svg.meta", "server/app-paths-manifest.json"]) {
+      expect(isBrowserFile(file), file).toBe(false);
+    }
   });
 });
 

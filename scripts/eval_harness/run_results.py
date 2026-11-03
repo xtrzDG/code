@@ -24,6 +24,8 @@ class SampleResult(BaseModel):
     conversation ran to its end and, on replay, every call was recorded.
     `reply_languages` is the language each written reply read as ("?" when
     it told too little), for the per-language confusion of the report.
+    `hallucinations` says why its answers went beyond the business's data
+    (grounding_check); empty when they did not.
     """
 
     sample_index: int
@@ -39,6 +41,11 @@ class SampleResult(BaseModel):
     turn_latencies_ms: list[int] = Field(default_factory=list[int])
     stale_reasons: list[str] = Field(default_factory=list[str])
     error: str | None = None
+    hallucinations: list[str] = Field(default_factory=list[str])
+
+    @property
+    def is_hallucinated(self) -> bool:
+        return bool(self.hallucinations)
 
 
 class ScenarioResult(BaseModel):

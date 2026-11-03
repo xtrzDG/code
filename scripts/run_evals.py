@@ -8,9 +8,10 @@ The evaluation harness (evals/README.md):
 
 Writes reports/evals/report.json, report.html and summary.md (the job
 summary of the nightly run) and compares the run with
-evals/baselines/<model>.json. Exit code 1: the pass rate or a criterion's
-pass rate fell by more than its tolerance, a replayed cassette is stale,
-or (with --require-pass) a scenario failed.
+evals/baselines/<model>.json. Exit code 1 (run_gates): the pass rate or a
+criterion's pass rate fell by more than its tolerance, a replayed cassette
+is stale, pass^k is under --min-pass-rate, the hallucination rate is over
+--max-hallucination-rate, or (with --require-pass) a scenario failed.
 """
 
 import sys
@@ -31,6 +32,7 @@ from scripts.eval_harness.dataset_loading import DatasetError
 from scripts.eval_harness.eval_report import EvalReport, ModelsUsed
 from scripts.eval_harness.eval_runner import RunOutcome, print_progress, run_evals
 from scripts.eval_harness.report_writing import write_reports
+from scripts.eval_harness.run_gates import find_gate_failures
 from scripts.eval_harness.run_summary import RunSummary, summarize
 
 
@@ -59,6 +61,7 @@ def main(arguments: list[str] | None = None) -> int:
             options.criterion_tolerance,
         )
     )
+    failures: list[str] = find_gate_failures(summary, diff, options.limits)
     report = EvalReport(
         generated_at=datetime.now(UTC).isoformat(timespec="seconds"),
         mode=options.run.mode.value,
@@ -74,6 +77,7 @@ def main(arguments: list[str] | None = None) -> int:
         ],
         summary=summary,
         baseline=diff,
+        gate_failures=failures,
         scenarios=outcome.scenarios,
     )
     written: list[Path] = write_reports(options.out_dir, report)
@@ -94,7 +98,9 @@ def main(arguments: list[str] | None = None) -> int:
         f"\npass^{options.run.samples} {summary.pass_rate:.1%} "
         f"({summary.passed_count}/{summary.scenario_count}), pass@1 "
         f"{summary.pass_at_1:.1%}, stale {summary.stale_count}, "
-        f"errors {summary.errored_count}, "
+        f"errors {summary.errored_count}, hallucination rate "
+        f"{summary.hallucination_rate:.1%} ({summary.hallucinated_count}/"
+        f"{summary.grounded_samples}), "
         f"cost ${summary.cost_usd:.4f}, model time p50 {summary.latency_p50_ms} ms "
         f"p95 {summary.latency_p95_ms} ms"
     )
@@ -110,13 +116,11 @@ def main(arguments: list[str] | None = None) -> int:
                 f"{diff.criterion_tolerance * 100:.1f} pt)"
             )
 
+    for failure in failures:
+        print(f"FAILED: {failure}")
+
     print("Report: " + ", ".join(str(item) for item in written))
-    failed: bool = (
-        (diff is not None and diff.is_regression)
-        or summary.stale_count > 0
-        or (options.require_pass and summary.passed_count < summary.scenario_count)
-    )
-    return 1 if failed else 0
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

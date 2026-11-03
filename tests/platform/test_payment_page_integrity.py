@@ -2,10 +2,11 @@
 The payment pages' scripts are checked every week against their reviewed
 inventory (PAY-02; PCI DSS 11.6.1 intent): a scheduled workflow with
 pinned actions, read-only permissions and no secret hashes the files
-production serves (with PRODUCTION_CABINET_URL) or a fresh build's, fails
-on a difference and opens one issue; the schedule watch notices when it
-stops running. The comparison itself is tested in
-web/src/test/paymentPageScripts.test.ts.
+production serves (with PRODUCTION_CABINET_URL, against the inventory of
+production's commit) or a fresh build's, fails on a difference and opens
+one issue; the schedule watch notices when it stops running. Every pull
+request's build is compared too, so the inventory changes with the code.
+The comparison itself is tested in web/src/test/paymentPageScripts.test.ts.
 """
 
 import json
@@ -69,6 +70,40 @@ def test_it_compares_production_or_a_fresh_build_with_the_inventory() -> None:
     assert "npm run build" in scripts(job)
     keep = step_named(job, "Keep the scripts found")
     assert keep["if"] == "failure() && env.PRODUCTION_CABINET_URL == ''"
+
+
+def test_production_s_files_are_compared_with_production_s_commit() -> None:
+    [checkout] = uses(check_job(), "actions/checkout")
+
+    # The inventory of the release branch (what production runs) with the
+    # production address; the default branch's for a build of it.
+    assert checkout["with"]["ref"] == (
+        "${{ vars.PRODUCTION_CABINET_URL != '' && 'release' || '' }}"
+    )
+    assert checkout["with"]["persist-credentials"] is False
+
+
+def test_every_pull_request_s_build_is_compared_with_the_inventory() -> None:
+    job = workflow("ci.yml")["jobs"]["web-build"]
+    names = [str(step.get("name", "")) for step in steps(job)]
+    step = steps(job)[names.index("Payment pages' scripts against the inventory")]
+    run = str(step["run"])
+
+    assert names.index("No secrets in the build") < names.index(
+        "Payment pages' scripts against the inventory"
+    )
+    assert names.index("Payment pages' scripts against the inventory") < names.index(
+        "Keep the build for the end-to-end shards"
+    )
+    assert "node scripts/payment-page-integrity.mjs --build .next" in run
+    assert "GITHUB_STEP_SUMMARY" in run
+    # A change warns (the pull request updates the inventory); an unreadable
+    # build fails the step.
+    assert (
+        '[ "$status" -eq 1 ]' in run and "::warning title=Payment page scripts::" in run
+    )
+    assert run.rstrip().endswith('exit "$status"')
+    assert "continue-on-error" not in step
 
 
 def test_a_scheduled_difference_opens_one_issue() -> None:

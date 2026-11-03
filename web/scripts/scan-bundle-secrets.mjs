@@ -8,16 +8,17 @@
  *
  * Every file of `<build>/static` (what browsers download) and
  * `<build>/server` (the server's bundles and prerendered pages) is read;
- * images, fonts and media are skipped. Hits are printed masked, as GitHub
+ * images, fonts and media are skipped. The values of secret variables are
+ * looked for in what browsers receive: `static` and the prerendered pages. Hits are printed masked, as GitHub
  * annotations. Exit codes: 0 nothing found, 1 a secret found, 2 no build
  * to scan (a scan of nothing proves nothing).
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { parseArgs } from "node:util";
 
-import { documentedVariables, findSecrets, secretValues } from "./bundle-secrets.mjs";
+import { documentedVariables, findSecrets, isBrowserFile, secretValues } from "./bundle-secrets.mjs";
 
 const BINARY_FILE = /\.(?:png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|eot|mp3|mp4|webm|wasm|glb|gltf|bin)$/i;
 const SCANNED_DIRECTORIES = ["static", "server"];
@@ -53,13 +54,13 @@ const values = secretValues(names, process.env);
 let scanned = 0;
 const hits = [];
 for (const directory of SCANNED_DIRECTORIES) {
-  const isBrowserFile = directory === "static";
   for (const path of filesUnder(join(options.build, directory))) {
     if (statSync(path).size === 0) {
       continue;
     }
     scanned += 1;
-    hits.push(...findSecrets(relative(".", path), readFileSync(path, "latin1"), { values, isBrowserFile }));
+    const browser = isBrowserFile(relative(options.build, path).split(sep).join("/"));
+    hits.push(...findSecrets(relative(".", path), readFileSync(path, "latin1"), { values, isBrowserFile: browser }));
   }
 }
 

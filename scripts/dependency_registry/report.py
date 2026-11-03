@@ -7,7 +7,7 @@ ones marked with their reason; and the GitHub annotations of the run.
 
 import datetime
 
-from scripts.dependency_registry.manifests import Dependency
+from scripts.dependency_registry.manifests import ORIGINS, REGISTRY, Dependency
 from scripts.dependency_registry.registry_facts import PackageFacts
 from scripts.dependency_registry.risk_signals import FAIL, Signal
 
@@ -25,14 +25,23 @@ def yes_no(value: bool | None) -> str:
 
 
 def cell(value: str | None) -> str:
-    return (value or NOT_MEASURED).replace("|", "\\|")
+    """A registry's text in one table cell: no line break, no column break."""
+
+    text = " ".join((value or NOT_MEASURED).split())
+    return text.replace("|", "\\|")
 
 
 def row(dependency: Dependency, facts: PackageFacts) -> str:
-    if not facts.exists:
+    if dependency.origin != REGISTRY or not facts.exists:
         empty = " |" * 6
         where = f"| {dependency.key} | `{dependency.manifest}`"
-        return f"{where} | not on the registry |{empty}"
+        origin = ORIGINS.get(dependency.origin, dependency.origin)
+        found = (
+            "not on the registry"
+            if dependency.origin == REGISTRY
+            else f"installed from {origin}"
+        )
+        return f"{where} | {found} |{empty}"
     publishers = NOT_MEASURED if facts.publishers is None else str(facts.publishers)
     return (
         f"| {dependency.key} | `{dependency.manifest}` | {day(facts.first_release)}"

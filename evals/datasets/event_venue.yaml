@@ -1,14 +1,19 @@
 # Evaluation dataset of the event_venue niche: Garden Hall in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: event_venue
 business:
   name: Garden Hall
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {banquet_package: '85', hall_rental: '200', hall_decoration: '500'}
   answers: {own_drinks: 'Yes, you can bring your own wine; the corkage fee is included.', decoration: 'Yes, our decorator can dress the hall in your colours.'}
+  knowledge:
+  - {title: 'Is there parking for guests?', body: 'Yes, free parking for 40 cars next to the hall.'}
+  - {title: 'Can you arrange live music?', body: 'Yes, we work with a band and a DJ; the manager arranges them.'}
+  - {title: 'Is there a garden for the ceremony?', body: 'Yes, a garden for outdoor ceremonies of up to 80 guests.'}
+  - {title: 'Is there a vegetarian menu?', body: 'Yes, the banquet menu has a vegetarian option.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -757,3 +762,115 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much renting the hall costs per hour.
+  customer: ['hi how much is the hole rental per our']
+  assistant:
+  - call:
+      get_price: {item_name: Hall rental per hour}
+  - {say: 'Renting the hall costs 200 GEL per hour. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['200']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the banquet package costs per guest.
+  customer: ['buongiorno quanto banchetto ogni ospite']
+  assistant:
+  - call:
+      get_price: {item_name: Banquet package per guest}
+  - {say: 'Il pacchetto banchetto costa 85 GEL a ospite. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['85']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask whether guests may bring their own wine.
+  customer: ['allo we can bring ze wine of my uncle for ze wedding']
+  assistant:
+  - {say: 'Yes, you can bring your own wine; the corkage fee is included. Can I help with anything else?'}
+  expect:
+    facts: [corkage]
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask to book the main hall for a party on Saturday for one hundred and fifty guests or fifty; let the assistant ask.
+  customer: ['vorrei prenotare la sala per una festa sabato per 150 ospiti']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: quanti ospiti saranno? La sala principale è per un massimo di 100 persone. Mi conferma anche la data?'}
+  expect:
+    facts: ['100']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: banquet, language: en, item: 'Banquet package per guest', ask: 'How much is the banquet per person?', say: 'The banquet package costs 85 GEL per guest.', prices: ['85']}
+- {id: hall_rental, language: en, item: 'Hall rental per hour', ask: 'What does it cost to rent the hall for an hour?', say: 'Renting the hall costs 200 GEL per hour.', prices: ['200']}
+- {id: decoration, language: en, item: 'Hall decoration', ask: 'How much do you charge to decorate the hall?', say: 'Hall decoration costs 500 GEL.', prices: ['500']}
+- {id: weekday_hours, language: en, ask: 'When can I reach you on weekdays?', say: 'Monday to Friday we are open from 10:00 to 20:00.', facts: ['10:00']}
+- {id: saturday, language: en, ask: 'Are you open on Saturday?', say: 'Yes, on Saturday we are open from 11:00 to 18:00.', facts: ['11:00']}
+- {id: capacity, language: en, ask: 'How many guests fit in the main hall?', say: 'The main hall takes up to 100 people.', facts: ['100']}
+- {id: own_wine, language: en, ask: 'Can we bring our own wine to the wedding?', say: 'Yes, you can bring your own wine; the corkage fee is included.', facts: ['corkage']}
+- {id: decor_help, language: en, ask: 'Can you help with decorating in our wedding colours?', say: 'Yes, our decorator can dress the hall in your colours.', facts: ['decorator']}
+- {id: visit, language: en, ask: 'Can I come and see the hall first?', say: 'Yes. Write a convenient day and time here, and I will arrange a visit with our manager.', facts: ['visit']}
+- {id: how_to_book, language: en, ask: 'How do I book the hall for an event?', say: 'Write the date, the number of guests and the kind of event here. I will check the date and pass the details to our manager.', facts: ['number of guests']}
+- {id: changes, language: en, ask: 'How late can we change the details of the event?', say: 'Please tell us about changes at least 14 days before the event.', facts: ['14 days']}
+- {id: notice, language: en, ask: 'Can we book the hall for tomorrow?', say: 'Bookings need at least 2880 minutes of notice, so tomorrow is too soon.', facts: ['2880']}
+- {id: parking, language: en, ask: 'Is there parking for the guests?', say: 'Yes, there is free parking for 40 cars next to the hall.', facts: ['40 cars']}
+- {id: music, language: en, ask: 'Can you organise live music?', say: 'Yes, we work with a band and a DJ; the manager arranges them.', facts: ['band']}
+- {id: garden, language: en, ask: 'Can we have the ceremony outside?', say: 'Yes, there is a garden for outdoor ceremonies of up to 80 guests.', facts: ['garden']}
+- {id: vegetarian, language: en, ask: 'Some guests are vegetarian. Is there a menu for them?', say: 'Yes, the banquet menu has a vegetarian option.', facts: ['vegetarian']}
+- {id: phone, language: en, ask: 'What is your phone number?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: fireworks, language: en, unknown: true, ask: 'Are fireworks allowed in the garden?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['fireworks are allowed', 'fireworks are fine']}
+- {id: end_time, language: en, unknown: true, ask: 'Until what time can the party go on at night?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['until 02:00', 'party can go on until']}
+- {id: kids_corner, language: en, unknown: true, ask: 'Is there a kids'' corner with a nanny?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['our nanny', 'kids corner is']}
+- {id: halal, language: en, unknown: true, ask: 'Can the kitchen prepare a halal menu?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['halal menu is', 'halal is possible']}
+- {id: photographer, language: en, unknown: true, ask: 'Do you have a photographer we can hire?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['our photographer', 'photographer costs']}
+- {id: rooms, language: en, unknown: true, ask: 'Are there rooms for guests to stay overnight?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['rooms for guests are', 'guests can stay']}
+- {id: tasting, language: en, unknown: true, ask: 'Can we taste the menu before the wedding?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['tasting is free', 'tasting costs']}
+- {id: projector, language: en, unknown: true, ask: 'Is there a projector and a screen for a presentation?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['projector is available', 'there is a screen']}
+- {id: cake, language: en, unknown: true, ask: 'Do you make the wedding cake too?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['we make the cake', 'cake costs']}
+- {id: banquet, language: it, item: 'Banquet package per guest', ask: 'Buongiorno, quanto costa il banchetto a persona?', say: 'Il pacchetto banchetto costa 85 GEL a ospite.', prices: ['85']}
+- {id: hall_rental, language: it, item: 'Hall rental per hour', ask: 'Quanto costa l''affitto della sala per un''ora?', say: 'L''affitto della sala costa 200 GEL all''ora.', prices: ['200']}
+- {id: decoration, language: it, item: 'Hall decoration', ask: 'Quanto costa la decorazione della sala?', say: 'La decorazione della sala costa 500 GEL.', prices: ['500']}
+- {id: weekday_hours, language: it, ask: 'Che orari fate durante la settimana?', say: 'Dal lunedì al venerdì siamo aperti dalle 10:00 alle 20:00.', facts: ['10:00']}
+- {id: sunday, language: it, ask: 'La domenica siete aperti?', say: 'Sì, la domenica siamo aperti dalle 11:00 alle 18:00.', facts: ['18:00']}
+- {id: capacity, language: it, ask: 'Quante persone può ospitare la sala principale?', say: 'La sala principale è per un massimo di 100 persone.', facts: ['100']}
+- {id: own_wine, language: it, ask: 'Possiamo portare il nostro vino al matrimonio?', say: 'Sì, può portare il suo vino; il diritto di tappo è incluso.', facts: ['tappo']}
+- {id: decor_help, language: it, ask: 'Potete decorare la sala con i colori del nostro matrimonio?', say: 'Sì, il nostro decoratore può allestire la sala nei vostri colori.', facts: ['decoratore']}
+- {id: visit, language: it, ask: 'Posso venire a vedere la sala prima di prenotare?', say: 'Sì. Scriva qui un giorno e un orario comodi, e organizzerò una visita con il nostro manager.', facts: ['visita']}
+- {id: changes, language: it, ask: 'Fino a quando posso cambiare il numero degli ospiti e il menu?', say: 'La preghiamo di comunicarci le modifiche almeno 14 giorni prima dell''evento.', facts: ['14 giorni']}
+- {id: notice, language: it, ask: 'Posso prenotare la sala per domani?', say: 'Serve un preavviso di almeno 2880 minuti, quindi per domani non è possibile.', facts: ['2880']}
+- {id: parking, language: it, ask: 'C''è il parcheggio per gli ospiti?', say: 'Sì, c''è un parcheggio gratuito per 40 auto accanto alla sala.', facts: ['40']}
+- {id: music, language: it, ask: 'Potete organizzare la musica dal vivo?', say: 'Sì, lavoriamo con una band e un DJ; li organizza il manager.', facts: ['band']}
+- {id: garden, language: it, ask: 'Possiamo fare la cerimonia all''aperto?', say: 'Sì, c''è un giardino per cerimonie all''aperto fino a 80 ospiti.', facts: ['giardino']}
+- {id: vegetarian, language: it, ask: 'Alcuni ospiti sono vegetariani: c''è un menu per loro?', say: 'Sì, il menu del banchetto ha un''opzione vegetariana.', facts: ['vegetariana']}
+- {id: phone, language: it, ask: 'Qual è il vostro numero di telefono?', say: 'Può chiamarci al +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: fireworks, language: it, unknown: true, ask: 'È possibile fare i fuochi d''artificio in giardino per il matrimonio?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['i fuochi sono permessi', 'i fuochi sono ammessi']}
+- {id: end_time, language: it, unknown: true, ask: 'Fino a che ora di notte può durare la festa?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['fino alle 02:00', 'la festa può durare fino']}
+- {id: kids_corner, language: it, unknown: true, ask: 'C''è un angolo bimbi con una baby-sitter?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['la nostra baby-sitter', 'l''angolo bimbi è']}
+- {id: halal, language: it, unknown: true, ask: 'La cucina può preparare un menu halal?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['il menu halal è', 'halal è possibile']}
+- {id: photographer, language: it, unknown: true, ask: 'Avete un fotografo da prenotare?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['il nostro fotografo', 'il fotografo costa']}
+- {id: rooms, language: it, unknown: true, ask: 'Ci sono camere per far dormire gli ospiti?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['le camere sono', 'gli ospiti possono dormire']}
+- {id: tasting, language: it, unknown: true, ask: 'È possibile assaggiare il menu prima del matrimonio?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['la degustazione è gratuita', 'la degustazione costa']}
+- {id: projector, language: it, unknown: true, ask: 'C''è un proiettore con lo schermo per una presentazione?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['il proiettore è disponibile', 'c''è uno schermo']}
+- {id: cake, language: it, unknown: true, ask: 'Preparate anche la torta nuziale?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['prepariamo la torta', 'la torta costa']}

@@ -42,6 +42,15 @@ def check_scenario(
             "played on whatsapp by a persona with a phone number."
         )
 
+    is_voice_note: bool = (
+        scenario.attachment is not None and scenario.attachment.voice_note
+    )
+    if scenario.kind is EvalFlowKind.ASR_NOISE and not is_voice_note:
+        raise ScenarioError(
+            f"{scenario.id} plays misrecognised speech: its first message is "
+            "a voice note (attachment: {voice_note: true})."
+        )
+
     check_attachment(scenario, media_dir)
     check_memory(scenario)
 

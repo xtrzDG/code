@@ -7,9 +7,12 @@ name: Payment page integrity
 # first-party chunks of the build; web/payment-page-scripts.json lists each
 # with its SHA-384, reviewed like code (web/scripts/payment-page-scripts.mjs).
 #
-# - With the repository variable PRODUCTION_CABINET_URL set: every listed
-#   file as production serves it, against its reviewed hash.
-# - Without it: the scripts of a fresh build of the default branch.
+# - With the repository variable PRODUCTION_CABINET_URL set: every file
+#   the inventory of the `release` branch lists (the commit production
+#   runs, docs/operations/deploys.md), as production serves it, against
+#   its reviewed hash.
+# - Without it: the scripts of a fresh build of the default branch, whose
+#   pull requests keep the inventory current (ci.yml, job "web-build").
 #
 # A difference fails the run, and a scheduled failure opens the issue
 # "Payment page scripts changed" (or comments on the open one). A deploy
@@ -46,6 +49,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Production's commit for production's files; the default branch otherwise.
+          ref: ${{ vars.PRODUCTION_CABINET_URL != '' && 'release' || '' }}
 
       - name: Install Node 22
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

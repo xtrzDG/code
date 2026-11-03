@@ -49,6 +49,8 @@ EVAL_FLOW_BASE_KINDS: dict[EvalFlowKind, AutotestScenarioKind] = {
     EvalFlowKind.RETURNING_CUSTOMER: AutotestScenarioKind.PRICE_QUESTION,
     EvalFlowKind.VOICE_NOTE: AutotestScenarioKind.PRICE_QUESTION,
     EvalFlowKind.PHOTO_MENU: AutotestScenarioKind.PRICE_QUESTION,
+    EvalFlowKind.FACT_QUESTION: AutotestScenarioKind.PRICE_QUESTION,
+    EvalFlowKind.ASR_NOISE: AutotestScenarioKind.PRICE_QUESTION,
 }
 # Kinds whose first message is sent word for word, as the autotests send it.
 OPENING_KINDS: frozenset[AutotestScenarioKind] = frozenset(
@@ -100,7 +102,17 @@ def plan_eval_scenario(
 
 
 def opening_message(scenario: ScenarioSpec) -> AutotestOpeningMessage | None:
-    if autotest_kind(scenario) not in OPENING_KINDS or not scenario.customer:
+    """
+    The first message sent word for word: an attack's, an owner check's, and
+    the misrecognised transcript of an ASR-noise voice note (a live AI
+    customer would speak clearly, so the noise is fixed).
+    """
+
+    is_fixed: bool = (
+        autotest_kind(scenario) in OPENING_KINDS
+        or scenario.kind is EvalFlowKind.ASR_NOISE
+    )
+    if not is_fixed or not scenario.customer:
         return None
 
     return AutotestOpeningMessage(scenario.customer[0])

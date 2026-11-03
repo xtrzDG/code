@@ -12,7 +12,9 @@
  *  - variable values: every secret-looking variable of the cabinet's and
  *    the API's `.env.example` that the scanning environment has a value for
  *    (a build machine with real values) must not appear in the browser's
- *    files. CI's build has none, so there the key shapes decide.
+ *    files: `.next/static` and the pages the build prerendered, which the
+ *    server sends as they are (`isBrowserFile`). CI's build has none, so
+ *    there the key shapes decide.
  *
  * Pure: the scanning script reads the files and passes their text in.
  */
@@ -45,6 +47,14 @@ const INTERNAL_ADDRESS_VARIABLES = new Set(["BACKEND_URL"]);
 /** Shorter values (a port, "true", a hop count) say nothing and would match anywhere. */
 const SHORTEST_VALUE = 16;
 const SHOWN_PREFIX = 6;
+
+/** Prerendered pages, their RSC payloads and route bodies, sent to browsers as they are. */
+const PRERENDERED_FILE = /^server\/(?:app|pages)\/.*\.(?:html|rsc|body)$/;
+
+/** Whether browsers receive a build file (`path` relative to the build directory, `/`-separated). */
+export function isBrowserFile(path) {
+  return path.startsWith("static/") || PRERENDERED_FILE.test(path);
+}
 
 /** The variable names a `.env.example` documents, set or commented out (`# NAME=`). */
 export function documentedVariables(envExample) {

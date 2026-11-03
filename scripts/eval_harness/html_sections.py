@@ -44,6 +44,11 @@ def render_tiles(summary: RunSummary) -> str:
         tile(percent(summary.pass_at_1), "pass@1"),
         tile(f"{summary.passed_count}/{summary.scenario_count}", "scenarios passed"),
         tile(
+            percent(summary.hallucination_rate),
+            "hallucination rate",
+            "bad" if summary.hallucinated_count else "good",
+        ),
+        tile(
             str(summary.stale_count),
             "stale cassettes",
             "bad" if summary.stale_count else "",

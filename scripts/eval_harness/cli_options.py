@@ -14,6 +14,11 @@ from scripts.eval_harness.eval_runner import (
     SCRIPTED_MODEL,
     RunOptions,
 )
+from scripts.eval_harness.run_gates import (
+    DEFAULT_MAX_HALLUCINATION_RATE,
+    DEFAULT_MIN_PASS_RATE,
+    GateLimits,
+)
 from scripts.eval_harness.scenario_player import EvalMode, RunModels
 
 EVALS_DIRECTORY: Path = Path("evals")
@@ -40,7 +45,7 @@ class CliOptions:
     tolerance: float
     criterion_tolerance: float
     update_baseline: bool
-    require_pass: bool
+    limits: GateLimits
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -81,6 +86,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--require-pass", action="store_true", help="fail when any scenario fails"
     )
+    parser.add_argument(
+        "--min-pass-rate",
+        type=float,
+        default=DEFAULT_MIN_PASS_RATE,
+        help="fail when pass^k is under this floor (1.0 = every scenario)",
+    )
+    parser.add_argument(
+        "--max-hallucination-rate",
+        type=float,
+        default=DEFAULT_MAX_HALLUCINATION_RATE,
+        help="fail when more played samples than this share hallucinated",
+    )
     return parser
 
 
@@ -117,5 +134,9 @@ def parse_options(arguments: list[str] | None = None) -> CliOptions:
         tolerance=parsed.tolerance,
         criterion_tolerance=parsed.criterion_tolerance,
         update_baseline=parsed.update_baseline,
-        require_pass=parsed.require_pass,
+        limits=GateLimits(
+            min_pass_rate=parsed.min_pass_rate,
+            max_hallucination_rate=parsed.max_hallucination_rate,
+            require_pass=parsed.require_pass,
+        ),
     )

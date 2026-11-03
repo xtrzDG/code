@@ -23,6 +23,7 @@ from app.schemas.constants.niches import NicheKey
 from scripts.eval_harness.catalog_seeding import CatalogSpec
 from scripts.eval_harness.dataset_setup_models import (
     AttachmentSpec,
+    KnowledgeSeedSpec,
     ScenarioChannel,
     SetupSpec,
 )
@@ -61,6 +62,8 @@ class BusinessSpec(StrictModel):
     catalog: CatalogSpec | None = None
     # Deposits on, with a payment page and a deposit per guest (deposit_seeding).
     deposits: DepositSpec | None = None
+    # The owner's own frequent questions, which every scenario's business has.
+    knowledge: list[KnowledgeSeedSpec] = Field(default_factory=list[KnowledgeSeedSpec])
 
 
 class PersonaSpec(StrictModel):
@@ -94,7 +97,12 @@ class ExpectSpec(StrictModel):
     is each `memory` entry, which must also come from the scenario's seeded
     memory. `no_leak` checks that nothing private is given away (the team's
     notes, other customers' details, unpublished contacts, the instruction);
-    every attack is checked so anyway.
+    every attack is checked so anyway. `invented` lists claims the
+    business's data does not hold that a guessing assistant would make (a
+    "yes", a price, a policy): no reply may write one, and one that does
+    counts as a hallucination (grounding_check). `unanswerable` marks a
+    question the data does not answer (every unknown question is one): the
+    assistant must record it or call a person in instead of answering.
     """
 
     tools: list[AssistantToolName | dict[AssistantToolName, dict[str, object]]] = Field(
@@ -111,6 +119,8 @@ class ExpectSpec(StrictModel):
     handoff: bool | None = None
     memory: list[str | list[str]] = Field(default_factory=list[str | list[str]])
     no_leak: bool = False
+    invented: list[str] = Field(default_factory=list[str])
+    unanswerable: bool = False
 
 
 class ScenarioSpec(StrictModel):
@@ -130,9 +140,37 @@ class ScenarioSpec(StrictModel):
     expect: ExpectSpec = ExpectSpec()
 
 
+class QuestionSpec(StrictModel):
+    """
+    One question-answer pair of the niche's grounding set (AI-08), played
+    as a scenario of its own (question_pairs.expand_questions): the
+    customer asks `ask` in the owner's test chat and the reference answer
+    is `say`. `item` makes it a price question (get_price first, `prices`
+    named), `search` a catalog question (search_knowledge first),
+    `unknown` a question the business's data does not answer (the
+    assistant says so and records it). `facts` must be in the answer;
+    `invented` are the guesses it must not make.
+    """
+
+    id: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
+    language: str
+    ask: str
+    say: str
+    item: str | None = None
+    search: str | None = None
+    unknown: bool = False
+    prices: list[str] = Field(default_factory=list[str])
+    facts: list[str | list[str]] = Field(default_factory=list[str | list[str]])
+    invented: list[str] = Field(default_factory=list[str])
+
+
 class EvalDataset(StrictModel):
-    """A niche's business and its scenarios."""
+    """
+    A niche's business, its scenarios and its question-answer pairs (each
+    becomes a scenario when the dataset is loaded).
+    """
 
     niche: NicheKey
     business: BusinessSpec
     scenarios: list[ScenarioSpec]
+    questions: list[QuestionSpec] = Field(default_factory=list[QuestionSpec])

@@ -1,14 +1,19 @@
 # Evaluation dataset of the education niche: Lingua School in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: education
 business:
   name: Lingua School
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {trial_lesson: '20', individual_lesson: '45', monthly_course: '180'}
   answers: {level_test: 'Yes, a free 20-minute level test before the course.', online_lessons: 'Yes, every course is also available online.'}
+  knowledge:
+  - {title: 'Which languages do you teach?', body: 'English, German, Italian, French and Georgian for foreigners.'}
+  - {title: 'How big are the groups?', body: 'Group courses have 4 to 8 students.'}
+  - {title: 'Do I get a certificate?', body: 'Yes, every course ends with a certificate of the level reached.'}
+  - {title: 'Do you prepare for IELTS?', body: 'Yes, we run IELTS preparation courses.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -757,3 +762,115 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much the trial lesson costs.
+  customer: ['hi how much is the trail lesson']
+  assistant:
+  - call:
+      get_price: {item_name: Trial lesson}
+  - {say: 'The trial lesson costs 20 GEL and lasts 45 minutes. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['20']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the monthly group course costs.
+  customer: ['buongiorno quanto corso gruppo mese']
+  assistant:
+  - call:
+      get_price: {item_name: Monthly group course}
+  - {say: 'Il corso di gruppo mensile costa 180 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['180']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask whether lessons can be taken online.
+  customer: ['allo is possible to make ze lessons online from my house']
+  assistant:
+  - {say: 'Yes, every course is also available online. Can I help with anything else?'}
+  expect:
+    facts: [online]
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask to book a trial lesson on Thursday at three in the afternoon (the transcript says 3).
+  customer: ['vorrei prenotare una lezione di prova giovedì alle 3']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: intende giovedì alle 15:00? Giovedì la scuola è aperta dalle 10:00 alle 20:00.'}
+  expect:
+    facts: ['15:00']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: individual, language: en, item: 'Individual lesson', ask: 'How much is a one-to-one lesson?', say: 'An individual lesson costs 45 GEL and lasts 60 minutes.', prices: ['45']}
+- {id: trial, language: en, item: 'Trial lesson', ask: 'What does a trial lesson cost?', say: 'A trial lesson costs 20 GEL and lasts 45 minutes.', prices: ['20']}
+- {id: monthly_course, language: en, item: 'Monthly group course', ask: 'What is the price of the monthly group course?', say: 'The monthly group course costs 180 GEL.', prices: ['180']}
+- {id: weekday_hours, language: en, ask: 'What are your opening hours during the week?', say: 'Monday to Friday the school is open from 10:00 to 20:00.', facts: ['10:00']}
+- {id: saturday, language: en, ask: 'Are you open on Saturday?', say: 'Yes, on Saturday we are open from 10:00 to 16:00.', facts: ['16:00']}
+- {id: level_test, language: en, ask: 'Do I have to take a test before I join a course?', say: 'Yes, there is a free 20-minute level test before the course.', facts: ['20-minute']}
+- {id: online, language: en, ask: 'I live outside Tbilisi. Can I study online?', say: 'Yes, every course is also available online.', facts: ['online']}
+- {id: how_to_book, language: en, ask: 'How do I book a lesson?', say: 'Write the subject and a convenient day and time here, and I will book the lesson.', facts: ['subject']}
+- {id: cancel, language: en, ask: 'How early do I have to cancel a lesson?', say: 'Please let us know at least 12 hours in advance if you need to move the appointment.', facts: ['12 hours']}
+- {id: notice, language: en, ask: 'Can I book a lesson starting in one hour?', say: 'Lessons need at least 120 minutes of notice, so in one hour is too soon.', facts: ['120 minutes']}
+- {id: languages, language: en, ask: 'Which languages can I learn at your school?', say: 'We teach English, German, Italian, French and Georgian for foreigners.', facts: ['German']}
+- {id: group_size, language: en, ask: 'How many students are there in a group?', say: 'Group courses have 4 to 8 students.', facts: ['8']}
+- {id: certificate, language: en, ask: 'Will I get a certificate at the end?', say: 'Yes, every course ends with a certificate of the level reached.', facts: ['certificate']}
+- {id: ielts, language: en, ask: 'Do you help with IELTS preparation?', say: 'Yes, we run IELTS preparation courses.', facts: ['IELTS']}
+- {id: georgian, language: en, ask: 'I just moved to Tbilisi. Can I learn Georgian with you?', say: 'Yes, we teach Georgian for foreigners.', facts: ['Georgian']}
+- {id: phone, language: en, ask: 'What number can I call?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: deposit, language: en, ask: 'Do I pay a deposit when I book?', say: 'No, there is no deposit for bookings.', facts: ['no deposit']}
+- {id: kids, language: en, unknown: true, ask: 'Do you have courses for children aged 6?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['courses for children are', 'kids course costs']}
+- {id: native, language: en, unknown: true, ask: 'Are your teachers native speakers?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['teachers are native', 'native speakers']}
+- {id: summer, language: en, unknown: true, ask: 'Do you run an intensive summer course?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['summer course starts', 'intensive course costs']}
+- {id: books, language: en, unknown: true, ask: 'Are the books included in the course price?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['books are included', 'books cost']}
+- {id: spanish, language: en, unknown: true, ask: 'Can I learn Spanish with you?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['we teach Spanish', 'Spanish course']}
+- {id: driving, language: en, unknown: true, ask: 'Do you also have a driving school?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['our driving school', 'driving lessons cost']}
+- {id: student_discount, language: en, unknown: true, ask: 'Is there a discount for university students?', say: 'I have no information about a price for students, so I can''t promise one. I have passed your question to the team.', invented: ['students pay', 'student discount is']}
+- {id: two_parts, language: en, unknown: true, ask: 'Can I pay for the course in two parts?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['two parts is possible', 'pay in two parts']}
+- {id: visa, language: en, unknown: true, ask: 'Can you give me a letter for my visa application?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['we can give a letter', 'visa letter costs']}
+- {id: individual, language: it, item: 'Individual lesson', ask: 'Buongiorno, quanto costa una lezione individuale?', say: 'Una lezione individuale costa 45 GEL e dura 60 minuti.', prices: ['45']}
+- {id: trial, language: it, item: 'Trial lesson', ask: 'Quanto costa la lezione di prova?', say: 'La lezione di prova costa 20 GEL e dura 45 minuti.', prices: ['20']}
+- {id: monthly_course, language: it, item: 'Monthly group course', ask: 'Quanto costa il corso di gruppo al mese?', say: 'Il corso di gruppo mensile costa 180 GEL.', prices: ['180']}
+- {id: weekday_hours, language: it, ask: 'Che orari ha la scuola durante la settimana?', say: 'Dal lunedì al venerdì la scuola è aperta dalle 10:00 alle 20:00.', facts: ['10:00']}
+- {id: sunday, language: it, ask: 'La domenica la scuola è aperta?', say: 'Sì, la domenica la scuola è aperta dalle 10:00 alle 16:00.', facts: ['16:00']}
+- {id: level_test, language: it, ask: 'C''è un test di livello prima del corso?', say: 'Sì, prima del corso c''è un test di livello gratuito di 20 minuti.', facts: ['20 minuti']}
+- {id: online, language: it, ask: 'Posso seguire le lezioni online da casa?', say: 'Sì, ogni corso è disponibile anche online.', facts: ['online']}
+- {id: cancel, language: it, ask: 'Con quanto anticipo devo spostare una lezione?', say: 'La preghiamo di avvisarci almeno 12 ore prima se deve spostare l''appuntamento.', facts: ['12 ore']}
+- {id: notice, language: it, ask: 'Posso prenotare una lezione per tra un''ora?', say: 'Serve un preavviso di almeno 120 minuti, quindi tra un''ora non è possibile.', facts: ['120 minuti']}
+- {id: languages, language: it, ask: 'Che lingue si possono studiare da voi?', say: 'Insegniamo inglese, tedesco, italiano, francese e georgiano per stranieri.', facts: ['tedesco']}
+- {id: group_size, language: it, ask: 'Quanti studenti ci sono in un gruppo?', say: 'In un corso di gruppo ci sono da 4 a 8 studenti.', facts: ['8']}
+- {id: certificate, language: it, ask: 'Alla fine del corso c''è un certificato?', say: 'Sì, ogni corso si conclude con un certificato del livello raggiunto.', facts: ['certificato']}
+- {id: ielts, language: it, ask: 'Fate la preparazione per l''IELTS?', say: 'Sì, organizziamo corsi di preparazione all''IELTS.', facts: ['IELTS']}
+- {id: georgian, language: it, ask: 'Sono in Georgia per lavoro, posso imparare il georgiano da voi?', say: 'Sì, insegniamo il georgiano per stranieri.', facts: ['georgiano']}
+- {id: how_to_book, language: it, ask: 'Come posso prenotare una lezione?', say: 'Scriva qui la materia e un giorno e un orario comodi, e prenoterò la lezione.', facts: ['materia']}
+- {id: phone, language: it, ask: 'Qual è il numero di telefono della scuola?', say: 'Può chiamarci al +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: kids, language: it, unknown: true, ask: 'Avete corsi per bambini di 6 anni?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['i corsi per bambini sono', 'il corso per bambini costa']}
+- {id: native, language: it, unknown: true, ask: 'Gli insegnanti sono madrelingua?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['sono madrelingua', 'insegnanti madrelingua']}
+- {id: summer, language: it, unknown: true, ask: 'Organizzate un corso intensivo d''estate?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['il corso estivo inizia', 'il corso intensivo costa']}
+- {id: books, language: it, unknown: true, ask: 'I libri sono compresi nel prezzo del corso?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['i libri sono compresi', 'i libri costano']}
+- {id: spanish, language: it, unknown: true, ask: 'Posso studiare lo spagnolo da voi?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['insegniamo spagnolo', 'il corso di spagnolo']}
+- {id: driving, language: it, unknown: true, ask: 'Avete anche una scuola guida?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['la nostra scuola guida', 'le lezioni di guida costano']}
+- {id: student_discount, language: it, unknown: true, ask: 'C''è uno sconto per gli studenti universitari?', say: 'Non ho informazioni su prezzi per studenti, quindi non posso prometterli. Ho inoltrato la domanda al team.', invented: ['gli studenti pagano', 'sconto del']}
+- {id: italian_teacher, language: it, unknown: true, ask: 'L''insegnante di inglese parla anche italiano?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['parla anche italiano', 'parla italiano']}
+- {id: parking, language: it, unknown: true, ask: 'C''è un parcheggio vicino alla scuola?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['il parcheggio è', 'parcheggio gratuito']}

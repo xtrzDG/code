@@ -37,6 +37,7 @@ from scripts.eval_harness.dataset_validation import (
     check_scenario,
     media_directory,
 )
+from scripts.eval_harness.question_pairs import QuestionError, expand_questions
 
 DATASET_SUFFIX: str = ".yaml"
 
@@ -63,15 +64,16 @@ def list_dataset_paths(directory: Path, niches: Sequence[str] = ()) -> list[Path
 
 def load_dataset(path: Path) -> EvalDataset:
     """
-    One dataset, validated: a file named after its niche, unique scenario
-    ids, and every scenario playable as written (`check_scenario`: its
-    language, goal, channel, media and memory facts).
+    One dataset, validated: a file named after its niche, its
+    question-answer pairs added as scenarios (`expand_questions`), unique
+    scenario ids, and every scenario playable as written (`check_scenario`:
+    its language, goal, channel, media and memory facts).
     """
 
     try:
         raw: object = yaml.safe_load(path.read_text(encoding="utf-8"))
-        dataset: EvalDataset = EvalDataset.model_validate(raw)
-    except (yaml.YAMLError, ValidationError) as error:
+        dataset: EvalDataset = expand_questions(EvalDataset.model_validate(raw))
+    except (yaml.YAMLError, ValidationError, QuestionError) as error:
         raise DatasetError(f"{path}: {error}") from error
 
     if dataset.niche.value != path.stem:
@@ -130,7 +132,10 @@ def build_expectations(
             )
             for fact in expect.facts
         ],
-        forbidden_values=[ForbiddenReplyValue(value) for value in expect.forbidden],
+        forbidden_values=[
+            ForbiddenReplyValue(value)
+            for value in [*expect.forbidden, *expect.invented]
+        ],
         is_handoff_expected=(
             None if expect.handoff is None else IsHandoffExpected(expect.handoff)
         ),

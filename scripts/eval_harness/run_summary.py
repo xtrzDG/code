@@ -1,6 +1,8 @@
 """
 The numbers of a run: pass^k (a scenario counts only when every sample
-passed), pass@1 (the share of passed samples), per-criterion pass rates,
+passed), pass@1 (the share of passed samples), the hallucination rate (the
+share of played samples whose answers asserted something the business's
+data does not hold, grounding_check), per-criterion pass rates,
 judge averages, pass rates per niche and language, what the replies of each scenario
 language read as (`language_confusion`), list-price cost and the p50/p95
 model latency of the assistant's turns.
@@ -43,6 +45,10 @@ class RunSummary(BaseModel):
     pass_at_1: float
     stale_count: int
     errored_count: int
+    # Samples played to the end (not stale) and how many of them hallucinated.
+    grounded_samples: int = 0
+    hallucinated_count: int = 0
+    hallucination_rate: float = 0.0
     cost_usd: float
     latency_p50_ms: int
     latency_p95_ms: int
@@ -62,6 +68,8 @@ def summarize(scenarios: Sequence[ScenarioResult]) -> RunSummary:
     latencies: list[int] = [
         latency for sample in samples for latency in sample.turn_latencies_ms
     ]
+    played: list[SampleResult] = [s for s in samples if not s.stale_reasons]
+    hallucinated: int = sum(1 for sample in played if sample.is_hallucinated)
     return RunSummary(
         scenario_count=len(scenarios),
         passed_count=passed,
@@ -71,6 +79,9 @@ def summarize(scenarios: Sequence[ScenarioResult]) -> RunSummary:
         errored_count=sum(
             1 for scenario in scenarios if any(s.error for s in scenario.samples)
         ),
+        grounded_samples=len(played),
+        hallucinated_count=hallucinated,
+        hallucination_rate=ratio(hallucinated, len(played)),
         cost_usd=sum(sample.cost_micro_usd for sample in samples) / MICRO_USD_PER_USD,
         latency_p50_ms=percentile(latencies, 50),
         latency_p95_ms=percentile(latencies, 95),

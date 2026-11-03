@@ -9,7 +9,11 @@ pull request until a person accepted them in
 - too-new: first released fewer than 30 days ago (most malicious packages
   are found and removed within days);
 - typosquat: one or two characters, or only separators, from a popular
-  name or one the repository already uses.
+  name or one the repository already uses (npm names of one scope are
+  not compared with each other: only the scope's owner publishes in it);
+- not-from-registry: installed from a git repository, an address, a local
+  path, the workspace or another index, so the registry's facts say
+  nothing about what is installed.
 
 Warnings go into the report for the reviewer: younger than 180 days, no
 release in two years, a single account that may publish it, code that
@@ -20,7 +24,7 @@ or no source repository named.
 import datetime
 from dataclasses import dataclass
 
-from scripts.dependency_registry.manifests import Dependency
+from scripts.dependency_registry.manifests import ORIGINS, REGISTRY, Dependency
 from scripts.dependency_registry.registry_facts import PackageFacts
 
 FAIL: str = "fail"
@@ -69,14 +73,24 @@ def bare(name: str) -> str:
     return name.replace("-", "").replace("_", "").replace(".", "")
 
 
+def scope(name: str) -> str | None:
+    """An npm name's scope (`@types` of `@types/node`), None without one."""
+
+    return name.split("/", 1)[0] if name.startswith("@") and "/" in name else None
+
+
 def lookalike(name: str, known: frozenset[str]) -> str | None:
     """The known name `name` imitates, if any; a known name imitates nothing."""
 
     if name in known:
         return None
     allowed = 1 if len(name) <= ONE_EDIT_LENGTH else 2
+    own_scope = scope(name)
     for other in sorted(known):
         if len(other) < SHORTEST_COMPARED_NAME:
+            continue
+        if own_scope is not None and scope(other) == own_scope:
+            # Only the scope's owner publishes in it: no one can squat there.
             continue
         if bare(other) == bare(name) or edit_distance(name, other) <= allowed:
             return other
@@ -105,6 +119,10 @@ def signals(
     now: datetime.datetime,
     known: frozenset[str],
 ) -> list[Signal]:
+    if dependency.origin != REGISTRY:
+        where = ORIGINS.get(dependency.origin, dependency.origin)
+        text = f"installed from {where}, not from the registry: nothing measured"
+        return [Signal("not-from-registry", FAIL, text)]
     if not facts.exists:
         return [
             Signal("not-found", FAIL, f"no package {dependency.name} on the registry")

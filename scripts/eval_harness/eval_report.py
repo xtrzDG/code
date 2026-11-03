@@ -21,4 +21,6 @@ class EvalReport(BaseModel):
     models: list[ModelsUsed] = Field(default_factory=list[ModelsUsed])
     summary: RunSummary
     baseline: BaselineDiff | None = None
+    # Why the run fails (run_gates); empty when it passes.
+    gate_failures: list[str] = Field(default_factory=list[str])
     scenarios: list[ScenarioResult] = Field(default_factory=list[ScenarioResult])

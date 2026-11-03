@@ -44,6 +44,7 @@ from scripts.eval_harness.eval_container import (
     SwitchableLlmAdapter,
     build_provider_router,
 )
+from scripts.eval_harness.grounding_check import find_hallucinations
 from scripts.eval_harness.run_results import JudgeResult, SampleResult, TranscriptLine
 from scripts.eval_harness.scenario_planning import (
     build_customer_side,
@@ -218,6 +219,9 @@ def play_sample(
         turn_latencies_ms=list(conversation.turn_latencies_ms),
         stale_reasons=stale,
         error=error,
+        hallucinations=[]
+        if stale
+        else find_hallucinations(scenario, conversation.replies),
     )
 
 

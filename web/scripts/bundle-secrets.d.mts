@@ -20,6 +20,8 @@ export const SECRET_RULES: readonly SecretRule[];
 
 export function documentedVariables(envExample: string): string[];
 
+export function isBrowserFile(path: string): boolean;
+
 export function isSecretVariable(name: string): boolean;
 
 export function secretValues(names: readonly string[], env: Record<string, string | undefined>): SecretValue[];

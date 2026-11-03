@@ -25,6 +25,7 @@ class Baseline(BaseModel):
     samples: int
     pass_rate: float
     pass_at_1: float
+    hallucination_rate: float = 0.0
     criteria: dict[str, float] = Field(default_factory=dict[str, float])
     scenarios: dict[str, bool] = Field(default_factory=dict[str, bool])
     # Scenario key -> criterion -> share of its samples that passed it.
@@ -76,6 +77,7 @@ def build_baseline(
         samples=samples,
         pass_rate=summary.pass_rate,
         pass_at_1=summary.pass_at_1,
+        hallucination_rate=summary.hallucination_rate,
         criteria={item.criterion: item.rate for item in summary.criteria},
         scenarios={scenario.key: scenario.is_passed for scenario in scenarios},
         scenario_criteria={

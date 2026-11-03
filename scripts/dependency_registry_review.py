@@ -12,7 +12,8 @@ npm's or PyPI's own data: first and latest release, how many accounts may
 publish it, deprecation or archival, code run on install, licence and
 source (registry_facts.py); then the signals (risk_signals.py). A failing
 signal (not on the registry, deprecated or archived, younger than 30 days,
-a lookalike of a popular or already used name) fails the step unless
+a lookalike of a popular or already used name, installed from elsewhere
+than the registry) fails the step unless
 .github/dependency-registry-review.toml accepts it with a reason; warnings
 go to the report for the reviewer. The report is the run summary.
 
@@ -32,6 +33,7 @@ from typing import Any, cast
 from scripts.dependency_registry.manifests import (
     NPM,
     PYPI,
+    REGISTRY,
     Dependency,
     ManifestError,
     added,
@@ -99,7 +101,9 @@ def review(
     known = known_names(base)
     measured: Measured = []
     for dependency in new:
-        facts = measure(dependency, fetch)
+        # One installed from elsewhere is not on the registry to measure.
+        from_registry = dependency.origin == REGISTRY
+        facts = measure(dependency, fetch) if from_registry else PackageFacts(False)
         pool = known[dependency.ecosystem]
         measured.append((dependency, facts, signals(dependency, facts, now, pool)))
     return measured

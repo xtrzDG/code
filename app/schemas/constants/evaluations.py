@@ -56,6 +56,13 @@ class EvalFlowKind(StrEnum):
       conversation's summary) comes back.
     - VOICE_NOTE: the customer's first message is a voice note.
     - PHOTO_MENU: the customer sends a photo of an offer and asks about it.
+    - FACT_QUESTION: one question the business's data answers (its hours,
+      booking rules, frequent questions): a question-answer pair of the
+      grounding set, where the answer must come from that data (AI-08).
+    - ASR_NOISE: a voice note the speech recognition got partly wrong
+      (homophones, dropped words, an accent, a misheard number): the
+      assistant reads the intent or asks back, and never acts on a number
+      it was not given clearly (AI-12).
     """
 
     RESCHEDULE = "reschedule"
@@ -63,3 +70,5 @@ class EvalFlowKind(StrEnum):
     RETURNING_CUSTOMER = "returning_customer"
     VOICE_NOTE = "voice_note"
     PHOTO_MENU = "photo_menu"
+    FACT_QUESTION = "fact_question"
+    ASR_NOISE = "asr_noise"

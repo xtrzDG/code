@@ -15,6 +15,9 @@ def render_markdown(report: EvalReport) -> str:
         f"- pass^{report.samples}: **{summary.pass_rate:.1%}** "
         f"({summary.passed_count}/{summary.scenario_count}), pass@1 "
         f"{summary.pass_at_1:.1%}",
+        f"- hallucination rate **{summary.hallucination_rate:.1%}** "
+        f"({summary.hallucinated_count}/{summary.grounded_samples} samples "
+        "asserted what the business's data does not hold)",
         f"- stale {summary.stale_count}, errors {summary.errored_count}, "
         f"cost ${summary.cost_usd:.4f}, model time p50 {summary.latency_p50_ms} ms, "
         f"p95 {summary.latency_p95_ms} ms",
@@ -30,6 +33,7 @@ def render_markdown(report: EvalReport) -> str:
             f"tolerance {diff.tolerance * 100:.1f} pt): {verdict}"
         )
 
+    lines.extend(f"- **failed**: {failure}" for failure in report.gate_failures)
     lines.extend(["", "| Criterion | Rate | Change |", "| --- | --- | --- |"])
     deltas: dict[str, float] = {} if diff is None else diff.criteria_deltas
     regressed: set[str] = set() if diff is None else set(diff.regressed_criteria)

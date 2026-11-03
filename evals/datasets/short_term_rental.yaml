@@ -1,14 +1,19 @@
 # Evaluation dataset of the short_term_rental niche: Old Town Loft in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: short_term_rental
 business:
   name: Old Town Loft
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {whole_apartment: '150', late_checkout: '30', airport_pickup: '50'}
   answers: {check_in: 'Self check-in from 14:00 with a key box; check-out until 11:00.', amenities: 'Yes, there is fast Wi-Fi and a washing machine.'}
+  knowledge:
+  - {title: 'How many bedrooms are there?', body: 'Two bedrooms: one with a double bed and one with two single beds.'}
+  - {title: 'Is there air conditioning?', body: 'Yes, every room has air conditioning.'}
+  - {title: 'Can I park nearby?', body: 'There is paid street parking in front of the building.'}
+  - {title: 'Are pets allowed?', body: 'Small pets are welcome on request.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -754,3 +759,114 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much the airport pick-up costs.
+  customer: ['hi how much is the air port pick up for too people']
+  assistant:
+  - call:
+      get_price: {item_name: Airport pick-up}
+  - {say: 'The airport pick-up costs 50 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['50']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the late check-out costs.
+  customer: ['buongiorno quanto check out tardi']
+  assistant:
+  - call:
+      get_price: {item_name: Late check-out}
+  - {say: 'Il check-out posticipato costa 30 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['30']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask from what time check-in is possible.
+  customer: ['allo at wat hour we can enter in ze apartment ze first day']
+  assistant:
+  - {say: 'Self check-in is from 14:00 with a key box; check-out is until 11:00. Can I help with anything else?'}
+  expect:
+    facts: ['14:00']
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask to book the apartment from Thursday for two nights for four guests (the transcript says 14).
+  customer: ['vorrei prenotare l appartamento da giovedì per 2 notti per 14 persone']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: quanti ospiti sarete? L''appartamento è per un massimo di 4 persone. Le 2 notti sono da giovedì, giusto?'}
+  expect:
+    facts: ['4']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: night_price, language: en, item: 'Whole apartment for up to 4 guests', ask: 'How much is the apartment per night?', say: 'The whole apartment for up to 4 guests costs 150 GEL.', prices: ['150']}
+- {id: late_checkout, language: en, item: 'Late check-out', ask: 'What does a late check-out cost?', say: 'A late check-out costs 30 GEL.', prices: ['30']}
+- {id: airport, language: en, item: 'Airport pick-up', ask: 'Do you do airport pick-ups, and how much?', say: 'Yes, an airport pick-up costs 50 GEL.', prices: ['50']}
+- {id: check_in, language: en, ask: 'What time can we check in?', say: 'Self check-in is from 14:00 with a key box.', facts: ['14:00']}
+- {id: check_out, language: en, ask: 'By what time do we have to leave on the last day?', say: 'Check-out is until 11:00.', facts: ['11:00']}
+- {id: key_box, language: en, ask: 'How do we get the keys if we arrive late?', say: 'Check-in is self check-in with a key box, from 14:00.', facts: ['key box']}
+- {id: wifi, language: en, ask: 'Is there Wi-Fi in the apartment?', say: 'Yes, there is fast Wi-Fi and a washing machine.', facts: ['Wi-Fi']}
+- {id: washing, language: en, ask: 'Can I wash my clothes there?', say: 'Yes, there is a washing machine.', facts: ['washing machine']}
+- {id: guests, language: en, ask: 'We are five friends. Can we all stay?', say: 'The apartment is for up to 4 guests, so five people cannot stay.', facts: ['4']}
+- {id: cancel, language: en, ask: 'Until when can I cancel my booking for free?', say: 'Please cancel at least 3 days before arrival.', facts: ['3 days']}
+- {id: bedrooms, language: en, ask: 'How many bedrooms does the apartment have?', say: 'Two bedrooms: one with a double bed and one with two single beds.', facts: ['double bed']}
+- {id: aircon, language: en, ask: 'Is there air conditioning? It is hot in August.', say: 'Yes, every room has air conditioning.', facts: ['air conditioning']}
+- {id: parking, language: en, ask: 'Where can I park the car?', say: 'There is paid street parking in front of the building.', facts: ['street parking']}
+- {id: pets, language: en, ask: 'Can we bring our small dog?', say: 'Small pets are welcome on request.', facts: ['pets']}
+- {id: how_to_book, language: en, ask: 'How can I book the apartment?', say: 'Write your dates and the number of guests here, and I will check whether it is free and book it.', facts: ['dates']}
+- {id: office_hours, language: en, ask: 'Until what time can I reach you in the evening?', say: 'We answer every day from 09:00 to 21:00.', facts: ['21:00']}
+- {id: phone, language: en, ask: 'What number can I call when I arrive?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: crib, language: en, unknown: true, ask: 'Do you have a baby cot?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['baby cot is available', 'we have a cot']}
+- {id: balcony, language: en, unknown: true, ask: 'Is there a balcony with a view of the old town?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['there is a balcony', 'the balcony has']}
+- {id: kitchen, language: en, unknown: true, ask: 'Is the kitchen fully equipped?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['fully equipped', 'kitchen has']}
+- {id: cleaning, language: en, unknown: true, ask: 'Is there cleaning during a week-long stay?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['cleaning is included', 'cleaning every']}
+- {id: long_stay, language: en, unknown: true, ask: 'Is there a lower price for a month-long stay?', say: 'I have no information about a monthly price, so I can''t promise one. I have passed your question to the team.', invented: ['monthly price is', 'discount for a month']}
+- {id: smoking, language: en, unknown: true, ask: 'Can we smoke on the balcony?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['smoking is allowed', 'you can smoke']}
+- {id: luggage, language: en, unknown: true, ask: 'Can we leave our bags before check-in?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['leave your bags', 'luggage storage']}
+- {id: towels, language: en, unknown: true, ask: 'Are towels and bed linen provided?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['towels are provided', 'linen is included']}
+- {id: tv, language: en, unknown: true, ask: 'Is there a TV with Netflix?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['there is Netflix', 'TV with Netflix']}
+- {id: night_price, language: it, item: 'Whole apartment for up to 4 guests', ask: 'Buongiorno, quanto costa l''appartamento a notte?', say: 'L''appartamento intero per un massimo di 4 ospiti costa 150 GEL a notte.', prices: ['150']}
+- {id: late_checkout, language: it, item: 'Late check-out', ask: 'Quanto costa il check-out posticipato?', say: 'Il check-out posticipato costa 30 GEL.', prices: ['30']}
+- {id: airport, language: it, item: 'Airport pick-up', ask: 'Quanto costa il trasferimento dall''aeroporto?', say: 'Il trasferimento dall''aeroporto costa 50 GEL.', prices: ['50']}
+- {id: check_in, language: it, ask: 'Da che ora possiamo fare il check-in?', say: 'Il self check-in è dalle 14:00 con una cassetta per le chiavi.', facts: ['14:00']}
+- {id: check_out, language: it, ask: 'Entro che ora dobbiamo lasciare l''appartamento?', say: 'Il check-out è entro le 11:00.', facts: ['11:00']}
+- {id: wifi, language: it, ask: 'Nell''appartamento c''è il Wi-Fi?', say: 'Sì, c''è il Wi-Fi veloce e una lavatrice.', facts: ['Wi-Fi']}
+- {id: washing, language: it, ask: 'C''è una lavatrice per lavare i vestiti?', say: 'Sì, c''è una lavatrice. Posso aiutarla con altro?', facts: ['lavatrice']}
+- {id: guests, language: it, ask: 'Siamo in cinque persone: è possibile stare tutti nell''appartamento?', say: 'L''appartamento è per un massimo di 4 ospiti, quindi in cinque non è possibile.', facts: ['4']}
+- {id: cancel, language: it, ask: 'Fino a quando posso disdire la prenotazione?', say: 'La preghiamo di disdire almeno 3 giorni prima dell''arrivo.', facts: ['3 giorni']}
+- {id: bedrooms, language: it, ask: 'Quante camere da letto ci sono?', say: 'Ci sono due camere da letto: una con un letto matrimoniale e una con due letti singoli.', facts: ['matrimoniale']}
+- {id: aircon, language: it, ask: 'C''è l''aria condizionata?', say: 'Sì, in ogni stanza c''è l''aria condizionata.', facts: ['aria condizionata']}
+- {id: parking, language: it, ask: 'Dove posso parcheggiare la macchina?', say: 'Davanti al palazzo c''è il parcheggio a pagamento in strada.', facts: ['parcheggio']}
+- {id: pets, language: it, ask: 'Possiamo portare il nostro cagnolino?', say: 'Gli animali piccoli sono i benvenuti su richiesta.', facts: ['animali']}
+- {id: how_to_book, language: it, ask: 'Come posso prenotare l''appartamento?', say: 'Scriva qui le date e il numero degli ospiti, e controllerò se è libero e lo prenoterò.', facts: ['date']}
+- {id: office_hours, language: it, ask: 'Fino a che ora rispondete la sera?', say: 'Il servizio è aperto tutti i giorni dalle 09:00 alle 21:00.', facts: ['21:00']}
+- {id: city, language: it, ask: 'In che città si trova l''appartamento?', say: 'L''appartamento è a Tbilisi, in Georgia. Posso aiutarla con altro?', facts: ['Tbilisi']}
+- {id: crib, language: it, unknown: true, ask: 'Avete un lettino per il bambino?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['il lettino è disponibile', 'abbiamo un lettino']}
+- {id: balcony, language: it, unknown: true, ask: 'C''è un balcone con vista sulla città vecchia?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['c''è un balcone', 'il balcone ha']}
+- {id: kitchen, language: it, unknown: true, ask: 'La cucina è completamente attrezzata?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['è completamente attrezzata', 'la cucina ha']}
+- {id: cleaning, language: it, unknown: true, ask: 'Per un soggiorno di una settimana c''è la pulizia?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['la pulizia è inclusa', 'pulizia ogni']}
+- {id: long_stay, language: it, unknown: true, ask: 'C''è un prezzo più basso per un mese intero?', say: 'Non ho informazioni su un prezzo mensile, quindi non posso prometterlo. Ho inoltrato la domanda al team.', invented: ['il prezzo mensile è', 'sconto per un mese']}
+- {id: smoking, language: it, unknown: true, ask: 'Si può fumare sul balcone?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['si può fumare', 'è permesso fumare']}
+- {id: luggage, language: it, unknown: true, ask: 'Posso lasciare le valigie prima del check-in?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['lasciare le valigie è', 'deposito bagagli']}
+- {id: towels, language: it, unknown: true, ask: 'Gli asciugamani e le lenzuola sono compresi?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['sono compresi', 'le lenzuola sono incluse']}

@@ -25,7 +25,7 @@ from app.registries.demo.tbilisi_restaurant.restaurant_foundation import (
 )
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import BusinessStatus
-from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
@@ -201,7 +201,10 @@ class EvalBusinessSeeder:
     def _add_offers_and_answers(
         self, business: BusinessDocument, spec: BusinessSpec
     ) -> None:
-        """Priced offer examples and the owner's answers to open questions."""
+        """
+        Priced offer examples, the owner's answers to open questions and the
+        owner's own frequent questions (`knowledge`).
+        """
 
         starters: StarterAnswers = (
             self._container.registries.starter_answer_registry().get(
@@ -251,5 +254,21 @@ class EvalBusinessSeeder:
                     str(faq.questions.values[ANSWERS_LANGUAGE]),
                     since=now,
                     body=answer,
+                )
+            )
+
+        for entry in spec.knowledge:
+            knowledge_repo.save(
+                knowledge_item(
+                    business,
+                    KnowledgeItemKind.FAQ,
+                    entry.title,
+                    since=now,
+                    body=entry.body,
+                    source=(
+                        KnowledgeItemSource.MENU_IMPORT
+                        if entry.imported
+                        else KnowledgeItemSource.OWNER
+                    ),
                 )
             )

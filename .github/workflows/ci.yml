@@ -270,6 +270,25 @@ jobs:
       - name: No secrets in the build
         run: node scripts/scan-bundle-secrets.mjs --build .next --env-example .env.example --env-example ../.env.example
 
+      # The payment pages' scripts against their reviewed inventory (PAY-02,
+      # web/payment-page-scripts.json): a change is a warning with its table
+      # in the run summary, so the pull request that makes it also updates
+      # the inventory (docs/operations/ci.md, "Payment page integrity") and
+      # the weekly payment-page-integrity.yml finds nothing unreviewed. A
+      # build it cannot read (exit 2) fails: a check of nothing proves nothing.
+      - name: Payment pages' scripts against the inventory
+        run: |
+          status=0
+          node scripts/payment-page-integrity.mjs --build .next --report "$RUNNER_TEMP/payment-pages.md" || status=$?
+          if [ "$status" -ne 0 ]; then
+            cat "$RUNNER_TEMP/payment-pages.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$status" -eq 1 ]; then
+            echo "::warning title=Payment page scripts::The billing or hosted chat page loads other scripts than web/payment-page-scripts.json lists. Review them and update the inventory in this pull request (docs/operations/ci.md, Payment page integrity)."
+            status=0
+          fi
+          exit "$status"
+
       # The gzipped first-load JavaScript of the landing, a legal page, the
       # cabinet and the offline page, and the lazy 3D chunk, against
       # web/first-load-budget.json (scripts/first-load-budget.mjs).

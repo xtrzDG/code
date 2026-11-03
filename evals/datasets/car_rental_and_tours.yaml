@@ -1,14 +1,20 @@
 # Evaluation dataset of the car_rental_and_tours niche: Kartli Cars & Tours in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: car_rental_and_tours
 business:
   name: Kartli Cars & Tours
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {economy_car: '90', suv: '160', day_tour: '250'}
   answers: {documents: A passport and a driving licence held for at least 2 years., rental_deposit: 'Yes, a deposit of 300 GEL, returned with the car.'}
+  knowledge:
+  - {title: 'Where can I pick up the car?', body: 'At our office in Tbilisi or, on request, at Tbilisi airport.'}
+  - {title: 'Is insurance included?', body: 'Basic insurance is included in every rental; full cover can be added at the office.'}
+  - {title: 'Can I drive the car to another country?', body: 'No, our cars may only be driven within Georgia.'}
+  - {title: 'What is the minimum age to rent a car?', body: 'Drivers must be at least 23 years old.'}
+  - {title: 'Which languages do the tour guides speak?', body: 'Our day tours are guided in English, Russian and Georgian.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -757,3 +763,115 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much an SUV costs per day.
+  customer: ['hi how much is an ass you vee per day']
+  assistant:
+  - call:
+      get_price: {item_name: SUV per day}
+  - {say: 'An SUV costs 160 GEL per day. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['160']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the day tour with a driver costs.
+  customer: ['buongiorno quanto costa tour giornata autista']
+  assistant:
+  - call:
+      get_price: {item_name: Day tour with a driver}
+  - {say: 'Il tour di un giorno con autista costa 250 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['250']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask which documents are needed to rent a car.
+  customer: ['allo wich documents I need for to rent ze car']
+  assistant:
+  - {say: 'You need a passport and a driving licence held for at least 2 years. Can I help with anything else?'}
+  expect:
+    facts: [passport]
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask to rent an economy car on Thursday at nine for five people (the transcript says 15).
+  customer: ['vorrei noleggiare una macchina economica giovedì alle 9 per 15 persone']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: quante persone siete? Un''auto economica porta al massimo 5 persone. E intende giovedì alle 09:00?'}
+  expect:
+    facts: ['09:00']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: economy_price, language: en, item: 'Economy car per day', ask: 'What does it cost to rent a small economy car for one day?', say: 'An economy car costs 90 GEL per day.', prices: ['90']}
+- {id: suv_price, language: en, item: 'SUV per day', ask: 'How much is an SUV per day?', say: 'An SUV costs 160 GEL per day.', prices: ['160']}
+- {id: day_tour, language: en, item: 'Day tour with a driver', ask: 'What is the price of a day tour with a driver?', say: 'A day tour with a driver costs 250 GEL and lasts 480 minutes.', prices: ['250']}
+- {id: opening, language: en, ask: 'What time does your office open?', say: 'We are open every day from 09:00 to 20:00.', facts: ['09:00']}
+- {id: sunday, language: en, ask: 'Are you open on Sundays?', say: 'Yes, on Sunday we are open from 09:00 to 20:00.', facts: ['20:00']}
+- {id: documents, language: en, ask: 'What do I need to bring to rent a car?', say: 'A passport and a driving licence held for at least 2 years.', facts: ['driving licence']}
+- {id: rental_deposit, language: en, ask: 'Do I have to leave a deposit for the car?', say: 'Yes, a deposit of 300 GEL, returned with the car.', facts: ['300']}
+- {id: cancel_policy, language: en, ask: 'How late can I cancel my rental?', say: 'Please cancel or change your booking at least 24 hours before pick-up.', facts: ['24 hours']}
+- {id: notice, language: en, ask: 'Can I book a car for pick-up in two hours?', say: 'A rental needs at least 720 minutes of notice, so a pick-up in two hours cannot be booked here.', facts: ['720']}
+- {id: seats, language: en, ask: 'How many people fit in the economy car?', say: 'The economy car takes up to 5 people.', facts: ['5 people']}
+- {id: airport, language: en, ask: 'Can I pick the car up at the airport?', say: 'Yes, at our office in Tbilisi or, on request, at Tbilisi airport.', facts: ['airport']}
+- {id: insurance, language: en, ask: 'Is insurance included in the price?', say: 'Basic insurance is included in every rental; full cover can be added at the office.', facts: ['Basic insurance']}
+- {id: abroad, language: en, ask: 'Can I drive the rental car to Armenia?', say: 'No, our cars may only be driven within Georgia.', facts: ['within Georgia']}
+- {id: min_age, language: en, ask: 'I am 21. Can I rent a car?', say: 'Drivers must be at least 23 years old, so I''m afraid not yet.', facts: ['23']}
+- {id: guide_language, language: en, ask: 'Which languages do your tour guides speak?', say: 'Our day tours are guided in English, Russian and Georgian.', facts: ['English']}
+- {id: how_to_rent, language: en, ask: 'How does renting a car with you work?', say: 'Write the dates, where you want to pick up the car and how many people will travel here, and I will check what is free and book it.', facts: ['dates']}
+- {id: phone, language: en, ask: 'What is your phone number?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: child_seat, language: en, unknown: true, ask: 'Do you have child seats?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['child seats are available', 'a child seat costs']}
+- {id: mileage, language: en, unknown: true, ask: 'Is the mileage unlimited?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['mileage is unlimited', 'unlimited mileage']}
+- {id: automatic, language: en, unknown: true, ask: 'Is the economy car automatic or manual?', say: 'I have no information about the gearbox yet. I have passed your question to the team so they can answer it.', invented: ['it is automatic', 'it is manual']}
+- {id: batumi_return, language: en, unknown: true, ask: 'Can I drop the car off in Batumi?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['you can drop it in Batumi', 'one-way rental is']}
+- {id: fuel, language: en, unknown: true, ask: 'Do I have to return the car with a full tank?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['full tank', 'return it full']}
+- {id: wine_tour, language: en, unknown: true, ask: 'Do you do wine tours to Kakheti?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['our wine tour', 'Kakheti tour costs']}
+- {id: dog_in_car, language: en, unknown: true, ask: 'Can I take my dog in the rental car?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['dogs are allowed', 'pets are welcome']}
+- {id: snow_chains, language: en, unknown: true, ask: 'Do you give snow chains in winter?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['snow chains are included', 'chains cost']}
+- {id: electric, language: en, unknown: true, ask: 'Do you rent electric cars?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['electric cars are available', 'our electric']}
+- {id: economy_price, language: it, item: 'Economy car per day', ask: 'Buongiorno, quanto costa al giorno un''auto economica?', say: 'Un''auto economica costa 90 GEL al giorno.', prices: ['90']}
+- {id: suv_price, language: it, item: 'SUV per day', ask: 'Quanto costa il noleggio di un SUV per un giorno?', say: 'Un SUV costa 160 GEL al giorno.', prices: ['160']}
+- {id: day_tour, language: it, item: 'Day tour with a driver', ask: 'Quanto costa una gita di un giorno con l''autista?', say: 'Il tour di un giorno con autista costa 250 GEL e dura 480 minuti.', prices: ['250']}
+- {id: opening, language: it, ask: 'A che ora apre il vostro ufficio?', say: 'Il nostro ufficio è aperto tutti i giorni dalle 09:00 alle 20:00.', facts: ['09:00']}
+- {id: saturday, language: it, ask: 'Il sabato siete aperti?', say: 'Sì, il sabato siamo aperti dalle 09:00 alle 20:00.', facts: ['20:00']}
+- {id: documents, language: it, ask: 'Che documenti servono per noleggiare un''auto?', say: 'Servono il passaporto e una patente di guida posseduta da almeno 2 anni.', facts: ['passaporto']}
+- {id: rental_deposit, language: it, ask: 'Per il noleggio c''è da lasciare un deposito?', say: 'Sì, un deposito di 300 GEL, che viene restituito con l''auto.', facts: ['300']}
+- {id: cancel_policy, language: it, ask: 'Fino a quando posso disdire il noleggio?', say: 'La preghiamo di disdire o cambiare la prenotazione almeno 24 ore prima del ritiro.', facts: ['24 ore']}
+- {id: seats, language: it, ask: 'Quante persone ci stanno nell''auto economica?', say: 'L''auto economica è per un massimo di 5 persone.', facts: ['5 persone']}
+- {id: airport, language: it, ask: 'Posso ritirare l''auto all''aeroporto?', say: 'Sì, presso il nostro ufficio a Tbilisi oppure, su richiesta, all''aeroporto di Tbilisi.', facts: ['aeroporto']}
+- {id: insurance, language: it, ask: 'L''assicurazione è compresa nel prezzo?', say: 'L''assicurazione di base è compresa in ogni noleggio; la copertura completa si può aggiungere in ufficio.', facts: ['assicurazione di base']}
+- {id: abroad, language: it, ask: 'Posso andare con l''auto in Armenia?', say: 'No, non è possibile: le nostre auto si guidano solo in Georgia.', facts: [Georgia]}
+- {id: min_age, language: it, ask: 'Che età serve per noleggiare un''auto?', say: 'Il conducente deve avere almeno 23 anni.', facts: ['23']}
+- {id: guide_language, language: it, ask: 'Le guide dei tour parlano anche italiano?', say: 'Le nostre guide parlano inglese, russo e georgiano: l''italiano non è tra le lingue dei tour.', facts: ['inglese']}
+- {id: phone, language: it, ask: 'Qual è il vostro numero di telefono?', say: 'Può chiamarci al +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: city, language: it, ask: 'In che città si trova l''ufficio?', say: 'L''ufficio è a Tbilisi, in Georgia. Posso aiutarla con altro?', facts: ['Tbilisi']}
+- {id: child_seat, language: it, unknown: true, ask: 'Avete il seggiolino per bambini?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['il seggiolino costa', 'abbiamo il seggiolino']}
+- {id: mileage, language: it, unknown: true, ask: 'Il chilometraggio è illimitato?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['è illimitato', 'chilometraggio illimitato']}
+- {id: automatic, language: it, unknown: true, ask: 'L''auto economica ha il cambio automatico?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['ha il cambio automatico', 'è automatica']}
+- {id: batumi_return, language: it, unknown: true, ask: 'Posso lasciare la macchina a Batumi?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['può lasciarla a Batumi', 'il noleggio di sola andata']}
+- {id: fuel, language: it, unknown: true, ask: 'Devo restituire l''auto con il pieno?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['con il pieno è obbligatorio', 'deve fare il pieno']}
+- {id: wine_tour, language: it, unknown: true, ask: 'Ci sono anche tour del vino in Cachezia?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['il nostro tour del vino', 'il tour costa']}
+- {id: dog_in_car, language: it, unknown: true, ask: 'Posso portare il cane in macchina?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['i cani sono ammessi', 'animali ammessi']}
+- {id: gps, language: it, unknown: true, ask: 'Nell''auto c''è il navigatore?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['c''è il navigatore', 'il navigatore costa']}
+- {id: second_driver, language: it, unknown: true, ask: 'C''è un costo in più per un secondo conducente?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['il secondo conducente costa', 'il secondo conducente è gratuito']}

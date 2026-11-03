@@ -1,14 +1,22 @@
 # Evaluation dataset of the fitness niche: Pulse Fitness in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md). `customer` and `assistant` are the reference
 # conversation the scripted model plays (the seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
 niche: fitness
 business:
   name: Pulse Fitness
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {monthly_membership: '120', single_visit: '25', personal_training: '70'}
   answers: {trial_class: 'Yes, the first group class is free.', showers: 'Yes, there are showers and lockers in both changing rooms.'}
+  knowledge:
+  - {title: 'Which classes do you run?', body: 'Yoga, pilates, functional training, boxing and padel.'}
+  - {title: 'Can I freeze my membership?', body: 'Yes, a monthly membership can be frozen once for up to 14 days.'}
+  - {title: 'Is there parking?', body: 'Yes, members park free of charge in the courtyard behind the building.'}
+  - {title: 'From what age can I join?', body: 'Members must be at least 16; teenagers aged 14 or 15 can join with a parent''s consent.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -757,3 +765,116 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much one single visit costs.
+  customer: ['hi how much is a single visit four one person']
+  assistant:
+  - call:
+      get_price: {item_name: Single visit}
+  - {say: 'A single visit costs 25 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['25']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much the monthly membership costs.
+  customer: ['ciao quanto abbonamento mese']
+  assistant:
+  - call:
+      get_price: {item_name: Monthly membership}
+  - {say: 'L''abbonamento mensile costa 120 GEL. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['120']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask what time the gym closes on Saturday.
+  customer: ['allo I wanna know at wat hour you are closing the saturday']
+  assistant:
+  - {say: 'On Saturday we are open until 20:00. Can I help with anything else?'}
+  expect:
+    facts: ['20:00']
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask to book a group class on Thursday at six for six people (the transcript says 16).
+  customer: ['vorrei prenotare una lezione di gruppo giovedì alle 6 per 16 persone']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: quante persone siete? Una prenotazione è per al massimo 2 persone. E intende giovedì alle 18:00?'}
+  expect:
+    facts: ['18:00']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: sat_hours, language: en, ask: 'What time do you open on Saturdays?', say: 'On Saturday we are open from 09:00 to 20:00. See you there!', facts: ['09:00']}
+- {id: wednesday_close, language: en, ask: 'How late are you open on a Wednesday?', say: 'On Wednesday we are open until 22:00.', facts: ['22:00']}
+- {id: sunday_morning, language: en, ask: 'Are you open on Sunday mornings?', say: 'Yes, on Sunday we open at 09:00 and close at 20:00.', facts: ['09:00']}
+- {id: single_visit, language: en, ask: 'How much does it cost to just drop in once?', item: Single visit, prices: ['25'], say: 'A single visit costs 25 GEL.'}
+- {id: personal_training, language: en, ask: 'What do you charge for a session with a personal trainer?', item: Personal training, prices: ['70'], say: 'A personal training session costs 70 GEL and lasts 60 minutes.'}
+- {id: month_membership, language: en, ask: 'I am in Tbilisi for a month. What is the price of a membership?', item: Monthly membership, prices: ['120'], say: 'A monthly membership costs 120 GEL.'}
+- {id: free_trial, language: en, ask: 'Can I try a group class before I pay for anything?', say: 'Yes, the first group class is free.', facts: [free]}
+- {id: showers, language: en, ask: 'Is there somewhere to shower after the workout?', say: 'Yes, there are showers and lockers in both changing rooms.', facts: [showers]}
+- {id: cancel_notice, language: en, ask: 'If I book a class and cannot make it, how much notice do I need to give?', say: 'Please cancel at least 6 hours before the class.', facts: ['6 hours']}
+- {id: party_size, language: en, ask: 'Can I book a class for me and two friends in one booking?', say: 'One booking can be for up to 2 people. Shall I help you book?', facts: ['2 people']}
+- {id: short_notice, language: en, ask: 'Can I book a class that starts in half an hour?', say: 'Bookings need at least 60 minutes of notice, so a class in half an hour cannot be booked here.', facts: ['60 minutes']}
+- {id: phone, language: en, ask: 'What is your phone number?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: classes, language: en, ask: 'What kind of classes do you run?', say: 'We run yoga, pilates, functional training, boxing and padel.', facts: [yoga]}
+- {id: freeze, language: en, ask: 'I am travelling for two weeks. Can I pause my membership?', say: 'Yes, a monthly membership can be frozen once for up to 14 days.', facts: ['14 days']}
+- {id: parking, language: en, ask: 'Is there anywhere to leave my car?', say: 'Yes, members park free of charge in the courtyard behind the building.', facts: [courtyard]}
+- {id: teen_member, language: en, ask: 'My son is 15. Can he train with you?', say: 'Teenagers aged 14 or 15 can join with a parent''s consent; from 16 they can join on their own.', facts: [consent]}
+- {id: deposit, language: en, ask: 'Do I need to pay a deposit to book a class?', say: 'No, there is no deposit for bookings.', facts: [no deposit]}
+- {id: sauna, language: en, unknown: true, ask: 'Do you have a sauna?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: [we have a sauna, sauna is open]}
+- {id: pool, language: en, unknown: true, ask: 'Is there a swimming pool at the gym?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: [our pool, the pool is]}
+- {id: student_price, language: en, unknown: true, ask: 'Do students get a cheaper membership?', say: 'I have no information about a price for students, so I can''t promise one. I have passed your question to the team.', invented: [students pay, student membership costs]}
+- {id: nutritionist, language: en, unknown: true, ask: 'Is there a nutritionist I could talk to?', say: 'I don''t have that information yet. I have passed your question on so the team can answer it.', invented: [our nutritionist]}
+- {id: wifi_password, language: en, unknown: true, ask: 'What is the Wi-Fi password?', say: 'I don''t have that information. I have passed your question to the team; the reception can also help when you are here.', invented: [password is]}
+- {id: dog, language: en, unknown: true, ask: 'Can I bring my dog to the gym?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: [dogs are welcome, dogs are allowed]}
+- {id: massage, language: en, unknown: true, ask: 'Do you offer sports massage after training?', say: 'I have no information about that yet. I have passed your question to the team so they can add the answer.', invented: [massage costs, our massage]}
+- {id: cafe, language: en, unknown: true, ask: 'Is there a cafe where I can buy a protein shake?', say: 'I don''t have that information yet. I have passed your question to the team. Anything else I can help with?', invented: [our cafe, shakes cost]}
+- {id: towels, language: en, unknown: true, ask: 'Do you rent out towels?', say: 'I''m not sure, so I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: [towels cost, towels are free]}
+- {id: sat_hours, language: it, ask: 'A che ora aprite il sabato?', say: 'Il sabato siamo aperti dalle 09:00 alle 20:00.', facts: ['09:00']}
+- {id: friday_close, language: it, ask: 'Fino a che ora siete aperti il venerdì sera?', say: 'Il venerdì siamo aperti fino alle 22:00.', facts: ['22:00']}
+- {id: monday_open, language: it, ask: 'Il lunedì mattina a che ora aprite?', say: 'Il lunedì apriamo alle 07:00 e chiudiamo alle 22:00.', facts: ['07:00']}
+- {id: single_visit, language: it, ask: 'Quanto costa un ingresso singolo?', item: Single visit, prices: ['25'], say: 'Un ingresso singolo costa 25 GEL.'}
+- {id: personal_training, language: it, ask: 'Quanto costa una lezione con il personal trainer?', item: Personal training, prices: ['70'], say: 'Una lezione con il personal trainer costa 70 GEL e dura 60 minuti.'}
+- {id: month_membership, language: it, ask: 'Quanto viene l''abbonamento mensile?', item: Monthly membership, prices: ['120'], say: 'L''abbonamento mensile costa 120 GEL.'}
+- {id: free_trial, language: it, ask: 'La prima lezione di gruppo si paga?', say: 'No, la prima lezione di gruppo è gratuita.', facts: [gratuita]}
+- {id: lockers, language: it, ask: 'Ci sono gli armadietti per lasciare lo zaino?', say: 'Sì, ci sono docce e armadietti in entrambi gli spogliatoi.', facts: [armadietti]}
+- {id: cancel_notice, language: it, ask: 'Con quanto anticipo devo disdire una lezione?', say: 'La preghiamo di disdire almeno 6 ore prima della lezione.', facts: ['6 ore']}
+- {id: short_notice, language: it, ask: 'Posso prenotare una lezione che inizia tra mezz''ora?', say: 'Serve un preavviso di almeno 60 minuti, quindi tra mezz''ora non è possibile prenotare.', facts: ['60 minuti']}
+- {id: group_size, language: it, ask: 'Quante persone possono partecipare a una lezione di gruppo?', say: 'Una lezione di gruppo accoglie fino a 15 persone.', facts: ['15']}
+- {id: classes, language: it, ask: 'Buongiorno! Fate anche lezioni di yoga o di pilates?', say: 'Sì, organizziamo yoga, pilates, allenamento funzionale, boxe e padel.', facts: [pilates]}
+- {id: freeze, language: it, ask: 'Salve, posso sospendere l''abbonamento mentre sono in vacanza?', say: 'Sì, l''abbonamento mensile si può congelare una volta per un massimo di 14 giorni.', facts: ['14 giorni']}
+- {id: parking, language: it, ask: 'C''è un parcheggio per i clienti?', say: 'Sì, i soci parcheggiano gratis nel cortile dietro l''edificio.', facts: [cortile]}
+- {id: teen_member, language: it, ask: 'Mia figlia ha 14 anni, può iscriversi?', say: 'Sì, a 14 o 15 anni ci si può iscrivere con il consenso di un genitore; dai 16 anni anche senza.', facts: [consenso]}
+- {id: city, language: it, ask: 'In che città si trova la palestra?', say: 'La palestra è a Tbilisi, in Georgia. Posso aiutarla con altro?', facts: [Tbilisi]}
+- {id: deposit, language: it, ask: 'Per prenotare devo lasciare una caparra?', say: 'No, per le prenotazioni non serve nessuna caparra.', facts: [nessuna caparra]}
+- {id: sauna, language: it, unknown: true, ask: 'Avete la sauna?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: [abbiamo la sauna, la sauna è]}
+- {id: pool, language: it, unknown: true, ask: 'C''è una piscina in palestra?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: [la piscina è, abbiamo una piscina]}
+- {id: student_discount, language: it, unknown: true, ask: 'Gli studenti hanno uno sconto?', say: 'Non ho informazioni su prezzi per studenti, quindi non posso prometterli. Ho inoltrato la domanda al team.', invented: [sconto del, studenti pagano]}
+- {id: massage, language: it, unknown: true, ask: 'Buonasera, fate anche massaggi sportivi dopo l''allenamento?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: [il massaggio costa, facciamo massaggi]}
+- {id: wifi_password, language: it, unknown: true, ask: 'Qual è la password del Wi-Fi?', say: 'Non ho questa informazione. Ho inoltrato la domanda al team; in palestra può chiedere anche alla reception.', invented: [la password è]}
+- {id: italian_coach, language: it, unknown: true, ask: 'C''è un istruttore che parla italiano?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla in altro?', invented: [parla italiano, istruttore italiano]}
+- {id: supplements, language: it, unknown: true, ask: 'Buongiorno, avete anche integratori o barrette proteiche per i clienti?', say: 'Non ho ancora questa informazione. Ho chiesto al team di aggiungere la risposta. Posso aiutarla in altro?', invented: [vendiamo integratori, le barrette costano]}
+- {id: shampoo, language: it, unknown: true, ask: 'Nelle docce ci sono shampoo e asciugacapelli?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: [ci sono shampoo, c'è l'asciugacapelli]}
+- {id: dog, language: it, unknown: true, ask: 'Posso portare il cane in palestra?', say: 'Non lo so ancora, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: [i cani sono ammessi, cani benvenuti]}

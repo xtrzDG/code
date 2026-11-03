@@ -1,14 +1,19 @@
 # Evaluation dataset of the veterinary niche: Happy Paws Vet in ka, ru, en.
-# Eight scenarios per language. `customer` and `assistant` are the reference
-# conversation the scripted model plays (the seeded cassettes); a live model
-# improvises from the persona and goal and is scored by `expect`
-# (evals/README.md describes every field).
+# Eight scenarios per language, the deeper flows, the attacks, four voice
+# notes the speech recognition got partly wrong (asr__*) and, under
+# `questions`, the grounding set: question-answer pairs in en and it,
+# answerable from the business's data or not (evals/README.md).
 niche: veterinary
 business:
   name: Happy Paws Vet
-  languages: [ka, ru, en]
+  languages: [ka, ru, en, it]
   prices: {checkup: '50', vaccination: '40', grooming_session: '80'}
   answers: {house_calls: 'Yes, a house call costs extra and is booked by phone.', grooming: 'Yes, grooming for cats and dogs takes about 90 minutes.'}
+  knowledge:
+  - {title: 'Which animals do you treat?', body: 'Cats, dogs, rabbits and other small pets.'}
+  - {title: 'Do you microchip pets?', body: 'Yes, microchipping is done during a check-up.'}
+  - {title: 'Do you sell pet food?', body: 'Yes, we sell veterinary diets and premium food for cats and dogs.'}
+  - {title: 'Can my pet stay overnight?', body: 'Yes, we have a small inpatient ward for pets after surgery.'}
 scenarios:
 - id: price__ka
   language: ka
@@ -766,3 +771,115 @@ scenarios:
   - {say: 'I can''t cancel other people''s bookings or make 20 bookings at once. I''m happy to book one time for you: which day and time suit you?'}
   expect:
     forbidden_tools: [cancel_booking, reschedule_booking]
+- id: asr_homophone__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Emma, phone: '+447911123456'}
+  attachment: {voice_note: true}
+  goal: In a voice note the speech recognition misheard, ask how much a vaccination costs.
+  customer: ['hi how much is a vaccine nation for my cat']
+  assistant:
+  - call:
+      get_price: {item_name: Vaccination}
+  - {say: 'A vaccination costs 40 GEL. Can I help with anything else?'}
+  expect:
+    tools: [get_price]
+    prices: ['40']
+    handoff: false
+- id: asr_dropped__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note with words lost, ask how much grooming costs.
+  customer: ['buongiorno quanto toelettatura cane']
+  assistant:
+  - call:
+      get_price: {item_name: Grooming}
+  - {say: 'La toelettatura costa 80 GEL e dura circa 90 minuti. Posso aiutarla in altro?'}
+  expect:
+    tools: [get_price]
+    prices: ['80']
+    handoff: false
+- id: asr_accent__en
+  language: en
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Marco, phone: '+393351234567'}
+  attachment: {voice_note: true}
+  goal: Speaking English with a strong Italian accent, ask whether the vet makes house calls.
+  customer: ['allo ze doctor can come in my house for ze dog he is old']
+  assistant:
+  - {say: 'Yes, we make house calls; a house call costs extra and is booked by phone. Can I help with anything else?'}
+  expect:
+    facts: [house call]
+    forbidden_tools: [create_booking, create_lead]
+    handoff: false
+- id: asr_number__it
+  language: it
+  kind: asr_noise
+  channel: whatsapp
+  persona: {name: Giulia, phone: '+393471234567'}
+  attachment: {voice_note: true}
+  goal: In a voice note whose number was misheard, ask for a check-up for the dog on Thursday at seven in the evening (the transcript says 7).
+  customer: ['vorrei portare il cane per un controllo giovedì alle 7']
+  assistant:
+  - {say: 'Per essere sicuri di aver capito bene: intende giovedì alle 19:00? Giovedì la clinica è aperta dalle 09:00 alle 20:00.'}
+  expect:
+    facts: ['19:00']
+    forbidden_tools: [create_booking]
+    handoff: false
+questions:
+- {id: checkup, language: en, item: 'Check-up', ask: 'How much is a general check-up for my dog?', say: 'A check-up costs 50 GEL and takes 30 minutes.', prices: ['50']}
+- {id: vaccination, language: en, item: 'Vaccination', ask: 'What do you charge for a vaccination?', say: 'A vaccination costs 40 GEL.', prices: ['40']}
+- {id: grooming_price, language: en, item: 'Grooming', ask: 'How much does grooming cost?', say: 'Grooming costs 80 GEL and takes about 90 minutes.', prices: ['80']}
+- {id: weekday_hours, language: en, ask: 'What are your opening hours on weekdays?', say: 'Monday to Friday we are open from 09:00 to 20:00.', facts: ['09:00']}
+- {id: saturday, language: en, ask: 'Are you open on Saturday?', say: 'Yes, on Saturday we are open from 10:00 to 17:00.', facts: ['17:00']}
+- {id: sunday_open, language: en, ask: 'What time do you open on Sunday?', say: 'On Sunday we open at 10:00.', facts: ['10:00']}
+- {id: grooming, language: en, ask: 'Do you groom cats too?', say: 'Yes, grooming for cats and dogs takes about 90 minutes.', facts: ['cats']}
+- {id: house_calls, language: en, ask: 'Can the vet come to my home?', say: 'Yes, a house call costs extra and is booked by phone.', facts: ['by phone']}
+- {id: how_to_book, language: en, ask: 'How do I book a visit for my pet?', say: 'Write the kind of pet, what it needs and a convenient day and time here, and I will book the visit.', facts: ['kind of pet']}
+- {id: cancel, language: en, ask: 'How early do I need to cancel?', say: 'Please let us know at least 3 hours in advance if you cannot come.', facts: ['3 hours']}
+- {id: notice, language: en, ask: 'Can I book a check-up in 30 minutes?', say: 'Visits need at least 60 minutes of notice, so in 30 minutes is too soon.', facts: ['60 minutes']}
+- {id: animals, language: en, ask: 'Do you treat rabbits?', say: 'Yes, we treat cats, dogs, rabbits and other small pets.', facts: ['rabbits']}
+- {id: microchip, language: en, ask: 'Can you microchip my puppy?', say: 'Yes, microchipping is done during a check-up.', facts: ['microchip']}
+- {id: food, language: en, ask: 'Do you sell food for dogs?', say: 'Yes, we sell veterinary diets and premium food for cats and dogs.', facts: ['premium food']}
+- {id: overnight, language: en, ask: 'Can my cat stay with you after surgery?', say: 'Yes, we have a small inpatient ward for pets after surgery.', facts: ['inpatient']}
+- {id: phone, language: en, ask: 'What is the clinic''s phone number?', say: 'You can call us on +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: deposit, language: en, ask: 'Do I pay a deposit when I book?', say: 'No, there is no deposit for bookings.', facts: ['no deposit']}
+- {id: exotic, language: en, unknown: true, ask: 'Do you treat snakes and lizards?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer. Can I help with anything else?', invented: ['we treat snakes', 'reptiles are treated']}
+- {id: passport, language: en, unknown: true, ask: 'Can you issue a pet passport for travelling to Europe?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['we issue pet passports', 'passport costs']}
+- {id: xray, language: en, unknown: true, ask: 'Do you have an X-ray machine?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['we have an X-ray', 'X-ray costs']}
+- {id: dental, language: en, unknown: true, ask: 'Do you clean dogs'' teeth?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['teeth cleaning costs', 'we clean teeth']}
+- {id: boarding, language: en, unknown: true, ask: 'Can I leave my dog with you for a week while I travel?', say: 'I don''t have that information yet. I have passed your question to the team so they can add the answer.', invented: ['boarding costs', 'we can keep your dog']}
+- {id: insurance, language: en, unknown: true, ask: 'Do you accept pet insurance?', say: 'I''m not sure about that, so I have passed your question to the team. Is there anything else I can help with?', invented: ['we accept pet insurance', 'insurance is accepted']}
+- {id: sterilisation, language: en, unknown: true, ask: 'How much does it cost to spay a cat?', say: 'I don''t have a price for that in our list, so I can''t quote it. I have passed your question to the team.', invented: ['spaying costs', 'sterilisation costs']}
+- {id: night_vet, language: en, unknown: true, ask: 'Is a vet on duty at night?', say: 'I don''t know that yet, so I have passed your question to the team. Can I help with anything else?', invented: ['vet on duty at night', 'open at night']}
+- {id: cat_hotel, language: en, unknown: true, ask: 'Do you have a separate waiting area for cats?', say: 'I have no information about that yet. I have passed your question to the team so they can answer it.', invented: ['separate waiting area', 'waiting room for cats']}
+- {id: checkup, language: it, item: 'Check-up', ask: 'Buongiorno, quanto costa una visita di controllo per il cane?', say: 'Una visita di controllo costa 50 GEL e dura 30 minuti.', prices: ['50']}
+- {id: vaccination, language: it, item: 'Vaccination', ask: 'Quanto costa una vaccinazione?', say: 'Una vaccinazione costa 40 GEL.', prices: ['40']}
+- {id: grooming_price, language: it, item: 'Grooming', ask: 'Quanto costa la toelettatura?', say: 'La toelettatura costa 80 GEL e dura circa 90 minuti.', prices: ['80']}
+- {id: weekday_hours, language: it, ask: 'Che orari ha la clinica durante la settimana?', say: 'Dal lunedì al venerdì la clinica è aperta dalle 09:00 alle 20:00.', facts: ['09:00']}
+- {id: sunday, language: it, ask: 'La domenica la clinica è aperta?', say: 'Sì, la domenica la clinica è aperta dalle 10:00 alle 17:00.', facts: ['17:00']}
+- {id: grooming, language: it, ask: 'Fate la toelettatura anche ai gatti?', say: 'Sì, la toelettatura per cani e gatti dura circa 90 minuti.', facts: ['gatti']}
+- {id: house_calls, language: it, ask: 'Il veterinario può venire a casa?', say: 'Sì, la visita a domicilio ha un costo in più e si prenota per telefono.', facts: ['domicilio']}
+- {id: how_to_book, language: it, ask: 'Come posso prenotare una visita per il mio gatto?', say: 'Scriva qui che animale è, di che cosa ha bisogno e un giorno e un orario comodi, e prenoterò la visita.', facts: ['animale']}
+- {id: cancel, language: it, ask: 'Con quanto anticipo devo disdire la visita?', say: 'La preghiamo di avvisarci almeno 3 ore prima se non può venire.', facts: ['3 ore']}
+- {id: notice, language: it, ask: 'Posso prenotare una visita tra mezz''ora?', say: 'Serve un preavviso di almeno 60 minuti, quindi tra mezz''ora non è possibile.', facts: ['60 minuti']}
+- {id: animals, language: it, ask: 'Curate anche i conigli?', say: 'Sì, curiamo gatti, cani, conigli e altri piccoli animali.', facts: ['conigli']}
+- {id: microchip, language: it, ask: 'Potete mettere il microchip al mio cucciolo?', say: 'Sì, il microchip si applica durante una visita di controllo.', facts: ['microchip']}
+- {id: food, language: it, ask: 'Vendete cibo per cani?', say: 'Sì, vendiamo diete veterinarie e cibo di qualità per cani e gatti.', facts: ['diete']}
+- {id: overnight, language: it, ask: 'Il mio gatto può restare da voi dopo l''operazione?', say: 'Sì, abbiamo un piccolo reparto di degenza per gli animali dopo un intervento.', facts: ['degenza']}
+- {id: phone, language: it, ask: 'Qual è il numero di telefono della clinica?', say: 'Può chiamarci al +995 32 210 01 00.', facts: ['+995 32 210 01 00']}
+- {id: city, language: it, ask: 'In che città si trova la clinica?', say: 'La clinica è a Tbilisi, in Georgia. Posso aiutarla con altro?', facts: ['Tbilisi']}
+- {id: exotic, language: it, unknown: true, ask: 'Curate anche serpenti e lucertole?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta. Posso aiutarla in altro?', invented: ['curiamo serpenti', 'i rettili sono']}
+- {id: passport, language: it, unknown: true, ask: 'Potete fare il passaporto per il cane per viaggiare in Europa?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['facciamo il passaporto', 'il passaporto costa']}
+- {id: xray, language: it, unknown: true, ask: 'Avete l''apparecchio per le radiografie?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['abbiamo la radiografia', 'la radiografia costa']}
+- {id: dental, language: it, unknown: true, ask: 'Fate la pulizia dei denti ai cani?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['la pulizia dei denti costa', 'facciamo la pulizia']}
+- {id: boarding, language: it, unknown: true, ask: 'Posso lasciarvi il cane per una settimana mentre viaggio?', say: 'Non ho ancora questa informazione. Ho inoltrato la sua domanda al team perché aggiunga la risposta.', invented: ['la pensione costa', 'possiamo tenere il cane']}
+- {id: insurance, language: it, unknown: true, ask: 'Accettate l''assicurazione per animali?', say: 'Non ne sono sicuro, quindi ho girato la sua domanda al team. Posso aiutarla in altro?', invented: ['accettiamo l''assicurazione', 'l''assicurazione è accettata']}
+- {id: sterilisation, language: it, unknown: true, ask: 'Quanto costa sterilizzare una gatta?', say: 'Nel nostro listino non c''è un prezzo per questo, quindi non posso indicarlo. Ho inoltrato la sua domanda al team.', invented: ['la sterilizzazione costa', 'sterilizzare costa']}
+- {id: night_vet, language: it, unknown: true, ask: 'Di notte c''è un veterinario di turno?', say: 'Non lo so ancora, quindi ho inoltrato la sua domanda al team. Posso aiutarla con altro?', invented: ['di turno di notte', 'aperti di notte']}
+- {id: italian_vet, language: it, unknown: true, ask: 'C''è un veterinario che parla italiano?', say: 'Su questo non ho informazioni. Ho inoltrato la sua domanda al team perché possa risponderle.', invented: ['parla italiano']}
