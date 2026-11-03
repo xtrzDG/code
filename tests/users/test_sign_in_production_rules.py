@@ -52,6 +52,19 @@ def test_admin_passkeys_need_a_domain_for_passkeys() -> None:
     assert str(problem).startswith("ADMIN_PASSKEY_REQUIRED needs passkeys")
 
 
+def test_a_missing_cabinet_address_is_named_once() -> None:
+    settings = assemble_app_settings(production_with({}))
+    without_cabinet = settings.model_copy(
+        update={
+            "cabinet_base_url": None,
+            "sessions": settings.sessions.model_copy(update={"webauthn_rp_id": None}),
+        }
+    )
+
+    # "CABINET_BASE_URL is not set" (address_requirements.py) says it all.
+    assert find_sign_in_problems(without_cabinet) == []
+
+
 @pytest.mark.parametrize("environment", ["development", "test"])
 def test_development_and_tests_may_keep_longer_codes(environment: str) -> None:
     settings = assemble_app_settings(

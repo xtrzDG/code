@@ -4,6 +4,7 @@ floating alias that a provider repoints (AI-12); the offline scripted model
 of development and tests stays.
 """
 
+import logging
 import re
 from pathlib import Path
 
@@ -30,6 +31,7 @@ from app.utilities.config_helpers.app_settings.reply_safety_settings_section imp
 from app.utilities.config_helpers.app_settings.reply_speed_settings_section import (
     DEFAULT_FALLBACK_MODEL_IDS,
 )
+from app.utilities.config_helpers.model_pin_report import report_floating_models
 from app.utilities.conversations.llm_model_pins import (
     FLOATING_MODEL_ALIASES,
     is_pinned_model_id,
@@ -51,6 +53,7 @@ CONFIGURED_MODEL: re.Pattern[str] = re.compile(
     r"(?:MODEL_ID|model|judge)[ \t]*[:=][ \t]*[\"']?([a-z0-9][a-z0-9.\-]+)",
     re.IGNORECASE,
 )
+PIN_REPORT_LOGGER: str = "app.utilities.config_helpers.model_pin_report"
 CONFIG_FILES: tuple[str, ...] = (
     ".env.example",
     "render.yaml",
@@ -125,6 +128,29 @@ def test_deploy_and_ci_files_name_no_floating_alias(relative_path: str) -> None:
     named = [match.group(1) for match in CONFIGURED_MODEL.finditer(text)]
 
     assert [model for model in named if not is_pinned_model_id(model)] == []
+
+
+def test_a_configured_floating_alias_is_reported_at_startup(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    floating = assemble_app_settings(
+        {
+            **BOTH_KEYS,
+            "LLM_SUMMARY_MODEL_ID": "gpt-5-nano",
+            "LLM_FALLBACK_MODEL_ID": "claude-sonnet-4-5",
+        }
+    )
+    pinned = assemble_app_settings(BOTH_KEYS)
+
+    with caplog.at_level(logging.WARNING, logger=PIN_REPORT_LOGGER):
+        reported = report_floating_models(floating)
+    assert report_floating_models(pinned) == []
+
+    assert reported == ["gpt-5-nano", "claude-sonnet-4-5"]
+    [summary, fallback] = [record.getMessage() for record in caplog.records]
+    assert summary.startswith("LLM_SUMMARY_MODEL_ID=gpt-5-nano is a floating alias")
+    assert "gpt-5-nano-2025-08-07" in summary
+    assert "claude-sonnet-4-5-20250929" in fallback
 
 
 def test_the_scripted_provider_keeps_its_offline_model() -> None:

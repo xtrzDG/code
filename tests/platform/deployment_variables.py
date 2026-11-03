@@ -88,6 +88,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # The default follows APP_ENV (json in production) and THREADPOOL_SIZE.
         "LOG_FORMAT",
         "DB_POOL_SIZE",
+        # The default follows APP_ENV (true in production, which refuses false).
+        "ADMIN_PASSKEY_REQUIRED",
         # Render sets RENDER and RENDER_GIT_COMMIT itself on every service;
         # APP_RELEASE names the build on other platforms.
         "RENDER",

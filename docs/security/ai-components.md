@@ -18,7 +18,10 @@ Default model ids are pinned versions, never floating aliases
 publishes a dated snapshot, the default is that snapshot; Claude Opus 5.5
 and Claude Sonnet 5.5 are published as fixed model ids without a date and
 are not repointed. Every id can be overridden by its environment variable;
-an override should name a pinned version too (`.env.example`).
+an override should name a pinned version too (`.env.example`): the API and
+the worker log one warning at startup for every configured model that is a
+floating alias, naming the snapshot to set instead
+(`app/utilities/config_helpers/model_pin_report.py`).
 
 | Use | Default (pinned) | Variable | Provider |
 | --- | --- | --- | --- |

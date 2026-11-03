@@ -59,7 +59,9 @@ def find_sign_in_problems(settings: AppSettings) -> list[ProductionSettingProble
                 "authenticator app's code alone, which can be phished: remove it."
             )
         )
-    elif settings.sessions.webauthn_rp_id is None:
+    elif settings.sessions.webauthn_rp_id is None and settings.cabinet_base_url:
+        # Without a cabinet address that problem is named on its own
+        # (address_requirements.py); passkeys follow once it is set.
         problems.append(
             ProductionSettingProblem(
                 "ADMIN_PASSKEY_REQUIRED needs passkeys, and none can be offered: "

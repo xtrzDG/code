@@ -6,10 +6,12 @@ special hours), the settings of deposits, the waitlist, the return-visit
 campaign, visit feedback, the inbox, the assistant and the customers (the
 business's own tags), the customer segments, the quick replies and the
 team's notes on conversations, each a JSON array like every collection of
-the archive. None of them holds a credential: a deposit's payment links
-are the pages customers are sent anyway.
+the archive. No credential leaves: a payment page whose address carries a
+key is kept only sealed with the platform's key, and leaves as its
+preview, never its sealed address (`without_sealed_addresses`).
 """
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 from app.contracts.repositories.business_document_pages import (
@@ -20,7 +22,7 @@ from app.schemas.domain.campaigns import CampaignSettingsDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.customer_segments import CustomerSegmentDocument
 from app.schemas.domain.customer_settings import CustomerSettingsDocument
-from app.schemas.domain.deposits import DepositSettingsDocument
+from app.schemas.domain.deposits import DepositSettingsDocument, PaymentLink
 from app.schemas.domain.feedback import ReviewSettingsDocument
 from app.schemas.domain.inbox_settings import InboxSettingsDocument
 from app.schemas.domain.quick_replies import QuickReplyLibraryDocument
@@ -29,6 +31,28 @@ from app.schemas.domain.waitlist import WaitlistSettingsDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.exports.archive_pages import DocumentPages
 from app.use_cases.shared.document_pages import pages_in_write_order
+
+
+def unsealed(link: PaymentLink) -> PaymentLink:
+    """A payment page as exported: its sealed (key-bearing) address left out."""
+
+    return link.model_copy(update={"sealed_address": None})
+
+
+def without_sealed_addresses(
+    settings: DepositSettingsDocument,
+) -> DepositSettingsDocument:
+    """The deposits' settings as exported: every payment page unsealed."""
+
+    return settings.model_copy(
+        update={
+            "payment_links": [unsealed(link) for link in settings.payment_links],
+            "retired_payment_links": [
+                retired.model_copy(update={"link": unsealed(retired.link)})
+                for retired in settings.retired_payment_links
+            ],
+        }
+    )
 
 
 @dataclass(frozen=True)
@@ -52,8 +76,11 @@ class SetupArchive:
         exceptions = pages_in_write_order(
             self.schedule_exception_repo, business_id, lambda item: str(item.id)
         )
-        deposits = pages_in_write_order(
-            self.deposit_settings_repo, business_id, lambda item: str(item.id)
+        deposits: Iterator[list[DepositSettingsDocument]] = (
+            [without_sealed_addresses(settings) for settings in page]
+            for page in pages_in_write_order(
+                self.deposit_settings_repo, business_id, lambda item: str(item.id)
+            )
         )
         waitlist = pages_in_write_order(
             self.waitlist_settings_repo, business_id, lambda item: str(item.id)

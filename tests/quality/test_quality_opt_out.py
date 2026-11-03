@@ -47,7 +47,10 @@ def test_the_judge_is_the_assistants_own_model_by_default() -> None:
     second = bench.conversation(bench.live_business())
     bench.job(CountingJudge(answer), judge_same_provider=False).run(tick(bench))
 
-    assert models == [LlmModelId("gpt-5-mini-2025-08-07"), LlmModelId("claude-sonnet-5-5")]
+    assert models == [
+        LlmModelId("gpt-5-mini-2025-08-07"),
+        LlmModelId("claude-sonnet-5-5"),
+    ]
     judges = {
         score.conversation_id: str(score.judge_model_id)
         for score in bench.stored_scores()

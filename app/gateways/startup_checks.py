@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.platform.strings import ProductionSettingProblem
 from app.schemas.typings.storage.strings import DatabaseRoleProblem
 from app.utilities.config_helpers.llm_provider_keys import report_unusable_fallback
+from app.utilities.config_helpers.model_pin_report import report_floating_models
 from app.utilities.config_helpers.production.production_problems import (
     find_production_problems,
     require_production_settings,
@@ -36,13 +37,15 @@ def run_startup_checks(app_container: AppContainer) -> None:
     """
     Production's requirements first, then the sub-processor list and the
     database roles (each refuses to start in production); a fallback model
-    whose provider has no key is reported once and skipped.
+    whose provider has no key is reported once and skipped, and a model
+    named by a floating alias is reported once.
     """
 
     check_production_requirements(app_container)
     check_processor_uses(app_container)
     check_database_roles(app_container)
     report_unusable_fallback(app_container.config.app_settings())
+    report_floating_models(app_container.config.app_settings())
 
 
 def check_production_requirements(

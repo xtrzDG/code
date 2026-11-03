@@ -9,8 +9,8 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,

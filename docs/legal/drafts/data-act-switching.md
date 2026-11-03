@@ -36,7 +36,7 @@ is a new number):
 | `channels.json` | The connected channels, **without** credentials or WhatsApp PINs |
 | `consent_records.json` | The consent ledger: every marketing consent and withdrawal |
 | `schedule_exceptions.json` | Closed days and special opening hours |
-| `deposit_settings.json`, `waitlist_settings.json`, `campaign_settings.json`, `review_settings.json`, `inbox_settings.json`, `assistant_settings.json`, `customer_settings.json` | The settings of deposits (with the payment links customers are sent), the waitlist, the return-visit campaign, visit feedback, the inbox, the assistant and the customers (the business's tags) |
+| `deposit_settings.json`, `waitlist_settings.json`, `campaign_settings.json`, `review_settings.json`, `inbox_settings.json`, `assistant_settings.json`, `customer_settings.json` | The settings of deposits (the payment pages; an address that carries a key leaves only as its preview), the waitlist, the return-visit campaign, visit feedback, the inbox, the assistant and the customers (the business's tags) |
 | `customer_segments.json`, `quick_reply_libraries.json` | Customer segments, the team's quick replies |
 | `conversation_notes.json` | The team's notes on conversations |
 | `recordings/<call id>.<ext>` | The calls' audio (mp3, wav, ogg, webm, m4a or bin) |
@@ -52,7 +52,8 @@ point to each other by them (a message's `conversation_id`, a booking's
 `tests/storage/golden/`; that is the machine-readable schema a receiving
 provider validates against (`tests/e2e/test_full_export_journey.py` reads
 every JSON file of an export back as its stored kind; there is no import
-tool). Secrets never leave: channel tokens and PINs, review link tokens.
+tool). Secrets never leave: channel tokens and PINs, review link tokens,
+the sealed addresses of payment pages that carry a key.
 
 Single customers: **Customers → a customer → Export** gives one customer's
 records as JSON (GDPR art. 15 and 20), consent ledger included.

@@ -6,7 +6,7 @@ import type { assistantControlsEn } from "./assistantControls.en";
 export const assistantControlsIt: Translation<typeof assistantControlsEn> = {
   title: "Controlli dell'assistente",
   description:
-    "Impedite all'assistente di agire da solo, subito e senza una nuova versione. Usateli quando sbaglia; riattivateli quando è sistemato.",
+    "Impedite all'assistente di agire da solo, subito: la modifica vale dal messaggio successivo. Usateli quando sbaglia; riattivateli quando è sistemato.",
   handOver: {
     label: "Passa ogni cliente al team",
     hint: "L'assistente smette di rispondere da solo: ogni nuovo messaggio aspetta il vostro team nella posta in arrivo (il cliente sa che risponderà un collega) e le chiamate vanno al vostro numero di inoltro.",

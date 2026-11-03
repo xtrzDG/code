@@ -98,8 +98,9 @@ holds the calls' audio, named by call id; recordings.json lists every
 recording, what the archive holds of it and the API path that downloads
 it. CSV: the cabinet's tables, as their downloads (local times, UTF-8).
 Customers who asked to be erased are not in it (the consent ledger keeps
-their consents by contact id only, as proof); channel credentials and
-review link tokens never leave the platform.
+their consents by contact id only, as proof); channel credentials, review
+link tokens and payment page addresses that carry a key never leave the
+platform.
 """
 
 

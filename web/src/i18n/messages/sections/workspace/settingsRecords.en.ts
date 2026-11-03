@@ -131,6 +131,7 @@ export const settingsRecordsEn = {
       business_profile_contacts: "Business contacts",
       business_profile_starter_answers: "Starter answers",
       business_security: "Team sign-in security",
+      booking_manage_links: "Guest's booking links",
       call_settings: "Call settings",
       digest_preferences: "Report preferences",
       value_settings: "Value report settings",

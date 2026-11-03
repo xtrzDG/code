@@ -130,6 +130,7 @@ export const settingsRecordsIt: Translation<typeof settingsRecordsEn> = {
       business_profile_contacts: "Contatti dell'attività",
       business_profile_starter_answers: "Risposte iniziali",
       business_security: "Sicurezza degli accessi del team",
+      booking_manage_links: "Link della prenotazione del cliente",
       call_settings: "Impostazioni delle chiamate",
       digest_preferences: "Preferenze dei report",
       value_settings: "Impostazioni del report sul valore",

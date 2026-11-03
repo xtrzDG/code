@@ -1383,7 +1383,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 12
     }
    ]
   },
@@ -1408,7 +1408,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 8
     }
    ]
   },
@@ -1439,7 +1439,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 15
+     "elapsed": 0
     }
    ]
   },
@@ -1788,7 +1788,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 15
+     "elapsed": 0
     }
    ]
   },
@@ -1981,7 +1981,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 12
     }
    ]
   },
@@ -2873,7 +2873,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 5
+     "elapsed": 0
     }
    ]
   },
@@ -3721,7 +3721,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 4
     }
    ]
   },
@@ -4894,7 +4894,7 @@
       "output_tokens": 0,
       "fallback_model_id": null
      },
-     "elapsed": 0
+     "elapsed": 12
     }
    ]
   },

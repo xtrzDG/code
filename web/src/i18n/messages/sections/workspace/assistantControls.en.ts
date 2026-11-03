@@ -7,7 +7,7 @@
 export const assistantControlsEn = {
   title: "Assistant controls",
   description:
-    "Stop the assistant from acting on its own, at once and without a new version. Use these when it misbehaves; switch them back when it is fixed.",
+    "Stop the assistant from acting on its own, at once: the change applies from the next message. Use these when it misbehaves; switch them back when it is fixed.",
   handOver: {
     label: "Pass every customer to the team",
     hint: "The assistant stops answering by itself: each new message waits for your team in the inbox (the customer hears that a colleague will reply), and calls go to your forwarding number.",
