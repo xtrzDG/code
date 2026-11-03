@@ -3,8 +3,9 @@ Every sub-processor's transfer mechanism is published (DPA section 8 and
 GET /v1/legal/subprocessors, PRIV-02) and agrees with the vendor register:
 its "Location and safeguard" and DPA cells name each mechanism the registry
 lists and no other, the transfer register dates each mechanism within a
-year (PRIV-05), and production's backups are never restored on a
-GitHub-hosted runner (GitHub is no sub-processor).
+year (PRIV-05), and production's backups are restored on a
+GitHub-hosted runner only when that is switched on (GitHub is no
+sub-processor).
 """
 
 from datetime import UTC, date, datetime, timedelta
@@ -127,16 +128,19 @@ def test_every_transfer_was_recorded_within_a_year() -> None:
             assert "TIA" in row[3], vendor
 
 
-def test_production_backups_are_restored_only_on_the_eu_runner() -> None:
+def test_github_hosted_runners_restore_no_production_backup_by_default() -> None:
     workflow = cast(dict[str, Any], yaml.safe_load(RESTORE_DRILL.read_text("utf-8")))
     jobs = cast(dict[str, dict[str, Any]], workflow["jobs"])
     production = jobs["production"]
+    register = read("docs/operations/vendor-register.md")
 
-    assert production["runs-on"] == ["self-hosted", "linux", "eu-restore-drill"]
-    assert "vars.RESTORE_DRILL_EU_RUNNER == 'true'" in str(production["if"])
+    # The production job decrypts production's data on GitHub: a transfer
+    # the DPA's list does not name, so it runs only when switched on.
+    assert "vars.RESTORE_DRILL_ON_GITHUB == 'true'" in str(production["if"])
     assert production["environment"] == "backup-drill"
-    # The GitHub-hosted job never holds production's key or bucket.
+    assert all("GitHub" not in entry.name.model_dump_json() for entry in entries())
+    assert "`RESTORE_DRILL_ON_GITHUB` unset" in register
+    # The GitHub-hosted job of every night holds neither key nor bucket.
     hosted = str(jobs["round-trip"])
     assert "secrets." not in hosted
     assert "BACKUP_AGE_IDENTITY: ${{" not in hosted
-    assert "eu-restore-drill" in read(".github/actionlint.yaml")

@@ -7,13 +7,15 @@ name: Restore drill
 #   restores it again with every check of the drill;
 # - production, on Mondays and on demand: production's newest backup
 #   (the code of `release`) restored into a throwaway Postgres 16 and
-#   checked, with a Sentry Crons check-in (monitor restore-drill). It runs
-#   only when the repository variables BACKUP_S3_BUCKET is set and
-#   RESTORE_DRILL_EU_RUNNER is "true"; its secrets live in the environment
-#   backup-drill. Production's data is decrypted only on the platform's
-#   own runner in the EU (labels self-hosted, eu-restore-drill), never on
-#   a GitHub-hosted runner: GitHub is no sub-processor, and the run summary
-#   holds counts and timings only (docs/operations/vendor-register.md).
+#   checked, with a Sentry Crons check-in (monitor restore-drill). Off
+#   unless the repository variables BACKUP_S3_BUCKET is set and
+#   RESTORE_DRILL_ON_GITHUB is "true": it decrypts production's data on a
+#   GitHub-hosted runner, a transfer to GitHub, which is no sub-processor.
+#   Turn it on only after GitHub is announced in the DPA's list (30 days'
+#   notice, DPF and SCCs). By default the weekly production drill runs in
+#   the EU on the platform's drill machine (docs/operations/backup-restore.md,
+#   "Where the production drill runs"); its secrets here live in the
+#   environment backup-drill.
 #
 # Both append the drill's report (timings and checks) to the run summary.
 on:
@@ -200,14 +202,11 @@ jobs:
   production:
     name: Restore production's newest backup
     if: >-
-      vars.BACKUP_S3_BUCKET != '' && vars.RESTORE_DRILL_EU_RUNNER == 'true' && (
+      vars.BACKUP_S3_BUCKET != '' && vars.RESTORE_DRILL_ON_GITHUB == 'true' && (
         (github.event_name == 'schedule' && github.event.schedule == '41 3 * * 1') ||
         (github.event_name == 'workflow_dispatch' && inputs.production)
       )
-    # The platform's runner in the EU (docs/operations/backup-restore.md,
-    # "Where the production drill runs"): Docker for the service container,
-    # passwordless sudo for apt, nothing else of the platform on it.
-    runs-on: [self-hosted, linux, eu-restore-drill]
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     environment: backup-drill
     services:

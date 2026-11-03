@@ -53,8 +53,8 @@ What each scenario costs:
 3. **Restore drill**, `.github/workflows/restore-drill.yml`: proves the
    backups restore. Nightly it backs up and restores a seeded throwaway
    database with this checkout's code on a GitHub-hosted runner (synthetic
-   data only); on Mondays it restores production's newest backup into a
-   throwaway Postgres 16 on the platform's own runner in the EU (below).
+   data only); every week production's newest backup is restored into a
+   throwaway Postgres 16 on the platform's drill machine in the EU (below).
 
 ## The backup (`workshop backup`)
 
@@ -137,8 +137,10 @@ records customers' erasures there too).
 **Backup keys (age).** Generated with `age-keygen` on an operator's
 machine, never on a server.
 
-- The **drill identity**: its private key is the GitHub environment secret
-  `BACKUP_AGE_IDENTITY` of the `backup-drill` environment; nothing else
+- The **drill identity**: its private key is `BACKUP_AGE_IDENTITY` on the
+  drill machine (below, "Where the production drill runs"); the GitHub
+  environment `backup-drill` holds a copy only while the workflow's
+  production job is switched on (`RESTORE_DRILL_ON_GITHUB`); nothing else
   holds it.
 - The **escrow identity**: printed and sealed in the company safe, a second
   copy in the founders' password manager vault; two named people can reach
@@ -266,10 +268,14 @@ configured.
   more with the `age` tool. Proves the tooling of the code about to ship.
 - `production`, Mondays and on demand: checks out `release` (the code
   production runs), restores production's newest backup into a throwaway
-  Postgres 16 and checks it. Runs only when the repository variables
-  `BACKUP_S3_BUCKET` is set and `RESTORE_DRILL_EU_RUNNER` is `true`; its
-  secrets (the drill's read-only bucket key, `BACKUP_AGE_IDENTITY`,
-  `SENTRY_DSN`) live in the environment `backup-drill`.
+  Postgres 16 and checks it. **Off by default**: it runs only when the
+  repository variables `BACKUP_S3_BUCKET` is set and
+  `RESTORE_DRILL_ON_GITHUB` is `true`, because it decrypts production's
+  data on a GitHub-hosted runner, a transfer to GitHub that the DPA's list
+  does not name. Turn it on only after GitHub is announced as a
+  sub-processor (30 days' notice, its DPA with DPF and SCCs); its secrets
+  (the drill's read-only bucket key, `BACKUP_AGE_IDENTITY`, `SENTRY_DSN`)
+  live in the environment `backup-drill`.
 
 Both append the drill's report to the run's summary (`--report`): the
 archive, when it was taken, when the drill started and finished, how long
@@ -277,15 +283,19 @@ the download, restore and checks took, how old the backup was (the data a
 restore at that moment would lose) and the failed checks.
 
 **Where the production drill runs.** Production's data is decrypted only
-in the EU, on a machine the platform runs: a GitHub self-hosted runner
-with the labels `self-hosted`, `linux`, `eu-restore-drill` (e.g. a small
-Hetzner or Scaleway VM in Germany, Docker for the service container,
-passwordless sudo for apt, registered to this repository only, nothing
-else on it; `.github/actionlint.yaml` knows the label). GitHub-hosted
-runners never see production's data, so GitHub is no sub-processor
+in the EU, on the platform's **drill machine**: a small VM at an EU
+provider other than Render (e.g. Hetzner or Scaleway in Germany), with
+Postgres 16 and pgvector for the scratch database, this repository's
+`release` checkout, the drill's read-only bucket key and
+`BACKUP_AGE_IDENTITY`, and nothing else of the platform. A weekly timer
+(Monday 03:41 UTC) runs
+`uv run python -m app.gateways.cli.restore_check --report <dated file>`
+with `SENTRY_DSN` set, so Sentry Crons `restore-drill` sees each run and
+the reports stay on the machine for the quarterly record. GitHub-hosted
+runners restore synthetic data only, so GitHub is no sub-processor
 (`docs/operations/vendor-register.md`, "GitHub and the restore drill").
-Until the runner exists, the weekly production proof does not run: set
-`RESTORE_DRILL_EU_RUNNER=true` once it is registered.
+Until the machine exists, the weekly production proof does not run (an
+owner action of `docs/operations/go-live.md`, section 6).
 
 Both install the Postgres 17 client: the image's `pg_dump` is Debian's 17,
 and an archive opens only with a `pg_restore` at least as new.

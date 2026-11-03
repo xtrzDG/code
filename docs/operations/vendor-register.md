@@ -37,23 +37,26 @@ workaround. *Low*: comfort or insight only.
 | Sentry | error data, scrubbed | low | EU region; Functional Software (US) under DPF and SCCs for support access | online DPA; dated copy to file | SOC 2 Type II |
 | Web push services (Google, Mozilla, Apple) | a device's push address; end-to-end encrypted notices | low | outside the EEA under each vendor's terms | none (browser infrastructure) | none |
 | Registrar and DNS host | no personal data | critical | [provider] | not needed | not needed |
-| GitHub | source code and CI; no customers' data (production's backups are restored only on the platform's EU runner) | medium | US; DPF and SCCs | GitHub's customer agreement | SOC 2 Type II |
+| GitHub | source code and CI; no customers' data (production's backups are restored only on the platform's EU drill machine) | medium | US; DPF and SCCs | GitHub's customer agreement | SOC 2 Type II |
 
 "To sign", "to request" and "dated copy to file" are the owner's actions
 before launch (`docs/operations/go-live.md`); write the date into the cell
 when done. The safeguards follow the DPA (section 7.2); the transfer cells
 of `docs/security/data-classification.md` repeat them per data category.
 
-**GitHub and the restore drill.** GitHub-hosted runners only ever restore
-a seeded, synthetic database (`.github/workflows/restore-drill.yml`, job
-`round-trip`). The weekly restore of production's newest backup runs on
-the platform's own runner in the EU (labels `self-hosted`,
-`eu-restore-drill`; job `production`), so production's data is decrypted
-only in the EU and GitHub receives the drill's counts and timings, never
-customers' data: GitHub is no sub-processor and not in the DPA's list.
-GitHub does hold the drill's private age key as an environment secret
-(`backup-drill`), which opens backups but reaches no bucket by itself
-(`docs/operations/backup-restore.md`, "Keys and custody").
+**GitHub and the restore drill.** Decision of 2026-11-03: GitHub-hosted
+runners restore only a seeded, synthetic database
+(`.github/workflows/restore-drill.yml`, job `round-trip`). The weekly
+restore of production's newest backup runs on the platform's drill machine
+in the EU (`docs/operations/backup-restore.md`, "Where the production
+drill runs"), so GitHub is no sub-processor and not in the DPA's list. The
+workflow's `production` job, which would decrypt production's data on a
+GitHub-hosted runner, stays off (`RESTORE_DRILL_ON_GITHUB` unset); turning
+it on is a transfer to GitHub (US, its DPA with DPF and SCCs) that must
+first be announced in the DPA's list with 30 days' notice. Until then the
+`backup-drill` environment's copy of the drill's private age key is not
+needed and can be deleted (it opens backups but reaches no bucket by
+itself).
 
 **If the Data Privacy Framework falls.** The EU-US framework is challenged
 before the Court of Justice (the Latombe appeal, C-703/25 P). Every vendor

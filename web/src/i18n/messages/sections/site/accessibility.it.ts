@@ -18,13 +18,13 @@ export const accessibilityIt: Translation<typeof accessibilityEn> = {
   limitationsTitle: "Contenuti non ancora accessibili",
   limitations: {
     legalLanguage:
-      "I testi legali (termini di servizio, informativa privacy, informativa sui cookie e accordo sul trattamento dei dati) sono pubblicati solo in inglese; le versioni italiane sono in preparazione.",
+      "I testi legali (termini di servizio, informativa privacy, informativa sui cookie e accordo sul trattamento dei dati) sono pubblicati solo in inglese; le versioni italiane sono in preparazione. Nel frattempo, scrivici o chiamaci tramite i contatti qui sotto e ti spieghiamo in italiano qualsiasi clausola, per iscritto o al telefono.",
     userContent:
-      "Le foto e i file che le attività o i loro clienti inviano in una conversazione, e i testi che le attività scrivono da sé, possono non avere una descrizione testuale o una struttura chiara: non possiamo controllare tutto ciò che pubblicano.",
+      "Le foto e i file che le attività o i loro clienti inviano in una conversazione, e i testi che le attività scrivono da sé, possono non avere una descrizione testuale o una struttura chiara: non possiamo controllare tutto ciò che pubblicano. Chiedi le stesse informazioni all'attività per telefono o con un messaggio, oppure chiedi a noi di inoltrare la tua richiesta.",
     thirdParty:
-      "Le pagine di altri servizi a cui la piattaforma rimanda non rientrano in questa dichiarazione: la verifica anti-bot all'accesso (Cloudflare Turnstile), le pagine di pagamento (Flitt, Stripe) e i siti web delle attività.",
+      "Le pagine di altri servizi a cui la piattaforma rimanda non rientrano in questa dichiarazione: la verifica anti-bot all'accesso (Cloudflare Turnstile), le pagine di pagamento (Flitt, Stripe) e i siti web delle attività. Se la verifica anti-bot ti blocca, scrivici e ti aiutiamo ad accedere; al posto del pagamento online puoi chiedere all'attività un altro modo di pagare.",
     audit:
-      "Non è ancora stata svolta una verifica manuale completa con tecnologie assistive (come i lettori di schermo), quindi possono restare barriere che i controlli automatici non trovano.",
+      "Non è ancora stata svolta una verifica manuale completa con tecnologie assistive (come i lettori di schermo), quindi possono restare barriere che i controlli automatici non trovano. Segnalaci ogni barriera che incontri: rispondiamo entro 30 giorni e ti diciamo come ottenere nel frattempo ciò di cui avevi bisogno.",
   },
   methodTitle: "Come è stata redatta questa dichiarazione",
   methodText:

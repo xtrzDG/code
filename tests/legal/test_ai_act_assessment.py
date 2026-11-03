@@ -40,8 +40,12 @@ def test_the_record_was_reviewed_within_a_year() -> None:
 
 def test_the_record_answers_article_5_and_article_50_point_by_point() -> None:
     text = read(RECORD)
-    article_5 = [row[0] for row in table_rows(section(text, "Article 5: no prohibited practice"))]
-    article_50 = [row[0] for row in table_rows(section(text, "Article 50: transparency"))]
+    article_5 = [
+        row[0] for row in table_rows(section(text, "Article 5: no prohibited practice"))
+    ]
+    article_50 = [
+        row[0] for row in table_rows(section(text, "Article 50: transparency"))
+    ]
 
     assert article_5 == ARTICLE_5_POINTS
     assert article_50 == ARTICLE_50_PARAGRAPHS

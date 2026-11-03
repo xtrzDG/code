@@ -1,6 +1,0 @@
-# actionlint (.github/workflows/workflow-audit.yml): the labels of the
-# platform's own runners. eu-restore-drill: the EU machine that restores
-# production's backups (restore-drill.yml, docs/operations/backup-restore.md).
-self-hosted-runner:
-  labels:
-    - eu-restore-drill

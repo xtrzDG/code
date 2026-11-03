@@ -299,7 +299,7 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    Lock** and a default retention in compliance mode of 31 days, a
    lifecycle rule that expires noncurrent versions after 400 days and one
    that aborts incomplete multipart uploads after 2 days. The recordings
-   bucket (`RECORDINGS_S3_*`) gets versioning and a rule that expires
+   bucket (`RECORDINGS_S3_BUCKET`) gets versioning and a rule that expires
    noncurrent versions after 30 days; recordings are not in the backups
    (`docs/operations/backup-restore.md`, "Objectives").
 2. Three access keys: the backup cron's (put, list and delete under
@@ -325,13 +325,13 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    and the overdue mark (`BACKUP_MAX_AGE_HOURS`) have defaults.
 5. GitHub: the repository variables and the `backup-drill` secrets of
    step 5.
-6. The EU runner of the production drill: a small VM in Germany with
-   Docker, registered to this repository as a self-hosted runner with the
-   label `eu-restore-drill` (Settings → Actions → Runners), nothing else
-   on it; then the repository variable `RESTORE_DRILL_EU_RUNNER=true`.
-   GitHub-hosted runners never restore production's backups
-   (`docs/operations/backup-restore.md`, "Where the production drill
-   runs").
+6. The drill machine of the production drill: a small VM in Germany at a
+   provider other than Render, with Postgres 16 and pgvector, the
+   `release` checkout, the drill's bucket key and `BACKUP_AGE_IDENTITY`,
+   and the weekly timer of `docs/operations/backup-restore.md` ("Where the
+   production drill runs"). Leave `RESTORE_DRILL_ON_GITHUB` unset: the
+   workflow's production job would restore production's data on a
+   GitHub-hosted runner.
 
 Check:
 
@@ -339,10 +339,11 @@ Check:
    (`workshop/<year>/<month>/<time>Z.pgdump.age`) and its manifest;
    `/admin/system` shows the backup; Sentry Crons shows an OK check-in of
    `database-backup`.
-2. `gh workflow run restore-drill.yml -f production=true`: the job
-   "Restore production's newest backup" is green on the EU runner, its
-   summary shows the drill's timings, and Sentry Crons shows an OK
-   check-in of `restore-drill`. From then on it runs every Monday.
+2. On the drill machine, run the drill once by hand
+   (`uv run python -m app.gateways.cli.restore_check --report first-drill.md`):
+   it ends with "OK", the report shows its timings, and Sentry Crons shows
+   an OK check-in of `restore-drill`. From then on the timer runs it every
+   Monday.
 3. Immutability: with the cron's key, delete one archive version
    (`aws s3api delete-object --key <archive> --version-id <id>`): it must
    answer AccessDenied; the drill's and the ledger's keys too. Then stop

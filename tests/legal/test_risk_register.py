@@ -33,7 +33,9 @@ def risks() -> list[list[str]]:
 
 
 def test_the_register_was_reviewed_within_a_year() -> None:
-    match = re.search(r"^Reviewed: ([0-9]{4}-[0-9]{2}-[0-9]{2})\.", read(REGISTER), re.M)
+    match = re.search(
+        r"^Reviewed: ([0-9]{4}-[0-9]{2}-[0-9]{2})\.", read(REGISTER), re.M
+    )
     today = datetime.now(UTC).date()
 
     assert match is not None

@@ -45,6 +45,12 @@ the end, and the switching clauses (notice, transitional and retrieval
 periods, charges) the next terms version must carry under the Data Act, for
 the lawyer and for the switching information published before contracting.
 
+`sla.md` is the service level agreement drafted for the owner to adopt
+(availability, the call fallback, RPO and RTO, support and credits): it
+promises less than the internal targets, which
+`tests/legal/test_sla_draft.py` keeps true, and becomes a legal text with
+its own version only once the owner and the lawyer adopt it.
+
 ## Publishing a draft
 
 1. A lawyer who is a native speaker of the language reviews the draft

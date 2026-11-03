@@ -46,4 +46,4 @@ planned one, whose date carries "(planned)" until it is held.
 
 | Date | Kind | Archive taken | RPO achieved | RTO achieved | Integrity | Runbook changes | By |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-12-15 (planned) | full path B restore and delete denied, after the bucket and the EU runner exist (`docs/operations/go-live.md`, section 6) | | | | | | the founder |
+| 2026-12-15 (planned) | full path B restore and delete denied, after the bucket and the drill machine exist (`docs/operations/go-live.md`, section 6) | | | | | | the founder |

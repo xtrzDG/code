@@ -24,6 +24,8 @@ export const HELP_ARTICLES = [
   "privacy",
   "dpia-support",
   "staff-call-notice",
+  "ai-use-guidance",
+  "accessibility-statement",
 ] as const;
 
 export type HelpArticleSlug = (typeof HELP_ARTICLES)[number];

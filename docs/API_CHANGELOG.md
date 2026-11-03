@@ -16,8 +16,7 @@ label and a migration path).
 Spec: `8a0ce7daa7101f35`
 
 Everything below is additive within `/v1`; the new refusals are errors a
-client that follows the description already handles. (Skeleton listing
-every `/v1` change of the round; wording to be polished.)
+client that follows the description already handles.
 
 - **Changed** `PUT /v1/businesses/{business_id}/security`:
   `require_mfa_for_members` is optional (null keeps the stored value) and
@@ -30,9 +29,10 @@ every `/v1` change of the round; wording to be polished.)
 - **Added** `POST /v1/businesses/{business_id}/bookings/{booking_id}/manage-links/revoke`
   (204; owners and staff; audited as UPDATE of `booking_manage_links`):
   every manage link and page credential sent so far answers 404
-  `link_expired`. Manage tokens are now versions 4 (links) and 5 (page
-  credentials), 80 characters, with the booking's link generation inside
-  the MAC; versions 1–3 still read as generation 0.
+  `link_expired` ("This booking link no longer works; contact the
+  business about the booking."). Manage tokens are now versions 4 (links)
+  and 5 (page credentials), 80 characters, with the booking's link
+  generation inside the MAC; versions 1–3 still read as generation 0.
 - **Added** `LoginSessionView.second_factor_suggested` (owners and brand
   owners without a second factor). Where `ADMIN_PASSKEY_REQUIRED` is on,
   admin endpoints answer 403 `passkey_required` until the admin has a

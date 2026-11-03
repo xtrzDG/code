@@ -14,8 +14,11 @@ of this file. Anything not needed any more is removed the same day.
       who still need it, each with the smallest role that is enough.
 - [ ] `PLATFORM_ADMIN_EMAILS` and `PLATFORM_ADMIN_PHONE_NUMBERS` on Render name the
       same people (the bootstrap list), nobody else.
-- [ ] Every platform admin has an authenticator; nobody signs in with a code
-      alone.
+- [ ] Every platform admin has an authenticator and, in production, a
+      passkey (`ADMIN_PASSKEY_REQUIRED`); nobody signs in with a code alone,
+      and no admin account is shared by two people. Admin sessions end
+      after 15 idle minutes (`ADMIN_SESSION_IDLE_TIMEOUT_SECONDS`, 900):
+      nobody raised it on Render.
 - [ ] Support access grants of the quarter (each business's audit log,
       `support_access_start`) all had a reason; none is still open.
 
@@ -70,8 +73,10 @@ Twilio, the registrar and DNS host):
 
 - [ ] `ENCRYPTION_KEYS` holds no key older than the last rotation needs
       (docs/operations/backup-restore.md).
-- [ ] The age private key of the backups is held by the restore drill and in
-      escrow only; the last restore drill passed.
+- [ ] The age private key of the backups is held by the drill machine (and
+      the `backup-drill` environment only while `RESTORE_DRILL_ON_GITHUB`
+      is on) and in escrow only; the last restore drill passed; the drill
+      machine has no other user or service.
 - [ ] The security.txt fields (`web/src/server/securityTxt.ts`) have more
       than a quarter left before `Expires` (the test fails 30 days ahead),
       and production's `/.well-known/security.txt` names the security

@@ -43,7 +43,9 @@ def test_every_module_exists_with_its_check() -> None:
 
 
 def test_the_training_page_was_reviewed_within_a_year() -> None:
-    match = re.search(r"^Reviewed: ([0-9]{4}-[0-9]{2}-[0-9]{2})\.", read(TRAINING), re.M)
+    match = re.search(
+        r"^Reviewed: ([0-9]{4}-[0-9]{2}-[0-9]{2})\.", read(TRAINING), re.M
+    )
 
     assert match is not None
     reviewed = date.fromisoformat(match.group(1))
@@ -66,7 +68,9 @@ def test_a_session_was_held_or_is_planned_within_a_year() -> None:
 
 def test_the_businesses_guidance_is_published_in_both_languages() -> None:
     for language in ("en", "it"):
-        assert (REPOSITORY / "docs" / "help" / language / "ai-use-guidance.md").is_file()
+        assert (
+            REPOSITORY / "docs" / "help" / language / "ai-use-guidance.md"
+        ).is_file()
     assert "ai-literacy.md" in read("docs/operations/offboarding.md")
 
 

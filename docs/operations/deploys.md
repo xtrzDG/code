@@ -708,9 +708,21 @@ as a one-off job **after** the deploy that added the columns, never in
 When the production smoke test fails, errors climb in Sentry, or owners
 report a broken flow right after a deploy:
 
-1. **Roll back all three services to the same commit.** Render → each of
-   `workshop-api`, `workshop-worker`, `workshop-cabinet` → Events → the
-   last good deploy → Rollback. API first, then worker, then cabinet.
+1. **Roll back every service to the same commit, in one command:**
+
+   ```bash
+   export RENDER_API_KEY=...                # Render → Account settings → API keys
+   uv run python -m scripts.rollback <good-commit>           # the plan: each service's deploy
+   uv run python -m scripts.rollback <good-commit> --apply   # roll them all back
+   ```
+
+   `scripts/rollback.py` takes the services that deploy `release` from
+   `render.yaml` (API, worker, batch worker, backup cron, cabinet; the API
+   first, the cabinet last), finds each one's last live deploy of that
+   commit and rolls it back through the Render API; it changes nothing
+   when one service never ran that commit, and stops at the first refusal
+   (`tests/platform/test_rollback_script.py`). By hand, the same: Render →
+   each service → Events → the last good deploy → Rollback, in that order.
 2. **Stop the bad commit from coming back.** Move `release` to the good
    commit, the only force push ever made to it: add "Repository admin" to
    the bypass of `release`'s ruleset, `git push --force-with-lease origin

@@ -43,4 +43,4 @@ Kept short; the items move here from the table when they ship.
 - 2026-11-03: admin passkeys required in production and 15-minute admin
   idle timeout (AUTHZ-04, partly); sub-processor transfer mechanisms
   published (PRIV-02); production backups restored only on the
-  platform's EU runner (PRIV-05).
+  platform's drill machine in the EU (PRIV-05).

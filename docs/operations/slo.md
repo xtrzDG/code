@@ -33,9 +33,9 @@ announced at least 72 h (3 days) before on the status page, as
 
 Five more promises follow the customer's path past the first answer. They
 are read from the same metrics and tables every month, in the SLO report
-(`docs/operations/maintenance.md`, the calendar); they have no error budget
-of their own yet, and their alerts page on the size of a failure, not on its
-burn rate.
+(`docs/operations/maintenance.md`, the calendar). Each has an error budget
+(the next section), read in that report rather than by a burn-rate alert: their alerts
+page on the size of a failure, not on its burn rate.
 
 | SLI | Objective (28 days) | Measured from | Pages today |
 | --- | --- | --- | --- |
@@ -50,6 +50,28 @@ so its target sits close to the chat's; the voice agent itself answers in
 about a second and our tools must not double it; a booking the assistant
 promised but could not write is worse than none; a reminder that never
 arrives becomes a no-show.
+
+## Error budgets of the product objectives
+
+Over 28 days, for all businesses together:
+
+| Objective | Budget | Spent when |
+| --- | --- | --- |
+| Calls answered | 1% of calls: about 1 in 100 may go untaken | the missed calls of the period reach 1% of all calls |
+| Voice latency | a day whose tool p95 is above 2 s spends a day; 1.4 days in 28 (5%) | more than one such day in the window |
+| Booking success | 0.5% of booking tool calls: about 1 in 200 may end in an error | errors reach 0.5% of the period's booking tool calls |
+| Notification delivery | 1% of settled outbox messages may die | dead messages reach 1% |
+| Webhook lag | the hours whose p99 is above 10 s: 1% of the hours (about 7 in 28 days) | more than 7 such hours |
+
+**Chat availability** is not a separate figure: a chat is available when
+its messages reach the API (**API availability**, 99.9%) and get an answer
+or a handoff (**Answered in time**, 99.5%); both have their budgets and
+burn-rate alerts above.
+
+The monthly SLO report states what is left of each budget. A product
+budget that is spent follows the error budget policy below like the three
+main ones: feature work stops in its area (voice, bookings, notifications,
+the inbound pipeline) until the next report shows it back above zero.
 
 ## How each SLO is read today
 
@@ -202,7 +224,7 @@ with the restore drill's result (`docs/operations/backup-restore.md`).
 | --- | --- |
 | More than 50% | Normal work. Risky changes (migrations of large tables, provider switches) ship on weekdays before 15:00 Europe/Rome, never in a freeze period, and those that may interrupt answering only in the maintenance window (`docs/operations/maintenance.md`). |
 | 50% to 0% | Every deploy names its rollback in the pull request; no Friday deploys; the on-call person reviews the burn each morning. |
-| Spent | Feature work stops for the area that spent it: only fixes, tests and reliability work ship until the 28-day window is back above zero. A SEV1 or SEV2 postmortem's action items go first. |
+| Spent (a main budget, or a product budget in the monthly report) | Feature work stops for the area that spent it: only fixes, tests and reliability work ship until the 28-day window is back above zero. A SEV1 or SEV2 postmortem's action items go first. |
 | Spent twice in a quarter | The objective or the architecture is wrong: revisit the target with the founder, or plan the structural fix (more workers, a second model provider, a second region) before new features. |
 
 One incident that spends more than 20% of a budget at once gets a

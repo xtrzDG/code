@@ -80,7 +80,8 @@ Every pull request and every push to `main` runs (`.github/workflows/`):
 | Semantic analysis | CodeQL (Python, JavaScript/TypeScript and the workflows themselves, `actions`; `security-extended`) | new high-severity alerts |
 | Workflows | `Workflow audit (actionlint, zizmor)`: syntax, shellcheck, template injection, credentials left in checkouts, dangerous triggers, unpinned or impostor actions, permissions | any finding not commented where it occurs |
 | Container images | Trivy on the backend and cabinet images with its vulnerability, misconfiguration and secret scanners (`.github/trivy-secret.yaml` exempts only third-party package folders) | HIGH or CRITICAL: a vulnerability with a fix available, a misconfiguration or a secret |
-| Software bill of materials | syft (SPDX JSON per image, kept 30 days as a CI artifact) | — |
+| Software bill of materials | syft (CycloneDX JSON per image, kept 30 days as a CI artifact and, on `main`, attested to each published image) | — |
+| New dependencies | `actions/dependency-review-action` on pull requests with `.github/dependency-review-config.yml` | a new dependency with a high vulnerability, or a denied licence (AGPL, GPL, SSPL, BUSL, CC-BY-NC) without a reviewed exception |
 | API contract | `oasdiff breaking` against the merge base | breaking changes without the `api-breaking` label |
 | API fuzzing | `Backend tests (api-fuzz 1/1)`: hypothesis over every documented operation, signed in, and hostile bodies (`tests/api_fuzz`) | any server error other than an unavailable provider |
 | Action and image pinning | `tests/platform/test_ci_workflows.py`, `tests/platform/test_image_pins.py` | an action not pinned to a commit SHA, an image without its digest |
@@ -108,8 +109,9 @@ On every commit of `main` (a push, or the CI run `automerge.yml` starts
 after it merged a Dependabot group, since that merge pushes no event),
 after every gate passed, CI publishes the backend
 and cabinet images it built and scanned to ghcr.io under the commit SHA,
-attaches SLSA build provenance (`actions/attest-build-provenance`) and
-signs them with cosign, keyless: Sigstore certifies this workflow's GitHub
+attaches SLSA build provenance (`actions/attest-build-provenance`) and the
+CycloneDX SBOM as an attestation (`actions/attest`), and signs them with
+cosign, keyless: Sigstore certifies this workflow's GitHub
 OIDC identity, so no signing key exists to keep or to leak. Deploy smoke
 verifies both for every deployed commit (`scripts/verify_images.sh`): the
 certificate and the provenance must name `.github/workflows/ci.yml` of this
@@ -161,8 +163,10 @@ These settings live in GitHub, not in a file:
   passed. Approvals are not required while one maintainer reviews every
   change and Dependabot's grouped patch updates merge themselves
   (`automerge.yml`, after each workflow that owns a required check, once
-  none is pending); raise `required_approving_review_count` when a second
-  maintainer joins.
+  none is pending); raise `required_approving_review_count` to at least 1 and require
+  Code Owners' review when a second maintainer joins (an owner action,
+  `docs/security/roadmap.md`, SDLC-05): until then the author can merge a
+  security-sensitive change alone.
 - **`release`**, which production deploys, is protected like `main` by a
   ruleset whose only bypass is "Deploy keys". The one key with write
   access lives in the environment **`production-release`** (secret
@@ -235,7 +239,39 @@ put through only to ordinary numbers of the business's country or the EU
 default; the platform can be paused and stops at its daily budget, its
 background model work included; queued
 jobs stay in their tenant; payments are reconciled daily; erasures survive
-a restore and marketing waits for consent. Each measure with its code and
+a restore and marketing waits for consent.
+
+Added in the readiness round of 2026-11-03: platform admins sign in with a
+passkey in production (`ADMIN_PASSKEY_REQUIRED`, also for a look into a
+client's cabinet) and their sessions end after 15 idle minutes; sign-in
+code alerts reach the admins at most once per key an hour in each process
+(`app/facilitators/users/hourly_admin_alerts.py`); owners without
+a second factor are asked at every one-factor sign-in; invitations to
+accounts that never signed in lapse after 7 days; API keys and webhook
+endpoints need a fresh sign-in, and a person who leaves or deletes the
+account takes the keys they made with them. Guests' booking links can be
+revoked; recordings are owner-only unless the owner lets staff play them.
+Card numbers, security codes, IBANs and ID numbers are masked before
+storage, the model, traces, logs and Sentry, and a call where a card was
+read out keeps no audio; Flitt's callbacks count only once its status API
+confirms them. The assistant may not claim a booking no tool made, stops
+a conversation past its token, time or repeated-tool limits, stops a
+business past ten times its daily spend limit in a month, and can be
+switched off per action by the owner or for every business by a SUPER
+admin; its customer memory keeps facts, not instructions. Text-backs go
+only to mobiles of the business's country or the EU, trials without a card
+have smaller caps and rent no number, fallback dials show the rented line,
+and providers' raw error texts reach platform admins only. Tenant URLs are
+fetched over https only through one provider HTTP client factory, the
+widget loader is pinned with SRI, the consent ledger is append-only in the
+database, and an erasure leaves salted digests that keep the customer out
+of campaigns. Production refuses an external (dotted or IP) database
+address that does not require TLS; a single-label private-network host
+(Render's internal `dpg-…-a`) is exempt unless its query names another
+server (`?host=`, `?hostaddr=`), so the Blueprints set no `PGSSLMODE`.
+Integration circuits open only on provider outages, never on one
+business's 4xx, and webhook signature bursts, storage errors, API latency,
+backup failures and unused sign-in codes are platform alerts. Each measure with its code and
 test: [docs/security/runtime-protections.md](docs/security/runtime-protections.md)
 (the platform's edge) and
 [docs/security/product-protections.md](docs/security/product-protections.md)
@@ -245,9 +281,11 @@ Channel and calendar tokens are stored sealed with the newest key of
 `ENCRYPTION_KEYS`; older keys only open what they sealed until a platform
 admin's re-encryption run (`POST /v1/admin/security/encryption-keys/rotate`)
 moves everything to the newest one. Off-site backups are encrypted with
-age before they leave Render; their private keys are held by the restore
-drill (a GitHub environment secret) and in escrow, never by the service
-that writes the backups. Custody, escrow and the rotation runbook:
+age before they leave Render, into a bucket at another provider with
+Object Lock; their private keys are held by the restore drill's own machine in
+the EU and in escrow, never by the service that writes the backups. Production's backups are decrypted only on the platform's drill
+machine in the EU; GitHub-hosted runners restore synthetic data only
+(the workflow's production job stays off). Custody, escrow and the rotation runbook:
 [docs/operations/backup-restore.md](docs/operations/backup-restore.md).
 
 ### Governance documents
@@ -257,7 +295,12 @@ that describe the platform's security, each with the test that keeps it
 true: the generated inventory of every entry point and its access class,
 the permission matrix, the secrets inventory with rotation, the data
 classification with transfers and retention, the DPIA and the change risk
-classes. A pull request carries a risk class; one labelled `risk:high` is
+classes; and the management documents: the information security policy,
+the risk register, the regulatory applicability register, the AI Act
+record, the team's AI literacy training, the security and certification
+roadmap (envelope encryption with a managed key, separate origins, an
+admin origin, independent review) and the prepared security
+questionnaire. A pull request carries a risk class; one labelled `risk:high` is
 HIGH and needs the differential review of
 [docs/security/change-risk.md](docs/security/change-risk.md).
 

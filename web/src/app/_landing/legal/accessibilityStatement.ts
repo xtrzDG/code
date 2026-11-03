@@ -6,7 +6,7 @@
  */
 
 /** The day the statement was prepared or last reviewed (YYYY-MM-DD, UTC). */
-export const ACCESSIBILITY_STATEMENT_DATE = "2026-11-02";
+export const ACCESSIBILITY_STATEMENT_DATE = "2026-11-03";
 
 /** AgID's online form for reports on accessibility (the enforcement procedure). */
 export const AGID_REPORT_URL = "https://form.agid.gov.it/";

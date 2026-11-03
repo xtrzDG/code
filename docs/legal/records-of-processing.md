@@ -8,11 +8,22 @@ like the other legal texts (`docs/legal/README.md`). The risks and
 measures are assessed in `docs/security/dpia.md`; classes and transfers
 are in `docs/security/data-classification.md`.
 
+Reviewed: 2026-11-03. Review with every release that adds a personal-data
+field, a purpose or a vendor (the pull request template's "Records of
+processing" item) and at least every six months;
+`tests/legal/test_records_of_processing.py` fails when the review is older
+than that or a sub-processor of the DPA's list is missing below.
+
 **Controller / processor:** [operator name, address, VAT number].
 **Contact for data protection:** [privacy contact e-mail]; the privacy
 lead (the founder unless `docs/operations/contacts.md` names another
-person). **Representative in the EU:** not
-needed (established in the EU) [or name].
+person). **Data protection officer (article 37):** not designated; the
+assessment and the threshold at which one is appointed are in
+`docs/security/regulatory-register.md` (for the lawyer's confirmation).
+**Representative in the EU:** not needed (established in the EU) [or
+name]. **Hosting of everything below:** Render (Frankfurt; Render
+Services, US, under SCCs for support access); backups encrypted at
+another EU provider.
 
 ## A. The platform as controller
 
@@ -34,11 +45,11 @@ Data protection). **Sub-processors:** DPA section 8 and
 
 | Processing on the business's behalf | People | Data | Sub-processors (location, safeguard) |
 | --- | --- | --- | --- |
-| The assistant in chats, messengers and the hosted chat page | the business's customers and visitors | messages, voice notes, photos, names, phones, messenger ids, language | OpenAI (EU residency); Meta (Ireland, onward DPF and SCCs); Telegram (no SCCs, only when turned on); Langfuse (EU, traces 30 days) |
+| The assistant in chats, messengers and the hosted chat page | the business's customers and visitors | messages, voice notes, photos, names, phones, messenger ids, language | OpenAI (EU residency; also the knowledge search's embeddings); Meta (Ireland, onward DPF and SCCs); Telegram (no SCCs, only when turned on); Langfuse (EU, traces 30 days) |
 | Calls, transcripts and recordings | callers | call audio, transcripts, caller number, recordings (only when the owner turns them on) | ElevenLabs (EU residency); Zadarma or the business's telephony (in transit); EU object storage |
 | Contacts and the team's card | customers | name, phones, channel ids, tags, VIP, block, marketing consent (when, where, by whom, wording version) | none beyond storage |
 | Bookings, requests, handoffs, waitlist | customers | dates, party, services, notes (allergies possible) | Google Calendar, Cal.com (when connected; Google: DPF and SCCs) |
-| Notifications to the team | staff | the booking or request they are told about | the e-mail provider, Twilio, Telegram (staff chats the business chose) |
+| Notifications to the team | staff | the booking or request they are told about | the e-mail provider, Twilio, Telegram (staff chats the business chose), web push services (browser notifications, end-to-end encrypted; outside the EEA under each browser vendor's terms) |
 | Campaigns (marketing, with consent only) | customers who agreed | contact, language, past visit | the channel the customer booked in |
 | Quality sampling (the business may turn it off) | customers | sampled conversations, phones and e-mails blanked | Anthropic (US, SCCs) |
 | Exports and erasures on request | customers | everything of one customer | none |

@@ -15,13 +15,13 @@ export const accessibilityEn = {
   limitationsTitle: "Content that is not yet accessible",
   limitations: {
     legalLanguage:
-      "The legal texts (terms of service, privacy policy, cookie statement and data processing agreement) are published in English only; the Italian versions are being prepared.",
+      "The legal texts (terms of service, privacy policy, cookie statement and data processing agreement) are published in English only; the Italian versions are being prepared. Until then, ask us through the contacts below and we explain any clause in Italian, in writing or by phone.",
     userContent:
-      "Photos and files that businesses or their customers send in a conversation, and the texts businesses write themselves, may lack a text description or a clear structure: we cannot check everything they publish.",
+      "Photos and files that businesses or their customers send in a conversation, and the texts businesses write themselves, may lack a text description or a clear structure: we cannot check everything they publish. Ask the business for the same information by phone or in a message, or ask us to pass on your request.",
     thirdParty:
-      "Pages of other services the platform leads to are not covered by this statement: the bot check at sign-in (Cloudflare Turnstile), the payment pages (Flitt, Stripe) and the businesses' own websites.",
+      "Pages of other services the platform leads to are not covered by this statement: the bot check at sign-in (Cloudflare Turnstile), the payment pages (Flitt, Stripe) and the businesses' own websites. If the bot check stops you, write to us and we help you sign in; instead of an online payment you can ask the business for another way to pay.",
     audit:
-      "No full manual audit with assistive technologies (such as screen readers) has been carried out yet, so barriers that automated checks cannot find may remain.",
+      "No full manual audit with assistive technologies (such as screen readers) has been carried out yet, so barriers that automated checks cannot find may remain. Report any barrier you meet: we answer within 30 days and tell you how to get what you needed meanwhile.",
   },
   methodTitle: "How this statement was prepared",
   methodText:

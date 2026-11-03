@@ -45,7 +45,7 @@ describe("the accessibility statement", () => {
     expect(screen.getByText(/WCAG\) 2\.2 al livello AA/)).toBeTruthy();
     expect(screen.getByText(/parzialmente conforme/i)).toBeTruthy();
     expect(screen.getAllByRole("listitem").filter((item) => item.closest("[data-testid='accessibility-statement']"))).toHaveLength(4);
-    expect(screen.getByText(/redatta il 2 novembre 2026/)).toBeTruthy();
+    expect(screen.getByText(/redatta il 3 novembre 2026/)).toBeTruthy();
     expect(screen.getByRole("link", { name: t("accessibility.enforcementLink") }).getAttribute("href")).toBe("https://form.agid.gov.it/");
   });
 

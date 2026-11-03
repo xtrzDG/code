@@ -43,6 +43,8 @@ DOCUMENTS: tuple[str, ...] = (
     "docs/operations/runbooks/data-breach.md",
     "docs/operations/runbooks/secret-rotation.md",
     "docs/operations/runbooks/sms-pumping.md",
+    "docs/operations/runbooks/irsf-toll-fraud.md",
+    "docs/operations/restore-test-report.md",
     "docs/security/README.md",
     "docs/security/change-risk.md",
     "docs/security/runtime-protections.md",

@@ -255,6 +255,44 @@ moves.
   (`app/use_cases/billing/payment_state_events.py`;
   `tests/payments/test_payment_state_events.py`).
 
+## Added in the readiness round of 2026-11-03
+
+- **Admins hold a passkey.** With `ADMIN_PASSKEY_REQUIRED` (on in
+  production, refused off there) admin endpoints and a look into a
+  client's cabinet answer 403 `passkey_required` (404 for the cabinet)
+  until the admin has a passkey, and an app code from an admin who has one
+  is refused; admin sessions end after 15 idle minutes
+  (`ADMIN_SESSION_IDLE_TIMEOUT_SECONDS`, 900)
+  (`app/use_cases/authorize_support_access_use_case.py`;
+  `tests/users/passkeys/test_admin_passkey_rule.py`). Sign-in code alerts
+  reach the admins once per key an hour in each process
+  (`app/facilitators/users/hourly_admin_alerts.py`).
+- **Team access ends with the person.** Invitations to accounts that
+  never signed in lapse after 7 days (`app/use_cases/shared/lapsed_invitations.py`;
+  `tests/businesses/test_invitation_expiry.py`); a member removed, or
+  deleting the account, revokes the API keys they made and the webhooks
+  those keys subscribed (`tests/integrations/test_removed_member_keys.py`).
+- **The database connection uses TLS** whenever its address is external
+  (`app/utilities/config_helpers/production/database_tls_requirements.py`;
+  `tests/platform/test_database_tls_requirement.py`): a dotted or IP host
+  must require it, a single-label private-network host (Render's internal
+  `dpg-…-a`) is exempt unless its query names another server, and the
+  Blueprints set no `PGSSLMODE`.
+- **Outbound calls to providers** come from one client factory with TLS
+  verification, timeouts, no redirects and a cap on the unpacked answer
+  (`app/clients/http/provider_http_client.py`;
+  `tests/resilience/test_provider_http_clients.py`); tenant URLs are
+  fetched over https only and a refusal is the security event
+  `outbound_fetch_refused` (`tests/web_fetching/test_https_only_and_refusal_log.py`).
+- **Log lines** lose credentials (Bearer and Basic, Stripe and webhook
+  secrets, bot tokens, token query values), card numbers, security codes,
+  IBANs, ID numbers, e-mails and phones in their message, traceback and
+  text fields (`app/utilities/observability/log_formatting.py`;
+  `tests/platform/test_log_secret_redaction.py`).
+- **The widget loader** is an immutable, versioned script the snippet
+  loads with Subresource Integrity (`loader_integrity`;
+  `tests/channels/test_widget_script.py`).
+
 ## The assistant, calls, bookings and money
 
 What the AI agent, the phone line, bookings, payments and customers' data

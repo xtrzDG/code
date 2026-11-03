@@ -8,6 +8,11 @@ in the last 15-30 minutes, or no finished-call report arrived in the last
 ElevenLabs client or the voice webhooks; no `process_post_call` jobs;
 missed-call text-backs (`send_text_back`) suddenly frequent.
 
+**Target:** callers reach a person within **15 minutes** of detection:
+the fallback to the businesses' forwarding phones is on and the status
+page says so (the SLA draft, `docs/legal/drafts/sla.md`, section 3). Do
+that before looking for the cause.
+
 ## Which half fired
 
 The alert's detail line names both figures:

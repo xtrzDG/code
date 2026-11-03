@@ -180,3 +180,48 @@ a path here moves.
   `tests/campaigns/test_campaign_consent.py`,
   `tests/customers/test_marketing_consent_stop.py`,
   `tests/bookings/test_booking_page_consent.py`).
+
+## Added in the readiness round of 2026-11-03
+
+- **Card data.** The assistant never asks for card numbers, security
+  codes or banking passwords and points to the payment link; card numbers
+  (Luhn-checked, digit groups split by spaces, tabs, line breaks or
+  hyphens), security codes, IBANs and ID numbers are masked at every
+  intake, before the model, in transcripts, summaries, traces, logs and
+  Sentry (`app/utilities/privacy/sensitive_numbers.py`;
+  `tests/privacy/test_sensitive_numbers.py`), across a call's turns as
+  well, and such a call keeps no audio
+  (`app/utilities/privacy/split_card_numbers.py`;
+  `tests/calls/test_declined_recordings.py`). An owner checks a dump and
+  the logs with `scripts/card_number_scan.py`
+  (`tests/privacy/test_card_number_scan.py`).
+- **Payments.** Flitt's approved and reversed callbacks count only once
+  its status API confirms them (`tests/billing/test_flitt_status_confirmation.py`);
+  every deposit line and reminder states the refund terms
+  (`tests/deposits/test_deposit_refund_terms.py`).
+- **The assistant's limits.** A reply claiming a booking no tool made is
+  rewritten once, then handed off (`app/utilities/reply_guard/booking_claims.py`;
+  `tests/brain/test_booking_claim_guard.py`); per conversation, a token
+  and time cap and a refused repeated tool call end the turn
+  (`tests/brain/test_turn_budget.py`); a business stops at ten times its
+  daily spend limit in a month (`tests/spend_guard/test_monthly_spend_limit.py`);
+  owners switch single actions off or pass every customer to the team, and
+  a SUPER admin switches actions off for all (`tests/spend_guard/test_assistant_switches.py`);
+  at most 20 new website conversations an hour per client network and
+  business (`tests/brain/test_network_conversation_cap.py`); memory keeps
+  facts, not instructions (`tests/brain/test_memory_keeps_facts_only.py`).
+- **Calls and text-backs.** Text-backs go only to mobiles of the
+  business's country or the EU (`tests/calls/test_text_back_sms_destinations.py`);
+  trials without a card send at most 20 a day, take 60 call minutes a day
+  and rent no number (`tests/calls/test_trial_text_back_cap.py`,
+  `tests/channels/test_trial_call_minutes.py`); fallback dials show the
+  rented line (`tests/calls/test_call_fallback_caller_id.py`); staff play
+  recordings only when the owner allows it
+  (`tests/brain/test_call_recording_permission.py`).
+- **Customers' data.** Guests' booking links can be revoked
+  (`tests/bookings/test_booking_link_revocation.py`); the consent ledger is
+  append-only in the database (`tests/storage/test_consent_ledger_on_postgres.py`);
+  an erasure leaves salted digests that keep the customer out of campaigns
+  (`tests/privacy/test_erasure_suppression.py`); campaigns send only from
+  09:00 to 21:00 in the business's time zone.
+
