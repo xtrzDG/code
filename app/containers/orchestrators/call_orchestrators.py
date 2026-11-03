@@ -5,7 +5,11 @@ from app.containers.phone_numbers.phone_number_root import PhoneNumberRoot
 from app.containers.phone_numbers.phone_number_use_case_factories import (
     PhoneNumberUseCaseFactories as PhoneNumbers,
 )
-from app.containers.provider_chains import use_case_orchestrator
+from app.containers.provider_chains import (
+    platform_details_edge,
+    team_view_orchestrator,
+    use_case_orchestrator,
+)
 from app.containers.use_cases.call_use_cases import CallUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.voice.call_fallback_orchestrator import (
@@ -28,6 +32,7 @@ from app.schemas.dto.calls.missed_calls import (
     PbxCallWebhookRequest,
     RegisteredMissedCall,
 )
+from app.utilities.deliveries.provider_error_details import team_text_backs
 
 
 class CallOrchestratorsContainer(containers.DeclarativeContainer):
@@ -84,8 +89,13 @@ class CallOrchestratorsContainer(containers.DeclarativeContainer):
     update_call_settings_orchestrator = use_case_orchestrator(
         call_use_cases.update_call_settings_use_case
     )
-    list_text_backs_orchestrator = use_case_orchestrator(
-        call_use_cases.list_text_backs_use_case
+    # A text-back's last_error (the provider's own words) only for platform
+    # admins (API-05).
+    see_platform_details = platform_details_edge()
+    list_text_backs_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(call_use_cases.list_text_backs_use_case),
+        see_platform_details,
+        team_text_backs,
     )
 
     # --- The phone line's rented number (1213).

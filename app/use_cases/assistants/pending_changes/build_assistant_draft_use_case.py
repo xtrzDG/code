@@ -59,7 +59,8 @@ class BuildAssistantDraftUseCase(
     brand's location also the facts its brand shares and it does not
     replace), resources and upcoming special days; tools follow the niche (booking
     tools only for a business with booking rules and an active resource,
-    send_link only with links) and voice follows the plan.
+    send_link always: the privacy notice can always be sent) and voice
+    follows the plan.
 
     Assembling a version stores this draft; the changes not live yet are
     this draft compared with the live version.
@@ -168,7 +169,10 @@ class BuildAssistantDraftUseCase(
         )
         tools: list[AssistantToolName] = select_assistant_tools(
             takes_bookings=can_take_bookings(profile, resources),
-            has_links=bool(profile.links),
+            # Every business has a link to send: its privacy notice, its
+            # own or else the platform's hosted one, which a call's
+            # greeting offers to every caller (VOICE-05).
+            has_links=True,
         )
         instruction_source = AssistantInstructionSource(
             business=business,

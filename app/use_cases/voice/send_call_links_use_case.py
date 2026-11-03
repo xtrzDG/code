@@ -17,13 +17,14 @@ from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.channels.booleans import IsCallLinkMessageSent
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.use_cases.voice.call_message_outbox import CallMessageOutbox
 from app.utilities.channels.call_links import (
     CALL_LINKS_TEXT,
     build_call_links_text,
     find_promised_link_kinds,
 )
-from app.utilities.knowledge.profile_links import find_profile_link
+from app.utilities.knowledge.profile_links import find_sendable_link
 
 
 class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent]):
@@ -33,11 +34,12 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
 
     The promised links are the send_link results of the call that said
     `texted_after_call`; their addresses come from the business profile as
-    it is now. One message in the call's language goes into the outbox for
-    the first connected messenger that can reach the caller now
-    (`CallMessageOutbox`), once per call, and the worker sends it with
-    retries. A repeated webhook sends nothing again; True when it was
-    queued.
+    it is now (the privacy notice, without one of the business's own, from
+    the platform's hosted notice, as send_link gave it). One message in the
+    call's language goes into the outbox for the first connected messenger
+    that can reach the caller now (`CallMessageOutbox`), once per call, and
+    the worker sends it with retries. A repeated webhook sends nothing
+    again; True when it was queued.
     """
 
     def __init__(
@@ -48,6 +50,7 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
         message_repo: MessageRepoContract,
         call_messages: CallMessageOutbox,
         text_resolver: LocalizedTextResolverContract,
+        cabinet_base_url: CabinetBaseUrl | None,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -55,6 +58,7 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
         self._message_repo: MessageRepoContract = message_repo
         self._call_messages: CallMessageOutbox = call_messages
         self._text_resolver: LocalizedTextResolverContract = text_resolver
+        self._cabinet_base_url: CabinetBaseUrl | None = cabinet_base_url
 
     def run(self, input_data: RecordedCall) -> IsCallLinkMessageSent:
         if (
@@ -75,7 +79,7 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
         profile: BusinessProfileDocument | None = (
             self._business_profile_repo.get_by_business(input_data.business_id)
         )
-        if business is None or contact is None or profile is None:
+        if business is None or contact is None:
             return False
 
         kinds: list[BusinessLinkKind] = find_promised_link_kinds(
@@ -85,7 +89,7 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
         )
         urls: list[str] = []
         for kind in kinds:
-            url = find_profile_link(profile, kind)
+            url = find_sendable_link(business, profile, kind, self._cabinet_base_url)
             if url is not None and str(url) not in urls:
                 urls.append(str(url))
 

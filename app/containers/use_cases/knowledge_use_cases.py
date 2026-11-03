@@ -15,8 +15,6 @@ from app.schemas.dto.knowledge import (
     KnowledgeSearchResult,
     PriceLookupQuery,
     PriceLookupResult,
-    SendLinkQuery,
-    SendLinkResult,
 )
 from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
@@ -62,7 +60,6 @@ from app.use_cases.knowledge.get_price_use_case import GetPriceUseCase
 from app.use_cases.knowledge.list_knowledge_items_use_case import (
     ListKnowledgeItemsUseCase,
 )
-from app.use_cases.knowledge.send_link_use_case import SendLinkUseCase
 from app.use_cases.knowledge.update_knowledge_item_use_case import (
     UpdateKnowledgeItemUseCase,
 )
@@ -94,8 +91,10 @@ type KnowledgeIndexing = UseCaseContract[QueuedJobInput, JobReport]
 class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
     """
     What the assistant knows: niche templates, the profile wizard and the
-    knowledge base (search_knowledge, get_price and send_link are also tools of
-    the conversation engine).
+    knowledge base (search_knowledge and get_price are also tools of the
+    conversation engine; send_link, which needs the cabinet's address for
+    the hosted privacy notice, is built with them in
+    ConversationUseCasesContainer).
     """
 
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -261,10 +260,4 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
-    )
-    send_link_use_case: Factory[UseCaseContract[SendLinkQuery, SendLinkResult]] = (
-        Factory(
-            SendLinkUseCase,
-            business_profile_repo=repositories.business_profile_repo,
-        )
     )

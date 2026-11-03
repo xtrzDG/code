@@ -63,6 +63,7 @@ def delivery_of_state(state: StaffDeliveryStateDocument) -> StaffDeliveryView:
     return StaffDeliveryView(
         status=state.status,
         last_error=state.last_error,
+        is_last_delivery_failed=state.last_error is not None,
         attempted_at=state.attempted_at,
         delivered_at=state.delivered_at,
     )
@@ -94,6 +95,7 @@ def device_view(subscription: PushSubscriptionDocument) -> PushDeviceView:
         created_at=subscription.created_at,
         delivered_at=subscription.delivered_at,
         last_error=subscription.last_error,
+        is_last_delivery_failed=subscription.last_error is not None,
     )
 
 

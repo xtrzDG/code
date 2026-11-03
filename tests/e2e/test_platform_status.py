@@ -50,12 +50,15 @@ def test_anyone_reads_the_status_of_a_quiet_platform(workshop: Workshop) -> None
     assert response.headers["cache-control"] == "public, max-age=30"
     view: JsonObject = response.json()
     assert view["level"] == "operational"
+    # Payments is shown from this release (REL-06); its day records and
+    # announcements wait for the `status_payments` release gate.
     assert [item["component"] for item in view["components"]] == [
         "chat",
         "meta",
         "telegram",
         "voice",
         "cabinet",
+        "payments",
     ]
     assert len(view["components"][0]["history"]) == 90
     assert view["announcements"] == [] and view["past_announcements"] == []

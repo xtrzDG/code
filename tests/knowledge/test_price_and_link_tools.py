@@ -14,7 +14,7 @@ from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.knowledge.harness import KnowledgeHarness
+from tests.knowledge.harness import CABINET_BASE_URL, KnowledgeHarness
 from tests.knowledge.knowledge_base_helpers import add_item, price_titles, save_step
 
 
@@ -116,3 +116,27 @@ def test_send_link_returns_only_links_from_the_profile() -> None:
     assert map_link.url == "https://maps.example.com/kutaisi"
     assert payment.kind is BusinessLinkKind.PAYMENT
     assert payment.url is None
+
+
+def test_the_privacy_link_falls_back_to_the_hosted_notice() -> None:
+    harness = KnowledgeHarness()
+    business = harness.add_business()
+    query = SendLinkQuery(business_id=business.id, kind=BusinessLinkKind.PRIVACY)
+    menu = BusinessLink(
+        kind=BusinessLinkKind.MENU, url=WebLink("https://venue.example/menu.pdf")
+    )
+    privacy = BusinessLink(
+        kind=BusinessLinkKind.PRIVACY, url=WebLink("https://venue.example/privacy")
+    )
+
+    save_step(harness, business, ChannelsStepInput(links=[menu]))
+    hosted = harness.send_link.run(query)
+    save_step(harness, business, ChannelsStepInput(links=[menu, privacy]))
+    own = harness.send_link.run(query)
+
+    # Without a notice of its own, the platform's notice of its chat page,
+    # so the link a call's greeting offers can always be sent (VOICE-05).
+    assert hosted.url == (
+        f"{CABINET_BASE_URL}/c/{business.public_slug or business.id}/privacy"
+    )
+    assert own.url == "https://venue.example/privacy"

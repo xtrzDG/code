@@ -119,10 +119,14 @@ def test_recorded_callbacks_verify_and_are_read(
 
 
 def world_callback(world: RouteWorld, fixture: str) -> dict[str, Any]:
-    """The fixture as Flitt would send it for the world's payment order."""
+    """
+    The fixture as Flitt would send it for the world's payment order. Flitt's
+    own record of the order (what its status API answers) says the same, as
+    it does for a genuine callback.
+    """
 
     order = world.checkout()
-    return signed(
+    callback: dict[str, Any] = signed(
         {
             **load_json_fixture("flitt", fixture),
             "order_id": str(order.id),
@@ -132,6 +136,8 @@ def world_callback(world: RouteWorld, fixture: str) -> dict[str, Any]:
             "currency": str(order.currency_code),
         }
     )
+    world.testbed.flitt.know_callback(callback)
+    return callback
 
 
 def post_json(world: RouteWorld, body: dict[str, Any]) -> Any:
@@ -161,6 +167,8 @@ def test_approved_callback_pays_the_invoices_in_every_encoding(encoding: str) ->
 
     assert response.status_code == 200, response.text
     assert response.json()["outcome"] == "applied"
+    # The approval took effect only after Flitt's status API confirmed it.
+    assert world.testbed.flitt.status_queries == [callback["order_id"]]
     page = world.client.get(world.billing_path(), headers=bearer(world.owner))
     assert {invoice["status"] for invoice in page.json()["invoices"]} == {"paid"}
 

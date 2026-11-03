@@ -127,10 +127,19 @@ def test_the_parser_offers_every_catalog_collection_but_the_append_only() -> Non
         [f"--collection={definition.name!s}" for definition in rewritable]
     )
 
+    append_only: set[str] = {
+        str(definition.name)
+        for definition in DOCUMENT_COLLECTIONS
+        if definition.is_append_only
+    }
+
     assert len(parsed.collection) == len(rewritable)
-    assert len(rewritable) == len(DOCUMENT_COLLECTIONS) - 1
-    with pytest.raises(SystemExit):
-        build_argument_parser().parse_args(["--collection=audit_log_entries"])
+    # The audit log and the consent ledger are never rewritten.
+    assert append_only == {"audit_log_entries", "consent_records"}
+    assert len(rewritable) == len(DOCUMENT_COLLECTIONS) - len(append_only)
+    for name in sorted(append_only):
+        with pytest.raises(SystemExit):
+            build_argument_parser().parse_args([f"--collection={name}"])
     assert batch_size("10000") == 10_000
 
 

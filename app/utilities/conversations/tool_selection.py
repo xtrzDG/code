@@ -48,8 +48,8 @@ def select_available_tools(
     channel: ChannelKind = ChannelKind.PHONE,
 ) -> list[AssistantToolName]:
     """
-    The version's tools in its order (with list_my_bookings and
-    join_waitlist for a version assembled before they existed), then, in a
+    The version's tools in its order (with list_my_bookings, join_waitlist
+    and send_link for a version assembled before it had them), then, in a
     chat channel, offer_choices (every version gets it, so options to tap
     need no new version) and send_payment_link for a version that books or
     takes requests (a deposit's link is written, never spoken), and on a
@@ -57,8 +57,8 @@ def select_available_tools(
     LEADS_ONLY_TOOLS remain.
     """
 
-    tools: list[AssistantToolName] = with_join_waitlist(
-        with_list_my_bookings(list(version.tools))
+    tools: list[AssistantToolName] = with_send_link(
+        with_join_waitlist(with_list_my_bookings(list(version.tools)))
     )
     if channel in RECORDED_CHANNELS:
         tools = with_decline_recording(tools)
@@ -84,7 +84,8 @@ def select_voice_agent_tools(
 ) -> list[AssistantToolName]:
     """
     The tools the business's voice agent is built with: the version's, with
-    join_waitlist for a version assembled before it and decline_recording,
+    join_waitlist and send_link for a version assembled before it had them
+    and decline_recording,
     but none of CALLER_ID_BOUND_TOOLS (list_my_bookings, cancel_booking,
     reschedule_booking): a caller id proves nobody's identity, so the agent
     is not even given them (the tool webhook still refuses them). The
@@ -94,7 +95,9 @@ def select_voice_agent_tools(
 
     return [
         tool
-        for tool in with_decline_recording(with_join_waitlist(list(version.tools)))
+        for tool in with_decline_recording(
+            with_send_link(with_join_waitlist(list(version.tools)))
+        )
         if tool not in CALLER_ID_BOUND_TOOLS
     ]
 
@@ -154,3 +157,24 @@ def with_join_waitlist(tools: list[AssistantToolName]) -> list[AssistantToolName
         tools.index(tool) for tool in tools if tool in BOOKING_TOOL_ORDER
     )
     return [*tools[:position], AssistantToolName.JOIN_WAITLIST, *tools[position:]]
+
+
+def with_send_link(tools: list[AssistantToolName]) -> list[AssistantToolName]:
+    """
+    Every version can send a link: every business has its privacy notice,
+    its own or else the platform's hosted one, whose link a call's greeting
+    offers to every caller (VOICE-05). One assembled without links gets
+    send_link where a new version has it, without the owner publishing
+    again.
+    """
+
+    if AssistantToolName.SEND_LINK in tools:
+        return tools
+
+    order: list[AssistantToolName] = list(AssistantToolName)
+    position: int = sum(
+        1
+        for tool in tools
+        if order.index(tool) < order.index(AssistantToolName.SEND_LINK)
+    )
+    return [*tools[:position], AssistantToolName.SEND_LINK, *tools[position:]]

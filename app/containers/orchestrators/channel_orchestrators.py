@@ -3,7 +3,11 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
-from app.containers.provider_chains import use_case_orchestrator
+from app.containers.provider_chains import (
+    platform_details_edge,
+    team_view_orchestrator,
+    use_case_orchestrator,
+)
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
 from app.containers.use_cases.conversation_use_cases import (
@@ -37,6 +41,7 @@ from app.schemas.dto.channels.widget import WidgetMessagesQuery, WidgetMessagesV
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.media_requests import InboundMediaRequest
+from app.utilities.deliveries.provider_error_details import team_channel, team_channels
 
 
 class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
@@ -101,20 +106,33 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
         get_widget_messages=channel_use_cases.get_widget_messages_use_case,
         issue_stream_ticket=channel_use_cases.issue_widget_stream_ticket_use_case,
     )
-    list_channels_orchestrator = use_case_orchestrator(
-        channel_use_cases.list_channels_use_case
+    # Cabinet channel settings: a channel's last_error (the provider's own
+    # words) only for platform admins (API-05).
+    see_platform_details = platform_details_edge()
+    list_channels_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(channel_use_cases.list_channels_use_case),
+        see_platform_details,
+        team_channels,
     )
-    connect_channel_orchestrator = use_case_orchestrator(
-        channel_use_cases.connect_channel_use_case
+    connect_channel_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(channel_use_cases.connect_channel_use_case),
+        see_platform_details,
+        team_channel,
     )
-    disable_channel_orchestrator = use_case_orchestrator(
-        channel_use_cases.disable_channel_use_case
+    disable_channel_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(channel_use_cases.disable_channel_use_case),
+        see_platform_details,
+        team_channel,
     )
-    set_whatsapp_staff_template_orchestrator = use_case_orchestrator(
-        channel_use_cases.set_whatsapp_staff_template_use_case
+    set_whatsapp_staff_template_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(channel_use_cases.set_whatsapp_staff_template_use_case),
+        see_platform_details,
+        team_channel,
     )
-    set_whatsapp_staff_templates_orchestrator = use_case_orchestrator(
-        channel_use_cases.set_whatsapp_staff_templates_use_case
+    set_whatsapp_staff_templates_orchestrator = team_view_orchestrator(
+        use_case_orchestrator(channel_use_cases.set_whatsapp_staff_templates_use_case),
+        see_platform_details,
+        team_channel,
     )
     validate_telegram_token_orchestrator = use_case_orchestrator(
         channel_use_cases.validate_telegram_token_use_case

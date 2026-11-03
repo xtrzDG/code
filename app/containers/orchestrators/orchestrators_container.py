@@ -113,6 +113,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         CallOrchestratorsContainer,
         call_use_cases=CoreOrchestratorsContainer.use_cases.calls,
         phone_number_root=CoreOrchestratorsContainer.use_cases.phone_number_root,
+        see_platform_details=see_platform_details,
     )
     conversations: ConversationOrchestratorsContainer = Container(  # type: ignore[assignment]
         ConversationOrchestratorsContainer,
@@ -157,6 +158,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         facilitators=CoreOrchestratorsContainer.facilitators,
         time_provider=CoreOrchestratorsContainer.time_provider,
         utilities=CoreOrchestratorsContainer.utilities,
+        see_platform_details=see_platform_details,
     )
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,
@@ -168,6 +170,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         NotificationOrchestratorsContainer,
         notification_use_cases=CoreOrchestratorsContainer.use_cases.notifications,
         delivery_use_cases=CoreOrchestratorsContainer.use_cases.deliveries,
+        see_platform_details=see_platform_details,
     )
     sharing: SharingOrchestratorsContainer = Container(  # type: ignore[assignment]
         SharingOrchestratorsContainer,

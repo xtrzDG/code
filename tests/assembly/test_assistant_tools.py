@@ -28,13 +28,15 @@ def test_restaurant_with_tables_rules_and_links_gets_every_tool() -> None:
     assert len(version.tools) == 12
 
 
-def test_clinic_books_doctors_but_has_no_links() -> None:
+def test_clinic_books_doctors_and_sends_links_without_any_stored() -> None:
     testbed = AssemblyTestbed()
     version = testbed.assemble(seed_israeli_clinic(testbed).id)
 
     assert AssistantToolName.CREATE_BOOKING in version.tools
-    assert AssistantToolName.SEND_LINK not in version.tools
-    assert len(version.tools) == 11
+    # Its privacy notice is always there to send: the platform's hosted
+    # notice when it stored none (VOICE-05).
+    assert AssistantToolName.SEND_LINK in version.tools
+    assert len(version.tools) == 12
 
 
 def test_online_shop_takes_orders_as_leads() -> None:
@@ -46,6 +48,7 @@ def test_online_shop_takes_orders_as_leads() -> None:
         AssistantToolName.GET_PRICE,
         AssistantToolName.CREATE_LEAD,
         AssistantToolName.HANDOFF_TO_HUMAN,
+        AssistantToolName.SEND_LINK,
         AssistantToolName.RECORD_UNANSWERED_QUESTION,
     ]
 

@@ -36,13 +36,15 @@ def test_an_old_agent_gets_the_new_tools_without_a_new_publish() -> None:
     [spec] = testbed.voice_provisioner.specs
     assert spec.existing_agent_id == old.voice_agent_id
     assert spec.prompt_text == old.phone_prompt_text
-    # No tool bound to the caller id (list_my_bookings, cancel_booking).
+    # No tool bound to the caller id (list_my_bookings, cancel_booking), and
+    # send_link for the privacy notice the greeting offers (revision 5).
     assert [tool.name for tool in spec.tools] == [
         AssistantToolName.SEARCH_KNOWLEDGE,
         AssistantToolName.CHECK_AVAILABILITY,
         AssistantToolName.CREATE_BOOKING,
         AssistantToolName.JOIN_WAITLIST,
         AssistantToolName.HANDOFF_TO_HUMAN,
+        AssistantToolName.SEND_LINK,
         AssistantToolName.DECLINE_RECORDING,
     ]
     synced = testbed.version_repo.get(business_id, old.id)
@@ -69,7 +71,7 @@ def test_an_agent_of_the_previous_revision_is_set_up_again() -> None:
 
     report: JobReport = resync_use_case(testbed, lines).run(TICK)
 
-    assert VoiceAgentRevision(4) == VOICE_AGENT_REVISION
+    assert VoiceAgentRevision(5) == VOICE_AGENT_REVISION
     assert int(report.processed_count) == 1
     [spec] = testbed.voice_provisioner.specs
     assert spec.existing_agent_id == old.voice_agent_id

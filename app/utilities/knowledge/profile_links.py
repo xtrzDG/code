@@ -3,8 +3,11 @@
 from collections.abc import Sequence
 
 from app.schemas.constants.businesses import BusinessLinkKind
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessLink, BusinessProfileDocument
 from app.schemas.typings.businesses.constrained_strings import WebLink
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
+from app.utilities.sharing.share_links import choose_privacy_url
 
 
 def read_profile_links(profile: BusinessProfileDocument) -> list[BusinessLink]:
@@ -73,3 +76,23 @@ def find_profile_link(
         return profile.address.maps_url
 
     return None
+
+
+def find_sendable_link(
+    business: BusinessDocument,
+    profile: BusinessProfileDocument | None,
+    kind: BusinessLinkKind,
+    cabinet_base_url: CabinetBaseUrl | None,
+) -> WebLink | None:
+    """
+    The link send_link sends: the profile's link of the kind (`find_profile_link`),
+    and for the privacy notice, without one of the business's own, the
+    platform's hosted notice of its chat page (`/c/{slug}/privacy`), so the
+    link a call's greeting offers can always be sent (VOICE-05; None only
+    while CABINET_BASE_URL is not set).
+    """
+
+    if kind is BusinessLinkKind.PRIVACY:
+        return choose_privacy_url(business, profile, cabinet_base_url)
+
+    return None if profile is None else find_profile_link(profile, kind)

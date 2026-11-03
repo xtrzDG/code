@@ -161,6 +161,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.message_repo,
             self.call_messages,
             self.text_resolver,
+            self.settings.cabinet_base_url,
         )
         # The after-call check of what the assistant said; its handoffs are
         # stored by a fake that records them.

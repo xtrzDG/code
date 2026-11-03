@@ -255,7 +255,8 @@ def test_answer_format_is_for_chat_only() -> None:
     assert "Write concise plain text without markdown" in with_links
     assert "Send links only through send_link." in with_links
     assert "On the phone" not in with_links
-    assert "send_link" not in without_links
+    # A business without links can still send its privacy notice (VOICE-05).
+    assert "Send links only through send_link." in without_links
 
 
 def test_instruction_is_byte_stable_across_assemblies() -> None:

@@ -5,6 +5,8 @@ Example:
 """
 
 IsDeliverySimulated = bool
+# The latest send to a staff contact or device failed (retried or given up).
+IsLastDeliveryFailed = bool
 IsProviderReady = bool
 IsStaffLinkExpired = bool
 IsUrgentStaffAlert = bool

@@ -6,8 +6,12 @@ the operator, so a router builder given the wrong operator fails type
 checking.
 """
 
-from dependency_injector.providers import Factory, Provider
+from collections.abc import Callable
+from typing import cast
 
+from dependency_injector.providers import Dependency, Factory, Provider
+
+from app.contracts.acting_user import ActingUserInputContract
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.pipeline_contract import PipelineContract
@@ -19,8 +23,11 @@ from app.operators.business_scoped_pipeline_operator import (
 from app.operators.platform_wide_pipeline_operator import (
     PlatformWidePipelineOperator,
 )
+from app.orchestrators.team_view_orchestrator import TeamViewOrchestrator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.schemas.typings.users.booleans import IsPlatformAdmin
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 def use_case_orchestrator[InputData, OutputData](
@@ -29,6 +36,38 @@ def use_case_orchestrator[InputData, OutputData](
     """Orchestrator of an endpoint that needs exactly one use case."""
 
     return Factory(UseCaseOrchestrator[InputData, OutputData], use_case=use_case)
+
+
+# Whether a person sees platform details: a platform admin of now (API-05).
+type PlatformDetailsCheck = UseCaseContract[UserId, IsPlatformAdmin]
+
+
+def platform_details_edge() -> Dependency[PlatformDetailsCheck]:
+    """
+    A container's typed edge to the conversation feed's
+    `see_platform_details_use_case` (a use case contract is a protocol,
+    which `instance_of` cannot check at run time).
+    """
+
+    return cast(Dependency[PlatformDetailsCheck], Dependency())
+
+
+def team_view_orchestrator[InputData: ActingUserInputContract, OutputData](
+    orchestrator: Provider[OrchestratorContract[InputData, OutputData]],
+    see_platform_details: Provider[PlatformDetailsCheck],
+    for_team: Callable[[OutputData], OutputData],
+) -> Factory[OrchestratorContract[InputData, OutputData]]:
+    """
+    The orchestrator of an endpoint whose answer holds platform details:
+    platform admins get it whole, everyone else `for_team(answer)` (API-05).
+    """
+
+    return Factory(
+        TeamViewOrchestrator[InputData, OutputData],
+        orchestrator=orchestrator,
+        see_platform_details=see_platform_details,
+        for_team=for_team,
+    )
 
 
 def orchestrator_pipeline[InputData, OutputData](

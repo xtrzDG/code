@@ -50,6 +50,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.utilities.deposits.deposit_refund_texts",
     "app.use_cases.deposits.payment_page_notice_texts",
     "app.utilities.security.sign_in_notice_texts",
+    "app.utilities.security.security_change_notice_texts",
     "app.utilities.integrations.webhook_disabled_texts",
     "app.utilities.calls.voice_fallback_texts",
     "app.utilities.calendar_sync.booking_system_writes",

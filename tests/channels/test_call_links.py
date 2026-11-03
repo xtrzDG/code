@@ -23,7 +23,7 @@ from app.schemas.typings.conversations.strings import (
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.call_links import read_promised_kind
 from tests.channels.channels_payloads import telegram_ok
-from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
+from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN, build_settings
 from tests.channels.post_call_steps import (
     post_call,
     post_call_payload,
@@ -36,8 +36,14 @@ MENU_URL: str = "https://funicular.example/menu"
 MAPS_URL: str = "https://maps.example.com/funicular"
 
 
-def links_setup(*, with_telegram: bool = True) -> VoiceSetup:
-    setup = build_voice_setup()
+def links_setup(
+    *, with_telegram: bool = True, cabinet_base_url: str = ""
+) -> VoiceSetup:
+    setup = build_voice_setup(
+        settings=build_settings(CABINET_BASE_URL=cabinet_base_url)
+        if cabinet_base_url
+        else None
+    )
     setup.testbed.profile_repo.save(
         BusinessProfileDocument(
             business_id=setup.business.id,
@@ -111,6 +117,21 @@ def test_links_that_were_not_promised_or_do_not_exist_are_not_sent() -> None:
     post_call(setup, post_call_payload(tool_names=("send_link",)))
 
     assert setup.testbed.telegram_transport.requests_to("/sendMessage") == []
+
+
+def test_the_privacy_notice_offered_in_the_greeting_is_always_texted() -> None:
+    # The business stored no privacy notice of its own: the caller who asked
+    # for the link the greeting offers gets the platform's hosted notice.
+    setup = links_setup(cabinet_base_url="https://cabinet.workshop.example")
+    record_send_link(setup, "privacy")
+
+    post_call(setup, post_call_payload(tool_names=("send_link",)))
+
+    [sent] = setup.testbed.telegram_transport.requests_to("/sendMessage")
+    address = setup.business.public_slug or setup.business.id
+    assert sent.json()["text"].endswith(
+        f"\nhttps://cabinet.workshop.example/c/{address}/privacy"
+    )
 
 
 def test_no_messenger_reaches_the_caller_and_the_call_is_still_stored() -> None:

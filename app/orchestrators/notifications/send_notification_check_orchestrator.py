@@ -52,6 +52,7 @@ class SendNotificationCheckOrchestrator[CheckRequest](
             delivery=StaffDeliveryView(
                 status=message.status,
                 last_error=message.last_error,
+                is_last_delivery_failed=message.last_error is not None,
                 attempted_at=message.updated_at,
                 delivered_at=message.delivered_at,
             ),

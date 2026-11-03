@@ -10,6 +10,7 @@ from app.registries.limits.request_rate_limit_registry import RequestRateLimitRe
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.repositories.billing_repositories import UsageEventRepository
 from app.schemas.domain.billing import UsageEventDocument
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.use_cases.knowledge.aliases.suggest_knowledge_aliases_use_case import (
     SuggestKnowledgeAliasesUseCase,
 )
@@ -70,6 +71,9 @@ from tests.knowledge.cross_language.fakes import PhraseBookAliasSuggester
 from tests.knowledge.knowledge_store import KnowledgeStore
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.spend_guard.platform_brake_fakes import SetPlatformBrakes
+
+# Where the platform hosts every business's default privacy notice.
+CABINET_BASE_URL: CabinetBaseUrl = CabinetBaseUrl("https://cabinet.workshop.example")
 
 
 class KnowledgeHarness(KnowledgeStore):
@@ -209,7 +213,9 @@ class KnowledgeHarness(KnowledgeStore):
             brand_knowledge_item_repo=self.brand_knowledge_repo,
         )
         self.send_link = SendLinkUseCase(
+            business_repo=self.business_repo,
             business_profile_repo=self.business_profile_repo,
+            cabinet_base_url=CABINET_BASE_URL,
         )
         self.create_resource = CreateResourceUseCase(
             business_repo=self.business_repo,

@@ -58,7 +58,7 @@ assistant version (its instruction text and tools)
 
 The voice agent of every business is created and updated by the platform
 from code (`app/adapters/voice/elevenlabs_agent_config.py`); its build is
-versioned by `VOICE_AGENT_REVISION` (now 4,
+versioned by `VOICE_AGENT_REVISION` (now 5,
 `app/utilities/assembly/voice_agents.py`), and `resync_voice_agents` sets
 up every live agent of an older revision again.
 

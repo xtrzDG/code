@@ -28,7 +28,7 @@ from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.payments import PaymentProvider
+from app.schemas.constants.payments import PaymentProvider, PaymentStatus
 from app.schemas.constants.resilience import OutboundProvider
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
@@ -39,6 +39,7 @@ from app.schemas.dto.payment_retries import PaymentRetryRequest, PaymentRetryRes
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
     PaymentCheckoutSession,
+    PaymentNotification,
     PaymentWebhookDelivery,
     VerifiedPaymentEvent,
 )
@@ -123,6 +124,10 @@ class RecordingSenders:
         del delivery
         self.calls.append("read_notification")
         raise LookupError("not a real notification")
+
+    def confirm_notification(self, payment: PaymentNotification) -> None:
+        del payment
+        raise AssertionError("A status read-back reached the provider.")
 
     def stop_recurring(
         self, provider: PaymentProvider, provider_reference: PaymentProviderReference
@@ -245,6 +250,15 @@ def test_mail_sms_and_payments_wait_for_their_circuits() -> None:
     with pytest.raises(ProviderCircuitOpenError):
         payments.stop_recurring(
             PaymentProvider.FLITT, PaymentProviderReference("802345671")
+        )
+    # Reading a payment back from the provider's status API waits too.
+    with pytest.raises(ProviderCircuitOpenError):
+        payments.confirm_notification(
+            PaymentNotification(
+                provider=PaymentProvider.FLITT,
+                order_reference=PaymentProviderReference("payment_order_1"),
+                status=PaymentStatus.APPROVED,
+            )
         )
     # A notification is checked locally: no circuit in the way.
     with pytest.raises(LookupError):

@@ -90,15 +90,19 @@ def test_a_dead_job_pages_once_per_cooldown_and_once_resolved(
 ) -> None:
     worker = workshop.container.gateways.background_worker()
     job_id = kill_one_job(workshop, worker)
-    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
 
     tick_after(workshop, worker, TICK_MINUTES)
     first = alert_texts(workshop)
     wait(workshop, worker, 20)
     within_cooldown = alert_texts(workshop)
+    # The admin opens the system page when paged, and comes back later to
+    # discard the job: each visit signs in again, since an admin session
+    # ends after 15 idle minutes (ADMIN_SESSION_IDLE_TIMEOUT_SECONDS).
+    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
     page = workshop.client.get("/v1/admin/system", headers=bearer(admin_token))
     wait(workshop, worker, 45)
     after_cooldown = alert_texts(workshop)
+    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
     discarded = workshop.client.post(
         f"/v1/admin/jobs/{job_id}/discard", headers=bearer(admin_token)
     )

@@ -23,6 +23,7 @@ from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerN
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.booleans import (
     IsDeliverySimulated,
+    IsLastDeliveryFailed,
     IsProviderReady,
 )
 from app.schemas.typings.notifications.constrained_strings import (
@@ -38,11 +39,15 @@ class StaffDeliveryView(ImmutableDTO):
     """
     How the latest notification to a contact or device went: sending
     (`pending`, also while held for quiet hours or waiting for a retry),
-    `delivered` or `dead` with the reason, and when one last arrived.
+    `delivered` or `dead`, and when one last arrived.
+    `is_last_delivery_failed` says the latest attempt failed (retried while
+    `pending`); `last_error`, the provider's own words, goes to platform
+    admins only (None for everyone else, API-05).
     """
 
     status: OutboundMessageStatus
     last_error: DeliveryErrorText | None = None
+    is_last_delivery_failed: IsLastDeliveryFailed = False
     attempted_at: Microseconds
     delivered_at: Microseconds | None = None
 
@@ -86,13 +91,19 @@ class ContactCheckCommand(ImmutableDTO):
 
 
 class PushDeviceView(ImmutableDTO):
-    """One device of the signed-in user that shows notifications."""
+    """
+    One device of the signed-in user that shows notifications.
+    `is_last_delivery_failed`: the last notification did not arrive;
+    `last_error`, the push service's own words, goes to platform admins
+    only (None for everyone else, API-05).
+    """
 
     id: PushSubscriptionId
     language: LanguageTag
     created_at: Microseconds
     delivered_at: Microseconds | None = None
     last_error: DeliveryErrorText | None = None
+    is_last_delivery_failed: IsLastDeliveryFailed = False
 
 
 class MyNotificationSettingsView(ImmutableDTO):

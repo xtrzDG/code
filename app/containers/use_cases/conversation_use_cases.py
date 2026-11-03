@@ -76,6 +76,7 @@ from app.use_cases.conversations.transcribe_voice_note_use_case import (
 from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import (
     PrepareConversationTurnUseCase,
 )
+from app.use_cases.knowledge.send_link_use_case import SendLinkUseCase
 
 
 class ConversationUseCasesContainer(containers.DeclarativeContainer):
@@ -115,7 +116,12 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         RunAssistantToolUseCase,
         search_knowledge=knowledge_use_cases.search_knowledge_use_case,
         get_price=knowledge_use_cases.get_price_use_case,
-        send_link=knowledge_use_cases.send_link_use_case,
+        send_link=Factory(
+            SendLinkUseCase,
+            business_repo=repositories.business_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+        ),
         check_availability=customer_availability_use_case,
         create_booking=booking_use_cases.create_booking_use_case,
         cancel_booking=booking_use_cases.cancel_booking_use_case,

@@ -8,7 +8,8 @@ origin, which audit entries and security lines name (request_origin.py).
 
 import uuid
 
-from starlette.datastructures import Headers, MutableHeaders
+from starlette.datastructures import Address, Headers, MutableHeaders
+from starlette.requests import HTTPConnection
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.schemas.typings.platform.constrained_strings import RequestId
@@ -43,10 +44,8 @@ class RequestContextMiddleware:
                 MutableHeaders(scope=message)[REQUEST_ID_HEADER] = str(request_id)
             await send(message)
 
-        client: object = scope.get("client")
-        client_address: str | None = (
-            str(client[0]) if isinstance(client, tuple) and client else None
-        )
+        client: Address | None = HTTPConnection(scope).client
+        client_address: str | None = None if client is None else str(client.host)
         with (
             bound_log_context(request_id=request_id),
             bound_request_origin(

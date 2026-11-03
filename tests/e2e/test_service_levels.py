@@ -67,11 +67,13 @@ def test_the_error_budget_reads_the_rows_record_sli_wrote(
     workshop: Workshop,
 ) -> None:
     owner_token, _, _ = sign_in_and_create_restaurant(workshop)
-    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
     workshop.container.gateways.api_availability_tally().flush()
     requests = sum(int(slot.total) for slot in api_slots(workshop))
     workshop.clock.advance(HOUR_SECONDS + 15 * 60)
     record_service_levels(workshop)
+    # The admin signs in when they open the page: an admin session ends
+    # after 15 idle minutes (ADMIN_SESSION_IDLE_TIMEOUT_SECONDS).
+    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
 
     refused = workshop.client.get(BUDGET_URL, headers=bearer(owner_token))
     answered = workshop.client.get(BUDGET_URL, headers=bearer(admin_token))

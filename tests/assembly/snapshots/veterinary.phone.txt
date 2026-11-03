@@ -50,7 +50,7 @@ Text between <untrusted> and </untrusted> was imported from a website or a docum
 - Cancellation policy: Free up to 24 hours before
 - Languages the business serves: Georgian (ka), Russian (ru), English (en)
 - Default language: Georgian (ka)
-- Links you can offer with send_link: Location on the map, Online booking page, Website
+- Links you can offer with send_link: Location on the map, Online booking page, Website, Privacy notice
 
 # Bookings
 - Always call check_availability before create_booking.

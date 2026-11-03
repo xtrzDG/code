@@ -13,7 +13,9 @@ chat instruction.
 from collections.abc import Sequence
 
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.domain.assistants import BusinessFact
+from app.utilities.assembly.fact_descriptions import LINK_LABELS
 from app.utilities.assembly.instruction_sections import (
     build_booking_section,
     build_fact_section_from_rows,
@@ -72,15 +74,19 @@ def build_spoken_fact_section(
     """
     The fact table as it is said on the phone. Rows that are only a link are
     named instead, as links send_link can offer when the version can send
-    links (whether one is texted is the tool result's to say).
+    links (whether one is texted is the tool result's to say), the privacy
+    notice always: the greeting offers its link to every caller, and
+    send_link falls back to the platform's hosted notice (VOICE-05).
     """
 
     table: SpokenFactTable = speak_facts(facts)
     lines: list[str] = build_fact_section_from_rows(table.rows, tools)
-    if table.link_labels and AssistantToolName.SEND_LINK in tools:
-        lines.append(
-            "- Links you can offer with send_link: " + ", ".join(table.link_labels)
-        )
+    privacy_label: str = LINK_LABELS[BusinessLinkKind.PRIVACY]
+    link_labels: list[str] = list(table.link_labels)
+    if privacy_label not in link_labels:
+        link_labels.append(privacy_label)
+    if AssistantToolName.SEND_LINK in tools:
+        lines.append("- Links you can offer with send_link: " + ", ".join(link_labels))
 
     return lines
 

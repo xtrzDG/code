@@ -55,7 +55,13 @@ def find_existing_voice_agent_id(
 # 4: the provider's retention backstop (`privacy.retention_days`: a day, a
 #   week while the business records calls) and the filler said when an
 #   answer is late (`turn.soft_timeout_config`).
-VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(4)
+# 5: send_link on every agent (a version assembled without links gets it),
+#   so a caller who asks for the privacy notice the greeting offers gets
+#   its link, the platform's hosted notice when the business stored none.
+#   The rule for "repeat" and "speak slower" is part of the phone
+#   instruction a version stores, which an agent of an older revision keeps
+#   until the owner publishes again: no revision brings it.
+VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(5)
 
 
 def needs_voice_agent_resync(version: AssistantVersionDocument) -> bool:

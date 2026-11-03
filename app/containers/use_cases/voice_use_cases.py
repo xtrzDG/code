@@ -174,6 +174,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         message_repo=repositories.message_repo,
         call_messages=call_message_outbox,
         text_resolver=utilities.localized_text_resolver,
+        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
     )
     send_call_confirmation_use_case: Factory[UseCaseContract[RecordedCall, bool]] = (
         Factory(
