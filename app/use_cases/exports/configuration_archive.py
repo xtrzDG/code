@@ -37,13 +37,16 @@ from app.use_cases.exports.archive_pages import DocumentPages, single_page
 from app.use_cases.exports.setup_archive import SetupArchive
 from app.use_cases.shared.document_pages import pages_in_write_order
 
+# The channel fields that hold a credential: an export leaves them empty.
+CREDENTIAL_FIELDS: tuple[str, ...] = ("encrypted_secret",)
+
 
 def without_credentials(channel: ChannelDocument) -> ChannelDocument:
     """The channel as exported: its credentials and PINs left out."""
 
-    return channel.model_copy(
-        update={"encrypted_secret": None, "whatsapp_registration_pins": []}
-    )
+    cleared: dict[str, object] = {name: None for name in CREDENTIAL_FIELDS}
+    cleared["whatsapp_registration_pins"] = []
+    return channel.model_copy(update=cleared)
 
 
 @dataclass(frozen=True)
