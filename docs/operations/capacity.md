@@ -1174,6 +1174,31 @@ Blueprint and the test together:
 - Periodic jobs ask by indexed predicates or walk the businesses in keyset
   batches of 200 (`walk_businesses`); no repository reads a whole table.
 
+## Before onboarding a large business
+
+There is no automatic step for this yet (REL-08): a business much bigger
+than the load dataset's (a chain, a brand with many locations, a call
+centre's volume) is load-tested by hand before it goes live, and the
+result is kept.
+
+1. Size the dataset to the business: seed a load stack as in "Load
+   scenarios" above with its expected contacts, messages, bookings and
+   website visitors per business (`seed-load --businesses … --messages …
+   --bookings … --visitors …`), and add the businesses the platform
+   already serves.
+2. Run the three k6 scenarios with that business's peak instead of the
+   defaults: `CABINET_USERS` (its owners and staff at once),
+   `WIDGET_VISITORS` (its open website chats) and `WEBHOOK_RATE` (its
+   messenger updates a second). Every threshold of the table above must
+   hold.
+3. Run `perf.yml` by hand at the `full` scale (or the latency budgets
+   locally over the sized dataset) and compare with `perf/baseline.json`.
+4. Keep the k6 summaries and the budgets report with the onboarding
+   record, and note the business's expected model turns: the customer
+   turn slots and `LLM_MAX_CONCURRENCY` are per process, not per business,
+   so one busy business can take every slot of a process (no per-business
+   cap yet); size `WEB_CONCURRENCY` and the workers for it.
+
 ## Known limits
 
 - The admin client list reads stored standings (one keyset page, database

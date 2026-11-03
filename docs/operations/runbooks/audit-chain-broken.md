@@ -60,10 +60,13 @@ table, a restore mixed two backups, or a bug wrote outside the chain.
 
 ## Retention purge
 
-Old entries leave only through `workshop purge-audit-log
+Old entries leave through the worker's daily `purge_expired_audit_log`
+job, which removes only entries past 1,095 days (the platform role calls
+`workshop.purge_expired_audit_chain`, migration 1250, which never passes
+a newer cutoff on), or through `workshop purge-audit-log
 --older-than-days N` (at least 365), run by an operator with the
-migration role's `DATABASE_URL`, never from `preDeployCommand`. It
-removes each chain's oldest entries in batches and records the chain's
+migration role's `DATABASE_URL`, never from `preDeployCommand`. Both
+remove each chain's oldest entries in batches and records the chain's
 checkpoint (the last removed position, its hash and the cutoff), so the
 rest of the chain still verifies; each purged chain gets a
 `retention_purge` entry. The database function itself refuses a cutoff

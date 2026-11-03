@@ -418,6 +418,8 @@ tasks leave it alone (older versions upcast on read), and its four new
 lookup columns stay empty for older rows (they are in no chain). A rollback
 keeps the trigger and the privileges: nothing in the previous release
 needs more. Old entries leave only through `workshop purge-audit-log`
+and, since 1250, the daily `purge_expired_audit_log` job, which removes
+only entries past 1,095 days
 (docs/operations/runbooks/audit-chain-broken.md); the database's
 `workshop.purge_audit_chain` refuses a cutoff younger than 365 days.
 

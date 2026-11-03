@@ -46,6 +46,32 @@ it (DPA 11.3, `docs/help/en/privacy.md`).
 | Erasure | `DELETE /v1/me` after the step-up (the account goes; a sole owner closes their businesses first, which starts the 30 days and ends with a deletion certificate). Invoices and the audit log stay as the law requires; say so in the answer. |
 | Objection to product e-mails | turn them off in the account's notification settings; no marketing is sent without consent. |
 
+## When a business answers its customer
+
+The business (the controller) answers its customers from the cabinet;
+support explains these two points when an owner asks:
+
+- **Copy** (the customer's export, `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`):
+  besides the conversations, bookings and consent records it lists the
+  business's knowledge items that name the customer
+  (`records.knowledge_mentions`): by their whole name (without case,
+  accents and punctuation, also surname first) or by one of their numbers
+  in any format, also inside a list of numbers. Each comes with its title,
+  text, attribute values and aliases, so the mention itself is in the
+  copy. Those texts may name other people: the owner removes third
+  parties' data before sending the copy (art. 15(4)). Items a brand shares
+  with its locations are searched only as each location's copy; the brand
+  owner checks the brand's own items by hand.
+- **Erasure**: the owner's knowledge base is never edited by an erasure.
+  The items that named the customer are flagged "Names an erased
+  customer" in the knowledge editor; the owner removes the details and
+  saves, which clears the flag. A later sync of a brand's shared item can
+  drop the flag of its location copy, so a brand owner checks the shared
+  text too.
+
+The platform keeps no customer e-mail address, so nothing is matched by
+e-mail.
+
 ## Afterwards
 
 - Answer within the month. Only when a request is complex or one of many,

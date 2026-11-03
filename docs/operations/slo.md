@@ -101,10 +101,13 @@ ones from `/admin/system`, the product ones from
 `uv run python -m scripts.slo_report` (with `PROMETHEUS_URL`, and for
 Grafana Cloud `PROMETHEUS_USER` and `PROMETHEUS_TOKEN`; `--json`, `--out`;
 exit 1 when a budget is spent; a token goes only over https, or plain
-http to this machine, and is refused otherwise with exit 2). A product budget that is spent follows
-the error budget policy below like the three main ones: feature work
-stops in its area (voice, bookings, notifications, the inbound pipeline)
-until the next report shows it back above zero.
+http to this machine, and is refused otherwise with exit 2). A product
+budget that is spent follows the error budget policy below like the
+three main ones: feature work stops in its area (voice, bookings,
+notifications, the inbound pipeline) until the next report shows it back
+above zero. `/admin/system` and `GET /v1/admin/system/error-budget` show
+only the three main budgets; no monthly report has been written yet
+(owner step, `docs/operations/go-live.md`).
 
 ## How each SLO is read today
 

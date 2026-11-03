@@ -29,6 +29,7 @@ system dependencies and the cached packages all follow the image.
 | `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
+| `evals` | the evals replay gate ("The evals replay gate" below): when the change touches what the model sees, every recorded conversation replayed offline, without keys | — | not measured yet |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
 | `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 222 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
 | `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
@@ -163,6 +164,46 @@ weekly run's artifact `payment-page-scripts` is the same file, built from
 `main`). Promoting `main` to `release` then carries the inventory to the
 commit production runs. A difference no reviewed commit explains is an
 incident (`docs/operations/incident.md`).
+
+## The evals replay gate
+
+`evals` ("Evals replay gate (prompts, models, tools)", AI-12) is one of
+the jobs `CI passed (every gate)` and `durations` wait for, so it blocks a
+merge. Its first step, `scripts/eval_replay_scope.py` (standard library
+only, before anything installs), lists what the change touches against
+the pull request's base (a push: the commit before it; a manual run
+replays everything). When it touches what the model sees or how it is
+scored — the instruction's sections and the niche templates
+(`app/utilities/assembly/`, `app/registries/niches/`), the English owner
+texts, the prompt snapshots, the tool registries and input schemas, the
+model pins and the LLM adapters, the conversation use cases,
+`app/utilities/conversations/`, `memory/`, `knowledge/`, `reply_guard/`
+and `llm_cassettes/`, the eval harness, `evals/` and the script itself —
+the job replays every recorded cassette with the scripted model, offline
+and without provider keys, at `--min-pass-rate 1` and
+`--max-hallucination-rate 0`, and writes the summary to the run. A change
+that touches none of them passes without the replay. When git cannot list
+the changed files (a base a force-push removed, a shallow clone) it
+replays everything: the gate is never skipped, and never fails, for want
+of a diff.
+
+It replays recorded answers: a stale cassette, a broken harness or a
+dataset rule fails it, but it cannot see how a real model answers a
+changed prompt. Real models run in `evals-nightly.yml` (nightly, with
+`OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; skipped with a notice without
+both), whose floor and ceiling are its inputs `min_pass_rate` (0.85) and
+`max_hallucination_rate` (0.02); its regressions show after the merge.
+Datasets and the hallucination metric: `evals/README.md`.
+
+## Migration rehearsal
+
+The weekly `perf.yml` also runs `migrations` ("Migration rehearsal",
+REL-08): `scripts.migration_rehearsal --base-ref origin/release` applies
+on a scratch Postgres 16 the migrations `release` already has, seeds a
+production-sized synthetic dataset at the run's `scale` (`full` by
+default) and times every pending file against its budget; the table goes
+to the run summary and the JSON report is kept as an artifact
+(`docs/operations/deploys.md`, "Rehearsing the pending migrations").
 
 ## Backend tests in parts
 

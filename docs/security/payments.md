@@ -36,14 +36,39 @@ to businesses (owner step at the end).
    - the signature is checked over the raw body before parsing, in
      constant time, failing closed without a secret (Stripe: 300 s
      tolerance; Flitt: its SHA-1 signature, `app/clients/flitt/flitt_protocol.py`);
-   - a Flitt approval or refund takes effect only when Flitt's status API
-     reports the same status and amount for the order
+   - the webhook answers at once (API-03,
+     `app/use_cases/billing/payment_webhook/receive_payment_webhook_use_case.py`):
+     it finds the order (404 for an unknown one), answers `duplicate` for
+     a notification the order applied already and `ignored` for one the
+     platform does not act on, and otherwise queues the job
+     `apply_payment_notification` and answers 200 `queued`. The job is
+     stored before the answer, so it is the durable record of the
+     delivery; its payload seals the verified event with the key ring (no
+     card token in plain text), it runs in the business's storage scope
+     and one order's jobs run one at a time (`payment_order:<id>`);
+   - in the job, a Flitt approval or refund takes effect only when Flitt's
+     status API reports the same status and amount for the order
      (`app/adapters/payments/flitt_status_confirmation.py`); otherwise the
-     API answers 409 and Flitt sends it again;
-   - each order's notifications are applied under a lock across API
-     instances (`app/registries/locks/payment_notification_lock_registry.py`)
+     job fails and the queue tries it again with backoff (Flitt no longer
+     resends after the 200). After 5 attempts, about 7.5 minutes, the job
+     is dead: the `dead_jobs` alert fires and the daily reconciliation
+     reports the order (`payment_mismatch`); nothing re-queues it by
+     itself (accepted risk, `docs/security/threat-model.md`);
+   - each order's notifications are applied under a lock across processes
+     (`app/registries/locks/payment_notification_lock_registry.py`)
      against the keys the order already applied, so two copies of one
-     delivery apply once (`tests/billing/test_payment_notification_races.py`);
+     delivery apply once (`tests/billing/test_payment_notification_races.py`,
+     `tests/billing/test_queued_payment_webhooks.py`). A retried job waits
+     its backoff while a later one of the same order runs, so an approval
+     can arrive after its payment's refund or chargeback: it is recorded
+     as seen and pays nothing (`is_overtaken_approval`);
+   - every declined payment of a business (not a retry of a declined
+     automatic charge) counts against card testing (LOG-05,
+     `app/facilitators/billing/payment_decline_watch_facilitator.py`): 5
+     within the current and the previous hour raise the platform alert
+     `tenant_payment_declines`, and from 10 the business opens no new
+     checkout, subscription payment or card page (429 with Retry-After)
+     until they cool down;
    - the daily reconciliation compares every open order with the
      provider's state (`app/use_cases/billing/reconciliation/`).
 
@@ -54,7 +79,15 @@ to businesses (owner step at the end).
    placeholders the platform fills (`{amount}`, `{amount_minor}`,
    `{currency}`, `{reference}`). An address that carries a key is stored
    sealed and never shown again (`app/utilities/deposits/payment_link_addresses.py`).
-   Adding or changing a page needs a recent sign-in and is audited.
+   Adding or changing a page needs a recent sign-in and is audited
+   (`deposit_settings`). Every change (a page added or removed, the
+   default changed, a rule pointed at another page) is announced urgently
+   on the owners' devices and the staff contacts, and e-mailed to every
+   owner's account address in the account's language with a signed link
+   to Account → Security (PAY-06,
+   `app/facilitators/notifications/owner_account_email_facilitator.py`);
+   an address a staff contact already gets is not mailed twice, and
+   owners who sign in by phone have no account address.
 2. A booking or banquet the owner's policy covers gets a deposit: the
    amount comes from the policy, never from the model. The platform writes
    the payment line under the assistant's reply (the model never writes a
@@ -140,7 +173,7 @@ platform meets them:
 | the payment page comes entirely from the provider (redirect) | the cabinet sends the browser to the provider's URL; no card field, iframe or provider script on our pages |
 | no electronic storage, processing or transmission of account data on our systems | no PAN or security code is ever accepted; one typed or said by mistake is masked before storage, model, logs and traces, and its call audio is deleted (above, with the limits listed there: a photo of a card, a card typed over several messages) |
 | paper records with account data, if any, are not electronic | none exist |
-| the pages that send to the payment page are protected | the cabinet's CSP runs scripts only with the page's nonce, enforces Trusted Types, posts forms only to itself and `pay.flitt.com` and reports violations (`web/src/server/contentSecurityPolicy.ts`); the billing pages load no third-party script (Turnstile runs on sign-in, Facebook's SDK on the Meta connection pages) |
+| the pages that send to the payment page are protected | the cabinet's CSP runs scripts only with the page's nonce, enforces Trusted Types, posts forms only to itself and `pay.flitt.com` and reports violations (`web/src/server/contentSecurityPolicy.ts`); the billing page's policy names no third-party host at all (`web/src/lib/paymentPages.ts`: Turnstile runs on sign-in only, Facebook's SDK on the Meta connection pages); the scripts of the billing page and the hosted chat page are inventoried with their SHA-384 (`web/payment-page-scripts.json`): every pull request's build is compared with it and a weekly run compares what production serves (`docs/operations/ci.md`, "Payment page integrity") |
 
 For deposits the platform is not the merchant and never sees the card, so
 it does not enter the business's cardholder data environment; it writes a
@@ -160,7 +193,7 @@ affects how the business's customers pay, hence the matrix below.
 | Refunds | refunds in the merchant account | tells staff which deposit to refund and when | executes the refund |
 | Card data a customer sends anyway | deletes it from the messenger if staff saw it | masks it and deletes call audio holding it | |
 | Disputes and chargebacks | handles them with the PSP | gives the booking, the line sent and its time | runs the process |
-| Fraud tooling on the page (card testing) | turns on the PSP's tooling | asks one deposit per booking or banquet request (asking again sends the same one) | provides it |
+| Fraud tooling on the page (card testing) | turns on the PSP's tooling | asks one deposit per booking or banquet request (asking again sends the same one); the platform never sees the deposit page's declines, so its own decline brake covers only its billing pages | provides it |
 
 ## Owner steps
 
@@ -171,6 +204,14 @@ affects how the business's customers pay, hence the matrix below.
   and refund wording of the deposit lines.
 - Keep Flitt's PCI DSS certificate and Stripe's attestation on file in the
   vendor register each year.
+- Turn on a second factor on the platform's Stripe and Flitt consoles
+  (risk register R10), and tell businesses to protect their own payment
+  provider accounts.
+- Create the Sentry alert rule on CSP violation events of the production
+  project (`/api/csp-report` forwards them to Sentry's security endpoint),
+  and set the repository variable `PRODUCTION_CABINET_URL` so the weekly
+  integrity run hashes the scripts production serves
+  (`docs/operations/go-live.md`).
 - Before the first SAQ and then yearly, scan a data-only dump of the
   production database, 7 days of exported logs and the storage listing for
   card numbers, expecting none (each hit is checked by hand: a Luhn-valid

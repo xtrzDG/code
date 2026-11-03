@@ -72,7 +72,7 @@ Each period is enforced by the job named; the constants are the ones
 | Call recordings, files customers sent | the business's choice (90 days by default) | `purge_expired_recordings`, daily | `recording_retention_days`, `app/schemas/domain/businesses.py` |
 | Contacts and their marketing consent | until the owner erases the customer or the business is deleted; a consent taken back stays recorded as taken back (proof) | the erasure, `delete_business` | `app/use_cases/compliance/contact_data_eraser.py` |
 | The erasure ledger outside the database | ids and the moment of each erasure, as long as a backup older than it can be restored | never by the platform (the bucket key cannot delete) | `app/adapters/business_closures/bucket_contact_erasure_ledger_adapter.py` |
-| Audit log | at least 365 days, purged at 1,095 days | `workshop purge-audit-log` | `app/utilities/compliance/audit_retention.py` |
+| Audit log | at least 365 days, purged at 1,095 days | the daily `purge_expired_audit_log` job (`workshop purge-audit-log` by hand if it was down) | `app/utilities/compliance/audit_retention.py` |
 | Invoices | 10 years (civil code art. 2220) | kept when the business is deleted | `app/use_cases/businesses/deletion/delete_business_use_case.py` |
 | Backups | 30 daily and 12 monthly copies | `workshop backup` retention | `docs/operations/backup-restore.md` |
 

@@ -79,7 +79,11 @@ Rules:
   docs/operations/deploys.md). No migration
   changes or removes its rows; old entries leave only through
   `workshop.purge_audit_chain` (`workshop purge-audit-log`), which refuses
-  entries of the last 365 days and keeps each hash chain verifiable.
+  entries of the last 365 days and keeps each hash chain verifiable. Since
+  1250 the platform role may call `workshop.purge_expired_audit_chain`
+  (SECURITY DEFINER), which purges through it only entries past 1,095 days
+  by the database's clock: the worker's daily `purge_expired_audit_log`
+  job.
   `GRANT` and `REVOKE` are idempotent and may stand in a no-transaction
   file.
 

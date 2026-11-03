@@ -255,14 +255,14 @@ rest. Names only: the values are yours.
 | environment `production` | `API_URL`, `CABINET_URL` (no smoke business unless one real model answer per deploy is wanted) | none | `deploy-smoke.yml` |
 | environment `backup-drill` | none | only while `RESTORE_DRILL_ON_GITHUB` is `true` (GitHub announced as a sub-processor first, `docs/operations/vendor-register.md`): `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY` (the drill's read-only key), `BACKUP_AGE_IDENTITY` (the drill's private age key), `SENTRY_DSN` (the backend project); otherwise empty, the drill machine holds them (step 6) | `restore-drill.yml`, production job |
 | environment `production-release` (required reviewers, `main` as its only branch) | none | `RELEASE_DEPLOY_KEY` (the private half of a deploy key with write access, docs/operations/deploys.md, "One-time setup") | `deploy-smoke.yml`, the promotion to `release` |
-| repository | `PRODUCTION_URL` (the production API's https address, as `PRODUCTION_API_URL`), `MONITORING_BUSINESS_ID` (a live business kept for the checks: open for a booking for one at 12:00 every day, its staff notifications off), `PRODUCTION_CABINET_URL` (optional) | `MONITORING_API_KEY` (an API key of that business with `bookings:write`) | `synthetics.yml`, every hour; a run without them fails and names what is missing |
+| repository | `PRODUCTION_URL` (the production API's https address, as `PRODUCTION_API_URL`), `MONITORING_BUSINESS_ID` (a live business kept for the checks: open for a booking for one at 12:00 every day, its staff notifications off), `PRODUCTION_CABINET_URL` (optional) | `MONITORING_API_KEY` (an API key of that business with `bookings:write`) | `synthetics.yml`, every hour; a run without them fails and names what is missing. `PRODUCTION_CABINET_URL` (the production cabinet's https address) is also read by `payment-page-integrity.yml`: set, the weekly run checks out `release` and hashes the payment pages' scripts as production serves them (step 12) |
 | repository | `STAGING_URL` (the staging API's https address) | `STAGING_SCAN_API_KEY` (an API key of a staging business that exists for the scan, every scope) | `zap-staging.yml`, every Sunday; never production |
 | repository | `PRODUCTION_API_URL` (the promotion waits for production's data tasks); `PROMOTE_AFTER_STAGING_SMOKE` (optional: `false` asks for the approval only in a run started by hand, docs/operations/deploys.md) | none | `deploy-smoke.yml` |
 | repository | `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_PREFIX` (optional, `workshop/` by default), `RESTORE_DRILL_ON_GITHUB` (leave unset: the production drill runs on the drill machine, step 6) | none | `restore-drill.yml`: the Monday job runs only once `BACKUP_S3_BUCKET` is set and `RESTORE_DRILL_ON_GITHUB` is `true` |
 | repository | `SENTRY_ORG`, `SENTRY_PROJECT` (step 7) | `SENTRY_AUTH_TOKEN` (step 7) | `ci.yml`, the cabinet's source maps |
 | repository | `LEGAL_TEXTS_FINAL` (`true` once the lawyer approved the legal texts, docs/legal/README.md) | none | `ci.yml` |
 | repository | none | `REPO_SETTINGS_TOKEN` (step 1) | `repo-settings.yml` |
-| repository | none | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `ANTHROPIC_API_KEY`: without both keys the benchmark is skipped and the run is still green (evals/README.md) | `evals-nightly.yml` |
+| repository | none | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `ANTHROPIC_API_KEY`: without both keys the benchmark is skipped and the run is still green (evals/README.md); with them the nightly run fails under an 85 % pass rate or over a 2 % hallucination rate (step 12) | `evals-nightly.yml` |
 | repository | none | sandbox credentials only (tests/contracts/README.md): `CONTRACTS_TELEGRAM_BOT_TOKEN`, `CONTRACTS_META_ACCESS_TOKEN`, `CONTRACTS_META_PHONE_NUMBER_ID`, `CONTRACTS_META_TEST_RECIPIENT`, `CONTRACTS_TWILIO_TEST_ACCOUNT_SID`, `CONTRACTS_TWILIO_TEST_AUTH_TOKEN`, `CONTRACTS_GOOGLE_CLIENT_ID`, `CONTRACTS_GOOGLE_CLIENT_SECRET`, `CONTRACTS_GOOGLE_REFRESH_TOKEN`, `CONTRACTS_OPENAI_API_KEY`, `CONTRACTS_ANTHROPIC_API_KEY`, `CONTRACTS_ELEVENLABS_API_KEY` | `contracts-live.yml`, the sandbox calls |
 
 Render reports each deploy to GitHub as a deployment named after the
@@ -559,3 +559,61 @@ measured. After at least 14 days of pilot traffic:
 
 Check: the pull request is merged, and the following two weeks page only
 for real problems.
+
+## 12. The owner steps of the readiness round of 2026-11-03
+
+The second readiness round added code that needs these accounts and
+decisions (docs/LAUNCH.md, section 8, items 12 to 16, says the same in
+Russian).
+
+1. **A Sentry alert on CSP violations.** The cabinet forwards every
+   violation report (`/api/csp-report`) to the security endpoint of its
+   Sentry project. In the production cabinet's project, create an alert
+   rule on those events (Alerts → Create alert → Issues, filtered to the
+   CSP event type) and point it at the on-call person (step 9). Check: a
+   report sent to staging's `/api/csp-report` (or a page with a blocked
+   inline script) appears in staging's project and its alert fires.
+2. **The payment pages' weekly check against production.** Set the
+   repository variable `PRODUCTION_CABINET_URL` (step 5) once `release`
+   exists (step 1): with it, `payment-page-integrity.yml` checks out
+   `release` and hashes each script of the billing page and the hosted
+   chat page as production serves it against `web/payment-page-scripts.json`;
+   without `release` the run fails at its checkout, loudly. Check:
+   `gh workflow run payment-page-integrity.yml` is green, or its issue
+   "Payment page scripts changed" names a change a reviewed commit
+   explains (`docs/operations/ci.md`, "Payment page integrity").
+3. **Twilio against SMS pumping.** In the Twilio console restrict the
+   SMS geo permissions to the countries the platform serves and export
+   the settings as evidence; turn on SMS pumping protection (or Verify
+   Fraud Guard for Verify). The platform's own throttle of unused sign-in
+   codes (VOICE-03) can hold a country's new-phone sign-ups at 10 an hour
+   for six hours when someone floods it: decide whether the home market
+   should be exempt from the country throttle (the range throttle stays).
+   Once, against staging, script 500 sign-in code requests to sequential
+   numbers (the checklist's VOICE-03 verification; no such script is in
+   the repository) and keep the result; expect the caps and the throttle
+   to refuse them past their thresholds. Turn on a second factor on the platform's Stripe and Flitt
+   consoles as well (risk register R10).
+4. **Real-model evaluations.** With the provider keys of step 5 the
+   nightly `evals-nightly.yml` measures the assistant against the real
+   models (floor 85 % via `min_pass_rate`, ceiling 2 % hallucinations via
+   `max_hallucination_rate`). Agree that ceiling, run the workflow once
+   by hand with `update_baseline`, and commit the `evals/baselines/<model>.json`
+   it uploads. The pull request gate (`evals` in `ci.yml`) replays
+   recorded answers only; decide whether a live-model run on model-facing
+   pull requests (its cost per run) should become a required check.
+   Check: the next nightly run plays the datasets instead of skipping them
+   and stays green.
+5. **Product error budgets, rehearsals and flags.** Import
+   `ops/grafana/workshop-service.json` (the row "Product service levels"),
+   give `scripts/slo_report.py` the Prometheus address and credentials
+   (`docs/operations/slo.md`, "How they are computed") and write the
+   monthly SLO report with it and `/admin/system`; booking success is read
+   by hand until it has a counter. Before the next release with migrations,
+   run the migration rehearsal at the full scale
+   (`docs/operations/deploys.md`, "Rehearsing the pending migrations"), and
+   once run a rollback drill by switching the `release_canary` flag on for
+   one business and off again (`PUT /v1/admin/feature-flags/{flag_name}`,
+   `docs/operations/deploys.md`, "Staged rollouts"). Check: the report, the
+   rehearsal's table and the two audit entries of the flag are filed with
+   the evidence.
