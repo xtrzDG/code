@@ -34,7 +34,7 @@ class PostCallFollowUps:
         ],
         summarize_call: UseCaseContract[CallSummaryRequest, CallSummaryOutcome],
         send_call_confirmation: UseCaseContract[RecordedCall, IsCallConfirmationSent],
-        send_call_links: UseCaseContract[RecordedCall, IsCallLinkMessageSent],
+        send_call_links: UseCaseContract[CallSummaryRequest, IsCallLinkMessageSent],
         schedule_recording_archive: UseCaseContract[
             RecordedCall, IsRecordingArchiveScheduled
         ],
@@ -57,9 +57,9 @@ class PostCallFollowUps:
         self.send_call_confirmation: UseCaseContract[
             RecordedCall, IsCallConfirmationSent
         ] = send_call_confirmation
-        self.send_call_links: UseCaseContract[RecordedCall, IsCallLinkMessageSent] = (
-            send_call_links
-        )
+        self.send_call_links: UseCaseContract[
+            CallSummaryRequest, IsCallLinkMessageSent
+        ] = send_call_links
         self.schedule_recording_archive: UseCaseContract[
             RecordedCall, IsRecordingArchiveScheduled
         ] = schedule_recording_archive

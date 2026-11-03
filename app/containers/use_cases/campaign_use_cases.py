@@ -19,6 +19,7 @@ from app.schemas.dto.growth.campaign_views import (
     UpdateCampaignSettingsCommand,
 )
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.use_cases.campaigns.campaign_review_gate import CampaignReviewGate
 from app.use_cases.campaigns.campaign_settings_views import CampaignSettingsReader
 from app.use_cases.campaigns.campaign_writer import CampaignWriter
 from app.use_cases.campaigns.get_campaign_settings_use_case import (
@@ -105,6 +106,16 @@ class CampaignUseCasesContainer(containers.DeclarativeContainer):
                 ),
             ),
             wall_clock=wall_clock,
+            review_gate=Factory(
+                CampaignReviewGate,
+                settings_repo=repositories.campaign_settings_repo,
+                message_repo=repositories.campaign_message_repo,
+                contact_repo=repositories.contact_repo,
+                user_repo=repositories.user_repo,
+                manager_notifier=facilitators.manager_notification_facilitator,
+                text_resolver=utilities.localized_text_resolver,
+                signal_counter=adapters.signal_counter,
+            ),
         )
     )
     get_campaign_settings_use_case: Factory[

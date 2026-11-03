@@ -113,7 +113,9 @@ class AssistantVersionDocument(BaseDocument):
     # 10: `voice_agent_revision` (optional: an agent set up before it is
     #    re-synced by `resync_voice_agents`), and the tool decline_recording
     #    once its release gate is open (a new value, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("10")
+    # 11: the tool send_call_transcript once its release gate is open (a
+    #    new value, no upcaster; ACC-03).
+    schema_version: SchemaVersion = SchemaVersion("11")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

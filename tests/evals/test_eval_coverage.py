@@ -7,14 +7,16 @@ once. A new tool or kind fails here until a scenario covers it.
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
 from app.schemas.constants.evaluations import EvalFlowKind
-from app.utilities.conversations.tool_selection import with_decline_recording
+from app.utilities.conversations.tool_selection import with_call_tools
 from scripts.eval_harness.dataset_models import EvalDataset, ScenarioKind
 from tests.evals.test_dataset_files import load_all
 
 # The scenarios are chats (the owner's test chat, WhatsApp). A tool only a
-# call offers (tool_selection.RECORDED_CHANNELS: decline_recording) is never
-# offered to them; tests/calls/test_declined_recordings.py covers it.
-CALL_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(with_decline_recording([]))
+# call offers (tool_selection.RECORDED_CHANNELS: decline_recording,
+# send_call_transcript) is never offered to them;
+# tests/calls/test_declined_recordings.py and
+# tests/calls/test_call_transcript_requests.py cover them.
+CALL_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(with_call_tools([]))
 
 
 def expected_tools(datasets: list[EvalDataset]) -> set[AssistantToolName]:
@@ -39,7 +41,10 @@ def test_every_tool_is_expected_by_a_scenario() -> None:
 
 def test_the_call_only_tools_are_the_ones_chats_never_offer() -> None:
     # Only what the chat scenarios cannot be offered leaves the check above.
-    assert {AssistantToolName.DECLINE_RECORDING} == CALL_ONLY_TOOLS
+    assert {
+        AssistantToolName.DECLINE_RECORDING,
+        AssistantToolName.SEND_CALL_TRANSCRIPT,
+    } == CALL_ONLY_TOOLS
     assert not CALL_ONLY_TOOLS & expected_tools(load_all())
 
 

@@ -720,6 +720,8 @@
     "closure.certificate.backups": "Encrypted backups expire on their own: daily copies after 30 days, monthly copies after 12 months. A restored backup never brings this business back: the deletion is applied again from the deletion ledger.",
     "closure.certificate.digest": "Fingerprint (SHA-256)",
     "closure.certificate.footer": "Issued by Assistant Workshop. Keep this certificate as proof of the deletion.",
-    "closure.notices.reopened_paid": "{business} is open again: the subscription is paid, nothing will be deleted, and the channels that were on are on again."
+    "closure.notices.reopened_paid": "{business} is open again: the subscription is paid, nothing will be deleted, and the channels that were on are on again.",
+    "campaigns.review_hold.held": "{business}: your return-visit campaign is paused for a review by our team. Of the {sent} customers it wrote to in the last 30 days, {opted_out} asked for no more messages, more than messaging providers accept before they block a sender. Nothing is sent until the review is done; we will contact you. Your settings stay as they are.",
+    "campaigns.review_hold.released": "{business}: our team finished the review of your return-visit campaign, and it writes to your customers again. If many of them ask for no more messages again, it pauses again for a review."
   }
 }

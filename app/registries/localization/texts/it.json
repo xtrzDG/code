@@ -1,7 +1,10 @@
 {
   "language": "it",
   "review_status": "needs_review",
-  "draft_keys": [],
+  "draft_keys": [
+    "campaigns.review_hold.held",
+    "campaigns.review_hold.released"
+  ],
   "texts": {
     "notifications.staff_alert.handoff_title": "Un cliente ha bisogno di una persona",
     "notifications.staff_alert.urgent_handoff_title": "Urgente: un cliente ha bisogno di una persona",
@@ -720,6 +723,8 @@
     "closure.certificate.backups": "I backup cifrati scadono da soli: le copie giornaliere dopo 30 giorni, quelle mensili dopo 12 mesi. Il ripristino di un backup non riporta mai indietro questa attività: la cancellazione viene applicata di nuovo in base al registro delle cancellazioni.",
     "closure.certificate.digest": "Impronta (SHA-256)",
     "closure.certificate.footer": "Emesso da Assistant Workshop. Conserva questo certificato come prova della cancellazione.",
-    "closure.notices.reopened_paid": "L'attività {business} è di nuovo aperta: l'abbonamento è pagato, non verrà eliminato nulla e i canali che erano attivi sono di nuovo attivi."
+    "closure.notices.reopened_paid": "L'attività {business} è di nuovo aperta: l'abbonamento è pagato, non verrà eliminato nulla e i canali che erano attivi sono di nuovo attivi.",
+    "campaigns.review_hold.held": "{business}: la tua campagna di ritorno è in pausa per una verifica del nostro team. Dei {sent} clienti a cui ha scritto negli ultimi 30 giorni, {opted_out} hanno chiesto di non ricevere più messaggi, più di quanto i fornitori di messaggistica accettano prima di bloccare un mittente. Non viene inviato nulla finché la verifica non è conclusa; ti contatteremo. Le tue impostazioni restano invariate.",
+    "campaigns.review_hold.released": "{business}: il nostro team ha concluso la verifica della tua campagna di ritorno, che torna a scrivere ai tuoi clienti. Se di nuovo molti chiedono di non ricevere più messaggi, si ferma di nuovo per una verifica."
   }
 }

@@ -23,6 +23,7 @@ CONVERSATION_TOOLS: frozenset[AssistantToolName] = frozenset(
         AssistantToolName.OFFER_CHOICES,
         AssistantToolName.SEND_PAYMENT_LINK,
         AssistantToolName.DECLINE_RECORDING,
+        AssistantToolName.SEND_CALL_TRANSCRIPT,
     }
 )
 
@@ -47,7 +48,7 @@ def select_assistant_tools(
     that does not book directly (it takes requests with create_lead instead)
     and minus send_link when the profile has no links to send. Tools a
     conversation adds by its channel (offer_choices, send_payment_link,
-    decline_recording) are not a version's.
+    decline_recording, send_call_transcript) are not a version's.
     """
 
     return [

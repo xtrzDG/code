@@ -61,7 +61,9 @@ def find_existing_voice_agent_id(
 #   The rule for "repeat" and "speak slower" is part of the phone
 #   instruction a version stores, which an agent of an older revision keeps
 #   until the owner publishes again: no revision brings it.
-VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(5)
+# 6: send_call_transcript on every agent (ACC-03): a caller who asks for
+#   the call in writing gets its transcript texted after the call.
+VOICE_AGENT_REVISION: VoiceAgentRevision = VoiceAgentRevision(6)
 
 
 def needs_voice_agent_resync(version: AssistantVersionDocument) -> bool:

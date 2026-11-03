@@ -5,6 +5,7 @@ from app.contracts.repositories.booking_repositories import (
     HandoffRepoContract,
     LeadRepoContract,
 )
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
@@ -40,6 +41,7 @@ from app.schemas.dto.conversation_feed.conversation_views import (
 )
 from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.bookings.booleans import SeesHealthNotes
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -58,6 +60,10 @@ from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
 from app.use_cases.shared.assignment_views import build_assignment_view
+from app.use_cases.shared.health_note_privacy import (
+    protect_health_note,
+    sees_health_notes,
+)
 from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.conversations.platform_details import conversation_for
 from app.utilities.paging.keyset_paging import finish_page, read_slice
@@ -109,7 +115,9 @@ class GetConversationUseCase(
         outbound_message_repo: OutboundMessageRepoContract,
         read_session: StorageReadSessionContract | None = None,
         see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = None,
+        brand_repo: BrandRepoContract | None = None,
     ) -> None:
+        self._brand_repo: BrandRepoContract | None = brand_repo
         self._see_platform_details: UseCaseContract[UserId, IsPlatformAdmin] | None = (
             see_platform_details
         )
@@ -202,6 +210,9 @@ class GetConversationUseCase(
             self._resource_repo,
             self._contact_repo,
         )
+        sees_notes: SeesHealthNotes = sees_health_notes(
+            self._brand_repo, business, input_data.user_id
+        )
         view = ConversationDetailView(
             conversation=self._summary_transformer.transform(
                 build_view_sources(
@@ -224,7 +235,10 @@ class GetConversationUseCase(
             earlier_messages_cursor=earlier_cursor,
             usage=self._message_repo.sum_usage(business.id, conversation.id),
             calls=[self._call_transformer.transform(call) for call in calls],
-            bookings=links.bookings,
+            # Health notes for the owner and staff only (PRIV-10).
+            bookings=[
+                protect_health_note(booking, sees_notes) for booking in links.bookings
+            ],
             leads=links.leads,
             handoffs=links.handoffs,
             reply=assess_conversation_reply(

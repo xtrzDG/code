@@ -1,7 +1,7 @@
 {
   "collection": "campaign_settings",
   "document_type": "CampaignSettingsDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -39,6 +39,36 @@
         "minimum": 1,
         "type": "integer"
       },
+      "review_hold": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "held_at": {
+                "type": "integer"
+              },
+              "opted_out": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sent": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "held_at",
+              "sent",
+              "opted_out"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "rule_kind": {
         "enum": [
           "rebook",
@@ -48,7 +78,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "segment_id": {

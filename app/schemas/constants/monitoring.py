@@ -58,6 +58,9 @@ class PlatformAlertCode(StrEnum):
     Meta flagged or downgraded a business's WhatsApp number, lowered a
     template's quality, paused or disabled a template, or moved one into
     the marketing category (the number risks a restriction).
+    CAMPAIGN_OPT_OUTS: a business's campaign was held for review because
+    too many of the customers it wrote to asked for no more messages
+    (ABUSE-05).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -95,6 +98,7 @@ class PlatformAlertCode(StrEnum):
     BOOKING_SPIKE = "booking_spike"
     CANCELLATION_SPIKE = "cancellation_spike"
     WHATSAPP_QUALITY = "whatsapp_quality"
+    CAMPAIGN_OPT_OUTS = "campaign_opt_outs"
 
 
 class PlatformAlertStatus(StrEnum):
@@ -126,8 +130,9 @@ class PlatformSignal(StrEnum):
     failed by the database or the object storage, API requests slower
     than 2 s, and SMS of a business past its hourly volume; payments of a
     business declined past its alert or brake count (card testing); new
-    bookings and cancellations of a business past its hourly cap, and
-    Meta's warnings about a WhatsApp number's or template's quality.
+    bookings and cancellations of a business past its hourly cap,
+    Meta's warnings about a WhatsApp number's or template's quality, and
+    campaigns held for review over their opt-out rate.
     """
 
     LLM_CALL = "llm_call"
@@ -144,6 +149,7 @@ class PlatformSignal(StrEnum):
     BOOKING_SURGE = "booking_surge"
     CANCELLATION_SURGE = "cancellation_surge"
     WHATSAPP_QUALITY_DROP = "whatsapp_quality_drop"
+    CAMPAIGN_HOLD = "campaign_hold"
 
 
 class MaintenanceRunKind(StrEnum):

@@ -1,7 +1,7 @@
 {
   "collection": "messages",
   "document_type": "MessageDocument",
-  "schema_version": 9,
+  "schema_version": 10,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -438,7 +438,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "9",
+        "default": "10",
         "type": "string"
       },
       "sent_by": {
@@ -486,7 +486,8 @@
                 "record_unanswered_question",
                 "offer_choices",
                 "send_payment_link",
-                "decline_recording"
+                "decline_recording",
+                "send_call_transcript"
               ],
               "type": "string"
             }

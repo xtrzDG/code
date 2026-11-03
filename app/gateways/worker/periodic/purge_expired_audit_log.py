@@ -11,9 +11,7 @@ from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 
 PURGE_EXPIRED_AUDIT_LOG_JOB: JobName = JobName("purge_expired_audit_log")
-PURGE_EXPIRED_AUDIT_LOG_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(
-    24 * 60 * 60
-)
+PURGE_EXPIRED_AUDIT_LOG_INTERVAL: JobIntervalSeconds = JobIntervalSeconds(24 * 60 * 60)
 
 
 def purge_expired_audit_log_job(operator: PeriodicJobOperator) -> PeriodicJobSpec:

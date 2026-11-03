@@ -44,7 +44,7 @@ def sees_health_notes(
 def protect_health_note(view: BookingView, sees_notes: SeesHealthNotes) -> BookingView:
     """The booking as this viewer may see it: a health note withheld."""
 
-    if sees_notes or not is_health_note(view.notes):
+    if sees_notes or view.is_health_note_withheld or not is_health_note(view.notes):
         return view
 
     return view.model_copy(update={"notes": None, "is_health_note_withheld": True})

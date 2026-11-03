@@ -38,6 +38,10 @@ class AssistantToolName(StrEnum):
     # The caller does not want the call recorded (phone calls only; offered
     # by the call's conversation, never stored in a version).
     DECLINE_RECORDING = "decline_recording"
+    # The caller asks for the call in writing: its transcript is texted to
+    # them after the call (phone calls only; offered by the call's
+    # conversation, never stored in a version; ACC-03).
+    SEND_CALL_TRANSCRIPT = "send_call_transcript"
 
 
 class AutotestRunStatus(StrEnum):

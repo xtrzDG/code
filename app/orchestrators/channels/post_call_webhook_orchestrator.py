@@ -73,15 +73,14 @@ class PostCallWebhookOrchestrator(
         missed_call: MissedCallDocument | None = self._register_missed_caller(
             StoredFinishedCall(report=report, call=recorded)
         )
-        self._steps.summarize_call.run(
-            CallSummaryRequest(
-                call=recorded, transcript=report.transcript, missed_call=missed_call
-            )
+        summary_request = CallSummaryRequest(
+            call=recorded, transcript=report.transcript, missed_call=missed_call
         )
+        self._steps.summarize_call.run(summary_request)
         is_confirmation_sent: IsCallConfirmationSent = (
             self._steps.send_call_confirmation.run(recorded)
         )
-        self._steps.send_call_links.run(recorded)
+        self._steps.send_call_links.run(summary_request)
         self._steps.schedule_recording_archive.run(recorded)
         return PostCallWebhookOutcome(
             status=recorded.status,

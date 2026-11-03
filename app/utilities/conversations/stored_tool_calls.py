@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.domain.conversations import ToolCallRecord
 from app.schemas.typings.maintenance.constrained_strings import ReleaseGateName
+from app.utilities.storage.call_tool_release_gates import CALL_TRANSCRIPT_TOOL_GATE
 from app.utilities.storage.release_gates import (
     DECLINE_RECORDING_GATE,
     OFFER_CHOICES_GATE,
@@ -17,16 +18,18 @@ GATED_TOOLS: tuple[tuple[AssistantToolName, ReleaseGateName], ...] = (
     (AssistantToolName.OFFER_CHOICES, OFFER_CHOICES_GATE),
     (AssistantToolName.SEND_PAYMENT_LINK, PAYMENT_LINK_TOOL_GATE),
     (AssistantToolName.DECLINE_RECORDING, DECLINE_RECORDING_GATE),
+    (AssistantToolName.SEND_CALL_TRANSCRIPT, CALL_TRANSCRIPT_TOOL_GATE),
 )
 
 
 def storable_tool_calls(records: Sequence[ToolCallRecord]) -> list[ToolCallRecord]:
     """
-    Every call, except offer_choices, send_payment_link and
-    decline_recording while their release gates are closed: the release
-    before cannot read those tool names yet; the reply keeps the options it
-    offered in its own `choices` and the payment line in its text, and the
-    voice platform's report of the call names a declined recording.
+    Every call, except offer_choices, send_payment_link, decline_recording
+    and send_call_transcript while their release gates are closed: the
+    release before cannot read those tool names yet; the reply keeps the
+    options it offered in its own `choices` and the payment line in its
+    text, and the voice platform's report of the call names a declined
+    recording and a transcript the caller asked for.
     """
 
     withheld: set[AssistantToolName] = {

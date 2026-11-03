@@ -1,3 +1,5 @@
+import logging
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
@@ -28,6 +30,8 @@ from app.use_cases.compliance.contact_data_eraser import ContactDataEraser
 from app.use_cases.compliance.record_contact_erasure_use_case import (
     RECORD_CONTACT_ERASURE_JOB,
 )
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class DeleteContactDataUseCase(
@@ -87,6 +91,13 @@ class DeleteContactDataUseCase(
         )
         now: Microseconds = self._wall_clock.now_unix()
         result: ContactErasureResult = self._eraser.erase(records, now)
+        if int(result.flagged_knowledge_items) > 0:
+            # A count only: the owner reviews the items in the knowledge editor.
+            logger.info(
+                "An erasure in business %s flagged %d knowledge items for review.",
+                business.id,
+                int(result.flagged_knowledge_items),
+            )
         self._job_queue.enqueue(
             RECORD_CONTACT_ERASURE_JOB,
             JobPayloadJson(

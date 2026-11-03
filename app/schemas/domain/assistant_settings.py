@@ -32,8 +32,9 @@ class AssistantSettingsDocument(BaseDocument):
     """
 
     # 2: `is_paused` and `disabled_tools` (optional: a version 1 row reads
-    # as running with every tool).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # as running with every tool). 3: the tool names know
+    # send_call_transcript (a new value no switch writes; no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: AssistantSettingsId
     business_id: BusinessId
     remembers_customers: RemembersCustomers = True

@@ -13,6 +13,8 @@ IsAfterHours = bool
 IsAnswerCorrected = bool
 # The caller declined the call's recording (all-party consent countries).
 IsCallRecordingDeclined = bool
+# The caller asked for the call's transcript (send_call_transcript).
+IsCallTranscriptRequested = bool
 IsConversationHandedOff = bool
 IsFallbackModel = bool
 IsFirstAssistantReply = bool

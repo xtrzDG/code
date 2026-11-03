@@ -29,7 +29,7 @@ from app.schemas.typings.maintenance.constrained_strings import (
     StoredEnumPath,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
-from app.utilities.storage.status_release_gates import STATUS_RELEASE_GATES
+from app.utilities.storage.appended_release_gates import APPENDED_RELEASE_GATES
 
 SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
 OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
@@ -216,7 +216,7 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         values=[GatedEnumValue("callback_requested")],
         is_open=False,
     ),
-    *STATUS_RELEASE_GATES,  # The status page's payments component (REL-06).
+    *APPENDED_RELEASE_GATES,  # Status payments (REL-06), send_call_transcript.
 )
 
 PATH_STEP: re.Pattern[str] = re.compile(r"[a-z_][a-z0-9_]*|\[\]|\{\}")

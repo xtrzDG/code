@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.campaigns import (
@@ -12,6 +12,7 @@ from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.campaigns.booleans import IsCampaignEnabled
 from app.schemas.typings.campaigns.constrained_integers import (
+    CampaignMessageCount,
     CampaignMonthlyCap,
     RebookingDelayDays,
 )
@@ -29,6 +30,20 @@ from app.schemas.typings.users.prefixed_id import UserId
 DEFAULT_MONTHLY_CAP: CampaignMonthlyCap = CampaignMonthlyCap(100)
 
 
+class CampaignReviewHold(PersistentDocument):
+    """
+    The campaign is held for the platform team's review (ABUSE-05): too
+    many of the customers it wrote to in the last 30 days asked for no
+    more messages (`opted_out` of `sent`, measured `held_at`). It sends
+    nothing until a platform admin releases it; the owner's settings stay
+    as they are.
+    """
+
+    held_at: Microseconds
+    sent: CampaignMessageCount
+    opted_out: CampaignMessageCount
+
+
 class CampaignSettingsDocument(BaseDocument):
     """
     The rebooking campaign of one business (Bookings → Return visits; one
@@ -39,8 +54,13 @@ class CampaignSettingsDocument(BaseDocument):
     segment `segment_id` (`audience`), at most `monthly_cap` messages in a
     calendar month of the business. STOP, the suppression list and a
     blocked customer always win.
+
+    Version 2 adds `review_hold` (optional, ABUSE-05): set by the campaign
+    job when the opt-out rate of its recent messages is too high, cleared
+    by a platform admin; the owner's saves keep it.
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: CampaignSettingsId
     business_id: BusinessId
     is_enabled: IsCampaignEnabled = False
@@ -50,6 +70,7 @@ class CampaignSettingsDocument(BaseDocument):
     segment_id: CustomerSegmentId | None = None
     monthly_cap: CampaignMonthlyCap = DEFAULT_MONTHLY_CAP
     updated_by: UserId | None = None
+    review_hold: CampaignReviewHold | None = None
 
 
 class CampaignMessageDocument(BaseDocument):

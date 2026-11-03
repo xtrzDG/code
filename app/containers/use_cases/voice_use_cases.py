@@ -16,6 +16,7 @@ from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesCon
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
+from app.schemas.dto.calls.call_summaries import CallSummaryRequest
 from app.schemas.dto.conversations import VoiceToolCallRequest
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
@@ -166,15 +167,17 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         unit_of_work=adapters.storage_unit_of_work,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    send_call_links_use_case: Factory[UseCaseContract[RecordedCall, bool]] = Factory(
-        SendCallLinksUseCase,
-        business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        contact_repo=repositories.contact_repo,
-        message_repo=repositories.message_repo,
-        call_messages=call_message_outbox,
-        text_resolver=utilities.localized_text_resolver,
-        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+    send_call_links_use_case: Factory[UseCaseContract[CallSummaryRequest, bool]] = (
+        Factory(
+            SendCallLinksUseCase,
+            business_repo=repositories.business_repo,
+            business_profile_repo=repositories.business_profile_repo,
+            contact_repo=repositories.contact_repo,
+            message_repo=repositories.message_repo,
+            call_messages=call_message_outbox,
+            text_resolver=utilities.localized_text_resolver,
+            cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+        )
     )
     send_call_confirmation_use_case: Factory[UseCaseContract[RecordedCall, bool]] = (
         Factory(

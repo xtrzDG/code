@@ -211,4 +211,7 @@ class CollectContactRecordsUseCase(
                         matched_on=matched,
                     )
                 )
-        return mentions
+        # The surest first: those that name the customer and hold a number.
+        return sorted(
+            mentions, key=lambda mention: (-len(mention.matched_on), mention.title)
+        )

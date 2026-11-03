@@ -31,6 +31,7 @@ from app.schemas.typings.campaigns.constrained_strings import CampaignMonthKey
 from app.schemas.typings.campaigns.prefixed_id import CampaignMessageId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
+from app.use_cases.campaigns.campaign_review_gate import CampaignReviewGate
 from app.use_cases.campaigns.campaign_targets import came_back, due_bookings
 from app.use_cases.campaigns.campaign_writer import CampaignWriter
 from app.use_cases.campaigns.quiet_hours import is_quiet_hour
@@ -65,7 +66,10 @@ class RunRebookingCampaignsUseCase(UseCaseContract[JobTick, JobReport]):
     its monthly cap in a calendar month of its time zone; nothing is
     written from 21:00 to 09:00 there (`quiet_hours`: the due bookings
     wait for the morning); STOP, the suppression list and a block always
-    win. One business failing never stops the others.
+    win. A campaign whose recent messages made too many customers opt out
+    is held for the platform team's review and writes nothing until an
+    admin releases it (`review_gate`, ABUSE-05). One business failing never
+    stops the others.
     """
 
     def __init__(
@@ -79,7 +83,9 @@ class RunRebookingCampaignsUseCase(UseCaseContract[JobTick, JobReport]):
         segment_readers: SegmentReaders,
         writer: CampaignWriter,
         wall_clock: WallClock[Microseconds],
+        review_gate: CampaignReviewGate | None = None,
     ) -> None:
+        self._review_gate: CampaignReviewGate | None = review_gate
         self._settings_repo: CampaignSettingsRepoContract = campaign_settings_repo
         self._message_repo: CampaignMessageRepoContract = campaign_message_repo
         self._business_repo: BusinessRepoContract = business_repo
@@ -114,6 +120,11 @@ class RunRebookingCampaignsUseCase(UseCaseContract[JobTick, JobReport]):
         zone: ZoneInfo = load_time_zone(business.timezone)
         if is_quiet_hour(now, zone):
             # Nothing is decided at night: the morning's run writes instead.
+            return 0
+
+        if self._review_gate is not None and self._review_gate.is_held(
+            business, settings, now
+        ):
             return 0
 
         month: CampaignMonthKey = campaign_month_of(now, zone)

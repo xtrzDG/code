@@ -162,4 +162,3 @@ def test_entries_younger_than_the_retention_stay_past_the_yearly_floor() -> None
     assert int(report.processed_count) == 0
     for chain in world.chains:
         assert [minute for _, minute in world.actions(chain)] == [0, 1, 2, 3, 4]
-

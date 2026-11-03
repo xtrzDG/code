@@ -21,7 +21,7 @@ from app.use_cases.admin.alerts.alert_checks import AlertCheck, observe
 
 
 class AbuseAlertChecks:
-    """The three checks, by alert code (`checks`)."""
+    """The four checks, by alert code (`checks`)."""
 
     def __init__(self, signal_counter: SignalCounterAdapterContract) -> None:
         self._signals: SignalCounterAdapterContract = signal_counter
@@ -31,6 +31,7 @@ class AbuseAlertChecks:
             PlatformAlertCode.BOOKING_SPIKE: self.booking_spike,
             PlatformAlertCode.CANCELLATION_SPIKE: self.cancellation_spike,
             PlatformAlertCode.WHATSAPP_QUALITY: self.whatsapp_quality,
+            PlatformAlertCode.CAMPAIGN_OPT_OUTS: self.campaign_opt_outs,
         }
 
     def booking_spike(
@@ -64,6 +65,17 @@ class AbuseAlertChecks:
             warnings,
             f"{warnings} quality warnings from Meta in the last {minutes(rule)} "
             "minutes; the log names the business account and the template.",
+        )
+
+    def campaign_opt_outs(
+        self, rule: PlatformAlertRule, now: Microseconds
+    ) -> AlertObservation:
+        held: int = self._recent(PlatformSignal.CAMPAIGN_HOLD, now)
+        return observe(
+            rule,
+            held,
+            f"{held} campaigns held for review in the last {minutes(rule)} "
+            "minutes; the admin's Campaign holds list names them.",
         )
 
     def _recent(self, signal: PlatformSignal, now: Microseconds) -> int:

@@ -55,6 +55,7 @@ TOOL_MOCKS: dict[AssistantToolName, str] = {
     AssistantToolName.SEND_PAYMENT_LINK: '{"status": "sent"}',
     AssistantToolName.OFFER_CHOICES: '{"status": "shown"}',
     AssistantToolName.DECLINE_RECORDING: '{"status": "recording_off"}',
+    AssistantToolName.SEND_CALL_TRANSCRIPT: '{"texted_after_call": true}',
 }
 DISCLOSURE_CONDITION: str = (
     "The agent said near the start of the call that it is an AI (virtual) "

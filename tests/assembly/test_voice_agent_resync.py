@@ -46,6 +46,7 @@ def test_an_old_agent_gets_the_new_tools_without_a_new_publish() -> None:
         AssistantToolName.HANDOFF_TO_HUMAN,
         AssistantToolName.SEND_LINK,
         AssistantToolName.DECLINE_RECORDING,
+        AssistantToolName.SEND_CALL_TRANSCRIPT,
     ]
     synced = testbed.version_repo.get(business_id, old.id)
     assert synced is not None
@@ -71,7 +72,7 @@ def test_an_agent_of_the_previous_revision_is_set_up_again() -> None:
 
     report: JobReport = resync_use_case(testbed, lines).run(TICK)
 
-    assert VoiceAgentRevision(5) == VOICE_AGENT_REVISION
+    assert VoiceAgentRevision(6) == VOICE_AGENT_REVISION
     assert int(report.processed_count) == 1
     [spec] = testbed.voice_provisioner.specs
     assert spec.existing_agent_id == old.voice_agent_id

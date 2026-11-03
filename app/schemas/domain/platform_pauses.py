@@ -25,7 +25,9 @@ class PlatformPauseDocument(BaseDocument):
     """
 
     # 2: `disabled_tools` (optional: a version 1 row switches nothing off).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: the tool names know send_call_transcript (a new value no switch
+    # writes; no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     is_paused: IsPlatformPaused
     reason: PlatformPauseReason
     changed_by: UserId

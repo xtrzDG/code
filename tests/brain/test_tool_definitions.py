@@ -21,6 +21,7 @@ from app.schemas.dto.assistant_tools import (
     RecordUnansweredQuestionToolInput,
     RescheduleBookingToolInput,
     SearchKnowledgeToolInput,
+    SendCallTranscriptToolInput,
     SendLinkToolInput,
 )
 from app.schemas.dto.deposits.payment_link_requests import SendPaymentLinkToolInput
@@ -34,6 +35,7 @@ INPUT_MODELS: dict[AssistantToolName, type[Any]] = {
     AssistantToolName.RESCHEDULE_BOOKING: RescheduleBookingToolInput,
     AssistantToolName.LIST_MY_BOOKINGS: ListMyBookingsToolInput,
     AssistantToolName.DECLINE_RECORDING: DeclineRecordingToolInput,
+    AssistantToolName.SEND_CALL_TRANSCRIPT: SendCallTranscriptToolInput,
     AssistantToolName.JOIN_WAITLIST: JoinWaitlistToolInput,
     AssistantToolName.CREATE_LEAD: CreateLeadToolInput,
     AssistantToolName.HANDOFF_TO_HUMAN: HandoffToHumanToolInput,

@@ -206,9 +206,11 @@ class MessageDocument(BaseDocument):
     open (a new value). Version 8 (W19): they may name send_payment_link
     once its release gate is open (a new value; version 7 rows read as is).
     Version 9 (W20): decline_recording likewise (version 8 rows read as is).
+    Version 10 (ACC-03): send_call_transcript likewise (version 9 rows read
+    as is).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("9")
+    schema_version: SchemaVersion = SchemaVersion("10")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId

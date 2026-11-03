@@ -247,6 +247,9 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             booking_ids=[booking.id for booking in bookings],
             language=language,
             is_recording_declined=call.recording_declined,
+            is_transcript_requested=(
+                AssistantToolName.SEND_CALL_TRANSCRIPT in input_data.called_tools
+            ),
         )
 
     def _keep_called_number(

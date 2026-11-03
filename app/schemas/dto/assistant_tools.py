@@ -162,6 +162,10 @@ class DeclineRecordingToolInput(ImmutableDTO):
     """decline_recording: no input; the call comes from the conversation."""
 
 
+class SendCallTranscriptToolInput(ImmutableDTO):
+    """send_call_transcript: no input; the call comes from the conversation."""
+
+
 class CreateLeadToolInput(ImmutableDTO):
     """
     create_lead: a request for a manager (banquet, group, corporate, ...); a

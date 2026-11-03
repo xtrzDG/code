@@ -36,6 +36,7 @@ from app.schemas.typings.campaigns.constrained_integers import (
 from app.schemas.typings.contacts.constrained_strings import SegmentName
 from app.schemas.typings.contacts.prefixed_id import CustomerSegmentId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.campaigns.campaign_review_gate import CampaignReviewGate
 from app.use_cases.campaigns.campaign_writer import CampaignWriter
 from app.use_cases.campaigns.run_rebooking_campaigns_use_case import (
     RunRebookingCampaignsUseCase,
@@ -163,7 +164,7 @@ class CampaignWorld(GrowthWorld):
         self.booking_repo.save(booking)
         return booking
 
-    def run_campaigns(self) -> JobReport:
+    def run_campaigns(self, review_gate: CampaignReviewGate | None = None) -> JobReport:
         return RunRebookingCampaignsUseCase(
             campaign_settings_repo=self.campaign_settings_repo,
             campaign_message_repo=self.campaign_message_repo,
@@ -182,6 +183,7 @@ class CampaignWorld(GrowthWorld):
                 whatsapp_template=None,
             ),
             wall_clock=self.clock.wall_clock,
+            review_gate=review_gate,
         ).run(
             JobTick(
                 job_name=RUN_REBOOKING_CAMPAIGNS_JOB,

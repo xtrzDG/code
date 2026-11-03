@@ -24,7 +24,10 @@ from app.schemas.typings.channels.strings import (
     WebhookSignatureHeader,
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.typings.conversations.booleans import IsCallRecordingDeclined
+from app.schemas.typings.conversations.booleans import (
+    IsCallRecordingDeclined,
+    IsCallTranscriptRequested,
+)
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
 )
@@ -179,6 +182,8 @@ class RecordedCall(ImmutableDTO):
     language: LanguageTag | None = None
     # The caller declined the recording (`CallDocument.recording_declined`).
     is_recording_declined: IsCallRecordingDeclined = False
+    # The caller asked for the call's transcript (send_call_transcript).
+    is_transcript_requested: IsCallTranscriptRequested = False
 
 
 class PostCallWebhookOutcome(ImmutableDTO):

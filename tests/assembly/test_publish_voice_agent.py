@@ -69,7 +69,8 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
     assert [greeting.language for greeting in spec.greetings] == spec.languages
     assert str(spec.greetings[0].text).startswith("[ka] AI assistant here")
     # The version's tools but those bound to the caller id (a caller id
-    # proves nobody), then decline_recording, which every call offers.
+    # proves nobody), then decline_recording and send_call_transcript,
+    # which every call offers.
     assert [tool.name for tool in spec.tools] == [
         *(
             tool
@@ -77,6 +78,7 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
             if tool not in CONVERSATION_TOOLS and tool not in CALLER_ID_BOUND_TOOLS
         ),
         AssistantToolName.DECLINE_RECORDING,
+        AssistantToolName.SEND_CALL_TRANSCRIPT,
     ]
     assert AssistantToolName.CANCEL_BOOKING not in [tool.name for tool in spec.tools]
     assert (

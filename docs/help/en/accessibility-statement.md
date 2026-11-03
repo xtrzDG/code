@@ -24,3 +24,7 @@ Replace the parts in square brackets.
 - Keep a phone number or e-mail where customers can book without the online pages, and put it in the text above.
 - Answer accessibility requests within 30 days; forward questions about the pages themselves to us through support.
 - Photos, menus and texts you upload are your content: give photos a short description and write menus as text, not only as images.
+
+## Callers who hear or speak with difficulty
+
+Your phone assistant repeats its last answer and speaks more slowly whenever a caller asks. A caller can also ask for the call in writing: when a messenger you connected (Telegram, WhatsApp, Messenger or Instagram) reaches them, the transcript of the call is texted to them right after it ends, together with any link the assistant promised. The voice platform does not support keypad input (DTMF, "press 1 for..."), so the assistant never asks for it. The fallback is text: a caller who cannot speak or hear on the phone can book, change or cancel, and ask the same questions, in your website chat, your chat page, WhatsApp or the booking page, where the assistant offers the same services. Name these channels next to your phone number in the text above.

@@ -139,6 +139,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         outbound_message_repo=repositories.outbound_message_repo,
         read_session=adapters.storage_read_session,
         see_platform_details=see_platform_details_use_case,
+        brand_repo=repositories.brand_repo,
     )
     # The judge's score of the conversation (production quality), if sampled.
     get_conversation_quality_use_case: Factory[

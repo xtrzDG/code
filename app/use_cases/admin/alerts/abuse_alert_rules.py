@@ -1,11 +1,13 @@
 """
-The abuse alert rules (ABUSE-04, VOICE-09), the code's copy of
-ops/alerts/{booking_spike,cancellation_spike,whatsapp_quality}.yaml. Each
-fires on any counted event in the shared signal windows: a business past
-40 new bookings or 15 cancellations in an hour (counted where the change
-is announced, `BookingSurgeObserverFacilitator`), or a warning of Meta
-about a WhatsApp number or template (counted by the WhatsApp webhook,
-`report_quality_warnings`).
+The abuse alert rules (ABUSE-04, ABUSE-05, VOICE-09), the code's copy of
+ops/alerts/{booking_spike,cancellation_spike,whatsapp_quality,
+campaign_opt_outs}.yaml. Each fires on any counted event in the shared
+signal windows: a business past 40 new bookings or 15 cancellations in an
+hour (counted where the change is announced,
+`BookingSurgeObserverFacilitator`), a warning of Meta about a WhatsApp
+number or template (counted by the WhatsApp webhook,
+`report_quality_warnings`), or a campaign held for review over its
+opt-out rate (counted by the campaign job, `CampaignReviewGate`).
 """
 
 from app.schemas.constants.incidents import IncidentSeverity
@@ -24,6 +26,9 @@ BOOKING_RUNBOOK: AlertRunbookPath = AlertRunbookPath(
 )
 WHATSAPP_RUNBOOK: AlertRunbookPath = AlertRunbookPath(
     "docs/operations/runbooks/whatsapp-quality.md"
+)
+CAMPAIGN_RUNBOOK: AlertRunbookPath = AlertRunbookPath(
+    "docs/operations/runbooks/campaign-opt-outs.md"
 )
 ANY_EVENT: AlertThreshold = AlertThreshold(0)
 NO_FLOOR: AlertVolumeFloor = AlertVolumeFloor(0)
@@ -67,5 +72,18 @@ ABUSE_ALERT_RULES: tuple[PlatformAlertRule, ...] = (
         window_minutes=SIGNAL_WINDOW_MINUTES,
         volume_floor=NO_FLOOR,
         runbook=WHATSAPP_RUNBOOK,
+    ),
+    PlatformAlertRule(
+        code=PlatformAlertCode.CAMPAIGN_OPT_OUTS,
+        severity=IncidentSeverity.SEV3,
+        summary=AlertRuleSummary(
+            "A campaign was held for review: 5 % or more of the customers it "
+            "wrote to in 30 days asked for no more messages."
+        ),
+        threshold=ANY_EVENT,
+        unit=AlertUnit.COUNT,
+        window_minutes=SIGNAL_WINDOW_MINUTES,
+        volume_floor=NO_FLOOR,
+        runbook=CAMPAIGN_RUNBOOK,
     ),
 )
