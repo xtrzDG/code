@@ -14,8 +14,9 @@ guard; how it is scored is the evaluation harness and its datasets,
 cassettes and baselines. The script prints the matching paths and, under
 GitHub Actions, writes `replay=true|false` to $GITHUB_OUTPUT. It needs only
 the standard library, so the job decides before it installs the
-dependencies.
-Exit code 2: git could not list the changed files.
+dependencies. When git cannot list the changed files (a base commit a
+force-push removed, a shallow clone) it replays everything: the gate is
+never skipped for want of a diff.
 """
 
 import argparse
@@ -39,9 +40,15 @@ MODEL_FACING_PATTERNS: tuple[str, ...] = (
     # Pinned model ids and the provider adapters.
     "app/utilities/conversations/llm_model_pins.py",
     "app/adapters/llm/*",
-    # The conversation engine and the guard on its replies.
+    # The conversation engine, what it hands the model (tool payloads, the
+    # fenced customer and owner texts, memory, knowledge search results)
+    # and the guard on its replies; how a recorded call is matched.
     "app/use_cases/conversations/*",
+    "app/utilities/conversations/*",
+    "app/utilities/memory/*",
+    "app/utilities/knowledge/*",
     "app/utilities/reply_guard/*",
+    "app/utilities/llm_cassettes/*",
     # The harness itself.
     "app/schemas/constants/evaluations.py",
     "evals/*",
@@ -103,8 +110,9 @@ def main(arguments: Sequence[str] | None = None) -> int:
             changed_paths(parsed.base) if parsed.base else sys.stdin.read().splitlines()
         )
     except RuntimeError as error:
-        print(f"Cannot list the changed files: {error}", file=sys.stderr)
-        return 2
+        print(f"Cannot list the changed files ({error}); replay everything.")
+        write_output(True)
+        return 0
 
     matched: list[str] = matching_paths(paths)
     for path in matched:

@@ -63,13 +63,18 @@ def measure_opt_outs(
     contact_repo: ContactRepoContract,
     business_id: BusinessId,
     now: Microseconds,
+    released_at: Microseconds | None = None,
 ) -> CampaignOptOutRate:
     """
     Walk the business's messages newest first, a page of 200 at a time,
-    until the window ends; each page's customers come in one read.
+    until the window ends (30 days, or the last release of a hold when it
+    is later: a released campaign starts afresh); each page's customers
+    come in one read.
     """
 
     since: int = int(now) - REVIEW_WINDOW_DAYS * MICROSECONDS_PER_DAY
+    if released_at is not None:
+        since = max(since, int(released_at))
     reached: dict[ContactId, CampaignMessageDocument] = {}
     after: KeysetPosition | None = None
     while True:

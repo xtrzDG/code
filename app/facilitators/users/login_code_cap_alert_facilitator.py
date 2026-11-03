@@ -32,7 +32,7 @@ CAP_DESCRIPTIONS: dict[LoginCodeCap, str] = {
     ),
     LoginCodeCap.NUMBER_RANGE_CONVERSION: (
         "login code to a number range whose codes go unused: the range is "
-        "refused until its unused codes leave the hour (the automatic "
+        "refused until its unused codes are six hours old (the automatic "
         "conversion throttle)"
     ),
 }

@@ -12,9 +12,6 @@ from app.schemas.dto.login_protection import LoginCodeCapAlert, LoginCodeDestina
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.exceptions.login_errors import LoginCodeCapReachedError
 from app.schemas.typings.users.constrained_integers import OtpSendLimit
-from app.use_cases.users.otp_login.login_code_conversion import (
-    refuse_over_conversion_throttle,
-)
 
 RESEND_INTERVAL_SECONDS: int = 30
 LIMIT_WINDOW_SECONDS: int = 60 * 60
@@ -31,8 +28,9 @@ def refuse_over_login_code_limits(
     Refuse a send, given the challenges of the last hour (`recent`):
     within 30 seconds of the last one to the same destination and channel
     (a phone may switch to another channel at once), or over the hourly
-    caps per destination and per client address, or over a platform cap,
-    or under the conversion throttle of new phones (`login_code_conversion`).
+    caps per destination and per client address, or over a platform cap.
+    The conversion throttle of new phones (`login_code_conversion`) runs
+    after these, on a longer window.
 
     The platform caps keep two budgets: codes for verified users' phones
     and e-mails, and codes for everything else (new destinations), so a
@@ -78,7 +76,6 @@ def refuse_over_login_code_limits(
         raise RateLimitedError(TOO_MANY_CODES_MESSAGE)
 
     refuse_over_platform_caps(recent, destination, app_settings)
-    refuse_over_conversion_throttle(recent, destination, wall_clock.now_unix())
 
 
 def refuse_over_platform_caps(

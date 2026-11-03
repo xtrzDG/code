@@ -8,7 +8,7 @@ pull request (offline, from recorded model answers) and every night
 | --- | --- | --- |
 | `tests/evals/test_replay_cassettes.py` | every scenario of every niche replays from `evals/cassettes` with no stale recording and the result matches `evals/baselines/scripted.json` | every CI run (`uv run pytest`), no network, no keys |
 | `tests/evals/test_eval_coverage.py`, `test_dataset_depth.py`, `test_grounding_sets.py` | every tool a chat offers is expected by a scenario (`decline_recording`, offered only on calls, is covered by `tests/calls/test_declined_recordings.py`), every scenario kind is played, every niche plays the customer flows and attacks below, at least 100 scenarios per vertical with its grounding set in en and it and four misrecognised voice notes | every CI run |
-| CI job `evals` (`.github/workflows/ci.yml`) | a pull request that changes what the model sees (prompts and their snapshots, tool definitions and inputs, model pins, the conversation engine, the reply guard) or the harness replays every cassette with `--min-pass-rate 1 --max-hallucination-rate 0`; "CI passed" needs it, so it blocks the merge (`scripts/eval_replay_scope.py` decides) | pull requests and main, offline, no keys |
+| CI job `evals` (`.github/workflows/ci.yml`) | a pull request that changes what the model sees (prompts and their snapshots, tool definitions and inputs, model pins, the conversation engine and what it hands the model: tool payloads, fenced texts, memory, knowledge search; the reply guard) or the harness replays every cassette with `--min-pass-rate 1 --max-hallucination-rate 0`; "CI passed" needs it, so it blocks the merge (`scripts/eval_replay_scope.py` decides, and replays everything when git cannot list the change). It replays recorded answers: a changed prompt makes its cassettes stale, and their re-recording is reviewed in the pull request; how a real model answers the change shows in the nightly run | pull requests and main, offline, no keys |
 | `scripts/run_evals.py --record --model <model>` | real models play the scenarios: pass^k, per-criterion rates, judge scores, cost and latency, compared with `evals/baselines/<model>.json` | nightly and on demand (`.github/workflows/evals-nightly.yml`) |
 
 ## What is played
@@ -51,7 +51,10 @@ speech recognition got partly wrong (AI-12):
   assistant says it does not know and records the question; kind
   `unknown_question`). `invented` lists what a guessing assistant would
   say instead ("we have a sauna", a price the list lacks); no reply may
-  write it (`question_pairs.py`);
+  write it (`question_pairs.py`). An invented value is the guess itself,
+  never words of the question: an honest "I don't know whether the kitchen
+  is fully equipped" would otherwise count as one, so loading refuses it
+  (`dataset_validation.check_invented`);
 - `asr_homophone__en`, `asr_dropped__it`, `asr_accent__en` and
   `asr_number__it` (kind `asr_noise`) send a WhatsApp voice note whose
   transcript is fixed word for word, even for a live AI customer:

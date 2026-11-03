@@ -57,10 +57,13 @@ class CampaignSettingsDocument(BaseDocument):
 
     Version 2 adds `review_hold` (optional, ABUSE-05): set by the campaign
     job when the opt-out rate of its recent messages is too high, cleared
-    by a platform admin; the owner's saves keep it.
+    by a platform admin; the owner's saves keep it. Version 3 adds
+    `review_released_at` (optional): when a platform admin last released a
+    hold; the campaign's opt-out rate counts only the messages sent since,
+    so the messages that held it cannot hold it again.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: CampaignSettingsId
     business_id: BusinessId
     is_enabled: IsCampaignEnabled = False
@@ -71,6 +74,7 @@ class CampaignSettingsDocument(BaseDocument):
     monthly_cap: CampaignMonthlyCap = DEFAULT_MONTHLY_CAP
     updated_by: UserId | None = None
     review_hold: CampaignReviewHold | None = None
+    review_released_at: Microseconds | None = None
 
 
 class CampaignMessageDocument(BaseDocument):

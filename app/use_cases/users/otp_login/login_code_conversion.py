@@ -4,11 +4,17 @@ used (VOICE-03): SMS pumping requests codes nobody types in, so a country
 or a number range whose codes go unused gets fewer codes, then none.
 
 Only settled codes count (used, or expired unused) among the codes to new
-phones of the last hour (`recent`): a verified owner's code and an e-mail
-never trip it. The throttle needs no stored state: a refused request
-creates no code, so a range or country opens again once its unused codes
-leave the hour.
+phones of the last six hours (`CONVERSION_WINDOW_SECONDS`): a verified
+owner's code and an e-mail never trip it. The window is longer than the
+hour of the send caps on purpose: a burst of codes sent before any of them
+expires stays visible after it, so the range stays denied and the country
+stays at its lowered cap while the burst's codes are in the window,
+instead of opening again as soon as they are an hour old. The throttle
+needs no stored state: a refused request creates no code, so a range or
+country opens again once its unused codes leave the window.
 """
+
+from collections.abc import Callable
 
 from typed_time_provider import Microseconds
 
@@ -20,7 +26,12 @@ from app.schemas.typings.localization.constrained_strings import PhoneNumberPref
 from app.schemas.typings.users.constrained_integers import OtpSendLimit
 
 THROTTLED_MESSAGE: str = "Too many login codes were requested. Try again later."
-# A country needs this many settled codes in the hour before its
+MICROSECONDS_PER_SECOND: int = 1_000_000
+# How far back the conversion of a country or a number range is measured.
+CONVERSION_WINDOW_SECONDS: int = 6 * 60 * 60
+# The lowered cap of a country counts its codes to new phones of the hour.
+CAP_WINDOW_SECONDS: int = 60 * 60
+# A country needs this many settled codes in the window before its
 # conversion counts; under the floor (a share of used codes, in percent)
 # its hourly cap of codes to new phones drops to the throttled cap.
 COUNTRY_MIN_SETTLED: int = 20
@@ -28,7 +39,8 @@ COUNTRY_CONVERSION_FLOOR_PERCENT: int = 30
 THROTTLED_SENDS_PER_COUNTRY_PER_HOUR: OtpSendLimit = OtpSendLimit(10)
 # A number range is the first characters of the E.164 number ("+" and six
 # digits: a calling code and the start of a network's range). Under its
-# floor no new code goes to the range until its unused codes leave the hour.
+# floor no new code goes to the range until its unused codes leave the
+# window.
 RANGE_PREFIX_LENGTH: int = 7
 RANGE_MIN_SETTLED: int = 10
 RANGE_CONVERSION_FLOOR_PERCENT: int = 10
@@ -36,7 +48,7 @@ DENIED_RANGE_LIMIT: OtpSendLimit = OtpSendLimit(1)
 
 
 def refuse_over_conversion_throttle(
-    recent: list[OtpChallengeDocument],
+    list_lookback: Callable[[], list[OtpChallengeDocument]],
     destination: LoginCodeDestination,
     now: Microseconds,
 ) -> None:
@@ -44,7 +56,8 @@ def refuse_over_conversion_throttle(
     Refuse a code to a new phone whose number range converts under its
     floor, or whose country converts under its floor and already had the
     throttled cap of codes this hour (a lower OTP_SENDS_PER_COUNTRY_PER_HOUR
-    refuses first).
+    refuses first). `list_lookback` reads the challenges of the conversion
+    window; it is called only for a new phone.
 
     Raises:
         LoginCodeCapReachedError: the platform team is alerted with the
@@ -60,7 +73,7 @@ def refuse_over_conversion_throttle(
 
     new_phones: list[OtpChallengeDocument] = [
         challenge
-        for challenge in recent
+        for challenge in list_lookback()
         if challenge.login_method is LoginMethod.PHONE
         and not challenge.is_verified_destination
     ]
@@ -87,7 +100,11 @@ def refuse_over_conversion_throttle(
         for challenge in new_phones
         if challenge.country_code == destination.country_code
     ]
-    if len(in_country) >= int(THROTTLED_SENDS_PER_COUNTRY_PER_HOUR) and converts_under(
+    hour_start: int = int(now) - CAP_WINDOW_SECONDS * MICROSECONDS_PER_SECOND
+    sent_this_hour: int = len(
+        [challenge for challenge in in_country if int(challenge.created_at) > hour_start]
+    )
+    if sent_this_hour >= int(THROTTLED_SENDS_PER_COUNTRY_PER_HOUR) and converts_under(
         in_country, now, COUNTRY_MIN_SETTLED, COUNTRY_CONVERSION_FLOOR_PERCENT
     ):
         raise LoginCodeCapReachedError(

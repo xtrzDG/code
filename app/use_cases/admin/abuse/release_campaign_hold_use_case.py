@@ -49,10 +49,10 @@ class ReleaseCampaignHoldUseCase(
     cleared (the owner's settings stay as they are), the release goes to
     the business's audit log (UPDATE of `campaign_settings`,
     `review_hold_released`, with the reason and the address) and the
-    owners are told in their language. The next hourly run measures the
-    campaign afresh, so a campaign whose recent messages still made too
-    many customers opt out is held again at once; agree on a narrower
-    audience with the owner first.
+    owners are told in their language. The release time is kept
+    (`review_released_at`): from then on the campaign's opt-out rate counts
+    only the messages sent after it, so the messages that held it cannot
+    hold it again, and new ones past the rate hold it again.
 
     Raises:
         AccessDeniedError: the user is not a SUPER platform admin.
@@ -108,7 +108,13 @@ class ReleaseCampaignHoldUseCase(
 
         now: Microseconds = self._wall_clock.now_unix()
         self._settings_repo.save(
-            settings.model_copy(update={"review_hold": None, "updated_at": now})
+            settings.model_copy(
+                update={
+                    "review_hold": None,
+                    "review_released_at": now,
+                    "updated_at": now,
+                }
+            )
         )
         entry = AuditLogEntryDocument(
             business_id=business.id,

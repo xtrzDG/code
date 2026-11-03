@@ -53,6 +53,24 @@ def check_scenario(
 
     check_attachment(scenario, media_dir)
     check_memory(scenario)
+    check_invented(scenario)
+
+
+def check_invented(scenario: ScenarioSpec) -> None:
+    """
+    An invented value is the guess itself ("yes, there is a balcony"), never
+    words of the customer's own messages: an honest reply that repeats the
+    question ("I don't know whether there is a balcony") would otherwise
+    count as a hallucination and fail the scenario.
+    """
+
+    asked: str = "\n".join(scenario.customer).casefold()
+    for value in scenario.expect.invented:
+        if value.casefold() in asked:
+            raise ScenarioError(
+                f"{scenario.id}: the invented {value!r} repeats the customer's "
+                "own words; name the guess an assistant would assert instead."
+            )
 
 
 def check_language(scenario: ScenarioSpec, languages: list[str]) -> None:

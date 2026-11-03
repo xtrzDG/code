@@ -536,7 +536,7 @@
       "type": "stat",
       "id": 34,
       "title": "Calls answered: budget left",
-      "description": "Calls the voice platform took (they asked the conversation-initiation webhook for their greeting) over those plus the calls that reached the Twilio voice fallback, against 99 % over 28 days. 100 % untouched, 0 spent. Booking success has no Prometheus series: the monthly SLO report reads it from the replies' tool results.",
+      "description": "Calls the voice platform took (they asked the conversation-initiation webhook for their greeting) over those plus the calls that reached the Twilio voice fallback, against 99 % over 28 days. 100 % untouched, 0 spent. Booking success has no Prometheus series: nothing computes its budget yet, and the monthly SLO report reads it by hand from the replies' tool results.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"

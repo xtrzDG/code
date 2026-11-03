@@ -2,8 +2,9 @@
 # when most were never used, codes go to numbers nobody signs in
 # with (SMS pumping through sign-in). The message names the countries
 # with the most unused codes. Sign-in throttles itself before this alert:
-# a number range whose codes go unused gets no code for the hour, and a
-# country's cap of codes to new phones drops to 10 an hour
+# a number range whose codes to new phones of the last six hours went
+# unused gets no code, and such a country's cap of codes to new phones
+# drops to 10 an hour, until the unused codes are six hours old
 # (app/use_cases/users/otp_login/login_code_conversion.py).
 code: otp_conversion
 severity: sev2

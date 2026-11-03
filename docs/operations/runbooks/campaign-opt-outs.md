@@ -32,7 +32,10 @@ settings stay as they are.
   longer delay, then release the hold with
   `POST /v1/admin/campaign-holds/{business_id}/release` and the reason
   (SUPER admins). The release is audited and the owners are
-  told that their campaign writes again.
+  told that their campaign writes again. From the release on, the
+  campaign's rate counts only the messages sent after it: the messages
+  that held it cannot hold it again, and the campaign is held again only
+  when 5 % of at least 40 customers it writes to from then on opt out.
 
 ## Afterwards
 

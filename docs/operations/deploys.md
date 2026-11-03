@@ -687,6 +687,30 @@ The same expand and contract, for tables and columns:
   quieter moment, and redeploy. Nothing of a failed file is recorded, and
   a half-built concurrent index is dropped and built again next time.
 
+### Rehearsing the pending migrations
+
+```
+uv run python -m scripts.migration_rehearsal                       # full: 500 businesses, 2,000,000 messages
+uv run python -m scripts.migration_rehearsal --scale small --report rehearsal.json
+uv run python -m scripts.migration_rehearsal --messages 500000 --businesses 100 --budget-seconds 120
+```
+
+Before a release that adds migrations, the rehearsal applies on a scratch
+Postgres (the local `postgres` binaries, `POSTGRES_BIN_DIRECTORY`, as the
+storage tests use)
+every file production's `release` branch already has, fills the biggest
+tables with a production-sized synthetic dataset (`--scale full`, the
+default, follows `docs/operations/capacity.md`; `medium` and `small` are a
+tenth and a hundredth; `--messages` and `--businesses` set it exactly),
+and then times each pending file alone. A file that fails or takes longer
+than `--budget-seconds` (300) fails the run (exit 1); without a Postgres it
+exits 2. It prints the table as Markdown; `--report` also writes it as
+JSON. Without the `release` ref (a fork, a shallow clone) the newest
+three files count as pending (`--base-ref` names another commit). The weekly
+perf workflow runs it (`migrations` job, `.github/workflows/perf.yml`) and
+puts the table in the run's summary; run it by hand for a migration that
+rewrites or indexes a big table.
+
 ### `workshop backfill-lookup`
 
 ```
@@ -702,6 +726,28 @@ and whose document holds the field. Idempotent and resumable; it prints,
 per column, the rows it filled (with `--dry-run`, the rows left). Run it from the API's Render Shell or
 as a one-off job **after** the deploy that added the columns, never in
 `preDeployCommand`.
+
+## Staged rollouts: feature flags
+
+A risky change ships dark behind a flag of the registry
+(`app/utilities/feature_flags/feature_flag_catalog.py`; the first is
+`release_canary`), which the code asks per business at request time
+(`FeatureFlagGateContract`): one keyed read of the `feature_flags`
+collection, so a change holds at the next request of every process and a
+flag never set is off. A flag holds for a business when it is on and the
+business is on its inclusion list, or it is not excluded and its bucket
+(a stable hash of the flag and the business, 0-99) is below the rollout
+percentage.
+
+A SUPER platform admin sets a flag after a recent sign-in, with a reason
+(`PUT /v1/admin/feature-flags/{flag_name}`; `GET /v1/admin/feature-flags`
+lists them and `GET .../businesses/{business_id}` says why one holds or
+not, for any admin who sees operations). Every change is on the platform's
+audit log (`feature_flag`). The usual order: the pilot businesses on the
+inclusion list, then 5, 25 and 100 percent, a day apart, watching the
+error budgets (`docs/operations/slo.md`); switching the flag off is the
+rollback, faster than a deploy. Remove the flag and its branch in the
+release after it reached 100 percent.
 
 ## Rollback
 

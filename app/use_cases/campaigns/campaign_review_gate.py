@@ -39,7 +39,8 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 class CampaignReviewGate:
     """
     A held campaign stays held until a platform admin releases it. An
-    unheld one is measured before it writes: past the opt-out rate
+    unheld one is measured before it writes (after a release, only its
+    messages sent since count): past the opt-out rate
     (`CampaignOptOutRate.needs_review`) it is held now, its owners are
     told why in their language, the platform signal `campaign_hold` counts
     once (the `campaign_opt_outs` alert) and a warning line names the
@@ -64,13 +65,22 @@ class CampaignReviewGate:
             return True
 
         rate: CampaignOptOutRate = measure_opt_outs(
-            self.message_repo, self.contact_repo, business.id, now
+            self.message_repo,
+            self.contact_repo,
+            business.id,
+            now,
+            settings.review_released_at,
         )
         if not rate.needs_review():
             return False
 
         hold: CampaignReviewHold = rate.hold(now)
-        self.settings_repo.save(settings.model_copy(update={"review_hold": hold}))
+        # Read again just before the write: an owner's save made while the
+        # messages were counted is kept.
+        latest: CampaignSettingsDocument = (
+            self.settings_repo.get_by_business(business.id) or settings
+        )
+        self.settings_repo.save(latest.model_copy(update={"review_hold": hold}))
         LOGGER.warning(
             "The campaign of %s is held for review: %d of %d customers opted out.",
             business.id,

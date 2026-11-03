@@ -1,5 +1,7 @@
 """The platform admin's review of campaigns held over their opt-out rate (ABUSE-05)."""
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from app.repositories.compliance_repositories import AuditLogRepository
@@ -123,6 +125,40 @@ def test_a_super_admin_releases_a_hold_with_an_audit_entry_and_a_notice() -> Non
                 user_id=super_admin, business_id=world.business.id, reason=REASON
             )
         )
+
+
+def test_a_released_campaign_is_measured_only_on_the_messages_sent_since() -> None:
+    world = held_world()
+    authorizer = RoleAuthorizer(world.user_repo)
+    super_admin = admin_of(world, authorizer, PlatformAdminRole.SUPER)
+    use_case, _ = release_use_case(world, authorizer, audit_log_repository())
+    use_case.run(
+        ReleaseCampaignHoldCommand(
+            user_id=super_admin, business_id=world.business.id, reason=REASON
+        )
+    )
+    released_at = settings_of(world).review_released_at
+    assert released_at is not None
+    assert released_at == world.clock.now_microseconds()
+    gate, notifier, _ = build_gate(world)
+
+    # The next hourly run: the messages that held it do not count again.
+    world.clock.move_to(
+        datetime.fromtimestamp(int(released_at) / 1_000_000, UTC) + timedelta(hours=1)
+    )
+    assert gate.is_held(
+        world.business, settings_of(world), world.clock.now_microseconds()
+    ) is False
+    assert notifier.notifications == []
+
+    # New messages past the rate hold it again.
+    reach(world, 40, stops=3, days_ago=0)
+    assert gate.is_held(
+        world.business, settings_of(world), world.clock.now_microseconds()
+    ) is True
+    hold = settings_of(world).review_hold
+    assert hold is not None
+    assert (int(hold.sent), int(hold.opted_out)) == (40, 3)
 
 
 def test_only_a_super_admin_may_release_a_hold() -> None:

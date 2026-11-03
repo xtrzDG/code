@@ -20,6 +20,10 @@ from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.login_errors import LoginCodeCapReachedError
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
+from app.use_cases.users.otp_login.login_code_conversion import (
+    CONVERSION_WINDOW_SECONDS,
+    refuse_over_conversion_throttle,
+)
 from app.use_cases.users.otp_login.login_code_delivery import deliver_login_code
 from app.use_cases.users.otp_login.login_code_limits import (
     LIMIT_WINDOW_SECONDS,
@@ -51,6 +55,9 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
       allowed, for a number that is not on WhatsApp), and so is a send over
       the hourly caps per destination, per client address, per country (new
       phones) and in total, where verified users have a budget of their own;
+    - a number range whose codes to new phones of the last six hours mostly
+      went unused gets none, and such a country gets at most 10 an hour
+      (`login_code_conversion`);
       the platform team is alerted when a platform cap refuses sends, and
       when one client network asks codes for many different phones and
       e-mails within the hour (`login_code_spray`).
@@ -158,6 +165,11 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
                 refuse_over_login_code_limits(
                     recent, destination, self._wall_clock, self._app_settings
                 )
+                refuse_over_conversion_throttle(
+                    self._list_conversion_lookback,
+                    destination,
+                    self._wall_clock.now_unix(),
+                )
                 self._otp_challenge_repo.save(challenge)
                 return recent
         except LoginCodeCapReachedError as error:
@@ -184,4 +196,9 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
     def _list_recent_challenges(self) -> list[OtpChallengeDocument]:
         return self._otp_challenge_repo.list_created_since(
             self._wall_clock.now_unix_with_delta(Seconds(-LIMIT_WINDOW_SECONDS))
+        )
+
+    def _list_conversion_lookback(self) -> list[OtpChallengeDocument]:
+        return self._otp_challenge_repo.list_created_since(
+            self._wall_clock.now_unix_with_delta(Seconds(-CONVERSION_WINDOW_SECONDS))
         )

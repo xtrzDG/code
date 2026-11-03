@@ -68,10 +68,42 @@ its messages reach the API (**API availability**, 99.9%) and get an answer
 or a handoff (**Answered in time**, 99.5%); both have their budgets and
 burn-rate alerts above.
 
-The monthly SLO report states what is left of each budget. A product
-budget that is spent follows the error budget policy below like the three
-main ones: feature work stops in its area (voice, bookings, notifications,
-the inbound pipeline) until the next report shows it back above zero.
+**How they are computed.** Four of the five budgets are computed from the
+Prometheus series (`app/utilities/observability/product_service_levels.py`,
+one set of queries for the dashboard and the report):
+
+- **Calls answered**: calls that asked the conversation-initiation webhook
+  for their greeting (every call the voice platform takes) over those plus
+  the requests of the Twilio voice fallback (`POST
+  /v1/telephony/twilio/voice-fallback/{business_id}`, a call it could not
+  take), over 28 days.
+- **Notification delivery**: `workshop_outbound_attempts_total` with
+  `outcome="delivered"` over delivered plus `dead` (one each per settled
+  message), over 28 days.
+- **Voice latency**: the days of the last 28 whose p95 of `POST
+  /v1/voice/tools/{tool_name}` was above 2 s, against 1.4 days.
+- **Webhook lag**: the hours of the last 28 days whose p99 of
+  `workshop_job_pickup_delay_seconds{lane="inbound"}` was above 10 s,
+  against 6.72 hours. A day or hour without traffic counts as within the
+  target; a window with no traffic at all is reported as not measured.
+
+The dashboard's "Product service levels" row (`ops/grafana/`) shows what
+is left of each of these four and the daily voice p95 and hourly pickup
+p99 against their targets. **Booking success** has no Prometheus series:
+its only record is the tool results stored with each reply, so nothing
+computes its budget yet. `scripts/slo_report.py` lists it as not
+measured, and whoever writes the report reads it from those tool results
+by hand (the `tool_errors` alert's failed calls are the bad ones) until a
+booking outcome counter exists.
+
+The monthly SLO report states what is left of each budget: the three main
+ones from `/admin/system`, the product ones from
+`uv run python -m scripts.slo_report` (with `PROMETHEUS_URL`, and for
+Grafana Cloud `PROMETHEUS_USER` and `PROMETHEUS_TOKEN`; `--json`, `--out`;
+exit 1 when a budget is spent). A product budget that is spent follows
+the error budget policy below like the three main ones: feature work
+stops in its area (voice, bookings, notifications, the inbound pipeline)
+until the next report shows it back above zero.
 
 ## How each SLO is read today
 

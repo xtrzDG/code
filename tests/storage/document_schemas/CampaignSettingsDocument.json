@@ -1,7 +1,7 @@
 {
   "collection": "campaign_settings",
   "document_type": "CampaignSettingsDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -69,6 +69,17 @@
         ],
         "default": null
       },
+      "review_released_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "rule_kind": {
         "enum": [
           "rebook",
@@ -78,7 +89,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "segment_id": {

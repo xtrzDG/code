@@ -87,9 +87,7 @@ def test_a_super_admin_sets_a_flag_and_support_sees_it() -> None:
 def test_support_cannot_change_a_flag() -> None:
     world = FlagWorld()
 
-    refused = client_as(world, world.support).put(
-        f"{PATH}/release_canary", json=body()
-    )
+    refused = client_as(world, world.support).put(f"{PATH}/release_canary", json=body())
 
     assert refused.status_code == 403, refused.text
     assert world.audit_entries.list_all() == []

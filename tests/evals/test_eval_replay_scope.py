@@ -38,6 +38,10 @@ def jobs(path: Path) -> dict[str, Any]:
         "evals/datasets/hotel.yaml",
         "scripts/eval_harness/grounding_check.py",
         "app/registries/localization/texts/en.json",
+        "app/utilities/conversations/tool_payloads.py",
+        "app/utilities/memory/conversation_summary_prompt.py",
+        "app/utilities/knowledge/ranking/hybrid_ranking.py",
+        "app/utilities/llm_cassettes/cassette_keys.py",
     ],
 )
 def test_a_model_facing_change_needs_the_replay(path: str) -> None:
@@ -80,8 +84,14 @@ def test_the_decision_goes_to_the_job_output(
     assert "model-facing: evals/README.md" in capsys.readouterr().out
 
 
-def test_an_unknown_base_commit_fails_the_job() -> None:
-    assert main(["--base", "not-a-commit"]) == 2
+def test_an_unknown_base_commit_replays_everything(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+
+    assert main(["--base", "not-a-commit"]) == 0
+    assert output.read_text(encoding="utf-8").splitlines() == ["replay=true"]
 
 
 def test_ci_replays_offline_with_a_full_floor_and_blocks_the_merge() -> None:

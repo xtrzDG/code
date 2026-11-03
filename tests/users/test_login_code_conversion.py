@@ -1,6 +1,8 @@
 """
 The automatic throttle of login codes to new phones whose codes go unused
-(VOICE-03): a number range is denied for the hour, a country's cap drops.
+(VOICE-03): a number range is denied and a country's cap drops while the
+unused codes are in the six-hour window, so a burst cannot come back as
+soon as its codes are an hour old.
 """
 
 import pytest
@@ -20,6 +22,7 @@ from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 CODE_LIFETIME_SECONDS: int = 600
 HOUR_SECONDS: int = 3600
+WINDOW_SECONDS: int = 6 * HOUR_SECONDS
 
 
 def range_number(network: str, index: int) -> str:
@@ -33,7 +36,9 @@ def request_unused_codes(testbed: AccountsTestbed, network: str, count: int) -> 
         testbed.request_phone_code(range_number(network, index))
 
 
-def test_a_range_whose_codes_go_unused_is_denied_for_the_hour() -> None:
+def test_a_range_whose_codes_go_unused_is_denied_while_they_are_in_the_window() -> (
+    None
+):
     testbed = build_accounts_testbed()
     request_unused_codes(testbed, "555", 10)
     testbed.clock.advance(CODE_LIFETIME_SECONDS + 1)
@@ -53,7 +58,13 @@ def test_a_range_whose_codes_go_unused_is_denied_for_the_hour() -> None:
     testbed.request_phone_code(range_number("577", 1))
     testbed.request_phone_code(GERMANY_MOBILE)
 
+    # An hour later the burst's codes are out of the send caps' hour, not
+    # out of the conversion window: the range stays denied.
     testbed.clock.advance(HOUR_SECONDS)
+    with pytest.raises(LoginCodeCapReachedError):
+        testbed.request_phone_code(range_number("555", 98))
+
+    testbed.clock.advance(WINDOW_SECONDS - HOUR_SECONDS)
     testbed.request_phone_code(range_number("555", 99))
     assert len(testbed.otp_delivery.deliveries) == 13
 
@@ -98,6 +109,23 @@ def test_a_country_whose_codes_go_unused_gets_a_lower_cap() -> None:
     testbed.request_phone_code(GERMANY_MOBILE)
     testbed.clock.advance(HOUR_SECONDS)
     testbed.request_phone_code(range_number("591", 1))
+
+
+def test_a_country_keeps_its_lower_cap_after_the_hour_of_the_burst() -> None:
+    testbed = build_accounts_testbed()
+    for network in ("555", "577", "599"):
+        request_unused_codes(testbed, network, 7)
+    testbed.clock.advance(HOUR_SECONDS + 1)
+
+    for network in ("591", "592"):
+        request_unused_codes(testbed, network, 5)
+    with pytest.raises(LoginCodeCapReachedError):
+        testbed.request_phone_code(range_number("593", 1))
+
+    assert [alert.cap for alert in testbed.cap_alerts.alerts] == [
+        LoginCodeCap.COUNTRY_CONVERSION
+    ]
+    assert len(testbed.otp_delivery.deliveries) == 31
 
 
 def test_a_country_that_converts_keeps_its_cap() -> None:

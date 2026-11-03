@@ -128,3 +128,30 @@ def test_a_misrecognised_voice_note_must_be_a_voice_note() -> None:
 
     with pytest.raises(ScenarioError, match="voice note"):
         check_scenario(scenario, ["en", "it"], Path("/nonexistent"))
+
+
+def test_an_invented_value_never_repeats_the_question() -> None:
+    scenario = ScenarioSpec.model_validate(
+        {
+            "id": "qa_kitchen__en",
+            "language": "en",
+            "kind": "unknown_question",
+            "persona": {"name": "Emma"},
+            "goal": 'Ask: "Is the kitchen fully equipped?"',
+            "customer": ["Is the kitchen fully equipped?"],
+            "assistant": [{"say": "I don't know whether it is fully equipped."}],
+            "expect": {"invented": ["fully equipped"], "unanswerable": True},
+        }
+    )
+
+    with pytest.raises(ScenarioError, match="repeats the customer's own words"):
+        check_scenario(scenario, ["en", "it"], Path("/nonexistent"))
+
+    guess = scenario.model_copy(
+        update={
+            "expect": scenario.expect.model_copy(
+                update={"invented": ["yes, it is fully equipped"]}
+            )
+        }
+    )
+    check_scenario(guess, ["en", "it"], Path("/nonexistent"))
