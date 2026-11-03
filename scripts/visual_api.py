@@ -39,12 +39,22 @@ from app.main import create_application
 from app.schemas.constants.environment import DeploymentEnvironment
 
 CLOCK_START_VARIABLE: str = "VISUAL_CLOCK_START"
-# Read by web/e2e/support/apiClock.ts: keep the wording.
-CLOCK_LOG_LINE: str = "Visual clock: %d ns at the machine's %d ns"
+# Read by web/e2e/support/apiClock.ts: keep the wording. The moments are
+# seconds with nine decimals, never a bare run of 19 digits: the log's card
+# number masking (app/utilities/privacy/sensitive_numbers.py) would hide a
+# reading that happens to pass the Luhn check.
+CLOCK_LOG_LINE: str = "Visual clock: %s s at the machine's %s s"
 MODULE: str = "scripts.visual_api"
 NANOSECONDS_PER_SECOND: int = 1_000_000_000
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+
+
+def seconds_text(nanoseconds: int) -> str:
+    """Nanoseconds since the epoch as seconds with nine decimals."""
+
+    whole, fraction = divmod(nanoseconds, NANOSECONDS_PER_SECOND)
+    return f"{whole}.{fraction:09d}"
 
 
 class ClockStartError(ValueError):
@@ -73,7 +83,11 @@ class StartedClock:
             if self._offset is None:
                 reading: int = self._machine()
                 self._offset = self._start_nanoseconds - reading
-                LOGGER.warning(CLOCK_LOG_LINE, self._start_nanoseconds, reading)
+                LOGGER.warning(
+                    CLOCK_LOG_LINE,
+                    seconds_text(self._start_nanoseconds),
+                    seconds_text(reading),
+                )
 
     def __call__(self) -> int:
         with self._lock:

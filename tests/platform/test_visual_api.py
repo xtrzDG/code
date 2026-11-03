@@ -19,12 +19,15 @@ from app.containers.app import AppContainer
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.privacy.sensitive_numbers import mask_sensitive_numbers
 from scripts.visual_api import (
+    CLOCK_LOG_LINE,
     CLOCK_START_VARIABLE,
     ClockStartError,
     StartedClock,
     read_clock_start,
     runs_on_after_startup,
+    seconds_text,
     start_wall_clocks,
 )
 from tests.e2e.workshop_container import replace_provider
@@ -61,8 +64,20 @@ def test_the_clock_stands_at_the_start_until_it_runs_on(
     assert standing == [START, START]
     assert running == [START + 250, START + 60 * SECOND]
     assert caplog.messages == [
-        f"Visual clock: {START} ns at the machine's {5 * SECOND} ns"
+        "Visual clock: 1791963000.000000000 s at the machine's 5.000000000 s"
     ]
+
+
+def test_the_clock_line_survives_the_logs_card_number_masking() -> None:
+    # 1793030000123456789 passes the Luhn check: logged as a bare run of
+    # digits it became "[card number]" and the tests lost the API's time.
+    reading = 1_793_030_000_123_456_789
+    line = CLOCK_LOG_LINE % (seconds_text(START), seconds_text(reading))
+
+    assert mask_sensitive_numbers(line) == line
+    assert line == (
+        "Visual clock: 1791963000.000000000 s at the machine's 1793030000.123456789 s"
+    )
 
 
 def test_the_api_starts_at_the_start_and_runs_on_after() -> None:
