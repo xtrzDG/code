@@ -27,6 +27,23 @@ def build_notification_key(notification: PaymentNotification) -> PaymentNotifica
     )
 
 
+def is_overtaken_approval(
+    notification: PaymentNotification,
+    processed_keys: list[PaymentNotificationKey],
+) -> bool:
+    """
+    An approval of a payment whose reversal (a refund or a chargeback) was
+    applied already: the provider delivered the two out of order, and the
+    money went back, so the late approval pays nothing.
+    """
+
+    reversal = notification.model_copy(update={"status": PaymentStatus.REVERSED})
+    return (
+        notification.status is PaymentStatus.APPROVED
+        and build_notification_key(reversal) in processed_keys
+    )
+
+
 def require_expected_amount(
     notification: PaymentNotification,
     payment_order: PaymentOrderDocument,

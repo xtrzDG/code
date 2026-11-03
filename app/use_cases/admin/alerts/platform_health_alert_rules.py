@@ -1,9 +1,10 @@
 """
 The platform health alert rules (LOG-04, LOG-05), the code's copy of
 ops/alerts/{webhook_signature_failures,storage_errors,api_latency,
-backup_failed,tenant_sms_volume,otp_conversion}.yaml. Each fires when its
-figure is above its threshold; the counted signals are written by the
-processes that see the events (platform_health_alert_checks.py).
+backup_failed,tenant_sms_volume,otp_conversion,
+tenant_payment_declines}.yaml. Each fires when its figure is above its
+threshold; the counted signals are written by the processes that see the
+events (platform_health_alert_checks.py).
 """
 
 from app.schemas.constants.incidents import IncidentSeverity
@@ -110,5 +111,15 @@ PLATFORM_HEALTH_ALERT_RULES: tuple[PlatformAlertRule, ...] = (
         HOUR,
         "tenant-sms-volume.md",
         OTP_CONVERSION_FLOOR,
+    ),
+    _rule(
+        PlatformAlertCode.TENANT_PAYMENT_DECLINES,
+        IncidentSeverity.SEV2,
+        "The payments of a business were declined 5 times within two hours "
+        "(card testing); from 10 its new payment pages are refused.",
+        0,
+        AlertUnit.COUNT,
+        SIGNAL_WINDOW_MINUTES,
+        "tenant-payment-declines.md",
     ),
 )

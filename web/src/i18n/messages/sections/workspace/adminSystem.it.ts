@@ -77,6 +77,7 @@ export const adminSystemIt: Translation<typeof adminSystemEn> = {
       api_latency: "API lenta",
       backup_failed: "Backup non riuscito",
       tenant_sms_volume: "Un cliente invia troppi SMS",
+      tenant_payment_declines: "I pagamenti di un cliente vengono rifiutati di continuo",
       otp_conversion: "Codici di accesso non usati",
       booking_spike: "Un cliente riceve un'ondata di nuove prenotazioni",
       cancellation_spike: "Le prenotazioni di un cliente vengono annullate in massa",

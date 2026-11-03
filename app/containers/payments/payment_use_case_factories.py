@@ -1,6 +1,7 @@
 from functools import cached_property
 
 from app.containers.payments.payment_dependencies import PaymentDependencies
+from app.contracts.payment_declines import PaymentDeclineWatchFacilitatorContract
 from app.contracts.payment_methods import (
     DunningNoticeFacilitatorContract,
     PaymentProviderRegistryContract,
@@ -9,10 +10,13 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.facilitators.billing.dunning_notice_facilitator import (
     DunningNoticeFacilitator,
 )
+from app.facilitators.billing.payment_decline_watch_facilitator import (
+    PaymentDeclineWatchFacilitator,
+)
 from app.registries.billing.payment_provider_registry import PaymentProviderRegistry
 from app.schemas.constants.payments import PaymentWebhookOutcome
 from app.schemas.dto.billing_cabinet import CheckoutSessionView, StartCheckoutCommand
-from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.payment_methods import (
     CardSetupSessionView,
     PaymentMethodQuery,
@@ -20,7 +24,11 @@ from app.schemas.dto.payment_methods import (
     StartCardSetupCommand,
 )
 from app.schemas.dto.payment_webhooks import PaymentStatusChange
-from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
+from app.schemas.dto.payments import (
+    PaymentWebhookDelivery,
+    PaymentWebhookReceipt,
+    VerifiedPaymentEvent,
+)
 from app.use_cases.billing.card_on_file.get_payment_method_use_case import (
     GetPaymentMethodUseCase,
 )
@@ -30,11 +38,17 @@ from app.use_cases.billing.card_on_file.retry_failed_payments_use_case import (
 from app.use_cases.billing.card_on_file.start_card_setup_use_case import (
     StartCardSetupUseCase,
 )
+from app.use_cases.billing.payment_webhook.apply_payment_event_use_case import (
+    ApplyPaymentEventUseCase,
+)
+from app.use_cases.billing.payment_webhook.apply_payment_job_use_case import (
+    ApplyPaymentJobUseCase,
+)
 from app.use_cases.billing.payment_webhook.apply_payment_status_use_case import (
     ApplyPaymentStatusUseCase,
 )
-from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
-    ProcessPaymentWebhookUseCase,
+from app.use_cases.billing.payment_webhook.receive_payment_webhook_use_case import (
+    ReceivePaymentWebhookUseCase,
 )
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 
@@ -42,11 +56,12 @@ from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 class PaymentUseCaseFactories:
     """
     One typed factory per payments use case (R17-PAYMENTS-REGIONAL,
-    migration 1214): checkout, the payment webhooks of both providers, the
-    card on file ("Save card", "Update card") and the retries of declined
-    automatic charges with the owners' notices. Each call builds a new use
-    case; the registry of providers by country and the dunning notices are
-    made once per root.
+    migration 1214): checkout, the payment webhooks of both providers and
+    the job that applies what they queued (API-03), the card on file
+    ("Save card", "Update card") and the retries of declined automatic
+    charges with the owners' notices. Each call builds a new use case; the
+    registry of providers by country, the dunning notices and the watch
+    over declined payments (LOG-05) are made once per root.
     """
 
     def __init__(self, dependencies: PaymentDependencies) -> None:
@@ -70,6 +85,15 @@ class PaymentUseCaseFactories:
             wall_clock=given.wall_clock,
         )
 
+    @cached_property
+    def payment_declines(self) -> PaymentDeclineWatchFacilitatorContract:
+        given = self._dependencies
+        return PaymentDeclineWatchFacilitator(
+            buckets=given.rate_limit_buckets,
+            signal_counter=given.signal_counter,
+            wall_clock=given.wall_clock,
+        )
+
     def start_checkout(
         self,
     ) -> UseCaseContract[StartCheckoutCommand, CheckoutSessionView]:
@@ -85,6 +109,7 @@ class PaymentUseCaseFactories:
             wall_clock=given.wall_clock,
             invoice_issuing=given.invoice_issuing,
             payment_provider_registry=self.payment_provider_registry,
+            payment_declines=self.payment_declines,
         )
 
     def apply_payment_status(
@@ -107,11 +132,22 @@ class PaymentUseCaseFactories:
             payment_order_repo=given.payment_order_repo,
         )
 
-    def process_payment_webhook(
+    def receive_payment_webhook(
         self,
     ) -> UseCaseContract[PaymentWebhookDelivery, PaymentWebhookReceipt]:
         given = self._dependencies
-        return ProcessPaymentWebhookUseCase(
+        return ReceivePaymentWebhookUseCase(
+            payment_gateway=given.payment_gateway,
+            payment_order_repo=given.payment_order_repo,
+            job_queue=given.job_queue,
+            secret_cipher=given.secret_cipher,
+        )
+
+    def apply_payment_event(
+        self,
+    ) -> UseCaseContract[VerifiedPaymentEvent, PaymentWebhookReceipt]:
+        given = self._dependencies
+        return ApplyPaymentEventUseCase(
             payment_gateway=given.payment_gateway,
             notification_lock=given.payment_notification_lock,
             payment_order_repo=given.payment_order_repo,
@@ -121,6 +157,15 @@ class PaymentUseCaseFactories:
             secret_cipher=given.secret_cipher,
             wall_clock=given.wall_clock,
             product_events=given.product_events,
+            payment_declines=self.payment_declines,
+        )
+
+    def apply_payment_job(
+        self,
+    ) -> UseCaseContract[QueuedJobInput, PaymentWebhookReceipt]:
+        return ApplyPaymentJobUseCase(
+            apply_payment_event=self.apply_payment_event(),
+            secret_cipher=self._dependencies.secret_cipher,
         )
 
     def get_payment_method(
@@ -157,6 +202,7 @@ class PaymentUseCaseFactories:
             issue_due_invoices=given.issue_due_invoices,
             plan_registry=given.plan_registry,
             invoice_description_transformer=given.invoice_description_transformer,
+            payment_declines=self.payment_declines,
         )
 
     def retry_failed_payments(self) -> UseCaseContract[JobTick, JobReport]:

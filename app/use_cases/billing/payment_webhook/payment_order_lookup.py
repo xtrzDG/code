@@ -2,10 +2,33 @@
 
 from app.contracts.billing import PaymentOrderRepoContract
 from app.schemas.domain.payments import PaymentOrderDocument
-from app.schemas.dto.payments import PaymentNotification
+from app.schemas.dto.payments import PaymentNotification, VerifiedPaymentEvent
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
 from app.schemas.typings.billing.strings import PaymentProviderReference
+
+
+def find_event_order(
+    payment_order_repo: PaymentOrderRepoContract,
+    event: VerifiedPaymentEvent,
+) -> PaymentOrderDocument | None:
+    """
+    The payment order of a verified event: its payment's order, else its
+    saved card's; None for an event that names neither (nothing to act on).
+
+    Raises:
+        NotFoundError: the event names an order the platform does not know.
+    """
+
+    if event.payment is not None:
+        return find_payment_order(payment_order_repo, event.payment)
+
+    if event.payment_method is not None:
+        return find_payment_order_by_reference(
+            payment_order_repo, event.payment_method.order_reference
+        )
+
+    return None
 
 
 def find_payment_order(

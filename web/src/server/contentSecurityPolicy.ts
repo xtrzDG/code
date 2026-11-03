@@ -22,6 +22,10 @@
  * through the Trusted Types policy `facebook-sdk`, so 'strict-dynamic'
  * admits it; the host is the fallback of older browsers), call Facebook,
  * show its images and frame its sign-in pages.
+ *
+ * The pages that send a payer to a payment page (lib/paymentPages.ts) allow
+ * no third-party host at all (PAY-02): the Turnstile exception goes, so
+ * only first-party scripts with the page's nonce, and what they load, run.
  */
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
@@ -57,6 +61,8 @@ interface PolicyOptions {
   isHttps: boolean;
   /** A page where the owner signs in with Facebook (lib/metaSignInPages.ts). */
   allowsFacebookSignIn?: boolean;
+  /** A page that sends a payer to a payment page (lib/paymentPages.ts): no third-party host. */
+  isPaymentPage?: boolean;
 }
 
 function scriptSource(options: PolicyOptions, extra: readonly string[]): string {
@@ -86,15 +92,16 @@ function closingDirectives(options: PolicyOptions): string[] {
 
 export function buildContentSecurityPolicy(options: PolicyOptions): string {
   const facebook = options.allowsFacebookSignIn === true;
+  const turnstile = options.isPaymentPage === true ? [] : [TURNSTILE_ORIGIN];
   const directives = [
     "default-src 'self'",
-    scriptSource(options, [TURNSTILE_ORIGIN, ...(facebook ? [FACEBOOK_SDK_ORIGIN] : [])]),
+    scriptSource(options, [...turnstile, ...(facebook ? [FACEBOOK_SDK_ORIGIN] : [])]),
     styleSource(options),
     ["img-src 'self' data: blob:", ...(facebook ? ["https://www.facebook.com"] : [])].join(" "),
     "font-src 'self' data:",
     "media-src 'self' blob:",
-    [`connect-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_API_ORIGINS : [])].join(" "),
-    [`frame-src 'self' ${TURNSTILE_ORIGIN}`, ...(facebook ? FACEBOOK_PAGE_ORIGINS : [])].join(" "),
+    ["connect-src 'self'", ...turnstile, ...(facebook ? FACEBOOK_API_ORIGINS : [])].join(" "),
+    ["frame-src 'self'", ...turnstile, ...(facebook ? FACEBOOK_PAGE_ORIGINS : [])].join(" "),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",

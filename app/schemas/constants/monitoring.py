@@ -48,7 +48,10 @@ class PlatformAlertCode(StrEnum):
     26 hours. TENANT_SMS_VOLUME: a business passed its hourly SMS volume
     (an alert at 60, refused from 200: SMS pumping through a tenant).
     OTP_CONVERSION: most login codes of the last hour were never used
-    (SMS pumping through sign-in).
+    (SMS pumping through sign-in). TENANT_PAYMENT_DECLINES: the payments
+    of one business were declined 5 times within two hours (card testing
+    through the platform's payment pages; from 10 its new payment pages
+    are refused).
     BOOKING_SPIKE, CANCELLATION_SPIKE: one business got more new bookings,
     or more cancellations, in an hour than its hourly cap of either (fake
     bookings holding every slot, or a mass cancellation). WHATSAPP_QUALITY:
@@ -88,6 +91,7 @@ class PlatformAlertCode(StrEnum):
     BACKUP_FAILED = "backup_failed"
     TENANT_SMS_VOLUME = "tenant_sms_volume"
     OTP_CONVERSION = "otp_conversion"
+    TENANT_PAYMENT_DECLINES = "tenant_payment_declines"
     BOOKING_SPIKE = "booking_spike"
     CANCELLATION_SPIKE = "cancellation_spike"
     WHATSAPP_QUALITY = "whatsapp_quality"
@@ -120,9 +124,10 @@ class PlatformSignal(StrEnum):
     refused, and calls of the voice platform's API (ElevenLabs) with the
     failed ones among them; refused webhook deliveries, requests and jobs
     failed by the database or the object storage, API requests slower
-    than 2 s, and SMS of a business past its hourly volume; new bookings
-    and cancellations of a business past its hourly cap, and Meta's
-    warnings about a WhatsApp number's or template's quality.
+    than 2 s, and SMS of a business past its hourly volume; payments of a
+    business declined past its alert or brake count (card testing); new
+    bookings and cancellations of a business past its hourly cap, and
+    Meta's warnings about a WhatsApp number's or template's quality.
     """
 
     LLM_CALL = "llm_call"
@@ -135,6 +140,7 @@ class PlatformSignal(StrEnum):
     OBJECT_STORAGE_ERROR = "object_storage_error"
     SLOW_API_REQUEST = "slow_api_request"
     TENANT_SMS_SURGE = "tenant_sms_surge"
+    TENANT_PAYMENT_DECLINES = "tenant_payment_declines"
     BOOKING_SURGE = "booking_surge"
     CANCELLATION_SURGE = "cancellation_surge"
     WHATSAPP_QUALITY_DROP = "whatsapp_quality_drop"

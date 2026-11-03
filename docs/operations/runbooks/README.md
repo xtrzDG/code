@@ -41,6 +41,7 @@ which runbook is `../dependency-map.md`.
 | [api-latency](api-latency.md) | `api_latency` | SEV2 |
 | [backup-failed](backup-failed.md) | `backup_failed`, the last backup on Admin → System, Sentry Crons | SEV2 |
 | [tenant-sms-volume](tenant-sms-volume.md) | `tenant_sms_volume`, `otp_conversion` | SEV2 |
+| [tenant-payment-declines](tenant-payment-declines.md) | `tenant_payment_declines` (card testing; new payment pages braked) | SEV2 |
 | [booking-abuse](booking-abuse.md) | `booking_spike`, `cancellation_spike` | SEV3 |
 | [whatsapp-quality](whatsapp-quality.md) | `whatsapp_quality` | SEV2 |
 | [privacy-requests](privacy-requests.md) | none: a person asks the platform about their own data (access, copy, correction, erasure) | none; answer within a month |

@@ -66,9 +66,11 @@ def build_payment_method_router(
     the retries of a declined charge stand. Saving a card charges nothing
     now; 409 when no card can be saved (an unpaid bill is paid instead).
     The webhook needs no token: its `Stripe-Signature` is verified (403
-    when wrong, stale or Stripe is not configured), and it answers 200 for
-    applied, repeated and ignored events, 404 for an unknown order and 422
-    for a malformed body.
+    when wrong, stale or Stripe is not configured), and it answers at once
+    (API-03): 200 `queued` for an event a worker will apply (in order,
+    once), `duplicate` for one already applied and `ignored` for one the
+    platform does not act on, 404 for an unknown order and 422 for a
+    malformed body.
     """
 
     router = APIRouter(tags=["billing"], responses=standard_error_responses())

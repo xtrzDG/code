@@ -206,6 +206,22 @@ test.describe("the BFF", () => {
   });
 });
 
+test.describe("the middleware bypass header (CVE-2025-29927)", () => {
+  test("takes no visitor past the sign-in redirect, the policy or the API", async ({ request }) => {
+    for (const value of ["middleware:middleware:middleware:middleware:middleware", "src/proxy:src/proxy:src/proxy:src/proxy:src/proxy"]) {
+      const headers = { "x-middleware-subrequest": value };
+
+      const protectedPage = await request.get("/businesses", { headers, maxRedirects: 0 });
+      expect(protectedPage.status(), value).toBe(307);
+      expect(new URL(protectedPage.headers()["location"] ?? "/", WEB_URL).pathname, value).toBe("/login");
+      const login = await request.get("/login", { headers, maxRedirects: 0 });
+      expectStrictPolicy(login.headers()["content-security-policy"] ?? "", value);
+      // The BFF lies outside the proxy: the API itself refuses a call without a session.
+      expect((await request.get("/api/backend/v1/me", { headers })).status(), value).toBe(401);
+    }
+  });
+});
+
 test.describe("the sign-in page", () => {
   test("shows the bot check only when the API asks for it, then sends the code", async ({ page, consoleErrors }) => {
     // The browser reports the refused first request itself.

@@ -46,7 +46,8 @@ class PlatformAlertStateDocument(BaseDocument):
     # `api_latency`, `backup_failed`, `tenant_sms_volume` or
     # `otp_conversion` (platform health, LOG-04/05), `booking_spike`,
     # `cancellation_spike` or `whatsapp_quality` (abuse and number quality).
-    schema_version: SchemaVersion = SchemaVersion("9")
+    # 10: `code` may be `tenant_payment_declines` (card testing, LOG-05).
+    schema_version: SchemaVersion = SchemaVersion("10")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

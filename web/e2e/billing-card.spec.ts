@@ -96,6 +96,8 @@ test("updating the card leaves for the provider's page without a policy violatio
 
   const billing = await page.goto(`/b/${salon!.id}/settings/billing`);
   expectStrictPolicy(billing?.headers()["content-security-policy"] ?? "", "the billing page");
+  // A page that sends the payer to a payment page allows no third-party host (PAY-02).
+  expect(billing?.headers()["content-security-policy"]).not.toContain("challenges.cloudflare.com");
   await cardRegion(page).getByRole("button", { name: texts.update }).click();
   await page.waitForURL(providerPage);
 

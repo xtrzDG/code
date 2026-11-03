@@ -148,6 +148,17 @@ describe("RestoredBooking: a reload of /r/booking", () => {
     expect(screen.getByTestId("customer-page-links").innerHTML).toContain("https://mtsvane.example/privacy");
   });
 
+  it("opens the platform's privacy notice, named by its full address on this site, in place", async () => {
+    storePageSession({ token: CREDENTIAL, expiresAt: ENDS, language: "it" });
+    answerGet(() => ok({ ...view, token: CREDENTIAL, privacy_url: `${window.location.origin}/c/mtsvane-ezo/privacy` }));
+
+    renderInLocale(<RestoredBooking />, { locale: "it" });
+
+    const privacy = await screen.findByRole("link", { name: "Informativa privacy" });
+    expect(privacy.getAttribute("href")).toBe("/c/mtsvane-ezo/privacy");
+    expect(privacy.getAttribute("target")).toBeNull();
+  });
+
   it("asks to open the link again once the credential ended", async () => {
     storePageSession({ token: CREDENTIAL, expiresAt: Date.now() * 1000 - 1, language: "it" });
 

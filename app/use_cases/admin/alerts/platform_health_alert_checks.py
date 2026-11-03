@@ -13,7 +13,9 @@ The checks of the platform health alerts (LOG-04, LOG-05):
 - `tenant_sms_volume`: SMS of a business past its hourly alert volume or
   refused past its cap (`TenantSmsVolumeGuardAdapter`);
 - `otp_conversion`: login codes of the last hour that were never used,
-  among those settled (used, or expired unused).
+  among those settled (used, or expired unused);
+- `tenant_payment_declines`: a business's payments declined past its
+  alert or brake count (`PaymentDeclineWatchFacilitator`).
 """
 
 from collections import Counter
@@ -69,6 +71,7 @@ class PlatformHealthAlertChecks:
             PlatformAlertCode.BACKUP_FAILED: self.backup_failed,
             PlatformAlertCode.TENANT_SMS_VOLUME: self.tenant_sms_volume,
             PlatformAlertCode.OTP_CONVERSION: self.otp_conversion,
+            PlatformAlertCode.TENANT_PAYMENT_DECLINES: self.tenant_payment_declines,
         }
 
     def webhook_failures(
@@ -156,6 +159,18 @@ class PlatformHealthAlertChecks:
             f"{surges} times in the last {recent_minutes(rule)} minutes a "
             "business passed its hourly SMS volume or had an SMS refused at its "
             "cap; the warning lines of app.adapters name the business.",
+        )
+
+    def tenant_payment_declines(
+        self, rule: PlatformAlertRule, now: Microseconds
+    ) -> AlertObservation:
+        bursts: int = self._recent(PlatformSignal.TENANT_PAYMENT_DECLINES, now)
+        return observe(
+            rule,
+            bursts,
+            f"{bursts} times in the last {recent_minutes(rule)} minutes a "
+            "business had 5 or 10 payments declined within two hours; the "
+            "warning lines of app.facilitators name the business.",
         )
 
     def otp_conversion(

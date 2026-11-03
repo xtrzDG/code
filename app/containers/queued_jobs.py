@@ -18,6 +18,9 @@ from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.billing.payment_webhook.payment_notification_jobs import (
+    APPLY_PAYMENT_NOTIFICATION_JOB,
+)
 from app.use_cases.compliance.record_contact_erasure_use_case import (
     RECORD_CONTACT_ERASURE_JOB,
 )
@@ -68,6 +71,10 @@ def queued_job_operator_map(
             # An Instagram comment that named the owner's keyword (1212).
             PROCESS_COMMENT_TRIGGER_JOB: (
                 operators.channels.process_comment_trigger_operator
+            ),
+            # A verified Flitt or Stripe notification applied (API-03).
+            APPLY_PAYMENT_NOTIFICATION_JOB: (
+                operators.billing.apply_payment_notification_operator
             ),
             # A finished call's recording moved into the EU object storage.
             ARCHIVE_CALL_RECORDING_JOB: (

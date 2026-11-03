@@ -10,12 +10,17 @@ from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.invoicing import BillingDocumentKind
 from app.schemas.constants.payments import PaymentWebhookOutcome
 from app.schemas.dto.invoicing import BillingEmailsQueued
-from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
-from app.schemas.typings.billing.strings import PaymentWebhookBody
+from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.dto.payments import PaymentWebhookReceipt
 from app.schemas.typings.invoicing.constrained_integers import BillingEmailCount
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.prefixed_id import QueuedJobId
+from app.schemas.typings.platform.strings import JobPayloadJson
 from app.transformers.invoicing.billing_document_email_transformer import (
     BillingDocumentEmailTransformer,
+)
+from app.use_cases.billing.payment_webhook.payment_notification_jobs import (
+    APPLY_PAYMENT_NOTIFICATION_JOB,
 )
 from app.use_cases.billing.send_payment_documents_use_case import (
     SendPaymentDocumentsUseCase,
@@ -124,10 +129,19 @@ def test_nothing_is_sent_for_a_payment_that_paid_nothing() -> None:
 class ScriptedWebhook:
     def __init__(self, outcome: PaymentWebhookOutcome) -> None:
         self.outcome: PaymentWebhookOutcome = outcome
+        self.jobs: list[QueuedJobInput] = []
 
-    def run(self, input_data: PaymentWebhookDelivery) -> PaymentWebhookReceipt:
-        del input_data
+    def run(self, input_data: QueuedJobInput) -> PaymentWebhookReceipt:
+        self.jobs.append(input_data)
         return PaymentWebhookReceipt(outcome=self.outcome)
+
+
+def queued_job() -> QueuedJobInput:
+    return QueuedJobInput(
+        job_id=QueuedJobId(),
+        job_name=APPLY_PAYMENT_NOTIFICATION_JOB,
+        payload=JobPayloadJson("{}"),
+    )
 
 
 class RecordingSender:
@@ -143,8 +157,7 @@ class RecordingSender:
         return BillingEmailsQueued(queued=BillingEmailCount(0))
 
 
-def test_the_webhook_mails_documents_only_after_a_payment_was_applied() -> None:
-    delivery = PaymentWebhookDelivery(body=PaymentWebhookBody("{}"))
+def test_the_job_mails_documents_only_after_a_payment_was_applied() -> None:
     for outcome, expected_calls in (
         (PaymentWebhookOutcome.APPLIED, 1),
         (PaymentWebhookOutcome.REFUND_DUE, 1),
@@ -152,20 +165,23 @@ def test_the_webhook_mails_documents_only_after_a_payment_was_applied() -> None:
         (PaymentWebhookOutcome.IGNORED, 0),
     ):
         sender = RecordingSender()
-        orchestrator = PaymentWebhookOrchestrator(ScriptedWebhook(outcome), sender)
+        webhook = ScriptedWebhook(outcome)
+        orchestrator = PaymentWebhookOrchestrator(webhook, sender)
 
-        assert orchestrator.execute(delivery).outcome is outcome
-        assert len(sender.receipts) == expected_calls
+        assert int(orchestrator.execute(queued_job()).processed_count) == 1
+        assert len(webhook.jobs) == 1
+        assert [receipt.outcome for receipt in sender.receipts] == [
+            outcome
+        ] * expected_calls
 
 
-def test_a_failure_to_queue_the_e_mails_never_fails_the_webhook() -> None:
+def test_a_failure_to_queue_the_e_mails_never_fails_the_job() -> None:
     sender = RecordingSender(error=RuntimeError("outbox down"))
     orchestrator = PaymentWebhookOrchestrator(
         ScriptedWebhook(PaymentWebhookOutcome.APPLIED), sender
     )
 
-    receipt = orchestrator.execute(
-        PaymentWebhookDelivery(body=PaymentWebhookBody("{}"))
-    )
+    report = orchestrator.execute(queued_job())
 
-    assert receipt.outcome is PaymentWebhookOutcome.APPLIED
+    assert int(report.processed_count) == 1
+    assert len(sender.receipts) == 1

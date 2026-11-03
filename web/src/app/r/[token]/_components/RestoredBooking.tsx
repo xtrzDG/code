@@ -88,6 +88,8 @@ export function RestoredBooking() {
       <CustomerPageLinks
         language={language}
         privacyHref={restored.kind === "found" ? privacyNoticeOfView(restored.view) : null}
+        // Rendered in the browser only (the server renders the loading state).
+        siteOrigin={typeof window === "undefined" ? null : window.location.origin}
         className={LINKS_CLASS}
       />
     </main>

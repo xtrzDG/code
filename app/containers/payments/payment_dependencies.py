@@ -9,10 +9,13 @@ from app.contracts.billing import (
 )
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.monitoring import SignalCounterAdapterContract
 from app.contracts.notification_utilities import StaffLinkSignerContract
 from app.contracts.payment_locks import PaymentNotificationLockRegistryContract
 from app.contracts.payment_methods import PaymentRetryRepoContract
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.referrals import ReferralEarningsFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
@@ -45,9 +48,11 @@ class PaymentDependencies:
     takes from the rest of the application, as contracts: the repositories
     of subscriptions, invoices, payment orders and retries, the payment
     gateway (Flitt or Stripe, each behind its circuit), the cabinet's access
-    check, the issuing of due invoices and the facilitators and settings it
-    reads. The only place the dependency graph meets the typed root (the
-    provider in app/containers/use_cases/payment_root_provider.py fills it).
+    check, the issuing of due invoices, the job queue the payment webhooks
+    hand their notifications to, the shared buckets declined payments are
+    counted in, and the facilitators and settings it reads. The only place
+    the dependency graph meets the typed root (the provider in
+    app/containers/use_cases/payment_root_provider.py fills it).
     """
 
     authorize_business_access: UseCaseContract[BusinessAccessRequest, BusinessDocument]
@@ -68,6 +73,9 @@ class PaymentDependencies:
     referral_earnings: ReferralEarningsFacilitatorContract
     product_events: RecordProductEventFacilitatorContract
     secret_cipher: SecretCipherAdapterContract
+    job_queue: JobQueueFacilitatorContract
+    rate_limit_buckets: RateLimitBucketAdapterContract
+    signal_counter: SignalCounterAdapterContract
     localized_text_resolver: LocalizedTextResolverContract
     billing_notice_transformer: TransformerContract[BillingNotice, MessageText]
     invoice_description_transformer: TransformerContract[

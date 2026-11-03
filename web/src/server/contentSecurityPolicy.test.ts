@@ -95,6 +95,22 @@ describe("buildContentSecurityPolicy", () => {
     const elsewhere = buildContentSecurityPolicy({ nonce: "abc", isDevelopment: false, isHttps: true, allowsFacebookSignIn: false });
     expect(elsewhere).not.toContain("facebook");
   });
+
+  it("allows no third-party host on a page that sends a payer to a payment page", () => {
+    const payment = buildContentSecurityPolicy({ nonce: "abc", isDevelopment: false, isHttps: true, isPaymentPage: true });
+    const policy = directives(payment);
+
+    expect(policy.get("script-src")).toBe("'self' 'nonce-abc' 'strict-dynamic'");
+    expect(policy.get("connect-src")).toBe("'self'");
+    expect(policy.get("frame-src")).toBe("'self'");
+    expect(payment).not.toContain("https://challenges.cloudflare.com");
+    // Still nonce'd styles, Trusted Types, reports, and the checkout as the only other form target.
+    expect(policy.get("style-src")).toBe("'self' 'nonce-abc'");
+    expect(policy.get("require-trusted-types-for")).toBe("'script'");
+    expect(policy.get("report-to")).toBe("csp");
+    expect(policy.get("form-action")).toBe("'self' https://pay.flitt.com");
+    expect(policy.get("frame-ancestors")).toBe("'none'");
+  });
 });
 
 describe("buildHostedChatPolicy", () => {

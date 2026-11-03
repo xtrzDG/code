@@ -28,6 +28,7 @@ import {
   lookUpHostedChat,
   originOf,
 } from "./hostedChat";
+import { forwardedRequestHeaders } from "./middlewareSubrequest";
 
 const CSP_HEADER = "content-security-policy";
 export const ROBOTS_HEADER = "x-robots-tag";
@@ -51,7 +52,7 @@ export async function routeHostedChat(request: NextRequest, address: string): Pr
     isHttps: isCookieSecure(request.headers),
     isPreview: isPreviewRequest(request.nextUrl.searchParams),
   });
-  const requestHeaders = new Headers(request.headers);
+  const requestHeaders = forwardedRequestHeaders(request);
   requestHeaders.set(PATHNAME_HEADER, `${pathname}${search}`);
   requestHeaders.set(CSP_HEADER, policy);
   requestHeaders.set(NONCE_HEADER, nonce);

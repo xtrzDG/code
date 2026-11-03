@@ -95,8 +95,11 @@ def build_billing_router(
     trial, after cancelling, or instead of the trial): it switches to the
     chosen plan and period and answers with the payment page like checkout.
     The webhook needs no token: its signature is verified, and it answers
-    200 for applied, repeated and ignored notifications, 403 for a wrong
-    signature, 404 for an unknown order and 422 for a malformed body.
+    at once (API-03): 200 `queued` for a notification a worker will apply
+    (in order, once, after reading the payment back from Flitt), 200
+    `duplicate` for one the order applied already and `ignored` for one
+    the platform does not act on; 403 for a wrong signature, 404 for an
+    unknown order and 422 for a malformed body.
     """
 
     router = APIRouter(tags=["billing"], responses=standard_error_responses())

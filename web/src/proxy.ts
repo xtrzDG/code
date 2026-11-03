@@ -9,7 +9,11 @@
  *    Next.js puts on its own scripts, and the endpoint its violations are
  *    reported to (server/contentSecurityPolicy.ts); the pages where an
  *    owner signs in with Facebook also let its SDK in
- *    (lib/metaSignInPages.ts);
+ *    (lib/metaSignInPages.ts), and the pages that send a payer to a payment
+ *    page allow no third-party host at all (lib/paymentPages.ts);
+ *  - the header of the old middleware bypass (`x-middleware-subrequest`,
+ *    CVE-2025-29927) is dropped from every request passed on
+ *    (server/middlewareSubrequest.ts);
  *  - a session under the cookie's old name moves to `__Host-aw_session`
  *    outside production; in production that cookie is only dropped
  *    (server/sessionCookie.ts);
@@ -31,6 +35,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { LOCALE_COOKIE, matchLocale, negotiateLocale, resolveLocale, DEFAULT_LOCALE } from "@/i18n/config";
 import { isMetaSignInPage } from "@/lib/metaSignInPages";
+import { isPaymentPage } from "@/lib/paymentPages";
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
 import { PATH_LOCALE_HEADER, localizedRedirectPath, pathLocale } from "@/lib/publicSite/paths";
 import { isBookingPagePath } from "@/lib/bookingPage/paths";
@@ -46,6 +51,7 @@ import {
 } from "@/server/contentSecurityPolicy";
 import { HOSTED_CHAT_HEADER, hostedChatAddress, isHostedChatPath } from "@/server/hostedChat";
 import { NOINDEX, ROBOTS_HEADER, routeHostedChat } from "@/server/hostedChatProxy";
+import { forwardedRequestHeaders } from "@/server/middlewareSubrequest";
 import { migrateLegacySessionCookie, readSessionToken } from "@/server/sessionCookie";
 
 const CSP_HEADER = "content-security-policy";
@@ -107,7 +113,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL(`${localized}${search}`, request.url));
   }
 
-  const requestHeaders = new Headers(request.headers);
+  const requestHeaders = forwardedRequestHeaders(request);
   requestHeaders.set(PATHNAME_HEADER, `${pathname}${search}`);
   // Next.js reads the nonce from the request's policy while rendering.
   const nonce = createNonce();
@@ -116,6 +122,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
     isDevelopment: process.env.NODE_ENV === "development",
     isHttps: isCookieSecure(request.headers),
     allowsFacebookSignIn: isMetaSignInPage(pathname),
+    isPaymentPage: isPaymentPage(pathname),
   });
   requestHeaders.set(CSP_HEADER, policy);
   requestHeaders.set(NONCE_HEADER, nonce);

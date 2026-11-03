@@ -7,9 +7,15 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
 )
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.facilitators.billing.dunning_notice_facilitator import (
     DunningNoticeFacilitator,
+)
+from app.facilitators.billing.payment_decline_watch_facilitator import (
+    PaymentDeclineWatchFacilitator,
 )
 from app.registries.billing.payment_provider_registry import PaymentProviderRegistry
 from app.registries.locks.payment_notification_lock_registry import (
@@ -29,11 +35,11 @@ from app.use_cases.billing.card_on_file.start_card_setup_use_case import (
     StartCardSetupUseCase,
 )
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
+from app.use_cases.billing.payment_webhook.apply_payment_event_use_case import (
+    ApplyPaymentEventUseCase,
+)
 from app.use_cases.billing.payment_webhook.apply_payment_status_use_case import (
     ApplyPaymentStatusUseCase,
-)
-from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
-    ProcessPaymentWebhookUseCase,
 )
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
@@ -41,7 +47,9 @@ from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.billing_infrastructure import BillingInfrastructure
 from tests.billing.billing_settings import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+from tests.billing.synchronous_payment_webhook import SynchronousPaymentWebhook
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.platform_ops.failure_signal_doubles import CountedSignals
 
 
 @dataclass
@@ -49,7 +57,10 @@ class PaymentParts:
     provider_registry: PaymentProviderRegistry
     start_checkout: StartCheckoutUseCase
     apply_payment_status: ApplyPaymentStatusUseCase
-    process_webhook: ProcessPaymentWebhookUseCase
+    apply_event: ApplyPaymentEventUseCase
+    process_webhook: SynchronousPaymentWebhook
+    payment_declines: PaymentDeclineWatchFacilitator
+    decline_signals: CountedSignals
     get_payment_method: GetPaymentMethodUseCase
     start_card_setup: StartCardSetupUseCase
     dunning_notices: DunningNoticeFacilitator
@@ -86,6 +97,26 @@ def build_payment_parts(
         payment_retry_repo=world.payment_retry_repo,
         payment_order_repo=world.payment_order_repo,
     )
+    decline_signals = CountedSignals()
+    payment_declines = PaymentDeclineWatchFacilitator(
+        buckets=InMemoryRateLimitBucketAdapter(),
+        signal_counter=decline_signals,
+        wall_clock=wall_clock,
+    )
+    apply_event = ApplyPaymentEventUseCase(
+        payment_gateway=world.payment_gateway,
+        notification_lock=PaymentNotificationLockRegistry(
+            InMemoryAdvisoryLockAdapter()
+        ),
+        payment_order_repo=world.payment_order_repo,
+        subscription_repo=world.subscription_repo,
+        business_repo=world.business_repo,
+        apply_payment_status=apply_payment_status,
+        secret_cipher=world.secret_cipher,
+        wall_clock=wall_clock,
+        product_events=product_events,
+        payment_declines=payment_declines,
+    )
     dunning_notices = DunningNoticeFacilitator(
         user_repo=world.user_repo,
         manager_notifier=world.notifier,
@@ -107,21 +138,13 @@ def build_payment_parts(
             wall_clock=wall_clock,
             invoice_issuing=world.invoicing.invoice_issuing,
             payment_provider_registry=registry,
+            payment_declines=payment_declines,
         ),
         apply_payment_status=apply_payment_status,
-        process_webhook=ProcessPaymentWebhookUseCase(
-            payment_gateway=world.payment_gateway,
-            notification_lock=PaymentNotificationLockRegistry(
-                InMemoryAdvisoryLockAdapter()
-            ),
-            payment_order_repo=world.payment_order_repo,
-            subscription_repo=world.subscription_repo,
-            business_repo=world.business_repo,
-            apply_payment_status=apply_payment_status,
-            secret_cipher=world.secret_cipher,
-            wall_clock=wall_clock,
-            product_events=product_events,
-        ),
+        apply_event=apply_event,
+        process_webhook=SynchronousPaymentWebhook(world.payment_gateway, apply_event),
+        payment_declines=payment_declines,
+        decline_signals=decline_signals,
         get_payment_method=GetPaymentMethodUseCase(
             authorize_business_access=authorize,
             subscription_repo=world.subscription_repo,
@@ -147,6 +170,7 @@ def build_payment_parts(
             issue_due_invoices=issue_due_invoices,
             plan_registry=world.plan_registry,
             invoice_description_transformer=world.invoice_description_transformer,
+            payment_declines=payment_declines,
         ),
         dunning_notices=dunning_notices,
         retry_failed_payments=RetryFailedPaymentsUseCase(

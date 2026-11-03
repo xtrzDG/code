@@ -1,0 +1,18 @@
+# Every declined payment of a business (not a retry of a declined
+# automatic charge) counts in the business's hourly bucket
+# (PaymentDeclineWatchFacilitator); the declines of the window filling
+# now and the one before count together. The 5th counts the platform
+# signal tenant_payment_declines once, and at the 10th it counts again:
+# from then on the business opens no new payment page (checkout, card
+# setup: 429) until the windows cool down. A warning line names the
+# business.
+code: tenant_payment_declines
+severity: sev2
+summary: The payments of a business were declined 5 times within two hours (card testing); from 10 its new payment pages are refused.
+measure: businesses whose declined payments reached 5 or 10 within two hours, in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (tenant-payment-declines:<business>, platform-signal:tenant_payment_declines)
+runbook: docs/operations/runbooks/tenant-payment-declines.md

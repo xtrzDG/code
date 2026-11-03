@@ -6,6 +6,7 @@ import {
   CUSTOMER_PAGE_LINK_LANGUAGES,
   accessibilityStatementPath,
   customerPageLinkNames,
+  privacyLinkOf,
   privacyNoticeOfChat,
 } from "./customerPageLinks";
 
@@ -35,5 +36,23 @@ describe("the links at the foot of customers' pages", () => {
     expect(privacyNoticeOfChat("https://wa.me/39333")).toBeNull();
     expect(privacyNoticeOfChat("tel:+39333")).toBeNull();
     expect(privacyNoticeOfChat("not a link")).toBeNull();
+  });
+
+  it("open a privacy notice on this site in place and one elsewhere in a new tab", () => {
+    const site = "https://app.example.com";
+    expect(privacyLinkOf("/c/cafe-roma/privacy", site)).toEqual({ href: "/c/cafe-roma/privacy", isExternal: false });
+    // The API names the platform's notice by its full address (CABINET_BASE_URL).
+    expect(privacyLinkOf(`${site}/c/cafe-roma/privacy`, site)).toEqual({ href: "/c/cafe-roma/privacy", isExternal: false });
+    expect(privacyLinkOf(`${site}/c/cafe-roma/privacy?lang=en#keep`, site)).toEqual({
+      href: "/c/cafe-roma/privacy?lang=en#keep",
+      isExternal: false,
+    });
+    // Another origin (a business's own site, another port or scheme), or an origin not known.
+    expect(privacyLinkOf("https://cafe.example/privacy", site)).toEqual({ href: "https://cafe.example/privacy", isExternal: true });
+    expect(privacyLinkOf("http://app.example.com/c/cafe-roma/privacy", site).isExternal).toBe(true);
+    expect(privacyLinkOf("https://app.example.com:8443/c/cafe-roma/privacy", site).isExternal).toBe(true);
+    expect(privacyLinkOf(`${site}/c/cafe-roma/privacy`, null).isExternal).toBe(true);
+    // A protocol-relative address is another site's.
+    expect(privacyLinkOf("//cafe.example/privacy", site)).toEqual({ href: "//cafe.example/privacy", isExternal: true });
   });
 });

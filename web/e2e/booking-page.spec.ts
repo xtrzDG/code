@@ -54,8 +54,13 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   await expect(page.locator("main")).toHaveAttribute("dir", "ltr");
 
   await expect(page.getByRole("heading", { level: 1, name: "Your booking" })).toBeVisible();
-  // The closed cancel dialog names the business too, in a span of its own (user content).
-  await expect(page.getByText(DEMO_RESTAURANT, { exact: true }).filter({ visible: true })).toBeVisible();
+  // The business's line above the title (the closed cancel dialog names it too, hidden).
+  const card = page.getByRole("article", { name: "Your booking" });
+  await expect(card.getByRole("paragraph").filter({ hasText: new RegExp(`^${DEMO_RESTAURANT}$`) })).toBeVisible();
+  // The marketing consent names the business on purpose: a consent says who will write.
+  await expect(
+    page.getByTestId("marketing-consent").getByRole("checkbox", { name: new RegExp(`come back from ${DEMO_RESTAURANT} in the chat`) }),
+  ).not.toBeChecked();
   await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
   await expect(page.getByRole("definition").filter({ hasText: /\d{4}/ }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Open in maps" })).toHaveAttribute("href", "https://mtsvane-ezo.example/map");

@@ -5,6 +5,7 @@ from app.contracts.billing import (
     PaymentOrderRepoContract,
 )
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
+from app.contracts.payment_declines import PaymentDeclineWatchFacilitatorContract
 from app.contracts.payment_methods import PaymentProviderRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
@@ -85,6 +86,8 @@ class StartCardSetupUseCase(
         ConflictError: no card can be saved now (an unpaid bill is paid
             instead, which saves the card too; a paused or cancelled
             subscription has no charges to save it for).
+        RateLimitedError: the business's declined payments reached the
+            card-testing brake (LOG-05).
     """
 
     def __init__(
@@ -105,7 +108,11 @@ class StartCardSetupUseCase(
         invoice_description_transformer: TransformerContract[
             InvoiceDescriptionInput, InvoiceDescription
         ],
+        payment_declines: PaymentDeclineWatchFacilitatorContract,
     ) -> None:
+        self._payment_declines: PaymentDeclineWatchFacilitatorContract = (
+            payment_declines
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -138,6 +145,7 @@ class StartCardSetupUseCase(
         language: LanguageTag = input_data.display_language or business.owner_language
         require_babel_locale(language)
         require_allowed_return_url(input_data.request.return_url, self._app_settings)
+        self._payment_declines.require_payment_pages(business.id)
         subscription: SubscriptionDocument = require_current_subscription(
             self._subscription_repo, business.id
         )

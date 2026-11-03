@@ -262,6 +262,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # No key, token or private key in what the build ships (WEB-05): the
+      # browser's files (.next/static) and the server's (.next/server)
+      # against the key shapes of scripts/bundle-secrets.mjs, and the
+      # browser's files against the values of the cabinet's and the API's
+      # secret variables wherever a build has them (this one has none).
+      - name: No secrets in the build
+        run: node scripts/scan-bundle-secrets.mjs --build .next --env-example .env.example --env-example ../.env.example
+
       # The gzipped first-load JavaScript of the landing, a legal page, the
       # cabinet and the offline page, and the lazy 3D chunk, against
       # web/first-load-budget.json (scripts/first-load-budget.mjs).

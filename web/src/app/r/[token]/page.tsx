@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 
 import { bookingPageTexts } from "@/lib/bookingPage/texts";
 import { directionOf } from "@/lib/hostedChat/language";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
 import { bookingPageLanguage, loadManagedBooking, type ManagedBookingLookup } from "@/server/managedBooking";
+import { siteOrigin } from "@/server/siteOrigin";
 
 import { CustomerPageLinks } from "../../c/[slug]/_components/CustomerPageLinks";
 import { BookingProblemCard } from "./_components/BookingProblemCard";
@@ -77,6 +79,7 @@ export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
       <CustomerPageLinks
         language={language}
         privacyHref={privacyNoticeOf(lookup)}
+        siteOrigin={siteOrigin(await headers())}
         className="mx-auto mt-6 w-full max-w-[560px] text-center text-sm text-ink-muted"
       />
     </main>

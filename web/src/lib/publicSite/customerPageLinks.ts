@@ -70,6 +70,35 @@ export function accessibilityStatementPath(tag: string): string {
   return legalPath(isCabinetLanguage(language) ? language : DEFAULT_LOCALE, "accessibility");
 }
 
+export interface PrivacyLink {
+  href: string;
+  /** A notice on another site: it opens in a new tab, the customer's page stays. */
+  isExternal: boolean;
+}
+
+/**
+ * The privacy link at a page's foot. A notice on this site (the platform's
+ * default notice of a business's chat, which the API names by its full
+ * address under CABINET_BASE_URL) becomes a path and opens in place like
+ * the page's other links; a business's own notice elsewhere opens in a new
+ * tab. `siteOrigin` is the origin the page is served from (null: unknown,
+ * so only a path counts as this site).
+ */
+export function privacyLinkOf(href: string, siteOrigin: string | null): PrivacyLink {
+  if (href.startsWith("/") && !href.startsWith("//")) {
+    return { href, isExternal: false };
+  }
+  try {
+    const url = new URL(href);
+    if (siteOrigin !== null && url.origin === siteOrigin) {
+      return { href: `${url.pathname}${url.search}${url.hash}`, isExternal: false };
+    }
+  } catch {
+    // Not an address of its own: left as the API wrote it.
+  }
+  return { href, isExternal: true };
+}
+
 /** A business's chat link on the cabinet's host ("https://…/c/cafe") gives its privacy notice ("…/c/cafe/privacy"). */
 export function privacyNoticeOfChat(chatUrl: string): string | null {
   try {

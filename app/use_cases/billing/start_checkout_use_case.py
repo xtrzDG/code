@@ -5,6 +5,7 @@ from app.contracts.billing import (
     PaymentOrderRepoContract,
 )
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
+from app.contracts.payment_declines import PaymentDeclineWatchFacilitatorContract
 from app.contracts.payment_methods import PaymentProviderRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -72,7 +73,8 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
     on the local day the paid period ends, never in the past, with the
     business's VAT on top like its invoices. Every
     checkout is a new provider order, so a payment declined earlier can be
-    retried.
+    retried, unless the business's declines reached the card-testing brake
+    (RateLimitedError, LOG-05).
     """
 
     def __init__(
@@ -90,9 +92,13 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         wall_clock: WallClock[Microseconds],
         invoice_issuing: InvoiceIssuingFacilitatorContract,
         payment_provider_registry: PaymentProviderRegistryContract,
+        payment_declines: PaymentDeclineWatchFacilitatorContract,
     ) -> None:
         self._payment_provider_registry: PaymentProviderRegistryContract = (
             payment_provider_registry
+        )
+        self._payment_declines: PaymentDeclineWatchFacilitatorContract = (
+            payment_declines
         )
         self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._authorize_business_access: UseCaseContract[
@@ -121,6 +127,7 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         language: LanguageTag = input_data.display_language or business.owner_language
         require_babel_locale(language)
         require_allowed_return_url(input_data.request.return_url, self._app_settings)
+        self._payment_declines.require_payment_pages(business.id)
         subscription: SubscriptionDocument = require_current_subscription(
             self._subscription_repo,
             business.id,

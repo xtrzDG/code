@@ -19,7 +19,7 @@ from app.schemas.dto.billing_cabinet import (
     StartCheckoutCommand,
     SubscribeCommand,
 )
-from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.payment_methods import (
     CardSetupSessionView,
     PaymentMethodQuery,
@@ -50,9 +50,12 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     start_card_setup_use_case: Factory[
         UseCaseContract[StartCardSetupCommand, CardSetupSessionView]
     ] = Factory(PaymentUseCaseFactories.start_card_setup, payments)
-    process_payment_webhook_use_case: Factory[
+    receive_payment_webhook_use_case: Factory[
         UseCaseContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
-    ] = Factory(PaymentUseCaseFactories.process_payment_webhook, payments)
+    ] = Factory(PaymentUseCaseFactories.receive_payment_webhook, payments)
+    apply_payment_job_use_case: Factory[
+        UseCaseContract[QueuedJobInput, PaymentWebhookReceipt]
+    ] = Factory(PaymentUseCaseFactories.apply_payment_job, payments)
     retry_failed_payments_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(PaymentUseCaseFactories.retry_failed_payments, payments)
     )
@@ -83,12 +86,16 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     start_checkout_orchestrator = use_case_orchestrator(start_checkout_use_case)
     get_payment_method_orchestrator = use_case_orchestrator(get_payment_method_use_case)
     start_card_setup_orchestrator = use_case_orchestrator(start_card_setup_use_case)
-    # The payment is applied, then each invoice it paid is e-mailed.
-    process_payment_webhook_orchestrator: Factory[
-        OrchestratorContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
+    # The webhook verifies and queues the notification (API-03); the job
+    # applies it, then each invoice it paid is e-mailed.
+    process_payment_webhook_orchestrator = use_case_orchestrator(
+        receive_payment_webhook_use_case
+    )
+    apply_payment_notification_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
     ] = Factory(
         PaymentWebhookOrchestrator,
-        process_payment_webhook=process_payment_webhook_use_case,
+        apply_payment_notification=apply_payment_job_use_case,
         send_payment_documents=invoicing_use_cases.send_payment_documents_use_case,
     )
 

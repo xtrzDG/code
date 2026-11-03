@@ -5,6 +5,7 @@ from app.contracts.billing import (
     PaymentGatewayAdapterContract,
     PaymentOrderRepoContract,
 )
+from app.contracts.payment_declines import PaymentDeclineWatchFacilitatorContract
 from app.contracts.payment_locks import PaymentNotificationLockRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
@@ -19,7 +20,6 @@ from app.schemas.dto.payment_webhooks import PaymentStatusChange
 from app.schemas.dto.payments import (
     PaymentMethodNotice,
     PaymentNotification,
-    PaymentWebhookDelivery,
     PaymentWebhookReceipt,
     VerifiedPaymentEvent,
 )
@@ -34,34 +34,36 @@ from app.use_cases.billing.payment_webhook.card_on_file_recording import (
     settle_card_setup,
 )
 from app.use_cases.billing.payment_webhook.payment_order_lookup import (
-    find_payment_order,
-    find_payment_order_by_reference,
+    find_event_order,
 )
 from app.use_cases.billing.payment_webhook.payment_order_rules import (
     build_notification_key,
+    is_overtaken_approval,
 )
 from app.utilities.analytics.billing_event_drafts import payment_events
 
 
-class ProcessPaymentWebhookUseCase(
-    UseCaseContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
+class ApplyPaymentEventUseCase(
+    UseCaseContract[VerifiedPaymentEvent, PaymentWebhookReceipt]
 ):
     """
-    Apply a payment provider notification (POST /v1/payments/flitt/webhook
-    and POST /v1/payments/stripe/webhook).
+    Apply a verified payment provider notification (the queued job
+    `apply_payment_notification`; the webhooks of Flitt and Stripe only
+    verify and queue it, API-03).
 
-    The gateway verifies the signature first and says what the event is:
-    a payment's status, a saved card, both, or neither (IGNORED). The
-    payment order is found by the order id we sent (or the parent order of
-    an automatic charge, or the echoed merchant data). Each (payment,
-    status) pair and each saved card is applied once: the order's applied
-    notification keys are read, checked and stored under the order's
-    notification lock, so two copies of one delivery that arrive at the
-    same moment (two API instances) apply once and the second is a
-    DUPLICATE. A new payment status is read back from the provider before
-    it takes effect (`confirm_notification`: Flitt's status API for an
-    approval or a refund; a ConflictError leaves the order unchanged and
-    the provider sends the notification again).
+    The event says what happened: a payment's status, a saved card, both,
+    or neither (IGNORED). The payment order is found by the order id we
+    sent (or the parent order of an automatic charge, or the echoed
+    merchant data). Each (payment, status) pair and each saved card is
+    applied once: the order's applied notification keys are read, checked
+    and stored under the order's notification lock, so two copies of one
+    notification apply once and the second is a DUPLICATE. A new payment
+    status is read back from the provider before it takes effect
+    (`confirm_notification`: Flitt's status API for an approval or a
+    refund; a ConflictError leaves the order unchanged and the job tries
+    again later). An approval delivered after the reversal (a refund or a
+    chargeback) of the same payment pays nothing: the refund stands and
+    the late approval is recorded as seen (IGNORED).
 
     - a saved card: the provider's references of the order's charges and
       the card's token (sealed) are kept on the order; a card setup's
@@ -69,7 +71,9 @@ class ProcessPaymentWebhookUseCase(
       file (APPLIED) when its order's charges are the ones that run.
     - a payment's status: `ApplyPaymentStatusUseCase` applies it (paid,
       declined and retried invoices, grace, owner notices), and product
-      events record what changed.
+      events record what changed. A declined payment (not a retry of a
+      declined automatic charge) counts for the business's card-testing
+      watch (LOG-05).
     """
 
     def __init__(
@@ -85,6 +89,7 @@ class ProcessPaymentWebhookUseCase(
         secret_cipher: SecretCipherAdapterContract,
         wall_clock: WallClock[Microseconds],
         product_events: RecordProductEventFacilitatorContract,
+        payment_declines: PaymentDeclineWatchFacilitatorContract,
     ) -> None:
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
         self._notification_lock: PaymentNotificationLockRegistryContract = (
@@ -99,22 +104,15 @@ class ProcessPaymentWebhookUseCase(
         self._secret_cipher: SecretCipherAdapterContract = secret_cipher
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._product_events: RecordProductEventFacilitatorContract = product_events
-
-    def run(self, input_data: PaymentWebhookDelivery) -> PaymentWebhookReceipt:
-        event: VerifiedPaymentEvent = self._payment_gateway.read_notification(
-            input_data
+        self._payment_declines: PaymentDeclineWatchFacilitatorContract = (
+            payment_declines
         )
-        payment: PaymentNotification | None = event.payment
-        card: PaymentMethodNotice | None = event.payment_method
-        if payment is not None:
-            payment_order: PaymentOrderDocument = find_payment_order(
-                self._payment_order_repo, payment
-            )
-        elif card is not None:
-            payment_order = find_payment_order_by_reference(
-                self._payment_order_repo, card.order_reference
-            )
-        else:
+
+    def run(self, input_data: VerifiedPaymentEvent) -> PaymentWebhookReceipt:
+        payment_order: PaymentOrderDocument | None = find_event_order(
+            self._payment_order_repo, input_data
+        )
+        if payment_order is None:
             return PaymentWebhookReceipt(outcome=PaymentWebhookOutcome.IGNORED)
 
         with self._notification_lock.lock_for_order(
@@ -124,7 +122,7 @@ class ProcessPaymentWebhookUseCase(
             current: PaymentOrderDocument = (
                 self._payment_order_repo.get(payment_order.id) or payment_order
             )
-            return self._apply(payment, card, current)
+            return self._apply(input_data.payment, input_data.payment_method, current)
 
     def _apply(
         self,
@@ -151,6 +149,9 @@ class ProcessPaymentWebhookUseCase(
                 payment_order_id=payment_order.id,
             )
 
+        if new_payment is not None and is_overtaken_approval(new_payment, processed):
+            return self._skip_overtaken(new_payment, new_card, payment_order)
+
         status_before: PaymentStatus = payment_order.status
         business: BusinessDocument | None = self._business_repo.get(
             payment_order.business_id
@@ -169,29 +170,9 @@ class ProcessPaymentWebhookUseCase(
             outcome = self._record_card(new_card, payment_order, subscription)
 
         if new_payment is not None:
-            previous_status: SubscriptionStatus = subscription.status
-            payment_outcome: PaymentWebhookOutcome = self._apply_payment_status.run(
-                PaymentStatusChange(
-                    notification=new_payment,
-                    payment_order=payment_order,
-                    subscription=subscription,
-                    business=business,
-                )
+            outcome = self._apply_payment(
+                new_payment, payment_order, subscription, business, outcome
             )
-            self._product_events.record(
-                *payment_events(
-                    new_payment.status, payment_outcome, previous_status, subscription
-                )
-            )
-            if payment_outcome is not PaymentWebhookOutcome.IGNORED:
-                outcome = payment_outcome
-
-            processed.append(build_notification_key(new_payment))
-            if new_payment.payment_reference is not None:
-                payment_order.last_payment_reference = new_payment.payment_reference
-
-            if new_payment.failure_reason is not None:
-                payment_order.last_failure_reason = new_payment.failure_reason
 
         now: Microseconds = self._wall_clock.now_unix()
         if new_card is not None:
@@ -214,6 +195,73 @@ class ProcessPaymentWebhookUseCase(
             outcome,
         )
         return PaymentWebhookReceipt(outcome=outcome, payment_order_id=payment_order.id)
+
+    def _apply_payment(
+        self,
+        payment: PaymentNotification,
+        payment_order: PaymentOrderDocument,
+        subscription: SubscriptionDocument,
+        business: BusinessDocument,
+        outcome: PaymentWebhookOutcome,
+    ) -> PaymentWebhookOutcome:
+        previous_status: SubscriptionStatus = subscription.status
+        payment_outcome: PaymentWebhookOutcome = self._apply_payment_status.run(
+            PaymentStatusChange(
+                notification=payment,
+                payment_order=payment_order,
+                subscription=subscription,
+                business=business,
+            )
+        )
+        self._product_events.record(
+            *payment_events(
+                payment.status, payment_outcome, previous_status, subscription
+            )
+        )
+        if payment.status is PaymentStatus.DECLINED and not payment.is_retry:
+            self._payment_declines.record_decline(payment_order.business_id)
+
+        payment_order.processed_notification_keys.append(
+            build_notification_key(payment)
+        )
+        if payment.payment_reference is not None:
+            payment_order.last_payment_reference = payment.payment_reference
+
+        if payment.failure_reason is not None:
+            payment_order.last_failure_reason = payment.failure_reason
+
+        if payment_outcome is PaymentWebhookOutcome.IGNORED:
+            return outcome
+
+        return payment_outcome
+
+    def _skip_overtaken(
+        self,
+        payment: PaymentNotification,
+        card: PaymentMethodNotice | None,
+        payment_order: PaymentOrderDocument,
+    ) -> PaymentWebhookReceipt:
+        """A late approval of a reversed payment: seen, nothing paid or saved."""
+
+        payment_order.processed_notification_keys.append(
+            build_notification_key(payment)
+        )
+        if card is not None:
+            payment_order.processed_notification_keys.append(
+                build_card_notice_key(card)
+            )
+
+        payment_order.updated_at = self._wall_clock.now_unix()
+        self._payment_order_repo.save(payment_order)
+        log_payment_state_change(
+            payment_order,
+            payment_order.status,
+            payment.status,
+            PaymentWebhookOutcome.IGNORED,
+        )
+        return PaymentWebhookReceipt(
+            outcome=PaymentWebhookOutcome.IGNORED, payment_order_id=payment_order.id
+        )
 
     def _record_card(
         self,

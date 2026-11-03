@@ -202,3 +202,19 @@ describe("proxy and the session cookie in production", () => {
     expect(local.headers.get("location")).toBe("http://localhost:3010/businesses");
   });
 });
+
+describe("proxy on the payment pages", () => {
+  it("gives the billing page a policy with no third-party host; other pages keep Turnstile", async () => {
+    const headers = { cookie: "aw_session=tok; aw_locale=en" };
+
+    const billing = await proxy(new NextRequest("https://app.example.com/b/biz_1/settings/billing?card=return", { headers }));
+    const overview = await proxy(new NextRequest("https://app.example.com/b/biz_1/overview", { headers }));
+
+    const policy = billing.headers.get("content-security-policy") ?? "";
+    expect(policy).toContain("script-src 'self' 'nonce-");
+    expect(policy).not.toContain("challenges.cloudflare.com");
+    // The page renders with the same policy it is sent with.
+    expect(billing.headers.get("x-middleware-request-content-security-policy")).toBe(policy);
+    expect(overview.headers.get("content-security-policy")).toContain("https://challenges.cloudflare.com");
+  });
+});

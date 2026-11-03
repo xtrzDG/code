@@ -96,9 +96,12 @@ test.describe("the landing hero", () => {
     await page.goto("/");
     for (const id of ["how", "features", "channels", "pricing", "faq"]) {
       const section = page.locator(`#${id}`);
-      await section.scrollIntoViewIfNeeded();
-      // A reveal starts transparent; seen once, it is marked and shown for good.
+      // The block's heading and lead come into view. (A block taller than the
+      // screen, centred as a whole, would leave them above it: the cookie box
+      // keeps the foot of the screen clear with scroll-padding.)
       const reveal = section.locator("[data-reveal]").first();
+      await reveal.scrollIntoViewIfNeeded();
+      // A reveal starts transparent; seen once, it is marked and shown for good.
       await expect(reveal).toHaveAttribute("data-revealed", "");
       await expect(reveal).toHaveCSS("opacity", "1");
       await expect(section.getByRole("heading", { level: 2 })).toBeVisible();

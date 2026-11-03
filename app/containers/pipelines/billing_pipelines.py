@@ -43,6 +43,9 @@ class BillingPipelinesContainer(containers.DeclarativeContainer):
     process_payment_webhook_pipeline = orchestrator_pipeline(
         billing_orchestrators.process_payment_webhook_orchestrator
     )
+    apply_payment_notification_pipeline = orchestrator_pipeline(
+        billing_orchestrators.apply_payment_notification_orchestrator
+    )
     get_billing_profile_pipeline = orchestrator_pipeline(
         billing_orchestrators.get_billing_profile_orchestrator
     )

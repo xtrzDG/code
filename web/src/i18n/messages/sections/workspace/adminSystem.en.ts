@@ -79,6 +79,7 @@ export const adminSystemEn = {
       api_latency: "API is slow",
       backup_failed: "Backup failed",
       tenant_sms_volume: "A client sends too many SMS",
+      tenant_payment_declines: "A client's payments keep being declined",
       otp_conversion: "Login codes go unused",
       booking_spike: "A client gets a flood of new bookings",
       cancellation_spike: "A client's bookings are cancelled en masse",

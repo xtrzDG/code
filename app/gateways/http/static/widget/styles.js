@@ -47,7 +47,9 @@
     ".aw-heading{flex:1;min-width:0;}",
     ".aw-title{margin:0;font-size:16px;font-weight:600;line-height:1.3;overflow:hidden;",
     "text-overflow:ellipsis;white-space:nowrap;}",
-    ".aw-subtitle{margin:0;font-size:12.5px;opacity:.85;}",
+    // Text on the accent keeps its full colour: accentColors picks it for
+    // AA (4.5:1) and no more, so a faded line (opacity) would fall below.
+    ".aw-subtitle{margin:0;font-size:12.5px;}",
     ".aw-language{background:transparent;border:1px solid currentColor;border-radius:8px;",
     "padding:4px 6px;font-size:13px;max-width:120px;cursor:pointer;}",
     ".aw-language option{color:var(--aw-fg);background:var(--aw-bg);}",
@@ -81,7 +83,8 @@
     "color:var(--aw-danger);background:var(--aw-danger-bg);padding:6px 10px;border-radius:10px;",
     "max-width:92%;}",
     ".aw-error-text{flex:1;}",
-    ".aw-error-detail{display:block;margin-top:2px;opacity:.8;font-size:12px;}",
+    // Full colour too: faded, the danger text falls below AA on its tint.
+    ".aw-error-detail{display:block;margin-top:2px;font-size:12px;}",
     ".aw-retry{border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;",
     "padding:3px 10px;cursor:pointer;font-size:13px;}",
     ".aw-fallback{align-self:flex-end;display:flex;flex-wrap:wrap;align-items:center;gap:6px;",

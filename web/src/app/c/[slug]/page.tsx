@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -7,6 +8,7 @@ import { hostedChatTexts } from "@/lib/hostedChat/texts";
 import { poweredByText } from "@/lib/referrals/poweredByTexts";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
 import { chatApiBase, hostedChatPath, type HostedChatView } from "@/server/hostedChat";
+import { siteOrigin } from "@/server/siteOrigin";
 
 import { CustomerPageLinks } from "./_components/CustomerPageLinks";
 import { HostedChatPreview } from "./_components/HostedChatPreview";
@@ -20,12 +22,19 @@ const CONTAINER_ID = "hosted-chat";
 
 const LINKS_CLASS = "w-full px-4 pt-2 pb-4 text-center text-xs text-(--hc-muted)";
 
+interface PageLinks {
+  language: string;
+  privacyHref: string | null;
+  /** The page's own origin: the platform's notice on it opens in place. */
+  origin: string;
+}
+
 /** The page's content, then its privacy and accessibility links below it. */
-function WithLinks({ language, privacyHref, children }: { language: string; privacyHref: string | null; children: ReactNode }) {
+function WithLinks({ language, privacyHref, origin, children }: PageLinks & { children: ReactNode }) {
   return (
     <div className="flex w-full flex-col items-center">
       {children}
-      <CustomerPageLinks language={language} privacyHref={privacyHref} className={LINKS_CLASS} />
+      <CustomerPageLinks language={language} privacyHref={privacyHref} siteOrigin={origin} className={LINKS_CLASS} />
     </div>
   );
 }
@@ -77,12 +86,13 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   if (lookup.kind === "missing") {
     notFound();
   }
+  const origin = siteOrigin(await headers());
   if (lookup.kind === "failed") {
     const page = visitorLanguage(acceptLanguage);
     const texts = hostedChatTexts(page.language);
     return (
       <HostedChatShell page={page}>
-        <WithLinks language={page.language} privacyHref={null}>
+        <WithLinks language={page.language} privacyHref={null} origin={origin}>
           <HostedChatNotice lead={texts.unavailable} hint={texts.tryLater} />
         </WithLinks>
       </HostedChatShell>
@@ -103,7 +113,7 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   if (!view.is_enabled) {
     return (
       <HostedChatShell page={page} accent={view.accent_color}>
-        <WithLinks language={page.language} privacyHref={privacyHref}>
+        <WithLinks language={page.language} privacyHref={privacyHref} origin={origin}>
           <HostedChatNotice
             title={view.business_name}
             lead={texts.unavailable}
@@ -132,7 +142,7 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   );
   return (
     <HostedChatShell page={page} accent={view.accent_color}>
-      <WithLinks language={page.language} privacyHref={privacyHref}>
+      <WithLinks language={page.language} privacyHref={privacyHref} origin={origin}>
         {hasHostedInfo(view) ? (
           // A link in bio: the business's hours, address and Book beside the chat.
           <div className="hc-layout">

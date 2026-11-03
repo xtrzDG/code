@@ -44,7 +44,10 @@ test("the hosted chat page links the privacy notice and the accessibility statem
   await expect(page.getByRole("heading", { level: 1, name: business.name })).toBeVisible();
 
   const links = page.getByTestId("customer-page-links");
-  await expect(links.getByRole("link", { name: "Privacy notice" })).toHaveAttribute("href", `/c/${business.slug}/privacy`);
+  // The platform's own notice (the API names it by its full address on this site) opens in place.
+  const privacy = links.getByRole("link", { name: "Privacy notice" });
+  await expect(privacy).toHaveAttribute("href", `/c/${business.slug}/privacy`);
+  await expect(privacy).not.toHaveAttribute("target");
   await expect(links.getByRole("link", { name: "Accessibility" })).toHaveAttribute("href", "/en/accessibility");
   await expect(page.getByTestId("cookie-consent")).toHaveCount(0);
   expect((await page.context().cookies()).map((cookie) => cookie.name)).not.toContain("aw_attr");

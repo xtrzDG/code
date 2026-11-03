@@ -69,9 +69,14 @@ class PaymentStatus(StrEnum):
 
 
 class PaymentWebhookOutcome(StrEnum):
-    """What processing one provider notification did."""
+    """
+    What processing one provider notification did. The webhook itself
+    answers QUEUED (verified and queued for a worker), DUPLICATE or
+    IGNORED; the worker that applies it gets the others (API-03).
+    """
 
     APPLIED = "applied"
     DUPLICATE = "duplicate"
     IGNORED = "ignored"
     REFUND_DUE = "refund_due"
+    QUEUED = "queued"
