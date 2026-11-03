@@ -15,7 +15,8 @@ more than a year old and none is planned.
    three injects: what is seen first, what gets worse, a surprise.
 2. **Walk-through**: the team plays it in real time order. At each inject:
    which alert or person notices, which severity (`docs/operations/on-call.md`),
-   who is lead, which runbook, what the owners and the status page say,
+   who is lead and who is scribe (the scribe keeps the exercise's timeline
+   as in a real incident), which runbook, what the owners and the status page say,
    which clock runs (the 48 hours of DPA 12.1, the businesses' 72 hours).
 3. **Findings**: every missing step, wrong contact or unclear decision is a
    finding with an owner and a date, tracked like a postmortem's action
@@ -33,7 +34,8 @@ more than a year old and none is planned.
 | Render's Frankfurt region is unavailable for hours | `runbooks/render-outage.md`, restore elsewhere from the off-site backup |
 | SMS pumping through the login form at night | `runbooks/sms-pumping.md`, provider budgets |
 | A prompt injection makes the assistant offer a free booking | `runbooks/assistant-quality.md`, pausing the assistant of a business |
-| A forged payment webhook marks deposits as paid | `docs/operations/on-call.md` question 2, the PSP's dashboard |
+| A forged payment webhook marks deposits as paid | `docs/operations/on-call.md` question 2, the PSP's dashboard, the PSP's notification clock (`docs/operations/incident.md`) |
+| Calls are transferred to premium numbers abroad overnight | `runbooks/irsf-toll-fraud.md`, provider spend limits, the founder's call at night |
 
 ## Record
 

@@ -22,6 +22,7 @@ which runbook is `../dependency-map.md`.
 | [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors`, `quality_drop` | SEV2-SEV3 |
 | [sms-pumping](sms-pumping.md) | `otp_cap_trips`; "Sign-in codes sprayed" (e-mail and Sentry) | SEV2 |
 | [spend-spike](spend-spike.md) | provider budget e-mails, margin on Admin → Metrics | SEV2 |
+| [irsf-toll-fraud](irsf-toll-fraud.md) | `spend_spike` with outgoing call legs, the telephony provider's fraud e-mail | SEV2 |
 | [stalled-data-task](stalled-data-task.md) | `backfill_stalled`, the data-task card | SEV3 |
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |
 | [data-breach](data-breach.md) | anyone who suspects one | SEV1, 48 h clock |

@@ -34,8 +34,8 @@ provider incident and write its number in the timeline.
 | Meta (WhatsApp, Instagram, Messenger) | those channels, WhatsApp codes | https://metastatus.com | Meta Business Help Center, direct support of the Business Manager |
 | Telegram | the Telegram channels, alerts to the ops chat | [none official] | https://t.me/BotSupport |
 | E-mail provider | login codes by e-mail, notices, alerts by e-mail | [provider's status page] | [provider's support] |
-| Stripe | subscriptions, deposits | https://status.stripe.com | the dashboard's support |
-| Flitt | payments where Flitt is the PSP | [none public] | [merchant support from the contract] |
+| Stripe | subscriptions, deposits | https://status.stripe.com | the dashboard's support; a suspected compromise of a key, webhook secret or card data: security@stripe.com within 24 hours (`docs/operations/incident.md`) or the agreement's shorter deadline [to record] |
+| Flitt | payments where Flitt is the PSP | [none public] | [merchant support from the contract]; a suspected compromise: within 24 hours or the merchant agreement's deadline [to record] |
 | Google (Calendar) | calendar sync | https://www.google.com/appsstatus | Google Cloud console support |
 | Cloudflare (Turnstile, DNS when used) | bot checks of risky sign-ins | https://www.cloudflarestatus.com | the dashboard's support |
 | Sentry (EU) | error reports, Crons | https://status.sentry.io | the dashboard's support |
@@ -50,7 +50,7 @@ provider incident and write its number in the timeline.
 | --- | --- | --- |
 | Garante per la protezione dei dati personali (Italy) | a personal data breach where the platform is controller (accounts, billing, security data): within 72 hours; for the businesses' data each business notifies, the platform helps (DPA 12.2) | the online data breach procedure on https://servizi.gpdp.it; Piazza Venezia 11, 00187 Roma; protocollo@pec.gpdp.it; +39 06 696771 |
 | The lead authority of another country | a breach of a business outside Italy | the business notifies its own authority; the platform gives it the DPA 12.1 notice |
-| CSIRT Italia (Agenzia per la cybersicurezza nazionale) | a significant incident, only once the platform is in scope of NIS2 (D.Lgs. 138/2024); the assessment is still open (`docs/security/readiness-checklist.json`, GOV-08, the regulatory applicability register) | https://www.csirt.gov.it |
+| CSIRT Italia (Agenzia per la cybersicurezza nazionale) | a significant incident, only once the platform is in scope of NIS2 (D.Lgs. 138/2024); not in scope today (`docs/security/regulatory-register.md`) | https://www.csirt.gov.it |
 | Polizia Postale e delle Comunicazioni | fraud, extortion, a compromise by a known attacker | https://www.commissariatodips.it |
 
 Every notice to an authority is recorded in the incident's timeline with

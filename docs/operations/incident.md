@@ -23,8 +23,15 @@ the first minute: the decision tree of `docs/operations/on-call.md`
 
 One person can hold several roles in a small team; the roles still exist.
 
-- **Incident lead**: decides, assigns, keeps the timeline. Says "I am the
-  lead" in the ops chat. Hands over explicitly.
+- **Incident lead** (the incident commander): decides, assigns, sets the
+  next check-in. Says "I am the lead" in the ops chat. Hands over
+  explicitly.
+- **Scribe**: keeps the timeline in the incident's thread as it happens
+  (UTC time, who, what was seen, what was decided and why, every command
+  run against production), collects links to logs, Sentry events and
+  audit entries for the evidence, and starts the postmortem draft from it.
+  The lead is the scribe only while nobody else is there; the second
+  person to join takes it over.
 - **Fixer**: works the runbook; tells the lead before any risky step
   (rollback, restore, key rotation).
 - **Communicator**: owner notices (templates below), the status page
@@ -40,7 +47,7 @@ One person can hold several roles in a small team; the roles still exist.
    monitor, or an owner. Open `/admin/system` first: alerts, lanes, dead
    letters, workers, channels.
 2. **Declare**: post in the ops chat `INCIDENT <SEV> <one line>`, name the
-   lead, start the timeline (UTC times).
+   lead and the scribe, start the timeline (UTC times).
 3. **Record**: Admin → System → Incidents → "Record incident" (or `POST
    /v1/admin/incidents`) with the businesses affected, or "All businesses"
    (`scope: all_businesses`) when the whole platform was hit. Each of them
@@ -88,6 +95,7 @@ Both at once is common (a leaked database copy): run both rows.
 | 48 hours | Processor data: notify every owner of each affected business (DPA 12.1, "without undue delay and in any case within 48 hours") through `POST /v1/admin/incidents` with `kind: data_breach` (below) | the **communicator** |
 | 72 hours | Controller data with a risk: notify the Garante per la protezione dei dati personali through its online breach notification procedure (garanteprivacy.it, "Notifica di una violazione dei dati personali"). Facts still missing go in later phases (art. 33(4)); a late notice says why it is late | the **privacy lead** |
 | without undue delay | High risk: tell the people concerned in plain language (art. 34(2): what happened, a contact point, the likely consequences, the measures, what they can do themselves); for processor data, give the owners the facts and the template below | controller data: the communicator; processor data: the owner, helped by the communicator |
+| 24 hours | A payment provider's key, webhook secret or account is (or may be) compromised, or card data may have been exposed: tell the PSP through its security contact (Stripe: the Dashboard's support and security@stripe.com; Flitt: its support desk and the contact of the merchant agreement), rotate the key and webhook secret ([runbooks/secret-rotation.md](runbooks/secret-rotation.md)), and check `docs/security/payments.md`. The contracts' own deadlines win where shorter: record each PSP's in `docs/operations/contacts.md` (owner action) | the **incident lead**, with the communicator |
 | always | Enter the breach in the breach register (art. 33(5)) with the facts, the effects, the decision on each notice and why, and the remedial action, also when nothing was notified; keep it at least 5 years | the privacy lead |
 | 5 working days | Postmortem (template below) | the lead |
 
