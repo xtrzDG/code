@@ -536,6 +536,7 @@
     {"name": "purge_expired_personal_data", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
     {"name": "purge_idempotency_keys", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "verify_audit_chain", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
+    {"name": "purge_expired_audit_log", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
     {"name": "send_subprocessor_notices", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
     {"name": "expire_waitlist_offers", "access": "worker", "every_seconds": 60, "lane": "default", "runs_in": "one worker"},
     {"name": "run_rebooking_campaigns", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
@@ -550,6 +551,7 @@
     {"name": "reapply_contact_erasures", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"}
   ],
   "queued_jobs": [
+    {"name": "apply_payment_notification", "access": "worker"},
     {"name": "archive_call_recording", "access": "worker"},
     {"name": "build_business_export", "access": "worker"},
     {"name": "delete_business", "access": "worker"},

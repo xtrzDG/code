@@ -51,7 +51,7 @@ incident (`docs/operations/incident.md`).
 | First Monday of the month | the retention check: the last `succeeded` run of each purge job in `periodic_job_runs`, no Sentry Crons monitor missed | `docs/security/data-classification.md`, "Is the retention job running?" |
 | Monthly | the SLO report (every objective of `docs/operations/slo.md`) shared in the ops chat | `docs/operations/slo.md` |
 | First week of each quarter | access review | `docs/security/access-review.md` |
-| January | tabletop exercise; `workshop purge-audit-log --older-than-days 1095`; the vendor register's yearly review | `docs/operations/tabletop.md`, `docs/operations/vendor-register.md` |
+| January | tabletop exercise; the audit log's retention check: the daily `purge_expired_audit_log` job (1,095 days, migration 1250) has `succeeded` runs in `periodic_job_runs` and no chain is older than 1,095 days (`workshop purge-audit-log --older-than-days 1095` by hand only if the job was down); the vendor register's yearly review | `docs/operations/tabletop.md`, `docs/operations/vendor-register.md` |
 | 12 months after each secret's last rotation | its rotation | `docs/security/secrets-inventory.md` |
 | 30 days before `Expires` of security.txt | renew it (a test fails at 30 days) | `web/src/server/securityTxt.ts` |
 
