@@ -21,6 +21,7 @@ from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.dto.paging import PageRequest
+from app.schemas.dto.privacy.knowledge_mentions import KnowledgeMention
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.booleans import (
     IsDpaAccepted,
@@ -30,6 +31,7 @@ from app.schemas.typings.compliance.constrained_integers import (
     AuditRecordCount,
     DeletedRecordingCount,
     ErasedRecordCount,
+    FlaggedKnowledgeItemCount,
     PurgedCallCount,
     ScannedBusinessCount,
 )
@@ -179,18 +181,15 @@ class ContactRecordsQuery(ImmutableDTO):
 
 class ContactRecords(ImmutableDTO):
     """
-    Every stored record that describes one visitor of one business.
-
-    Calls belong to the visitor through one of their conversations or their
-    phone number; `notes` are the team's internal notes on their
-    conversations. Raw language-model turns repeat the messages and are not
-    listed. Missed calls are found by the visitor's numbers, the messages
-    queued to them (`outbound_messages`: replies, reminders, text-backs) by
-    their account in each of the business's channels, the webhook events
-    they sent (`inbound_events`) by their accounts and conversations, and
-    the requests for feedback after their visits, their places on the
-    waitlist, the rebooking campaign's messages and the consent ledger's
-    entries by the contact (1246, oldest first; kept after an erasure).
+    Every stored record that describes one visitor of one business. Calls
+    belong to them through a conversation or their phone; `notes` are the
+    team's notes on their conversations (raw model turns repeat the
+    messages and are left out). Missed calls are found by their numbers,
+    queued messages (`outbound_messages`) by their channel accounts,
+    webhook events (`inbound_events`) by accounts and conversations;
+    feedback requests, waitlist places, campaign messages and consent
+    ledger entries (1246, oldest first, kept after an erasure) by the
+    contact; `knowledge_mentions` are the items naming them (PRIV-08).
     """
 
     contact: ContactDocument
@@ -226,6 +225,9 @@ class ContactRecords(ImmutableDTO):
     consent_records: list[ConsentRecordDocument] = Field(
         default_factory=list[ConsentRecordDocument]
     )
+    knowledge_mentions: list[KnowledgeMention] = Field(
+        default_factory=list[KnowledgeMention]
+    )
 
 
 class ContactOptOutState(ImmutableDTO):
@@ -253,16 +255,13 @@ class ContactDataExport(ImmutableDTO):
 
 class ContactErasureResult(ImmutableDTO):
     """
-    What a visitor's erasure removed.
-
-    Messages, model transcripts, the team's notes, call transcripts and
-    recordings are deleted; conversations, bookings, leads and handoffs stay
-    as anonymous business records. Missed calls lose the caller's number,
-    messages queued to them and webhook events they sent lose their text
-    and account (queued ones are no longer sent or processed), and requests
-    for feedback lose their review link; a STOP stays on the suppression
-    list. `queued_processor_erasures`: the deletion jobs queued for the
-    copies at the sub-processors (Langfuse traces, ElevenLabs calls).
+    What a visitor's erasure removed. Messages, model transcripts, notes,
+    call transcripts and recordings go; conversations, bookings, leads and
+    handoffs stay anonymous. Missed calls lose the number, queued messages
+    and webhook events their text and account (no longer sent or
+    processed), feedback requests their link; a STOP stays suppressed.
+    `queued_processor_erasures`: deletion jobs for the sub-processors'
+    copies; `flagged_knowledge_items`: items naming them, for the owner.
     """
 
     business_id: BusinessId
@@ -282,6 +281,7 @@ class ContactErasureResult(ImmutableDTO):
     anonymized_feedback_requests: ErasedRecordCount = ErasedRecordCount(0)
     anonymized_waitlist_entries: ErasedRecordCount = ErasedRecordCount(0)
     queued_processor_erasures: ProcessorErasureJobCount = ProcessorErasureJobCount(0)
+    flagged_knowledge_items: FlaggedKnowledgeItemCount = FlaggedKnowledgeItemCount(0)
 
 
 class PurgeExpiredRecordingsCommand(ImmutableDTO):

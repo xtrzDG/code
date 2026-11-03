@@ -1,7 +1,10 @@
 # Login codes of the last hour that settled (used, or expired unused):
 # when most were never used, codes go to numbers nobody signs in
 # with (SMS pumping through sign-in). The message names the countries
-# with the most unused codes.
+# with the most unused codes. Sign-in throttles itself before this alert:
+# a number range whose codes go unused gets no code for the hour, and a
+# country's cap of codes to new phones drops to 10 an hour
+# (app/use_cases/users/otp_login/login_code_conversion.py).
 code: otp_conversion
 severity: sev2
 summary: More than 70 % of the login codes sent in the last hour were never used.

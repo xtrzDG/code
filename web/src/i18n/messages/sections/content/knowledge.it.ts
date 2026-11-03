@@ -44,6 +44,8 @@ export const knowledgeIt: Translation<typeof knowledgeEn> = {
     off: "Disattivata",
     importDraft: "Importata, da verificare",
     fromQuestion: "Da una domanda di un cliente",
+    erasedCustomer: "Cita un cliente cancellato",
+    erasedCustomerHint: "Un cliente citato qui ha chiesto la cancellazione dei suoi dati. Togli il suo nome e il suo numero da questa voce, poi salvala.",
     minutes: "{count} min",
     useToggle: "L'assistente usa “{title}”",
     used: "Attiva",

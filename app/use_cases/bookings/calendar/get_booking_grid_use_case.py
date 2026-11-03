@@ -3,6 +3,7 @@ from datetime import timedelta
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -18,6 +19,8 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.booking_grid import BookingGrid, BookingGridQuery
+from app.schemas.dto.bookings import BookingView
+from app.schemas.typings.bookings.booleans import SeesHealthNotes
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
@@ -35,6 +38,10 @@ from app.use_cases.bookings.calendar.grid_window import (
     WindowBounds,
     read_window_bookings,
     window_bounds,
+)
+from app.use_cases.shared.health_note_privacy import (
+    protect_health_note,
+    sees_health_notes,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.scheduling.zoned_time import parse_local_date, to_local_date
@@ -54,7 +61,8 @@ class GetBookingGridUseCase(UseCaseContract[BookingGridQuery, BookingGrid]):
     taken each night. Inactive places show only while they keep bookings.
     With the bookings, customers' names are shown, so the call is written
     to the audit log as a view by the staff member; the counts alone (the
-    week's heatmap) are not.
+    week's heatmap) are not. Notes with health data are shown to the owner
+    and staff only (`health_note_privacy`, PRIV-10).
     """
 
     def __init__(
@@ -68,7 +76,9 @@ class GetBookingGridUseCase(UseCaseContract[BookingGridQuery, BookingGrid]):
         contact_repo: ContactRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        brand_repo: BrandRepoContract | None = None,
     ) -> None:
+        self._brand_repo: BrandRepoContract | None = brand_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -125,16 +135,20 @@ class GetBookingGridUseCase(UseCaseContract[BookingGridQuery, BookingGrid]):
                 input_data.client_ip_address,
             )
         )
+        sees_notes: SeesHealthNotes = sees_health_notes(
+            self._brand_repo, inputs.business, input_data.actor_id
+        )
+        views: list[BookingView] = booking_views(
+            self._contact_repo,
+            self._knowledge_item_repo,
+            inputs.business.id,
+            inputs.business.timezone,
+            inputs.zone,
+            inputs.resources,
+            window.bookings,
+        )
         return grid.model_copy(
             update={
-                "bookings": booking_views(
-                    self._contact_repo,
-                    self._knowledge_item_repo,
-                    inputs.business.id,
-                    inputs.business.timezone,
-                    inputs.zone,
-                    inputs.resources,
-                    window.bookings,
-                )
+                "bookings": [protect_health_note(view, sees_notes) for view in views]
             }
         )

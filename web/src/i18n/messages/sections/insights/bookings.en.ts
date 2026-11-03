@@ -72,6 +72,7 @@ export const bookingsEn = {
     value: "Value",
     phone: "Phone",
     notes: "Notes",
+    notesWithheld: "Health details, shown to the owner and staff only",
     source: "Source",
   },
   actions: {

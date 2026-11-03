@@ -61,11 +61,11 @@ from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_business_exports import (
     PURGE_BUSINESS_EXPORTS_JOB,
 )
-from app.gateways.worker.periodic.purge_idempotency_keys import (
-    PURGE_IDEMPOTENCY_KEYS_JOB,
-)
 from app.gateways.worker.periodic.purge_expired_audit_log import (
     PURGE_EXPIRED_AUDIT_LOG_JOB,
+)
+from app.gateways.worker.periodic.purge_idempotency_keys import (
+    PURGE_IDEMPOTENCY_KEYS_JOB,
 )
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
 from app.gateways.worker.periodic.purge_webhook_deliveries import (
@@ -114,6 +114,9 @@ from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.billing.payment_webhook.payment_notification_jobs import (
+    APPLY_PAYMENT_NOTIFICATION_JOB,
+)
 from app.use_cases.compliance.record_contact_erasure_use_case import (
     RECORD_CONTACT_ERASURE_JOB,
 )
@@ -224,6 +227,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         PROCESS_PLATFORM_BOT_UPDATE_JOB,
         PROCESS_POST_CALL_JOB,
         PROCESS_COMMENT_TRIGGER_JOB,
+        APPLY_PAYMENT_NOTIFICATION_JOB,
         ARCHIVE_CALL_RECORDING_JOB,
         DISCARD_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,

@@ -21,6 +21,7 @@ export function booking(id: string, date: string, time: string | null): BookingV
     source_channel: "phone",
     notes: null,
     is_sandbox: false,
+    is_health_note_withheld: false,
     created_at: 1_790_000_000_000_000,
   };
 }

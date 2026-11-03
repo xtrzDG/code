@@ -142,7 +142,7 @@
         log.focus();
         announce(text("rateThanks"));
       }
-      var body = { session_key: state.sessionKey, rating: rating, message_id: answer.id };
+      var body = { session_key: useSessionKey(), rating: rating, message_id: answer.id };
       if (reason) {
         body.reason = reason;
       }

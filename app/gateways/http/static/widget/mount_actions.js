@@ -150,7 +150,7 @@
       renderActions();
       requestJson(
         handoffUrl,
-        withVisitSource({ session_key: state.sessionKey, language: state.language })
+        withVisitSource({ session_key: useSessionKey(), language: state.language })
       ).then(
         guarded("person", function (result) {
           state.isRequestingPerson = false;

@@ -15,6 +15,7 @@ from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.typings.bookings.constrained_strings import LocalDate
+from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -24,6 +25,7 @@ from app.schemas.typings.localization.strings import (
     LocalizedTextValue,
 )
 from app.utilities.localization.owner_texts import owner_text
+from app.utilities.privacy.health_notes import is_health_note
 from app.utilities.scheduling.localized_formatting import (
     choose_template_language,
     format_full_date,
@@ -215,6 +217,28 @@ BOOKING_STAFF_DETAILS: LocalizedText = owner_text(
 )
 
 NOTES_LINE: LocalizedText = owner_text("notifications.staff_message.notes_line")
+HEALTH_NOTES_LINE: LocalizedText = owner_text(
+    "notifications.staff_message.health_notes_line"
+)
+
+
+def render_notes_line(
+    resolver: LocalizedTextResolverContract,
+    notes: BookingNote | None,
+    language: LanguageTag,
+) -> str | None:
+    """
+    The booking's notes for a message or an event outside the cabinet; a
+    note with health data is Restricted (PRIV-10): only "see the booking".
+    """
+
+    if notes is None:
+        return None
+
+    if is_health_note(notes):
+        return render(resolver, HEALTH_NOTES_LINE, language, {})
+
+    return render(resolver, NOTES_LINE, language, {"notes": str(notes)})
 
 
 def render_booking_staff_notification(
@@ -247,9 +271,8 @@ def render_booking_staff_notification(
             },
         ),
     ]
-    if booking.notes is not None:
-        lines.append(
-            render(resolver, NOTES_LINE, language, {"notes": str(booking.notes)})
-        )
+    notes_line: str | None = render_notes_line(resolver, booking.notes, language)
+    if notes_line is not None:
+        lines.append(notes_line)
 
     return "\n".join(lines)

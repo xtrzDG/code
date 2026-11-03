@@ -72,6 +72,7 @@ export const bookingsIt: Translation<typeof bookingsEn> = {
     value: "Valore",
     phone: "Telefono",
     notes: "Note",
+    notesWithheld: "Dati sulla salute, visibili solo al titolare e allo staff",
     source: "Provenienza",
   },
   actions: {

@@ -94,7 +94,7 @@
     function upload(file, kind, fileName, seconds) {
       var entry = {
         kind: kind,
-        sessionKey: state.sessionKey,
+        sessionKey: useSessionKey(),
         id: "",
         seconds: seconds,
         url: kind === "image" ? objectUrl(file) : ""

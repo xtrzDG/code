@@ -1,13 +1,34 @@
   // --- visitor identity and history (web storage, never cookies) ----------
 
+  // The visitor key this device already has, else "": a site's widget
+  // writes nothing to the site's storage until the visitor opens or uses
+  // the chat (CONS-07), so its key is made on first use
+  // (ensureSessionKey). The chat page is the chat the visitor opened (its
+  // tab's storage only): it has its key at once.
   function loadSessionKey() {
     forgetIdleConversation();
-    var storage = conversationStorageOrNull();
-    var key = storageGet(storage, storagePrefix + "session");
+    var key = storageGet(conversationStorageOrNull(), storagePrefix + "session");
     if (key && SESSION_KEY_PATTERN.test(key)) {
       return key;
     }
-    key = "v1_" + randomString(32);
+    return isPageMode ? ensureSessionKey("") : "";
+  }
+
+  // The key for a message, a request or a poll: the one in use (stored
+  // again if another tab dropped it), else another tab's, else a new one.
+  function ensureSessionKey(current) {
+    var storage = conversationStorageOrNull();
+    var stored = storageGet(storage, storagePrefix + "session");
+    if (current && SESSION_KEY_PATTERN.test(current)) {
+      if (!stored) {
+        storageSet(storage, storagePrefix + "session", current);
+      }
+      return current;
+    }
+    if (stored && SESSION_KEY_PATTERN.test(stored)) {
+      return stored;
+    }
+    var key = "v1_" + randomString(32);
     storageSet(storage, storagePrefix + "session", key);
     return key;
   }
@@ -36,6 +57,10 @@
     if (lastAt === 0) {
       if (storageGet(storage, storagePrefix + "history")) {
         storageSet(storage, storagePrefix + "history-at", String(Date.now()));
+      } else if (!storageGet(storage, storagePrefix + "cursor") && storageGet(storage, storagePrefix + "handoff") !== "1") {
+        // A key no message ever used (an earlier version made one on every
+        // page): an unused key does not outlive the page that made it.
+        storageRemove(storage, storagePrefix + "session");
       }
       return;
     }
@@ -142,8 +167,10 @@
 
   // The script's data-source, else ?src= or ?utm_source= of the page,
   // kept for the tab, so a visitor who came by a QR code and opened
-  // another page before writing still counts for that code.
-  function loadVisitSource() {
+  // another page before writing still counts for that code. A site's
+  // widget keeps it only once the visitor opens or uses the chat
+  // (`isKept`, keepVisitSource); the chat page at once.
+  function loadVisitSource(isKept) {
     var storage = sessionStorageOrNull();
     var found = (
       script.getAttribute("data-source") ||
@@ -154,7 +181,9 @@
       .trim()
       .slice(0, MAX_SOURCE_LENGTH);
     if (found) {
-      storageSet(storage, storagePrefix + "source", found);
+      if (isKept === true || isPageMode) {
+        storageSet(storage, storagePrefix + "source", found);
+      }
       return found;
     }
     return storageGet(storage, storagePrefix + "source") || "";
@@ -165,6 +194,13 @@
       return new URLSearchParams(window.location.search).get(name) || "";
     } catch (error) {
       return "";
+    }
+  }
+
+  // The visitor opened or used the chat: the page's source is kept.
+  function keepVisitSource() {
+    if (visitSource) {
+      loadVisitSource(true);
     }
   }
 

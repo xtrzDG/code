@@ -175,3 +175,31 @@ test("business messages marked right-to-left stay right-to-left", async ({ page 
   await expect(chat(page).getByText("+995 555 12 34 56")).toHaveAttribute("dir", "auto");
   await expect(chat(page).getByText("iPhone شاشة مكسورة")).toHaveAttribute("dir", "auto");
 });
+
+test("the widget keeps nothing in the site's storage until the visitor opens or uses the chat", async ({ page }) => {
+  const api = new FakeWidgetApi();
+  await serveSite(page.context(), api, { attributes: { "data-source": "qr_table" } });
+  await page.goto(`${SITE}/`);
+  await expect(page.getByRole("button", { name: "Open chat" })).toBeVisible();
+  const kept = () =>
+    page.evaluate((prefix) => {
+      const keysOf = (storage: Storage) =>
+        Object.keys(storage)
+          .filter((key) => key.startsWith(prefix))
+          .map((key) => key.slice(prefix.length))
+          .sort();
+      return { device: keysOf(localStorage), tab: keysOf(sessionStorage) };
+    }, STORAGE_PREFIX);
+
+  // CONS-07: no visitor key, no source, no open state before the visitor acts.
+  expect(await kept()).toEqual({ device: [], tab: [] });
+
+  await page.getByRole("button", { name: "Open chat" }).click();
+  await expect(page.getByRole("textbox")).toBeVisible();
+  expect(await kept()).toEqual({ device: [], tab: ["open", "source"] });
+
+  await ask(page, "Is the terrace open?");
+  await expect(chat(page).getByText("Answer to Is the terrace open?")).toBeVisible();
+  expect((await kept()).device).toContain("session");
+  expect(await page.evaluate((prefix) => localStorage.getItem(`${prefix}session`), STORAGE_PREFIX)).toBe(api.sessionKeys[0]);
+});

@@ -217,6 +217,8 @@ class KnowledgeItemDetails(ImmutableDTO):
     replaces in this location (None: an item of the location's own).
     `aliases`: the item in the business's other languages, the owner's
     (APPROVED) and the model's suggestions waiting for review (SUGGESTED).
+    `erased_customer_flagged_at`: a customer the item names was erased then
+    (PRIV-08); the owner removes their details, and saving clears it.
     """
 
     id: KnowledgeItemId
@@ -246,6 +248,7 @@ class KnowledgeItemDetails(ImmutableDTO):
     created_at: Microseconds
     updated_at: Microseconds
     shared_key: KnowledgeShareKey | None = None
+    erased_customer_flagged_at: Microseconds | None = None
 
 
 class KnowledgeItemList(ImmutableDTO):

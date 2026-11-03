@@ -46,6 +46,10 @@ class LoginCodeCap(StrEnum):
     COUNTRY = "country"
     NEW_DESTINATIONS = "new_destinations"
     VERIFIED_USERS = "verified_users"
+    # The automatic throttle of codes to new phones that go unused
+    # (`login_code_conversion`): a country's lowered cap, a denied range.
+    COUNTRY_CONVERSION = "country_conversion"
+    NUMBER_RANGE_CONVERSION = "number_range_conversion"
 
 
 class SessionDeviceKind(StrEnum):

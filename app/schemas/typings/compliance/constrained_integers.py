@@ -65,6 +65,15 @@ class DeletedRecordingCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class FlaggedKnowledgeItemCount(BaseConstrainedTypedInt):
+    """
+    Knowledge items a customer's erasure flagged for the owner's review:
+    they mention the customer, and the owner's text is never erased.
+    """
+
+    ge = 0
+
+
 class ErasedRecordCount(BaseConstrainedTypedInt):
     """
     Number of stored records of one kind erased or anonymized when a visitor's

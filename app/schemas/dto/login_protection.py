@@ -13,6 +13,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
     LanguageTag,
+    PhoneNumberPrefix,
 )
 from app.schemas.typings.users.booleans import (
     IsBotCheckPassed,
@@ -70,9 +71,11 @@ class TurnstileVerification(ImmutableDTO):
 class LoginCodeCapAlert(ImmutableDTO):
     """
     A platform cap of login code sends refused a send: the cap, its hourly
-    limit and, for the per-country cap, the country.
+    limit and, for the per-country caps, the country; for a number range
+    denied by the conversion throttle, the range too.
     """
 
     cap: LoginCodeCap
     limit: OtpSendLimit
     country_code: CountryCode | None = None
+    phone_number_prefix: PhoneNumberPrefix | None = None

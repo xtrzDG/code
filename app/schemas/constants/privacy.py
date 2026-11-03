@@ -65,3 +65,13 @@ class ProcessorErasureReason(StrEnum):
 
     CONTACT_ERASURE = "contact_erasure"
     RETENTION = "retention"
+
+
+class KnowledgeMentionMatch(StrEnum):
+    """
+    How a knowledge item mentions a customer (their export, PRIV-08): by
+    their name or by one of their numbers.
+    """
+
+    NAME = "name"
+    PHONE = "phone"

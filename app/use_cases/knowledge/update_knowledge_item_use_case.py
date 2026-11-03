@@ -27,7 +27,8 @@ class UpdateKnowledgeItemUseCase(
     quotes them. An item of another business is reported as missing. A new
     performer list is the whole truth: resources left out stop listing the
     item among their services (or as their room type). The team member who
-    changes it is kept as `updated_by` and the change is audited.
+    changes it is kept as `updated_by` and the change is audited; the save
+    clears the flag a customer's erasure left on it (PRIV-08).
     """
 
     def run(self, input_data: UpdateKnowledgeItemCommand) -> KnowledgeItemDetails:
@@ -46,7 +47,13 @@ class UpdateKnowledgeItemUseCase(
             existing=existing,
             patch=input_data.patch,
             now=now,
-        ).model_copy(update={"updated_by": input_data.user_id})
+        ).model_copy(
+            # The owner reviewed the item: an erasure's flag is cleared.
+            update={
+                "updated_by": input_data.user_id,
+                "erased_customer_flagged_at": None,
+            }
+        )
         resources: list[ResourceDocument] = self._save_checked(
             updated, AuditAction.UPDATE
         )

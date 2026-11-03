@@ -15,6 +15,7 @@ from app.schemas.dto.brands.sister_locations import SisterLocationOption
 from app.schemas.dto.deposits.deposit_views import BookingDepositView
 from app.schemas.typings.bookings.booleans import (
     IsFullDayAvailability,
+    IsHealthNoteWithheld,
     IsOpenOnDate,
     ListsEveryFreeTime,
 )
@@ -218,14 +219,12 @@ class CancelBookingCommand(ImmutableDTO):
 
 class BookingView(ImmutableDTO):
     """
-    Booking rendered in the business time zone.
-
-    `conversation_id` is the conversation it was made in (the assistant's
-    tools, or staff booking from a conversation card). `language` is the
-    customer's language for texts about it. `reminder_sent_at` is when the
-    customer's reminder went out (None: not yet). A booking of a service,
-    package or room type names it and carries its value (`value_minor` in
-    `currency_code`). `deposit` is the deposit asked for it, if any.
+    Booking rendered in the business time zone. `conversation_id`: the
+    conversation it was made in; `language`: the customer's language for
+    texts about it; `reminder_sent_at`: when their reminder went out. A
+    booking of a service, package or room type names it with its value
+    (`value_minor` in `currency_code`); `deposit`: the deposit asked for.
+    `is_health_note_withheld`: health notes hidden from this viewer (PRIV-10).
     """
 
     id: BookingId
@@ -254,6 +253,7 @@ class BookingView(ImmutableDTO):
     value_minor: BookingValueMinor | None = None
     currency_code: CurrencyCode | None = None
     deposit: BookingDepositView | None = None
+    is_health_note_withheld: IsHealthNoteWithheld = False
 
 
 class BookingResult(ImmutableDTO):

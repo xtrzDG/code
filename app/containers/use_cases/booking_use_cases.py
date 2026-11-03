@@ -179,6 +179,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
             contact_repo=repositories.contact_repo,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            brand_repo=repositories.brand_repo,
         )
     )
     create_manual_booking_use_case: Factory[

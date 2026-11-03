@@ -233,6 +233,8 @@ export function BookingDetails({
               {booking.notes}
             </span>
           </DetailRow>
+        ) : booking.is_health_note_withheld ? (
+          <DetailRow label={t("bookings.details.notes")}>{t("bookings.details.notesWithheld")}</DetailRow>
         ) : null}
       </dl>
       {booking.conversation_id ? (

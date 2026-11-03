@@ -27,6 +27,9 @@ from app.contracts.repositories.feedback_repositories import (
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+)
 from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.contacts import ContactDocument
@@ -36,9 +39,11 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.dto.compliance import ContactRecords, ContactRecordsQuery
+from app.schemas.dto.privacy.knowledge_mentions import KnowledgeMention
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.use_cases.compliance.contact_traces import ContactTraceReader, ContactTraces
+from app.utilities.privacy.knowledge_mentions import mention_matches
 
 
 class CollectContactRecordsUseCase(
@@ -50,9 +55,12 @@ class CollectContactRecordsUseCase(
     The team's internal notes on the visitor's conversations are records
     about them too, and so are their traces outside the conversations:
     missed calls, queued messages, webhook events and requests for
-    feedback (`contact_traces`). Every read goes through the business id,
-    so a contact id of another business is reported as missing, and so is
-    an erased contact (nothing personal is left to export or erase).
+    feedback (`contact_traces`), and the knowledge items that mention them
+    by name or number (`knowledge_mentions`: the owner's text, listed for
+    the export and flagged by the erasure). Every read goes through the
+    business id, so a contact id of another business is reported as
+    missing, and so is an erased contact (nothing personal is left to
+    export or erase).
     Callers check access first.
     """
 
@@ -74,7 +82,11 @@ class CollectContactRecordsUseCase(
         waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
         campaign_message_repo: CampaignMessageRepoContract | None = None,
         consent_record_repo: ConsentRecordRepoContract | None = None,
+        knowledge_item_repo: KnowledgeItemRepoContract | None = None,
     ) -> None:
+        self._knowledge_item_repo: KnowledgeItemRepoContract | None = (
+            knowledge_item_repo
+        )
         self._consent_record_repo: ConsentRecordRepoContract | None = (
             consent_record_repo
         )
@@ -178,4 +190,25 @@ class CollectContactRecordsUseCase(
                     contact.business_id, contact.id
                 )
             ),
+            knowledge_mentions=self._knowledge_mentions(contact),
         )
+
+    def _knowledge_mentions(self, contact: ContactDocument) -> list[KnowledgeMention]:
+        """The business's knowledge items that name the customer."""
+
+        if self._knowledge_item_repo is None:
+            return []
+
+        mentions: list[KnowledgeMention] = []
+        for item in self._knowledge_item_repo.list_by_business(contact.business_id):
+            matched = mention_matches(item, contact)
+            if matched:
+                mentions.append(
+                    KnowledgeMention(
+                        knowledge_item_id=item.id,
+                        title=item.title,
+                        body=item.body,
+                        matched_on=matched,
+                    )
+                )
+        return mentions

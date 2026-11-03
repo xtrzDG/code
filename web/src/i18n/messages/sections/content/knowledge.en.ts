@@ -44,6 +44,8 @@ export const knowledgeEn = {
     off: "Off",
     importDraft: "Imported, not checked",
     fromQuestion: "From a customer question",
+    erasedCustomer: "Names an erased customer",
+    erasedCustomerHint: "A customer named here asked for their data to be erased. Remove their name and number from this item, then save it.",
     minutes: "{count} min",
     useToggle: "The assistant uses “{title}”",
     used: "On",

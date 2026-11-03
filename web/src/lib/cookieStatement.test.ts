@@ -151,8 +151,10 @@ describe("the cookie statement's storage section", () => {
   it("names everything else the widget keeps in local storage and in the tab", () => {
     expect(keysKeptIn(widget, "localStorageOrNull")).toEqual(["language", "rated"]);
     expect(keysKeptIn(widget, "sessionStorageOrNull")).toEqual(["open"]);
-    // The visit source (data-source, ?src=, ?utm_source=) is kept for the tab too.
-    expect(widget).toMatch(/function loadVisitSource\(\) \{\s*var storage = sessionStorageOrNull\(\);/);
+    // The visit source (data-source, ?src=, ?utm_source=) is kept for the tab
+    // too, on a site only once the visitor opens or uses the chat (CONS-07).
+    expect(widget).toMatch(/function loadVisitSource\(isKept\) \{\s*var storage = sessionStorageOrNull\(\);/);
+    expect(widget).toMatch(/if \(isKept === true \|\| isPageMode\) \{\s*storageSet\(storage, storagePrefix \+ "source", found\);/);
     // Nothing else reaches either storage: the conversation's own choice of
     // storage, the removal of an older copy and the visit source are all.
     const conversationChoice = "return isPageMode ? sessionStorageOrNull() : localStorageOrNull();";

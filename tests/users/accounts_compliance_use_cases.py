@@ -16,12 +16,14 @@ from app.repositories.delivery_repositories import (
     OutboundMessageRepository,
 )
 from app.repositories.feedback_repositories import FeedbackRequestRepository
+from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.repositories.message_media_repository import MessageMediaRepository
 from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.consent_records import ConsentRecordDocument
 from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.message_media import MessageMediaDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
@@ -88,6 +90,10 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.consent_record_repo = ConsentRecordRepository(
             InMemoryDocumentCollectionAdapter(ConsentRecordDocument)
         )
+        # The knowledge items that may name a customer (PRIV-08).
+        self.knowledge_item_repo = KnowledgeItemRepository(
+            InMemoryDocumentCollectionAdapter(KnowledgeItemDocument)
+        )
 
         collect_contact_records = CollectContactRecordsUseCase(
             contact_repo=self.contact_repo,
@@ -104,6 +110,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             inbound_event_repo=self.inbound_event_repo,
             feedback_request_repo=self.feedback_request_repo,
             consent_record_repo=self.consent_record_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
         )
         self.collect_contact_records = collect_contact_records
         self.legal_document_registry = LegalDocumentRegistry()
@@ -198,6 +205,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             widget_upload_repo=self.widget_upload_repo,
             calendar_erasure=self.calendar_erasure,
             consent_record_repo=self.consent_record_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
         )
         # The queued jobs that copy each erasure into the ledger.
         self.erasure_ledger_queue = RecordingJobQueue()

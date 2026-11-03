@@ -142,7 +142,9 @@
       if (hadCursor) {
         url += "?after=" + encodeURIComponent(state.cursor);
       }
-      requestJson(url, null, state.sessionKey).then(
+      // Polls come only after the visitor used the chat (a message, a
+      // handoff or an exchange): their key is made if a tab dropped it.
+      requestJson(url, null, useSessionKey()).then(
         guarded("poll", function (result) {
           state.isPolling = false;
           if (result.status === 404) {

@@ -44,6 +44,7 @@
     "notifications.staff_message.lead_type_labels.other": "Altro",
     "notifications.staff_message.booking_staff_details": "{period} · {resource}\nNome: {name}\nTelefono: {phone}\nPersone: {party}\nCanale: {channel}",
     "notifications.staff_message.notes_line": "Note: {notes}",
+    "notifications.staff_message.health_notes_line": "Note: dati sulla salute, vedi la prenotazione nel pannello.",
     "notifications.handoff.handoff": "[{urgency}] Un cliente ha bisogno di una persona · {business}\nMotivo: {reason}\n{summary}\nNome: {name}\nTelefono: {phone}\nCanale: {channel}",
     "notifications.handoff_summary.summary_texts.model_declined": "L'assistente non ha voluto rispondere a questo messaggio.",
     "notifications.handoff_summary.summary_texts.model_unavailable": "L'assistente non è stato disponibile per qualche istante e non ha potuto rispondere.",

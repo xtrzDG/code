@@ -59,6 +59,7 @@ function booking(overrides: Partial<BookingView> = {}): BookingView {
     date: "2026-10-08",
     end_date: "2026-10-08",
     id: "booking_1",
+    is_health_note_withheld: false,
     is_sandbox: false,
     party_size: 6,
     resource_id: "res_1",

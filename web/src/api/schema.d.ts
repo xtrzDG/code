@@ -8119,14 +8119,12 @@ export interface components {
         BookingUnit: "time_slot" | "night";
         /**
          * BookingView
-         * @description Booking rendered in the business time zone.
-         *
-         *     `conversation_id` is the conversation it was made in (the assistant's
-         *     tools, or staff booking from a conversation card). `language` is the
-         *     customer's language for texts about it. `reminder_sent_at` is when the
-         *     customer's reminder went out (None: not yet). A booking of a service,
-         *     package or room type names it and carries its value (`value_minor` in
-         *     `currency_code`). `deposit` is the deposit asked for it, if any.
+         * @description Booking rendered in the business time zone. `conversation_id`: the
+         *     conversation it was made in; `language`: the customer's language for
+         *     texts about it; `reminder_sent_at`: when their reminder went out. A
+         *     booking of a service, package or room type names it with its value
+         *     (`value_minor` in `currency_code`); `deposit`: the deposit asked for.
+         *     `is_health_note_withheld`: health notes hidden from this viewer (PRIV-10).
          */
         BookingView: {
             /** Business Id */
@@ -8152,6 +8150,11 @@ export interface components {
             end_time?: string | null;
             /** Id */
             id: string;
+            /**
+             * Is Health Note Withheld
+             * @default false
+             */
+            is_health_note_withheld: boolean;
             /**
              * Is Sandbox
              * @default false
@@ -10424,18 +10427,15 @@ export interface components {
         };
         /**
          * ContactRecords
-         * @description Every stored record that describes one visitor of one business.
-         *
-         *     Calls belong to the visitor through one of their conversations or their
-         *     phone number; `notes` are the team's internal notes on their
-         *     conversations. Raw language-model turns repeat the messages and are not
-         *     listed. Missed calls are found by the visitor's numbers, the messages
-         *     queued to them (`outbound_messages`: replies, reminders, text-backs) by
-         *     their account in each of the business's channels, the webhook events
-         *     they sent (`inbound_events`) by their accounts and conversations, and
-         *     the requests for feedback after their visits, their places on the
-         *     waitlist, the rebooking campaign's messages and the consent ledger's
-         *     entries by the contact (1246, oldest first; kept after an erasure).
+         * @description Every stored record that describes one visitor of one business. Calls
+         *     belong to them through a conversation or their phone; `notes` are the
+         *     team's notes on their conversations (raw model turns repeat the
+         *     messages and are left out). Missed calls are found by their numbers,
+         *     queued messages (`outbound_messages`) by their channel accounts,
+         *     webhook events (`inbound_events`) by accounts and conversations;
+         *     feedback requests, waitlist places, campaign messages and consent
+         *     ledger entries (1246, oldest first, kept after an erasure) by the
+         *     contact; `knowledge_mentions` are the items naming them (PRIV-08).
          */
         ContactRecords: {
             /** Bookings */
@@ -10455,6 +10455,8 @@ export interface components {
             handoffs?: components["schemas"]["HandoffDocument"][];
             /** Inbound Events */
             inbound_events?: components["schemas"]["InboundEventDocument"][];
+            /** Knowledge Mentions */
+            knowledge_mentions?: components["schemas"]["KnowledgeMention"][];
             /** Leads */
             leads?: components["schemas"]["LeadDocument"][];
             /** Messages */
@@ -13590,6 +13592,8 @@ export interface components {
          *     replaces in this location (None: an item of the location's own).
          *     `aliases`: the item in the business's other languages, the owner's
          *     (APPROVED) and the model's suggestions waiting for review (SUGGESTED).
+         *     `erased_customer_flagged_at`: a customer the item names was erased then
+         *     (PRIV-08); the owner removes their details, and saving clears it.
          */
         KnowledgeItemDetails: {
             /** Aliases */
@@ -13608,6 +13612,8 @@ export interface components {
             currency_code?: string | null;
             /** Duration Minutes */
             duration_minutes?: number | null;
+            /** Erased Customer Flagged At */
+            erased_customer_flagged_at?: number | null;
             /** Formatted Price */
             formatted_price?: string | null;
             /** Id */
@@ -13693,6 +13699,30 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * KnowledgeMention
+         * @description A knowledge item that mentions a customer (PRIV-08): by their name, by
+         *     one of their numbers, or both (`matched_on`). The customer's export
+         *     lists it with its text; their erasure flags it for the owner's review
+         *     and leaves the text as the owner wrote it.
+         */
+        KnowledgeMention: {
+            /** Body */
+            body?: string | null;
+            /** Knowledge Item Id */
+            knowledge_item_id: string;
+            /** Matched On */
+            matched_on?: components["schemas"]["KnowledgeMentionMatch"][];
+            /** Title */
+            title: string;
+        };
+        /**
+         * KnowledgeMentionMatch
+         * @description How a knowledge item mentions a customer (their export, PRIV-08): by
+         *     their name or by one of their numbers.
+         * @enum {string}
+         */
+        KnowledgeMentionMatch: "name" | "phone";
         /**
          * KnowledgeSearchResult
          * @description Up to `limit` matching items, best first.
@@ -17041,6 +17071,7 @@ export interface components {
          *     its `timezone`), what (`resource`, `service`, `party_size`, `value`),
          *     for whom (`contact`) and where it came from (`source_channel`, and the
          *     tag of the link or ad that brought the customer, `acquisition_source`).
+         *     `notes` are left out (None) when they hold health data (PRIV-10).
          */
         PublicBooking: {
             /** Acquisition Source */

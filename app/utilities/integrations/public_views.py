@@ -34,6 +34,7 @@ from app.utilities.integrations.public_timestamps import (
     local_timestamp,
     utc_timestamp,
 )
+from app.utilities.privacy.health_notes import is_health_note
 
 
 def contact_ref(
@@ -77,7 +78,8 @@ def public_booking(
         else PublicMoney(
             amount_minor=booking.value_minor, currency=booking.currency_code
         ),
-        notes=booking.notes,
+        # Health data stays in the platform (PRIV-10): no third-party copy.
+        notes=None if is_health_note(booking.notes) else booking.notes,
         contact=contact_ref(booking.contact_id, contact),
         source_channel=booking.source_channel,
         acquisition_source=None

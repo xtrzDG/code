@@ -30,7 +30,9 @@
       renderLog();
     }
 
-    function setOpen(isOpen, keepFocus) {
+    // `isAutomatic`: opened by the page (data-open, a chat page, the
+    // visitor's earlier choice), not by the visitor now: nothing is stored.
+    function setOpen(isOpen, keepFocus, isAutomatic) {
       if (isPageMode && !isOpen) {
         // A chat page has nothing to close to.
         return;
@@ -44,7 +46,10 @@
       updateLauncherLabel();
       launcher.replaceChild(isOpen ? closeIcon() : chatIcon(), launcher.firstChild);
       wrapper.classList.toggle("aw-open", isOpen);
-      storageSet(sessionStorageOrNull(), storagePrefix + "open", isOpen ? "1" : "0");
+      if (isAutomatic !== true) {
+        storageSet(sessionStorageOrNull(), storagePrefix + "open", isOpen ? "1" : "0");
+        keepVisitSource();
+      }
       if (isOpen) {
         scrollToEnd();
         if (!keepFocus) {
@@ -115,7 +120,17 @@
       send(item);
     }
 
+    // The visitor key, made when the visitor first uses the chat: a site's
+    // widget writes nothing to the site's storage before (CONS-07).
+    function useSessionKey() {
+      state.sessionKey = ensureSessionKey(state.sessionKey);
+      keepVisitSource();
+      return state.sessionKey;
+    }
+
     function send(item) {
+      // First, so other tabs adopt the key before the history that uses it.
+      useSessionKey();
       stopPolling();
       state.isSending = true;
       state.pendingItem = item;

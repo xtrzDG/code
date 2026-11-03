@@ -1,5 +1,6 @@
 from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.knowledge import (
     KnowledgeAliasStatus,
@@ -119,7 +120,11 @@ class KnowledgeItemDocument(BaseDocument):
     # and who changed it last in the cabinet (AI-11; optional, None for
     # items the platform wrote and every older item). Each such change also
     # has its entry in the business's audit log (`knowledge_item`).
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: `erased_customer_flagged_at`, when the erasure of a customer the
+    # item names (by name or number) flagged it for the owner's review
+    # (PRIV-08; optional, None for every older item); an owner's save of
+    # the item clears it. The erasure never changes the owner's text.
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
     kind: KnowledgeItemKind
@@ -147,3 +152,4 @@ class KnowledgeItemDocument(BaseDocument):
     shared_key: KnowledgeShareKey | None = None
     created_by: UserId | None = None
     updated_by: UserId | None = None
+    erased_customer_flagged_at: Microseconds | None = None

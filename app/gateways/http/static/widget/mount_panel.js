@@ -265,7 +265,7 @@
       savedOpen === "1" ||
       (savedOpen === null && script.getAttribute("data-open") === "true")
     ) {
-      setOpen(true, true);
+      setOpen(true, true, true);
     }
     window.addEventListener("storage", function (event) {
       if (event.key === storagePrefix + "session") {

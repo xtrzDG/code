@@ -58,4 +58,6 @@ class PurgeExpiredAuditLogUseCase(UseCaseContract[JobTick, JobReport]):
                 int(report.chains_purged),
             )
 
-        return JobReport(processed_count=ProcessedItemCount(int(report.entries_removed)))
+        return JobReport(
+            processed_count=ProcessedItemCount(int(report.entries_removed))
+        )

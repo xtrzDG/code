@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
@@ -18,6 +19,7 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.operations.bookings import BookingPage, ListBookingsQuery
+from app.schemas.typings.bookings.booleans import SeesHealthNotes
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -25,6 +27,10 @@ from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.use_cases.shared.booking_listing import page_bookings
 from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.health_note_privacy import (
+    protect_health_note,
+    sees_health_notes,
+)
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import load_time_zone
@@ -40,7 +46,8 @@ class ListBookingsUseCase(UseCaseContract[ListBookingsQuery, BookingPage]):
     a keyset page the database reads, with only its contacts and booked
     services loaded (each booking shows its service and value).
     Shows customers' names and phones, so every call is written to the audit
-    log as a view by the staff member.
+    log as a view by the staff member; notes with health data only to the
+    owner and staff (`health_note_privacy`, PRIV-10).
     """
 
     def __init__(
@@ -52,7 +59,9 @@ class ListBookingsUseCase(UseCaseContract[ListBookingsQuery, BookingPage]):
         contact_repo: ContactRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        brand_repo: BrandRepoContract | None = None,
     ) -> None:
+        self._brand_repo: BrandRepoContract | None = brand_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._booking_repo: BookingRepoContract = booking_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -109,19 +118,25 @@ class ListBookingsUseCase(UseCaseContract[ListBookingsQuery, BookingPage]):
                 input_data.client_ip_address,
             )
         )
+        sees_notes: SeesHealthNotes = sees_health_notes(
+            self._brand_repo, business, input_data.actor_id
+        )
         return BookingPage(
             items=[
-                build_booking_view(
-                    booking,
-                    business.timezone,
-                    zone,
-                    resources.get(booking.resource_id),
-                    contacts.get(booking.contact_id),
-                    (
-                        None
-                        if booking.service_item_id is None
-                        else services.get(booking.service_item_id)
+                protect_health_note(
+                    build_booking_view(
+                        booking,
+                        business.timezone,
+                        zone,
+                        resources.get(booking.resource_id),
+                        contacts.get(booking.contact_id),
+                        (
+                            None
+                            if booking.service_item_id is None
+                            else services.get(booking.service_item_id)
+                        ),
                     ),
+                    sees_notes,
                 )
                 for booking in bookings
             ],

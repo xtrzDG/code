@@ -5020,7 +5020,7 @@
       },
       "BookingView": {
         "additionalProperties": false,
-        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet). A booking of a service,\npackage or room type names it and carries its value (`value_minor` in\n`currency_code`). `deposit` is the deposit asked for it, if any.",
+        "description": "Booking rendered in the business time zone. `conversation_id`: the\nconversation it was made in; `language`: the customer's language for\ntexts about it; `reminder_sent_at`: when their reminder went out. A\nbooking of a service, package or room type names it with its value\n(`value_minor` in `currency_code`); `deposit`: the deposit asked for.\n`is_health_note_withheld`: health notes hidden from this viewer (PRIV-10).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -5125,6 +5125,11 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "is_health_note_withheld": {
+            "default": false,
+            "title": "Is Health Note Withheld",
+            "type": "boolean"
           },
           "is_sandbox": {
             "default": false,
@@ -10818,7 +10823,7 @@
       },
       "ContactRecords": {
         "additionalProperties": false,
-        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits, their places on the\nwaitlist, the rebooking campaign's messages and the consent ledger's\nentries by the contact (1246, oldest first; kept after an erasure).",
+        "description": "Every stored record that describes one visitor of one business. Calls\nbelong to them through a conversation or their phone; `notes` are the\nteam's notes on their conversations (raw model turns repeat the\nmessages and are left out). Missed calls are found by their numbers,\nqueued messages (`outbound_messages`) by their channel accounts,\nwebhook events (`inbound_events`) by accounts and conversations;\nfeedback requests, waitlist places, campaign messages and consent\nledger entries (1246, oldest first, kept after an erasure) by the\ncontact; `knowledge_mentions` are the items naming them (PRIV-08).",
         "properties": {
           "bookings": {
             "items": {
@@ -10877,6 +10882,13 @@
               "$ref": "#/components/schemas/InboundEventDocument"
             },
             "title": "Inbound Events",
+            "type": "array"
+          },
+          "knowledge_mentions": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeMention"
+            },
+            "title": "Knowledge Mentions",
             "type": "array"
           },
           "leads": {
@@ -18497,7 +18509,7 @@
       },
       "KnowledgeItemDetails": {
         "additionalProperties": false,
-        "description": "A knowledge item as the owner sees it, with the price formatted. Its\n`performer_resource_ids` are every resource linked to it, from either\nside (the item names them, or they list the item as a service or as\ntheir room type). `shared_key`: the brand's shared fact this item\nreplaces in this location (None: an item of the location's own).\n`aliases`: the item in the business's other languages, the owner's\n(APPROVED) and the model's suggestions waiting for review (SUGGESTED).",
+        "description": "A knowledge item as the owner sees it, with the price formatted. Its\n`performer_resource_ids` are every resource linked to it, from either\nside (the item names them, or they list the item as a service or as\ntheir room type). `shared_key`: the brand's shared fact this item\nreplaces in this location (None: an item of the location's own).\n`aliases`: the item in the business's other languages, the owner's\n(APPROVED) and the model's suggestions waiting for review (SUGGESTED).\n`erased_customer_flagged_at`: a customer the item names was erased then\n(PRIV-08); the owner removes their details, and saving clears it.",
         "properties": {
           "aliases": {
             "items": {
@@ -18572,6 +18584,17 @@
               }
             ],
             "title": "Duration Minutes"
+          },
+          "erased_customer_flagged_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Erased Customer Flagged At"
           },
           "formatted_price": {
             "anyOf": [
@@ -18854,6 +18877,54 @@
         ],
         "title": "KnowledgeItemView",
         "type": "object"
+      },
+      "KnowledgeMention": {
+        "additionalProperties": false,
+        "description": "A knowledge item that mentions a customer (PRIV-08): by their name, by\none of their numbers, or both (`matched_on`). The customer's export\nlists it with its text; their erasure flags it for the owner's review\nand leaves the text as the owner wrote it.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "knowledge_item_id": {
+            "title": "Knowledge Item Id",
+            "type": "string"
+          },
+          "matched_on": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeMentionMatch"
+            },
+            "minItems": 1,
+            "title": "Matched On",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "knowledge_item_id",
+          "title"
+        ],
+        "title": "KnowledgeMention",
+        "type": "object"
+      },
+      "KnowledgeMentionMatch": {
+        "description": "How a knowledge item mentions a customer (their export, PRIV-08): by\ntheir name or by one of their numbers.",
+        "enum": [
+          "name",
+          "phone"
+        ],
+        "title": "KnowledgeMentionMatch",
+        "type": "string"
       },
       "KnowledgeSearchResult": {
         "additionalProperties": false,
@@ -27308,7 +27379,7 @@
       },
       "PublicBooking": {
         "additionalProperties": false,
-        "description": "A booking: when (`starts_at`, `ends_at` with the business's offset, and\nits `timezone`), what (`resource`, `service`, `party_size`, `value`),\nfor whom (`contact`) and where it came from (`source_channel`, and the\ntag of the link or ad that brought the customer, `acquisition_source`).",
+        "description": "A booking: when (`starts_at`, `ends_at` with the business's offset, and\nits `timezone`), what (`resource`, `service`, `party_size`, `value`),\nfor whom (`contact`) and where it came from (`source_channel`, and the\ntag of the link or ad that brought the customer, `acquisition_source`).\n`notes` are left out (None) when they hold health data (PRIV-10).",
         "properties": {
           "acquisition_source": {
             "anyOf": [

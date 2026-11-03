@@ -154,6 +154,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         contact_repo=repositories.contact_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        brand_repo=repositories.brand_repo,
     )
 
     # --- Google Calendar (the consent's calls behind its circuit, REL-04).

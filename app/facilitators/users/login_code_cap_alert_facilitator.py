@@ -26,6 +26,15 @@ CAP_DESCRIPTIONS: dict[LoginCodeCap, str] = {
     LoginCodeCap.VERIFIED_USERS: (
         "login codes to verified users (OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR)"
     ),
+    LoginCodeCap.COUNTRY_CONVERSION: (
+        "login codes to new phones of a country whose codes mostly go unused "
+        "(the automatic conversion throttle)"
+    ),
+    LoginCodeCap.NUMBER_RANGE_CONVERSION: (
+        "login code to a number range whose codes go unused: the range is "
+        "refused until its unused codes leave the hour (the automatic "
+        "conversion throttle)"
+    ),
 }
 WHAT_TO_CHECK: str = (
     "Sends over the cap are refused until the hour passes. If this is not a "
@@ -66,7 +75,10 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         if self._signal_counter is not None:
             self._signal_counter.count(PlatformSignal.OTP_CAP_TRIP)
 
-        if not self._alert_gate.claim(f"{alert.cap.value}:{alert.country_code or ''}"):
+        if not self._alert_gate.claim(
+            f"{alert.cap.value}:{alert.country_code or ''}:"
+            f"{alert.phone_number_prefix or ''}"
+        ):
             return
 
         summary: str = describe_alert(alert)
@@ -89,6 +101,8 @@ def describe_alert(alert: LoginCodeCapAlert) -> str:
     """One English line: which cap refused sends, its limit and country."""
 
     country: str = "" if alert.country_code is None else f" for {alert.country_code}"
+    if alert.phone_number_prefix is not None:
+        country += f" (number range {alert.phone_number_prefix})"
     return (
         f"Login code cap reached{country}: {int(alert.limit)} "
         f"{CAP_DESCRIPTIONS[alert.cap]} in the last hour."

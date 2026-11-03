@@ -13,7 +13,8 @@ import { listFormat } from "@/lib/intl/formatters";
 import type { ResourceView } from "@/lib/resources";
 
 /**
- * One item: title, draft or off badges, price (a room type's per night),
+ * One item: title, draft, off or erased-customer badges (with what to do),
+ * price (a room type's per night),
  * duration and break, who performs it or its rooms, seasons and
  * languages; switch, edit and delete.
  */
@@ -64,7 +65,11 @@ export function KnowledgeItemRow({
             </Badge>
           ) : null}
           {item.source === "unanswered_question" ? <Badge tone="info">{t("knowledge.items.fromQuestion")}</Badge> : null}
+          {item.erased_customer_flagged_at ? <Badge tone="warning">{t("knowledge.items.erasedCustomer")}</Badge> : null}
         </div>
+        {item.erased_customer_flagged_at ? (
+          <p className="mt-1 text-sm text-warning">{t("knowledge.items.erasedCustomerHint")}</p>
+        ) : null}
         {item.body ? (
           <p className="mt-1 line-clamp-2 text-sm break-words whitespace-pre-line text-ink-muted" dir="auto" data-user-content>
             {item.body}

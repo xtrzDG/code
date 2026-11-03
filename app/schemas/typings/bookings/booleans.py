@@ -15,11 +15,13 @@ IsClosedAllDay = bool
 IsBookingGridTruncated = bool
 IsBookingPageSession = bool
 IsFullDayAvailability = bool
+IsHealthNoteWithheld = bool
 IsManagedBookingOver = bool
 IsManagedStayAvailable = bool
 IsOpenOnDate = bool
 IsResourceActive = bool
 IsSandboxIncluded = bool
 ListsEveryFreeTime = bool
+SeesHealthNotes = bool
 WasCalendarConnected = bool
 # Keep abc order for all non example types, if possible.

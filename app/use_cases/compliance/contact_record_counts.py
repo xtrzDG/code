@@ -29,5 +29,6 @@ def exported_record_count(records: ContactRecords) -> AuditRecordCount:
         records.waitlist_entries,
         records.campaign_messages,
         records.consent_records,
+        records.knowledge_mentions,
     )
     return AuditRecordCount(1 + sum(len(items) for items in collections))

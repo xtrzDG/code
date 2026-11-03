@@ -40,6 +40,9 @@ from app.contracts.repositories.inbox_repositories import (
 from app.contracts.repositories.integration_repositories import (
     WebhookDeliveryRepoContract,
 )
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+)
 from app.contracts.repositories.media_repositories import (
     MessageMediaRepoContract,
     WidgetUploadRepoContract,
@@ -65,6 +68,7 @@ from app.use_cases.compliance.contact_trace_erasure import (
     ContactTraceEraser,
     TraceErasure,
 )
+from app.use_cases.compliance.knowledge_mention_flags import flag_knowledge_mentions
 from app.use_cases.compliance.record_anonymization import (
     BusinessRecordAnonymizer,
     erased_call,
@@ -104,8 +108,10 @@ class ContactDataEraser:
     processor's outage never fails the erasure. The events the bookings
     have in the business's Google Calendar go last (`calendar_erasure`):
     rewritten without the guest while the booking still takes its time,
-    deleted otherwise. Erasing
-    what is gone already is no error, so it runs again after a restore.
+    deleted otherwise. The knowledge items that name the customer are the
+    owner's text: they are flagged for review, never changed
+    (`knowledge_mention_flags`). Erasing what is gone already is no error,
+    so it runs again after a restore.
     """
 
     def __init__(
@@ -133,7 +139,11 @@ class ContactDataEraser:
         webhook_delivery_repo: WebhookDeliveryRepoContract | None = None,
         calendar_erasure: CalendarGuestErasureFacilitatorContract | None = None,
         consent_record_repo: ConsentRecordRepoContract | None = None,
+        knowledge_item_repo: KnowledgeItemRepoContract | None = None,
     ) -> None:
+        self._knowledge_item_repo: KnowledgeItemRepoContract | None = (
+            knowledge_item_repo
+        )
         self._consent_record_repo: ConsentRecordRepoContract | None = (
             consent_record_repo
         )
@@ -226,6 +236,9 @@ class ContactDataEraser:
             anonymized_feedback_requests=traces.feedback_requests,
             anonymized_waitlist_entries=traces.waitlist_entries,
             queued_processor_erasures=queued,
+            flagged_knowledge_items=flag_knowledge_mentions(
+                self._knowledge_item_repo, records, now
+            ),
         )
 
     def _erase_calls(self, records: ContactRecords, now: Microseconds) -> None:

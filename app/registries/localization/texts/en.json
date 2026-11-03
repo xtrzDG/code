@@ -44,6 +44,7 @@
     "notifications.staff_message.lead_type_labels.other": "Other",
     "notifications.staff_message.booking_staff_details": "{period} · {resource}\nName: {name}\nPhone: {phone}\nGuests: {party}\nChannel: {channel}",
     "notifications.staff_message.notes_line": "Notes: {notes}",
+    "notifications.staff_message.health_notes_line": "Notes: health details, see the booking in the cabinet.",
     "notifications.handoff.handoff": "[{urgency}] A customer needs a person · {business}\nReason: {reason}\n{summary}\nName: {name}\nPhone: {phone}\nChannel: {channel}",
     "notifications.handoff_summary.summary_texts.model_declined": "The assistant would not answer this message.",
     "notifications.handoff_summary.summary_texts.model_unavailable": "The assistant was briefly unavailable and could not answer.",

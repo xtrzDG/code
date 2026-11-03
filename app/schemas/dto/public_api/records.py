@@ -71,6 +71,7 @@ class PublicBooking(ImmutableDTO):
     its `timezone`), what (`resource`, `service`, `party_size`, `value`),
     for whom (`contact`) and where it came from (`source_channel`, and the
     tag of the link or ad that brought the customer, `acquisition_source`).
+    `notes` are left out (None) when they hold health data (PRIV-10).
     """
 
     id: BookingId

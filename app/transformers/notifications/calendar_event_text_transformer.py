@@ -10,9 +10,9 @@ from app.schemas.typings.bookings.strings import (
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.notifications.message_rendering import (
     CHANNEL_LABELS,
-    NOTES_LINE,
     describe_phone,
     render,
+    render_notes_line,
     resolve_label,
     text_or_missing,
 )
@@ -68,15 +68,12 @@ class CalendarEventTextTransformer(
                 },
             )
         ]
-        if booking.notes is not None:
-            lines.append(
-                render(
-                    self._text_resolver,
-                    NOTES_LINE,
-                    language,
-                    {"notes": str(booking.notes)},
-                )
-            )
+        # A note with health data stays in the platform (PRIV-10).
+        notes_line: str | None = render_notes_line(
+            self._text_resolver, booking.notes, language
+        )
+        if notes_line is not None:
+            lines.append(notes_line)
 
         return CalendarEventText(
             title=CalendarEventTitle(title),

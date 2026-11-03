@@ -34,7 +34,7 @@ def mirrored(calendar: CalendarWorld, status: BookingStatus) -> BookingDocument:
     """A booking with notes, mirrored while confirmed, then in `status`."""
 
     booking = calendar.booking()
-    booking.notes = BookingNote("Allergic to nuts")
+    booking.notes = BookingNote("Birthday surprise")
     calendar.world.booking_repo.save(booking)
     calendar.sync.sync(booking)
     booking.status = status
@@ -74,7 +74,7 @@ def test_an_upcoming_event_loses_the_guest_and_a_past_one_is_deleted() -> None:
     past = mirrored(calendar, BookingStatus.COMPLETED)
     before = str(event_of(calendar, upcoming))
     assert "Nino" in before
-    assert "Allergic" in before
+    assert "Birthday" in before
     assert len(calendar.google.events) == 2
     erase_guest(calendar, [upcoming, past])
 
@@ -84,7 +84,7 @@ def test_an_upcoming_event_loses_the_guest_and_a_past_one_is_deleted() -> None:
     after = str(event_of(calendar, upcoming))
     assert "Nino" not in after
     assert "555" not in after
-    assert "Allergic" not in after
+    assert "Birthday" not in after
     assert calendar.link_repo.find_by_booking(calendar.business.id, past.id) is None
     assert len(calendar.google.events) == 1
 

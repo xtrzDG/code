@@ -174,6 +174,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         waitlist_entry_repo=repositories.waitlist_entry_repo,
         campaign_message_repo=repositories.campaign_message_repo,
         consent_record_repo=repositories.consent_record_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
     )
     export_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactDataExport]
@@ -212,6 +213,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         webhook_delivery_repo=repositories.webhook_delivery_repo,
         calendar_erasure=facilitators.calendar_guest_eraser,
         consent_record_repo=repositories.consent_record_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
     )
     delete_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactErasureResult]
