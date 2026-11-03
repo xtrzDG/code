@@ -23,6 +23,7 @@ from app.repositories.legal_repositories import (
 )
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.legal import TransferMechanism
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
@@ -119,6 +120,7 @@ def announced_entry(
             "E-mail addresses", "Адреса e-mail", "ელფოსტის მისამართები"
         ),
         location=texts("EU", "ЕС", "ევროკავშირი"),
+        transfer_mechanisms=[TransferMechanism.EEA_PROCESSING],
         client_modules=[ClientModuleName("email")],
         added_on=SubprocessorChangeDate(added_on),
         addition_announced_on=SubprocessorChangeDate(announced_on),

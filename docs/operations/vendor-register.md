@@ -37,12 +37,23 @@ workaround. *Low*: comfort or insight only.
 | Sentry | error data, scrubbed | low | EU region; Functional Software (US) under DPF and SCCs for support access | online DPA; dated copy to file | SOC 2 Type II |
 | Web push services (Google, Mozilla, Apple) | a device's push address; end-to-end encrypted notices | low | outside the EEA under each vendor's terms | none (browser infrastructure) | none |
 | Registrar and DNS host | no personal data | critical | [provider] | not needed | not needed |
-| GitHub | source code, no customers' data | medium | US; DPF and SCCs | GitHub's customer agreement | SOC 2 Type II |
+| GitHub | source code and CI; no customers' data (production's backups are restored only on the platform's EU runner) | medium | US; DPF and SCCs | GitHub's customer agreement | SOC 2 Type II |
 
 "To sign", "to request" and "dated copy to file" are the owner's actions
 before launch (`docs/operations/go-live.md`); write the date into the cell
 when done. The safeguards follow the DPA (section 7.2); the transfer cells
 of `docs/security/data-classification.md` repeat them per data category.
+
+**GitHub and the restore drill.** GitHub-hosted runners only ever restore
+a seeded, synthetic database (`.github/workflows/restore-drill.yml`, job
+`round-trip`). The weekly restore of production's newest backup runs on
+the platform's own runner in the EU (labels `self-hosted`,
+`eu-restore-drill`; job `production`), so production's data is decrypted
+only in the EU and GitHub receives the drill's counts and timings, never
+customers' data: GitHub is no sub-processor and not in the DPA's list.
+GitHub does hold the drill's private age key as an environment secret
+(`backup-drill`), which opens backups but reaches no bucket by itself
+(`docs/operations/backup-restore.md`, "Keys and custody").
 
 **If the Data Privacy Framework falls.** The EU-US framework is challenged
 before the Court of Justice (the Latombe appeal, C-703/25 P). Every vendor
@@ -50,6 +61,34 @@ above that relies on it also has SCCs in its DPA, so nothing stops; within
 a month of a judgment, re-check each transfer impact assessment and the
 supplementary measures (EU regions, encryption, scrubbing) and record it
 here.
+
+## Transfer register
+
+Each sub-processor's transfer mechanism as the DPA's list publishes it
+(`transfer_mechanisms` of `app/registries/legal/`, rendered into DPA
+section 8 and `GET /v1/legal/subprocessors`), the day it was recorded from
+the vendor's terms, and the evidence to keep on file. A vendor processing
+in the EEA with no access from elsewhere has no row.
+`tests/legal/test_subprocessor_transfers.py` fails when the registry and
+this page disagree, or a row is more than a year old: re-check each
+mechanism against the vendor's current DPA and the official DPF list
+(dataprivacyframework.gov) every January, and write the new date.
+
+| Vendor | Mechanism | Recorded | Evidence on file |
+| --- | --- | --- | --- |
+| Render | SCCs (support access from the US) | 2026-11-03 | dated DPA copy; transfer impact assessment (TIA): to write |
+| OpenAI | SCCs in OpenAI Ireland's DPA (access from the US to the EU project) | 2026-11-03 | dated DPA copy; TIA: to write; screenshot of the project's EU residency setting |
+| Anthropic | SCCs of the commercial DPA | 2026-11-03 | dated DPA copy; TIA: to write |
+| Twilio | Binding Corporate Rules; DPF | 2026-11-03 | dated DPF list screenshot: to file; BCR approval reference |
+| Meta | DPF; SCCs | 2026-11-03 | dated DPF list screenshot: to file; TIA: to write |
+| Telegram | none offered: only when the business turns the channel on | 2026-11-03 | the DPIA support pack's warning (`docs/help/en/dpia-support.md`) |
+| Stripe | DPF; SCCs (onward from Ireland) | 2026-11-03 | dated DPF list screenshot: to file |
+| Flitt | SCCs (Georgia has no adequacy decision) | 2026-11-03 | signed DPA with SCCs annexed: to file; TIA: to write |
+| Google (Calendar) | DPF; SCCs (onward from Ireland) | 2026-11-03 | dated DPF list screenshot: to file |
+| Cloudflare (Turnstile) | DPF; SCCs | 2026-11-03 | dated DPF list screenshot: to file |
+| Sentry | DPF; SCCs (support access from the US) | 2026-11-03 | dated DPF list screenshot: to file |
+| Web push services (Google, Mozilla, Apple) | none offered: browser infrastructure, end-to-end encrypted notices | 2026-11-03 | none |
+| Zadarma | to be confirmed in the contract | 2026-11-03 | the contract naming the processing location: to sign |
 
 ## Exit plans
 

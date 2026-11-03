@@ -19,7 +19,7 @@ from app.adapters.business_closures.in_memory_deletion_ledger_mirror_adapter imp
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     SqlFileMigrationSourceAdapter,
 )
-from app.gateways.cli.restore_check import describe_drill
+from app.gateways.cli.restore_drill_report import describe_drill
 from app.schemas.dto.backups import DeletionLedgerApplication
 from app.schemas.dto.business_closures.contact_erasure_ledger import (
     ContactErasureRecord,

@@ -8,8 +8,14 @@ name: Restore drill
 # - production, on Mondays and on demand: production's newest backup
 #   (the code of `release`) restored into a throwaway Postgres 16 and
 #   checked, with a Sentry Crons check-in (monitor restore-drill). It runs
-#   only when the repository variable BACKUP_S3_BUCKET is set; its secrets
-#   live in the environment backup-drill.
+#   only when the repository variables BACKUP_S3_BUCKET is set and
+#   RESTORE_DRILL_EU_RUNNER is "true"; its secrets live in the environment
+#   backup-drill. Production's data is decrypted only on the platform's
+#   own runner in the EU (labels self-hosted, eu-restore-drill), never on
+#   a GitHub-hosted runner: GitHub is no sub-processor, and the run summary
+#   holds counts and timings only (docs/operations/vendor-register.md).
+#
+# Both append the drill's report (timings and checks) to the run summary.
 on:
   schedule:
     - cron: "23 2 * * *"
@@ -163,7 +169,9 @@ jobs:
         run: uv run python -m app.gateways.cli.backup --work-directory "$RUNNER_TEMP/backup"
 
       - name: workshop restore-check
-        run: uv run python -m app.gateways.cli.restore_check --work-directory "$RUNNER_TEMP/drill"
+        run: |
+          uv run python -m app.gateways.cli.restore_check --work-directory "$RUNNER_TEMP/drill" \
+            --report "$GITHUB_STEP_SUMMARY"
 
       # The disaster runbook decrypts with the age tool, not with this code.
       - name: The archive opens with the age tool as well
@@ -192,11 +200,14 @@ jobs:
   production:
     name: Restore production's newest backup
     if: >-
-      vars.BACKUP_S3_BUCKET != '' && (
+      vars.BACKUP_S3_BUCKET != '' && vars.RESTORE_DRILL_EU_RUNNER == 'true' && (
         (github.event_name == 'schedule' && github.event.schedule == '41 3 * * 1') ||
         (github.event_name == 'workflow_dispatch' && inputs.production)
       )
-    runs-on: ubuntu-24.04
+    # The platform's runner in the EU (docs/operations/backup-restore.md,
+    # "Where the production drill runs"): Docker for the service container,
+    # passwordless sudo for apt, nothing else of the platform on it.
+    runs-on: [self-hosted, linux, eu-restore-drill]
     timeout-minutes: 120
     environment: backup-drill
     services:
@@ -256,4 +267,6 @@ jobs:
           BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
           BACKUP_AGE_IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: uv run python -m app.gateways.cli.restore_check --work-directory "$RUNNER_TEMP/drill"
+        run: |
+          uv run python -m app.gateways.cli.restore_check --work-directory "$RUNNER_TEMP/drill" \
+            --report "$GITHUB_STEP_SUMMARY"

@@ -9,7 +9,7 @@ from app.registries.legal.subprocessor_texts import (
     modules,
     texts,
 )
-from app.schemas.constants.legal import ProcessorFlow
+from app.schemas.constants.legal import ProcessorFlow, TransferMechanism
 from app.schemas.dto.legal import SubprocessorEntry
 from app.schemas.typings.legal.constrained_strings import SubprocessorChangeDate
 
@@ -73,6 +73,10 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         client_modules=modules("openai"),
         flows=ORIGINAL_OPENAI_FLOWS,
+        transfer_mechanisms=[
+            TransferMechanism.EEA_PROCESSING,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -94,6 +98,7 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         location=texts("EU", "ЕС", "ევროკავშირი"),
         client_modules=modules("elevenlabs"),
+        transfer_mechanisms=[TransferMechanism.EEA_PROCESSING],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -111,6 +116,7 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         location=texts("EU region", "Регион ЕС", "ევროკავშირის რეგიონი"),
         client_modules=modules("langfuse"),
+        transfer_mechanisms=[TransferMechanism.EEA_PROCESSING],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -141,9 +147,9 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "გადართვის შემდეგ",
         ),
         location=texts(
-            "[United States; transfer mechanism to be confirmed]",
-            "[США; механизм передачи уточнить]",
-            "[აშშ; გადაცემის მექანიზმი დასაზუსტებელია]",
+            "United States",
+            "США",
+            "აშშ",
         ),
         client_modules=modules("anthropic"),
         flows=[ProcessorFlow.AUTOTEST_JUDGE],
@@ -153,6 +159,7 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             ProcessorFlow.CONVERSATION_SUMMARIES,
             ProcessorFlow.QUALITY_SAMPLING,
         ],
+        transfer_mechanisms=[TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -185,12 +192,13 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "ჯანმრთელობაზე, რჩება), კლიენტის ცოდნა",
         ),
         location=texts(
-            "[United States; transfer mechanism to be confirmed]",
-            "[США; механизм передачи уточнить]",
-            "[აშშ; გადაცემის მექანიზმი დასაზუსტებელია]",
+            "United States",
+            "США",
+            "აშშ",
         ),
         client_modules=modules("anthropic"),
         flows=[ProcessorFlow.QUALITY_SAMPLING],
+        transfer_mechanisms=[TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES],
         added_on=ANTHROPIC_QUALITY_FROM,
         addition_announced_on=ANTHROPIC_QUALITY_ANNOUNCED_ON,
     ),
@@ -229,6 +237,10 @@ MODEL_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         client_modules=modules("openai"),
         flows=[ProcessorFlow.KNOWLEDGE_EMBEDDINGS],
+        transfer_mechanisms=[
+            TransferMechanism.EEA_PROCESSING,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=OPENAI_EMBEDDINGS_FROM,
         addition_announced_on=OPENAI_EMBEDDINGS_ANNOUNCED_ON,
     ),

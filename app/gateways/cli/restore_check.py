@@ -5,6 +5,7 @@ database and prove it is complete and safe.
     workshop restore-check                         # weekly, and nightly in CI
     workshop restore-check --archive workshop/2026/10/20261003T010700Z.pgdump.age
     workshop restore-check --keep-database         # keep it: a real restore
+    workshop restore-check --report "$GITHUB_STEP_SUMMARY"   # timings, checks
 
 It needs the bucket (BACKUP_S3_*), the private key (BACKUP_AGE_IDENTITY)
 and a throwaway Postgres server with a role that may create databases
@@ -58,6 +59,13 @@ from app.gateways.cli.maintenance_run_log import (
     record_with_container,
 )
 from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
+from app.gateways.cli.restore_drill_report import (
+    append_report,
+    describe_drill,
+    describe_timings,
+    failure_report,
+    markdown_report,
+)
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
@@ -74,7 +82,6 @@ from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.maintenance.backups.check_backup_restore_use_case import (
     CheckBackupRestoreUseCase,
 )
-from app.utilities.backups.backup_keys import to_datetime
 
 # The Sentry Crons monitor `restore-drill`: a week without a proven
 # restore alerts.
@@ -168,6 +175,8 @@ def main(
         )
     except Exception as error:  # noqa: BLE001 - reported, then the exit code
         print(f"Restore drill failed: {error}", file=error_stream)
+        if parsed.report is not None:
+            append_report(Path(parsed.report), failure_report(str(error), started_at))
         failed = RecordMaintenanceRunCommand(
             kind=MaintenanceRunKind.RESTORE_DRILL,
             outcome=MaintenanceRunOutcome.FAILED,
@@ -178,7 +187,15 @@ def main(
         record_maintenance_run(settings, failed, error_stream, record_run)
         return EXIT_FAILED
 
-    print(describe_drill(report, bool(parsed.keep_database)), file=output_stream)
+    finished_at: Microseconds = clock.now_unix()
+    is_kept: bool = bool(parsed.keep_database)
+    print(describe_drill(report, is_kept), file=output_stream)
+    print(describe_timings(report, started_at, finished_at), file=output_stream)
+    if parsed.report is not None:
+        append_report(
+            Path(parsed.report),
+            markdown_report(report, is_kept, started_at, finished_at),
+        )
     record_maintenance_run(
         settings, drill_run(report, started_at, clock), error_stream, record_run
     )
@@ -248,50 +265,17 @@ def build_argument_parser() -> argparse.ArgumentParser:
         "temporary directory)",
     )
     parser.add_argument(
+        "--report",
+        default=None,
+        help="append the drill's Markdown report (timings and checks) to this "
+        "file, e.g. the workflow's $GITHUB_STEP_SUMMARY",
+    )
+    parser.add_argument(
         "--migrations",
         default=str(DEFAULT_MIGRATIONS_DIRECTORY),
         help="the checkout's migrations to compare with (default: %(default)s)",
     )
     return parser
-
-
-def describe_drill(report: RestoreCheckReport, is_kept: bool) -> str:
-    facts = report.restored.facts
-    taken: str = to_datetime(report.archive_created_at).strftime("%Y-%m-%d %H:%M UTC")
-    lines: list[str] = [
-        f"Restored {report.archive_key} (taken {taken}) into "
-        f"{report.restored.scratch_database}"
-        + (" (kept)." if is_kept else " (dropped again)."),
-        f"{len(facts.row_counts)} tables, "
-        f"{sum(int(count) for count in facts.row_counts.values())} rows, "
-        f"{len(facts.applied_migrations)} migrations; row-level security "
-        f"probed on {len(report.restored.isolation_probes)} tables.",
-    ]
-    ledger = report.restored.ledger
-    if ledger is not None:
-        lines.append(
-            f"Deletion ledger: {int(ledger.deleted_businesses)} deleted businesses, "
-            f"{int(ledger.erased_rows)} of their rows deleted again, "
-            f"{int(ledger.remaining_rows)} left."
-        )
-        lines.append(
-            f"Erasure ledger: {int(ledger.erased_contacts)} erased customers, "
-            f"{int(ledger.restored_contacts)} of them with their data in this "
-            "backup (reapply_contact_erasures erases them again after a restore)."
-        )
-    if report.pending_migrations:
-        lines.append(
-            f"{len(report.pending_migrations)} migrations of this checkout are "
-            "newer than the backup: "
-            + ", ".join(str(name) for name in report.pending_migrations)
-        )
-    lines.extend(f"FAILED  {problem}" for problem in report.problems)
-    lines.append(
-        f"{len(report.problems)} checks failed."
-        if report.problems
-        else "OK: the backup restores completely and isolates businesses."
-    )
-    return "\n".join(lines)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from app.schemas.constants.legal import (
     LegalDocumentKind,
     ProcessorFlow,
     SubprocessorChangeKind,
+    TransferMechanism,
 )
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
@@ -36,6 +37,7 @@ from app.schemas.typings.legal.strings import (
     SubprocessorName,
     SubprocessorPersonalData,
     SubprocessorPurpose,
+    SubprocessorTransfer,
 )
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -59,6 +61,8 @@ class SubprocessorEntry(ImmutableDTO):
     production when a configured flow reaches a provider whose entries in
     force do not cover it (`processor_coverage.py`). A new purpose of a
     listed provider is an entry of its own, announced like an addition.
+    `transfer_mechanisms` are the safeguards of its processing (GDPR
+    Art. 44-46): every entry names at least one.
     """
 
     key: SubprocessorKey
@@ -66,6 +70,7 @@ class SubprocessorEntry(ImmutableDTO):
     purpose: LocalizedText
     personal_data: LocalizedText
     location: LocalizedText
+    transfer_mechanisms: list[TransferMechanism] = Field(min_length=1)
     client_modules: list[ClientModuleName] = Field(
         default_factory=list[ClientModuleName]
     )
@@ -96,13 +101,19 @@ class SubprocessorListQuery(ImmutableDTO):
 
 
 class SubprocessorView(ImmutableDTO):
-    """One sub-processor as owners and visitors read it."""
+    """
+    One sub-processor as owners and visitors read it: `transfer_mechanisms`
+    are the safeguards as codes, `transfer` the same as the DPA table
+    words them in the list's language.
+    """
 
     key: SubprocessorKey
     name: SubprocessorName
     purpose: SubprocessorPurpose
     personal_data: SubprocessorPersonalData
     location: SubprocessorLocation
+    transfer_mechanisms: list[TransferMechanism]
+    transfer: SubprocessorTransfer
     added_on: SubprocessorChangeDate
     removed_on: SubprocessorChangeDate | None = None
     is_in_force: IsSubprocessorInForce

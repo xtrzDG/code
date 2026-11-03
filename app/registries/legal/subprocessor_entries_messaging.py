@@ -9,6 +9,7 @@ from app.registries.legal.subprocessor_texts import (
     modules,
     texts,
 )
+from app.schemas.constants.legal import TransferMechanism
 from app.schemas.dto.legal import SubprocessorEntry
 
 MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
@@ -30,6 +31,7 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[ЕС, уточнить]",
             "[ევროკავშირი, დასაზუსტებელია]",
         ),
+        transfer_mechanisms=[TransferMechanism.TO_BE_CONFIRMED],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -55,6 +57,10 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "ევროკავშირი და სხვა ადგილები Meta-ს პირობების მიხედვით",
         ),
         client_modules=modules("meta"),
+        transfer_mechanisms=[
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -71,11 +77,12 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "შეტყობინებები, მომხმარებლის იდენტიფიკატორები",
         ),
         location=texts(
-            "Outside the EEA [transfer mechanism to be confirmed]",
-            "За пределами ЕЭЗ [механизм передачи уточнить]",
-            "ევროპის ეკონომიკური ზონის გარეთ [გადაცემის მექანიზმი დასაზუსტებელია]",
+            "Outside the EEA",
+            "За пределами ЕЭЗ",
+            "ევროპის ეკონომიკური ზონის გარეთ",
         ),
         client_modules=modules("telegram"),
+        transfer_mechanisms=[TransferMechanism.NONE_OFFERED],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -110,6 +117,7 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[ევროკავშირი, დასაზუსტებელია]",
         ),
         client_modules=modules("email"),
+        transfer_mechanisms=[TransferMechanism.EEA_PROCESSING],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -129,11 +137,15 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "ტელეფონის ნომრები, შეტყობინებების ტექსტი",
         ),
         location=texts(
-            "[United States / Ireland; transfer mechanism to be confirmed]",
-            "[США / Ирландия; механизм передачи уточнить]",
-            "[აშშ / ირლანდია; გადაცემის მექანიზმი დასაზუსტებელია]",
+            "United States / Ireland",
+            "США / Ирландия",
+            "აშშ / ირლანდია",
         ),
         client_modules=modules("twilio"),
+        transfer_mechanisms=[
+            TransferMechanism.BINDING_CORPORATE_RULES,
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -166,6 +178,7 @@ MESSAGING_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[ევროპის ეკონომიკური ზონის გარეთ, ბრაუზერის მწარმოებლის პირობებით]",
         ),
         client_modules=modules("webpush"),
+        transfer_mechanisms=[TransferMechanism.NONE_OFFERED],
         added_on=ORIGINAL_LIST_DATE,
     ),
 )

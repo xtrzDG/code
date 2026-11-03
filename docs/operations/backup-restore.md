@@ -12,7 +12,23 @@ covers the first setup; this page is the reference and the runbook.
 | RPO, database lost or corrupted | 5 minutes | Render's point-in-time recovery (continuous WAL archive, the plan's window) |
 | RPO, Render account or region lost | 24 hours | the nightly off-site backup (`workshop backup`) |
 | RTO, any of the above | 2 hours | a new database, one restore, `workshop migrate`, a deploy (runbook below) |
-| Proof | every week | the restore drill restores production's newest backup and checks it |
+| Proof | every week | the restore drill restores production's newest backup and checks it, and writes its timings to the run's report |
+| Measured | every quarter | a timed full path B restore, recorded in `docs/operations/restore-test-report.md` |
+
+The customer-facing commitments (`docs/legal/drafts/sla.md`, a draft for
+the owner to adopt) promise less than these internal targets: RPO 15
+minutes, RTO 4 hours, call forwarding switched on within 15 minutes.
+
+**Call recordings are not in the backups.** The backup is the database
+dump only. Recordings live in their own EU bucket (`RECORDINGS_S3_*`),
+each sealed with a key of its business; that bucket is set up with
+object versioning and a rule that expires noncurrent versions after 30
+days (an overwritten or deleted recording stays recoverable that long,
+`docs/operations/go-live.md` section 6) and relies on the provider's own
+durability. Losing that bucket loses the recordings; the database,
+transcripts and call summaries come back from the backups. This is a
+decision, not a gap: recordings are short-lived (the owner's retention),
+large, and the transcript keeps what was said.
 
 What each scenario costs:
 
@@ -36,8 +52,9 @@ What each scenario costs:
    loss of the Render account, the region or the provider.
 3. **Restore drill**, `.github/workflows/restore-drill.yml`: proves the
    backups restore. Nightly it backs up and restores a seeded throwaway
-   database with this checkout's code; on Mondays it restores production's
-   newest backup into a throwaway Postgres 16.
+   database with this checkout's code on a GitHub-hosted runner (synthetic
+   data only); on Mondays it restores production's newest backup into a
+   throwaway Postgres 16 on the platform's own runner in the EU (below).
 
 ## The backup (`workshop backup`)
 
@@ -86,9 +103,28 @@ Exit codes: 0 done, 1 failed, 2 not configured.
 
 **The bucket.** Private, in the EU, at another provider than Render
 (AWS `eu-central-1`, Hetzner, Scaleway, Cloudflare R2 with the EU
-jurisdiction). Versioning on, with a lifecycle rule that expires noncurrent
-versions after 14 days (a leaked writer key cannot erase the history at
-once) and aborts incomplete multipart uploads after 2 days. Three keys:
+jurisdiction), in **its own account** whose root credentials are in the
+vault and on no server. It is immutable for the whole retention window:
+
+- **Object Lock** is enabled when the bucket is created (it cannot be
+  added later on most providers; it turns versioning on), with a default
+  retention in **compliance mode of 31 days**: no key, the account's root
+  included, can remove an archive version for its first 31 days.
+- A lifecycle rule expires **noncurrent versions after 400 days**, never
+  sooner: a delete by retention or by a leaked key only hides an archive
+  behind a delete marker, and its version stays recoverable for more than
+  the 12 months of monthly copies. Another rule aborts incomplete
+  multipart uploads after 2 days. The price is storage: each expired
+  daily archive is kept about 13 months longer (about 400 archives in
+  all; at 1 GB a dump, well under 10 euros a month at EU object-storage
+  prices).
+- Proof, at setup and then once a year (`docs/operations/go-live.md`,
+  section 6): with the cron's key, `aws s3api delete-object --bucket <b>
+  --key <archive> --version-id <id>` must answer AccessDenied, and with
+  the drill's and the ledger's keys every delete must too. Write the date
+  into `docs/operations/restore-test-report.md`.
+
+Three keys:
 the cron's (put, list, delete under the prefix; set on `workshop-backup`
 only, never on the API or a worker), the drill's (get and list only), and
 the deletion ledger's (put, get and list under
@@ -230,10 +266,26 @@ configured.
   more with the `age` tool. Proves the tooling of the code about to ship.
 - `production`, Mondays and on demand: checks out `release` (the code
   production runs), restores production's newest backup into a throwaway
-  Postgres 16 and checks it. Runs only when the repository variable
-  `BACKUP_S3_BUCKET` is set; its secrets (the drill's read-only bucket key,
-  `BACKUP_AGE_IDENTITY`, `SENTRY_DSN`) live in the environment
-  `backup-drill`.
+  Postgres 16 and checks it. Runs only when the repository variables
+  `BACKUP_S3_BUCKET` is set and `RESTORE_DRILL_EU_RUNNER` is `true`; its
+  secrets (the drill's read-only bucket key, `BACKUP_AGE_IDENTITY`,
+  `SENTRY_DSN`) live in the environment `backup-drill`.
+
+Both append the drill's report to the run's summary (`--report`): the
+archive, when it was taken, when the drill started and finished, how long
+the download, restore and checks took, how old the backup was (the data a
+restore at that moment would lose) and the failed checks.
+
+**Where the production drill runs.** Production's data is decrypted only
+in the EU, on a machine the platform runs: a GitHub self-hosted runner
+with the labels `self-hosted`, `linux`, `eu-restore-drill` (e.g. a small
+Hetzner or Scaleway VM in Germany, Docker for the service container,
+passwordless sudo for apt, registered to this repository only, nothing
+else on it; `.github/actionlint.yaml` knows the label). GitHub-hosted
+runners never see production's data, so GitHub is no sub-processor
+(`docs/operations/vendor-register.md`, "GitHub and the restore drill").
+Until the runner exists, the weekly production proof does not run: set
+`RESTORE_DRILL_EU_RUNNER=true` once it is registered.
 
 Both install the Postgres 17 client: the image's `pg_dump` is Debian's 17,
 and an archive opens only with a `pg_restore` at least as new.
@@ -358,4 +410,9 @@ themselves; staff should look at the channels for the rest.
 
 The weekly drill covers path B's restore and checks. Once a quarter,
 time a full path B on a copy (steps 1–5 into a separate Render account
-or a local machine) and write the measured RTO into this page's table.
+or a local machine in the EU) and record it with the template of
+`docs/operations/restore-test-report.md`: the achieved RPO and RTO, the
+integrity checks (the drill's counts and isolation probes, three sample
+businesses opened in the restored cabinet, three recordings played from
+the recordings bucket) and what the runbook got wrong, fixed in this page
+the same day.

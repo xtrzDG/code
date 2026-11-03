@@ -294,9 +294,14 @@ fewer skipped providers (`-rs` in its log).
 The reference is `docs/operations/backup-restore.md` ("The bucket", "Keys
 and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
 
-1. A private bucket in the EU at another provider than Render, versioning
-   on, a lifecycle rule that expires noncurrent versions after 14 days and
-   aborts incomplete multipart uploads after 2 days.
+1. A private bucket in the EU at another provider than Render, in its own
+   account (root credentials in the vault only), created **with Object
+   Lock** and a default retention in compliance mode of 31 days, a
+   lifecycle rule that expires noncurrent versions after 400 days and one
+   that aborts incomplete multipart uploads after 2 days. The recordings
+   bucket (`RECORDINGS_S3_*`) gets versioning and a rule that expires
+   noncurrent versions after 30 days; recordings are not in the backups
+   (`docs/operations/backup-restore.md`, "Objectives").
 2. Three access keys: the backup cron's (put, list and delete under
    `workshop/`), the drill's (get and list only) and the deletion ledger's
    (put, get and list under `workshop/deletion-ledger/` only, no delete).
@@ -320,6 +325,13 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    and the overdue mark (`BACKUP_MAX_AGE_HOURS`) have defaults.
 5. GitHub: the repository variables and the `backup-drill` secrets of
    step 5.
+6. The EU runner of the production drill: a small VM in Germany with
+   Docker, registered to this repository as a self-hosted runner with the
+   label `eu-restore-drill` (Settings → Actions → Runners), nothing else
+   on it; then the repository variable `RESTORE_DRILL_EU_RUNNER=true`.
+   GitHub-hosted runners never restore production's backups
+   (`docs/operations/backup-restore.md`, "Where the production drill
+   runs").
 
 Check:
 
@@ -328,9 +340,16 @@ Check:
    `/admin/system` shows the backup; Sentry Crons shows an OK check-in of
    `database-backup`.
 2. `gh workflow run restore-drill.yml -f production=true`: the job
-   "Restore production's newest backup" is green and Sentry Crons shows an
-   OK check-in of `restore-drill`. From then on it runs every Monday.
-3. Once, the escrow holders prove their key opens a backup, on a trusted
+   "Restore production's newest backup" is green on the EU runner, its
+   summary shows the drill's timings, and Sentry Crons shows an OK
+   check-in of `restore-drill`. From then on it runs every Monday.
+3. Immutability: with the cron's key, delete one archive version
+   (`aws s3api delete-object --key <archive> --version-id <id>`): it must
+   answer AccessDenied; the drill's and the ledger's keys too. Then stop
+   the cron's run on purpose (a wrong `BACKUP_S3_SECRET_ACCESS_KEY` for
+   one run) and see Sentry alert on `database-backup`. Record both in
+   `docs/operations/restore-test-report.md`.
+4. Once, the escrow holders prove their key opens a backup, on a trusted
    machine with the drill's bucket key in an AWS CLI profile and
    `pg_restore` 17 or newer:
 
@@ -341,9 +360,9 @@ Check:
      | pg_restore --list > /dev/null && echo "the escrow key opens it"
    ```
 
-4. Once a quarter, time a full restore from the off-site backup
+5. Once a quarter, time a full restore from the off-site backup
    (`docs/operations/backup-restore.md`, "Rehearsing the runbook") and
-   write the measured RTO into that page.
+   record it in `docs/operations/restore-test-report.md`.
 
 ## 7. Sentry
 

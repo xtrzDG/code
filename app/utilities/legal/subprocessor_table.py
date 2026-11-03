@@ -10,6 +10,7 @@ markers' place.
 import re
 from datetime import date, timedelta
 
+from app.schemas.constants.legal import TransferMechanism
 from app.schemas.dto.legal import SubprocessorEntry
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.legal.constrained_strings import SubprocessorChangeDate
@@ -27,9 +28,51 @@ TABLE_BLOCK: re.Pattern[str] = re.compile(
     re.DOTALL,
 )
 
-HEADERS: dict[str, tuple[str, str, str, str]] = {
-    "en": ("Sub-processor", "Purpose", "Personal data", "Location"),
-    "it": ("Sub-responsabile", "Finalità", "Dati personali", "Luogo"),
+HEADERS: dict[str, tuple[str, str, str, str, str]] = {
+    "en": (
+        "Sub-processor",
+        "Purpose",
+        "Personal data",
+        "Location",
+        "Transfer mechanism",
+    ),
+    "it": (
+        "Sub-responsabile",
+        "Finalità",
+        "Dati personali",
+        "Luogo",
+        "Meccanismo di trasferimento",
+    ),
+}
+# The safeguards in the table's languages (GDPR Art. 44-46; DPA 7.2). "To
+# be confirmed" keeps its brackets: a field the lawyer still fills in.
+TRANSFER_LABELS: dict[str, dict[TransferMechanism, str]] = {
+    "en": {
+        TransferMechanism.EEA_PROCESSING: "processed in the EEA",
+        TransferMechanism.ADEQUACY_DECISION: "adequacy decision",
+        TransferMechanism.DATA_PRIVACY_FRAMEWORK: "EU-US Data Privacy Framework",
+        TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES: (
+            "standard contractual clauses (2021)"
+        ),
+        TransferMechanism.BINDING_CORPORATE_RULES: "binding corporate rules",
+        TransferMechanism.NONE_OFFERED: (
+            "none offered: only when the Client turns the channel on"
+        ),
+        TransferMechanism.TO_BE_CONFIRMED: "[to be confirmed in the contract]",
+    },
+    "it": {
+        TransferMechanism.EEA_PROCESSING: "trattamento nel SEE",
+        TransferMechanism.ADEQUACY_DECISION: "decisione di adeguatezza",
+        TransferMechanism.DATA_PRIVACY_FRAMEWORK: "EU-US Data Privacy Framework",
+        TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES: (
+            "clausole contrattuali standard (2021)"
+        ),
+        TransferMechanism.BINDING_CORPORATE_RULES: "norme vincolanti d'impresa",
+        TransferMechanism.NONE_OFFERED: (
+            "nessuna garanzia offerta: solo se il Cliente attiva il canale"
+        ),
+        TransferMechanism.TO_BE_CONFIRMED: "[da confermare nel contratto]",
+    },
 }
 # "(from 2026-12-01)": an announced addition; "(until ...)": its last day.
 FROM_LABEL: dict[str, str] = {"en": "from {day}", "it": "dal {day}"}
@@ -51,7 +94,7 @@ def render_subprocessor_table(
     """The Markdown table in a language (the header in en or it)."""
 
     written_in: str = str(table_language(language))
-    header: tuple[str, str, str, str] = HEADERS[written_in]
+    header: tuple[str, str, str, str, str] = HEADERS[written_in]
     lines: list[str] = [
         f"| {' | '.join(header)} |",
         f"| {' | '.join('---' for _ in header)} |",
@@ -62,6 +105,7 @@ def render_subprocessor_table(
             cell(entry.purpose, language),
             cell(entry.personal_data, language),
             cell(entry.location, language),
+            transfer_cell(entry, written_in),
         ]
         lines.append(f"| {' | '.join(cells)} |")
 
@@ -79,6 +123,16 @@ def name_cell(entry: SubprocessorEntry, language: LanguageTag, written_in: str) 
         notes.append(UNTIL_LABEL[written_in].format(day=last_day(entry.removed_on)))
 
     return f"{name} ({', '.join(notes)})" if notes else name
+
+
+def transfer_cell(entry: SubprocessorEntry, written_in: str) -> str:
+    """The entry's safeguards in the table's language, capitalised, "; "-joined."""
+
+    labels: str = "; ".join(
+        TRANSFER_LABELS[written_in][mechanism]
+        for mechanism in entry.transfer_mechanisms
+    )
+    return labels[:1].upper() + labels[1:]
 
 
 def last_day(removed_on: SubprocessorChangeDate) -> str:

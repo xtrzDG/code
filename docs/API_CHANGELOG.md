@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-11-03 — readiness checklist round: admin passkeys, revocable booking links, staff recording access, assistant kill switches, platform-only provider errors, payments status
 
-Spec: `74e08a9a30712a55`
+Spec: `8a0ce7daa7101f35`
 
 Everything below is additive within `/v1`; the new refusals are errors a
 client that follows the description already handles. (Skeleton listing
@@ -96,6 +96,13 @@ every `/v1` change of the round; wording to be polished.)
   release gate opens). Admin system circuits may list
   `provider:google_calendar`, `provider:cal_com` and
   `provider:twilio_numbers`.
+- **Added** `GET /v1/legal/subprocessors`: each `SubprocessorView` adds
+  `transfer_mechanisms` (codes of the new `TransferMechanism`:
+  `eea_processing`, `adequacy_decision`, `data_privacy_framework`,
+  `standard_contractual_clauses`, `binding_corporate_rules`,
+  `none_offered`, `to_be_confirmed`) and `transfer`, the same worded in
+  the list's language (English or Italian); the DPA's section 8 table has
+  the column "Transfer mechanism".
 
 ## 2026-11-02 — readiness round: sessions, platform brakes, marketing consent, call settings, idempotent money actions and request limits
 

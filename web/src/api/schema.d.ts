@@ -18885,7 +18885,9 @@ export interface components {
         };
         /**
          * SubprocessorView
-         * @description One sub-processor as owners and visitors read it.
+         * @description One sub-processor as owners and visitors read it: `transfer_mechanisms`
+         *     are the safeguards as codes, `transfer` the same as the DPA table
+         *     words them in the list's language.
          */
         SubprocessorView: {
             /** Added On */
@@ -18904,6 +18906,10 @@ export interface components {
             purpose: string;
             /** Removed On */
             removed_on?: string | null;
+            /** Transfer */
+            transfer: string;
+            /** Transfer Mechanisms */
+            transfer_mechanisms: components["schemas"]["TransferMechanism"][];
         };
         /**
          * SubscriptionLifecycleView
@@ -19301,6 +19307,18 @@ export interface components {
          * @enum {string}
          */
         TotpFactorStatus: "pending" | "active";
+        /**
+         * TransferMechanism
+         * @description The safeguard of a sub-processor's processing (DPA sections 7.2 and 8):
+         *     processed in the EEA, an adequacy decision, the EU-US Data Privacy
+         *     Framework, the 2021 standard contractual clauses, binding corporate
+         *     rules, none offered (a channel the Client chooses to turn on, under the
+         *     vendor's own terms), or still to be confirmed in the contract. An entry
+         *     lists every one that applies, e.g. EEA processing plus SCCs for the
+         *     vendor's support access from the US.
+         * @enum {string}
+         */
+        TransferMechanism: "eea_processing" | "adequacy_decision" | "data_privacy_framework" | "standard_contractual_clauses" | "binding_corporate_rules" | "none_offered" | "to_be_confirmed";
         /**
          * TrialConversionView
          * @description Trials started in the period: how many ended, and how many of those

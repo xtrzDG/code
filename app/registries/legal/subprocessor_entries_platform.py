@@ -10,6 +10,7 @@ from app.registries.legal.subprocessor_texts import (
     modules,
     texts,
 )
+from app.schemas.constants.legal import TransferMechanism
 from app.schemas.dto.legal import SubprocessorEntry
 from app.schemas.typings.legal.constrained_strings import SubprocessorChangeDate
 
@@ -41,6 +42,7 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[საქართველო, დასაზუსტებელია]",
         ),
         client_modules=modules("flitt"),
+        transfer_mechanisms=[TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -62,6 +64,10 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[Stripe Payments Europe, ირლანდია; დასაზუსტებელია]",
         ),
         client_modules=modules("stripe"),
+        transfer_mechanisms=[
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=STRIPE_FROM,
         addition_announced_on=STRIPE_ANNOUNCED_ON,
     ),
@@ -80,6 +86,11 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "შეიცავდეს",
         ),
         location=texts("EU region", "Регион ЕС", "ევროკავშირის რეგიონი"),
+        transfer_mechanisms=[
+            TransferMechanism.EEA_PROCESSING,
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -101,6 +112,10 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "ფრანკფურტი, გერმანია (ევროკავშირი)",
         ),
         client_modules=modules("postgres"),
+        transfer_mechanisms=[
+            TransferMechanism.EEA_PROCESSING,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -126,6 +141,10 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "[Google Ireland, დასაზუსტებელია]",
         ),
         client_modules=modules("google"),
+        transfer_mechanisms=[
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -146,11 +165,15 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
             "კაბინეტის მომხმარებლის IP მისამართი და ბრაუზერის ნიშნები",
         ),
         location=texts(
-            "[Global network; transfer mechanism to be confirmed]",
-            "[Глобальная сеть; механизм передачи уточнить]",
-            "[გლობალური ქსელი; გადაცემის მექანიზმი დასაზუსტებელია]",
+            "Global network",
+            "Глобальная сеть",
+            "გლობალური ქსელი",
         ),
         client_modules=modules("turnstile"),
+        transfer_mechanisms=[
+            TransferMechanism.DATA_PRIVACY_FRAMEWORK,
+            TransferMechanism.STANDARD_CONTRACTUAL_CLAUSES,
+        ],
         added_on=ORIGINAL_LIST_DATE,
     ),
     SubprocessorEntry(
@@ -178,6 +201,7 @@ PLATFORM_SUBPROCESSORS: tuple[SubprocessorEntry, ...] = (
         ),
         location=texts("EU", "ЕС", "ევროკავშირი"),
         client_modules=modules("object_storage"),
+        transfer_mechanisms=[TransferMechanism.EEA_PROCESSING],
         added_on=ORIGINAL_LIST_DATE,
     ),
 )

@@ -94,7 +94,10 @@ def test_announced_changes_are_marked_in_every_language() -> None:
     assert "Mailbox EU (from 2026-12-01)" in english
     assert "(until 2026-12-31)" in english
     # The Italian header and labels; the entries' own texts have no Italian yet.
-    assert "| Sub-responsabile | Finalità | Dati personali | Luogo |" in italian
+    assert (
+        "| Sub-responsabile | Finalità | Dati personali | Luogo "
+        "| Meccanismo di trasferimento |"
+    ) in italian
     assert "Mailbox EU (dal 2026-12-01)" in italian
     assert "(fino al 2026-12-31)" in italian
     # Languages without a DPA read the English table.
@@ -109,7 +112,7 @@ def test_a_cell_never_splits_the_table() -> None:
 
     row = render_subprocessor_table([piped], LanguageTag("en")).splitlines()[-1]
 
-    assert row.count("|") == 5
+    assert row.count("|") == 6
     assert "Mail / delivery across lines" in row
 
 

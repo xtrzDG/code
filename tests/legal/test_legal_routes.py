@@ -48,6 +48,8 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
             "Messages and voice notes, the Client's knowledge, booking details"
         ),
         "location": "EU (data residency)",
+        "transfer_mechanisms": ["eea_processing", "standard_contractual_clauses"],
+        "transfer": "Processed in the EEA; standard contractual clauses (2021)",
         "added_on": "2026-10-01",
         "removed_on": None,
         "is_in_force": True,
@@ -68,6 +70,10 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
     # cabinet languages and read the English list.
     assert italian.json()["language"] == "it"
     assert italian.json()["subprocessors"][0]["purpose"].startswith("Language model")
+    # The safeguards are worded by the list itself, so Italian has them.
+    assert italian.json()["subprocessors"][0]["transfer"] == (
+        "Trattamento nel SEE; clausole contrattuali standard (2021)"
+    )
     assert russian.json()["language"] == "en"
     assert georgian.json()["language"] == "en"
 

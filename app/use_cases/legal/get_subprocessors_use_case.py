@@ -19,6 +19,7 @@ from app.schemas.typings.legal.strings import (
     SubprocessorName,
     SubprocessorPersonalData,
     SubprocessorPurpose,
+    SubprocessorTransfer,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.legal.subprocessor_dates import (
@@ -28,7 +29,7 @@ from app.utilities.legal.subprocessor_dates import (
     to_day,
     utc_day,
 )
-from app.utilities.legal.subprocessor_table import table_language
+from app.utilities.legal.subprocessor_table import table_language, transfer_cell
 from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
@@ -95,6 +96,8 @@ class GetSubprocessorsUseCase(
                 str(resolve(entry.personal_data, language))
             ),
             location=SubprocessorLocation(str(resolve(entry.location, language))),
+            transfer_mechanisms=list(entry.transfer_mechanisms),
+            transfer=SubprocessorTransfer(transfer_cell(entry, str(language))),
             added_on=entry.added_on,
             removed_on=entry.removed_on,
             is_in_force=is_in_force(entry, today),

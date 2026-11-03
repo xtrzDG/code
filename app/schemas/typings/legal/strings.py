@@ -33,4 +33,12 @@ class SubprocessorPurpose(BaseTypedString):
     """What a sub-processor does for the service, in one language."""
 
 
+class SubprocessorTransfer(BaseTypedString):
+    """
+    The safeguards of a sub-processor's processing as the DPA table names
+    them, in one language, e.g. "EU-US Data Privacy Framework; standard
+    contractual clauses (2021)".
+    """
+
+
 # Keep abc order for all non example types, if possible.
