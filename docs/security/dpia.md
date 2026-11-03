@@ -18,8 +18,12 @@ customers of many businesses, health details customers volunteer (a
 clinic, allergies in a booking), and marketing to the customers the
 assistant met.
 
-Reviewed: 2026-11-02. Review again with every new channel, sub-processor,
-model provider or kind of personal data, and at least once a year.
+Reviewed: 2026-11-03. Review again with every new channel, sub-processor,
+model provider or kind of personal data, with every release that adds a
+use of booking outcomes or customer memory (see "No-show history and
+profiling"), and at least once a year. `tests/legal/test_dpia.py` fails
+when this date is more than a year old, when a code path or checklist id
+below is unknown, or when a measure names no checklist item.
 
 ## The processing
 
@@ -33,6 +37,37 @@ model provider or kind of personal data, and at least once a year.
 | Rebooking campaigns | contact, language, past visit | invite back, recall, pre-arrival notes, only with consent | `app/use_cases/campaigns/campaign_writer.py` |
 | Quality sampling (owner may turn off) | a sample of conversations, phones and e-mails blanked | the assistant's quality | `app/utilities/quality/quality_prompts.py` |
 | Owners' and staff accounts | phone or e-mail, sign-in codes, sessions, devices, IP | sign-in and security (platform as controller) | `app/use_cases/users/otp_login/` |
+
+## No-show history and profiling
+
+Bookings carry the status the team gives them: completed, cancelled or
+**no-show** (`BookingStatus` in `app/schemas/constants/bookings.py`, set
+by staff in the cabinet, never by the assistant). Where it is used:
+
+| Use | What it sees | Decision about a person? |
+| --- | --- | --- |
+| The deposit report (`app/utilities/deposits/deposit_report_math.py`) | the business's no-show rate with and without deposits, as counts and a percent over a period | no: an aggregate for the owner; deposits are set per place, service or banquet (`DepositTarget`), never per customer |
+| Rebooking campaigns (`app/use_cases/campaigns/campaign_targets.py`) | whether a customer's later booking was cancelled or a no-show, so it does not count as "came back" | no: it only decides whether an invitation the customer consented to is still useful; no-shows are never invited for being no-shows |
+| The customer's card | the bookings with their statuses, the team's tags, VIP and block | the team's own decisions (a block is set by a person and can be lifted) |
+| The assistant's memory of a customer (`app/utilities/conversations/memory_facts.py`) | a short summary of facts from earlier conversations, filtered of instructions and claimed exemptions | no: it keeps context for the next answer; it holds no booking outcomes or scores |
+
+There is **no per-customer no-show list, score, ranking or automated
+refusal**: nothing computes a reliability score, refuses a booking, asks a
+higher deposit or hides availability because of a person's history, and
+no booking outcome reaches the language model's prompt. This is not
+profiling with legal or similarly significant effect (article 22), and
+not systematic evaluation (Garante list, item 1). The business tells its
+customers about the card and the memory in its own privacy notice, which
+the hosted chat and the booking page link.
+
+Any of the following needs a new review of this assessment before it
+ships, a mention in the business's privacy notice template and a way to
+object: a per-customer no-show count shown to the assistant or used in a
+rule; a deposit, a booking limit or a refusal that depends on a person's
+history; a shared list of customers across businesses (never: each
+business's data stays its own); and emotion or sentiment analysis of
+callers (`docs/security/ai-act-assessment.md`). The pull request template
+asks for it (`.github/pull_request_template.md`, "Data").
 
 ## Necessity and proportionality
 
@@ -73,21 +108,25 @@ model provider or kind of personal data, and at least once a year.
 ## Risks and measures
 
 Likelihood and severity before the measures: L low, M medium, H high.
+"Checklist" names the items of `docs/security/readiness-checklist.json`
+whose requirements and verification cover the measures.
 
-| Risk to people | Before | Measures (where in the code) | Residual |
-| --- | --- | --- | --- |
-| The AI states wrong facts (prices, allergens, opening hours) and a customer relies on them | M / M | answers only from the business's facts; a reply's claims are checked against evidence before it is sent (`app/utilities/reply_guard/`, `reply_review.py`); unanswerable questions go to the team (handoffs) | L |
-| The AI reveals another customer's data | M / H | per-business row-level security for every table (`migrations/1200_tenant_and_platform_roles.sql`, probed by the restore drill), the business of a message comes from the server-side channel lookup, `personal_data_check.py` withholds foreign phones and e-mails | L |
-| Instructions hidden in a customer's message steer the AI | M / M | tools act only within the conversation's business and customer; names a customer gives cannot pose as markup (`CustomerGivenName`); every booking change goes through the same use cases as staff's | L |
-| A call recording or transcript leaks | L / H | off by default; AES-256-GCM per business and per file (`app/utilities/security/recording_encryption.py`) in an EU bucket; retention purge (`purge_expired_recordings_use_case.py`); access audited | L |
-| Conversation content stays at a sub-processor | M / M | models and voice in EU residency; traces at Langfuse 30 days; every erasure and purge deletes the copies by retried jobs (`app/facilitators/privacy/processor_erasure_facilitator.py`); only the uses the registry names (`app/registries/legal/processor_use_catalog.py`) | L |
-| Health details (special categories) in notes or calls | M / H | Restricted class, minimisation and the business's retention; never used to train models; the help article tells owners to keep a legal basis | M (the business's DPIA) |
-| Marketing without consent, or after it was taken back | M / M | campaigns write only to an active consent (`campaign_writer.py`); STOP, the suppression list and a block always win; a new STOP takes the consent back in the same storage step; the card never says "agreed" for a stopped customer (`app/use_cases/contacts/marketing_consent_views.py`); every change audited | L |
-| An erased customer comes back with a restored backup | L / H | the erasure is recorded outside the database (`record_contact_erasure_use_case.py`, `app/adapters/business_closures/bucket_contact_erasure_ledger_adapter.py`) and applied again daily (`reapply_contact_erasures_use_case.py`); the restore drill counts it | L |
-| An owner's or staff account is taken over | M / H | sign-in codes hashed, limited and expiring (`app/utilities/security/one_time_codes.py`); second factor and passkeys; Cloudflare Turnstile on risky sign-ins (`app/clients/turnstile/`); a fresh sign-in for exports and erasures (`StepUpGuardContract`) | L |
-| Transfers outside the EEA | M / M | each vendor's safeguard (DPF, SCCs, BCRs) in `docs/operations/vendor-register.md`; Telegram and Meta only when the business turns the channel on; Turnstile sees IP and browser signals only, on risky sign-ins | L |
-| Data kept longer than needed | M / L | purge jobs per category, watched by Sentry Crons and `missed_job_runs` | L |
-| A breach is noticed late or not told | L / H | the audit log's hash chain (`app/use_cases/compliance/audit_chain/`), alerts, `docs/operations/incident.md` (48 hours to the businesses, 72 hours to the Garante) | L |
+| Risk to people | Before | Measures (where in the code) | Checklist | Residual |
+| --- | --- | --- | --- | --- |
+| The AI states wrong facts (prices, allergens, opening hours) and a customer relies on them | M / M | answers only from the business's facts; a reply's claims are checked against evidence before it is sent (`app/utilities/reply_guard/`, `reply_review.py`); unanswerable questions go to the team (handoffs) | AI-08, AI-12 | L |
+| The AI reveals another customer's data | M / H | per-business row-level security for every table (`migrations/1200_tenant_and_platform_roles.sql`, probed by the restore drill), the business of a message comes from the server-side channel lookup, `personal_data_check.py` withholds foreign phones and e-mails | AUTHZ-01, AUTHZ-08, AI-05 | L |
+| Instructions hidden in a customer's message steer the AI | M / M | tools act only within the conversation's business and customer; names a customer gives cannot pose as markup (`CustomerGivenName`); every booking change goes through the same use cases as staff's | AI-01, AI-03, AI-04 | L |
+| A call recording or transcript leaks | L / H | off by default; AES-256-GCM per business and per file (`app/utilities/security/recording_encryption.py`) in an EU bucket; retention purge (`purge_expired_recordings_use_case.py`); access audited | VOICE-10, AUTHZ-06 | L |
+| Conversation content stays at a sub-processor | M / M | models and voice in EU residency; traces at Langfuse 30 days; every erasure and purge deletes the copies by retried jobs (`app/facilitators/privacy/processor_erasure_facilitator.py`); only the uses the registry names (`app/registries/legal/processor_use_catalog.py`) | PRIV-06, PRIV-08 | L |
+| Health details (special categories) in notes or calls | M / H | Restricted class, minimisation and the business's retention; never used to train models; the help article tells owners to keep a legal basis | PRIV-10 | M (the business's DPIA) |
+| Marketing without consent, or after it was taken back | M / M | campaigns write only to an active consent (`campaign_writer.py`); STOP, the suppression list and a block always win; a new STOP takes the consent back in the same storage step; the card never says "agreed" for a stopped customer (`app/use_cases/contacts/marketing_consent_views.py`); every change audited | CONS-01, CONS-02, CONS-03 | L |
+| An erased customer comes back with a restored backup | L / H | the erasure is recorded outside the database (`record_contact_erasure_use_case.py`, `app/adapters/business_closures/bucket_contact_erasure_ledger_adapter.py`) and applied again daily (`reapply_contact_erasures_use_case.py`); the restore drill counts it | PRIV-08, REL-03 | L |
+| An owner's or staff account is taken over | M / H | sign-in codes hashed, limited and expiring (`app/utilities/security/one_time_codes.py`); second factor and passkeys; Cloudflare Turnstile on risky sign-ins (`app/clients/turnstile/`); a fresh sign-in for exports and erasures (`StepUpGuardContract`) | AUTH-01, AUTH-07, ABUSE-01 | L |
+| Transfers outside the EEA | M / M | each vendor's safeguard (DPF, SCCs, BCRs) in `docs/operations/vendor-register.md`; Telegram and Meta only when the business turns the channel on; Turnstile sees IP and browser signals only, on risky sign-ins | PRIV-02, PRIV-05 | L |
+| Data kept longer than needed | M / L | purge jobs per category, watched by Sentry Crons and `missed_job_runs` | PRIV-07 | L |
+| A breach is noticed late or not told | L / H | the audit log's hash chain (`app/use_cases/compliance/audit_chain/`), alerts, `docs/operations/incident.md` (48 hours to the businesses, 72 hours to the Garante) | PRIV-09, REL-07, LOG-04 | L |
+| A customer is profiled or treated worse because of their booking history (no-shows) | L / M | no per-customer score, list or automated refusal; deposits per place or service (`DepositTarget`); no-shows only in the owner's aggregate report and to skip "came back" (`app/use_cases/campaigns/campaign_targets.py`); a new use needs this assessment again ("No-show history and profiling") | PRIV-04, PRIV-11 | L |
+| A caller does not know they speak to an AI or how their data is used | M / M | the AI disclosure opens every call and chat (`ai_disclosure_texts.py`); a short spoken privacy notice before recording (`call_texts.py`); the hosted pages link the business's notice | AIACT-01, AIACT-02, VOICE-05 | L |
 
 ## Transfers
 

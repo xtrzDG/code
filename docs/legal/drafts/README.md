@@ -13,7 +13,22 @@ They are not served and cannot be accepted: the API reads only
 is published. They are not in `published.json` either, so they can be edited
 freely until then. `tests/legal/test_legal_drafts.py` keeps every draft
 marked `needs_review`, numbered like its English text and outside what the
-API serves.
+API serves, and checks that the next DPA version closes the gaps of
+`dpa-art28-annex.md` it was drafted for.
+
+`dpa-2026-11-03.en.md` is the **next version** of the DPA in English, not a
+translation: clause 2.3 adds Article 28(3)(a)'s duty to tell the Client of
+a legal requirement to process otherwise, 13.3 describes closing and
+deleting a business in the cabinet with its certificate, 7.2 and section 8
+name every sub-processor's transfer mechanism, and 1.4 names Italian law.
+It is a draft for the lawyer (needs_review), not served and not in
+`published.json`. To put it in force: the lawyer reviews it and fills its
+fields; move it to `docs/legal/` (`git mv`), translate it into Italian
+here, run `uv run python -m scripts.render_subprocessor_table` and
+`uv run python -m scripts.publish_legal_texts`, set the default
+`DPA_DOCUMENT_VERSION` in `compliance_settings_section.py` to `2026-11-03`
+(or a later date of the reviewed text, renaming the file) and rebuild;
+owners are then asked to accept it within 30 days.
 
 Sections 8 (sub-processors) and 9 (security measures) are generated from the
 registries in `app/registries/legal/`, which hold no Italian today; the drafts

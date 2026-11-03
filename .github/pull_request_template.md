@@ -34,6 +34,8 @@ Risk:
 - [ ] **Stored documents:** a changed document schema still reads old rows (new fields optional or defaulted, a schema version bump and upcaster when a field changes meaning).
 - [ ] **API:** `cd web && npm run gen:api` run and `openapi.json` + `src/api/schema.d.ts` committed; changes within `/v1` are additive (`docs/api-versioning.md`); an entry with the new `Spec:` fingerprint on top of `docs/API_CHANGELOG.md`.
 - [ ] **Personal data:** views, exports, deletions and admin access write an audit entry; nothing personal goes to logs or traces.
+- [ ] **Records of processing:** a new personal-data field, purpose or vendor is in `docs/legal/records-of-processing.md` (its `Reviewed:` date moved); a new use of booking outcomes (no-shows) or customer memory is assessed in `docs/security/dpia.md` first.
+- [ ] **AI features:** a change to the assistant's prompts, tools, models, voice or post-call analysis is checked against `docs/security/ai-act-assessment.md` (no prohibited practice, no emotion or biometric analysis of callers, still not high-risk; its `Reviewed:` date moved) and the evals are re-recorded.
 - [ ] **Configuration:** new environment variables are in the settings section, `.env.example`, the table of `docs/dev/environment.md` and `docs/LAUNCH.md`; new secrets also in `docs/security/secrets-inventory.md`.
 - [ ] **Cabinet texts:** every new text in English and Italian (natural translations; never only one of them), UI kit and design tokens used, works at 390 px and with a keyboard.
 - [ ] **Security:** no new gate exception (bandit baseline, `.gitleaksignore`, `.trivyignore`, vulture whitelist) without a reason recorded in `SECURITY.md` or the file itself.

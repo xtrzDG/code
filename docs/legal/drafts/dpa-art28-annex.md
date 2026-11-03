@@ -35,7 +35,10 @@ test path exists.
 
 The first one leaves part of a duty without a clause; the others are text
 that lags the service or still has open fields. Collect them for the next
-version and the lawyer's review:
+version and the lawyer's review. The draft of that version,
+`docs/legal/drafts/dpa-2026-11-03.en.md`, already closes the first three
+(2.3, 13.3, and 7.2 with section 8's transfer mechanism column); the
+fields in square brackets wait for the lawyer:
 
 - (a) also asks the processor to tell the controller, before processing, of
   a Union or Member State law that requires processing outside the
@@ -44,8 +47,9 @@ version and the lawyer's review:
 - 13.3 says deletion after the end happens "through support (the cabinet
   does not offer this yet)": the cabinet now offers closing and deleting a
   business with a deletion certificate (row (g)).
-- 7.2 and section 8 still carry "[to be confirmed]" locations and transfer
-  mechanisms; the vendor register holds the facts to fill them.
+- 7.2 and section 8 still carry "[to be confirmed]" locations; section 8
+  now names each transfer mechanism (`transfer_mechanisms` of the registry),
+  Zadarma's still to be confirmed in its contract.
 - 1.2, 10.1, 11.3, 12.1, 13.3, 14.1 and 8.3 have fields in square brackets
   (the operator's identity, notice periods, governing law).
 - 3.3 leaves "[Additional safeguards for special categories, if any]": the

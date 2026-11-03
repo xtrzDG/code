@@ -6,7 +6,10 @@ of their last day (or at once when they leave on bad terms). The person
 who does it fills the record at the end with a time for each step; a
 second maintainer checks it. Joining is the reverse: least privilege, the
 smallest admin role that is enough (`docs/security/permission-matrix.md`),
-and the security and AI-literacy briefing before the first access.
+and the security and AI-literacy training before the first access
+(`docs/security/ai-literacy.md`, recorded there), with the information
+security policy read and acknowledged
+(`docs/security/information-security-policy.md`, "Acknowledgments").
 
 ## Checklist
 

@@ -15,7 +15,7 @@ const SECURITY_TXT_PATH = "/.well-known/security.txt";
 
 export const SECURITY_TXT_FIELDS = `Contact: https://github.com/xtrzDG/code/security/advisories/new
 Expires: 2027-07-01T00:00:00Z
-Preferred-Languages: en, ru, ka
+Preferred-Languages: en, it
 Policy: https://github.com/xtrzDG/code/blob/main/SECURITY.md`;
 
 /** One mailbox: no spaces, line breaks or a second address can be smuggled into the file. */
