@@ -60,6 +60,17 @@ class MetricsPort(BaseConstrainedTypedInt):
     le = 65535
 
 
+class ServiceLevelPeriodCount(BaseConstrainedTypedInt):
+    """
+    Periods (days or hours) of a latency objective's window: the window's
+    periods, or those whose percentile missed the target (a day of voice
+    tool p95 above 2 s, an hour of inbound pickup p99 above 10 s).
+    """
+
+    ge = 0
+    le = 1_000_000
+
+
 class ServiceLevelHourCount(BaseConstrainedTypedInt):
     """Hours of the service level rows (e.g. those whose p95 missed 15 s)."""
 

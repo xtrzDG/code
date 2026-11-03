@@ -1,12 +1,15 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { api } from "@/api/client";
 import type { BusinessView, CurrentUserView } from "@/api/types";
 import type { BookingView } from "@/components/insights/types";
 import { BusinessProvider } from "@/components/business/BusinessContext";
+import { ok } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
 import { bookingFixture } from "../_lib/bookingFixtures";
+import { BookingEditForm } from "./BookingEditForm";
 import { BookingDetails } from "./BookingList";
 
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
@@ -39,5 +42,28 @@ describe("BookingDetails: a health note withheld from this viewer (PRIV-10)", ()
 
     expect(screen.getByText("High chair")).toBeTruthy();
     expect(screen.queryByText(t("bookings.details.notesWithheld"))).toBeNull();
+  });
+});
+
+describe("BookingEditForm: a note withheld from this viewer cannot be replaced (PRIV-10)", () => {
+  it.each(["en", "it"] as const)("keeps the notes field closed and says why (%s)", (locale) => {
+    // The places, the offers and the niche the form reads: none of them matter here.
+    vi.mocked(api.GET).mockImplementation((() => ok({ items: [], niche: { resource_kind: null } })) as never);
+    const { t } = textsIn(locale);
+    renderInLocale(
+      <BusinessProvider business={agency} me={viewer}>
+        <BookingEditForm
+          booking={bookingFixture({ notes: null, is_health_note_withheld: true })}
+          resources={[]}
+          onSaved={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </BusinessProvider>,
+      { locale },
+    );
+
+    const notes = screen.getByRole("textbox", { name: new RegExp(t("bookings.form.notes")) });
+    expect(notes).toHaveProperty("disabled", true);
+    expect(screen.getByText(t("bookings.details.notesWithheld"))).toBeTruthy();
   });
 });

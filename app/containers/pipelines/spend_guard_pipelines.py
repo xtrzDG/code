@@ -43,3 +43,13 @@ class SpendGuardPipelinesContainer(containers.DeclarativeContainer):
     get_payment_reconciliation_pipeline = orchestrator_pipeline(
         spend_guard.get_payment_reconciliation_orchestrator
     )
+    # The feature flags of staged rollouts (1260).
+    list_feature_flags_pipeline = orchestrator_pipeline(
+        spend_guard.list_feature_flags_orchestrator
+    )
+    set_feature_flag_pipeline = orchestrator_pipeline(
+        spend_guard.set_feature_flag_orchestrator
+    )
+    check_feature_flag_pipeline = orchestrator_pipeline(
+        spend_guard.check_feature_flag_orchestrator
+    )

@@ -58,3 +58,13 @@ class SpendGuardOperatorsContainer(containers.DeclarativeContainer):
     get_payment_reconciliation_operator = pipeline_operator(
         spend_guard_pipelines.get_payment_reconciliation_pipeline, storage_scope
     )
+    # The feature flags: a platform collection read by its keys (1260).
+    list_feature_flags_operator = pipeline_operator(
+        spend_guard_pipelines.list_feature_flags_pipeline, storage_scope
+    )
+    set_feature_flag_operator = pipeline_operator(
+        spend_guard_pipelines.set_feature_flag_pipeline, storage_scope
+    )
+    check_feature_flag_operator = pipeline_operator(
+        spend_guard_pipelines.check_feature_flag_pipeline, storage_scope
+    )

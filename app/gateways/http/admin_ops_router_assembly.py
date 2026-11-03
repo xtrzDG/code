@@ -10,6 +10,9 @@ from app.gateways.http.admin_campaign_hold_routes import (
     build_admin_campaign_hold_router,
 )
 from app.gateways.http.admin_data_task_routes import build_admin_data_task_router
+from app.gateways.http.admin_feature_flag_routes import (
+    build_admin_feature_flag_router,
+)
 from app.gateways.http.admin_jobs_routes import build_admin_jobs_router
 from app.gateways.http.admin_ops_routes import build_admin_ops_router
 from app.gateways.http.error_budget_routes import build_error_budget_router
@@ -22,7 +25,8 @@ def build_admin_ops_routers(
 ) -> list[APIRouter]:
     """
     /v1/admin/jobs, GET /v1/admin/system (its error budget and data tasks),
-    /v1/admin/incidents and /v1/admin/campaign-holds.
+    /v1/admin/incidents, /v1/admin/campaign-holds and
+    /v1/admin/feature-flags.
     """
 
     platform = operators.platform
@@ -53,5 +57,11 @@ def build_admin_ops_routers(
             current_user=current_user,
             list_campaign_holds=platform.list_campaign_holds_operator(),
             release_campaign_hold=platform.release_campaign_hold_operator(),
+        ),
+        build_admin_feature_flag_router(
+            current_user=current_user,
+            list_feature_flags=operators.spend_guard.list_feature_flags_operator(),
+            set_feature_flag=operators.spend_guard.set_feature_flag_operator(),
+            check_feature_flag=operators.spend_guard.check_feature_flag_operator(),
         ),
     ]

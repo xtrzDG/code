@@ -415,6 +415,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/feature-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Admin Feature Flags */
+        get: operations["admin_list_admin_feature_flags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/feature-flags/{flag_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Admin Feature Flag */
+        put: operations["admin_set_admin_feature_flag"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/feature-flags/{flag_name}/businesses/{business_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check Admin Feature Flag */
+        get: operations["admin_check_admin_feature_flag"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/incidents": {
         parameters: {
             query?: never;
@@ -12086,6 +12137,66 @@ export interface components {
             scenario_key: string;
         };
         /**
+         * FeatureFlagCheck
+         * @description Whether the flag holds for the business now, as the release's code
+         *     sees it, why, and the business's bucket in its rollout (0-99).
+         */
+        FeatureFlagCheck: {
+            /** Bucket */
+            bucket: number;
+            /** Business Id */
+            business_id: string;
+            decision: components["schemas"]["FeatureFlagDecision"];
+            /** Is On */
+            is_on: boolean;
+            /** Name */
+            name: string;
+        };
+        /**
+         * FeatureFlagDecision
+         * @description Why a feature flag holds for a business or not (an answer, never
+         *     stored):
+         *
+         *     - OFF: the flag is switched off (or was never set): nobody gets it.
+         *     - EXCLUDED: switched on, but the business is on its exclusion list.
+         *     - INCLUDED: switched on and the business is on its inclusion list.
+         *     - IN_ROLLOUT: switched on and the business's bucket is below the
+         *       rollout percentage.
+         *     - OUTSIDE_ROLLOUT: switched on, but the bucket is not below it.
+         * @enum {string}
+         */
+        FeatureFlagDecision: "off" | "excluded" | "included" | "in_rollout" | "outside_rollout";
+        /** FeatureFlagList */
+        FeatureFlagList: {
+            /** Items */
+            items?: components["schemas"]["FeatureFlagView"][];
+        };
+        /**
+         * FeatureFlagView
+         * @description A flag of the registry as it stands: off with no lists until first set
+         *     (`changed_*` None).
+         */
+        FeatureFlagView: {
+            /** Changed At */
+            changed_at?: number | null;
+            /** Changed By */
+            changed_by?: string | null;
+            /** Description */
+            description: string;
+            /** Excluded Business Ids */
+            excluded_business_ids?: string[];
+            /** Included Business Ids */
+            included_business_ids?: string[];
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Name */
+            name: string;
+            /** Reason */
+            reason?: string | null;
+            /** Rollout Percent */
+            rollout_percent: number;
+        };
+        /**
          * FeedbackRequestDocument
          * @description The request for feedback after one visit (a booking) and how it went.
          *
@@ -13756,10 +13867,16 @@ export interface components {
          * KnowledgeMention
          * @description A knowledge item that mentions a customer (PRIV-08): by their name, by
          *     one of their numbers, or both (`matched_on`). The customer's export
-         *     lists it with its text; their erasure flags it for the owner's review
-         *     and leaves the text as the owner wrote it.
+         *     lists it with every text that was searched (title, body, attribute
+         *     values and aliases), so the mention itself is in the copy; their
+         *     erasure flags it for the owner's review and leaves the text as the
+         *     owner wrote it.
          */
         KnowledgeMention: {
+            /** Aliases */
+            aliases?: components["schemas"]["KnowledgeAlias"][];
+            /** Attributes */
+            attributes?: components["schemas"]["KnowledgeAttribute"][];
             /** Body */
             body?: string | null;
             /** Knowledge Item Id */
@@ -23189,6 +23306,281 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminActionReceipt"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_list_admin_feature_flags: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureFlagList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_set_admin_feature_flag: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                flag_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Excluded Business Ids */
+                    excluded_business_ids?: string[];
+                    /** Included Business Ids */
+                    included_business_ids?: string[];
+                    /** Is Enabled */
+                    is_enabled: boolean;
+                    /** Reason */
+                    reason: string;
+                    /** Rollout Percent */
+                    rollout_percent: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureFlagView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_check_admin_feature_flag: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                flag_name: string;
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureFlagCheck"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

@@ -22,6 +22,7 @@ from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
 )
+from app.schemas.domain.feature_flags import FeatureFlagDocument
 from app.schemas.domain.service_levels import (
     ServiceLevelHourDocument,
     ServiceLevelSlotDocument,
@@ -37,6 +38,9 @@ from app.utilities.storage.platform_safety_collections import (
 
 DATA_TASK_STATES_COLLECTION: DocumentCollectionName = DocumentCollectionName(
     "data_task_states"
+)
+FEATURE_FLAGS_COLLECTION: DocumentCollectionName = DocumentCollectionName(
+    "feature_flags"
 )
 OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
@@ -75,4 +79,6 @@ OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     *NICHE_TEXT_COLLECTIONS,  # Drafts and versions of the niche texts (1221).
     *PLATFORM_SAFETY_COLLECTIONS,  # Pause, job heartbeats, reconciliations (1230).
+    # The feature flags of staged rollouts, one row per flag (1260).
+    DocumentCollectionDefinition(FEATURE_FLAGS_COLLECTION, FeatureFlagDocument),
 )

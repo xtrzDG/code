@@ -521,6 +521,425 @@
     },
     {
       "type": "row",
+      "id": 33,
+      "title": "Product service levels (docs/operations/slo.md, 28 days)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 34,
+      "title": "Calls answered: budget left",
+      "description": "Calls the voice platform took (they asked the conversation-initiation webhook for their greeting) over those plus the calls that reached the Twilio voice fallback, against 99 % over 28 days. 100 % untouched, 0 spent. Booking success has no Prometheus series: the monthly SLO report reads it from the replies' tool results.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1 - ((sum(increase(workshop_http_request_duration_seconds_count{method=\"POST\", route=\"/v1/telephony/twilio/voice-fallback/{business_id}\"}[28d]))) or vector(0)) / clamp_min(((sum(increase(workshop_http_request_duration_seconds_count{method=\"POST\", route=\"/v1/voice/webhooks/conversation-initiation\"}[28d]))) or vector(0)) + ((sum(increase(workshop_http_request_duration_seconds_count{method=\"POST\", route=\"/v1/telephony/twilio/voice-fallback/{business_id}\"}[28d]))) or vector(0)), 1) / 0.01",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "red"
+              },
+              {
+                "value": 0,
+                "color": "orange"
+              },
+              {
+                "value": 0.5,
+                "color": "green"
+              }
+            ]
+          },
+          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 35,
+      "title": "Voice latency: budget left",
+      "description": "Days of the last 28 whose voice tool p95 (POST /v1/voice/tools/{tool_name}) was above 2 s, against the 1.4 days (5 %) the objective allows.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1 - ((count_over_time((histogram_quantile(0.95, sum by (le) (rate(workshop_http_request_duration_seconds_bucket{method=\"POST\", route=\"/v1/voice/tools/{tool_name}\"}[1d]))) > 2)[28d:1d])) or vector(0)) / 1.4",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "red"
+              },
+              {
+                "value": 0,
+                "color": "orange"
+              },
+              {
+                "value": 0.5,
+                "color": "green"
+              }
+            ]
+          },
+          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 36,
+      "title": "Notification delivery: budget left",
+      "description": "Outbox messages delivered over all that settled (delivered or dead) in 28 days, against 99 %.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1 - ((sum(increase(workshop_outbound_attempts_total{outcome=\"dead\"}[28d]))) or vector(0)) / clamp_min(((sum(increase(workshop_outbound_attempts_total{outcome=\"delivered\"}[28d]))) or vector(0)) + ((sum(increase(workshop_outbound_attempts_total{outcome=\"dead\"}[28d]))) or vector(0)), 1) / 0.01",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "red"
+              },
+              {
+                "value": 0,
+                "color": "orange"
+              },
+              {
+                "value": 0.5,
+                "color": "green"
+              }
+            ]
+          },
+          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 37,
+      "title": "Webhook lag: budget left",
+      "description": "Hours of the last 28 days whose inbound pickup p99 was above 10 s, against the 6.72 hours (1 %) the objective allows.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1 - ((count_over_time((histogram_quantile(0.99, sum by (le) (rate(workshop_job_pickup_delay_seconds_bucket{lane=\"inbound\"}[1h]))) > 10)[28d:1h])) or vector(0)) / 6.72",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "red"
+              },
+              {
+                "value": 0,
+                "color": "orange"
+              },
+              {
+                "value": 0.5,
+                "color": "green"
+              }
+            ]
+          },
+          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 38,
+      "title": "Voice tool p95 per day",
+      "description": "The p95 of the voice agent's tool calls over each day, against the 2 s target of the voice latency objective.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(workshop_http_request_duration_seconds_bucket{method=\"POST\", route=\"/v1/voice/tools/{tool_name}\"}[1d])))",
+          "legendFormat": "p95 (1 d)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "transparent"
+              },
+              {
+                "value": 2,
+                "color": "red"
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 39,
+      "title": "Inbound pickup p99 per hour",
+      "description": "The p99 of how long due inbound jobs (webhook messages) waited for a worker over each hour, against the 10 s target of the webhook lag objective.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(workshop_job_pickup_delay_seconds_bucket{lane=\"inbound\"}[1h])))",
+          "legendFormat": "p99 (1 h)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "transparent"
+              },
+              {
+                "value": 10,
+                "color": "red"
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
       "id": 8,
       "title": "HTTP",
       "collapsed": false,
@@ -528,7 +947,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 32
       },
       "panels": []
     },
@@ -545,7 +964,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 18
+        "y": 33
       },
       "targets": [
         {
@@ -607,7 +1026,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 18
+        "y": 33
       },
       "targets": [
         {
@@ -669,7 +1088,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 18
+        "y": 33
       },
       "targets": [
         {
@@ -727,7 +1146,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 41
       },
       "panels": []
     },
@@ -744,7 +1163,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 27
+        "y": 42
       },
       "targets": [
         {
@@ -806,7 +1225,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 27
+        "y": 42
       },
       "targets": [
         {
@@ -879,7 +1298,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 27
+        "y": 42
       },
       "targets": [
         {
@@ -941,7 +1360,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 50
       },
       "targets": [
         {
@@ -1014,7 +1433,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 50
       },
       "targets": [
         {
@@ -1081,7 +1500,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 58
       },
       "panels": []
     },
@@ -1098,7 +1517,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 59
       },
       "targets": [
         {
@@ -1176,7 +1595,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 59
       },
       "targets": [
         {
@@ -1238,7 +1657,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 52
+        "y": 67
       },
       "targets": [
         {
@@ -1300,7 +1719,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 52
+        "y": 67
       },
       "targets": [
         {
@@ -1358,7 +1777,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 75
       },
       "panels": []
     },
@@ -1375,7 +1794,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 61
+        "y": 76
       },
       "targets": [
         {
@@ -1437,7 +1856,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 61
+        "y": 76
       },
       "targets": [
         {
@@ -1495,7 +1914,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 84
       },
       "panels": []
     },
@@ -1512,7 +1931,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 70
+        "y": 85
       },
       "targets": [
         {
@@ -1574,7 +1993,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 70
+        "y": 85
       },
       "targets": [
         {
@@ -1647,7 +2066,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 70
+        "y": 85
       },
       "targets": [
         {
@@ -1734,7 +2153,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 78
+        "y": 93
       },
       "targets": [
         {
@@ -1796,7 +2215,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 84
+        "y": 99
       },
       "targets": [
         {
@@ -1869,7 +2288,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 84
+        "y": 99
       },
       "targets": [
         {

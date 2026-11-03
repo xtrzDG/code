@@ -3,8 +3,8 @@ Whether a change touches what the assistant's model sees or how its
 answers are scored, so CI's evals job must replay every recorded
 conversation (AI-12):
 
-    python3 scripts/eval_replay_scope.py --base <commit>   # in CI
-    git diff --name-only main | python3 scripts/eval_replay_scope.py
+    uv run --no-project python -m scripts.eval_replay_scope --base <commit>
+    git diff --name-only main | uv run python -m scripts.eval_replay_scope
 
 What the model sees is the instruction (its sections, the niche templates,
 the fact table, the owner texts it quotes, the golden prompt snapshots
@@ -13,7 +13,8 @@ schemas, the pinned model ids, the conversation engine and the reply
 guard; how it is scored is the evaluation harness and its datasets,
 cassettes and baselines. The script prints the matching paths and, under
 GitHub Actions, writes `replay=true|false` to $GITHUB_OUTPUT. It needs only
-the standard library, so the job decides before it installs anything.
+the standard library, so the job decides before it installs the
+dependencies.
 Exit code 2: git could not list the changed files.
 """
 
@@ -86,7 +87,7 @@ def write_output(replay: bool) -> None:
 
 
 def main(arguments: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n\n")[0])
     parser.add_argument("--base", help="compare HEAD with this commit")
     parser.add_argument(
         "--all", action="store_true", help="replay whatever changed (manual runs)"

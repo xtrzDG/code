@@ -8,6 +8,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.data_tasks import DataTaskStateDocument
+from app.schemas.domain.feature_flags import FeatureFlagDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.idempotency_keys import IdempotencyKeyDocument
 from app.schemas.domain.incidents import IncidentDocument
@@ -186,6 +187,15 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     payment_reconciliation_collection = document_collection(
         PaymentReconciliationDocument,
         "payment_reconciliations",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The feature flags of staged rollouts, one row per flag (1260).
+    feature_flag_collection = document_collection(
+        FeatureFlagDocument,
+        "feature_flags",
         config,
         clients,
         utilities,

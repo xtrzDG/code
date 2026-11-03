@@ -43,7 +43,6 @@ class DatasetSize:
             "bookings": self.messages // 10,
             "inbound_events": self.messages // 2,
             "outbound_messages": self.messages // 4,
-            "audit_log_entries": self.messages // 20,
         }
 
 
@@ -94,7 +93,9 @@ class RehearsalReport:
         return json.dumps(asdict(self) | {"failures": self.failures}, indent=2) + "\n"
 
     def to_markdown(self) -> str:
-        seeded: str = ", ".join(f"{count:,} {name}" for name, count in self.rows.items())
+        seeded: str = ", ".join(
+            f"{count:,} {name}" for name, count in self.rows.items()
+        )
         lines: list[str] = [
             f"### Migration rehearsal ({self.scale}, against {self.base})",
             "",

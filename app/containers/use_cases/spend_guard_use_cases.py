@@ -7,6 +7,7 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.feature_flag_factories import feature_flag_use_cases
 from app.containers.use_cases.platform_safety_factories import (
     payment_reconciliation_use_cases,
     platform_admin_check,
@@ -142,6 +143,14 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         payment_reconciliation_use_cases(
             config, repositories, utilities, time_provider, platform_admin_check
         )
+    )
+    # The feature flags of staged rollouts (1260).
+    (
+        list_feature_flags_use_case,
+        set_feature_flag_use_case,
+        check_feature_flag_use_case,
+    ) = feature_flag_use_cases(
+        repositories, utilities, time_provider, platform_admin_check
     )
     admit_owner_action_use_case: Factory[
         UseCaseContract[OwnerActionAdmission, None]

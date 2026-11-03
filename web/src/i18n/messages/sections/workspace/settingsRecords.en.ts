@@ -149,6 +149,7 @@ export const settingsRecordsEn = {
       platform_admin: "Platform admin",
       platform_announcement: "Platform announcement",
       platform_pause: "Platform pause",
+      feature_flag: "Feature flag",
       encryption_keys: "Encryption keys",
       audit_log_entry: "Audit log entries",
       login_destination: "Sign-in address",

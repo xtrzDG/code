@@ -9,6 +9,7 @@ from app.containers.adapters.operations_collections_container import (
 )
 from app.repositories.client_standing_repository import ClientStandingRepository
 from app.repositories.data_task_state_repository import DataTaskStateRepository
+from app.repositories.feature_flag_repository import FeatureFlagRepository
 from app.repositories.help_progress_repository import HelpProgressRepository
 from app.repositories.idempotency_key_repository import IdempotencyKeyRepository
 from app.repositories.incident_repository import IncidentRepository
@@ -37,6 +38,7 @@ from app.repositories.service_level_repositories import (
 )
 from app.repositories.system_health_repository import SystemHealthRepository
 from app.repositories.voice_activity_repository import VoiceActivityRepository
+from app.utilities.feature_flags.feature_flag_gate import FeatureFlagGate
 
 
 class OperationsRepositoriesContainer(containers.DeclarativeContainer):
@@ -146,4 +148,13 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     payment_reconciliation_repo: Singleton[PaymentReconciliationRepository] = Singleton(
         PaymentReconciliationRepository,
         collection=operations_collections.payment_reconciliation_collection,
+    )
+    # The feature flags of staged rollouts (1260), and the gate a release's
+    # code asks at request time.
+    feature_flag_repo: Singleton[FeatureFlagRepository] = Singleton(
+        FeatureFlagRepository,
+        collection=operations_collections.feature_flag_collection,
+    )
+    feature_flag_gate: Singleton[FeatureFlagGate] = Singleton(
+        FeatureFlagGate, flag_repo=feature_flag_repo
     )

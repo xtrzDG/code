@@ -14873,6 +14873,152 @@
         "title": "FailedAutotestView",
         "type": "object"
       },
+      "FeatureFlagCheck": {
+        "additionalProperties": false,
+        "description": "Whether the flag holds for the business now, as the release's code\nsees it, why, and the business's bucket in its rollout (0-99).",
+        "properties": {
+          "bucket": {
+            "maximum": 99.0,
+            "minimum": 0.0,
+            "title": "Bucket",
+            "type": "integer"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/FeatureFlagDecision"
+          },
+          "is_on": {
+            "title": "Is On",
+            "type": "boolean"
+          },
+          "name": {
+            "pattern": "^[a-z][a-z0-9_]{2,62}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "business_id",
+          "is_on",
+          "decision",
+          "bucket"
+        ],
+        "title": "FeatureFlagCheck",
+        "type": "object"
+      },
+      "FeatureFlagDecision": {
+        "description": "Why a feature flag holds for a business or not (an answer, never\nstored):\n\n- OFF: the flag is switched off (or was never set): nobody gets it.\n- EXCLUDED: switched on, but the business is on its exclusion list.\n- INCLUDED: switched on and the business is on its inclusion list.\n- IN_ROLLOUT: switched on and the business's bucket is below the\n  rollout percentage.\n- OUTSIDE_ROLLOUT: switched on, but the bucket is not below it.",
+        "enum": [
+          "off",
+          "excluded",
+          "included",
+          "in_rollout",
+          "outside_rollout"
+        ],
+        "title": "FeatureFlagDecision",
+        "type": "string"
+      },
+      "FeatureFlagList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureFlagView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "FeatureFlagList",
+        "type": "object"
+      },
+      "FeatureFlagView": {
+        "additionalProperties": false,
+        "description": "A flag of the registry as it stands: off with no lists until first set\n(`changed_*` None).",
+        "properties": {
+          "changed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed At"
+          },
+          "changed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "excluded_business_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excluded Business Ids",
+            "type": "array"
+          },
+          "included_business_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Included Business Ids",
+            "type": "array"
+          },
+          "is_enabled": {
+            "title": "Is Enabled",
+            "type": "boolean"
+          },
+          "name": {
+            "pattern": "^[a-z][a-z0-9_]{2,62}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 8,
+                "pattern": "^\\S[\\s\\S]*\\S$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rollout_percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Rollout Percent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "is_enabled",
+          "rollout_percent"
+        ],
+        "title": "FeatureFlagView",
+        "type": "object"
+      },
       "FeedbackRequestDocument": {
         "additionalProperties": false,
         "description": "The request for feedback after one visit (a booking) and how it went.\n\nThe id derives from the business and the booking, so a visit is asked\nabout once. A SENT request went into the outbox (`outbound_message_id`)\nin `channel` and `language` and waits for the customer's rating; the\noutbox marks it delivered (`delivered_at`) or FAILED. The rating\n(`score`) makes it ANSWERED; a low one also opens a handoff in the\nconversation. Everyone who answers gets the business's review link\nthrough the platform's address with `review_token`, which counts the\ncustomer's visits (`review_clicks`). A SKIPPED request keeps why\n(`skip_reason`). No text the customer wrote is kept here: their words\nstay in the conversation, which an erasure removes.",
@@ -18927,8 +19073,22 @@
       },
       "KnowledgeMention": {
         "additionalProperties": false,
-        "description": "A knowledge item that mentions a customer (PRIV-08): by their name, by\none of their numbers, or both (`matched_on`). The customer's export\nlists it with its text; their erasure flags it for the owner's review\nand leaves the text as the owner wrote it.",
+        "description": "A knowledge item that mentions a customer (PRIV-08): by their name, by\none of their numbers, or both (`matched_on`). The customer's export\nlists it with every text that was searched (title, body, attribute\nvalues and aliases), so the mention itself is in the copy; their\nerasure flags it for the owner's review and leaves the text as the\nowner wrote it.",
         "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeAlias"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeAttribute"
+            },
+            "title": "Attributes",
+            "type": "array"
+          },
           "body": {
             "anyOf": [
               {
@@ -40550,6 +40710,413 @@
           }
         },
         "summary": "Extend Trial",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/feature-flags": {
+      "get": {
+        "operationId": "admin_list_admin_feature_flags",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlagList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Admin Feature Flags",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/feature-flags/{flag_name}": {
+      "put": {
+        "operationId": "admin_set_admin_feature_flag",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "flag_name",
+            "required": true,
+            "schema": {
+              "title": "Flag Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of PUT /v1/admin/feature-flags/{flag_name}: the whole new state of\nthe flag and why (the audit log keeps the reason).",
+                "properties": {
+                  "excluded_business_ids": {
+                    "items": {
+                      "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "title": "Excluded Business Ids",
+                    "type": "array"
+                  },
+                  "included_business_ids": {
+                    "items": {
+                      "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "title": "Included Business Ids",
+                    "type": "array"
+                  },
+                  "is_enabled": {
+                    "title": "Is Enabled",
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  },
+                  "rollout_percent": {
+                    "maximum": 100,
+                    "minimum": 0,
+                    "title": "Rollout Percent",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "is_enabled",
+                  "rollout_percent",
+                  "reason"
+                ],
+                "title": "FeatureFlagRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlagView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Admin Feature Flag",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/feature-flags/{flag_name}/businesses/{business_id}": {
+      "get": {
+        "operationId": "admin_check_admin_feature_flag",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "flag_name",
+            "required": true,
+            "schema": {
+              "title": "Flag Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlagCheck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Check Admin Feature Flag",
         "tags": [
           "admin"
         ]

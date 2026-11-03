@@ -49,7 +49,8 @@ DOCUMENT_FIELDS: Mapping[str, str] = {
 }
 
 ROW_SQL: str = """
-insert into workshop.{table} (document_key, business_id, document, created_at, updated_at)
+insert into workshop.{table}
+    (document_key, business_id, document, created_at, updated_at)
 select '{prefix}_' || n, {business},
     jsonb_build_object('id', '{prefix}_' || n, 'business_id', {business},
         'created_at', {at}, 'updated_at', {at}, {fields}),

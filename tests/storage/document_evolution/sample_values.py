@@ -121,6 +121,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "StatusDay": "2026-09-21",
     "SpendDay": "2026-09-21",
     "PlatformPauseReason": "Model provider answers in the wrong language",
+    "FeatureFlagName": "release_canary",
+    "FeatureFlagChangeReason": "10% after a clean day at 1%",
     "ReconciliationDay": "2026-09-21",
     "PublicBaseUrl": "https://cafe-batumi.example.com",
     "SessionUserAgent": (

@@ -160,11 +160,24 @@ def budget_left_permille(
 ) -> ErrorBudgetLeftPermille:
     """What is left of the budget the window's events allow (1000 untouched)."""
 
-    total: int = int(tally.total)
+    return budget_left_of(tally.total, tally.good, objective)
+
+
+def budget_left_of(
+    events: ServiceLevelEventCount,
+    good_events: ServiceLevelEventCount,
+    objective: ServiceLevelObjective,
+) -> ErrorBudgetLeftPermille:
+    """
+    What is left of the budget `events` allow, of which `good_events` were
+    good: 1000 untouched, 0 spent, below 0 overspent (1000 without events).
+    """
+
+    total: int = int(events)
     if total == 0:
         return ErrorBudgetLeftPermille(PERMILLE)
 
-    bad: int = total - int(tally.good)
+    bad: int = total - min(total, int(good_events))
     allowed_bad: float = total * (1.0 - float(objective))
     left: int = PERMILLE - round(bad * PERMILLE / allowed_bad)
     return ErrorBudgetLeftPermille(min(PERMILLE, max(LOWEST_BUDGET_LEFT, left)))

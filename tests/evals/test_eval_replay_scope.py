@@ -89,7 +89,7 @@ def test_ci_replays_offline_with_a_full_floor_and_blocks_the_merge() -> None:
     job = cast(dict[str, Any], ci["evals"])
     script = "\n".join(str(step.get("run", "")) for step in job["steps"])
 
-    assert "python3 scripts/eval_replay_scope.py" in script
+    assert "python -m scripts.eval_replay_scope --base" in script
     assert "--min-pass-rate 1" in script
     assert "--max-hallucination-rate 0" in script
     assert "--record" not in script

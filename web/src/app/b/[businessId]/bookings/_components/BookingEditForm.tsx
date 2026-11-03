@@ -136,13 +136,19 @@ export function BookingEditForm({
           )}
         </Field>
       </div>
-      <Field label={t("bookings.form.notes")} error={errors.notes && t(errors.notes)} optionalLabel={t("common.optional")}>
+      <Field
+        label={t("bookings.form.notes")}
+        hint={booking.is_health_note_withheld ? t("bookings.details.notesWithheld") : undefined}
+        error={errors.notes && t(errors.notes)}
+        optionalLabel={t("common.optional")}
+      >
         {(control) => (
           <Textarea
             {...control}
             dir="auto"
             rows={3}
             maxLength={1000}
+            disabled={booking.is_health_note_withheld}
             placeholder={t("bookings.form.notesPlaceholder")}
             value={values.notes}
             onChange={(event) => set("notes", event.target.value)}

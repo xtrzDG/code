@@ -17,6 +17,14 @@ describe("booking edit", () => {
     });
   });
 
+  it("never sends a note withheld from this viewer (PRIV-10)", () => {
+    const withheld = { ...current, notes: null, is_health_note_withheld: true };
+    const values = { ...bookingEditValues(withheld), partySize: "3", notes: "VIP" };
+
+    expect(bookingEditValues(withheld).notes).toBe("");
+    expect(validateBookingEdit(values, withheld)).toEqual({ ok: true, body: { party_size: 3 } });
+  });
+
   it("refuses an empty name and a bad party size", () => {
     expect(validateBookingEdit({ ...bookingEditValues(current), contactName: " " }, current)).toEqual({
       ok: false,

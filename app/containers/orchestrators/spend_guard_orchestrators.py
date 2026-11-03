@@ -47,3 +47,13 @@ class SpendGuardOrchestratorsContainer(containers.DeclarativeContainer):
     get_payment_reconciliation_orchestrator = use_case_orchestrator(
         spend_guard_use_cases.get_payment_reconciliation_use_case
     )
+    # The feature flags of staged rollouts (1260).
+    list_feature_flags_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.list_feature_flags_use_case
+    )
+    set_feature_flag_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.set_feature_flag_use_case
+    )
+    check_feature_flag_orchestrator = use_case_orchestrator(
+        spend_guard_use_cases.check_feature_flag_use_case
+    )

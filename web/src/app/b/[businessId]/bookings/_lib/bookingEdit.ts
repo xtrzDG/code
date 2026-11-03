@@ -60,7 +60,8 @@ const editSchema = z.object({
 /**
  * The PATCH body with only the changed fields (null when nothing changed),
  * or the field errors. An emptied note is sent as "" (removes it); a name
- * cannot be emptied once set.
+ * cannot be emptied once set. A note withheld from this viewer (health
+ * details, PRIV-10) is never sent: it would replace a note they cannot see.
  */
 export function validateBookingEdit(
   values: BookingEditValues,
@@ -83,7 +84,7 @@ export function validateBookingEdit(
   if (values.resourceId && values.resourceId !== booking.resource_id) {
     body.resource_id = values.resourceId;
   }
-  if (parsed.data.notes !== (booking.notes ?? "")) {
+  if (!booking.is_health_note_withheld && parsed.data.notes !== (booking.notes ?? "")) {
     body.notes = parsed.data.notes;
   }
   return { ok: true, body: Object.keys(body).length > 0 ? body : null };

@@ -21,6 +21,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.domain.exchange_rates import ExchangeRateDocument
+from app.schemas.domain.feature_flags import FeatureFlagDocument
 from app.schemas.domain.idempotency_keys import IdempotencyKeyDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.incidents import IncidentDocument
@@ -138,5 +139,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         PlatformPauseDocument,
         PeriodicJobHeartbeatDocument,
         PaymentReconciliationDocument,
+        # The feature flags of staged rollouts (1260): a flag names
+        # businesses only in its lists.
+        FeatureFlagDocument,
     }
 )

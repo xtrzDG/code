@@ -148,6 +148,7 @@ export const settingsRecordsIt: Translation<typeof settingsRecordsEn> = {
       platform_admin: "Amministratore della piattaforma",
       platform_announcement: "Annuncio della piattaforma",
       platform_pause: "Pausa della piattaforma",
+      feature_flag: "Flag di funzionalità",
       encryption_keys: "Chiavi di cifratura",
       audit_log_entry: "Voci del registro delle attività",
       login_destination: "Indirizzo di accesso",
