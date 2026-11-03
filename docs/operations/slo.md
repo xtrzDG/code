@@ -39,9 +39,9 @@ page on the size of a failure, not on its burn rate.
 
 | SLI | Objective (28 days) | Measured from | Pages today |
 | --- | --- | --- | --- |
-| **Calls answered**: calls to a business's assistant that the voice platform took and reported, over those plus the calls it could not take | 99% | finished-call reports (`calls`) and the voice fallback's missed calls (`missed_calls`, `app/gateways/http/twilio_voice_routes.py`) | `voice_health` (SEV2) |
+| **Calls answered**: calls to a business's assistant that the voice platform took, over those plus the calls it could not take | 99% | a proxy from `workshop_http_request_duration_seconds_count`: the POST requests of the conversation-initiation webhook (one per call the voice platform takes, whatever its answer) over those plus the Twilio voice fallback's requests (`app/gateways/http/twilio_voice_routes.py`); a dedicated calls counter would be exact | `voice_health` (SEV2) |
 | **Voice latency**: the time our tools add to the agent's answer during a call | p95 under 2 s | `workshop_http_request_duration_seconds` of `POST /v1/voice/tools/{tool_name}` | `api_budget_*` when they fail; the dashboard's voice row |
-| **Booking success**: booking tool calls (create, reschedule, cancel) that ended with a booking or a business answer (slot taken, closed), not an error | 99.5% | the tool results stored with each reply | `tool_errors` (SEV3) |
+| **Booking success**: booking tool calls (create, reschedule, cancel) that ended with a booking or a business answer (slot taken, closed), not an error | 99.5% | not measured yet: only the tool results stored with each reply hold it, read by hand (below) | `tool_errors` (SEV3) |
 | **Notification delivery**: outbox messages (customers' replies, reminders, staff notices) delivered, over all that settled | 99% | `workshop_outbound_attempts_total` by `outcome` | `outbound_failures` (SEV2) |
 | **Webhook lag**: from a webhook's arrival to its inbound job starting | p99 under 10 s | `workshop_job_pickup_delay_seconds{lane="inbound"}`, `workshop_queue_oldest_wait_seconds{lane="inbound"}` | `inbound_backlog` (SEV2, 120 s) |
 
@@ -100,7 +100,8 @@ The monthly SLO report states what is left of each budget: the three main
 ones from `/admin/system`, the product ones from
 `uv run python -m scripts.slo_report` (with `PROMETHEUS_URL`, and for
 Grafana Cloud `PROMETHEUS_USER` and `PROMETHEUS_TOKEN`; `--json`, `--out`;
-exit 1 when a budget is spent). A product budget that is spent follows
+exit 1 when a budget is spent; a token goes only over https, or plain
+http to this machine, and is refused otherwise with exit 2). A product budget that is spent follows
 the error budget policy below like the three main ones: feature work
 stops in its area (voice, bookings, notifications, the inbound pipeline)
 until the next report shows it back above zero.

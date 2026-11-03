@@ -11,6 +11,86 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-03 — readiness checklist round 2: queued payment webhooks, card-testing brake, campaign holds, feature flags, call transcripts, health notes withheld, knowledge mentions in exports
+
+Spec: `133bc52d25af19c1`
+
+Everything below is additive within `/v1`; the new refusals are errors a
+client that follows the description already handles.
+
+- **Changed** `POST /v1/payments/flitt/webhook` and
+  `POST /v1/payments/stripe/webhook` answer at once: once the signature is
+  verified and the payment order found, a notification the order has not
+  applied yet is queued for a worker (the job `apply_payment_notification`)
+  and answered 200 `{"outcome": "queued", "payment_order_id": …}`; one the
+  order applied already is `duplicate` (nothing queued), one the platform
+  does not act on `ignored`. 403 (bad signature), 404 (unknown order) and
+  422 (malformed body) are unchanged. A Flitt callback its status API does
+  not confirm yet is no longer answered 409: the queued job reads it back
+  and retries. `PaymentWebhookOutcome` adds `queued` (an answer only; the
+  worker's run gets `applied` and the others).
+- **Changed** `POST /v1/businesses/{business_id}/billing/checkout`,
+  `POST …/billing/subscribe` and `POST …/billing/payment-method` answer
+  429 `rate_limited` (Retry-After 3600) while the business had 10 or more
+  declined payments in the current and the previous hour (retries of a
+  declined automatic charge do not count), until they cool down.
+  `PlatformAlertCode` adds `tenant_payment_declines` (5 declines within
+  those two hours) and `campaign_opt_outs` (a campaign held for review).
+- **Added** `GET /v1/admin/campaign-holds` (`CampaignHoldList` of
+  `CampaignHoldView`: `business_id`, `held_at`, `sent`, `opted_out`; the
+  longest held first; platform admins who see operations): the return-visit
+  campaigns held because, of the customers they reached in the last 30
+  days (at least 40), 5 % or more (at least 3) opted out since. **Added**
+  `POST /v1/admin/campaign-holds/{business_id}/release` (body `{"reason"}`,
+  8–300 characters; SUPER admins): the campaign writes again and from then
+  on counts only the messages sent after the release; audited in the
+  client's log as UPDATE of `campaign_settings` (`review_hold_released`),
+  the owners told; 404 without a campaign, 409 when it is not held.
+- **Added** `GET /v1/admin/feature-flags` (`FeatureFlagList` of
+  `FeatureFlagView`: every flag of the staged-rollout registry, on or off,
+  `rollout_percent`, `included_business_ids` and `excluded_business_ids`,
+  who changed it last, when and why; a flag never set is off; admins who
+  see operations). **Added** `PUT /v1/admin/feature-flags/{flag_name}`
+  (`FeatureFlagRequest`: `is_enabled`, `rollout_percent` 0–100, both
+  lists and a reason of 8–300 characters; answers `FeatureFlagView`):
+  SUPER admins after a recent sign-in (401 `step_up_required`), audited on
+  the platform's log as UPDATE of `feature_flag`; 404 for a name the
+  registry lacks, 422 for a business on both lists, 409 when the flag
+  already stands so. **Added**
+  `GET /v1/admin/feature-flags/{flag_name}/businesses/{business_id}`
+  (`FeatureFlagCheck`): whether the flag holds for that business now, the
+  `decision` (`FeatureFlagDecision`: `off`, `excluded`, `included`,
+  `in_rollout`, `outside_rollout`) and its `bucket` 0–99.
+- **Changed** `AssistantToolName` adds `send_call_transcript`, the phone
+  assistant's tool for texting the caller the call's transcript after the
+  call; it is not one owners or admins switch off (`disabled_tools` with it
+  answers 422), and stored messages and assistant versions name it only
+  once its release gate opens.
+- **Changed** `POST /v1/auth/otp/start` also answers 429 for a code to a
+  new phone whose number range (its first 7 characters) or country used
+  too few of the codes it got in the last six hours.
+- **Added** `BookingView.is_health_note_withheld` (default false): when
+  true, `notes` is null because they hold health data and the viewer acts
+  neither as owner nor as staff (an agency helper, platform support). It
+  applies to `GET /v1/businesses/{business_id}/bookings`,
+  `GET …/bookings/grid`, the bookings of the conversation card
+  (`GET …/conversations/{conversation_id}`) and the answers of
+  `PATCH …/bookings/{booking_id}`, `POST …/bookings/{booking_id}/revert-status`,
+  `POST …/bookings/{booking_id}/cancel` and
+  `POST …/bookings/{booking_id}/reschedule`. `PATCH …/bookings/{booking_id}`
+  answers 403 `access_denied` when such a viewer sends `notes` for a booking
+  whose notes hold health data. `PublicBooking.notes` (public API and
+  webhook payloads) is null when the notes hold health data.
+- **Added** `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`
+  adds `records.knowledge_mentions[]` (`KnowledgeMention`:
+  `knowledge_item_id`, `title`, `body`, `attributes`, `aliases` and
+  `matched_on`, a list of the new `KnowledgeMentionMatch` `name` | `phone`):
+  the business's knowledge items that name the customer, with every text
+  that was searched. `KnowledgeItemDetails` adds
+  `erased_customer_flagged_at` (null, or when a customer the item names was
+  erased); `PATCH /v1/businesses/{business_id}/knowledge/{item_id}` clears
+  it.
+
 ## 2026-11-03 — readiness checklist round: admin passkeys, revocable booking links, staff recording access, assistant kill switches, platform-only provider errors, payments status
 
 Spec: `8a0ce7daa7101f35`
