@@ -130,4 +130,43 @@ describe("the cookie banner", () => {
     await waitFor(() => expect(screen.queryByRole("region", { name: TEXTS.title })).toBeNull());
     expect(document.activeElement).toBe(settings);
   });
+
+  it("keeps focus on Cookie settings when the answer comes before the reopened box took focus", async () => {
+    stubConsentRoute();
+    // Frames run only when the test says so: here, the moment focus goes
+    // back to Cookie settings, before the closed box leaves the page.
+    const frames = new Map<number, FrameRequestCallback>();
+    let nextFrame = 0;
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      nextFrame += 1;
+      frames.set(nextFrame, callback);
+      return nextFrame;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (frame: number) => frames.delete(frame));
+    const runFrames = () => {
+      const pending = [...frames.values()];
+      frames.clear();
+      pending.forEach((callback) => callback(0));
+    };
+    render(
+      <>
+        <ConsentBanner texts={TEXTS} initiallyOpen={false} />
+        <CookieSettingsButton label="Cookie settings" />
+      </>,
+    );
+    const settings = screen.getByRole("button", { name: "Cookie settings" });
+    const focusSettings = settings.focus.bind(settings);
+    vi.spyOn(settings, "focus").mockImplementation((options) => {
+      focusSettings(options);
+      runFrames();
+    });
+
+    await userEvent.click(settings);
+    await act(async () => {
+      await userEvent.click(screen.getByRole("button", { name: TEXTS.accept }));
+    });
+
+    await waitFor(() => expect(screen.queryByRole("region", { name: TEXTS.title })).toBeNull());
+    expect(document.activeElement).toBe(settings);
+  });
 });

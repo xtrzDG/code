@@ -20,6 +20,13 @@ export interface ConsentBannerTexts {
   failed: string;
 }
 
+function cancelFocusFrame(frame: { current: number | null }): void {
+  if (frame.current !== null) {
+    cancelAnimationFrame(frame.current);
+    frame.current = null;
+  }
+}
+
 /**
  * The public site's cookie choice (ePrivacy, the Garante's 2021
  * guidelines): a box at the foot of the screen that does not block the
@@ -36,6 +43,8 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
   const [isSaving, setSaving] = useState(false);
   const [hasFailed, setFailed] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
+  // The frame that moves focus into a reopened box, until it has run.
+  const focusFrame = useRef<number | null>(null);
   const region = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -69,10 +78,17 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
       opener.current = named ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
       setFailed(false);
       setOpen(true);
-      requestAnimationFrame(() => region.current?.focus());
+      cancelFocusFrame(focusFrame);
+      focusFrame.current = requestAnimationFrame(() => {
+        focusFrame.current = null;
+        region.current?.focus();
+      });
     };
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
-    return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+    return () => {
+      window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+      cancelFocusFrame(focusFrame);
+    };
   }, []);
 
   if (!isOpen) {
@@ -85,6 +101,9 @@ export function ConsentBanner({ texts, initiallyOpen }: { texts: ConsentBannerTe
     setSaving(false);
     setFailed(!saved);
     if (saved) {
+      // An answer given before the reopened box took focus: that frame
+      // must not pull focus into a box that is closing.
+      cancelFocusFrame(focusFrame);
       setOpen(false);
       opener.current?.focus();
       opener.current = null;
