@@ -5,5 +5,8 @@
   "description": "Lighthouse CI for .github/workflows/lighthouse.yml, installed from this lockfile (npm ci --ignore-scripts) so every package is pinned with its integrity hash.",
   "dependencies": {
     "@lhci/cli": "0.15.1"
+  },
+  "overrides": {
+    "basic-ftp": "6.2.3"
   }
 }
