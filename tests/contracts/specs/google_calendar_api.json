@@ -36,6 +36,33 @@
     },
     "timeZone": {
      "type": "string"
+    },
+    "workingHours": {
+     "properties": {
+      "availableTimes": {
+       "items": {
+        "properties": {
+         "dayOfWeek": {
+          "type": "string"
+         },
+         "periodEnd": {
+          "format": "int32",
+          "type": "integer"
+         },
+         "periodStart": {
+          "format": "int32",
+          "type": "integer"
+         }
+        },
+        "type": "object"
+       },
+       "type": "array"
+      },
+      "workingHoursEnabled": {
+       "type": "boolean"
+      }
+     },
+     "type": "object"
     }
    },
    "type": "object"

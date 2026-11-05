@@ -303,7 +303,14 @@
      "$ref": "#/$defs/utilsCursorMetaResponse"
     }
    ],
-   "properties": {},
+   "properties": {
+    "comment": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
    "type": "object"
   },
   "ObservationsV2Response": {
