@@ -1,0 +1,55 @@
+{
+  "amount_minor": 1500,
+  "business_id": "business_cd1f9923-4f54-44b8-b104-19f027fec964",
+  "buyer": {
+    "address": "12 Rustaveli Ave, 0108 Tbilisi",
+    "country_code": "GE",
+    "email": "owner@example.com",
+    "legal_name": "Mtsvane Ezo LLC",
+    "tax_id": "405123456"
+  },
+  "created_at": 1790000000000000,
+  "credit_minor": 1500,
+  "currency_code": "GEL",
+  "description": "Sample InvoiceDescription",
+  "discount_minor": 1500,
+  "discount_percent": 1,
+  "id": "invoice_ae69102c-5756-421e-ade0-b1fe20f468ca",
+  "kind": "service_period",
+  "line_texts": [
+    {
+      "language": "ka",
+      "text": "Sample InvoiceDescription"
+    }
+  ],
+  "manual_payment": {
+    "method": "bank_transfer",
+    "recorded_at": 1790000000000000,
+    "recorded_by": "user_cdbc0437-59c8-4865-b7c8-84a7d07eaaee",
+    "reference": "TBC 2026-10-04 #88213"
+  },
+  "number": "AW-2026-000042",
+  "paid_at": 1790000000000000,
+  "payment_card": {
+    "brand": "Sample PaymentCardBrand",
+    "last_digits": "4242"
+  },
+  "period_end": 1790000000000000,
+  "period_start": 1790000000000000,
+  "provider_reference": "Sample PaymentProviderReference",
+  "schema_version": "3",
+  "seller": {
+    "address": "12 Rustaveli Ave, 0108 Tbilisi",
+    "country_code": "GE",
+    "email": "owner@example.com",
+    "legal_name": "Mtsvane Ezo LLC",
+    "tax_id": "405123456"
+  },
+  "status": "issued",
+  "subscription_id": "subscription_d7a9fdb5-95cf-4817-a9c0-a0e1b334941d",
+  "subtotal_minor": 1500,
+  "tax_minor": 1500,
+  "tax_rate_basis_points": 1,
+  "tax_treatment": "not_registered",
+  "updated_at": 1790000000000000
+}

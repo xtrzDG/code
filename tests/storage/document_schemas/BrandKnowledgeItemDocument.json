@@ -1,0 +1,116 @@
+{
+  "collection": "brand_knowledge_items",
+  "document_type": "BrandKnowledgeItemDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "body": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "brand_id": {
+        "pattern": "^brand_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "anyOf": [
+          {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_active": {
+        "default": true,
+        "type": "boolean"
+      },
+      "kind": {
+        "enum": [
+          "faq",
+          "policy",
+          "menu_item",
+          "service",
+          "room_type",
+          "package",
+          "vehicle",
+          "product"
+        ],
+        "type": "string"
+      },
+      "languages": {
+        "items": {
+          "maxLength": 16,
+          "minLength": 2,
+          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "price_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "shared_key": {
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[a-z0-9][a-z0-9_\\-]*$",
+        "type": "string"
+      },
+      "tags": {
+        "items": {
+          "maxLength": 48,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_\\-]*$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "brand_id",
+      "shared_key",
+      "kind",
+      "title"
+    ],
+    "type": "object"
+  }
+}

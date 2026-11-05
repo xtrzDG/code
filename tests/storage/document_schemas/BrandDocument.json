@@ -1,0 +1,75 @@
+{
+  "collection": "brands",
+  "document_type": "BrandDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^brand_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "members": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "business_ids": {
+              "items": {
+                "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "role": {
+              "enum": [
+                "brand_owner",
+                "regional_manager"
+              ],
+              "type": "string"
+            },
+            "user_id": {
+              "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "role"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "setup_fee_business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "members"
+    ],
+    "type": "object"
+  }
+}

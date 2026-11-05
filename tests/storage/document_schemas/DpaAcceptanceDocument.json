@@ -1,0 +1,48 @@
+{
+  "collection": "dpa_acceptances",
+  "document_type": "DpaAcceptanceDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "accepted_at": {
+        "type": "integer"
+      },
+      "accepted_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "document_version": {
+        "maxLength": 32,
+        "minLength": 1,
+        "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^dpa_acceptance_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "document_version",
+      "accepted_by",
+      "accepted_at"
+    ],
+    "type": "object"
+  }
+}

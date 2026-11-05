@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>workshop-backups</Name>
+  <Prefix>workshop/</Prefix>
+  <NextContinuationToken>test/continuation+token=0000</NextContinuationToken>
+  <KeyCount>2</KeyCount>
+  <MaxKeys>2</MaxKeys>
+  <IsTruncated>true</IsTruncated>
+  <Contents>
+    <Key>workshop/daily/2026-10-04T02-00-00Z.dump.age</Key>
+    <LastModified>2026-10-04T02:03:11.000Z</LastModified>
+    <ETag>&quot;70ee1738b6b21e2c8a43f3a5ab0eee71&quot;</ETag>
+    <ChecksumAlgorithm>CRC64NVME</ChecksumAlgorithm>
+    <ChecksumType>FULL_OBJECT</ChecksumType>
+    <Size>18342011</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>workshop/daily/2026-10-05T02-00-00Z.dump.age</Key>
+    <LastModified>2026-10-05T02:02:57.000Z</LastModified>
+    <ETag>&quot;becf17f89c30367a9a44495d62ed521a-2&quot;</ETag>
+    <ChecksumAlgorithm>CRC64NVME</ChecksumAlgorithm>
+    <ChecksumType>FULL_OBJECT</ChecksumType>
+    <Size>18420736</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+</ListBucketResult>

@@ -1,0 +1,85 @@
+{
+  "collection": "notification_preferences",
+  "document_type": "UserNotificationPreferencesDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^notification_preferences_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "preferences": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "enum": [
+                "handoff",
+                "lead",
+                "booking"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "quiet_hours": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ends_at": {
+                    "maxLength": 5,
+                    "minLength": 5,
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                    "type": "string"
+                  },
+                  "starts_at": {
+                    "maxLength": 5,
+                    "minLength": 5,
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "starts_at",
+                  "ends_at"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "user_id"
+    ],
+    "type": "object"
+  }
+}

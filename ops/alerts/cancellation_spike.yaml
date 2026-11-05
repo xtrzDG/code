@@ -1,0 +1,16 @@
+# Mass cancellations of one business (ABUSE-04): every booking announced
+# as changed that was just CANCELLED counts in the business's hourly
+# bucket (BookingSurgeObserverFacilitator); the first count past 15 in an
+# hour claims the hour's alert (once, however many processes count) and
+# counts the platform signal cancellation_surge; a warning line names the
+# business.
+code: cancellation_spike
+severity: sev3
+summary: A business had more than 15 bookings cancelled in an hour (a mass cancellation).
+measure: businesses past 15 cancellations an hour, in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (booking-surge:cancelled:<business>, platform-signal:cancellation_surge)
+runbook: docs/operations/runbooks/booking-abuse.md

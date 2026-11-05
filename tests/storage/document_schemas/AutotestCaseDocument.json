@@ -1,0 +1,233 @@
+{
+  "collection": "autotest_cases",
+  "document_type": "AutotestCaseDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "created_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "expectation": {
+        "enum": [
+          "must_mention",
+          "must_not_mention",
+          "must_hand_off",
+          "must_create_lead"
+        ],
+        "type": "string"
+      },
+      "expected_text": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "\\w",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^autotest_case_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_active": {
+        "default": true,
+        "type": "boolean"
+      },
+      "language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "last_probe": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "answer": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "answer_message_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "assistant_version_id": {
+                "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "check_codes": {
+                "items": {
+                  "enum": [
+                    "no_booking_created",
+                    "not_handed_off",
+                    "unexpected_records",
+                    "wrong_reply_language",
+                    "wrong_disclosure_language",
+                    "expected_text_missing",
+                    "forbidden_text_mentioned",
+                    "no_lead_created",
+                    "price_not_named",
+                    "unsupported_price",
+                    "instructions_revealed",
+                    "personal_data_revealed",
+                    "unauthorized_action",
+                    "tools_misused",
+                    "conversation_failed",
+                    "no_customer_message",
+                    "judge_unavailable",
+                    "judge_unreadable"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "checked_at": {
+                "type": "integer"
+              },
+              "conversation_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "judge_notes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "outcome": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "errored"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "assistant_version_id",
+              "outcome",
+              "checked_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "question": {
+        "maxLength": 500,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "source": {
+        "default": "owner",
+        "enum": [
+          "owner",
+          "correction",
+          "unanswered_question",
+          "bad_rating"
+        ],
+        "type": "string"
+      },
+      "source_conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "source_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "source_question_id": {
+        "anyOf": [
+          {
+            "pattern": "^unanswered_question_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "question",
+      "expectation",
+      "language"
+    ],
+    "type": "object"
+  }
+}

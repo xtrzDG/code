@@ -1,0 +1,10 @@
+{
+  "business_id": "business_d61803b9-63f5-4ebb-9495-b384616c4790",
+  "celebrated_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "id": "activation_event_bce32c06-b967-5c56-963c-69c260723818",
+  "kind": "test_chat_tried",
+  "occurred_at": 1790000000000000,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

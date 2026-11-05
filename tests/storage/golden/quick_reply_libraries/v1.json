@@ -1,0 +1,23 @@
+{
+  "business_id": "business_9522ab84-d406-47c6-8b47-ef6570660884",
+  "created_at": 1790000000000000,
+  "id": "quick_reply_library_5de3ac45-82f8-5da4-840f-3280e6bfad33",
+  "replies": [
+    {
+      "created_at": 1790000000000000,
+      "created_by": "user_4976af94-da41-4916-a3c2-b8b1df5a992b",
+      "id": "quick_reply_956e4ee2-b43f-4980-b7f3-20400c79c0a0",
+      "shortcut": "hours",
+      "title": "Sample QuickReplyTitle",
+      "updated_at": 1790000000000000,
+      "variants": [
+        {
+          "language": "ka",
+          "text": "Sample QuickReplyTemplateText"
+        }
+      ]
+    }
+  ],
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

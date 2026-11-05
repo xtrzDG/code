@@ -1,0 +1,17 @@
+# Someone guesses sign-in codes for one destination: wrong login codes for
+# one phone or e-mail address (named by a keyed digest, never the address)
+# or wrong second-factor codes of one person, the lockouts included
+# (LOGIN_FAILED, OTP_LOCKED, MFA_LOCKED in the platform's audit chain).
+# The per-challenge attempt limit and the network limits stop each burst;
+# this sees the bursts add up. The figure is the most failures of one
+# destination in the last hour.
+code: failed_sign_in_checks
+severity: sev2
+summary: More than 50 wrong sign-in codes in an hour for one phone, e-mail address or person.
+measure: failed sign-in checks of the most targeted destination in the last hour
+threshold: 50
+unit: count
+window_minutes: 60
+volume_floor: 0
+source: audit_log_entries by action and time (audit_log_entries_doc_action_idx), migration 1193
+runbook: docs/operations/runbooks/audit-anomaly.md

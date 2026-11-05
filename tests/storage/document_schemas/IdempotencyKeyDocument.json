@@ -1,0 +1,117 @@
+{
+  "collection": "idempotency_keys",
+  "document_type": "IdempotencyKeyDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "claim_id": {
+        "pattern": "^idempotency_claim_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "expires_at": {
+        "type": "integer"
+      },
+      "fingerprint": {
+        "maxLength": 64,
+        "minLength": 64,
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^idempotency_key_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "lease_expires_at": {
+        "type": "integer"
+      },
+      "operation": {
+        "maxLength": 300,
+        "minLength": 6,
+        "pattern": "^(POST|PUT|PATCH|DELETE) /[\\x21-\\x7e]*$",
+        "type": "string"
+      },
+      "response_body": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "response_media_type": {
+        "anyOf": [
+          {
+            "maxLength": 120,
+            "minLength": 3,
+            "pattern": "^[\\x20-\\x7e]+$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "response_status": {
+        "anyOf": [
+          {
+            "maximum": 299,
+            "minimum": 200,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "default": "in_progress",
+        "enum": [
+          "in_progress",
+          "completed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "user_id",
+      "operation",
+      "fingerprint",
+      "claim_id",
+      "lease_expires_at",
+      "expires_at"
+    ],
+    "type": "object"
+  }
+}

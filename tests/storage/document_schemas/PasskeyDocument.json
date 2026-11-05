@@ -1,0 +1,119 @@
+{
+  "collection": "passkeys",
+  "document_type": "PasskeyDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "aaguid": {
+        "anyOf": [
+          {
+            "maxLength": 36,
+            "minLength": 36,
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "clone_suspected_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "credential_id": {
+        "maxLength": 1364,
+        "minLength": 22,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^passkey_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_backed_up": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_synced": {
+        "default": false,
+        "type": "boolean"
+      },
+      "last_used_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "name": {
+        "maxLength": 60,
+        "minLength": 1,
+        "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+        "type": "string"
+      },
+      "public_key": {
+        "maxLength": 4096,
+        "minLength": 40,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "sign_count": {
+        "default": 0,
+        "maximum": 4294967295,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "transports": {
+        "items": {
+          "enum": [
+            "usb",
+            "nfc",
+            "ble",
+            "smart-card",
+            "hybrid",
+            "internal",
+            "cable"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "user_id",
+      "credential_id",
+      "public_key",
+      "name"
+    ],
+    "type": "object"
+  }
+}

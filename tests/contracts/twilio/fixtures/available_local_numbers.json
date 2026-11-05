@@ -1,0 +1,55 @@
+{
+  "available_phone_numbers": [
+    {
+      "friendly_name": "(512) 555-0142",
+      "phone_number": "+15125550142",
+      "lata": "558",
+      "rate_center": "AUSTIN",
+      "latitude": "30.267200",
+      "longitude": "-97.743100",
+      "locality": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "iso_country": "US",
+      "address_requirements": "none",
+      "beta": false,
+      "capabilities": {"voice": true, "SMS": true, "MMS": true, "fax": false}
+    },
+    {
+      "friendly_name": "(512) 555-0187",
+      "phone_number": "+15125550187",
+      "lata": "558",
+      "rate_center": "AUSTIN",
+      "latitude": "30.267200",
+      "longitude": "-97.743100",
+      "locality": "Austin",
+      "region": "TX",
+      "postal_code": "78702",
+      "iso_country": "US",
+      "address_requirements": "none",
+      "beta": false,
+      "capabilities": {"voice": true, "SMS": true, "MMS": false, "fax": false}
+    },
+    {
+      "friendly_name": "(512) 555-0199",
+      "phone_number": "+15125550199",
+      "locality": "Austin",
+      "region": "TX",
+      "iso_country": "US",
+      "address_requirements": "local",
+      "beta": false,
+      "capabilities": {"voice": true, "SMS": true, "MMS": false, "fax": false}
+    },
+    {
+      "friendly_name": "(512) 555-0111",
+      "phone_number": "+15125550111",
+      "locality": "Austin",
+      "region": "TX",
+      "iso_country": "US",
+      "address_requirements": "none",
+      "beta": false,
+      "capabilities": {"voice": false, "SMS": true, "MMS": false, "fax": false}
+    }
+  ],
+  "uri": "/2010-04-01/Accounts/AC00000000000000000000000000000000/AvailablePhoneNumbers/US/Local.json?VoiceEnabled=true&InLocality=Austin&PageSize=10"
+}

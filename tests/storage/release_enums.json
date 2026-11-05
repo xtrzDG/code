@@ -1,0 +1,1594 @@
+{
+  "commit": "cb72dfd38b645338bb1aa95a7337de69cedba42c",
+  "documents": {
+    "ActivationEventDocument": {
+      "kind": [
+        "first_after_hours_booking",
+        "first_booking",
+        "first_conversation",
+        "first_handoff",
+        "test_chat_tried",
+        "went_live"
+      ]
+    },
+    "AdminDigestStateDocument": {
+      "kind": [
+        "critical_clients"
+      ]
+    },
+    "AssistantApplyDocument": {
+      "attention[].code": [
+        "agreement_not_accepted",
+        "build_failed",
+        "checks_failed",
+        "checks_stopped",
+        "payment_needed",
+        "profile_incomplete",
+        "publish_failed",
+        "staff_contact_missing",
+        "voice_not_ready"
+      ],
+      "stage": [
+        "building",
+        "checking",
+        "live",
+        "needs_attention",
+        "publishing"
+      ]
+    },
+    "AssistantSettingsDocument": {},
+    "AssistantVersionDocument": {
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
+      ],
+      "status": [
+        "archived",
+        "draft",
+        "published",
+        "ready",
+        "testing",
+        "tests_failed"
+      ],
+      "tools[]": [
+        "cancel_booking",
+        "check_availability",
+        "create_booking",
+        "create_lead",
+        "get_price",
+        "handoff_to_human",
+        "join_waitlist",
+        "list_my_bookings",
+        "record_unanswered_question",
+        "reschedule_booking",
+        "search_knowledge",
+        "send_link"
+      ]
+    },
+    "AuditLogEntryDocument": {
+      "action": [
+        "admin_access",
+        "admin_credit_granted",
+        "admin_discount_given",
+        "admin_invoice_marked_paid",
+        "admin_plan_overridden",
+        "admin_setup_fee_waived",
+        "admin_trial_extended",
+        "create",
+        "delete",
+        "export",
+        "login",
+        "mfa_changed",
+        "platform_admin_changed",
+        "publish_untested",
+        "retention_purge",
+        "session_revoked",
+        "spend_limit_reached",
+        "support_access_end",
+        "support_access_start",
+        "update",
+        "view"
+      ]
+    },
+    "AutotestCaseDocument": {
+      "expectation": [
+        "must_create_lead",
+        "must_hand_off",
+        "must_mention",
+        "must_not_mention"
+      ],
+      "last_probe.check_codes[]": [
+        "conversation_failed",
+        "expected_text_missing",
+        "forbidden_text_mentioned",
+        "instructions_revealed",
+        "judge_unavailable",
+        "judge_unreadable",
+        "no_booking_created",
+        "no_customer_message",
+        "no_lead_created",
+        "not_handed_off",
+        "personal_data_revealed",
+        "price_not_named",
+        "tools_misused",
+        "unauthorized_action",
+        "unexpected_records",
+        "unsupported_price",
+        "wrong_disclosure_language",
+        "wrong_reply_language"
+      ],
+      "last_probe.outcome": [
+        "errored",
+        "failed",
+        "passed"
+      ],
+      "source": [
+        "bad_rating",
+        "correction",
+        "owner",
+        "unanswered_question"
+      ]
+    },
+    "AutotestRunDocument": {
+      "kinds[]": [
+        "booking",
+        "booking_out_of_hours",
+        "cancellation",
+        "data_exfiltration",
+        "discount_request",
+        "emergency",
+        "foreign_language",
+        "human_request",
+        "owner_check",
+        "price_question",
+        "prompt_injection",
+        "prompt_injection_spoof",
+        "rude_customer",
+        "staff_impersonation",
+        "tool_abuse",
+        "transliterated",
+        "unknown_question"
+      ],
+      "previous_version_status": [
+        "archived",
+        "draft",
+        "published",
+        "ready",
+        "testing",
+        "tests_failed"
+      ],
+      "results[].check_codes[]": [
+        "conversation_failed",
+        "expected_text_missing",
+        "forbidden_text_mentioned",
+        "instructions_revealed",
+        "judge_unavailable",
+        "judge_unreadable",
+        "no_booking_created",
+        "no_customer_message",
+        "no_lead_created",
+        "not_handed_off",
+        "personal_data_revealed",
+        "price_not_named",
+        "tools_misused",
+        "unauthorized_action",
+        "unexpected_records",
+        "unsupported_price",
+        "wrong_disclosure_language",
+        "wrong_reply_language"
+      ],
+      "results[].kind": [
+        "booking",
+        "booking_out_of_hours",
+        "cancellation",
+        "data_exfiltration",
+        "discount_request",
+        "emergency",
+        "foreign_language",
+        "human_request",
+        "owner_check",
+        "price_question",
+        "prompt_injection",
+        "prompt_injection_spoof",
+        "rude_customer",
+        "staff_impersonation",
+        "tool_abuse",
+        "transliterated",
+        "unknown_question"
+      ],
+      "results[].outcome": [
+        "errored",
+        "failed",
+        "passed"
+      ],
+      "results[].owner_check.expectation": [
+        "must_create_lead",
+        "must_hand_off",
+        "must_mention",
+        "must_not_mention"
+      ],
+      "results[].scores[].criterion": [
+        "ai_disclosure",
+        "booking_data",
+        "facts_and_prices",
+        "handoff",
+        "language"
+      ],
+      "results[].transcript[].author": [
+        "assistant",
+        "customer",
+        "staff",
+        "system"
+      ],
+      "status": [
+        "errored",
+        "finished",
+        "running"
+      ]
+    },
+    "BillingCreditDocument": {
+      "kind": [
+        "granted",
+        "used"
+      ]
+    },
+    "BillingProfileDocument": {},
+    "BookingDocument": {
+      "last_status_change.previous_status": [
+        "cancelled",
+        "completed",
+        "confirmed",
+        "no_show",
+        "pending"
+      ],
+      "origin": [
+        "campaign",
+        "waitlist"
+      ],
+      "source_channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "status": [
+        "cancelled",
+        "completed",
+        "confirmed",
+        "no_show",
+        "pending"
+      ]
+    },
+    "BusinessDocument": {
+      "data_region": [
+        "eu",
+        "us"
+      ],
+      "manager_contacts[].channel": [
+        "email",
+        "sms",
+        "telegram",
+        "whatsapp"
+      ],
+      "manager_contacts[].preferences.events[]": [
+        "booking",
+        "handoff",
+        "lead"
+      ],
+      "members[].role": [
+        "agency",
+        "owner",
+        "staff"
+      ],
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
+      ],
+      "plan_key": [
+        "chat",
+        "plus",
+        "voice_and_chat"
+      ],
+      "referred_by.owner_kind": [
+        "business",
+        "partner"
+      ],
+      "service_mode": [
+        "full",
+        "leads_only"
+      ],
+      "status": [
+        "live",
+        "onboarding",
+        "paused",
+        "testing"
+      ]
+    },
+    "BusinessExportDocument": {
+      "status": [
+        "expired",
+        "failed",
+        "queued",
+        "ready",
+        "running"
+      ]
+    },
+    "BusinessLimitsDocument": {},
+    "BusinessPrivacySettingsDocument": {},
+    "BusinessProfileDocument": {
+      "booking_rules.resource_kind": [
+        "arena",
+        "bay",
+        "room",
+        "slot",
+        "staff",
+        "table",
+        "vehicle"
+      ],
+      "hours[].weekday": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "links[].kind": [
+        "booking_page",
+        "delivery",
+        "google_review",
+        "map",
+        "menu",
+        "payment",
+        "privacy",
+        "website"
+      ],
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
+      ]
+    },
+    "CalendarAuthorizationStateDocument": {},
+    "CalendarConnectionDocument": {},
+    "CalendarEventLinkDocument": {},
+    "CallDocument": {
+      "guard_verdict": [
+        "clean",
+        "flagged",
+        "handed_off"
+      ],
+      "outcome": [
+        "abandoned",
+        "booking",
+        "handoff",
+        "information",
+        "lead",
+        "unanswered_question"
+      ]
+    },
+    "CallSettingsDocument": {},
+    "CampaignMessageDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "rule_kind": [
+        "pre_arrival",
+        "rebook",
+        "recall"
+      ],
+      "skip_reason": [
+        "no_channel",
+        "no_contact",
+        "opted_out",
+        "window_closed"
+      ],
+      "status": [
+        "booked",
+        "sent",
+        "skipped"
+      ]
+    },
+    "CampaignSettingsDocument": {
+      "audience": [
+        "all_customers",
+        "segment"
+      ],
+      "rule_kind": [
+        "pre_arrival",
+        "rebook",
+        "recall"
+      ]
+    },
+    "ChannelDocument": {
+      "kind": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "last_error_reason": [
+        "channel_disconnected",
+        "credential_rejected",
+        "expired",
+        "not_configured",
+        "provider_unavailable",
+        "rate_limited",
+        "recipient_refused",
+        "template_rejected"
+      ],
+      "status": [
+        "connected",
+        "disabled",
+        "error",
+        "pending"
+      ],
+      "web_chat_appearance.position": [
+        "left",
+        "right"
+      ]
+    },
+    "ChannelMessageReceiptDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ]
+    },
+    "ClientHealthChangeDocument": {
+      "issues[]": [
+        "autotests_failed",
+        "first_payment_pending",
+        "guard_spike",
+        "leads_only_mode",
+        "many_handoffs",
+        "negative_margin",
+        "no_subscription",
+        "not_published",
+        "open_questions",
+        "package_exceeded",
+        "payment_past_due",
+        "slow_replies",
+        "subscription_cancelled",
+        "tool_errors"
+      ],
+      "previous_status": [
+        "attention",
+        "critical",
+        "healthy"
+      ],
+      "status": [
+        "attention",
+        "critical",
+        "healthy"
+      ]
+    },
+    "ClientNoteDocument": {},
+    "ClientStandingDocument": {
+      "business_status": [
+        "live",
+        "onboarding",
+        "paused",
+        "testing"
+      ],
+      "health_status": [
+        "attention",
+        "critical",
+        "healthy"
+      ],
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
+      ]
+    },
+    "CommissionEntryDocument": {
+      "status": [
+        "accrued",
+        "paid"
+      ]
+    },
+    "ContactDocument": {
+      "channel_identities[].channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "opted_out_channels[]": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ]
+    },
+    "ConversationDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "rating": [
+        "bad",
+        "good"
+      ],
+      "rating_reason": [
+        "should_hand_off",
+        "tone",
+        "too_long",
+        "wrong_info"
+      ],
+      "status": [
+        "closed",
+        "handoff",
+        "open"
+      ]
+    },
+    "ConversationNoteDocument": {},
+    "ConversationQualityScoreDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "scores[].criterion": [
+        "ai_disclosure",
+        "booking_data",
+        "facts_and_prices",
+        "handoff",
+        "language"
+      ]
+    },
+    "ConversationTopicsDocument": {
+      "groups[].topics[].kind": [
+        "named",
+        "other"
+      ]
+    },
+    "CustomerSegmentDocument": {},
+    "CustomerSettingsDocument": {},
+    "DigestPreferencesDocument": {
+      "channels[]": [
+        "email",
+        "push",
+        "telegram",
+        "whatsapp"
+      ]
+    },
+    "DpaAcceptanceDocument": {},
+    "ExchangeRateDocument": {
+      "source": [
+        "ecb",
+        "nbg",
+        "planning"
+      ]
+    },
+    "ExportDownloadLinkDocument": {},
+    "FeedbackRequestDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "skip_reason": [
+        "already_asked",
+        "daily_limit",
+        "no_channel",
+        "no_contact",
+        "opted_out",
+        "window_closed"
+      ],
+      "status": [
+        "answered",
+        "failed",
+        "sent",
+        "skipped"
+      ]
+    },
+    "HandoffDocument": {
+      "reason": [
+        "complaint",
+        "customer_request",
+        "emergency",
+        "non_standard_request",
+        "profile_rule",
+        "sensitive_topic",
+        "unknown_answer",
+        "unverified_numbers",
+        "vip_guest"
+      ],
+      "status": [
+        "notification_failed",
+        "notified",
+        "pending",
+        "resolved"
+      ],
+      "status_before_resolve": [
+        "notification_failed",
+        "notified",
+        "pending",
+        "resolved"
+      ],
+      "summary_code": [
+        "answer_unfinished",
+        "call_booking_unverified_values",
+        "call_request_unverified_values",
+        "data_erased",
+        "model_declined",
+        "model_unavailable",
+        "reply_undelivered",
+        "unverified_values"
+      ],
+      "urgency": [
+        "critical",
+        "high",
+        "low",
+        "normal"
+      ]
+    },
+    "HelpProgressDocument": {},
+    "InboundEventDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "customer_message.attachments[].kind": [
+        "audio",
+        "contact",
+        "image",
+        "location",
+        "other",
+        "sticker"
+      ],
+      "kind": [
+        "customer_message",
+        "platform_bot_update",
+        "voice_post_call"
+      ],
+      "status": [
+        "answered",
+        "failed",
+        "handed_off",
+        "processing",
+        "received"
+      ]
+    },
+    "InboxSettingsDocument": {},
+    "IncidentDocument": {
+      "kind": [
+        "data_breach",
+        "degradation",
+        "outage"
+      ],
+      "severity": [
+        "sev1",
+        "sev2",
+        "sev3"
+      ],
+      "status": [
+        "open",
+        "resolved"
+      ]
+    },
+    "InvoiceCounterDocument": {},
+    "InvoiceDocument": {
+      "kind": [
+        "service_period",
+        "setup_fee",
+        "usage_overage"
+      ],
+      "manual_payment.method": [
+        "bank_transfer",
+        "cash"
+      ],
+      "status": [
+        "failed",
+        "issued",
+        "paid",
+        "void"
+      ],
+      "tax_treatment": [
+        "not_registered",
+        "outside_scope",
+        "reverse_charge",
+        "standard"
+      ]
+    },
+    "KeyRotationDocument": {
+      "status": [
+        "done",
+        "failed",
+        "queued",
+        "running"
+      ]
+    },
+    "KnowledgeItemDocument": {
+      "kind": [
+        "faq",
+        "menu_item",
+        "package",
+        "policy",
+        "product",
+        "room_type",
+        "service",
+        "vehicle"
+      ],
+      "source": [
+        "menu_import",
+        "owner",
+        "profile",
+        "unanswered_question"
+      ]
+    },
+    "LeadDocument": {
+      "lead_type": [
+        "banquet",
+        "corporate",
+        "group",
+        "order",
+        "other",
+        "viewing"
+      ],
+      "source_channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "status": [
+        "in_progress",
+        "lost",
+        "new",
+        "won"
+      ]
+    },
+    "LlmTurnDocument": {
+      "role": [
+        "assistant",
+        "user"
+      ]
+    },
+    "MaintenanceRunDocument": {
+      "kind": [
+        "backup",
+        "restore_drill"
+      ],
+      "outcome": [
+        "failed",
+        "succeeded"
+      ]
+    },
+    "ManagerTelegramLinkDocument": {},
+    "MessageDocument": {
+      "attachments[].kind": [
+        "audio",
+        "contact",
+        "image",
+        "location",
+        "other",
+        "sticker"
+      ],
+      "attachments[].problem": [
+        "not_understood",
+        "too_large",
+        "too_long",
+        "unavailable",
+        "unrecognized_format",
+        "unsupported_kind"
+      ],
+      "author": [
+        "assistant",
+        "customer",
+        "staff",
+        "system"
+      ],
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "claim_findings[].topic": [
+        "availability",
+        "policy"
+      ],
+      "claim_findings[].verdict": [
+        "supported",
+        "unchecked",
+        "unsupported"
+      ],
+      "direction": [
+        "inbound",
+        "outbound"
+      ],
+      "guard_reasons[]": [
+        "personal_data",
+        "unsupported_claims",
+        "unverified_values"
+      ],
+      "guard_verdict": [
+        "clean",
+        "handed_off",
+        "rewritten"
+      ],
+      "injection_flag": [
+        "data_exfiltration",
+        "fake_platform_text",
+        "instruction_override",
+        "prompt_extraction",
+        "role_change"
+      ],
+      "tool_calls[].tool_name": [
+        "cancel_booking",
+        "check_availability",
+        "create_booking",
+        "create_lead",
+        "get_price",
+        "handoff_to_human",
+        "join_waitlist",
+        "list_my_bookings",
+        "record_unanswered_question",
+        "reschedule_booking",
+        "search_knowledge",
+        "send_link"
+      ]
+    },
+    "MessageMediaDocument": {
+      "kind": [
+        "audio",
+        "contact",
+        "image",
+        "location",
+        "other",
+        "sticker"
+      ]
+    },
+    "MfaChallengeDocument": {},
+    "MissedCallDocument": {
+      "channel": [
+        "sms",
+        "whatsapp"
+      ],
+      "reason": [
+        "abandoned",
+        "busy",
+        "line_failed",
+        "no_answer",
+        "no_speech",
+        "not_started",
+        "transfer_unanswered"
+      ],
+      "skip_reason": [
+        "already_texted",
+        "daily_limit",
+        "in_conversation",
+        "no_caller_number",
+        "no_channel",
+        "not_live",
+        "opted_out",
+        "too_late",
+        "turned_off"
+      ],
+      "source": [
+        "pbx",
+        "voice_platform"
+      ],
+      "status": [
+        "failed",
+        "queued",
+        "sent",
+        "skipped"
+      ]
+    },
+    "NudgeSentDocument": {
+      "code": [
+        "live_day_10",
+        "live_day_2",
+        "live_day_5",
+        "not_live_day_1",
+        "not_live_day_3",
+        "not_live_day_7"
+      ]
+    },
+    "OnboardingRequestDocument": {
+      "plan_key": [
+        "chat",
+        "plus",
+        "voice_and_chat"
+      ],
+      "status": [
+        "done",
+        "open"
+      ]
+    },
+    "OtpChallengeDocument": {
+      "delivery_channel": [
+        "email",
+        "sms",
+        "telegram",
+        "whatsapp"
+      ],
+      "login_method": [
+        "email",
+        "phone"
+      ]
+    },
+    "OutboundMessageDocument": {
+      "billing_documents.kinds[]": [
+        "invoice",
+        "receipt"
+      ],
+      "customer.channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "kind": [
+        "booking_confirmation",
+        "booking_reminder",
+        "call_confirmation",
+        "call_links",
+        "customer_reply",
+        "staff_notification",
+        "staff_reply",
+        "text_back"
+      ],
+      "last_failure_reason": [
+        "channel_disconnected",
+        "credential_rejected",
+        "expired",
+        "not_configured",
+        "provider_unavailable",
+        "rate_limited",
+        "recipient_refused",
+        "template_rejected"
+      ],
+      "push.urgency": [
+        "high",
+        "normal"
+      ],
+      "staff_contact.channel": [
+        "email",
+        "sms",
+        "telegram",
+        "whatsapp"
+      ],
+      "staff_contact.preferences.events[]": [
+        "booking",
+        "handoff",
+        "lead"
+      ],
+      "status": [
+        "dead",
+        "delivered",
+        "pending"
+      ]
+    },
+    "PackageUsageWarningDocument": {
+      "metric": [
+        "dialogs",
+        "voice_minutes"
+      ]
+    },
+    "PartnerDocument": {
+      "login_method": [
+        "email",
+        "phone"
+      ],
+      "status": [
+        "active",
+        "paused"
+      ]
+    },
+    "PaymentOrderDocument": {
+      "provider": [
+        "flitt"
+      ],
+      "status": [
+        "approved",
+        "created",
+        "declined",
+        "expired",
+        "processing",
+        "reversed"
+      ]
+    },
+    "PeriodicJobRunDocument": {
+      "status": [
+        "failed",
+        "running",
+        "succeeded"
+      ]
+    },
+    "PlatformAdminDocument": {
+      "login_method": [
+        "email",
+        "phone"
+      ],
+      "role": [
+        "billing",
+        "super",
+        "support_readonly"
+      ]
+    },
+    "PlatformAlertStateDocument": {
+      "code": [
+        "dead_jobs",
+        "handoff_spike",
+        "inbound_backlog",
+        "llm_errors",
+        "otp_cap_trips",
+        "outbound_failures",
+        "quality_drop",
+        "spend_budget",
+        "spend_spike",
+        "stale_worker",
+        "tool_errors"
+      ],
+      "status": [
+        "firing",
+        "resolved"
+      ],
+      "unit": [
+        "count",
+        "percent",
+        "ratio",
+        "seconds"
+      ]
+    },
+    "PlatformAnnouncementDocument": {
+      "components[]": [
+        "cabinet",
+        "chat",
+        "meta",
+        "telegram",
+        "voice"
+      ],
+      "level": [
+        "degraded",
+        "info",
+        "maintenance",
+        "outage"
+      ],
+      "status": [
+        "active",
+        "resolved"
+      ]
+    },
+    "PlatformStatusDayDocument": {
+      "components[].component": [
+        "cabinet",
+        "chat",
+        "meta",
+        "telegram",
+        "voice"
+      ],
+      "components[].worst_level": [
+        "degraded",
+        "maintenance",
+        "no_data",
+        "operational",
+        "outage"
+      ]
+    },
+    "ProductEventDocument": {
+      "name": [
+        "business_created",
+        "cancelled",
+        "channel_connected",
+        "dpa_accepted",
+        "first_booking",
+        "first_handoff",
+        "first_real_conversation",
+        "launch_blocked",
+        "launch_succeeded",
+        "payment_failed",
+        "plan_changed",
+        "signed_in",
+        "signed_up",
+        "subscribed",
+        "test_chat_tried",
+        "trial_started",
+        "tunnel_step_completed",
+        "tunnel_step_entered",
+        "tunnel_step_skipped",
+        "went_live"
+      ],
+      "properties.attention_codes[]": [
+        "agreement_not_accepted",
+        "build_failed",
+        "checks_failed",
+        "checks_stopped",
+        "payment_needed",
+        "profile_incomplete",
+        "publish_failed",
+        "staff_contact_missing",
+        "voice_not_ready"
+      ],
+      "properties.billing_period": [
+        "annual",
+        "monthly"
+      ],
+      "properties.channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "properties.login_method": [
+        "email",
+        "phone"
+      ],
+      "properties.plan_key": [
+        "chat",
+        "plus",
+        "voice_and_chat"
+      ],
+      "properties.previous_plan_key": [
+        "chat",
+        "plus",
+        "voice_and_chat"
+      ],
+      "properties.tunnel_step": [
+        "business",
+        "channels",
+        "hours",
+        "launch",
+        "offer",
+        "people",
+        "place",
+        "try"
+      ],
+      "source": [
+        "cabinet",
+        "reconciliation",
+        "server"
+      ]
+    },
+    "PublicSlugClaimDocument": {},
+    "PushSubscriptionDocument": {},
+    "QueuedJobDocument": {
+      "dead_reason": [
+        "attempts_exhausted",
+        "no_handler",
+        "process_died"
+      ],
+      "lane": [
+        "autotests",
+        "default",
+        "inbound",
+        "outbound"
+      ],
+      "status": [
+        "dead",
+        "discarded",
+        "done",
+        "pending",
+        "running"
+      ]
+    },
+    "QuickReplyLibraryDocument": {},
+    "RecoveryCodeDocument": {},
+    "ReferralCodeDocument": {
+      "owner_kind": [
+        "business",
+        "partner"
+      ]
+    },
+    "ReferralDocument": {
+      "owner_kind": [
+        "business",
+        "partner"
+      ]
+    },
+    "ResourceDocument": {
+      "booking_unit": [
+        "night",
+        "time_slot"
+      ],
+      "kind": [
+        "arena",
+        "bay",
+        "room",
+        "slot",
+        "staff",
+        "table",
+        "vehicle"
+      ],
+      "schedule[].weekday": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    "RetentionPurgeStateDocument": {},
+    "ReviewSettingsDocument": {},
+    "ScheduleExceptionDocument": {
+      "special_hours[].weekday": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    "SetupStateDocument": {
+      "skipped_after_launch[]": [
+        "business",
+        "channels",
+        "hours_and_bookings",
+        "launch",
+        "offer",
+        "phone_test",
+        "second_channel",
+        "share",
+        "staff_contact",
+        "test"
+      ],
+      "skipped_steps[]": [
+        "business",
+        "channels",
+        "hours_and_bookings",
+        "launch",
+        "offer",
+        "phone_test",
+        "second_channel",
+        "share",
+        "staff_contact",
+        "test"
+      ]
+    },
+    "SpendLimitMarkDocument": {
+      "level": [
+        "hard_limit",
+        "normal",
+        "soft_limit"
+      ]
+    },
+    "StaffDeliveryStateDocument": {
+      "status": [
+        "dead",
+        "delivered",
+        "pending"
+      ]
+    },
+    "SubprocessorAnnouncementDocument": {
+      "kind": [
+        "added",
+        "removed"
+      ]
+    },
+    "SubprocessorNoticeDocument": {
+      "kind": [
+        "added",
+        "removed"
+      ]
+    },
+    "SubscriptionDocument": {
+      "billing_period": [
+        "annual",
+        "monthly"
+      ],
+      "plan_key": [
+        "chat",
+        "plus",
+        "voice_and_chat"
+      ],
+      "setup_option": [
+        "done_for_you",
+        "self_serve"
+      ],
+      "status": [
+        "active",
+        "cancelled",
+        "incomplete",
+        "past_due",
+        "trialing"
+      ]
+    },
+    "SupportAccessGrantDocument": {
+      "end_reason": [
+        "closed_by_admin",
+        "expired",
+        "replaced",
+        "revoked_by_owner"
+      ],
+      "kind": [
+        "session",
+        "write_consent"
+      ],
+      "status": [
+        "ended",
+        "open"
+      ]
+    },
+    "SuppressionEntryDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ]
+    },
+    "TotpFactorDocument": {
+      "status": [
+        "active",
+        "pending"
+      ]
+    },
+    "UnansweredQuestionDocument": {},
+    "UsageEventDocument": {
+      "kind": [
+        "dialog",
+        "llm_input_tokens",
+        "llm_output_tokens",
+        "transcription_seconds",
+        "transfer_seconds",
+        "voice_seconds",
+        "whatsapp_reply",
+        "whatsapp_template"
+      ]
+    },
+    "UserDocument": {
+      "login_method": [
+        "email",
+        "phone"
+      ]
+    },
+    "UserNotificationPreferencesDocument": {
+      "preferences.events[]": [
+        "booking",
+        "handoff",
+        "lead"
+      ]
+    },
+    "UserSessionDocument": {
+      "auth_level": [
+        "one_factor",
+        "two_factor"
+      ]
+    },
+    "ValueReportDocument": {
+      "average_check_source": [
+        "niche_default",
+        "none",
+        "owner"
+      ],
+      "current.revenue_source": [
+        "average_check",
+        "booked_values",
+        "mixed"
+      ],
+      "delivery": [
+        "no_recipients",
+        "quiet",
+        "sent"
+      ],
+      "kind": [
+        "daily",
+        "monthly",
+        "weekly"
+      ],
+      "previous.revenue_source": [
+        "average_check",
+        "booked_values",
+        "mixed"
+      ],
+      "value_basis": [
+        "bookings",
+        "requests"
+      ]
+    },
+    "ValueSettingsDocument": {},
+    "WaitlistEntryDocument": {
+      "end_reason": [
+        "date_passed",
+        "declined",
+        "no_answer",
+        "removed",
+        "unreachable"
+      ],
+      "offer.channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "resource_kind": [
+        "arena",
+        "bay",
+        "room",
+        "slot",
+        "staff",
+        "table",
+        "vehicle"
+      ],
+      "source_channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "status": [
+        "booked",
+        "expired",
+        "offered",
+        "waiting"
+      ]
+    },
+    "WaitlistSettingsDocument": {},
+    "WebVitalSampleDocument": {
+      "device_class": [
+        "desktop",
+        "mobile",
+        "tablet"
+      ],
+      "metric": [
+        "cls",
+        "inp",
+        "lcp"
+      ]
+    },
+    "WebsiteImportDocument": {
+      "problem": [
+        "website_import_interrupted",
+        "website_link_invalid",
+        "website_link_unreachable",
+        "website_link_unreadable",
+        "website_reader_unavailable"
+      ],
+      "status": [
+        "done",
+        "failed",
+        "queued",
+        "reading"
+      ]
+    },
+    "WorkerHeartbeatDocument": {
+      "periodic_results[].outcome": [
+        "failed",
+        "succeeded"
+      ]
+    }
+  },
+  "release": "wave-15"
+}

@@ -1,0 +1,16 @@
+# The API availability SLO burns fast: requests answered with a server
+# error (objective 99.9% without 5xx over 28 days) at more than 14.4 times
+# the sustainable pace over the last hour and the last five minutes alike,
+# once the hour holds 100 requests. Probes (/healthz, /readyz) and metrics
+# scrapes are not counted.
+code: api_budget_fast_burn
+severity: sev1
+summary: API requests fail with a server error at 14.4 times the pace the monthly error budget allows (1 h and 5 min).
+measure: burn rate of the api_availability slots over 60 min and over 5 min (both must exceed)
+threshold: 1440
+unit: percent
+window_minutes: 60
+short_window_minutes: 5
+volume_floor: 100
+source: service_level_slots (doc_series, doc_slot_start), migration 1163
+runbook: docs/operations/runbooks/error-budget-burn.md

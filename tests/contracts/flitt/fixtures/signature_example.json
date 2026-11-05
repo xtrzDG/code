@@ -1,0 +1,13 @@
+{
+  "$comment": "The signature example of the Fondy/Flitt protocol documentation: sha1 of 'test|1000|USD|1396424|Test payment|TestOrder2|http://myshop/callback/'.",
+  "secret_key": "test",
+  "parameters": {
+    "order_id": "TestOrder2",
+    "merchant_id": 1396424,
+    "order_desc": "Test payment",
+    "amount": 1000,
+    "currency": "USD",
+    "server_callback_url": "http://myshop/callback/"
+  },
+  "signature": "91ea7da493a8367410fe3d7f877fb5e0ed666490"
+}

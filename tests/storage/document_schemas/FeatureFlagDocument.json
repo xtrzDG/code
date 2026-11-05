@@ -1,0 +1,68 @@
+{
+  "collection": "feature_flags",
+  "document_type": "FeatureFlagDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "changed_at": {
+        "type": "integer"
+      },
+      "changed_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "excluded_business_ids": {
+        "items": {
+          "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "included_business_ids": {
+        "items": {
+          "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "is_enabled": {
+        "type": "boolean"
+      },
+      "name": {
+        "pattern": "^[a-z][a-z0-9_]{2,62}$",
+        "type": "string"
+      },
+      "reason": {
+        "maxLength": 300,
+        "minLength": 8,
+        "pattern": "^\\S[\\s\\S]*\\S$",
+        "type": "string"
+      },
+      "rollout_percent": {
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "is_enabled",
+      "rollout_percent",
+      "reason",
+      "changed_by",
+      "changed_at"
+    ],
+    "type": "object"
+  }
+}

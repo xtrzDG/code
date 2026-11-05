@@ -1,0 +1,13 @@
+# The assistant gives up: the handoffs of the last hour (sandbox excluded)
+# are more than 3 times the hourly mean of the week before, once there are
+# at least 5 of them.
+code: handoff_spike
+severity: sev2
+summary: Far more conversations go to people than in an hour of the last week.
+measure: handoffs of the last hour against the week before's hourly mean
+threshold: 3
+unit: ratio
+window_minutes: 60
+volume_floor: 5
+source: handoffs (doc_created_at) include (doc_is_sandbox), migration 1093
+runbook: docs/operations/runbooks/assistant-quality.md

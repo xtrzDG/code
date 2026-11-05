@@ -1,0 +1,16 @@
+# Reviewed exceptions of the registry check of new dependencies
+# (scripts/dependency_registry_review.py, step "New dependencies on their
+# registries" of the CI job "security", SDLC-02). A failing signal (a name
+# the registry does not know, a deprecated or archived package, one first
+# released fewer than 30 days ago, a lookalike of a popular or already used
+# name, one installed from a git repository, an address, a local path or
+# another index instead of the registry) stops the pull request until a
+# person checked it and accepted it here: one table per package, its
+# signals and the reason, reviewed with the pull request that adds the
+# dependency. Example:
+#
+# [reviewed."npm:cookies"]
+# signals = ["typosquat"]
+# reason = "The pillarjs package (not a lookalike of `cookie`); checked by <name> on <date>."
+
+[reviewed]

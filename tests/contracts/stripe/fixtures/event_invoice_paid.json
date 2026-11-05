@@ -1,0 +1,28 @@
+{
+  "id": "evt_test_invoice_0002",
+  "object": "event",
+  "api_version": "2024-06-20",
+  "created": 1795158000,
+  "livemode": false,
+  "type": "invoice.paid",
+  "data": {
+    "object": {
+      "id": "in_test_0002",
+      "object": "invoice",
+      "billing_reason": "subscription_cycle",
+      "status": "paid",
+      "customer": "cus_test_0001",
+      "subscription": "sub_test_0001",
+      "subscription_details": {
+        "metadata": {"payment_order_id": "payment_order_7d3c1f9e-2b4a-4c8e-9f10-000000000001"}
+      },
+      "amount_due": 17500,
+      "amount_paid": 17500,
+      "amount_remaining": 0,
+      "attempt_count": 1,
+      "attempted": true,
+      "currency": "eur",
+      "livemode": false
+    }
+  }
+}

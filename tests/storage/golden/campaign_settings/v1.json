@@ -1,0 +1,14 @@
+{
+  "audience": "all_customers",
+  "business_id": "business_b32f88eb-b4aa-440c-8f4d-cc4a4a3566bc",
+  "created_at": 1790000000000000,
+  "delay_days": 1,
+  "id": "campaign_settings_23469fd1-63b3-5044-a436-ec7329c2babf",
+  "is_enabled": true,
+  "monthly_cap": 1,
+  "rule_kind": "rebook",
+  "schema_version": "1",
+  "segment_id": "segment_a7891c6f-106e-45a1-bc04-b3bf43c2b357",
+  "updated_at": 1790000000000000,
+  "updated_by": "user_c77c795e-4771-46bd-b0f8-368ceda1229f"
+}

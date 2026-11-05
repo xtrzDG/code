@@ -1,0 +1,23 @@
+-- 1121_customer_memory
+--
+-- The assistant remembers returning customers.
+--
+-- assistant_settings (business collection): how the assistant of a
+--   business treats its customers (Settings → General), one document per
+--   business under an id derived from it, read whole by that id (no
+--   lookup column): whether it remembers returning customers (on by
+--   default, also without a document) and whether the team's internal
+--   notes reach that memory (off by default).
+--
+-- conversations gain, in schema version 5, `summary` (what the
+--   conversation was about, at most 300 characters, written by a cheap
+--   model after two quiet hours) and `summarized_at`. They are read only
+--   with the conversation, through the existing
+--   (business_id, doc_contact_id, doc_last_message_at) index of 1010 (a
+--   customer's latest conversations), so no column or index is added to
+--   the conversations table: the release takes no lock on it. The
+--   summaries are written by a queued job (`summarize_conversation`, the
+--   default lane) scheduled for two hours after a conversation becomes
+--   active, so finding idle conversations needs no index either.
+
+select workshop.create_document_collection('assistant_settings');

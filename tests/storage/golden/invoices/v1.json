@@ -1,0 +1,16 @@
+{
+  "amount_minor": 1500,
+  "business_id": "business_cd1f9923-4f54-44b8-b104-19f027fec964",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "description": "Sample InvoiceDescription",
+  "id": "invoice_ae69102c-5756-421e-ade0-b1fe20f468ca",
+  "kind": "service_period",
+  "period_end": 1790000000000000,
+  "period_start": 1790000000000000,
+  "provider_reference": "Sample PaymentProviderReference",
+  "schema_version": "1",
+  "status": "issued",
+  "subscription_id": "subscription_d7a9fdb5-95cf-4817-a9c0-a0e1b334941d",
+  "updated_at": 1790000000000000
+}

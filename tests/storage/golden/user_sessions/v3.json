@@ -1,0 +1,16 @@
+{
+  "auth_level": "one_factor",
+  "authenticated_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "created_ip": "203.0.113.7",
+  "expires_at": 1790000000000000,
+  "id": "user_session_a8465caf-bade-4219-a036-3eda1343df95",
+  "idle_expires_at": 1790000000000000,
+  "last_seen_at": 1790000000000000,
+  "last_seen_ip": "203.0.113.7",
+  "schema_version": "3",
+  "token_hash": "Sample AccessTokenHash",
+  "updated_at": 1790000000000000,
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "user_id": "user_e6941594-2613-460c-b3c6-6cb4883f149b"
+}

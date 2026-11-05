@@ -1,0 +1,54 @@
+{
+  "collection": "package_usage_warnings",
+  "document_type": "PackageUsageWarningDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^package_usage_warning_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "metric": {
+        "enum": [
+          "voice_minutes",
+          "dialogs"
+        ],
+        "type": "string"
+      },
+      "period_start": {
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "subscription_id": {
+        "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "usage_percent": {
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "subscription_id",
+      "metric",
+      "period_start",
+      "usage_percent"
+    ],
+    "type": "object"
+  }
+}

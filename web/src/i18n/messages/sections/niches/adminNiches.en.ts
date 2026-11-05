@@ -1,0 +1,103 @@
+/**
+ * `adminNiches.*` texts of /admin/niches: the platform admin's niche
+ * template editor (the words new owners read in the tunnel and the
+ * profile wizard), in English: the reference the other languages are
+ * typed against.
+ */
+
+export const adminNichesEn = {
+  nav: "Niche templates",
+  title: "Niche templates",
+  description:
+    "The words new owners read in the tunnel and the profile wizard: reword a niche's questions, rules and starter answers in each language. Keys, answer types and rules for the assistant stay in code.",
+  loading: "Loading niche templates…",
+  list: "Niches",
+  codeTemplate: "Code template",
+  version: "Version {version}",
+  reworded: { one: "{count} text reworded", other: "{count} texts reworded" },
+  draft: "Unpublished draft",
+  publishedBy: "Published {when} by {name}",
+  publishedAt: "Published {when}",
+  edit: "Edit {niche}",
+  editor: {
+    back: "All niche templates",
+    languages: "Language of the texts",
+    inForce: "Version {version} is in force",
+    onCode: "No version yet: owners read the code template",
+    draftWaiting: "An unpublished draft waits",
+    unsaved: "Unsaved changes in this language",
+    saveDraft: "Save draft",
+    draftSaved: "Draft saved",
+    publish: "Publish",
+    publishTitle: "Publish the draft of {niche}?",
+    publishDescription:
+      "It becomes the next version at once: new owners read these texts in the tunnel and the profile wizard. Profiles already saved keep their texts, and no assistant's prompt changes.",
+    published: "Version {version} published",
+    discard: "Discard draft",
+    discardTitle: "Discard the draft of {niche}?",
+    discardDescription: "Its texts in every language are forgotten; the version in force stays.",
+    discarded: "Draft discarded",
+    sections: {
+      niche: "The niche",
+      question: "Profile questions",
+      rules: "Default handoff and forbidden rules",
+      starters: "Starter answers",
+    },
+    fields: {
+      name: "Name",
+      description: "Description",
+      resourceNoun: "What is booked",
+      label: "Question",
+      hint: "Hint",
+      choice: "Choice “{choice}”",
+      handoffRule: "Handoff rule {position}",
+      forbiddenRule: "Forbidden rule {position}",
+      tone: "Tone",
+      cancellationPolicy: "Cancellation rule",
+      resourceName: "First thing booked",
+      faqQuestion: "Frequent question “{entry}”",
+      faqAnswer: "Answer to “{entry}”",
+      offerTitle: "Offer example “{entry}”",
+      unknown: "Text {key}",
+    },
+    question: "Question {position}",
+    code: "In code: {text}",
+    codeInEnglish: "In code only in English: {text}",
+    newWording: "New wording",
+    newWordingHint: "Leave it empty to keep the code's text. Length limit: {max}.",
+    errors: {
+      html: "Plain text only: no HTML tags.",
+      lineBreak: "One line only.",
+      tooLong: "Too long: the limit is {max}.",
+      placeholders: "Keep the placeholders of the code's text: {names}.",
+    },
+  },
+  preview: {
+    title: "Preview",
+    description: "The profile questions as an owner sees them in {language}.",
+    required: "Required",
+    answer: "The owner's answer",
+  },
+  history: {
+    title: "Versions",
+    description: "Every published version stays; restoring one publishes its texts again as the next version.",
+    empty: "Nothing published yet: owners read the code template.",
+    kinds: {
+      publish: "Published",
+      revert: "Restored version {version}",
+      reset: "Back to the code template",
+    },
+    inForce: "In force",
+    by: "{when} · {name}",
+    reworded: { one: "{count} text", other: "{count} texts" },
+    restore: "Restore",
+    restoreLabel: "Restore version {version}",
+    codeVersion: "Version 0 · code template",
+    reset: "Reset to the code template",
+    restoreTitle: "Restore version {version} of {niche}?",
+    resetTitle: "Reset {niche} to the code template?",
+    restoreDescription:
+      "Its texts become the next version at once, and the unpublished draft is discarded. Owners who already saved their profile keep their texts.",
+    restored: "Version {version} published",
+  },
+} as const;

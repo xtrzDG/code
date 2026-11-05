@@ -1,0 +1,17 @@
+# A stalled post-deploy data task: a document migration or lookup backfill
+# of the data-task registry (app/registries/maintenance/) that is not done
+# 24 hours after it became due, because a worker of another release still
+# beats (the release overlap never ended), its batches keep failing, or its
+# walk ended with rows that could not be upgraded. The figure is the number
+# of such tasks; until they are done some lists may miss older rows and the
+# deploy guard holds the next release.
+code: backfill_stalled
+severity: sev3
+summary: A post-deploy data task is not done a day after it became due.
+measure: data tasks not done 24 hours after they became due
+threshold: 0
+unit: count
+window_minutes: 1440
+volume_floor: 0
+source: data_task_states by registry key (get_many), migration 1164
+runbook: docs/operations/runbooks/stalled-data-task.md

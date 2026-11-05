@@ -1,0 +1,76 @@
+{
+  "collection": "client_health_changes",
+  "document_type": "ClientHealthChangeDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "changed_at": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^client_health_change_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "issues": {
+        "items": {
+          "enum": [
+            "no_subscription",
+            "first_payment_pending",
+            "payment_past_due",
+            "subscription_cancelled",
+            "leads_only_mode",
+            "not_published",
+            "autotests_failed",
+            "tool_errors",
+            "many_handoffs",
+            "open_questions",
+            "package_exceeded",
+            "negative_margin",
+            "slow_replies",
+            "guard_spike"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "previous_status": {
+        "enum": [
+          "healthy",
+          "attention",
+          "critical"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "healthy",
+          "attention",
+          "critical"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "previous_status",
+      "status",
+      "changed_at"
+    ],
+    "type": "object"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "batch_count": 1,
+  "changed_count": 1,
+  "collection_name": "contacts",
+  "created_at": 1790000000000000,
+  "failed_document_keys": [
+    "Sample StoredDocumentKey"
+  ],
+  "failed_row_count": 1,
+  "failure_count": 1,
+  "field": "last_seen_at",
+  "finished_at": 1790000000000000,
+  "key": "backfill_lookup:contacts.last_seen_at",
+  "kind": "migrate_documents",
+  "last_batch_at": 1790000000000000,
+  "last_error": "ExternalServiceError: a row stayed locked",
+  "pending_since": 1790000000000000,
+  "position": "contact_3f2a6b1c",
+  "release": "4718714c0f2e9a1b",
+  "scanned_count": 1,
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "status": "pending",
+  "target_version": 1,
+  "updated_at": 1790000000000000
+}

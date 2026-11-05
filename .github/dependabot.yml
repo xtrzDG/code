@@ -1,0 +1,142 @@
+# Weekly dependency updates, grouped so a week brings a few pull requests,
+# not dozens. Security updates are opened as soon as an advisory appears,
+# independent of this schedule and of the cooldown. A new release waits a
+# week (cooldown) so a compromised version is usually yanked before it
+# reaches us. A grouped patch or minor update merges itself once CI is green
+# (.github/workflows/automerge.yml); everything else waits for a person, and
+# nothing reaches production without one (docs/operations/deploys.md).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      python-runtime:
+        dependency-type: production
+        update-types: [minor, patch]
+      python-dev-tools:
+        dependency-type: development
+        update-types: [minor, patch]
+    labels: [dependencies, python]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      # Next.js and its ESLint config move together.
+      nextjs:
+        patterns: [next, eslint-config-next]
+      react:
+        patterns: [react, react-dom, "@types/react", "@types/react-dom"]
+      vitest:
+        patterns: [vitest, "@vitest/*", vite]
+      cabinet-runtime:
+        dependency-type: production
+        update-types: [minor, patch]
+      cabinet-dev-tools:
+        dependency-type: development
+        update-types: [minor, patch]
+    # Majors of the toolchain are taken in a quarterly review, not weekly:
+    # .github/workflows/major-updates.yml opens its issue. They change what
+    # the compiler and the linter accept across the whole cabinet, and
+    # @types/node follows the Node major the images run, not npm's latest.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    labels: [dependencies, javascript]
+
+  # The Zapier app and the CI-only tools (Lighthouse CI) with their own
+  # lockfiles.
+  - package-ecosystem: npm
+    directories: [/integrations/zapier, /.github/tools/lhci]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      tooling:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    labels: [dependencies, javascript]
+
+  # pip-audit, hash-pinned for CI (.github/tools/pip-audit/requirements.txt).
+  - package-ecosystem: pip
+    directory: /.github/tools/pip-audit
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      pip-audit:
+        patterns: ["*"]
+    labels: [dependencies, python]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+    labels: [dependencies, github-actions]
+
+  # Base images, pinned by tag and digest: an update moves the digest of
+  # the same tag as well as the tag.
+  - package-ecosystem: docker
+    directories: [/, /web]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      base-images:
+        patterns: ["*"]
+    labels: [dependencies, docker]
+
+  # Service images of the compose files (Postgres, k6), likewise.
+  - package-ecosystem: docker-compose
+    directories: [/, /perf]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
+    groups:
+      service-images:
+        patterns: ["*"]
+    labels: [dependencies, docker]

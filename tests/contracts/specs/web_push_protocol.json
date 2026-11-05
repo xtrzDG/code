@@ -1,0 +1,157 @@
+{
+ "$comment": "Written from RFC 8030 (Web Push), RFC 8291 (message encryption, aes128gcm of RFC 8188) and RFC 8292 (VAPID), which every browser's push service implements, and from the push services' pages on their answers. No push service publishes a machine-readable specification. Review against the pages in x-vendor.docs when a push service announces changes.",
+ "$defs": {
+  "ApnsWebPushError": {
+   "description": "Apple's push service answers errors with a reason (and, for 410, the time the device stopped accepting).",
+   "properties": {
+    "reason": {
+     "type": "string"
+    },
+    "timestamp": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "type": "object"
+  },
+  "AutopushError": {
+   "description": "Mozilla's push service answers errors with its errno and a link to the error table.",
+   "properties": {
+    "code": {
+     "type": "integer"
+    },
+    "errno": {
+     "type": "integer"
+    },
+    "error": {
+     "type": "string"
+    },
+    "message": {
+     "type": "string"
+    },
+    "more_info": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "code",
+    "errno",
+    "error"
+   ],
+   "type": "object"
+  },
+  "VapidClaims": {
+   "description": "RFC 8292, section 2: the audience is the push service origin, the expiry at most 24 hours ahead, the subject a mailto: or https: contact.",
+   "properties": {
+    "aud": {
+     "pattern": "^https://[^/?#]+$",
+     "type": "string"
+    },
+    "exp": {
+     "minimum": 0,
+     "type": "integer"
+    },
+    "sub": {
+     "pattern": "^(mailto:[^@\\s]+@[^@\\s]+|https://\\S+)$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "aud",
+    "exp",
+    "sub"
+   ],
+   "type": "object"
+  },
+  "VapidTokenHeader": {
+   "description": "RFC 8292, section 2: the token is a JWT signed with ES256 (RFC 7515).",
+   "properties": {
+    "alg": {
+     "const": "ES256"
+    },
+    "typ": {
+     "const": "JWT"
+    }
+   },
+   "required": [
+    "alg"
+   ],
+   "type": "object"
+  },
+  "request:push": {
+   "description": "The Web Push headers of POST <subscription endpoint>, by lower-case name.",
+   "properties": {
+    "authorization": {
+     "description": "RFC 8292, section 3: vapid t=<JWT>, k=<uncompressed P-256 public key, base64url without padding>.",
+     "pattern": "^vapid t=[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+, k=B[A-Za-z0-9_-]{86}$",
+     "type": "string"
+    },
+    "content-encoding": {
+     "const": "aes128gcm"
+    },
+    "content-type": {
+     "const": "application/octet-stream"
+    },
+    "topic": {
+     "description": "RFC 8030, section 5.4: at most 32 characters of the URL-safe base64 alphabet.",
+     "pattern": "^[A-Za-z0-9_-]{1,32}$",
+     "type": "string"
+    },
+    "ttl": {
+     "description": "RFC 8030, section 5.2: delta-seconds.",
+     "pattern": "^(0|[1-9][0-9]*)$",
+     "type": "string"
+    },
+    "urgency": {
+     "description": "RFC 8030, section 5.3.",
+     "enum": [
+      "very-low",
+      "low",
+      "normal",
+      "high"
+     ]
+    }
+   },
+   "required": [
+    "authorization",
+    "content-encoding",
+    "ttl"
+   ],
+   "type": "object"
+  },
+  "response:push-error": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/AutopushError"
+    },
+    {
+     "$ref": "#/$defs/ApnsWebPushError"
+    }
+   ]
+  }
+ },
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "x-roots": {
+  "ApnsWebPushError": "an error answer of Apple's push service",
+  "AutopushError": "an error answer of Mozilla's push service",
+  "VapidClaims": "the claims of the VAPID token",
+  "VapidTokenHeader": "the JOSE header of the VAPID token",
+  "request:push": "POST <subscription endpoint> (headers)",
+  "response:push-error": "a JSON error answer of a push service"
+ },
+ "x-vendor": {
+  "docs": [
+   "https://www.rfc-editor.org/rfc/rfc8030",
+   "https://www.rfc-editor.org/rfc/rfc8291",
+   "https://www.rfc-editor.org/rfc/rfc8292",
+   "https://firebase.google.com/docs/cloud-messaging/migrate-v1#web-push",
+   "https://mozilla-services.github.io/autopush-rs/errors.html",
+   "https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers"
+  ],
+  "kind": "documented",
+  "provider": "webpush",
+  "title": "Web Push protocol (RFC 8030, 8291, 8292)"
+ }
+}

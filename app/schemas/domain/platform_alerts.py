@@ -1,0 +1,63 @@
+from base_pydantic_schemas import BaseDocument, SchemaVersion
+from typed_time_provider import Microseconds
+
+from app.schemas.constants.monitoring import (
+    AlertUnit,
+    PlatformAlertCode,
+    PlatformAlertStatus,
+)
+from app.schemas.typings.monitoring.constrained_integers import (
+    AlertFigure,
+    AlertThreshold,
+    NotificationCount,
+)
+from app.schemas.typings.monitoring.strings import AlertDetailText
+
+
+class PlatformAlertStateDocument(BaseDocument):
+    """
+    The latest episode of one platform alert, stored under its code (a
+    platform collection: no business owns it).
+
+    An episode starts when the alert's check first fires (`fired_at`) and
+    ends when a check no longer fires (`resolved_at`). The team is told
+    when it starts, again after each cooldown while it still fires
+    (`notified_at`, `notification_count`) and once when it is over. The
+    figure, the threshold it was compared with, their unit and the detail
+    are those of the latest check, for the admin system page.
+    """
+
+    # 2: `code` may be `quality_drop` (production quality, migration 1120).
+    # 3: `code` may be `spend_spike` or `spend_budget` (the spend guard,
+    # migration 1142).
+    # 4: `code` may be `backfill_stalled` (post-deploy data tasks, 1164) or
+    # one of the burn-rate alerts (`answer_budget_*_burn`,
+    # `api_budget_*_burn`, migration 1163). States are stored and read under
+    # their code, so a release that does not know a code never reads its row.
+    # 5: `code` may be `worker_down` (the API's pipeline watchdog, 1173).
+    # 6: `code` may be `bulk_personal_data`, `tenant_hopping`,
+    # `failed_sign_in_checks` or `audit_chain_broken` (the audit log, 1193).
+    # 7: `code` may be `voice_health` (voice API errors or post-call reports
+    # gone quiet, W20).
+    # 8: `code` may be `spend_budget_stop` (the platform's daily budget
+    # stop), `missed_job_runs` (periodic job heartbeats) or
+    # `payment_mismatch` (the daily payment reconciliation), migration 1230.
+    # 9: `code` may be `webhook_signature_failures`, `storage_errors`,
+    # `api_latency`, `backup_failed`, `tenant_sms_volume` or
+    # `otp_conversion` (platform health, LOG-04/05), `booking_spike`,
+    # `cancellation_spike` or `whatsapp_quality` (abuse and number quality).
+    # 10: `code` may be `tenant_payment_declines` (card testing, LOG-05).
+    # 11: `code` may be `campaign_opt_outs` (a campaign held for review,
+    # ABUSE-05).
+    schema_version: SchemaVersion = SchemaVersion("11")
+    code: PlatformAlertCode
+    status: PlatformAlertStatus
+    figure: AlertFigure
+    threshold: AlertThreshold
+    unit: AlertUnit
+    detail: AlertDetailText
+    fired_at: Microseconds
+    checked_at: Microseconds
+    notified_at: Microseconds | None = None
+    notification_count: NotificationCount = NotificationCount(0)
+    resolved_at: Microseconds | None = None

@@ -1,0 +1,89 @@
+{
+  "collection": "message_media",
+  "document_type": "MessageMediaDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "byte_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "duration_seconds": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^message_media_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "audio",
+          "image",
+          "location",
+          "contact",
+          "sticker",
+          "other"
+        ],
+        "type": "string"
+      },
+      "media_type": {
+        "maxLength": 64,
+        "minLength": 7,
+        "pattern": "^(audio|image)/[a-z0-9][a-z0-9.+\\-]*$",
+        "type": "string"
+      },
+      "message_id": {
+        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "storage_path": {
+        "type": "string"
+      },
+      "transcript": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "message_id",
+      "kind",
+      "storage_path",
+      "media_type",
+      "byte_count"
+    ],
+    "type": "object"
+  }
+}

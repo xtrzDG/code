@@ -1,0 +1,26 @@
+{
+  "booking_unit": "time_slot",
+  "business_id": "business_4b64a99a-702c-4083-a416-005408d8c8c7",
+  "capacity": 1,
+  "created_at": 1790000000000000,
+  "external_calendar_id": "Sample ExternalCalendarId",
+  "id": "resource_25d9c843-3235-49e3-8e71-7a9f821f789c",
+  "is_active": true,
+  "kind": "table",
+  "name": "Sample ResourceName",
+  "room_type_item_id": "knowledge_item_13edab2c-b993-43b6-ae42-8a5e58a706ef",
+  "schedule": [
+    {
+      "closes_at": 1080,
+      "opens_at": 540,
+      "weekday": 1
+    }
+  ],
+  "schema_version": "3",
+  "serves_item_ids": [
+    "knowledge_item_837c4e75-ccbe-4cd7-ba45-abf7f0dd9d89"
+  ],
+  "slot_minutes": 30,
+  "unit_count": 1,
+  "updated_at": 1790000000000000
+}

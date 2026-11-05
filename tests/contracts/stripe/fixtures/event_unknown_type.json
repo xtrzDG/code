@@ -1,0 +1,9 @@
+{
+  "id": "evt_test_unknown_0005",
+  "object": "event",
+  "api_version": "2024-06-20",
+  "created": 1793000000,
+  "livemode": false,
+  "type": "customer.tax_id.created",
+  "data": {"object": {"id": "txi_test_0001", "object": "tax_id", "type": "eu_vat"}}
+}

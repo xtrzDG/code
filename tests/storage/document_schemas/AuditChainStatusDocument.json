@@ -1,0 +1,127 @@
+{
+  "collection": "audit_chain_statuses",
+  "document_type": "AuditChainStatusDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "broken_position": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "checked_at": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "entries_checked": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "id": {
+        "maxLength": 80,
+        "minLength": 8,
+        "pattern": "^(platform|business_[0-9A-Za-z-]{1,70})$",
+        "type": "string"
+      },
+      "problem": {
+        "anyOf": [
+          {
+            "enum": [
+              "hash_mismatch",
+              "link_broken",
+              "position_gap",
+              "head_lost",
+              "checkpoint_mismatch"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resume_position": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "intact",
+          "broken"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "verified_through_hash": {
+        "anyOf": [
+          {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "verified_through_position": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "id",
+      "status",
+      "entries_checked",
+      "checked_at"
+    ],
+    "type": "object"
+  }
+}

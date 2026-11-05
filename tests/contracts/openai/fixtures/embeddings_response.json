@@ -1,0 +1,21 @@
+{
+  "$comment": "OpenAI Embeddings API answer (platform.openai.com/docs/api-reference/embeddings/create), two inputs, entries out of order; vectors shortened to 4 dimensions.",
+  "object": "list",
+  "data": [
+    {
+      "object": "embedding",
+      "index": 1,
+      "embedding": [0.0115, -0.0402, 0.0321, 0.0049]
+    },
+    {
+      "object": "embedding",
+      "index": 0,
+      "embedding": [-0.0067, 0.0291, 0.0503, -0.0118]
+    }
+  ],
+  "model": "text-embedding-3-small",
+  "usage": {
+    "prompt_tokens": 14,
+    "total_tokens": 14
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "scale": "full",
+  "p95_ms": {
+    "authenticate": 13.9,
+    "availability": 39.2,
+    "conversation_detail": 38.1,
+    "conversations_list": 68.9,
+    "dashboard": 78.2,
+    "widget_poll": 19.2
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "business_id": "business_4a2244ca-807e-4e6b-b3ab-eea884499db7",
+  "conversations_purged_before": 1790000000000000,
+  "created_at": 1790000000000000,
+  "id": "retention_purge_43ebfe39-5f3e-5d28-9a9a-244ca803a112",
+  "last_counts": {
+    "anonymized_bookings": 1,
+    "anonymized_handoffs": 1,
+    "anonymized_leads": 1,
+    "deleted_llm_turns": 1,
+    "deleted_media": 1,
+    "deleted_messages": 1,
+    "deleted_missed_calls": 1,
+    "deleted_notes": 1,
+    "erased_calls": 1
+  },
+  "last_run_at": 1790000000000000,
+  "llm_turns_purged_before": 1790000000000000,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

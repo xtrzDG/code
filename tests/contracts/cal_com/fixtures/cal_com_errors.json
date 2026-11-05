@@ -1,0 +1,70 @@
+{
+  "$comment": "Cal.com API v2 error answers and the reason the cabinet explains.",
+  "cases": [
+    {
+      "status": 401,
+      "problem": "access_denied",
+      "body": {
+        "status": "error",
+        "timestamp": "2026-10-01T09:00:00.000Z",
+        "path": "/v2/bookings",
+        "error": {
+          "code": "UnauthorizedException",
+          "message": "Invalid Access Token."
+        }
+      }
+    },
+    {
+      "status": 403,
+      "problem": "access_denied",
+      "body": {
+        "status": "error",
+        "timestamp": "2026-10-01T09:00:00.000Z",
+        "path": "/v2/bookings",
+        "error": {
+          "code": "ForbiddenException",
+          "message": "Event type does not belong to the user."
+        }
+      }
+    },
+    {
+      "status": 404,
+      "problem": "not_found",
+      "body": {
+        "status": "error",
+        "timestamp": "2026-10-01T09:00:00.000Z",
+        "path": "/v2/event-types/1203845",
+        "error": {
+          "code": "NotFoundException",
+          "message": "Event type with id=1203845 not found"
+        }
+      }
+    },
+    {
+      "status": 429,
+      "problem": "provider_error",
+      "body": {
+        "status": "error",
+        "timestamp": "2026-10-01T09:00:00.000Z",
+        "path": "/v2/bookings",
+        "error": {
+          "code": "ThrottlerException",
+          "message": "Too Many Requests"
+        }
+      }
+    },
+    {
+      "status": 500,
+      "problem": "provider_error",
+      "body": {
+        "status": "error",
+        "timestamp": "2026-10-01T09:00:00.000Z",
+        "path": "/v2/bookings",
+        "error": {
+          "code": "InternalServerErrorException",
+          "message": "Internal server error"
+        }
+      }
+    }
+  ]
+}

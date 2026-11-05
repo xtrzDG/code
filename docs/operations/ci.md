@@ -1,0 +1,345 @@
+# CI: layout, time budget and the durations files
+
+`.github/workflows/ci.yml` runs on every pull request and every push to
+`main`. Its budget: **under eight minutes from the push to the last job**.
+The last job (`durations`, `scripts/ci_job_durations.py`) writes every job's
+duration to the run summary, slowest first, and warns about each job over
+eight minutes. Run 37537772194 (commit dd254a9) took 19 minutes with two
+backend parts, one cabinet job and four end-to-end shards; this page
+describes the layout that replaced it and how to keep it balanced.
+
+## The jobs
+
+Everything starts at once except `coverage` (after every backend part),
+`e2e` and `visual` (after `web-build`) and `durations` (after everything).
+
+Every job of every workflow runs on `ubuntu-24.04`, never `ubuntu-latest`
+(`tests/platform/test_runner_images.py`): on 26 October 2026
+`ubuntu-latest` became Ubuntu 26.04, which has no `postgresql-16`, and the
+Postgres tests stopped before their first test. Moving to a newer release
+is a change of its own: Postgres, the PDF engine's packages, Playwright's
+system dependencies and the cached packages all follow the image.
+
+| Job | What it does | Waits for | Expected |
+| --- | --- | --- | ---: |
+| `backend-checks` | ruff, mypy, pyright, legal texts, the duplication ratchet (jscpd, `docs/dev/code-health.md`) | — | ~2:25 |
+| `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4; api-fuzz 1/1) | pytest with coverage on four xdist workers, one part of a group each; `Backend tests (api-fuzz 1/1)` runs `-m api_fuzz` alone (`tests/api_fuzz`: hypothesis over every documented operation, and hostile bodies), which the other parts leave out | — | ~4:15 (tests ~3:15) |
+| `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
+| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the secret scan of the build, the payment pages' scripts against their inventory, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
+| `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
+| `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit | — | ~0:40 |
+| `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
+| `evals` | the evals replay gate ("The evals replay gate" below): when the change touches what the model sees, every recorded conversation replayed offline, without keys | — | not measured yet |
+| `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
+| `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 222 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
+| `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
+| `durations` | the run summary of every job's duration | all | ~0:20 |
+
+The critical path is `web-build` → `visual` → `durations`: about 1:45 +
+5:00 + 0:20, about seven minutes (the slowest `e2e` shard ends some
+twenty seconds before `visual`). The backend path
+(`backend-tests` → `coverage`) ends about 4:45 after the push. GitHub runs
+20 jobs at once for a free account; when `web-build` ends, ten shards,
+`visual`, seven backend parts (the API fuzz part is the seventh) and three
+others (`backend-checks`, `web-checks` and `images`) want to run, so one
+of them queues until a slot frees. A new job that overlaps them queues as
+well: it goes after one of them or replaces one.
+Wave 22's closing of a business brought the suite to about 2037 seconds,
+more than nine shards hold within their budget (9 × 225), so a tenth
+shard was added; branch protection requires only "CI passed (every
+gate)", which waits for every shard whatever their count.
+
+Expected times are local measurements scaled to GitHub's runners (public
+repository: four vCPUs, the same core count as the machine they were
+measured on). Run 37537772194 gave the scale: its four e2e shards' test
+steps took 1.03–1.16 times the seconds the same specs took locally, plus
+about 15 seconds to start the API and the cabinet, and each shard about
+70 seconds more for its setup (checkout, uv and npm installs, Chromium,
+the build's download). `web/e2e/durations.json` comes from one later
+local run of the whole suite on a machine busy with other work, whose
+specs took 1.22 times as long as in that calibrating local run: every
+duration was scaled by 0.86 (1.05 / 1.22) to CI's runners, and a shard of
+the plan holds about 204 of those seconds. `tests/durations.json` comes
+from one local run of the whole backend suite on four xdist workers, scaled
+per group so that each group's sum matches the worker-seconds of run
+37537772194: its `rest` part spent 679 seconds in pytest and its `postgres`
+part 283, about 30 of each collecting, on four workers (factors 0.53 and
+0.76). Each part of the plan holds about 650 (rest) or 506 (postgres) of
+those seconds, about 2:45 and 2:10 on four workers plus the collection;
+the slowest Postgres file (the chaos game days, about 157 seconds) sets
+the floor of its part.
+
+## Signed images, the dynamic scan and the repository settings
+
+- `publish-images` runs only for a push to `main`, after every gate. The
+  images are the ones `images` built and scanned (a saved artifact, not a
+  rebuild). Signing is keyless: Sigstore issues a short-lived certificate
+  for this workflow's OIDC identity (`ci.yml` on `refs/heads/main`), so
+  there is no signing key to keep or leak. Deploy smoke runs the same
+  `scripts/verify_images.sh` for every deployed commit
+  (`docs/operations/deploys.md`, "Signed images").
+- `zap.yml` (OWASP ZAP baseline, at most 45 minutes) starts the docker
+  compose stack with a scripted model, seeds one business and scans the
+  cabinet, the hosted chat page, the widget and every read-only `/v1`
+  operation with the owner's token. It runs on every push to `main`, every
+  Tuesday for ZAP's newer rules, and on pull requests that change the scan.
+  `scripts/zap_gate.py` fails it on any Medium or High finding
+  `.zap/rules.tsv` has not reviewed (SECURITY.md, "Dynamic scan"); the job
+  summary lists every finding with the reason of each reviewed exception.
+  `scripts/zap_auth_check.py` fails it when the `/v1` scan was not signed
+  in (the seeded business's routes answered 401 instead of 2xx).
+- `repo-settings.yml` checks every morning that branch protection, private
+  vulnerability reporting and Dependabot security updates are as
+  `.github/repository-settings.json` expects (SECURITY.md, "Repository
+  settings"), and the `production-release` and `backup-drill`
+  environments (reviewers, branch rule). The required checks there are
+  `CI passed (every gate)` (the last job of `ci.yml`, which always runs and
+  fails unless every other CI job succeeded: a required job that was
+  skipped because a job it needs failed would count as passed), the jobs of
+  `codeql.yml` (Python, JavaScript/TypeScript and `actions`, the workflows
+  themselves), `api-contract.yml` and `workflow-audit.yml` (`Workflow audit
+  (actionlint, zizmor)`, pinned by version and SHA-256): renaming a job means changing that file and the
+  branch protection together (`tests/platform/test_supply_chain_workflows.py`
+  and `tests/platform/test_release_paths.py` fail until both agree).
+- `automerge.yml` merges a green grouped Dependabot update after each of
+  the workflows that own a required check (CI, CodeQL, API contract,
+  Workflow audit) and
+  only once none of those checks is pending. Its merge, made with the
+  workflow's token, pushes no event, so it then starts every workflow a
+  push to `main` starts: CI (whose run on `main` publishes the signed
+  images deploy smoke verifies), CodeQL, Lighthouse and the ZAP baseline.
+
+## Dependencies a pull request adds
+
+On a pull request `security` runs GitHub's dependency review
+(`.github/dependency-review-config.yml`: a high advisory or a denied
+licence fails; its summary is a comment on the pull request, which is why
+the job may write pull requests, and a fork's read-only token only skips
+the comment) and then `scripts/dependency_registry_review.py` (SDLC-02).
+The latter compares the manifests (`web/`, `integrations/zapier/` and
+`.github/tools/lhci/` package.json, `pyproject.toml`) with the pull
+request's base, checked out as a worktree, and measures each new direct
+dependency on npm or PyPI: first and latest release, how many accounts may
+publish it, deprecation, archival or yanked releases, code run on install,
+licence and source repository. It fails on a name the registry does not
+know, a deprecated or archived package, one first released fewer than 30
+days ago, a lookalike of a popular or already used name (names in one
+npm scope are not compared with each other: only the scope's owner
+publishes there), or a dependency installed from a git repository, an
+address, a local path, the workspace or another index (`not-from-registry`:
+also when only its origin changed; an npm alias `npm:other@1` is measured
+as `other`), unless `.github/dependency-registry-review.toml` accepts that
+signal with a reason; the rest are warnings in the run summary, which
+holds the table.
+A registry that does not answer fails the step (nothing was measured):
+run the job again.
+
+## Payment page integrity
+
+`payment-page-integrity.yml` runs every Monday (and by hand) with no secret
+(PAY-02; PCI DSS 11.6.1 intent); its check reads only, and only the step
+that opens the issue may write issues. It compares the
+scripts of the payment pages, the billing page and the hosted chat page
+(which shows a deposit's payment link), with the reviewed inventory
+`web/payment-page-scripts.json` (every first-party chunk with its SHA-384,
+`web/scripts/payment-page-scripts.mjs`): with the repository variable
+`PRODUCTION_CABINET_URL`, each file the inventory of the `release` branch
+lists (the commit production runs), as production serves it; without it,
+the scripts of a fresh build of `main`. A difference fails the run and
+opens the issue "Payment page scripts changed"; the schedule watch notices
+when the workflow stops running.
+
+The inventory follows the code: `web-build` compares every pull request's
+build with it (step "Payment pages' scripts against the inventory"), and a
+pull request that changes these pages' scripts (most cabinet changes do)
+gets a warning and the table in its run summary. Review the changed
+scripts with the code, then update the inventory in the same pull request:
+
+```bash
+cd web && npm run build
+node scripts/payment-page-integrity.mjs --build .next --update
+```
+
+and commit `web/payment-page-scripts.json` with the change (the failed
+weekly run's artifact `payment-page-scripts` is the same file, built from
+`main`). Promoting `main` to `release` then carries the inventory to the
+commit production runs. A difference no reviewed commit explains is an
+incident (`docs/operations/incident.md`).
+
+## The evals replay gate
+
+`evals` ("Evals replay gate (prompts, models, tools)", AI-12) is one of
+the jobs `CI passed (every gate)` and `durations` wait for, so it blocks a
+merge. Its first step, `scripts/eval_replay_scope.py` (standard library
+only, before anything installs), lists what the change touches against
+the pull request's base (a push: the commit before it; a manual run
+replays everything). When it touches what the model sees or how it is
+scored — the instruction's sections and the niche templates
+(`app/utilities/assembly/`, `app/registries/niches/`), the English owner
+texts, the prompt snapshots, the tool registries and input schemas, the
+model pins and the LLM adapters, the conversation use cases,
+`app/utilities/conversations/`, `memory/`, `knowledge/`, `reply_guard/`
+and `llm_cassettes/`, the eval harness, `evals/` and the script itself —
+the job replays every recorded cassette with the scripted model, offline
+and without provider keys, at `--min-pass-rate 1` and
+`--max-hallucination-rate 0`, and writes the summary to the run. A change
+that touches none of them passes without the replay. When git cannot list
+the changed files (a base a force-push removed, a shallow clone) it
+replays everything: the gate is never skipped, and never fails, for want
+of a diff.
+
+It replays recorded answers: a stale cassette, a broken harness or a
+dataset rule fails it, but it cannot see how a real model answers a
+changed prompt. Real models run in `evals-nightly.yml` (nightly, with
+`OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; skipped with a notice without
+both), whose floor and ceiling are its inputs `min_pass_rate` (0.85) and
+`max_hallucination_rate` (0.02); its regressions show after the merge.
+Datasets and the hallucination metric: `evals/README.md`.
+
+## Migration rehearsal
+
+The weekly `perf.yml` also runs `migrations` ("Migration rehearsal",
+REL-08): `scripts.migration_rehearsal --base-ref origin/release` applies
+on a scratch Postgres 16 the migrations `release` already has, seeds a
+production-sized synthetic dataset at the run's `scale` (`full` by
+default) and times every pending file against its budget; the table goes
+to the run summary and the JSON report is kept as an artifact
+(`docs/operations/deploys.md`, "Rehearsing the pending migrations").
+
+## Backend tests in parts
+
+`tests/conftest.py` marks the tests that reach Postgres (`postgres`); CI
+runs that group (`-m "postgres and not perf"`), the rest
+(`-m "not postgres and not perf and not api_fuzz"`) in parts, and the API
+fuzz tests (`-m api_fuzz`, marker of `tests/api_fuzz/conftest.py`) as one
+part of their own. With `TEST_PART=k/n` a run
+keeps, after `-m` chose the group, only the test files that
+`tests/part_plan.py` gives part k of n: every file of the group weighs the
+seconds its tests took in `tests/durations.json` (a file not measured yet
+weighs the mean of its group), and files go, longest first, to the part
+with the least work. Every part and every xdist worker computes the same
+plan from the same collection. The parts write `.coverage.<group>-<k>`;
+the `coverage` job combines them and checks the 95 % floor on the sum.
+
+`tests/platform/test_ci_test_parts.py` fails when a part of the committed
+plan holds more measured seconds than its budget (add a part to the matrix
+or split the slow files) and warns about files without a duration.
+
+## Cabinet: build next to the checks
+
+`web-build` only builds: it restores `web/.next/cache` (Turbopack's build
+cache; key: the lockfile and a hash of `web/src`, `web/public` and
+`next.config.ts`, falling back to the newest cache of the same lockfile),
+runs `next build`, scans the build for secrets and keeps `.next` without
+its cache as `cabinet-build`. The scan (`web/scripts/scan-bundle-secrets.mjs`,
+WEB-05, about a second) fails on a key shape of the platform's providers
+(Stripe `sk_`/`rk_`/`whsec_`, ElevenLabs, AWS, a PEM key, the platform's
+`awk_` keys, Sentry, model providers) in `.next/static` or `.next/server`,
+and on the value of a secret variable of `web/.env.example` or
+`.env.example` in what browsers receive (`.next/static` and the prerendered
+pages) when the build's environment has one (CI's has none). A hit is fixed
+in the code and a real key rotated; there is no exception list. The job
+then compares the payment pages' scripts with their inventory (a warning
+on a change, "Payment page integrity" above).
+Locally the first build of this worktree took 1:44, a later one of the
+same sources 13 seconds from that cache (about 260 MB); after a change only
+what it touched compiles again.
+The e2e shards need only this job. `web-checks` runs everything else at
+the same time and holds the Sentry token on `main`, so the shards' build
+never sees it. npm's download cache comes from `setup-node`, uv's from
+`setup-uv` (`enable-cache`).
+
+## Visual tests
+
+`visual` runs `npm run e2e:visual` once, not in shards: its 222 pictures
+take about three minutes on three workers (`web/e2e/visual/project.ts`), and
+its first project (the demo owner's sign-in, the platform admin's pages)
+must run before the rest. It installs neither a browser nor the PDF
+engine's libraries: the browser is the one of Playwright's image, pinned by
+digest in `web/scripts/visual-browser.mjs`, which the job pulls (about 1 GB)
+in the background while uv and npm install, and the pages are only looked
+at. On failure it keeps the expected, actual and diff PNG of every
+differing screen with the HTML report (`visual-report`). A failed `e2e`
+shard or `visual` run prints the failed tests' page snapshots and the
+API log's end into its own log (`.github/scripts/show-e2e-failures.sh`).
+
+## End-to-end shards
+
+`web/e2e/support/shards.ts` gives each shard its spec files: every spec
+weighs the seconds it took in `web/e2e/durations.json` (a spec not measured
+yet weighs the mean, and the shard prints a warning), and specs go, longest
+first, to the shard with the least work. Every shard starts its own API
+with in-memory storage, and every spec builds what it needs there (an
+owner signs up; a platform admin is added to the team by the run's first
+admin, `support/admin.ts`), so any spec may run on any shard. A worker
+reuses an admin's sign-in for a few minutes: a second sign-in of the same
+address would wait out the 30-second code cooldown, and a spec's duration
+would depend on its neighbours.
+
+The PDF engine's libraries (WeasyPrint's Pango) and the browser's system
+libraries and fonts (`playwright install --with-deps`, about 22 MB from
+Ubuntu's mirror) come from the Actions cache, keyed by the runner image and
+`web/package-lock.json`: some runners reach the mirror at 30 kB/s or not at
+all. On 23 October 2026 the browser's packages took 9 to 13 minutes of
+three shards' 15; on 26 October `apt-get update` itself stalled until a
+shard's timeout. On a hit, dpkg installs the cached packages without apt
+(no `apt-get update`): they are what an earlier run of this workflow
+fetched and apt checked against the signed index, and only this
+repository's own runs write the cache. On a miss, apt fetches them with
+timeouts and retries and the cache keeps what it downloaded.
+
+`web/e2e/support/shards.test.ts` (part of `npm test`) fails while a spec
+has no duration, an entry names a spec that is gone, or a shard of the plan
+for the matrix in `ci.yml` holds more than its budget: 225 seconds of specs,
+which with the 15 seconds that start the API and the cabinet keep a
+shard's test step within four minutes. A long spec file is split so that
+no file holds more than about half a shard: the route tour runs as
+`tour-routes*.spec.ts` (all in the Tbilisi project, `e2e/support/tour.ts`),
+the audit of every section as `a11y-sections-en.spec.ts` and
+`a11y-sections-it.spec.ts` (`e2e/support/axe.ts`), the long texts as
+`pseudo-locale-ltr.spec.ts` and `pseudo-locale-rtl.spec.ts`
+(`e2e/support/long-texts.ts`).
+
+## Refreshing the durations files
+
+Refresh after adding, splitting or noticeably slowing down tests, or when
+the run summary shows one part or shard well above the others. Both files
+hold seconds on CI's runners, so CI's own reports are the best source; a
+run on an idle four-core machine measures about the same (CI took 1.03–1.16
+times as long), a run on a busy or faster machine needs scaling first.
+
+The end-to-end specs (`web/e2e/durations.json`):
+
+```bash
+cd web
+npm run e2e:durations                         # the whole suite, about 25 minutes
+npm run e2e:durations -- inbox.spec.ts        # only these files; the other entries stay
+# Or from a CI run, measured on CI's machines:
+gh run download <run-id> --pattern 'e2e-report-*' --dir /tmp/e2e-reports
+npm run e2e:durations -- $(for f in /tmp/e2e-reports/*/.artifacts/report.json; do printf -- '--from %s ' "$f"; done)
+```
+
+`scripts/e2e-durations.mjs` runs Playwright with its JSON reporter (on CI
+every shard writes `e2e/.artifacts/report.json` into its `e2e-report-<k>`
+artifact), adds up each spec file's tests (every project and attempt) and
+rewrites the file: measured specs replace their entries, specs that are
+gone are dropped. A run with a failed test writes nothing.
+
+The backend test files (`tests/durations.json`):
+
+```bash
+TEST_DURATIONS_REPORT=/tmp/durations-report.json uv run pytest -n auto \
+    --cov=app --cov-branch --cov-report= --cov-fail-under=0
+uv run python -m scripts.backend_test_durations /tmp/durations-report.json
+# Or from a CI run: its `backend-test-durations` artifact is the merged file.
+gh run download <run-id> --name backend-test-durations --dir tests
+```
+
+With `TEST_DURATIONS_REPORT` the run's controller (`tests/duration_recorder.py`)
+writes each test file's seconds (setup, call and teardown) by group;
+`scripts/backend_test_durations.py` merges one or more such reports into
+the committed file the same way. Every CI part writes its report into its
+`coverage-<group>-<k>` artifact, and the `coverage` job merges them.
+
+Commit the refreshed file with the change that made it necessary; CI's
+own numbers are the better source once a run has them.

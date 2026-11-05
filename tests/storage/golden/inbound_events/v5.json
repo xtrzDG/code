@@ -1,0 +1,46 @@
+{
+  "attempts": 1,
+  "business_id": "business_825d88e0-0be3-4c47-b6c6-01b4bb852234",
+  "channel": "phone",
+  "channel_id": "channel_5838bdb6-cced-403a-8c2b-8aaa6f008928",
+  "conversation_id": "conversation_3dfc0d3f-5297-4ca6-9b36-b2fcb1aefe08",
+  "created_at": 1790000000000000,
+  "customer_channel_user_id": "Sample ChannelUserId",
+  "customer_message": {
+    "acquisition_source": "qr-tables",
+    "attachments": [
+      {
+        "caption": "Sample AttachmentCaption",
+        "declared_bytes": 1,
+        "duration_seconds": 1,
+        "kind": "audio",
+        "location": {
+          "address": "Sample LocationAddress",
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "name": "Sample LocationName"
+        },
+        "mime_type": "Sample ProviderMediaType",
+        "provider_media_id": "Sample ProviderMediaId"
+      }
+    ],
+    "channel_user_id": "Sample ChannelUserId",
+    "contact_name": "Sample ContactName",
+    "contact_phone_number": "+995599123456",
+    "text": "Sample MessageText"
+  },
+  "customer_message_id": "message_bc861f77-9090-424e-a67c-eae4a3f5916f",
+  "handoff_requested_at": 1790000000000000,
+  "id": "inbound_event_3d34f3d5-d69b-5d8c-98c0-985a7050afd6",
+  "kind": "customer_message",
+  "last_error": "Sample InboundErrorText",
+  "lease_until": 1790000000000000,
+  "outbound_message_id": "outbound_message_4ac14085-6b10-54be-a0a0-db48a6ac1cbe",
+  "payload": "Sample InboundPayloadText",
+  "processed_at": 1790000000000000,
+  "provider_message_id": "Sample ProviderMessageId",
+  "reply_message_id": "message_fcc6527c-bfb5-43e4-aa15-0a957bccdbf4",
+  "schema_version": "5",
+  "status": "received",
+  "updated_at": 1790000000000000
+}

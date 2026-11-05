@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "challenge_ts": "2026-10-01T09:00:00.096Z",
+  "hostname": "app.example.com",
+  "error-codes": [],
+  "action": "login",
+  "cdata": "",
+  "metadata": {
+    "ephemeral_id": "x:9f78e0ed210960d7693b167e"
+  }
+}

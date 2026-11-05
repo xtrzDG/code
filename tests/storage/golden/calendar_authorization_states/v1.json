@@ -1,0 +1,11 @@
+{
+  "business_id": "business_659fb262-46b8-49fc-9001-fc91539488dc",
+  "created_at": 1790000000000000,
+  "expires_at": 1790000000000000,
+  "id": "calendar_authorization_state_0da18321-4315-4e28-af0a-3b43cc8c0120",
+  "is_consumed": true,
+  "schema_version": "1",
+  "state_hash": "Sample CalendarAuthorizationStateHash",
+  "updated_at": 1790000000000000,
+  "user_id": "user_6fb56184-be05-4e1e-8aa4-13d69356aa35"
+}

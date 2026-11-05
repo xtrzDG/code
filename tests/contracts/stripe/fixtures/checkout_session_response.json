@@ -1,0 +1,9 @@
+{
+  "id": "cs_test_0001",
+  "object": "checkout.session",
+  "mode": "subscription",
+  "status": "open",
+  "url": "https://checkout.stripe.com/c/pay/cs_test_0001",
+  "expires_at": 1792566000,
+  "livemode": false
+}

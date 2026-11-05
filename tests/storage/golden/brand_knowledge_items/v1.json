@@ -1,0 +1,20 @@
+{
+  "body": "Sample KnowledgeBody",
+  "brand_id": "brand_122da734-be7f-4341-a0a7-fc4a583c5b69",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "id": "knowledge_item_7b532364-686e-465a-9850-2573a4754f12",
+  "is_active": true,
+  "kind": "faq",
+  "languages": [
+    "ka"
+  ],
+  "price_minor": 1500,
+  "schema_version": "1",
+  "shared_key": "parking",
+  "tags": [
+    "signature"
+  ],
+  "title": "Sample KnowledgeTitle",
+  "updated_at": 1790000000000000
+}

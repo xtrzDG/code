@@ -1,0 +1,9 @@
+{
+  "business_id": "business_96f36541-b903-438c-b20c-04dbabe7e58b",
+  "channel": "phone",
+  "created_at": 1790000000000000,
+  "id": "channel_message_receipt_c37b3bc6-7275-43fa-9c6a-4786934a243e",
+  "provider_message_id": "Sample ProviderMessageId",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

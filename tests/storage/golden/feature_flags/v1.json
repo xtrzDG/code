@@ -1,0 +1,17 @@
+{
+  "changed_at": 1790000000000000,
+  "changed_by": "user_c8964663-726f-4278-a22f-c31e366ae588",
+  "created_at": 1790000000000000,
+  "excluded_business_ids": [
+    "business_8e7cae5a-666c-452f-bb5f-1e3461290ebb"
+  ],
+  "included_business_ids": [
+    "business_1e0a5448-ad8a-48e4-bd20-845a490ce47e"
+  ],
+  "is_enabled": true,
+  "name": "release_canary",
+  "reason": "10% after a clean day at 1%",
+  "rollout_percent": 1,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,17 @@
+# Requests answered with an error and jobs that failed because the
+# database (a psycopg error underneath) or the object storage failed,
+# counted by the process that saw them (platform signals database_error
+# and object_storage_error); a database's answer about the data (an
+# integrity or data error) is not counted. A database that is down altogether also
+# stops this count: GET /readyz (the uptime monitor) and worker_down
+# cover that.
+code: storage_errors
+severity: sev1
+summary: More than 5 requests or jobs failed on the database or the object storage in 15 to 30 minutes.
+measure: requests and jobs failed by the database or the object storage in the last 15 to 30 minutes
+threshold: 5
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (platform-signal:database_error, platform-signal:object_storage_error)
+runbook: docs/operations/runbooks/storage-errors.md

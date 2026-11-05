@@ -1,0 +1,53 @@
+{
+  "booking_system": {
+    "added_at": 1790000000000000,
+    "encrypted_api_key": "Sample EncryptedChannelSecret",
+    "external_resource_id": "1203845",
+    "external_resource_title": "Sample BookingSystemResourceTitle",
+    "kind": "cal_com",
+    "status": {
+      "block_count": 1,
+      "last_attempt_at": 1790000000000000,
+      "last_synced_at": 1790000000000000,
+      "problem": "not_connected",
+      "problem_detail": "Sample CalendarSyncErrorSummary"
+    },
+    "write_status": {
+      "last_failed_at": 1790000000000000,
+      "last_written_at": 1790000000000000,
+      "problem": "not_connected",
+      "problem_detail": "Sample CalendarSyncErrorSummary"
+    }
+  },
+  "business_id": "business_c092bc65-e8de-49ad-8372-bab8c01be2b4",
+  "created_at": 1790000000000000,
+  "google_status": {
+    "block_count": 1,
+    "last_attempt_at": 1790000000000000,
+    "last_synced_at": 1790000000000000,
+    "problem": "not_connected",
+    "problem_detail": "Sample CalendarSyncErrorSummary"
+  },
+  "ical_export_created_at": 1790000000000000,
+  "ical_export_token_hash": "abababababababababababababababababababababababababababababababab",
+  "ical_imports": [
+    {
+      "added_at": 1790000000000000,
+      "encrypted_url": "Sample EncryptedChannelSecret",
+      "feed_id": "ical_import_d4be3a69-529e-4322-a135-9a0de0fc9937",
+      "host": "www.airbnb.com",
+      "status": {
+        "block_count": 1,
+        "last_attempt_at": 1790000000000000,
+        "last_synced_at": 1790000000000000,
+        "problem": "not_connected",
+        "problem_detail": "Sample CalendarSyncErrorSummary"
+      }
+    }
+  ],
+  "id": "resource_calendar_5be08f1b-64a9-59b8-ac53-0ec2a0b14d46",
+  "next_sync_at": 1790000000000000,
+  "resource_id": "resource_7933be1e-76bb-4732-918a-14d2c218f8f2",
+  "schema_version": "2",
+  "updated_at": 1790000000000000
+}

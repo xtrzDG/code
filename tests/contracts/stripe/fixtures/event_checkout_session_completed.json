@@ -1,0 +1,29 @@
+{
+  "id": "evt_test_checkout_0001",
+  "object": "event",
+  "api_version": "2024-06-20",
+  "created": 1792479600,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {"id": null, "idempotency_key": null},
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_0001",
+      "object": "checkout.session",
+      "mode": "subscription",
+      "status": "complete",
+      "payment_status": "paid",
+      "client_reference_id": "payment_order_7d3c1f9e-2b4a-4c8e-9f10-000000000001",
+      "metadata": {"payment_order_id": "payment_order_7d3c1f9e-2b4a-4c8e-9f10-000000000001"},
+      "customer": "cus_test_0001",
+      "subscription": "sub_test_0001",
+      "invoice": "in_test_0001",
+      "amount_subtotal": 31900,
+      "amount_total": 31900,
+      "currency": "eur",
+      "locale": "it",
+      "livemode": false
+    }
+  }
+}

@@ -1,0 +1,432 @@
+{
+  "collection": "value_reports",
+  "document_type": "ValueReportDocument",
+  "schema_version": 4,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "average_check_minor": {
+        "anyOf": [
+          {
+            "maximum": 100000000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "average_check_source": {
+        "enum": [
+          "owner",
+          "niche_default",
+          "none"
+        ],
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "current": {
+        "additionalProperties": false,
+        "properties": {
+          "after_hours_conversation_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "assistant_booking_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "assistant_reply_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "booked_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "booking_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "call_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "conversation_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "customer_message_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "estimated_revenue_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "handoff_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "request_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revenue_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "booked_values",
+                  "mixed",
+                  "average_check"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "staff_minutes_saved": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "valued_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "conversation_count",
+          "after_hours_conversation_count",
+          "customer_message_count",
+          "assistant_reply_count",
+          "call_count",
+          "booking_count",
+          "assistant_booking_count",
+          "request_count",
+          "handoff_count",
+          "staff_minutes_saved"
+        ],
+        "type": "object"
+      },
+      "date_from": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "date_to": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "delivery": {
+        "enum": [
+          "sent",
+          "no_recipients",
+          "quiet"
+        ],
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^value_report_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "daily",
+          "weekly",
+          "monthly"
+        ],
+        "type": "string"
+      },
+      "period_key": {
+        "maxLength": 10,
+        "minLength": 7,
+        "pattern": "^\\d{4}-(W\\d{2}|\\d{2}|\\d{2}-\\d{2})$",
+        "type": "string"
+      },
+      "plan_cost_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "previous": {
+        "additionalProperties": false,
+        "properties": {
+          "after_hours_conversation_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "assistant_booking_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "assistant_reply_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "booked_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "booking_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "call_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "conversation_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "customer_message_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "estimated_revenue_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "handoff_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "request_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revenue_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "booked_values",
+                  "mixed",
+                  "average_check"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "staff_minutes_saved": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "valued_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "conversation_count",
+          "after_hours_conversation_count",
+          "customer_message_count",
+          "assistant_reply_count",
+          "call_count",
+          "booking_count",
+          "assistant_booking_count",
+          "request_count",
+          "handoff_count",
+          "staff_minutes_saved"
+        ],
+        "type": "object"
+      },
+      "previous_date_from": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "previous_date_to": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "recipient_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "return_multiple": {
+        "anyOf": [
+          {
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "4",
+        "type": "string"
+      },
+      "starts_at": {
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "value_basis": {
+        "enum": [
+          "bookings",
+          "requests"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "kind",
+      "period_key",
+      "date_from",
+      "date_to",
+      "previous_date_from",
+      "previous_date_to",
+      "starts_at",
+      "currency_code",
+      "value_basis",
+      "average_check_source",
+      "current",
+      "previous",
+      "delivery",
+      "recipient_count"
+    ],
+    "type": "object"
+  }
+}

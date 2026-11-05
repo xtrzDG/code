@@ -1,0 +1,14 @@
+{
+  "business_id": "business_a5df14df-9abd-40b7-ba25-ebc5bd7056a6",
+  "byte_count": 1,
+  "created_at": 1790000000000000,
+  "duration_seconds": 1,
+  "id": "message_media_eaa2f277-7177-5c7c-9592-4d4cb03f4773",
+  "kind": "audio",
+  "media_type": "audio/ogg",
+  "message_id": "message_82d9a1e3-6523-4090-925a-17f2fed3946c",
+  "schema_version": "1",
+  "storage_path": "Sample MediaStoragePath",
+  "transcript": "Sample TranscribedVoiceText",
+  "updated_at": 1790000000000000
+}

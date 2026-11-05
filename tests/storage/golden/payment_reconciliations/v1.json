@@ -1,0 +1,19 @@
+{
+  "checked_count": 1,
+  "created_at": 1790000000000000,
+  "day": "2026-09-21",
+  "mismatches": [
+    {
+      "business_id": "business_1c35b892-27bc-4db8-8841-9207f6e514cb",
+      "kind": "paid_at_provider",
+      "payment_order_id": "payment_order_5faed931-9c8b-4514-8af5-5528ae221564",
+      "provider": "flitt",
+      "provider_status": "created",
+      "recorded_status": "created"
+    }
+  ],
+  "ran_at": 1790000000000000,
+  "schema_version": "1",
+  "unreadable_count": 1,
+  "updated_at": 1790000000000000
+}

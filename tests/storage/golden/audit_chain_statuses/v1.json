@@ -1,0 +1,15 @@
+{
+  "broken_position": 1,
+  "business_id": "business_fc628aee-a7de-4c3f-b760-625f04e30b00",
+  "checked_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "entries_checked": 1,
+  "id": "business_fd43b272-3035-4a74-a29f-96b1631dd8b5",
+  "problem": "hash_mismatch",
+  "resume_position": 1,
+  "schema_version": "1",
+  "status": "intact",
+  "updated_at": 1790000000000000,
+  "verified_through_hash": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+  "verified_through_position": 1
+}

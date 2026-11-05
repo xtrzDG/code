@@ -1,0 +1,117 @@
+{
+  "collection": "api_keys",
+  "document_type": "ApiKeyDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "created_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^api_key_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "last_used_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "name": {
+        "maxLength": 60,
+        "minLength": 1,
+        "pattern": "^\\S(.*\\S)?$",
+        "type": "string"
+      },
+      "prefix": {
+        "maxLength": 12,
+        "minLength": 12,
+        "pattern": "^awk_[a-z2-7]{8}$",
+        "type": "string"
+      },
+      "revoked_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "revoked_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "scopes": {
+        "items": {
+          "enum": [
+            "bookings:read",
+            "bookings:write",
+            "leads:read",
+            "leads:write",
+            "contacts:read",
+            "conversations:read",
+            "webhooks:manage"
+          ],
+          "type": "string"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "secret_hash": {
+        "maxLength": 64,
+        "minLength": 64,
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "status": {
+        "default": "active",
+        "enum": [
+          "active",
+          "revoked"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "name",
+      "prefix",
+      "secret_hash",
+      "scopes",
+      "created_by"
+    ],
+    "type": "object"
+  }
+}

@@ -1,0 +1,99 @@
+/**
+ * `security.*` texts: Account → Security (the authenticator app, recovery
+ * codes, how this session is signed in) and a business's two-factor
+ * requirement in Settings → Team, in English: the reference that it is typed against.
+ */
+
+export const securityEn = {
+  title: "Security",
+  description: "How you sign in to the cabinet.",
+  menu: "Security",
+  back: "To my businesses",
+  required: {
+    business:
+      "This business asks everyone in its team to sign in with an authenticator app. Set one up below, then continue.",
+    admin:
+      "The admin pages need a sign-in with an authenticator app. Set one up below, or confirm with it, then continue.",
+    adminPasskey: "The admin pages need a passkey. Add one below, then continue.",
+    continue: "Continue",
+  },
+  suggestion: {
+    title: "Protect your business with a second step",
+    body: "Your cabinet holds your customers' names, phone numbers and conversations. With a second step, a stolen login code alone cannot open it.",
+    passkey: "A passkey: your phone's or computer's fingerprint, face or screen lock.",
+    app: "Or an authenticator app: a six-digit code after the login code.",
+    setUp: "Set it up now",
+    later: "Not now",
+    reminder: "We ask again at your next sign-in until you set one up.",
+  },
+  app: {
+    title: "Authenticator app",
+    description:
+      "After the login code, the cabinet also asks for a code from an app on your phone. Someone who gets your login code still cannot get in.",
+    on: "On",
+    off: "Off",
+    pending: "Setup not finished",
+    since: "Turned on {date}",
+    lastUsed: "Last code {date}",
+    setUp: "Set up",
+    finishSetup: "Finish the setup",
+    remove: "Turn off",
+    removeTitle: "Turn off the authenticator app?",
+    removeDescription:
+      "Signing in will only ask for the login code again, and your recovery codes stop working.",
+    removeAdmin:
+      "As a platform admin you will be asked to set it up again at the next sign-in.",
+    removed: "The authenticator app is off",
+    adminRequired: "Platform admins always sign in with an authenticator app.",
+    turnedOn: "The authenticator app is on",
+  },
+  codes: {
+    title: "Recovery codes",
+    description:
+      "For a lost phone or security key: each code stands in for your second factor once.",
+    left: {
+      one: "{count} unused code left",
+      other: "{count} unused codes left",
+    },
+    none: "No unused codes left. Get new ones.",
+    renew: "Get new codes",
+    renewTitle: "Get new recovery codes?",
+    renewDescription: "Your current codes stop working at once.",
+    renewing: "Preparing…",
+  },
+  session: {
+    title: "This session",
+    twoFactor: "Signed in with a login code and a second factor.",
+    oneFactor: "Signed in with a login code only.",
+    upgrade: "Confirm with your second factor",
+    upgraded: "This session now counts as signed in with two factors",
+  },
+  team: {
+    title: "Two-factor sign-in for the team",
+    description:
+      "Everyone who opens this business must sign in with an authenticator app as well as the login code.",
+    toggle: "Require an authenticator app",
+    on: "Required for everyone",
+    off: "Not required",
+    without: {
+      one: "{count} person has no authenticator app yet: they cannot open the business until they set one up in Account → Security.",
+      other:
+        "{count} people have no authenticator app yet: they cannot open the business until they set one up in Account → Security.",
+    },
+    everyone: "Everyone has an authenticator app.",
+    ownFirst:
+      "First sign in with your own authenticator app: set it up or confirm with it in Account → Security.",
+    openSecurity: "Open Security",
+    ownerOnly: "Only an owner can change this.",
+    saved: "Saved",
+  },
+  recordings: {
+    title: "Call recordings",
+    description:
+      "Recordings hold your callers' voices and what they said. Owners can always play them; staff only if you allow it here.",
+    toggle: "Staff may play call recordings",
+    on: "Owners and staff can play them",
+    off: "Only owners can play them",
+    saved: "Saved",
+  },
+} as const;

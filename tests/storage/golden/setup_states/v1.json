@@ -1,0 +1,10 @@
+{
+  "business_id": "business_188fb79f-63a0-4507-8583-dd0bc771bd7c",
+  "created_at": 1790000000000000,
+  "id": "setup_state_dff356ba-a230-51dc-a9f2-32a5dc8f493f",
+  "schema_version": "1",
+  "skipped_steps": [
+    "business"
+  ],
+  "updated_at": 1790000000000000
+}

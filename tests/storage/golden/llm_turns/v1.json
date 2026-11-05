@@ -1,0 +1,10 @@
+{
+  "conversation_id": "conversation_549e57ed-8d2b-487c-844d-e430d3a6ac54",
+  "created_at": 1790000000000000,
+  "id": "llm_turn_0c480918-e54c-4b2b-a570-c1ffced3d465",
+  "payload": "{\"role\": \"assistant\", \"content\": \"Hello\"}",
+  "role": "user",
+  "schema_version": "1",
+  "sequence_number": 1,
+  "updated_at": 1790000000000000
+}

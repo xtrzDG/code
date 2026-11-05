@@ -1,0 +1,11 @@
+{
+  "business_id": "business_2b8e57bf-f94c-41e1-9dd5-e9572c74fbe4",
+  "created_at": 1790000000000000,
+  "id": "onboarding_request_470d5191-e8a6-5f74-b5f7-38ac3154cf96",
+  "plan_key": "chat",
+  "requested_at": 1790000000000000,
+  "requested_by": "user_c2c31825-747f-4253-9acd-c88a45431d92",
+  "schema_version": "1",
+  "status": "open",
+  "updated_at": 1790000000000000
+}

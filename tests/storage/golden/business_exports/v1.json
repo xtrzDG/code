@@ -1,0 +1,17 @@
+{
+  "archive_bytes": 1,
+  "archive_path": "business-exports/business_42/export-42.zip",
+  "business_id": "business_6c025f7a-259b-41f7-acad-296cf7355e75",
+  "created_at": 1790000000000000,
+  "expires_at": 1790000000000000,
+  "finished_at": 1790000000000000,
+  "id": "business_export_eca47e33-2e9d-44b1-9b13-7e48306937ab",
+  "language": "ka",
+  "last_error": "Sample ExportErrorText",
+  "record_count": 1,
+  "requested_by": "user_77b8910c-3472-4d51-b031-93103c615443",
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "status": "queued",
+  "updated_at": 1790000000000000
+}

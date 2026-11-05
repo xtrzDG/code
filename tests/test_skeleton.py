@@ -7,7 +7,7 @@ from typed_time_provider import MonotonicClock, Nanoseconds, WallClock
 from app.containers.app import AppContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
-from app.containers.use_cases import UseCasesContainer
+from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.schemas.configurations.example_config import ExampleConfig
 from app.schemas.domain.example_document import (
     ExampleDocument,

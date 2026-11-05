@@ -1,0 +1,15 @@
+# A spend spike: the providers' spend of the current UTC day (model tokens,
+# voice minutes, telephony, WhatsApp templates, transcription; planned unit
+# prices where a figure is missing) is more than 3 times the daily mean of
+# the 7 days before, once it is at least $5. The figure is today's spend in
+# whole dollars, the threshold the dollars from which it fires.
+code: spend_spike
+severity: sev2
+summary: Today's provider spend is far above the daily mean of the week before.
+measure: today's provider spend (UTC) against the 7 days before's daily mean
+threshold: 3
+unit: ratio
+window_minutes: 1440
+volume_floor: 5
+source: usage_events BRIN (doc_occurred_at), migration 1142
+runbook: docs/operations/runbooks/spend-spike.md

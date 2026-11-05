@@ -1,0 +1,88 @@
+{
+  "collection": "widget_uploads",
+  "document_type": "WidgetUploadDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "attached_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "byte_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "duration_seconds": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^widget_upload_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "audio",
+          "image",
+          "location",
+          "contact",
+          "sticker",
+          "other"
+        ],
+        "type": "string"
+      },
+      "media_type": {
+        "maxLength": 64,
+        "minLength": 7,
+        "pattern": "^(audio|image)/[a-z0-9][a-z0-9.+\\-]*$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "storage_path": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "visitor_id": {
+        "pattern": "^widget_visitor_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "business_id",
+      "visitor_id",
+      "kind",
+      "media_type",
+      "storage_path",
+      "byte_count"
+    ],
+    "type": "object"
+  }
+}

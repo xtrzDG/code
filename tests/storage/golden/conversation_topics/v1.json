@@ -1,0 +1,23 @@
+{
+  "business_id": "business_318435c0-37d2-4b67-8c6d-0668fdfcfae8",
+  "created_at": 1790000000000000,
+  "groups": [
+    {
+      "conversation_count": 1,
+      "language": "ka",
+      "topics": [
+        {
+          "conversation_count": 1,
+          "label": "Sample TopicLabel",
+          "unanswered_count": 1
+        }
+      ]
+    }
+  ],
+  "id": "conversation_topics_b73805bd-bab3-586f-b65f-8d8a468cc4ad",
+  "label_language": "ka",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "window_from": 1790000000000000,
+  "window_to": 1790000000000000
+}

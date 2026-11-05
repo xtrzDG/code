@@ -1,0 +1,17 @@
+{
+  "business_id": "business_559f67b3-a94a-49a4-aa3e-9287f9406ed5",
+  "created_at": 1790000000000000,
+  "id": "notification_preferences_7af79c3d-5296-5ee8-a2e6-ad61ba0c760f",
+  "preferences": {
+    "events": [
+      "handoff"
+    ],
+    "quiet_hours": {
+      "ends_at": "22:00",
+      "starts_at": "22:00"
+    }
+  },
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "user_id": "user_9af9abff-f108-4611-a1ce-e0992d6d641f"
+}

@@ -1,0 +1,25 @@
+{
+  "amount_minor": 1500,
+  "business_id": "business_fce38d0b-6806-4467-93e9-65701ffa4db4",
+  "checkout_url": "https://pay.example.com/checkout/42",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "id": "payment_order_397db17d-b52a-41f1-b490-96ec44adaf43",
+  "invoice_ids": [
+    "invoice_0916d474-4d90-492a-ae2c-065986f7ca65"
+  ],
+  "is_initial_payment_settled": true,
+  "is_refund_due": true,
+  "last_failure_reason": "Sample PaymentFailureReason",
+  "last_payment_reference": "Sample PaymentProviderReference",
+  "processed_notification_keys": [
+    "Sample PaymentNotificationKey"
+  ],
+  "provider": "flitt",
+  "recurring_amount_minor": 1500,
+  "recurring_interval_months": 1,
+  "schema_version": "1",
+  "status": "created",
+  "subscription_id": "subscription_c0b96d59-fb6f-4af3-860b-4f48e4d1c548",
+  "updated_at": 1790000000000000
+}

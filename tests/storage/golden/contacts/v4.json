@@ -1,0 +1,37 @@
+{
+  "block": {
+    "blocked_at": 1790000000000000,
+    "blocked_by": "user_98e71d20-3568-4562-bc04-f77ded0cbe12"
+  },
+  "business_id": "business_50024b87-e376-47ab-96d7-41ff7402a57d",
+  "channel_identities": [
+    {
+      "channel": "phone",
+      "channel_user_id": "Sample ChannelUserId"
+    }
+  ],
+  "created_at": 1790000000000000,
+  "display_name_folded": "Sample FoldedContactName",
+  "erased_at": 1790000000000000,
+  "id": "contact_9504a7a8-3010-4e4f-9528-a18ff0a0ea1e",
+  "is_blocked": true,
+  "is_vip": true,
+  "language": "ka",
+  "last_seen_at": 1790000000000000,
+  "name": "Sample ContactName",
+  "opted_out_channels": [
+    "phone"
+  ],
+  "phone_number": "+995599123456",
+  "schema_version": "4",
+  "tags": [
+    {
+      "added_at": 1790000000000000,
+      "added_by": "user_92ebc82b-fe80-4fcc-b3f8-ffcc8c9bd2fe",
+      "key": "regular",
+      "tag": "regular"
+    }
+  ],
+  "updated_at": 1790000000000000,
+  "verified_phone_number": "+995599123456"
+}

@@ -1,0 +1,85 @@
+{
+  "collection": "platform_admins",
+  "document_type": "PlatformAdminDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "added_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "email": {
+        "anyOf": [
+          {
+            "maxLength": 254,
+            "minLength": 6,
+            "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^platform_admin_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "login_method": {
+        "enum": [
+          "phone",
+          "email"
+        ],
+        "type": "string"
+      },
+      "phone_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "role": {
+        "enum": [
+          "super",
+          "support_readonly",
+          "billing"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "login_method",
+      "role"
+    ],
+    "type": "object"
+  }
+}

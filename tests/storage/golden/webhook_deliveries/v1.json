@@ -1,0 +1,23 @@
+{
+  "attempts": 1,
+  "business_id": "business_a059c6c2-b3c8-48c0-a80c-8c58070b2fb1",
+  "contact_id": "contact_0a60f04f-be98-4495-82dd-65d3a94cc4a6",
+  "created_at": 1790000000000000,
+  "delivered_at": 1790000000000000,
+  "endpoint_id": "webhook_b92c45c1-f2af-4b59-ac1f-c038d334970f",
+  "event_id": "event_a6d3f785-5bf5-49ca-85b6-f56102c4067c",
+  "event_type": "booking.created",
+  "expires_at": 1790000000000000,
+  "give_up_at": 1790000000000000,
+  "id": "webhook_delivery_2ab41eb2-7f64-4407-a2d0-cc5b5aad2474",
+  "is_test": true,
+  "last_attempt_at": 1790000000000000,
+  "last_error": "The address answered HTTP 500.",
+  "last_problem": "not_public",
+  "last_status_code": 100,
+  "next_attempt_at": 1790000000000000,
+  "payload": "Sample WebhookPayloadJson",
+  "schema_version": "1",
+  "status": "pending",
+  "updated_at": 1790000000000000
+}

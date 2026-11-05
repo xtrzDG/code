@@ -1,0 +1,122 @@
+name: ZAP active scan (staging)
+
+# Weekly, an active ZAP scan of staging, the production rehearsal
+# (render.staging.yaml): ZAP attacks every operation of the public API
+# (`/v1/public-api/...`, reads and writes; scripts/zap_staging.py) with its
+# active rules (injection, path traversal, server-side request forgery, ...)
+# signed in with an API key of staging's scan business. zap.yml scans every
+# commit's stack passively; this one writes, so it never runs against
+# production. scripts/zap_gate.py fails on a Medium or High finding
+# .zap/rules.tsv has not reviewed (SECURITY.md, "Dynamic scan"), and
+# `scripts.zap_staging signed-in` when the key never reached the API.
+#
+# Setup: the repository variable STAGING_URL (the staging API's https
+# address) and the secret STAGING_SCAN_API_KEY (an API key of a business
+# that exists for the scan, with every scope; Settings → Integrations → API
+# keys in staging's cabinet). The scan writes bookings, leads and webhooks
+# with made-up contacts: give that business no connected channel and no
+# staff notifications, so nothing it writes reaches a real phone or
+# mailbox. A run without them fails and names what is
+# missing: a scan that skips itself proves nothing. schedule-watch.yml opens
+# an issue when this has not succeeded for 8 days.
+on:
+  schedule:
+    # 01:17 UTC on Sundays.
+    - cron: "17 1 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zap-staging
+  cancel-in-progress: false
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release);
+# the ZAP image by digest (2.17.0), as in zap.yml.
+env:
+  ZAP_IMAGE: ghcr.io/zaproxy/zaproxy:2.17.0@sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6
+
+jobs:
+  active:
+    name: ZAP active scan of staging (public API, signed in)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Staging is configured for the scan
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+          KEY_IS_SET: ${{ secrets.STAGING_SCAN_API_KEY != '' }}
+        run: |
+          missing=""
+          [ -n "$STAGING_URL" ] || missing="${missing} the variable STAGING_URL,"
+          [ "$KEY_IS_SET" = "true" ] || missing="${missing} the secret STAGING_SCAN_API_KEY,"
+          if [ -n "$missing" ]; then
+            echo "::error::The active scan of staging is not set up: set${missing%,} (.github/workflows/zap-staging.yml)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.14"
+
+      # ZAP runs as its own user (uid 1000) and writes its reports here.
+      - name: The scan's definition and rules
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/zap"
+          cp .zap/rules.tsv scripts/zap_status_hook.py "$RUNNER_TEMP/zap/"
+          uv run --no-project python -m scripts.zap_staging definition web/openapi.json \
+            --server "$STAGING_URL" > "$RUNNER_TEMP/zap/api-definition.json"
+          chmod -R a+rwX "$RUNNER_TEMP/zap"
+
+      # Exit codes 0-2 of the packaged scan (passed, FAIL rules, warnings)
+      # leave the verdict to the gate; above 2 the scan did not finish. ZAP
+      # adds the key to requests whose host name contains staging's.
+      - name: Active scan of the public API
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+          STAGING_SCAN_API_KEY: ${{ secrets.STAGING_SCAN_API_KEY }}
+        run: |
+          host="$(printf '%s' "$STAGING_URL" | sed -E 's#^https://([^/:]+).*#\1#')"
+          status=0
+          ZAP_AUTH_HEADER_VALUE="Bearer ${STAGING_SCAN_API_KEY}" ZAP_AUTH_HEADER_SITE="$host" \
+            docker run --rm --volume "$RUNNER_TEMP/zap:/zap/wrk:rw" \
+              --env ZAP_AUTH_HEADER_VALUE --env ZAP_AUTH_HEADER_SITE \
+              "$ZAP_IMAGE" zap-api-scan.py -t api-definition.json -f openapi \
+              -c rules.tsv -J api.json -r api.html -I \
+              --hook=/zap/wrk/zap_status_hook.py || status=$?
+          if [ "$status" -gt 2 ] || [ ! -s "$RUNNER_TEMP/zap/api.json" ]; then
+            echo "::error::The active scan did not finish (ZAP exit code $status)."
+            exit 1
+          fi
+
+      - name: New Medium or High findings fail (reviewed rules in .zap/rules.tsv)
+        run: >-
+          uv run --no-project python -m scripts.zap_gate
+          --rules .zap/rules.tsv --summary "$GITHUB_STEP_SUMMARY"
+          "$RUNNER_TEMP/zap/api.json"
+
+      - name: The scan was signed in with the key
+        if: ${{ !cancelled() }}
+        run: >-
+          uv run --no-project python -m scripts.zap_staging signed-in
+          --summary "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/zap/api-statuses.json"
+
+      - name: Keep the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: zap-staging-reports
+          path: |
+            ${{ runner.temp }}/zap/api.html
+            ${{ runner.temp }}/zap/api.json
+            ${{ runner.temp }}/zap/api-statuses.json
+          if-no-files-found: ignore
+          retention-days: 30

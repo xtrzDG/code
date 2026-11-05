@@ -1,0 +1,47 @@
+{
+  "block": {
+    "blocked_at": 1790000000000000,
+    "blocked_by": "user_98e71d20-3568-4562-bc04-f77ded0cbe12"
+  },
+  "business_id": "business_50024b87-e376-47ab-96d7-41ff7402a57d",
+  "channel_identities": [
+    {
+      "channel": "phone",
+      "channel_user_id": "Sample ChannelUserId"
+    }
+  ],
+  "created_at": 1790000000000000,
+  "display_name_folded": "Sample FoldedContactName",
+  "erased_at": 1790000000000000,
+  "id": "contact_9504a7a8-3010-4e4f-9528-a18ff0a0ea1e",
+  "is_blocked": true,
+  "is_vip": true,
+  "language": "ka",
+  "last_seen_at": 1790000000000000,
+  "marketing_consent": {
+    "booking_id": "booking_b9e96bdd-7d55-4e68-b1da-99e78b942fa7",
+    "given_at": 1790000000000000,
+    "recorded_by": "user_d1e27a12-231d-40e2-97c5-c3ea5d5690bf",
+    "source": "booking_page",
+    "text_version": "2026-11-02",
+    "withdrawal": "booking_page",
+    "withdrawn_at": 1790000000000000,
+    "withdrawn_by": "user_a9df7c37-d39e-443d-9886-c9c65832fb75"
+  },
+  "name": "Sample ContactName",
+  "opted_out_channels": [
+    "phone"
+  ],
+  "phone_number": "+995599123456",
+  "schema_version": "5",
+  "tags": [
+    {
+      "added_at": 1790000000000000,
+      "added_by": "user_92ebc82b-fe80-4fcc-b3f8-ffcc8c9bd2fe",
+      "key": "regular",
+      "tag": "regular"
+    }
+  ],
+  "updated_at": 1790000000000000,
+  "verified_phone_number": "+995599123456"
+}

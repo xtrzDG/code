@@ -1,0 +1,14 @@
+{
+  "change_key": "anthropic-added-2026-12-01",
+  "completed_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "effective_on": "2026-12-01",
+  "id": "subprocessor_announcement_c40aedfc-29d8-5f3d-ace9-865fa65bf10d",
+  "kind": "added",
+  "notified_business_count": 1,
+  "recipient_count": 1,
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "subprocessor": "anthropic",
+  "updated_at": 1790000000000000
+}

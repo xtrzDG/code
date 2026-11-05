@@ -1,0 +1,19 @@
+# Campaigns held for review (ABUSE-05): every hour the campaign job
+# measures, for each business whose campaign is on, how many of the
+# customers its messages of the last 30 days reached asked for no more
+# messages since (a STOP in that chat, or the marketing consent taken
+# back). From 40 reached customers, 3 opt-outs and 5 % it holds the
+# campaign (CampaignReviewGate): nothing more is sent until a platform
+# admin releases it, the owners are told why, and the platform signal
+# campaign_hold counts once. GET /v1/admin/campaign-holds names the
+# business and its figures.
+code: campaign_opt_outs
+severity: sev3
+summary: "A campaign was held for review: 5 % or more of the customers it wrote to in 30 days asked for no more messages."
+measure: campaigns held for review over their opt-out rate, in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (platform-signal:campaign_hold); campaign_messages by created_at
+runbook: docs/operations/runbooks/campaign-opt-outs.md

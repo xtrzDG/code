@@ -1,0 +1,224 @@
+{
+ "$comment": "Written from the Messenger Platform and Instagram Messaging references; Meta publishes no machine-readable specification for them. Review against the pages in x-vendor.docs when Meta announces a Graph API version.",
+ "$defs": {
+  "Attachment": {
+   "properties": {
+    "payload": {
+     "type": "object"
+    },
+    "type": {
+     "type": "string"
+    }
+   },
+   "required": ["type"],
+   "type": "object"
+  },
+  "Delivery": {
+   "properties": {
+    "mids": {
+     "items": {"type": "string"},
+     "type": "array"
+    },
+    "watermark": {"type": "integer"}
+   },
+   "required": ["watermark"],
+   "type": "object"
+  },
+  "Entry": {
+   "properties": {
+    "id": {"type": "string"},
+    "messaging": {
+     "items": {"$ref": "#/$defs/MessagingEvent"},
+     "type": "array"
+    },
+    "time": {"type": "integer"}
+   },
+   "required": ["id", "time"],
+   "type": "object"
+  },
+  "Message": {
+   "properties": {
+    "app_id": {"type": "integer"},
+    "attachments": {
+     "items": {"$ref": "#/$defs/Attachment"},
+     "type": "array"
+    },
+    "is_echo": {"type": "boolean"},
+    "metadata": {"type": "string"},
+    "mid": {"type": "string"},
+    "quick_reply": {
+     "properties": {"payload": {"type": "string"}},
+     "required": ["payload"],
+     "type": "object"
+    },
+    "referral": {"$ref": "#/$defs/Referral"},
+    "reply_to": {
+     "properties": {
+      "mid": {"type": "string"},
+      "story": {
+       "properties": {
+        "id": {"type": "string"},
+        "url": {"type": "string"}
+       },
+       "required": ["id", "url"],
+       "type": "object"
+      }
+     },
+     "type": "object"
+    },
+    "text": {"type": "string"}
+   },
+   "required": ["mid"],
+   "type": "object"
+  },
+  "MessagingEvent": {
+   "properties": {
+    "delivery": {"$ref": "#/$defs/Delivery"},
+    "message": {"$ref": "#/$defs/Message"},
+    "postback": {"$ref": "#/$defs/Postback"},
+    "reaction": {"$ref": "#/$defs/Reaction"},
+    "read": {"$ref": "#/$defs/Read"},
+    "recipient": {"$ref": "#/$defs/Participant"},
+    "referral": {"$ref": "#/$defs/Referral"},
+    "sender": {"$ref": "#/$defs/Participant"},
+    "timestamp": {"type": "integer"}
+   },
+   "required": ["sender", "recipient", "timestamp"],
+   "type": "object"
+  },
+  "Participant": {
+   "properties": {
+    "id": {"type": "string"}
+   },
+   "required": ["id"],
+   "type": "object"
+  },
+  "Postback": {
+   "properties": {
+    "mid": {"type": "string"},
+    "payload": {"type": "string"},
+    "referral": {"$ref": "#/$defs/Referral"},
+    "title": {"type": "string"}
+   },
+   "required": ["payload"],
+   "type": "object"
+  },
+  "Reaction": {
+   "properties": {
+    "action": {"enum": ["react", "unreact"], "type": "string"},
+    "emoji": {"type": "string"},
+    "mid": {"type": "string"},
+    "reaction": {"type": "string"}
+   },
+   "required": ["mid", "action"],
+   "type": "object"
+  },
+  "Read": {
+   "properties": {
+    "mid": {"type": "string"},
+    "watermark": {"type": "integer"}
+   },
+   "type": "object"
+  },
+  "Referral": {
+   "properties": {
+    "ad_id": {"type": "string"},
+    "ref": {"type": "string"},
+    "referer_uri": {"type": "string"},
+    "source": {"type": "string"},
+    "type": {"type": "string"}
+   },
+   "type": "object"
+  },
+  "WebhookPayload": {
+   "properties": {
+    "entry": {
+     "items": {"$ref": "#/$defs/Entry"},
+     "type": "array"
+    },
+    "object": {"enum": ["page", "instagram"], "type": "string"}
+   },
+   "required": ["object", "entry"],
+   "type": "object"
+  },
+  "request:messages.send": {
+   "anyOf": [
+    {
+     "properties": {
+      "message": {
+       "properties": {
+        "quick_replies": {
+         "items": {
+          "properties": {
+           "content_type": {
+            "enum": ["text", "user_phone_number", "user_email"],
+            "type": "string"
+           },
+           "image_url": {"type": "string"},
+           "payload": {"maxLength": 1000, "type": "string"},
+           "title": {"maxLength": 20, "type": "string"}
+          },
+          "required": ["content_type"],
+          "type": "object"
+         },
+         "maxItems": 13,
+         "type": "array"
+        },
+        "text": {"maxLength": 2000, "type": "string"}
+       },
+       "required": ["text"],
+       "type": "object"
+      },
+      "messaging_type": {
+       "enum": ["RESPONSE", "UPDATE", "MESSAGE_TAG"],
+       "type": "string"
+      },
+      "recipient": {"$ref": "#/$defs/Participant"},
+      "tag": {"type": "string"}
+     },
+     "required": ["recipient", "messaging_type", "message"],
+     "type": "object"
+    },
+    {
+     "properties": {
+      "recipient": {"$ref": "#/$defs/Participant"},
+      "sender_action": {
+       "enum": ["typing_on", "typing_off", "mark_seen"],
+       "type": "string"
+      }
+     },
+     "required": ["recipient", "sender_action"],
+     "type": "object"
+    }
+   ]
+  },
+  "response:messages.send": {
+   "properties": {
+    "message_id": {"type": "string"},
+    "recipient_id": {"type": "string"}
+   },
+   "required": ["recipient_id"],
+   "type": "object"
+  }
+ },
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "x-roots": {
+  "WebhookPayload": "Messenger and Instagram messaging webhooks",
+  "request:messages.send": "POST /me/messages (Send API: a text with optional quick replies, or a sender action)",
+  "response:messages.send": "the Send API's answer"
+ },
+ "x-vendor": {
+  "docs": [
+   "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messages",
+   "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/message-echoes",
+   "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/message-reads",
+   "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messaging_postbacks",
+   "https://developers.facebook.com/docs/messenger-platform/reference/send-api/",
+   "https://developers.facebook.com/docs/messenger-platform/send-messages/quick-replies",
+   "https://developers.facebook.com/docs/instagram-platform/webhooks/examples"
+  ],
+  "kind": "documented",
+  "provider": "meta",
+  "title": "Messenger Platform and Instagram Messaging (Meta)"
+ }
+}

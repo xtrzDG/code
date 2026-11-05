@@ -1,0 +1,96 @@
+/*
+ * The cabinet's typeface: Noto Sans (variable weight, 100–900) for Latin and
+ * Cyrillic, with Noto Sans Georgian and Noto Sans Hebrew from the same
+ * family, so the cabinet looks the same on every operating system and in
+ * every language (en, de, ru, ka, he). Self-hosted from public/fonts/ (SIL
+ * Open Font License, public/fonts/OFL.txt; provenance in web/README.md,
+ * "Typeface"); the build emits each file under a content hash.
+ *
+ * The faces are declared here, in the one stylesheet every page loads, and
+ * used only below `.brand-typeface`, which the root layout puts on <html> for
+ * cabinet pages. The public site (landing, niche and legal pages) keeps the
+ * system's fonts: it requests no font file and no extra stylesheet, so its
+ * first paint and LCP wait for neither.
+ *
+ * One file per script, each with its own unicode-range: a page downloads
+ * only the scripts it shows. The root layout preloads Latin (digits,
+ * punctuation, every English and German word) and the Georgian, Cyrillic or
+ * Hebrew file of a cabinet page in that language (server/brandFontPreload.ts,
+ * lib/brandFonts.ts). The extended Latin letters and currency signs (ğ, ș,
+ * ə, ₾, ₽, ₪…) and a script outside the page's language come when the first
+ * such character is on screen.
+ *
+ * `font-display: optional`: a font that is not there within about 100 ms of
+ * being needed is not swapped in later, so text never jumps: the layout
+ * shift stays 0. It is dropped for the rest of the document, and the cabinet
+ * changes pages without a new one: a file that came late is used from the
+ * next full load on (it is cached by then). Meanwhile Arial, resized to Noto
+ * Sans's metrics ("Brand Latin Fallback"), takes its place; where there is no
+ * Arial the system font does.
+ */
+
+@font-face {
+  font-family: "Brand Latin";
+  src: url("../../public/fonts/noto-sans-latin-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Arial with Noto Sans's metrics, as next/font's adjustFontFallback computes them. */
+@font-face {
+  font-family: "Brand Latin Fallback";
+  src: local("Arial");
+  ascent-override: 100.41%;
+  descent-override: 27.52%;
+  line-gap-override: 0%;
+  size-adjust: 106.47%;
+}
+
+@font-face {
+  font-family: "Brand Latin Ext";
+  src: url("../../public/fonts/noto-sans-latin-ext-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+  unicode-range: U+0100-0130, U+0132-0151, U+0154-017F, U+0218-021B, U+0259, U+1E9E, U+20A0-20AB, U+20AD-20C0;
+}
+
+@font-face {
+  font-family: "Brand Cyrillic";
+  src: url("../../public/fonts/noto-sans-cyrillic-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Brand Georgian";
+  src: url("../../public/fonts/noto-sans-georgian-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+  unicode-range: U+10A0-10FF, U+1C90-1CBA, U+1CBD-1CBF, U+2D00-2D2F;
+}
+
+@font-face {
+  font-family: "Brand Hebrew";
+  src: url("../../public/fonts/noto-sans-hebrew-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+  unicode-range: U+0590-05FF, U+FB1D-FB4F;
+}
+
+/* The families --font-sans (globals.css) lists, on cabinet pages only. */
+.brand-typeface {
+  --font-brand-latin: "Brand Latin", "Brand Latin Fallback";
+  --font-brand-latin-ext: "Brand Latin Ext";
+  --font-brand-cyrillic: "Brand Cyrillic";
+  --font-brand-georgian: "Brand Georgian";
+  --font-brand-hebrew: "Brand Hebrew";
+}

@@ -1,0 +1,12 @@
+{
+  "api_requests": 1,
+  "api_server_errors": 1,
+  "created_at": 1790000000000000,
+  "hour_start": 1790000000000000,
+  "inbound_in_time": 1,
+  "inbound_messages": 1,
+  "measured_replies": 1,
+  "reply_p95_ms": 1,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

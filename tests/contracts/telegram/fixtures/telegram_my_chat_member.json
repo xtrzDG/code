@@ -1,0 +1,40 @@
+{
+  "update_id": 900106,
+  "my_chat_member": {
+    "chat": {
+      "id": 555000111,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "type": "private"
+    },
+    "from": {
+      "id": 555000111,
+      "is_bot": false,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "language_code": "ru"
+    },
+    "date": 1750276400,
+    "old_chat_member": {
+      "user": {
+        "id": 7012345678,
+        "is_bot": true,
+        "first_name": "Funicular VR",
+        "username": "funicular_vr_bot"
+      },
+      "status": "member"
+    },
+    "new_chat_member": {
+      "user": {
+        "id": 7012345678,
+        "is_bot": true,
+        "first_name": "Funicular VR",
+        "username": "funicular_vr_bot"
+      },
+      "status": "kicked",
+      "until_date": 0
+    }
+  }
+}

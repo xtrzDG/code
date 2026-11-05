@@ -1,0 +1,197 @@
+"""
+Payment card, bank account and identity document numbers taken out of a
+text before it is stored, shown to a model, traced or logged: the platform
+never keeps a card number (PCI DSS SAQ A), and nobody needs a customer's
+account or ID number to book a table (GDPR data minimization).
+
+- A payment card number: 13 to 19 digits, together or in groups separated
+  by up to three spaces, tabs, line breaks or hyphens ("4242 4242 4242
+  4242", "3782-822463-10005", "4242 - 4242", a group per line, digits a
+  speech recognizer wrote one by one), that passes the Luhn check
+  and does not start with 0. A phone number written the international way
+  (a leading +), an all-digit UUID or digits joined to letters (an
+  identifier) are not one. The expiry date and the security code said
+  right after the card ("4242 4242 4242 4242 12/26 123") go with it.
+- A security code named as such ("cvv 123", "CVC: 1234", "il codice di
+  sicurezza è 123").
+- An IBAN of a registered country whose mod-97 check holds, grouped in
+  fours or not, in capitals or not.
+- An Italian tax code (codice fiscale) whose check letter holds, and a
+  document number named as such ("passaporto YA1234567", "ID card
+  number CA12345AB").
+
+Prices, dates, times, party sizes, booking references and phone numbers
+stay, so what was agreed stays readable. Each found number becomes a
+placeholder without digits, so masking a masked text changes nothing.
+"""
+
+import re
+
+from app.utilities.privacy.sensitive_number_checks import (
+    MAX_CARD_DIGITS,
+    is_card_number,
+    is_iban,
+    is_italian_tax_code,
+)
+
+CARD_PLACEHOLDER: str = "[card number]"
+SECURITY_CODE_PLACEHOLDER: str = "[security code]"
+ACCOUNT_PLACEHOLDER: str = "[account number]"
+ID_NUMBER_PLACEHOLDER: str = "[id number]"
+MASKING_PLACEHOLDERS: tuple[str, ...] = (
+    CARD_PLACEHOLDER,
+    SECURITY_CODE_PLACEHOLDER,
+    ACCOUNT_PLACEHOLDER,
+    ID_NUMBER_PLACEHOLDER,
+)
+# What may stand between a card's digit groups: spaces (also the no-break
+# and thin ones), tabs, line breaks and hyphens.
+GROUP_SEPARATORS: str = r"[ \t\n\u00a0\u2009\u202f\-]"
+# A run of at least 13 digits with up to three separators between them. A
+# run right after "+" is a phone number, one after a decimal point or
+# before a decimal part (0.30000000000000004) a fraction, one joined to
+# letters ("booking_d1234567-8901-2345-bb47-...", "id42424242...x") part of
+# an identifier.
+DIGIT_RUN_PATTERN: re.Pattern[str] = re.compile(
+    rf"(?<!\d[.,])(?<![\w+])(?<!\w-)\d(?:{GROUP_SEPARATORS}{{0,3}}\d){{12,}}"
+    r"(?![.,]?\d)(?!-?\w)"
+)
+DIGIT_GROUP_SEPARATOR: re.Pattern[str] = re.compile(rf"{GROUP_SEPARATORS}+")
+UUID_SHAPE: re.Pattern[str] = re.compile(r"\d{8}-\d{4}-\d{4}-\d{4}-\d{12}")
+# Right after a masked card, up to three of: the rest of an expiry date
+# ("/26" once the month joined the card's digits), an expiry date ("12/26")
+# or a security code ("123"); never a time or a decimal number.
+CARD_TAIL_PATTERN: re.Pattern[str] = re.compile(
+    re.escape(CARD_PLACEHOLDER) + r"(?:(?:\s?/\s?\d{2,4}|[ \u00a0,;\-]{1,3}"
+    r"(?:\d{1,2}\s?/\s?\d{2,4}|\d{3,4}))(?![\d:]|[.,]\d)){1,3}"
+)
+# Two letters, two check digits, then 11 to 30 letters or digits.
+IBAN_CANDIDATE_PATTERN: re.Pattern[str] = re.compile(
+    r"(?<!\w)[A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){11,30}(?!\w)"
+)
+# Six letters (surname and name), the birth year, month letter, day and
+# place (digits, or the letters that replace them in a recoded code), and
+# the check letter.
+TAX_CODE_PATTERN: re.Pattern[str] = re.compile(
+    r"(?<!\w)[A-Za-z]{6}[0-9LMNPQRSTUVlmnpqrstuv]{2}[ABCDEHLMPRSTabcdehlmprst]"
+    r"[0-9LMNPQRSTUVlmnpqrstuv]{2}[A-Za-z][0-9LMNPQRSTUVlmnpqrstuv]{3}[A-Za-z](?!\w)"
+)
+SECURITY_CODE_WORDS: str = (
+    r"cvv2?|cvc2?|cvn|csc|security code|card code|card verification code"
+    r"|codice di sicurezza|codice cvv|codice cvc|codice di verifica"
+    r"|código de seguridad|code de sécurité|cryptogramme|sicherheitscode"
+    r"|prüfnummer|код безопасности|cvv-код|cvc-код"
+)
+# The word, up to a few words of filler ("is", "on the back:"), then 3 or 4
+# digits.
+SECURITY_CODE_PATTERN: re.Pattern[str] = re.compile(
+    rf"(?i)(?<!\w)((?:{SECURITY_CODE_WORDS})(?![^\W\d])[^\d\n]{{0,20}}?)(\d{{3,4}})(?!\d)"
+)
+DOCUMENT_WORDS: str = (
+    r"passport(?: number| no\.?)?|passaporto|numero (?:di )?passaporto"
+    r"|(?:national )?id(?:entity)? card(?: number| no\.?)?"
+    r"|carta d['’ ]?identit[àa]|carta di identit[àa]|numero (?:del )?documento"
+    r"|documento(?: di identit[àa])?|patente(?: di guida)?"
+    r"|driv(?:ing|er'?s) licen[cs]e(?: number| no\.?)?|personalausweis|reisepass"
+    r"|паспорт|pasaporte"
+)
+# A document word, a few characters of filler, then 5 to 20 letters and
+# digits with at least one digit.
+DOCUMENT_NUMBER_PATTERN: re.Pattern[str] = re.compile(
+    rf"(?i)(?<!\w)((?:{DOCUMENT_WORDS})(?!\w)[^\w\n]{{0,6}}"
+    r"(?:(?:is|è|e|n\.?|no\.?|nr\.?|number|numero|:)[^\w\n]{0,4})?)"
+    r"(?=[A-Za-z]*\d)([A-Za-z0-9]{5,20})(?!\w)"
+)
+THOUSANDS_GROUP_LENGTH: int = 3
+
+
+def mask_sensitive_numbers(text: str) -> str:
+    """The text with card, security code, IBAN and ID numbers replaced."""
+
+    masked: str = IBAN_CANDIDATE_PATTERN.sub(_iban_placeholder, text)
+    masked = TAX_CODE_PATTERN.sub(_tax_code_placeholder, masked)
+    masked = DOCUMENT_NUMBER_PATTERN.sub(rf"\1{ID_NUMBER_PLACEHOLDER}", masked)
+    masked = DIGIT_RUN_PATTERN.sub(_card_placeholder, masked)
+    masked = CARD_TAIL_PATTERN.sub(CARD_PLACEHOLDER, masked)
+    return SECURITY_CODE_PATTERN.sub(rf"\1{SECURITY_CODE_PLACEHOLDER}", masked)
+
+
+def without_placeholders(text: str) -> str:
+    """
+    The masked text without its placeholders: they are English words, and
+    a reading of the customer's language must not count them.
+    """
+
+    for placeholder in MASKING_PLACEHOLDERS:
+        text = text.replace(placeholder, " ")
+    return text
+
+
+def holds_masked_card_data(text: str) -> bool:
+    """
+    Whether a masked text had a card number or a security code: a call
+    whose caller read one out keeps no audio (PCI DSS: no card data stored).
+    """
+
+    return CARD_PLACEHOLDER in text or SECURITY_CODE_PLACEHOLDER in text
+
+
+def holds_card_number(groups: list[str]) -> bool:
+    """
+    Whether consecutive digit groups of one run form a card number. A run
+    grouped in thousands ("1 500 000 000 000") is an amount.
+    """
+
+    if len(groups) > 2 and all(
+        len(group) == THOUSANDS_GROUP_LENGTH for group in groups[1:]
+    ):
+        return False
+
+    for start in range(len(groups)):
+        digits: str = ""
+        for group in groups[start:]:
+            digits += group
+            if is_card_number(digits):
+                return True
+
+            if len(digits) >= MAX_CARD_DIGITS:
+                break
+
+    return False
+
+
+def is_card_run(run: str) -> bool:
+    """Whether one run `DIGIT_RUN_PATTERN` found holds a card number."""
+
+    if UUID_SHAPE.fullmatch(run):
+        return False
+
+    return holds_card_number(DIGIT_GROUP_SEPARATOR.split(run))
+
+
+def _card_placeholder(match: re.Match[str]) -> str:
+    run: str = match.group(0)
+    return CARD_PLACEHOLDER if is_card_run(run) else run
+
+
+def _iban_placeholder(match: re.Match[str]) -> str:
+    """
+    The longest IBAN at the start of the candidate, ending where a group
+    ends: "IT60 X054 2811 1010 0000 0123 456 grazie" keeps " grazie".
+    """
+
+    candidate: str = match.group(0)
+    end: int = len(candidate)
+    while end > 0:
+        if is_iban(candidate[:end]):
+            return ACCOUNT_PLACEHOLDER + candidate[end:]
+
+        end = candidate.rfind(" ", 0, end)
+
+    return candidate
+
+
+def _tax_code_placeholder(match: re.Match[str]) -> str:
+    code: str = match.group(0)
+    has_digit: bool = any(character.isdigit() for character in code)
+    return ID_NUMBER_PLACEHOLDER if has_digit and is_italian_tax_code(code) else code

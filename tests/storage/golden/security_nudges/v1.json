@@ -1,0 +1,10 @@
+{
+  "business_id": "business_41330edd-4fb0-48a1-a26f-1b5d5f787874",
+  "created_at": 1790000000000000,
+  "dismissed_at": 1790000000000000,
+  "id": "security_nudge_55b77523-87aa-4be8-a9a7-4348a4160f07",
+  "schema_version": "1",
+  "team_size_at_dismissal": 1,
+  "updated_at": 1790000000000000,
+  "user_id": "user_fad350f8-1305-46f1-b186-de854c2109a3"
+}

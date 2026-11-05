@@ -1,0 +1,67 @@
+{
+  "collection": "platform_pauses",
+  "document_type": "PlatformPauseDocument",
+  "schema_version": 3,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "changed_at": {
+        "type": "integer"
+      },
+      "changed_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "disabled_tools": {
+        "items": {
+          "enum": [
+            "search_knowledge",
+            "get_price",
+            "check_availability",
+            "create_booking",
+            "cancel_booking",
+            "reschedule_booking",
+            "list_my_bookings",
+            "join_waitlist",
+            "create_lead",
+            "handoff_to_human",
+            "send_link",
+            "record_unanswered_question",
+            "offer_choices",
+            "send_payment_link",
+            "decline_recording",
+            "send_call_transcript"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "is_paused": {
+        "type": "boolean"
+      },
+      "reason": {
+        "maxLength": 300,
+        "minLength": 8,
+        "pattern": "^\\S(.*\\S)?$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "3",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "is_paused",
+      "reason",
+      "changed_by",
+      "changed_at"
+    ],
+    "type": "object"
+  }
+}

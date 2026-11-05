@@ -1,0 +1,261 @@
+import logging
+
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_closure_repositories import (
+    BusinessClosureRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+)
+from app.contracts.use_case_contract import UseCaseContract
+from app.contracts.voice_platform import (
+    VoiceAgentLockRegistryContract,
+    VoiceAgentProvisionerAdapterContract,
+)
+from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheckCode
+from app.schemas.constants.businesses import BusinessStatus, ServiceMode
+from app.schemas.constants.setup import ActivationEventKind
+from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
+from app.schemas.dto.billing_go_live import GoLiveTrial, GoLiveTrialRequest
+from app.schemas.dto.go_live import (
+    GoLiveCheck,
+    GoLiveReadiness,
+    GoLiveReadinessRequest,
+)
+from app.schemas.dto.setup.setup_progress import ActivationEventRecord
+from app.schemas.exceptions.application_errors import (
+    ConflictError,
+)
+from app.schemas.typings.assistants.constrained_integers import VoiceAgentRevision
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
+from app.use_cases.shared.closure_guard import refuse_while_closing
+from app.use_cases.shared.voice_agent_setup import VoiceAgentSetup
+from app.use_cases.shared.voice_agent_specs import VoiceAgentSources
+from app.utilities.assembly.go_live_refusals import (
+    build_check_reason,
+    describe_go_live_refusal,
+    find_blocking_failures,
+    is_voice_configured,
+)
+from app.utilities.assembly.version_retirement import retire_other_versions
+from app.utilities.assembly.voice_agents import (
+    VOICE_AGENT_REVISION,
+    find_existing_voice_agent_id,
+)
+from app.utilities.businesses.business_revisions import build_stale_revision_error
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
+# A re-sync of the agent (`resync_voice_agents`) holds the lock for seconds.
+VOICE_AGENT_LOCK_WAIT: LockWaitSeconds = LockWaitSeconds(60)
+
+# Whether an untested version may go live is decided by publishing (a
+# platform admin may force it); rollback restores a version that was live.
+CHECKS_DECIDED_BY_CALLER: frozenset[GoLiveCheckCode] = frozenset(
+    {GoLiveCheckCode.AUTOTESTS}
+)
+
+
+class ActivateAssistantVersionUseCase(
+    UseCaseContract[AssistantVersionActivation, AssistantVersionDocument]
+):
+    """
+    Make an already authorized and checked version the live one (shared by
+    publishing and rollback).
+
+    First every launch condition of the go-live checklist is checked (trial
+    or subscription, the data processing agreement, nothing blocking in the
+    profile, a staff contact, voice settings in production); a missing one
+    is a ConflictError whose reasons carry the check codes, and nothing
+    changes. The autotests are the caller's decision. With voice enabled, the
+    business's voice agent is created or updated first from the same
+    version (`VoiceAgentSetup`: its phone instruction, a greeting in every
+    language, the chat's tools with decline_recording, the transfer in
+    opening hours), reusing the agent id of earlier versions (one agent per
+    business), and the version records the agent's VOICE_AGENT_REVISION.
+    The agent's setup and the go-live hold the agent's lock, so the agents'
+    re-sync never sets up the agent from the version going out. If the
+    setup fails, ExternalServiceError is raised and nothing is published. Then the
+    business goes live with this version (see `_store_business`: a save
+    made meanwhile is never overwritten), the previously published version
+    is archived, older versions that never went live are discarded, and
+    this one is published. Activating a version without voice
+    removes the agent of earlier versions. In development and test, a voice
+    version goes live without an agent while ElevenLabs is not configured
+    (a warning is logged). A business that is closing (a closure not
+    cancelled) never goes live: ConflictError. The first go-live starts the
+    free trial when it is still due (the business takes its plan with full
+    service in the same write) and is recorded as the WENT_LIVE milestone.
+    """
+
+    def __init__(
+        self,
+        check_go_live_readiness: UseCaseContract[
+            GoLiveReadinessRequest, GoLiveReadiness
+        ],
+        remove_voice_agent: UseCaseContract[BusinessId, None],
+        business_repo: BusinessRepoContract,
+        assistant_version_repo: AssistantVersionRepoContract,
+        voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
+        voice_agent_sources: VoiceAgentSources,
+        start_trial_at_go_live: UseCaseContract[GoLiveTrialRequest, GoLiveTrial],
+        record_activation_event: UseCaseContract[ActivationEventRecord, None],
+        app_settings: AppSettings,
+        wall_clock: WallClock[Microseconds],
+        voice_agent_locks: VoiceAgentLockRegistryContract,
+        closure_repo: BusinessClosureRepoContract | None = None,
+    ) -> None:
+        self._closure_repo: BusinessClosureRepoContract | None = closure_repo
+        self._check_go_live_readiness: UseCaseContract[
+            GoLiveReadinessRequest, GoLiveReadiness
+        ] = check_go_live_readiness
+        self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
+        self._business_repo: BusinessRepoContract = business_repo
+        self._assistant_version_repo: AssistantVersionRepoContract = (
+            assistant_version_repo
+        )
+        self._voice_agent_setup: VoiceAgentSetup = VoiceAgentSetup(
+            voice_agent_sources, voice_agent_provisioner
+        )
+        self._voice_agent_locks: VoiceAgentLockRegistryContract = voice_agent_locks
+        self._start_trial_at_go_live: UseCaseContract[
+            GoLiveTrialRequest, GoLiveTrial
+        ] = start_trial_at_go_live
+        self._record_activation_event: UseCaseContract[ActivationEventRecord, None] = (
+            record_activation_event
+        )
+        self._app_settings: AppSettings = app_settings
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: AssistantVersionActivation) -> AssistantVersionDocument:
+        business: BusinessDocument = input_data.business
+        version: AssistantVersionDocument = input_data.version
+        # Publishing and rollback alike: a closing business stays paused.
+        refuse_while_closing(self._closure_repo, business.id, "publish again")
+        readiness: GoLiveReadiness = self._check_go_live_readiness.run(
+            GoLiveReadinessRequest(business=business, version=version)
+        )
+        failures: list[GoLiveCheck] = find_blocking_failures(
+            readiness, CHECKS_DECIDED_BY_CALLER
+        )
+        if failures:
+            raise ConflictError(
+                describe_go_live_refusal(failures),
+                reasons=[build_check_reason(check) for check in failures],
+            )
+
+        with self._voice_agent_locks.lock_agent(business.id, VOICE_AGENT_LOCK_WAIT):
+            return self._activate(input_data, readiness)
+
+    def _activate(
+        self,
+        input_data: AssistantVersionActivation,
+        readiness: GoLiveReadiness,
+    ) -> AssistantVersionDocument:
+        """Set up the voice agent and go live, holding the agent's lock."""
+
+        business: BusinessDocument = input_data.business
+        version: AssistantVersionDocument = input_data.version
+        versions: list[AssistantVersionDocument] = (
+            self._assistant_version_repo.list_by_business(business.id)
+        )
+        voice_agent_id: VoiceAgentId | None = version.voice_agent_id
+        revision: VoiceAgentRevision | None = version.voice_agent_revision
+        if version.is_voice_enabled and is_voice_configured(readiness):
+            voice_agent_id = self._provision_voice_agent(business, version, versions)
+            revision = VOICE_AGENT_REVISION
+        elif version.is_voice_enabled:
+            LOGGER.warning(
+                "Version %s of business %s goes live without a voice agent: "
+                "the voice platform is not configured on this server.",
+                version.id,
+                business.id,
+            )
+        elif any(other.voice_agent_id is not None for other in versions):
+            # A version without voice: the agent of an earlier version must
+            # not keep answering calls with the old instruction.
+            self._remove_voice_agent.run(business.id)
+
+        trial: GoLiveTrial = self._start_trial_at_go_live.run(
+            GoLiveTrialRequest(business=business)
+        )
+        now: Microseconds = self._wall_clock.now_unix()
+        # The business first: when that write is refused, the versions stay
+        # as they were and the business keeps pointing at its live one.
+        self._store_business(input_data, trial, now)
+        for other_version in retire_other_versions(versions, version, now):
+            self._assistant_version_repo.save(other_version)
+
+        version.status = AssistantVersionStatus.PUBLISHED
+        version.published_at = now
+        version.voice_agent_id = voice_agent_id
+        version.voice_agent_revision = revision
+        version.updated_at = now
+        self._assistant_version_repo.save(version)
+        self._record_activation_event.run(
+            ActivationEventRecord(
+                business_id=business.id,
+                kind=ActivationEventKind.WENT_LIVE,
+                occurred_at=now,
+            )
+        )
+        return version
+
+    def _store_business(
+        self,
+        activation: AssistantVersionActivation,
+        trial: GoLiveTrial,
+        now: Microseconds,
+    ) -> None:
+        """
+        Point the business at the version and make it live. Setting up the
+        voice agent takes seconds, so the business is never written from the
+        copy read before it: activation's fields go onto the business as
+        stored now, or, when the caller changed the business too, the whole
+        copy is written only while nobody saved the business since it was
+        read (else nothing is written and the change is refused as stale).
+        """
+
+        business: BusinessDocument = activation.business
+        version_id: AssistantVersionId = activation.version.id
+
+        def go_live(target: BusinessDocument) -> None:
+            target.published_assistant_version_id = version_id
+            target.status = BusinessStatus.LIVE
+            if trial.is_started and trial.plan_key is not None:
+                # The trial started now: its plan, served in full.
+                target.plan_key = trial.plan_key
+                target.service_mode = ServiceMode.FULL
+
+            target.updated_at = now
+
+        if activation.carries_business_changes:
+            go_live(business)
+            if not self._business_repo.save_if_unchanged(business):
+                raise build_stale_revision_error(None)
+
+            return
+
+        self._business_repo.update(business.id, go_live)
+        # The given copy shows the activation too, but keeps the revision it
+        # was read with: it does not hold what others saved meanwhile.
+        go_live(business)
+
+    def _provision_voice_agent(
+        self,
+        business: BusinessDocument,
+        version: AssistantVersionDocument,
+        versions: list[AssistantVersionDocument],
+    ) -> VoiceAgentId:
+        return self._voice_agent_setup.set_up(
+            business, version, find_existing_voice_agent_id(versions, version)
+        )

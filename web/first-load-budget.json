@@ -1,0 +1,10 @@
+{
+  "$comment": "Gzipped first-load JavaScript per page and the lazy 3D chunk, in KB (1024 bytes). Checked by `npm run measure:first-load -- --check` after a build (CI job web-build); see README.md, Motion.",
+  "pages": {
+    "/en": 192,
+    "/ka/terms": 180,
+    "/login": 316,
+    "/offline": 174
+  },
+  "lazy3dChunk": 245
+}

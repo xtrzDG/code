@@ -1,0 +1,43 @@
+{
+  "branches": {
+    "main": {
+      "pull_request_required": true,
+      "required_approving_review_count": 0,
+      "required_status_checks": [
+        "CI passed (every gate)",
+        "Analyze (python)",
+        "Analyze (javascript-typescript)",
+        "Analyze (actions)",
+        "OpenAPI breaking changes (oasdiff)",
+        "Workflow audit (actionlint, zizmor)"
+      ],
+      "force_pushes_blocked": true,
+      "deletions_blocked": true
+    },
+    "release": {
+      "pull_request_required": true,
+      "required_approving_review_count": 0,
+      "required_status_checks": [
+        "CI passed (every gate)",
+        "Analyze (python)",
+        "Analyze (javascript-typescript)",
+        "Analyze (actions)",
+        "Workflow audit (actionlint, zizmor)"
+      ],
+      "force_pushes_blocked": true,
+      "deletions_blocked": true
+    }
+  },
+  "environments": {
+    "production-release": {
+      "required_reviewers": ["xtrzDG"],
+      "deployment_branches": ["main"]
+    },
+    "backup-drill": {
+      "required_reviewers": [],
+      "deployment_branches": ["main"]
+    }
+  },
+  "private_vulnerability_reporting": true,
+  "dependabot_security_updates": true
+}

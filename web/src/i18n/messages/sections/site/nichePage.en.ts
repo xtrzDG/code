@@ -1,0 +1,26 @@
+/** `nichePage.*`: the public page of one kind of business (/[locale]/for/[niche]), English. */
+
+export const nichePageEn = {
+  metaTitle: "{niche}: an AI assistant for calls and messages",
+  metaDescription: "{description} The assistant answers day and night in your customers' languages, takes bookings and requests and passes complex cases to your team.",
+  breadcrumb: "Kinds of business",
+  eyebrow: "An AI assistant for this kind of business",
+  title: "{niche}: every call and message answered",
+  lead: "The assistant knows what customers of this kind of business usually ask, answers from your own prices and rules and never makes things up.",
+  primary: "Create an assistant",
+  secondary: "Try the demo",
+  doesTitle: "What the assistant does here",
+  books: "Books: {resource}, against your hours and free places",
+  noBookings: "Takes down orders and requests with the details your team needs",
+  answers: "Answers questions about prices, hours and rules in the customer's language",
+  handoff: "Passes complaints and unusual requests to a person with a short summary",
+  sensitive: "Sensitive questions (health, safety, legal) always go to a person: the assistant does not advise on them",
+  integrationsTitle: "Works with",
+  plansTitle: "Plans that fit",
+  plansText: "Businesses like this usually start with {plans}. Every plan has a free trial.",
+  pricingLink: "See the prices",
+  demoTitle: "Talk to a demo assistant",
+  demoText: "A demo business of this kind answers like a real one; nothing is booked for real.",
+  otherTitle: "Other kinds of business",
+  notFound: "There is no such kind of business.",
+} as const;

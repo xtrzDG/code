@@ -1,0 +1,99 @@
+name: Dependency audit
+
+# Every night, the lockfiles of what reaches users and production (uv.lock,
+# web/package-lock.json, integrations/zapier/package-lock.json, runtime and
+# dev dependencies, every severity) against the advisories known today: an
+# advisory published after a pull request passed CI's audits shows here, not
+# at the next pull request. scripts/dependency_advisories.py turns the
+# reports into the issue "Dependency advisories": a new advisory opens it or
+# comments on the open one, none left closes it.
+#
+# Remediation deadline, from the day an advisory was first reported:
+#   critical  2 days     high  7 days     moderate  30 days     low  90 days
+#                        (the next quarterly dependency review)
+# A Python advisory counts as high (pip-audit names no severity). The run
+# fails while a critical or high advisory is past its deadline, so
+# schedule-watch.yml escalates it after 8 days. Dependabot's security
+# updates propose the fixes they can; the CI tools' own lockfiles
+# (.github/tools) are watched by Dependabot and GitHub's dependency alerts.
+on:
+  schedule:
+    # 02:11 UTC every day.
+    - cron: "11 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Advisories in the lockfiles
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write # opens, comments on or closes the advisories issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.14"
+
+      - name: Install Node 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      # The audits exit non-zero when they find something; the reports
+      # decide. pip-audit itself comes hash-pinned (.github/tools/pip-audit).
+      - name: Audit the lockfiles
+        run: |
+          mkdir -p "$RUNNER_TEMP/audit"
+          uv venv --quiet "$RUNNER_TEMP/pip-audit"
+          uv pip install --quiet --python "$RUNNER_TEMP/pip-audit" --require-hashes --requirement .github/tools/pip-audit/requirements.txt
+          uv export --frozen --no-emit-project --format requirements-txt \
+            | "$RUNNER_TEMP/pip-audit/bin/pip-audit" --strict --disable-pip --requirement /dev/stdin \
+              --format json --output "$RUNNER_TEMP/audit/uv.json" || true
+          (cd web && npm audit --json > "$RUNNER_TEMP/audit/web.json") || true
+          (cd integrations/zapier && npm audit --json > "$RUNNER_TEMP/audit/zapier.json") || true
+
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Dependency advisories"
+          number="$(gh issue list --state open --search "in:title \"${title}\"" --json number,title \
+            --jq "map(select(.title == \"${title}\")) | .[0].number // empty")"
+          known=()
+          if [ -n "$number" ]; then
+            gh issue view "$number" --json body,comments --jq '.body, .comments[].body' > "$RUNNER_TEMP/known.md"
+            known=(--known "$RUNNER_TEMP/known.md")
+          fi
+          status=0
+          uv run --no-project python -m scripts.dependency_advisories \
+            --pip-audit uv.lock="$RUNNER_TEMP/audit/uv.json" \
+            --npm-audit web/package-lock.json="$RUNNER_TEMP/audit/web.json" \
+            --npm-audit integrations/zapier/package-lock.json="$RUNNER_TEMP/audit/zapier.json" \
+            "${known[@]}" --body "$RUNNER_TEMP/body.md" --action "$RUNNER_TEMP/action" \
+            --summary "$GITHUB_STEP_SUMMARY" || status=$?
+          if [ "$status" -gt 1 ]; then
+            exit "$status"
+          fi
+          printf '\nRun: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/body.md"
+          case "$(cat "$RUNNER_TEMP/action")" in
+            create) gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md" ;;
+            comment) gh issue comment "$number" --body-file "$RUNNER_TEMP/body.md" ;;
+            close) gh issue close "$number" --comment "No advisory left in the lockfiles: ${RUN_URL}" ;;
+            *) echo "Nothing new to report." ;;
+          esac
+          exit "$status"

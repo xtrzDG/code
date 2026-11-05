@@ -1,0 +1,12 @@
+# The assistant's tools fail: more than 5 replies of the last hour carry a
+# failed tool call (a booking, a price, availability, a calendar).
+code: tool_errors
+severity: sev3
+summary: The assistant's tools (bookings, prices, availability) fail.
+measure: assistant messages with a failed tool call created in the window
+threshold: 5
+unit: count
+window_minutes: 60
+volume_floor: 0
+source: messages lookup keys tool_calls[].is_error, migration 1042
+runbook: docs/operations/runbooks/assistant-quality.md

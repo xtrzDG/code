@@ -1,0 +1,60 @@
+{
+  "collection": "inbox_settings",
+  "document_type": "InboxSettingsDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "auto_assign_new_handoffs": {
+        "default": false,
+        "type": "boolean"
+      },
+      "auto_assign_new_requests": {
+        "default": false,
+        "type": "boolean"
+      },
+      "auto_assign_user_ids": {
+        "items": {
+          "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^inbox_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "last_auto_assigned_user_id": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "attempts": 1,
+  "business_id": "business_fb17d0a2-ed4f-4ca7-93af-83f9c412a8b1",
+  "created_at": 1790000000000000,
+  "id": "queued_job_9650c561-9904-451b-bb21-9ccdc3902905",
+  "lane": "inbound",
+  "last_error": "Sample JobErrorText",
+  "lease_token": "0123456789abcdef0123456789abcdef",
+  "lease_until": 1790000000000000,
+  "name": "send_booking_reminders",
+  "payload": "{\"business_id\": \"business_42\"}",
+  "run_at": 1790000000000000,
+  "schema_version": "1",
+  "serial_key": "business:business_42",
+  "status": "pending",
+  "updated_at": 1790000000000000
+}

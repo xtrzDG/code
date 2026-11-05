@@ -1,0 +1,20 @@
+{
+  "business_id": "business_2a7f5fbb-0c4b-4916-b599-58d7ae3e6e5d",
+  "call_id": "call_3c9c2766-55d9-438c-b914-7f1a9351965a",
+  "called_at": 1790000000000000,
+  "caller_phone_number": "+995599123456",
+  "channel": "whatsapp",
+  "conversation_id": "conversation_36abadc1-d13d-4d9b-b129-94d8a662e77d",
+  "created_at": 1790000000000000,
+  "id": "missed_call_14e8f0c9-dcf1-557c-bf1b-f0876327973e",
+  "language": "ka",
+  "last_error": "Sample DeliveryErrorText",
+  "provider_call_id": "Sample ProviderCallId",
+  "reason": "no_answer",
+  "schema_version": "1",
+  "sent_at": 1790000000000000,
+  "skip_reason": "turned_off",
+  "source": "pbx",
+  "status": "queued",
+  "updated_at": 1790000000000000
+}

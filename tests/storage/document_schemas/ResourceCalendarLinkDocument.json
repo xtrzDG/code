@@ -1,0 +1,433 @@
+{
+  "collection": "resource_calendar_links",
+  "document_type": "ResourceCalendarLinkDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "booking_system": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "added_at": {
+                "type": "integer"
+              },
+              "encrypted_api_key": {
+                "type": "string"
+              },
+              "external_resource_id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]*$",
+                "type": "string"
+              },
+              "external_resource_title": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "kind": {
+                "enum": [
+                  "cal_com"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "additionalProperties": false,
+                "properties": {
+                  "block_count": {
+                    "default": 0,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "last_attempt_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "last_synced_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "not_connected",
+                          "needs_reconnect",
+                          "not_found",
+                          "access_denied",
+                          "address_refused",
+                          "timeout",
+                          "unreachable",
+                          "not_a_calendar",
+                          "provider_error"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem_detail": {
+                    "anyOf": [
+                      {
+                        "maxLength": 300,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "type": "object"
+              },
+              "write_status": {
+                "additionalProperties": false,
+                "properties": {
+                  "last_failed_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "last_written_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "not_connected",
+                          "needs_reconnect",
+                          "not_found",
+                          "access_denied",
+                          "address_refused",
+                          "timeout",
+                          "unreachable",
+                          "not_a_calendar",
+                          "provider_error"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem_detail": {
+                    "anyOf": [
+                      {
+                        "maxLength": 300,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "kind",
+              "external_resource_id",
+              "encrypted_api_key",
+              "added_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "google_status": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "block_count": {
+                "default": 0,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "last_attempt_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "last_synced_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "problem": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "not_connected",
+                      "needs_reconnect",
+                      "not_found",
+                      "access_denied",
+                      "address_refused",
+                      "timeout",
+                      "unreachable",
+                      "not_a_calendar",
+                      "provider_error"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "problem_detail": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "ical_export_created_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "ical_export_token_hash": {
+        "anyOf": [
+          {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "ical_imports": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "added_at": {
+              "type": "integer"
+            },
+            "encrypted_url": {
+              "type": "string"
+            },
+            "feed_id": {
+              "pattern": "^ical_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "host": {
+              "maxLength": 253,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._\\-\\[\\]:]+$",
+              "type": "string"
+            },
+            "status": {
+              "additionalProperties": false,
+              "properties": {
+                "block_count": {
+                  "default": 0,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "last_attempt_at": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "last_synced_at": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "problem": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "not_connected",
+                        "needs_reconnect",
+                        "not_found",
+                        "access_denied",
+                        "address_refused",
+                        "timeout",
+                        "unreachable",
+                        "not_a_calendar",
+                        "provider_error"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "problem_detail": {
+                  "anyOf": [
+                    {
+                      "maxLength": 300,
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "feed_id",
+            "encrypted_url",
+            "host",
+            "added_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^resource_calendar_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "next_sync_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resource_id": {
+        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "resource_id"
+    ],
+    "type": "object"
+  }
+}

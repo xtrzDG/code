@@ -1,0 +1,18 @@
+{
+  "business_id": "business_808160ef-3dcd-4564-9343-2c2551a46390",
+  "created_at": 1790000000000000,
+  "created_by": "user_2007e647-721c-4921-a7ad-9a8f310e1a05",
+  "id": "api_key_027da77a-1ad9-4efc-a2ed-605beef353e3",
+  "last_used_at": 1790000000000000,
+  "name": "Zapier",
+  "prefix": "awk_abcd2345",
+  "revoked_at": 1790000000000000,
+  "revoked_by": "user_f86804de-9d71-47cf-8052-4fa1ecb87184",
+  "schema_version": "1",
+  "scopes": [
+    "bookings:read"
+  ],
+  "secret_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+  "status": "active",
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,50 @@
+# Pull requests that touch these paths get the label `risk:high`
+# (.github/workflows/risk-labels.yml, actions/labeler): the code where a
+# mistake costs the most. Such a change asks for a second look at its diff,
+# at the threat model (docs/security/threat-model.md) and at the tests of
+# the boundary it touches. Keep the list to boundaries, not whole features.
+risk:high:
+  - changed-files:
+      - any-glob-to-any-file:
+          # Sign-in, sessions, API keys, second factors, access decisions.
+          - app/gateways/http/user_authentication.py
+          - app/gateways/http/api_key_authentication.py
+          - app/gateways/http/api_key_routes.py
+          - app/gateways/http/session_routes.py
+          - app/gateways/http/passkey_*.py
+          - app/gateways/http/*security*.py
+          - app/use_cases/authorize_*_access_use_case.py
+          - app/use_cases/users/**
+          - web/src/server/**
+          - web/src/app/api/**
+          - web/src/proxy.ts
+          # Encryption, signatures, keys, backups.
+          - app/adapters/security/**
+          - app/utilities/security/**
+          - app/adapters/backup/**
+          - app/utilities/backups/**
+          # Payments and deposits.
+          - app/adapters/payments/**
+          - app/clients/stripe/**
+          - app/clients/flitt/**
+          - app/use_cases/billing/**
+          - app/use_cases/deposits/**
+          - app/gateways/http/billing_*.py
+          - app/gateways/http/payment_method_routes.py
+          # Inbound webhooks and what admits every request.
+          - app/gateways/http/webhook_routes.py
+          - app/gateways/http/middleware/**
+          # Tenant isolation: scoped storage, database roles, migrations.
+          - app/repositories/business_scoped_repository.py
+          - app/clients/postgres/**
+          - migrations/**
+          # The assistant's tools and what it may say.
+          - app/use_cases/conversations/tools/**
+          - app/registries/tools/**
+          - app/utilities/reply_guard/**
+          # CI, images and repository settings: they hold the secrets.
+          - .github/workflows/**
+          - .github/repository-settings.json
+          - Dockerfile
+          - web/Dockerfile
+          - docker/**

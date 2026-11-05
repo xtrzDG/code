@@ -1,0 +1,45 @@
+{
+  "type": "call_initiation_failure",
+  "event_timestamp": 1790855900,
+  "data": {
+    "agent_id": "agent_7101k6contract0000",
+    "conversation_id": "conv_8401k6contract0002",
+    "failure_reason": "busy",
+    "metadata": {
+      "type": "twilio",
+      "body": {
+        "Called": "+995322000000",
+        "ToState": "",
+        "CallerCountry": "GE",
+        "Direction": "inbound",
+        "Timestamp": "Sat, 03 Oct 2026 11:58:20 +0000",
+        "CallbackSource": "call-progress-events",
+        "SipResponseCode": "486",
+        "CallerState": "",
+        "ToZip": "",
+        "SequenceNumber": "2",
+        "CallSid": "CA00000000000000000000000000000001",
+        "To": "+995322000000",
+        "CallerZip": "",
+        "ToCountry": "GE",
+        "CalledZip": "",
+        "ApiVersion": "2010-04-01",
+        "CalledCity": "",
+        "CallStatus": "busy",
+        "Duration": "0",
+        "From": "+995599123456",
+        "CallDuration": "0",
+        "AccountSid": "AC00000000000000000000000000000000",
+        "CalledCountry": "GE",
+        "CallerCity": "",
+        "ToCity": "",
+        "FromCountry": "GE",
+        "Caller": "+995599123456",
+        "FromCity": "",
+        "CalledState": "",
+        "FromZip": "",
+        "FromState": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "attributes": [
+    {
+      "key": "spice_level",
+      "value": "Sample KnowledgeAttributeValue"
+    }
+  ],
+  "body": "Sample KnowledgeBody",
+  "business_id": "business_dc01d4f8-8473-40c8-a0c3-fc264708e005",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "duration_minutes": 1,
+  "id": "knowledge_item_b2a371a5-f2d6-45f0-8003-9f3f8796bf9e",
+  "import_batch_id": "menu_import_72be64f2-d7bb-4bed-8f38-b86a457b1d0c",
+  "is_active": true,
+  "kind": "faq",
+  "languages": [
+    "ka"
+  ],
+  "price_minor": 1500,
+  "schema_version": "1",
+  "source": "profile",
+  "tags": [
+    "signature"
+  ],
+  "title": "Sample KnowledgeTitle",
+  "updated_at": 1790000000000000
+}

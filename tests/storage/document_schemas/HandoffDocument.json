@@ -1,0 +1,163 @@
+{
+  "collection": "handoffs",
+  "document_type": "HandoffDocument",
+  "schema_version": 3,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "contact_id": {
+        "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "conversation_id": {
+        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "flagged_values": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^handoff_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_sandbox": {
+        "default": false,
+        "type": "boolean"
+      },
+      "quoted_text": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "reason": {
+        "enum": [
+          "customer_request",
+          "complaint",
+          "vip_guest",
+          "non_standard_request",
+          "unknown_answer",
+          "emergency",
+          "sensitive_topic",
+          "profile_rule",
+          "unverified_numbers"
+        ],
+        "type": "string"
+      },
+      "resolved_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resolved_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "3",
+        "type": "string"
+      },
+      "status": {
+        "default": "pending",
+        "enum": [
+          "pending",
+          "notified",
+          "notification_failed",
+          "resolved"
+        ],
+        "type": "string"
+      },
+      "status_before_resolve": {
+        "anyOf": [
+          {
+            "enum": [
+              "pending",
+              "notified",
+              "notification_failed",
+              "resolved"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "summary": {
+        "type": "string"
+      },
+      "summary_code": {
+        "anyOf": [
+          {
+            "enum": [
+              "model_declined",
+              "model_unavailable",
+              "answer_unfinished",
+              "unverified_values",
+              "call_booking_unverified_values",
+              "call_request_unverified_values",
+              "reply_undelivered",
+              "data_erased"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "urgency": {
+        "default": "normal",
+        "enum": [
+          "low",
+          "normal",
+          "high",
+          "critical"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "business_id",
+      "conversation_id",
+      "contact_id",
+      "reason",
+      "summary"
+    ],
+    "type": "object"
+  }
+}

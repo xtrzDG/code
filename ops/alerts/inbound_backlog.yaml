@@ -1,0 +1,13 @@
+# Customers wait: the oldest due job of the inbound lane (a customer
+# message to answer) has waited longer than two minutes for a worker. The
+# SLO answers 99.5% of messages within 60 s (docs/operations/slo.md).
+code: inbound_backlog
+severity: sev2
+summary: The oldest customer message waits for a worker too long.
+measure: seconds the oldest due inbound job has waited
+threshold: 120
+unit: seconds
+window_minutes: 5
+volume_floor: 0
+source: queued_jobs (doc_status, doc_lane, doc_run_at), migration 1093
+runbook: docs/operations/runbooks/stuck-worker.md

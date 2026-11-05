@@ -1,0 +1,13 @@
+{
+  "business_id": "business_b25dde88-bbbc-4f3e-9b06-aef490ce0230",
+  "changed_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "id": "client_health_change_3e135157-157e-4ffd-af76-663728e2b7ee",
+  "issues": [
+    "no_subscription"
+  ],
+  "previous_status": "healthy",
+  "schema_version": "1",
+  "status": "healthy",
+  "updated_at": 1790000000000000
+}

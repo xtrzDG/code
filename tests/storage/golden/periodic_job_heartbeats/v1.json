@@ -1,0 +1,12 @@
+{
+  "created_at": 1790000000000000,
+  "due_by": 1790000000000000,
+  "interval_seconds": 1,
+  "job_name": "send_booking_reminders",
+  "lane": "inbound",
+  "last_succeeded_at": 1790000000000000,
+  "registered_at": 1790000000000000,
+  "release": "4718714c0f2e9a1b",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,14 @@
+{
+  "business_id": "business_86f85830-9d57-45b4-8826-85912c65158b",
+  "change_key": "anthropic-added-2026-12-01",
+  "created_at": 1790000000000000,
+  "effective_on": "2026-12-01",
+  "id": "subprocessor_notice_0e51cd99-0fd2-56d9-b0b8-7ba338105eb0",
+  "is_late": true,
+  "kind": "added",
+  "notified_at": 1790000000000000,
+  "recipient_count": 1,
+  "schema_version": "1",
+  "subprocessor": "anthropic",
+  "updated_at": 1790000000000000
+}

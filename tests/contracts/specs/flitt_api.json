@@ -1,0 +1,481 @@
+{
+ "$comment": "Written from the Flitt API reference (Fondy-compatible protocol); Flitt publishes no machine-readable specification. Review against the pages in x-vendor.docs when Flitt announces protocol changes.",
+ "$defs": {
+  "Callback": {
+   "properties": {
+    "actual_amount": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "actual_currency": {
+     "type": "string"
+    },
+    "additional_info": {
+     "type": "string"
+    },
+    "amount": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "approval_code": {
+     "type": "string"
+    },
+    "card_bin": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "card_type": {
+     "type": "string"
+    },
+    "currency": {
+     "pattern": "^[A-Z]{3}$",
+     "type": "string"
+    },
+    "eci": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "fee": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "masked_card": {
+     "type": "string"
+    },
+    "merchant_data": {
+     "type": "string"
+    },
+    "merchant_id": {
+     "type": "integer"
+    },
+    "order_id": {
+     "type": "string"
+    },
+    "order_status": {
+     "enum": [
+      "created",
+      "processing",
+      "declined",
+      "approved",
+      "expired",
+      "reversed"
+     ],
+     "type": "string"
+    },
+    "order_time": {
+     "type": "string"
+    },
+    "parent_order_id": {
+     "type": "string"
+    },
+    "payment_id": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "payment_system": {
+     "type": "string"
+    },
+    "product_id": {
+     "type": "string"
+    },
+    "rectoken": {
+     "type": "string"
+    },
+    "rectoken_lifetime": {
+     "type": "string"
+    },
+    "response_code": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "response_description": {
+     "type": "string"
+    },
+    "response_signature_string": {
+     "type": "string"
+    },
+    "response_status": {
+     "enum": [
+      "success",
+      "failure"
+     ],
+     "type": "string"
+    },
+    "reversal_amount": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "rrn": {
+     "type": "string"
+    },
+    "sender_account": {
+     "type": "string"
+    },
+    "sender_cell_phone": {
+     "type": "string"
+    },
+    "sender_email": {
+     "type": "string"
+    },
+    "settlement_amount": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "settlement_currency": {
+     "type": "string"
+    },
+    "settlement_date": {
+     "type": "string"
+    },
+    "signature": {
+     "pattern": "^[0-9a-f]{40}$",
+     "type": "string"
+    },
+    "tran_type": {
+     "enum": [
+      "purchase",
+      "reverse",
+      "verification"
+     ],
+     "type": "string"
+    },
+    "verification_status": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "order_id",
+    "merchant_id",
+    "amount",
+    "currency",
+    "order_status",
+    "response_status",
+    "signature"
+   ],
+   "type": "object"
+  },
+  "CheckoutOrder": {
+   "properties": {
+    "amount": {
+     "minimum": 0,
+     "type": "integer"
+    },
+    "currency": {
+     "pattern": "^[A-Z]{3}$",
+     "type": "string"
+    },
+    "default_payment_system": {
+     "type": "string"
+    },
+    "delayed": {
+     "enum": [
+      "Y",
+      "N"
+     ],
+     "type": "string"
+    },
+    "design_id": {
+     "type": [
+      "string",
+      "integer"
+     ]
+    },
+    "lang": {
+     "pattern": "^[a-z]{2}$",
+     "type": "string"
+    },
+    "lifetime": {
+     "type": "integer"
+    },
+    "merchant_data": {
+     "maxLength": 2048,
+     "type": "string"
+    },
+    "merchant_id": {
+     "type": "integer"
+    },
+    "order_desc": {
+     "maxLength": 1024,
+     "type": "string"
+    },
+    "order_id": {
+     "maxLength": 1024,
+     "type": "string"
+    },
+    "payment_systems": {
+     "type": "string"
+    },
+    "preauth": {
+     "enum": [
+      "Y",
+      "N"
+     ],
+     "type": "string"
+    },
+    "product_id": {
+     "type": "string"
+    },
+    "recurring_data": {
+     "$ref": "#/$defs/RecurringData"
+    },
+    "required_rectoken": {
+     "enum": [
+      "Y",
+      "N"
+     ],
+     "type": "string"
+    },
+    "response_url": {
+     "maxLength": 2048,
+     "type": "string"
+    },
+    "sender_email": {
+     "type": "string"
+    },
+    "server_callback_url": {
+     "maxLength": 2048,
+     "type": "string"
+    },
+    "subscription": {
+     "enum": [
+      "Y",
+      "N"
+     ],
+     "type": "string"
+    },
+    "subscription_callback_url": {
+     "maxLength": 2048,
+     "type": "string"
+    },
+    "verification": {
+     "enum": [
+      "Y",
+      "N"
+     ],
+     "type": "string"
+    },
+    "verification_type": {
+     "enum": [
+      "amount",
+      "code"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "order_id",
+    "merchant_id",
+    "order_desc",
+    "amount",
+    "currency"
+   ],
+   "type": "object"
+  },
+  "Envelope": {
+   "properties": {
+    "data": {
+     "contentEncoding": "base64",
+     "type": "string"
+    },
+    "signature": {
+     "pattern": "^[0-9a-f]{40}$",
+     "type": "string"
+    },
+    "version": {
+     "const": "2.0"
+    }
+   },
+   "required": [
+    "version",
+    "data",
+    "signature"
+   ],
+   "type": "object"
+  },
+  "RecurringData": {
+   "properties": {
+    "amount": {
+     "minimum": 1,
+     "type": "integer"
+    },
+    "end_time": {
+     "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+     "type": "string"
+    },
+    "every": {
+     "minimum": 1,
+     "type": "integer"
+    },
+    "period": {
+     "enum": [
+      "day",
+      "week",
+      "month"
+     ],
+     "type": "string"
+    },
+    "quantity": {
+     "minimum": 1,
+     "type": "integer"
+    },
+    "readonly": {
+     "enum": [
+      "y",
+      "n"
+     ],
+     "type": "string"
+    },
+    "start_time": {
+     "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+     "type": "string"
+    },
+    "state": {
+     "enum": [
+      "y",
+      "n",
+      "shown_edit_on",
+      "shown_edit_off",
+      "hidden"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "every",
+    "period",
+    "amount",
+    "start_time"
+   ],
+   "type": "object"
+  },
+  "SubscriptionOrder": {
+   "properties": {
+    "action": {
+     "enum": [
+      "stop",
+      "start"
+     ],
+     "type": "string"
+    },
+    "merchant_id": {
+     "type": "integer"
+    },
+    "order_id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "order_id",
+    "merchant_id",
+    "action"
+   ],
+   "type": "object"
+  },
+  "request:api": {
+   "properties": {
+    "request": {
+     "$ref": "#/$defs/Envelope"
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "response:api": {
+   "properties": {
+    "response": {
+     "anyOf": [
+      {
+       "properties": {
+        "checkout_url": {
+         "format": "uri",
+         "type": "string"
+        },
+        "payment_id": {
+         "type": [
+          "string",
+          "integer"
+         ]
+        },
+        "response_status": {
+         "const": "success"
+        }
+       },
+       "required": [
+        "response_status"
+       ],
+       "type": "object"
+      },
+      {
+       "properties": {
+        "error_code": {
+         "type": "integer"
+        },
+        "error_message": {
+         "type": "string"
+        },
+        "request_id": {
+         "type": "string"
+        },
+        "response_status": {
+         "const": "failure"
+        }
+       },
+       "required": [
+        "response_status",
+        "error_message",
+        "error_code"
+       ],
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Envelope"
+      }
+     ]
+    }
+   },
+   "required": [
+    "response"
+   ],
+   "type": "object"
+  }
+ },
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "x-roots": {
+  "Callback": "server_callback_url and subscription_callback_url notifications (flat protocol 1.0 parameters, or the order inside a 2.0 envelope)",
+  "CheckoutOrder": "the order of POST /api/checkout/url/, inside the 2.0 envelope",
+  "SubscriptionOrder": "the order of POST /api/subscription/, inside the 2.0 envelope",
+  "request:api": "the protocol 2.0 request every API call sends",
+  "response:api": "the answer of every API call: success, failure or a 2.0 envelope"
+ },
+ "x-vendor": {
+  "docs": [
+   "https://docs.flitt.com/api/accept-purchase/",
+   "https://docs.flitt.com/api/callbacks/",
+   "https://docs.flitt.com/api/subscriptions/",
+   "https://docs.flitt.com/api/building-signature/"
+  ],
+  "kind": "documented",
+  "provider": "flitt",
+  "title": "Flitt payment API (protocol 1.0 and 2.0)"
+ }
+}

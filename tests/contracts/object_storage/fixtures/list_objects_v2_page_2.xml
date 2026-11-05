@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>workshop-backups</Name>
+  <Prefix>workshop/</Prefix>
+  <ContinuationToken>test/continuation+token=0000</ContinuationToken>
+  <KeyCount>1</KeyCount>
+  <MaxKeys>2</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>workshop/monthly/2026-10-01T02-00-00Z.dump.age</Key>
+    <LastModified>2026-10-01T02:04:40.000Z</LastModified>
+    <ETag>&quot;599bab3ed2c697f1d26842727561fd94&quot;</ETag>
+    <Size>17998112</Size>
+    <StorageClass>STANDARD_IA</StorageClass>
+  </Contents>
+</ListBucketResult>

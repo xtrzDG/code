@@ -1,0 +1,17 @@
+{
+  "created_at": 1790000000000000,
+  "id": "brand_b2535089-f9c6-4af2-8735-be6aab24f233",
+  "members": [
+    {
+      "business_ids": [
+        "business_482dea48-8ef8-4566-b8f1-827c622123a9"
+      ],
+      "role": "brand_owner",
+      "user_id": "user_6d467fd8-5f3c-4c13-8fc3-7e35712ba9ca"
+    }
+  ],
+  "name": "Sample BrandName",
+  "schema_version": "1",
+  "setup_fee_business_id": "business_d67fc198-6a58-490c-b8e3-03695bae4dc4",
+  "updated_at": 1790000000000000
+}

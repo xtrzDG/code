@@ -1,0 +1,14 @@
+{
+  "business_id": "business_7b401fab-6746-4df1-8dd1-eceac449311f",
+  "city": "Austin",
+  "closed_at": 1790000000000000,
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "id": "phone_number_request_57ec8657-d9b7-5e8a-adc1-5bb5090e97a6",
+  "number_type": "local",
+  "requested_at": 1790000000000000,
+  "requested_by": "user_8e3d42ae-aba1-4563-a457-af2f9187ace7",
+  "schema_version": "1",
+  "status": "open",
+  "updated_at": 1790000000000000
+}

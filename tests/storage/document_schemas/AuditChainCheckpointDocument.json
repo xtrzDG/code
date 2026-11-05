@@ -1,0 +1,63 @@
+{
+  "collection": "audit_chain_checkpoints",
+  "document_type": "AuditChainCheckpointDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "maxLength": 80,
+        "minLength": 8,
+        "pattern": "^(platform|business_[0-9A-Za-z-]{1,70})$",
+        "type": "string"
+      },
+      "purged_before": {
+        "type": "integer"
+      },
+      "purged_count": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "through_hash": {
+        "maxLength": 64,
+        "minLength": 64,
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "through_position": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "through_position",
+      "through_hash",
+      "purged_count",
+      "purged_before"
+    ],
+    "type": "object"
+  }
+}

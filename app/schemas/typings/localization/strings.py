@@ -3,6 +3,15 @@
 from base_typed_string import BaseTypedString
 
 
+class CarrierName(BaseTypedString):
+    """
+    Brand name of a mobile network operator, e.g. "Magti".
+
+    Example:
+        carrier = CarrierName("Silknet")
+    """
+
+
 class CountryDisplayName(BaseTypedString):
     """Country name rendered in some display language, e.g. "Грузия"."""
 
@@ -17,6 +26,15 @@ class FormattedMoneyText(BaseTypedString):
 
 class FormattedPhoneNumber(BaseTypedString):
     """Human-readable phone number, e.g. "+995 555 12 34 56"."""
+
+
+class InstructionText(BaseTypedString):
+    """
+    Owner-facing instruction rendered in one language with its values filled in.
+
+    Example:
+        step = InstructionText("Dial **61*+995322123456# and press call.")
+    """
 
 
 class LanguageDisplayName(BaseTypedString):

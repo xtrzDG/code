@@ -1,0 +1,70 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer
+
+from app.containers.pipelines.spend_guard_pipelines import (
+    SpendGuardPipelinesContainer,
+)
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
+from app.containers.utilities import UtilitiesContainer
+
+
+class SpendGuardOperatorsContainer(containers.DeclarativeContainer):
+    """
+    Operators of the spend guard's endpoints. The admin's spend tile sums
+    every business's usage, so it runs platform-wide; the origin check and
+    the lists of one business run in its scope, and the generic API limits
+    name no business (their counters are a platform table whose adapter
+    escalates by itself).
+    """
+
+    spend_guard_pipelines: SpendGuardPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    storage_scope = utilities.storage_scope
+
+    admit_api_request_operator = pipeline_operator(
+        spend_guard_pipelines.admit_api_request_pipeline, storage_scope
+    )
+    check_widget_origin_operator = pipeline_operator(
+        spend_guard_pipelines.check_widget_origin_pipeline, storage_scope
+    )
+    get_widget_allowed_origins_operator = pipeline_operator(
+        spend_guard_pipelines.get_widget_allowed_origins_pipeline, storage_scope
+    )
+    save_widget_allowed_origins_operator = pipeline_operator(
+        spend_guard_pipelines.save_widget_allowed_origins_pipeline, storage_scope
+    )
+    get_platform_spend_operator = platform_pipeline_operator(
+        spend_guard_pipelines.get_platform_spend_pipeline, storage_scope
+    )
+    set_business_spend_limits_operator = pipeline_operator(
+        spend_guard_pipelines.set_business_spend_limits_pipeline, storage_scope
+    )
+    # The platform's brakes and the daily payment reconciliation (1230):
+    # they name no business, so they run unscoped (platform collections
+    # only); the spend gauge escalates for its one sum, and the
+    # reconciliation enters each business's scope for its orders.
+    get_platform_pause_operator = pipeline_operator(
+        spend_guard_pipelines.get_platform_pause_pipeline, storage_scope
+    )
+    set_platform_pause_operator = pipeline_operator(
+        spend_guard_pipelines.set_platform_pause_pipeline, storage_scope
+    )
+    reconcile_payments_operator = pipeline_operator(
+        spend_guard_pipelines.reconcile_payments_pipeline, storage_scope
+    )
+    get_payment_reconciliation_operator = pipeline_operator(
+        spend_guard_pipelines.get_payment_reconciliation_pipeline, storage_scope
+    )
+    # The feature flags: a platform collection read by its keys (1260).
+    list_feature_flags_operator = pipeline_operator(
+        spend_guard_pipelines.list_feature_flags_pipeline, storage_scope
+    )
+    set_feature_flag_operator = pipeline_operator(
+        spend_guard_pipelines.set_feature_flag_pipeline, storage_scope
+    )
+    check_feature_flag_operator = pipeline_operator(
+        spend_guard_pipelines.check_feature_flag_pipeline, storage_scope
+    )

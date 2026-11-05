@@ -1,0 +1,114 @@
+/*
+ * The public site's motion, in CSS (src/components/siteMotion): content
+ * rising in as it scrolls into view, groups arriving one item after
+ * another, cards tilting towards the mouse, a magnetic call to action and
+ * glows drifting against the scroll. Scripts only mark what has been seen
+ * (data-revealed) and where the mouse is (custom properties).
+ *
+ * Reduced motion: the rule at the end of globals.css shortens every
+ * transition to nothing (content simply appears), and the transforms below
+ * are switched off.
+ */
+
+/* Per element, not inherited: a reveal inside a deeper one keeps its own. */
+@property --reveal-depth {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --reveal-delay {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 0s;
+}
+@property --reveal-index {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@layer components {
+  /*
+   * Hidden until seen: lower, and with depth smaller and tipped away, as if
+   * coming out of the page (the landing distance and depth of
+   * revealVariants() in src/lib/motion.ts).
+   */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px) scale(calc(1 - var(--reveal-depth) * 0.04)) rotateX(calc(var(--reveal-depth) * 8deg));
+    transition-property: opacity, transform;
+    transition-duration: var(--motion-spring-gentle);
+    transition-timing-function: var(--ease-spring-gentle);
+    transition-delay: var(--reveal-delay);
+  }
+  /* An item of a group waits for its turn: the group's delay, then a step per item before it. */
+  [data-reveal-item] {
+    transition-delay: calc(var(--stagger-delay, 0s) + var(--reveal-index) * var(--stagger-step, 0.08s));
+  }
+  [data-reveal][data-revealed],
+  [data-revealed] [data-reveal-item] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tilting cards (perspective as in the cabinet's motion: 1000px). */
+  .tilt-card {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform var(--motion-spring-bouncy) var(--ease-spring-bouncy);
+  }
+  .tilt-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at var(--glare-x, 50%) var(--glare-y, 50%),
+      color-mix(in oklab, var(--accent-solid) 22%, transparent),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity var(--motion-spring-snappy) var(--ease-spring-snappy);
+  }
+  .tilt-card[data-tilting] > .tilt-glare {
+    opacity: 1;
+  }
+
+  /* The magnetic call to action. */
+  .magnetic {
+    transform: translate(var(--magnet-x, 0px), var(--magnet-y, 0px));
+    transition: transform var(--motion-spring-bouncy) var(--ease-spring-bouncy);
+  }
+
+  /*
+   * Depth layers drift from +shift to -shift while their block crosses the
+   * screen (a view timeline: from entering at the bottom to leaving at the top).
+   */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .parallax-layer {
+        animation: aw-parallax linear both;
+        animation-timeline: view();
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal],
+    .tilt-card,
+    .magnetic {
+      transform: none;
+    }
+    .tilt-glare {
+      display: none;
+    }
+  }
+}
+
+@keyframes aw-parallax {
+  from {
+    transform: translateY(var(--parallax-shift, 0px));
+  }
+  to {
+    transform: translateY(calc(-1 * var(--parallax-shift, 0px)));
+  }
+}

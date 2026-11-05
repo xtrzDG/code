@@ -1,0 +1,10 @@
+{
+  "business_id": "business_52e4fd99-7058-4498-94c1-f2e2bc463b87",
+  "code": "partner-42",
+  "created_at": 1790000000000000,
+  "id": "referral_code_603f02c0-ad6b-4904-85e0-183259675fd7",
+  "owner_kind": "partner",
+  "partner_id": "partner_07d53947-3b7b-4926-a8b1-39b167fb9689",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

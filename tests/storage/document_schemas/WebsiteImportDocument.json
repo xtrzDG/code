@@ -1,0 +1,145 @@
+{
+  "collection": "website_imports",
+  "document_type": "WebsiteImportDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "batch_id": {
+        "pattern": "^menu_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "cost_micro_usd": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "finished_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^website_import_record_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "import_id": {
+        "pattern": "^website_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "items_found": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "pages_planned": {
+        "default": 0,
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "pages_read": {
+        "default": 0,
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "pages_skipped": {
+        "default": 0,
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "problem": {
+        "anyOf": [
+          {
+            "enum": [
+              "website_link_invalid",
+              "website_link_unreachable",
+              "website_link_unreadable",
+              "website_reader_unavailable",
+              "website_import_interrupted"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "problem_detail": {
+        "anyOf": [
+          {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "requested_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "skipped_line_count": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "started_at": {
+        "type": "integer"
+      },
+      "status": {
+        "enum": [
+          "queued",
+          "reading",
+          "done",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "url": {
+        "maxLength": 2048,
+        "minLength": 10,
+        "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "import_id",
+      "batch_id",
+      "url",
+      "status",
+      "requested_by",
+      "started_at"
+    ],
+    "type": "object"
+  }
+}

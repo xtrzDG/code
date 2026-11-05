@@ -3,6 +3,12 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class DeliveredNotificationCount(BaseConstrainedTypedInt):
+    """How many staff contacts actually received one notification."""
+
+    ge = 0
+
+
 class QuestionOccurrenceCount(BaseConstrainedTypedInt):
     """How many times customers asked the same unanswered question."""
 

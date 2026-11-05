@@ -1,0 +1,12 @@
+{
+  "business_id": "business_9d5defa3-a03e-45ad-afad-f9c772bb15d4",
+  "created_at": 1790000000000000,
+  "day": "2026-09-21",
+  "id": "spend_limit_mark_89be576b-c2d7-5382-9398-e48c9a2bcbb8",
+  "level": "normal",
+  "limit_micro_usd": 1,
+  "reached_at": 1790000000000000,
+  "schema_version": "1",
+  "spend_micro_usd": 1,
+  "updated_at": 1790000000000000
+}

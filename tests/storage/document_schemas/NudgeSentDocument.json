@@ -1,0 +1,55 @@
+{
+  "collection": "nudges_sent",
+  "document_type": "NudgeSentDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "code": {
+        "enum": [
+          "not_live_day_1",
+          "not_live_day_3",
+          "not_live_day_7",
+          "live_day_2",
+          "live_day_5",
+          "live_day_10"
+        ],
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^nudge_sent_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "recipient_count": {
+        "maximum": 1000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "sent_at": {
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "code",
+      "recipient_count",
+      "sent_at"
+    ],
+    "type": "object"
+  }
+}

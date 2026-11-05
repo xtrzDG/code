@@ -1,0 +1,10 @@
+{
+  "checked_at": 1790000000000000,
+  "created_at": 1790000000000000,
+  "holder": "srv-workshop-api-1:4211",
+  "lease_until": 1790000000000000,
+  "monitor": "alert_checks",
+  "release": "4718714c0f2e9a1b",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

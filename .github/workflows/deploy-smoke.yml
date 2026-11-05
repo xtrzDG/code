@@ -1,0 +1,240 @@
+name: Deploy smoke test
+
+# After every Render deploy of the API: scripts/smoke.sh against it, and the
+# deployed commit's images checked against what CI published on main
+# (scripts/verify_images.sh: the cosign signature and the SLSA provenance
+# name this repository's ci.yml, refs/heads/main and exactly this commit). A
+# green staging run of both asks a person to promote the commit: once one of
+# the required reviewers of the environment `production-release` approves
+# it, the `release` branch, which production deploys (render.yaml), is
+# fast-forwarded to it. A red production run is the signal to roll back
+# (docs/operations/deploys.md).
+#
+# Setup: GitHub environments `staging` and `production`, each with the
+# variables API_URL (and optionally CABINET_URL, SMOKE_WIDGET_BUSINESS_ID,
+# SMOKE_EXPECT_REPLY), and `production-release` with its reviewers, `main`
+# as its only branch and the secret RELEASE_DEPLOY_KEY. Render reports
+# deploys to GitHub as deployments of the service's name; a Render deploy
+# webhook relayed as a repository dispatch works too. Repository variable
+# PROMOTE_AFTER_STAGING_SMOKE=false leaves the approval request out of the
+# automatic runs: a run started by hand (staging) still asks. The promotion
+# waits until production has finished the post-deploy data tasks of the
+# release it runs (repository variable PRODUCTION_API_URL,
+# scripts/check_data_tasks.sh): re-run the promote job once they are done.
+#
+# The smoke and promote jobs hold their own concurrency groups (per
+# environment, and one promotion at a time); a group for the whole workflow
+# would queue production's smoke test behind a promotion awaiting approval.
+on: # zizmor: ignore[concurrency-limits]
+  deployment_status:
+  repository_dispatch:
+    # {"event_type": "render-deploy-succeeded",
+    #  "client_payload": {"service": "workshop-staging-api", "sha": "<commit>"}}
+    types: [render-deploy-succeeded]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment to test
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    name: Which deployment
+    if: >-
+      github.event_name != 'deployment_status'
+      || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    # Reads only the event: no token needed.
+    permissions: {}
+    outputs:
+      environment: ${{ steps.pick.outputs.environment }}
+      sha: ${{ steps.pick.outputs.sha }}
+    steps:
+      - name: Pick the environment and commit
+        id: pick
+        env:
+          SERVICE: >-
+            ${{ github.event.deployment.environment
+            || github.event.client_payload.service
+            || inputs.environment }}
+          DEPLOYED_SHA: >-
+            ${{ github.event.deployment.sha
+            || github.event.client_payload.sha
+            || github.sha }}
+        run: |
+          # Only the API's deploys are smoke-tested (the test covers the
+          # cabinet too); the worker's and cabinet's own deploys are skipped.
+          case "$SERVICE" in
+            staging | *staging-api*) environment=staging ;;
+            production | *workshop-api*) environment=production ;;
+            *) environment="" ;;
+          esac
+          if ! printf '%s' "$DEPLOYED_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Not a commit: $DEPLOYED_SHA" >&2
+            exit 1
+          fi
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "sha=$DEPLOYED_SHA" >> "$GITHUB_OUTPUT"
+          echo "Deployment of '$SERVICE' -> '${environment:-skipped}' at $DEPLOYED_SHA"
+
+  smoke:
+    name: Smoke test (${{ needs.target.outputs.environment }})
+    needs: target
+    if: needs.target.outputs.environment != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: ${{ needs.target.outputs.environment }}
+    concurrency:
+      group: deploy-smoke-${{ needs.target.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      # The scripts come from the default branch, which review guards: the
+      # deployed commit is only an argument, never code this job runs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Smoke test the deployment
+        env:
+          API_URL: ${{ vars.API_URL }}
+          CABINET_URL: ${{ vars.CABINET_URL }}
+          SMOKE_WIDGET_BUSINESS_ID: ${{ vars.SMOKE_WIDGET_BUSINESS_ID }}
+          SMOKE_EXPECT_REPLY: ${{ vars.SMOKE_EXPECT_REPLY }}
+          SMOKE_WAIT_SECONDS: "180"
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Set the variable API_URL of this GitHub environment." >&2
+            exit 1
+          fi
+          scripts/smoke.sh "$API_URL" ${CABINET_URL:+"$CABINET_URL"}
+
+  # Render builds from the same commit; this proves the commit is one CI
+  # built, scanned, attested and signed on main after review: an image of a
+  # commit pushed past main, or of a forged workflow, has no such signature.
+  images:
+    name: Signed images (${{ needs.target.outputs.environment }})
+    needs: target
+    if: needs.target.outputs.environment != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read # pulls the images to verify
+      attestations: read # reads their provenance
+    steps:
+      # The scripts come from the default branch, which review guards: the
+      # deployed commit is only an argument, never code this job runs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Verify the deployed commit's signatures and provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.target.outputs.sha }}
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          scripts/verify_images.sh "$SHA"
+
+  # The one step to production that waits for a person: the job runs in the
+  # environment `production-release`, whose required reviewers
+  # (.github/repository-settings.json) approve or reject it on the run's
+  # page, and which only workflows of `main` may use. It pushes with that
+  # environment's deploy key, the only key the protection of `release` lets
+  # past its pull-request rule: no workflow token can move `release`, and an
+  # environment GitHub made up on the fly holds no key.
+  promote:
+    name: Promote to production (release branch, approved by a person)
+    needs: [target, smoke, images]
+    # PROMOTE_AFTER_STAGING_SMOKE=false: only a run started by hand asks.
+    if: >-
+      needs.target.outputs.environment == 'staging'
+      && (vars.PROMOTE_AFTER_STAGING_SMOKE != 'false' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production-release
+    permissions:
+      contents: read
+      # Reads the environment's protection rules before anything is pushed.
+      actions: read # the environment's protection rules
+    concurrency:
+      group: promote-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Without reviewers the job would have started unapproved: refuse.
+      - name: A person approved this promotion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! reviewers="$(gh api "repos/${GITHUB_REPOSITORY}/environments/production-release" \
+              --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')"; then
+            echo "::error::The protection rules of production-release cannot be read: nothing is promoted."
+            exit 1
+          fi
+          if [ "${reviewers:-0}" -lt 1 ]; then
+            echo "::error::The environment production-release has no required reviewers: nothing reaches production without a person's approval (docs/operations/deploys.md)."
+            exit 1
+          fi
+
+      - name: Wait for production's post-deploy data tasks
+        env:
+          PRODUCTION_API_URL: ${{ vars.PRODUCTION_API_URL }}
+        run: |
+          # The next release may stop reading what production's tasks are
+          # still rewriting or filling (docs/operations/deploys.md).
+          if [ -z "$PRODUCTION_API_URL" ]; then
+            echo "Set the repository variable PRODUCTION_API_URL (the production API's address): promotion waits for its data tasks." >&2
+            exit 1
+          fi
+          scripts/check_data_tasks.sh "$PRODUCTION_API_URL"
+
+      - name: Fast-forward release to the smoke-tested commit
+        env:
+          SHA: ${{ needs.target.outputs.sha }}
+          RELEASE_DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+        run: |
+          if [ -z "$RELEASE_DEPLOY_KEY" ]; then
+            echo "::error::The environment production-release has no secret RELEASE_DEPLOY_KEY: release cannot move (docs/operations/deploys.md, \"One-time setup\")." >&2
+            exit 1
+          fi
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/release-key"' EXIT
+          printf '%s\n' "$RELEASE_DEPLOY_KEY" > "$RUNNER_TEMP/release-key"
+          # GitHub's published SSH host key, and no other.
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/release-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts"
+          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "$SHA is not on main: not promoted."
+            exit 0
+          fi
+          if git fetch --no-tags origin release 2>/dev/null; then
+            if git merge-base --is-ancestor "$SHA" origin/release; then
+              echo "release already contains $SHA."
+              exit 0
+            fi
+            if ! git merge-base --is-ancestor origin/release "$SHA"; then
+              echo "release has commits that $SHA lacks (a hotfix?): merge them into main first." >&2
+              exit 1
+            fi
+          fi
+          # Never forced: only a fast-forward to a commit staging accepted.
+          git push origin "$SHA:refs/heads/release"
+          echo "release -> $SHA: production deploys it once its checks pass."
