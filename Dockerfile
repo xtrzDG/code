@@ -12,7 +12,7 @@
 # Base images are named once, in FROM lines, by tag and digest: the build
 # takes exactly the reviewed image, and Dependabot (docker) moves both when
 # the tag moves. uv 0.12.21 and python 3.14-slim as of 2026-11-02.
-FROM ghcr.io/astral-sh/uv:0.12.21@sha256:a7aed3216253ee804de3e2d8afa5073baa1a177335345d43845cd4165e43b711 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
 FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966 AS python-base
 
 # --- Dependencies ------------------------------------------------------------
