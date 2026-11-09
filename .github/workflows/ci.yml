@@ -968,7 +968,7 @@ jobs:
       # repository's attestations and the registry (actions/attest, which
       # actions/attest-sbom v4.1.0 wraps at this same commit).
       - name: SBOM attestation of the backend image
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ steps.push.outputs.backend-name }}
           subject-digest: ${{ steps.push.outputs.backend-digest }}
@@ -976,7 +976,7 @@ jobs:
           push-to-registry: true
 
       - name: SBOM attestation of the cabinet image
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ steps.push.outputs.web-name }}
           subject-digest: ${{ steps.push.outputs.web-digest }}
