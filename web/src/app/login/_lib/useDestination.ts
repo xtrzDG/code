@@ -3,7 +3,10 @@
 /**
  * Where the sign-in code goes: phone (country, number, delivery channel) or
  * e-mail, and which of them work right now for the chosen country
- * (GET /v1/auth/login-options; a failed check offers everything).
+ * (GET /v1/auth/login-options; a failed check offers everything). The
+ * method starts as the one of the page's first HTML (openingMethod.ts) and
+ * changes only when the visitor changes it: the answers that come later
+ * explain and offer, they never swap the form.
  */
 
 import { useState } from "react";
@@ -22,16 +25,12 @@ import {
   effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
-  openingLoginMethod,
   phoneLoginBlock,
 } from "./loginOptions";
 
-export function useDestination() {
+export function useDestination(openingMethod: LoginMethod) {
   const countries = useCountries();
-  /** The visitor's own choice of method; null until there is one. */
-  const [chosenMethod, setChosenMethod] = useState<LoginMethod | null>(null);
-  /** The method shown before that choice: kept while another country's options load. */
-  const [openingMethod, setOpeningMethod] = useState<LoginMethod>("phone");
+  const [chosenMethod, setChosenMethod] = useState<LoginMethod>(openingMethod);
   const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(null);
   const [chosenCountry, setChosenCountry] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -53,11 +52,7 @@ export function useDestination() {
     api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   const options = loginOptions.data;
-  const suggestedMethod = options ? openingLoginMethod(options) : openingMethod;
-  if (suggestedMethod !== openingMethod) {
-    setOpeningMethod(suggestedMethod);
-  }
-  const method = effectiveLoginMethod(chosenMethod ?? suggestedMethod, options);
+  const method = effectiveLoginMethod(chosenMethod, options);
   const phoneBlock = phoneLoginBlock(options);
   const phoneChannels = options?.phone_channels ?? [];
   const isUnavailable = isSignInUnavailable(options);

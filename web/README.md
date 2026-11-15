@@ -1974,9 +1974,13 @@ Its motion and 3D hero: see [Motion](#motion).
   address, so the browser repeats it as a GET that carries the session.
 - `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
   switch hides e-mail when it cannot deliver codes, the phone form offers a
-  channel choice when several work, and explains when none does. Until the
-  visitor chooses, the page opens on the phone form, or on e-mail where no
-  phone channel has a provider in any country (codes go by e-mail only). The code
+  channel choice when several work, and explains when none does. The form
+  in the page's first HTML is the server's choice (`_lib/openingMethod.ts`
+  reads the options once while the page renders): phone, or e-mail where no
+  phone channel has a provider in any country (codes go by e-mail only);
+  when that read fails or takes more than two seconds, phone. After that
+  only the visitor changes the method: what the browser's own check answers
+  explains and offers, it never swaps the form under someone typing. The code
   screen offers the country's other channels ("No code? Send by SMS instead":
   a number without WhatsApp is reported only later), which the API allows at
   once. Phone numbers and codes typed in any script (Arabic-Indic, Persian,

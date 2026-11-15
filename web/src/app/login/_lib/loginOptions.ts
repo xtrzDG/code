@@ -27,10 +27,12 @@ export function isEmailLoginOffered(options: LoginOptions | undefined): boolean 
 }
 
 /**
- * The method the page opens on, until the visitor chooses one: phone, or
- * e-mail when codes go by e-mail only (no phone channel is set up for any
- * country). Opening on phone there would greet every visitor with "codes
- * cannot be sent to phone numbers" and a button to the form that works.
+ * The method the page opens on: phone, or e-mail when codes go by e-mail
+ * only (no phone channel is set up for any country). Opening on phone
+ * there would greet every visitor with "codes cannot be sent to phone
+ * numbers" and a button to the form that works. The server applies it to
+ * the page's first HTML (openingMethod.ts); the country does not matter,
+ * since `configured_channels` are the same for all of them.
  */
 export function openingLoginMethod(options: LoginOptions): LoginMethod {
   const hasPhoneChannel = options.configured_channels.some((channel) => channel !== "email");
