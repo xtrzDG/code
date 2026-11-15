@@ -292,11 +292,15 @@ browser: the host's Chromium draws other pixels than CI's. Then:
   (`e2e/support/apiClock.ts`).
 - **No model, no motion, one typeface.** The rehearsal model plays the
   assistant (`LLM_PROVIDER=scripted`); reduced motion, `animations:
-  "disabled"`, the caret hidden. The brand faces are `font-display:
-  optional`, which keeps the fallback when a file comes late on a busy
-  machine: every context loads them first and declares them again with
-  `font-display: block` (`e2e/visual/fonts.ts`), so text always waits for
-  the cabinet's own files.
+  "disabled"`, the caret hidden. A marker that glides to its place (the
+  current tab's underline) still lands on a later animation frame, and the
+  standing clock runs a page's frames from timers that a busy machine runs
+  late: before each picture `e2e/visual/shots.ts` runs the frames itself
+  (`page.clock.runFor`) until a run of them moves nothing. The brand faces
+  are `font-display: optional`, which keeps the fallback when a file comes
+  late on a busy machine: every context loads them first and declares them
+  again with `font-display: block` (`e2e/visual/fonts.ts`), so text always
+  waits for the cabinet's own files.
 - **Masks** paint over what a run makes itself: the audit log's entries (the
   run's own visits), the admin's reply time of the last hour, and the new
   business's clock times. No ratio of differing pixels is allowed.

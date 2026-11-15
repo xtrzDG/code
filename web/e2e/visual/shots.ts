@@ -6,9 +6,10 @@
  * Every picture is the viewport (not the full page) at one device pixel
  * per CSS pixel: 1440×900 or the phone's 390×844. Animations are off
  * (reduced motion, `animations: "disabled"`), the caret is hidden, the
- * browser's clock stands still (clock.ts) and the fonts are the cabinet's
- * own files, waited for (fonts.ts), so a page renders the same
- * pixels on every run; `mask` paints
+ * browser's clock stands still (clock.ts), the animation frames a page
+ * still waits for are run before its picture (comeToRest) and the fonts
+ * are the cabinet's own files, waited for (fonts.ts), so a page renders
+ * the same pixels on every run; `mask` paints
  * over what still changes (a QR code with a one-time token, the time of
  * something the run itself created). Checks and comparisons are soft: one
  * run lists every finding of a test, not only the first.
@@ -25,6 +26,10 @@ import { reviewPage, watchConsole } from "./gate";
 
 /** No request for this long: the page's data has come (a business page's chained reads start within it). */
 const SETTLED_MS = 300;
+/** Three animation frames of the standing clock (16 ms apart): a gliding marker lands within two. */
+const FRAME_RUN_MS = 48;
+/** Runs of frames after which a page that still moves fails: with reduced motion nothing moves for long. */
+const FRAME_RUNS = 10;
 
 export type Theme = "dark" | "light";
 export type Locale = "it" | "en";
@@ -86,6 +91,39 @@ export async function settle(page: Page): Promise<void> {
   });
 }
 
+/** Every inline style with a transform: what a script that moves things itself (motion, its markers) writes. */
+function inlineTransforms(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('[style*="transform"]')].map((element) => element.getAttribute("style")).join("\n"),
+  );
+}
+
+/**
+ * Until a run of the page's animation frames moves nothing. A marker that
+ * glides between places (motion's `layoutId`: the current tab's underline,
+ * the sidebar's) is drawn where it was and lands on a later frame, with
+ * reduced motion too, whenever its row moves: the Assistant's "answers
+ * customers since" line comes with its data and pushes the tabs down. The
+ * standing clock owns the page's frames and runs them from the page's
+ * timers, which a busy machine runs late: a picture then had the underline
+ * 32 px above its tab (`animations: "disabled"` ends the browser's
+ * animations, not a script's). `runFor` runs the frames here, however late
+ * those timers are, and a run that changes nothing shows that none was
+ * left: the first run, where nothing glides.
+ */
+async function comeToRest(page: Page): Promise<void> {
+  let before = await inlineTransforms(page);
+  for (let run = 0; run < FRAME_RUNS; run += 1) {
+    await page.clock.runFor(FRAME_RUN_MS);
+    const after = await inlineTransforms(page);
+    if (after === before) {
+      return;
+    }
+    before = after;
+  }
+  throw new Error(`${page.url()} still moves after ${FRAME_RUNS} runs of its animation frames.`);
+}
+
 /** The baseline's file name: screen, width, theme, language. */
 export function shotName(shot: Pick<Shot, "name" | "theme" | "locale">, width: number): string {
   return `${shot.name}-${width}-${shot.theme}-${shot.locale}.png`;
@@ -101,6 +139,8 @@ export async function shoot(page: Page, shot: Shot): Promise<void> {
     expect(response?.status(), `${shot.path} answers`).toBeLessThan(400);
     await settle(page);
     await reviewPage(page, { label: `${name} (${shot.path})`, isDocument: shot.isDocument ?? false });
+    // Last, after the gate's scans: nothing of ours comes between the page at rest and its picture.
+    await comeToRest(page);
     await expect.soft(page, name).toHaveScreenshot(name, { mask: shot.mask?.(page) ?? [] });
   });
 }
