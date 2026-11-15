@@ -74,12 +74,15 @@ start-up and sign-in answers 502 with an explanation.
   platform admins (`PLATFORM_ADMIN_EMAILS`, with SMTP configured) get an
   e-mail and Sentry an event, at most once an hour per limit.
 - **Bot check.** With `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
-  (Cloudflare Turnstile) a risky code request (a new number or address, an
-  address that already asked for 3 codes this hour, half of the shared
-  budget used, a country of `OTP_HIGH_RISK_COUNTRIES`) gets 403 with the
-  reason `challenge_required` and the widget's key; the sign-in page shows
-  the check and repeats the request with its token. A returning owner on a
-  quiet day never sees it. When Cloudflare does not answer, a risky request
+  (Cloudflare Turnstile) a risky code request (every code to a phone, a
+  known number or not; a client address that already asked for 3 codes this
+  hour; half of either shared budget used; a phone of a country of
+  `OTP_HIGH_RISK_COUNTRIES`) gets 403 with the reason `challenge_required`
+  and the widget's key; the sign-in page shows the check and repeats the
+  request with its token. No signal reads whether the phone or e-mail
+  belongs to a user (`login_risk_signals.py`), and a code to an e-mail
+  address on a quiet day never sees the check. When Cloudflare does not
+  answer, a risky request
   is refused (fail closed). Without the keys the check is off (development,
   tests).
 - **Second factor.** An authenticator app (TOTP, RFC 6238) is set up in
