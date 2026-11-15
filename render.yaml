@@ -1359,9 +1359,11 @@ services:
     envVars:
       # The API as the cabinet's server reaches it: its internal address from
       # the dashboard (workshop-api -> Connect -> Internal), with http:// and
-      # port 8000, e.g. http://workshop-api:8000. Never the public https
-      # address: those requests leave through Render's egress, so the API
-      # sees one egress IP for every owner (audit log, OTP_SENDS_PER_IP_PER_HOUR).
+      # port 8000, e.g. http://workshop-api:8000. Render may add a suffix to
+      # the name (http://workshop-api-ab12:8000): copy the address, never
+      # guess it. Never the public https address: those requests leave
+      # through Render's egress, so the API sees one egress IP for every
+      # owner (audit log, OTP_SENDS_PER_IP_PER_HOUR).
       - key: BACKEND_URL
         sync: false
       - key: COOKIE_SECURE
