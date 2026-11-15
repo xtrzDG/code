@@ -208,8 +208,8 @@ after you set it, `curl -fsS <production-api-url>/readyz` answers `ready`.
 
 1. With `release` in place (step 1) and the accounts of docs/LAUNCH.md,
    section 4: Render → New → Blueprint → `render.yaml`. It creates
-   `workshop-db` (`pro-8gb`), `workshop-api` (2 × `starter`),
-   `workshop-worker` (2 × `starter`), `workshop-batch-worker` (`standard`),
+   `workshop-db` (`basic-1gb`, 15 GB disk), `workshop-api` (1 × `starter`),
+   `workshop-worker` (1 × `starter`), `workshop-batch-worker` (`standard`),
    the cron `workshop-backup` (01:17 UTC) and `workshop-cabinet`
    (`starter`), all in Frankfurt, all following `release`.
 2. Roles and pgvector on `workshop-db` (step 3), then
@@ -472,8 +472,8 @@ env group has the same alert settings).
 
 `perf.yml` measures on GitHub's runner: four vCPU, four API processes in one
 container. Production runs `starter` instances, half a CPU and 512 MB each:
-two API instances of one process, two customer workers, and the batch
-worker on `standard` (`docs/operations/capacity.md`, "What one process
+at launch size one API instance of one process and one customer worker
+(two of each with `pro-8gb`), and the batch worker on `standard` (`docs/operations/capacity.md`, "What one process
 carries", "Worker roles").
 
 **The baseline.** Run the weekly job by hand and accept its numbers:
@@ -491,8 +491,8 @@ baseline").
 forwarded address that only the load stack trusts
 (`perf/docker-compose.perf.yml`), so never point them at staging or
 production. Hold the load stack's API and worker to one `starter` instance
-each and give them half of the weekly load, the share of one of
-production's two instances:
+each and give them half of the weekly load, the share of one instance
+of a two-instance production (the size after launch size):
 
 ```bash
 TIER="$(mktemp -d)/tier.yml"

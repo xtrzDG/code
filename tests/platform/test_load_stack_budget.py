@@ -98,7 +98,7 @@ def test_the_load_stack_runs_productions_pools_and_threads() -> None:
         assert api[name] == production_values(API_COMMAND)[name], name
     for name in PRODUCTION_SETTINGS:
         assert worker[name] == production_values(WORKER_COMMAND)[name], name
-    # Production runs one worker instance (render.yaml has no numInstances).
+    # The load stack runs one worker, as production's launch size does.
     assert replicas_of(services["worker"]) == 1
 
 
