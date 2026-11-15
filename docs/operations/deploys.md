@@ -44,7 +44,10 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
   `/readyz` (the database answers, the release's migrations are applied),
-  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and
+  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` (it answers,
+  and its first HTML holds the form those sign-in options call for: e-mail
+  where login codes go by e-mail only; a cabinet whose server cannot read
+  the API opens on phone and fails there) and
   `/.well-known/security.txt` (below) and, with `SMOKE_WIDGET_BUSINESS_ID`,
   a test chat through the website widget (`/v1/widget/{business_id}/config`,
   a message accepted with `202` and the worker's answer polled from

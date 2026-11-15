@@ -1983,6 +1983,8 @@ Its motion and 3D hero: see [Motion](#motion).
   only the visitor changes the method: when the browser's own check answers
   that the method shown cannot deliver, its form stays (the field, its focus
   and what was typed), explains, offers the other method and cannot send.
+  The form names its method (`data-login-method`), which the smoke test of
+  a deployment compares with the API's options (`scripts/smoke.sh`).
   `/login` is also the health-check path of the image (`Dockerfile`, five
   seconds a check) and of Render (`render.yaml`), so every probe makes that
   read: an API that hangs holds each probe for two seconds, and the page

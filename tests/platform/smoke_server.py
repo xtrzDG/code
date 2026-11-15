@@ -21,10 +21,23 @@ SECURITY_TXT: str = (
     "Canonical: https://app.workshop.test/.well-known/security.txt\n"
 )
 CABINET_SCRIPT: str = "/_next/static/chunks/main-app-4f1c.js"
-LOGIN_PAGE: str = (
-    f'<html><head><script src="{CABINET_SCRIPT}?dpl=1" async></script></head>'
-    "<body>login</body></html>"
-)
+
+
+def login_page(method: str | None = "email") -> str:
+    """The cabinet's /login whose form names `method` (None: it names none)."""
+
+    form: str = (
+        "login"
+        if method is None
+        else f'<form novalidate="" data-login-method="{method}">login</form>'
+    )
+    return (
+        f'<html><head><script src="{CABINET_SCRIPT}?dpl=1" async></script></head>'
+        f"<body>{form}</body></html>"
+    )
+
+
+LOGIN_PAGE: str = login_page()
 
 
 @dataclass
@@ -33,6 +46,8 @@ class FakeDeployment:
 
     widget_script: str = "(function () { window.workshopWidget = true; })();"
     configured_channels: list[str] = field(default_factory=lambda: ["email"])
+    # None leaves the field out of the sign-in options.
+    is_email_login_available: bool | None = True
     reply_inline: bool = True
     reply_text: str = REPLY
     security_txt: str = SECURITY_TXT
@@ -40,10 +55,27 @@ class FakeDeployment:
     # `checks.data_tasks` of /readyz; None leaves the line out (an older release).
     data_tasks: dict[str, object] | None = None
     login_page: str = LOGIN_PAGE
+    # What /cabinet/login answers first, one (status, page) a read; then `login_page`.
+    first_login_answers: list[tuple[int, str]] = field(
+        default_factory=list[tuple[int, str]]
+    )
+    login_reads: int = 0
     # Paths a broken release publishes (they answer 200 instead of 404).
     published: frozenset[str] = frozenset()
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
+
+    def login_options(self) -> dict[str, object]:
+        options: dict[str, object] = {"configured_channels": self.configured_channels}
+        if self.is_email_login_available is not None:
+            options["is_email_login_available"] = self.is_email_login_available
+        return options
+
+    def next_login_answer(self) -> tuple[int, str]:
+        self.login_reads += 1
+        if self.login_reads <= len(self.first_login_answers):
+            return self.first_login_answers[self.login_reads - 1]
+        return 200, self.login_page
 
 
 def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
@@ -70,11 +102,10 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             elif path == "/widget.js":
                 self.answer_text(200, deployment.widget_script, "text/javascript")
             elif path == "/v1/auth/login-options":
-                self.answer(
-                    200, {"configured_channels": deployment.configured_channels}
-                )
+                self.answer(200, deployment.login_options())
             elif path == "/cabinet/login":
-                self.answer_text(200, deployment.login_page, "text/html")
+                status, page = deployment.next_login_answer()
+                self.answer_text(status, page, "text/html")
             elif path == CABINET_SCRIPT:
                 self.answer_text(200, "self.x = 1;", "text/javascript")
             elif path == "/cabinet/.well-known/security.txt":

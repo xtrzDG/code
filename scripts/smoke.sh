@@ -16,6 +16,9 @@
 #      serves them), and of the cabinet /.git/HEAD and the source map of
 #      the first script its /login page loads
 #   5. GET  <cabinet>/login             the cabinet answers (if its URL is given)
+#                                       and its first HTML holds the form the
+#                                       sign-in options call for: e-mail where
+#                                       login codes go by e-mail only
 #      GET  <cabinet>/.well-known/security.txt  names the security mailbox
 #                                       and its https Canonical address
 #   6. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
@@ -31,7 +34,7 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,30p' "$0" >&2
+  sed -n '2,33p' "$0" >&2
   exit 2
 fi
 
@@ -82,8 +85,11 @@ request() {
 }
 
 # json_field NAME: a top-level field of the JSON body as text (objects and
-# lists as JSON), or `assistant_reply`: the text of the first assistant
-# message in `items`. Prints nothing when it is missing, null or empty.
+# lists as JSON), `assistant_reply`: the text of the first assistant
+# message in `items`, or `login_form`: the form the sign-in options open
+# the cabinet's /login on (openingLoginMethod in
+# web/src/app/login/_lib/loginOptions.ts). Prints nothing when it is
+# missing, null or empty.
 json_field() {
   python3 - "$1" "$body_file" <<'PYTHON' 2>/dev/null || true
 import json
@@ -103,11 +109,33 @@ if name == "assistant_reply":
         ),
         None,
     )
+elif name == "login_form":
+    channels = body.get("configured_channels")
+    by_email_only = isinstance(channels, list) and all(
+        channel == "email" for channel in channels
+    )
+    is_email_offered = body.get("is_email_login_available") is not False
+    value = "email" if is_email_offered and by_email_only else "phone"
 else:
     value = body.get(name)
 if value not in (None, "", [], {}):
     print(value if isinstance(value, str) else json.dumps(value))
 PYTHON
+}
+
+# page_login_form: the method the sign-in form in $body_file names
+# (data-login-method="email" or "phone"), or nothing when the page names none.
+page_login_form() {
+  grep -Eo 'data-login-method="[a-z]+"' "$body_file" | head -n 1 | cut -d '"' -f 2 || true
+}
+
+# form_name METHOD: the form as a message names it.
+form_name() {
+  if [ "$1" = "email" ]; then
+    printf 'e-mail'
+  else
+    printf '%s' "$1"
+  fi
 }
 
 # 1. The instance is up (Render may still be switching traffic).
@@ -137,6 +165,7 @@ status="$(request GET "$api_url/v1/auth/login-options")"
 [ "$status" = "200" ] || fail "GET /v1/auth/login-options answered $status"
 [ -n "$(json_field configured_channels)" ] \
   || fail "GET /v1/auth/login-options has no configured_channels"
+login_form="$(json_field login_form)"
 pass "GET /v1/auth/login-options"
 
 # 4. What a release must not publish (SEC-06).
@@ -154,6 +183,29 @@ if [ -n "$cabinet_url" ]; then
   status="$(request GET "$cabinet_url/login")"
   [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
   pass "GET cabinet /login"
+
+  # The cabinet's server reads the sign-in options while it renders the
+  # page and puts their form into the first HTML
+  # (web/src/app/login/_lib/openingMethod.ts). A cabinet that cannot read
+  # its API opens on phone, and so does one page whose read took over two
+  # seconds: that page is read again before the check fails.
+  page_form="$(page_login_form)"
+  reads=1
+  while [ "$page_form" = "phone" ] && [ "$login_form" = "email" ] && [ "$reads" -lt 3 ]; do
+    sleep 2
+    status="$(request GET "$cabinet_url/login")"
+    [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
+    page_form="$(page_login_form)"
+    reads=$((reads + 1))
+  done
+  if [ -z "$page_form" ]; then
+    printf 'skip  the form of cabinet /login (a release whose page does not name it)\n'
+  elif [ "$page_form" = "$login_form" ]; then
+    pass "cabinet /login opens on the $(form_name "$page_form") form"
+  else
+    : >"$body_file"
+    fail "cabinet /login opens on the $(form_name "$page_form") form, the sign-in options call for the $(form_name "$login_form") form (a cabinet that cannot read its API, BACKEND_URL, opens on phone)"
+  fi
 
   # Source maps go to the error tracker only (deleted after the upload).
   script_url="$(grep -Eo '(https?://[^"'"'"' ]+)?/_next/static/[^"'"'"' ?#]+\.js' \
