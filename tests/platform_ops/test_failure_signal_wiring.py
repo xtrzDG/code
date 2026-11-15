@@ -57,6 +57,22 @@ def build_application(signals: FailureSignals | None) -> FastAPI:
     )
 
 
+@pytest.fixture(autouse=True)
+def requests_take_no_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    The middleware times each request with the real clock, so a machine
+    that stalls for two seconds adds SLOW_API_REQUEST to what a test
+    counts (a busy CI runner did, on the database failure). Here a request
+    takes no time; the tests about slowness script their own clock.
+    """
+
+    monkeypatch.setattr(
+        request_telemetry_middleware,
+        "time",
+        SimpleNamespace(perf_counter=lambda: 100.0),
+    )
+
+
 def client_counting(counted: CountedSignals) -> TestClient:
     signals = FailureSignals(counted, run_later=lambda work: work())
     return TestClient(build_application(signals), raise_server_exceptions=False)
