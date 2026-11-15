@@ -1183,10 +1183,8 @@
      "type": "string"
     },
     "type": {
+     "const": "computer_screenshot",
      "default": "computer_screenshot",
-     "enum": [
-      "computer_screenshot"
-     ],
      "type": "string"
     }
    },
@@ -1281,10 +1279,8 @@
      "type": "string"
     },
     "type": {
+     "const": "computer_call_output",
      "default": "computer_call_output",
-     "enum": [
-      "computer_call_output"
-     ],
      "type": "string"
     }
    },
@@ -2408,7 +2404,7 @@
     "namespace": {
      "anyOf": [
       {
-       "maxLength": 64,
+       "maxLength": 128,
        "minLength": 1,
        "pattern": "^[a-zA-Z0-9_-]+$",
        "type": "string"
@@ -3134,9 +3130,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "function_call"
-     ],
+     "const": "function_call",
      "type": "string"
     }
    },
@@ -3194,9 +3188,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "function_call_output"
-     ],
+     "const": "function_call_output",
      "type": "string"
     }
    },
@@ -3485,7 +3477,7 @@
        "type": "string"
       },
       {
-       "default": "gpt-image-2",
+       "default": "gpt-image-2.6-sunburst",
        "enum": [
         "gpt-image-1",
         "gpt-image-1-mini",
@@ -4164,9 +4156,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "message"
-     ],
+     "const": "message",
      "type": "string"
     }
    },
@@ -4194,6 +4184,16 @@
      "type": "array"
     }
    ]
+  },
+  "InputRemovalReason": {
+   "enum": [
+    "organization_mismatch",
+    "end_user_mismatch",
+    "model_mismatch",
+    "prefix_mismatch",
+    "turn_boundary"
+   ],
+   "type": "string"
   },
   "InputTextContent": {
    "properties": {
@@ -4630,9 +4630,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "mcp_approval_request"
-     ],
+     "const": "mcp_approval_request",
      "type": "string"
     }
    },
@@ -4674,9 +4672,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "mcp_approval_response"
-     ],
+     "const": "mcp_approval_response",
      "type": "string"
     }
    },
@@ -4710,9 +4706,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "mcp_approval_response"
-     ],
+     "const": "mcp_approval_response",
      "type": "string"
     }
    },
@@ -4750,9 +4744,7 @@
      "type": "array"
     },
     "type": {
-     "enum": [
-      "mcp_list_tools"
-     ],
+     "const": "mcp_list_tools",
      "type": "string"
     }
    },
@@ -4936,9 +4928,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "mcp"
-     ],
+     "const": "mcp",
      "type": "string"
     }
    },
@@ -4996,9 +4986,7 @@
      "$ref": "#/$defs/MCPToolCallStatus"
     },
     "type": {
-     "enum": [
-      "mcp_call"
-     ],
+     "const": "mcp_call",
      "type": "string"
     }
    },
@@ -5157,6 +5145,7 @@
       "gpt-daybreak-blue-latest",
       "gpt-daybreak-red-latest",
       "gpt-5.6-cyber",
+      "gpt-6-cyber",
       "gpt-rosalind-research",
       "gpt-6-rosalind"
      ],
@@ -5709,9 +5698,7 @@
      ]
     },
     "role": {
-     "enum": [
-      "assistant"
-     ],
+     "const": "assistant",
      "type": "string"
     },
     "status": {
@@ -5723,9 +5710,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "message"
-     ],
+     "const": "message",
      "type": "string"
     }
    },
@@ -6289,6 +6274,37 @@
    ],
    "type": "string"
   },
+  "ReasoningInputTransformation": {
+   "properties": {
+    "action": {
+     "default": "removed",
+     "enum": [
+      "removed"
+     ],
+     "type": "string"
+    },
+    "id": {
+     "type": "string"
+    },
+    "reason": {
+     "$ref": "#/$defs/InputRemovalReason"
+    },
+    "type": {
+     "default": "reasoning",
+     "enum": [
+      "reasoning"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "type",
+    "id",
+    "action",
+    "reason"
+   ],
+   "type": "object"
+  },
   "ReasoningItem": {
    "properties": {
     "content": {
@@ -6484,6 +6500,12 @@
         }
        ]
       },
+      "input_transformations": {
+       "items": {
+        "$ref": "#/$defs/ReasoningInputTransformation"
+       },
+       "type": "array"
+      },
       "instructions": {
        "anyOf": [
         {
@@ -6525,9 +6547,7 @@
        ]
       },
       "object": {
-       "enum": [
-        "response"
-       ],
+       "const": "response",
        "type": "string"
       },
       "output": {
@@ -6669,10 +6689,8 @@
      "type": "object"
     },
     "type": {
+     "const": "configuration_update",
      "default": "configuration_update",
-     "enum": [
-      "configuration_update"
-     ],
      "type": "string"
     }
    },
@@ -6766,9 +6784,7 @@
   "ResponseFormatJsonObject": {
    "properties": {
     "type": {
-     "enum": [
-      "json_object"
-     ],
+     "const": "json_object",
      "type": "string"
     }
    },
@@ -6784,9 +6800,7 @@
   "ResponseFormatText": {
    "properties": {
     "type": {
-     "enum": [
-      "text"
-     ],
+     "const": "text",
      "type": "string"
     }
    },
@@ -8075,9 +8089,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "find_in_page"
-     ],
+     "const": "find_in_page",
      "type": "string"
     },
     "url": {
@@ -8101,9 +8113,7 @@
   "WebSearchActionOpenPage": {
    "properties": {
     "type": {
-     "enum": [
-      "open_page"
-     ],
+     "const": "open_page",
      "type": "string"
     },
     "url": {
@@ -8138,9 +8148,7 @@
      "items": {
       "properties": {
        "type": {
-        "enum": [
-         "url"
-        ],
+        "const": "url",
         "type": "string"
        },
        "url": {
@@ -8157,9 +8165,7 @@
      "type": "array"
     },
     "type": {
-     "enum": [
-      "search"
-     ],
+     "const": "search",
      "type": "string"
     }
    },
@@ -8213,10 +8219,8 @@
        ]
       },
       "type": {
+       "const": "approximate",
        "default": "approximate",
-       "enum": [
-        "approximate"
-       ],
        "type": "string"
       }
      },
@@ -8353,9 +8357,7 @@
      "$ref": "#/$defs/WebSearchCallStatus"
     },
     "type": {
-     "enum": [
-      "web_search_call"
-     ],
+     "const": "web_search_call",
      "type": "string"
     }
    },
